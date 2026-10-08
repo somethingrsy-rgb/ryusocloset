@@ -1,8 +1,9 @@
-import { ITEM_BY_ID } from './items'
+import { ID_ALIASES, ITEM_BY_ID } from './items'
 import { sanitizeOutfit } from './outfit'
 import { sanitizeRoom } from './room'
+import { sanitizeTweaks } from './tweaks'
 import type { RoomState } from './roomTypes'
-import type { Outfit, SavedOutfit } from './types'
+import type { Outfit, SavedOutfit, Tweaks } from './types'
 
 export const MAX_SAVED = 30
 
@@ -10,6 +11,7 @@ const K_SAVED = 'ryuso.saved.v1'
 const K_SETTINGS = 'ryuso.settings.v1'
 const K_CURRENT = 'ryuso.current.v1'
 const K_ROOM = 'ryuso.room.v1'
+const K_TWEAKS = 'ryuso.tweaks.v1'
 
 function read<T>(key: string): T | null {
   try {
@@ -35,7 +37,10 @@ export function loadSaved(): SavedOutfit[] {
   if (!Array.isArray(list)) return []
   return list
     .filter((s) => s && typeof s.id === 'string' && typeof s.thumb === 'string')
-    .map((s) => ({ ...s, outfit: sanitizeOutfit(s.outfit, ITEM_BY_ID) }))
+    .map((s) => {
+      const outfit = sanitizeOutfit(s.outfit, ITEM_BY_ID, ID_ALIASES)
+      return { ...s, outfit, tweaks: sanitizeTweaks(s.tweaks, outfit) }
+    })
 }
 export const persistSaved = (list: SavedOutfit[]) => write(K_SAVED, list)
 
@@ -47,8 +52,11 @@ export interface Settings {
 export const loadSettings = (): Partial<Settings> => read<Partial<Settings>>(K_SETTINGS) ?? {}
 export const persistSettings = (s: Settings) => write(K_SETTINGS, s)
 
-export const loadCurrent = (): Outfit => sanitizeOutfit(read<Outfit>(K_CURRENT), ITEM_BY_ID)
+export const loadCurrent = (): Outfit => sanitizeOutfit(read<Outfit>(K_CURRENT), ITEM_BY_ID, ID_ALIASES)
 export const persistCurrent = (o: Outfit) => write(K_CURRENT, o)
 
 export const loadRoom = (): RoomState => sanitizeRoom(read<unknown>(K_ROOM))
 export const persistRoom = (r: RoomState) => write(K_ROOM, r)
+
+export const loadTweaks = (outfit: Outfit): Tweaks => sanitizeTweaks(read<unknown>(K_TWEAKS), outfit)
+export const persistTweaks = (t: Tweaks) => write(K_TWEAKS, t)

@@ -1,7 +1,7 @@
 /**
  * assets-src/ 의 원본 PNG → public/assets/ (webp, 썸네일) + src/data/items.json 매니페스트 생성.
  *
- *   assets-src/clothes/<category>_<name>_<color>.png   (1024x1536, 투명 배경, 아바타와 같은 캔버스. 예전 851x1280 옷은 자동으로 옮겨 맞춤)
+ *   assets-src/clothes/<category>_<name>_<color>.png   (899x1536, 투명 배경, 아바타와 같은 캔버스)
  *   assets-src/base/{body,body_barefoot,hair_front}.png
  *   scripts/labels.json                                 (파일명 → 한/영 이름, 선택적으로 category/color 덮어쓰기)
  *
@@ -11,9 +11,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
-import { makeThumb } from './lib/image.ts'
+import { alphaBBox, makeThumb } from './lib/image.ts'
 import { buildRoom } from './build-room.ts'
-import { CANVAS_H, CANVAS_W, CATEGORIES, LAYER_Z, LEGACY_CANVAS, type Category } from '../src/lib/layers.ts'
+import { CANVAS_H, CANVAS_W, CATEGORIES, LAYER_Z, type Category } from '../src/lib/layers.ts'
 import type { Item } from '../src/lib/types.ts'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -64,36 +64,6 @@ function fallbackName(stem: string) {
   return { ko: text, en: text.replace(/\b\w/g, (c) => c.toUpperCase()) }
 }
 
-/**
- * 옷 PNG 를 아바타 캔버스(1024x1536)에 맞춘 PNG 버퍼로 만든다.
- * - 1024x1536: 그대로
- * - 851x1280(예전 아바타용): LEGACY_CANVAS 변환(확대 + 이동)
- */
-async function toAvatarCanvas(file: string): Promise<Buffer> {
-  const meta = await sharp(file).metadata()
-  if (meta.width === CANVAS_W && meta.height === CANVAS_H) return sharp(file).png().toBuffer()
-  if (meta.width !== LEGACY_CANVAS.w || meta.height !== LEGACY_CANVAS.h) {
-    console.warn(`⚠ ${path.basename(file)}: ${meta.width}x${meta.height} (1024x1536 또는 851x1280 이어야 아바타와 정렬됩니다)`)
-    return sharp(file).png().toBuffer()
-  }
-  const { scale, dx, dy } = LEGACY_CANVAS
-  const w = Math.round(LEGACY_CANVAS.w * scale)
-  const h = Math.round(LEGACY_CANVAS.h * scale)
-  const resized = await sharp(file).resize(w, h, { kernel: 'lanczos3' }).png().toBuffer()
-  // 캔버스 밖으로 나가는 부분은 잘라낸다
-  const srcX = Math.max(0, -dx)
-  const srcY = Math.max(0, -dy)
-  const dstX = Math.max(0, dx)
-  const dstY = Math.max(0, dy)
-  const cw = Math.min(w - srcX, CANVAS_W - dstX)
-  const ch = Math.min(h - srcY, CANVAS_H - dstY)
-  const part = await sharp(resized).extract({ left: srcX, top: srcY, width: cw, height: ch }).toBuffer()
-  return sharp({ create: { width: CANVAS_W, height: CANVAS_H, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
-    .composite([{ input: part, left: dstX, top: dstY }])
-    .png()
-    .toBuffer()
-}
-
 async function main() {
   fs.mkdirSync(path.join(OUT, 'base'), { recursive: true })
   fs.mkdirSync(path.join(OUT, 'thumbs'), { recursive: true })
@@ -117,12 +87,17 @@ async function main() {
     const stem = file.replace(/\.png$/i, '')
     const category = parseCategory(stem)
     const colorKey = parseColor(stem)
-    const src = await toAvatarCanvas(path.join(SRC, 'clothes', file))
+    const src = path.join(SRC, 'clothes', file)
+    const meta = await sharp(src).metadata()
+    if (meta.width !== CANVAS_W || meta.height !== CANVAS_H) {
+      console.warn(`⚠ ${file}: ${meta.width}x${meta.height} (${CANVAS_W}x${CANVAS_H} 이어야 아바타와 정렬됩니다)`)
+    }
     fs.mkdirSync(path.join(OUT, 'clothes', category), { recursive: true })
     await sharp(src).webp({ quality: 90, alphaQuality: 100 }).toFile(path.join(OUT, 'clothes', category, `${stem}.webp`))
     await makeThumb(src, path.join(OUT, 'thumbs', `${stem}.webp`)).catch((e) => {
       throw new Error(`${stem}: ${e.message}`)
     })
+    const box = await alphaBBox(src)
     const label = labels[stem] ?? (console.warn(`ℹ labels.json 에 ${stem} 없음 → 파일명으로 이름 생성`), {})
     const fb = fallbackName(stem)
     items.push({
@@ -132,6 +107,7 @@ async function main() {
       color: colorKey ?? null,
       colorName: colorKey ? { ko: COLORS[colorKey].ko, en: COLORS[colorKey].en } : null,
       colorHex: colorKey ? COLORS[colorKey].hex : null,
+      box: { x: box.left, y: box.top, w: box.width, h: box.height },
       image: `assets/clothes/${category}/${stem}.webp`,
       thumb: `assets/thumbs/${stem}.webp`,
       zIndex: LAYER_Z[category],

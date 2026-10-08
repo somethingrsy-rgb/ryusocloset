@@ -2,7 +2,7 @@ import { renderFigure, loadImage } from './exportPng'
 import { assetUrl } from './items'
 import { drawables, hasContactShadow, shadowWidthRatio } from './room'
 import { FLOOR_H, ROOM_H, ROOM_W, type RoomState } from './roomTypes'
-import type { Outfit } from './types'
+import type { Outfit, Tweaks } from './types'
 
 export const ROOM_ASSETS = {
   wall: assetUrl('assets/room/wall.webp'),
@@ -27,12 +27,12 @@ export function drawContactShadow(ctx: CanvasRenderingContext2D, cx: number, y: 
 }
 
 /** 방 + 가구 + (옷 입은) 아바타를 1086×1448 PNG 로 합성 */
-export async function renderRoomCanvas(room: RoomState, outfit: Outfit): Promise<HTMLCanvasElement> {
+export async function renderRoomCanvas(room: RoomState, outfit: Outfit, tweaks: Tweaks = {}): Promise<HTMLCanvasElement> {
   const list = drawables(room)
   const [floor, wall, figure, ...imgs] = await Promise.all([
     loadImage(ROOM_ASSETS.floor),
     loadImage(ROOM_ASSETS.wall),
-    renderFigure(outfit),
+    renderFigure(outfit, tweaks),
     ...list.map((d) => (d.src ? loadImage(assetUrl(d.src)) : Promise.resolve(null))),
   ])
   const canvas = document.createElement('canvas')

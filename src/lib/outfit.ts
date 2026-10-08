@@ -18,13 +18,18 @@ export function toggleItem(outfit: Outfit, item: Item): Outfit {
   return next
 }
 
-/** 저장 데이터에서 모르는 id 제거, 원피스/상하의 충돌 정리 */
-export function sanitizeOutfit(raw: unknown, byId: Record<string, Item>): Outfit {
+/** 저장 데이터에서 모르는 id 제거(이름이 바뀐 id 는 aliases 로 이어받기), 원피스/상하의 충돌 정리 */
+export function sanitizeOutfit(
+  raw: unknown,
+  byId: Record<string, Item>,
+  aliases: Record<string, string> = {},
+): Outfit {
   const out: Outfit = {}
   if (!raw || typeof raw !== 'object') return out
   for (const c of CATEGORIES) {
-    const id = (raw as Record<string, unknown>)[c]
-    if (typeof id === 'string' && byId[id]?.category === c) out[c] = id
+    const rawId: unknown = (raw as Record<string, unknown>)[c]
+    const id: string | undefined = typeof rawId === 'string' ? (aliases[rawId] ?? rawId) : undefined
+    if (id && byId[id]?.category === c) out[c] = id
   }
   if (out.dress) {
     delete out.top
