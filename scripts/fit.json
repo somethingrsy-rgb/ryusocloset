@@ -1,68 +1,122 @@
 {
+  "bottom_belt_skirt_charcoal": {
+    "sx": 1.12,
+    "sy": 0.99,
+    "dx": -18.0,
+    "dy": -24.0
+  },
   "bottom_button_skirt_brown": {
-    "sx": 1.11,
-    "sy": 1.05,
-    "dx": -9.0,
+    "sx": 1.18,
+    "sy": 0.99,
+    "dx": -18.0,
     "dy": -24.0
   },
   "bottom_denim": {
-    "sx": 1.11,
-    "sy": 1.05,
-    "dx": -6.0,
-    "dy": -20.0
+    "sx": 1.2,
+    "sy": 0.99,
+    "dx": -18.0,
+    "dy": -24.0
+  },
+  "bottom_denim_skirt_white": {
+    "sx": 1.13,
+    "sy": 1.02,
+    "dx": -18.0,
+    "dy": -24.0
   },
   "bottom_flare_skirt_gray": {
-    "sx": 1.15,
-    "sy": 1.05,
-    "dx": 0.0,
+    "sx": 1.2,
+    "sy": 0.99,
+    "dx": -18.0,
     "dy": -24.0
   },
   "bottom_pants_black": {
-    "sx": 1.14,
-    "sy": 1.06,
-    "dx": 3.0,
-    "dy": -20.0
+    "sx": 1.17,
+    "sy": 0.96,
+    "dx": -18.0,
+    "dy": 0.0
   },
   "bottom_pants_charcoal": {
-    "sx": 1.13,
-    "sy": 1.06,
-    "dx": -6.0,
-    "dy": -20.0
+    "sx": 1.14,
+    "sy": 0.96,
+    "dx": -18.0,
+    "dy": 24.0
   },
   "bottom_shezmig_skirt_brown": {
-    "sx": 1.07,
-    "sy": 1.02,
-    "dx": 0.0,
-    "dy": 0.0
+    "sx": 1.15,
+    "sy": 0.99,
+    "dx": -18.0,
+    "dy": -24.0
   },
   "bottom_skirt_black": {
-    "sx": 1.04,
-    "sy": 1.02,
-    "dx": 0.0,
-    "dy": 0.0
+    "sx": 1.13,
+    "sy": 0.99,
+    "dx": -18.0,
+    "dy": -24.0
   },
   "bottom_thick_pants_ivory": {
-    "sx": 1.16,
-    "sy": 1.06,
-    "dx": -3.0,
-    "dy": -4.0
+    "sx": 1.14,
+    "sy": 0.96,
+    "dx": -18.0,
+    "dy": 24.0
+  },
+  "dress_deco_tweed_black": {
+    "sx": 1.06,
+    "sy": 1.03,
+    "dx": -18.0,
+    "dy": -24.0
   },
   "dress_isaac_black": {
-    "sx": 1.05,
-    "sy": 0.98,
+    "sx": 1.14,
+    "sy": 1.05,
+    "dx": -18.0,
+    "dy": -4.0
+  },
+  "dress_isaac_brown": {
+    "sx": 1.03,
+    "sy": 1.02,
+    "dx": -15.0,
+    "dy": -20.0
+  },
+  "dress_isaac_navy": {
+    "sx": 1.04,
+    "sy": 1.05,
+    "dx": -18.0,
+    "dy": -16.0
+  },
+  "dress_oxford_beige": {
+    "sx": 1.13,
+    "sy": 1.02,
+    "dx": -18.0,
+    "dy": -16.0
+  },
+  "dress_shesmiss_gray": {
+    "sx": 1.04,
+    "sy": 1.02,
+    "dx": -3.0,
+    "dy": 0.0
+  },
+  "outer_uniclo_beige": {
+    "sx": 1.02,
+    "sy": 0.99,
     "dx": 0.0,
     "dy": 0.0
   },
-  "dress_oxford_beige": {
-    "sx": 1.07,
-    "sy": 0.97,
-    "dx": 3.0,
-    "dy": 4.0
-  },
-  "top_knit_vest_ivory": {
+  "top_inner_black": {
     "sx": 1.04,
     "sy": 0.96,
-    "dx": 6.0,
-    "dy": -8.0
+    "dx": -18.0,
+    "dy": -20.0
+  },
+  "top_ivory": {
+    "sx": 1.04,
+    "sy": 1.0,
+    "dx": -18.0,
+    "dy": -24.0
+  },
+  "top_knit_vest_ivory": {
+    "sx": 1.11,
+    "sy": 0.98,
+    "dx": -18.0,
+    "dy": -4.0
   }
 }
