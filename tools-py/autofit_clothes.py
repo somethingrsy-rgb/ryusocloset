@@ -20,17 +20,17 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi
 
-W, H = 899, 1536
+W, H = 1024, 1536
 K = 3  # 탐색은 1/3 해상도로
 DELTA = 300  # 이만큼(픽셀 수) 이상 줄어드는 옷만 보정한다
-AVATAR = 'assets-src/base/source/bodysuit_avatar_transparent.png'
+AVATAR = 'assets-src/base/body.png'  # 1024x1536, 옷과 같은 캔버스
 CLOTHES = 'assets-src/clothes'
 OUT = 'scripts/fit.json'
-SEED_REL = (0.53, 0.60)  # 속옷 몸통 안쪽 점 (아바타 폭, 높이 비율) — 가슴~허리 사이
+SEED_REL = (0.51, 0.55)  # 속옷 몸통 안쪽 점 (아바타 폭, 높이 비율) — 가슴~허리 사이
 
 
 def suit_mask():
-    """아바타(959x1639)에서 속옷 영역(외곽선 포함)을 캔버스 크기(899x1536) 불리언 마스크로."""
+    """아바타(1024x1536 body.png)에서 속옷 영역(외곽선 포함)을 같은 크기 불리언 마스크로."""
     a = np.array(Image.open(AVATAR).convert('RGBA'))
     h, w = a.shape[:2]
     rgb = a[:, :, :3].astype(int)
@@ -50,7 +50,8 @@ def suit_mask():
     suit = lab == max(ids)[1]
     suit = cv2.dilate(suit.astype(np.uint8), np.ones((9, 9), np.uint8)) > 0  # 외곽선 포함
     suit &= al
-    return cv2.resize(suit.astype(np.uint8) * 255, (W, H), interpolation=cv2.INTER_AREA) > 127
+    assert suit.shape == (H, W), suit.shape
+    return suit
 
 
 def main():
@@ -96,14 +97,15 @@ def main():
                         best, p = j, q
         return p, j0, best
 
+    labels = json.load(open('scripts/labels.json', encoding='utf-8'))
     fits = {}
     for f in sorted(os.listdir(CLOTHES)):
         if not f.lower().endswith('.png'):
             continue
         stem = f[:-4]
         cat = stem.split('_')[0]
-        if cat in ('shoes', 'acc'):
-            continue
+        if cat in ('shoes', 'acc') or labels.get(stem, {}).get('native'):
+            continue  # 신발·소품, 그리고 현재 아바타 기준으로 새로 그린 옷(native)은 보정하지 않는다
         g = np.array(Image.open(os.path.join(CLOTHES, f)).convert('RGBA'))
         if g.shape[:2] != (H, W):
             print(f'건너뜀(캔버스 {W}x{H} 아님): {f}')

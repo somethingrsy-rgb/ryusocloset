@@ -49,11 +49,12 @@ npm test           # 착용 규칙 단위 테스트
 
 ```
 assets-src/                 원본 에셋 (직접 편집하는 곳)
-  clothes/*.png             옷 PNG — 899×1536 투명 배경(아바타와 같은 캔버스)
-  base/body.png             기본 몸 — 속옷 차림, 머리·슬리퍼 포함 (899×1536)
+  clothes/*.png             옷 PNG — 1024×1536 투명 배경(아바타와 같은 캔버스)
+  base/body.png             기본 몸 — 속옷 차림, 정면 자세, 맨발 (1024×1536)
   base/body_barefoot.png    맨발 몸 (신발 착용 시 이쪽으로 교체)
   base/hair_front.png       앞머리·옆머리 (옷 위에 덮는 레이어)
-  base/source/bodysuit_avatar_transparent.png   body 를 만든 원본(투명 PNG, 959×1639)
+  base/source/standing_avatar_transparent.png   body 를 만든 원본(정면 자세, 투명 PNG, 1024×1536)
+  base/source/standing_avatar_original.png      흰 배경 원본
   room/wall.webp, floor.webp            벽지(1086×1448, 아래쪽은 투명), 바닥
   room/items/<그룹>_<이름>.webp          가구·벽 장식·조명 (그룹: furniture / rug / wall / light)
 scripts/
@@ -79,8 +80,8 @@ src/
 
 ## 합성 규칙 (중요)
 
-- 아바타와 옷 PNG의 캔버스는 **899×1536** 이고, 옷은 아바타 위 **(0, 0)** 에 캔버스 전체를 그대로 겹칩니다. 자르거나 가운데 정렬하지 마세요.
-- 옷은 `base/source/bodysuit_avatar_transparent.png`(959×1639)를 899×1536 으로 줄인 몸 위에 그려져 있어서, 아바타와 비율이 같고 따로 옮길 필요가 없습니다.
+- 아바타와 옷 PNG의 캔버스는 **1024×1536** 이고, 옷은 아바타 위 **(0, 0)** 에 캔버스 전체를 그대로 겹칩니다. 자르거나 가운데 정렬하지 마세요.
+- 옷 51벌 중 **29벌은 현재 아바타(정면 자세) 기준으로 새로 그린 옷**이라 정확히 맞고(`scripts/labels.json` 에 `native: true`), **나머지 22벌은 예전 아바타(몸을 기울이고 팔을 벌린 자세) 기준** 옷을 같은 캔버스에 옮겨 놓은 것이라 신발 위치·어깨선·소매가 어긋납니다. 이 22벌도 새로 만들어 같은 이름으로 `assets-src/clothes/` 에 넣고 `native: true` 로 표시하면 교체됩니다.
 - 예전 파일명이 바뀐 옷은 `src/lib/items.ts` 의 `ID_ALIASES` 로 이어받아서, 이전에 저장한 코디와 마지막 코디가 그대로 불러와집니다. 옷 파일명을 바꾸면 여기에도 추가하세요.
 - 레이어 순서(아래→위): 몸 < 신발 < 하의 < 상의 < 원피스 < 아우터 < **앞머리** < 액세서리 < 가방
 - 앞머리 레이어가 아우터 위에 한 번 더 올라가서 어깨 위로 내려온 머리가 옷 앞에 보입니다.
@@ -89,7 +90,7 @@ src/
 
 옷은 각각 따로 그려진 그림이라 몸에 대한 폭·높이가 조금씩 다릅니다. 특히 바지·스커트가 몸 엉덩이 폭보다 좁게 그려져 옆으로 속옷이 보였습니다.
 `tools-py/autofit_clothes.py` 가 아바타의 속옷(외곽선으로 둘러싸인 영역)을 찾고, 옷마다 **속옷이 옷의 가로 범위 밖으로 삐져나온 픽셀 수**를 줄이는 가로·세로 배율과 이동값을 계산해 `scripts/fit.json` 에 저장합니다.
-개선이 충분히 큰 옷(현재 11벌: 바지·스커트·일부 원피스·조끼)만 보정하고 나머지는 원본 그대로 둡니다. `npm run assets` 가 이 값을 읽어 옷 이미지에 적용합니다. 원본은 `assets-src/clothes` 에 그대로 있습니다.
+개선이 충분히 큰 옷만(현재 8벌) 보정하고, `native: true` 인 옷(새로 그린 29벌)·신발·소품은 건너뛰고 나머지는 원본 그대로 둡니다. `npm run assets` 가 이 값을 읽어 옷 이미지에 적용합니다. 원본은 `assets-src/clothes` 에 그대로 있습니다.
 
 ```bash
 pip install numpy scipy opencv-python-headless pillow
@@ -102,7 +103,7 @@ npm run assets                       # 보정을 반영해 public/assets 다시 
 
 ## 새 옷 추가하는 법
 
-1. 투명 배경 899×1536 PNG(아바타와 같은 캔버스)를 `assets-src/clothes/` 에 넣습니다. 파일명 규칙: `카테고리_이름_색상.png`
+1. 투명 배경 1024×1536 PNG(아바타와 같은 캔버스)를 `assets-src/clothes/` 에 넣습니다. 파일명 규칙: `카테고리_이름_색상.png`
    - 카테고리 접두사: `top_` `bottom_` `dress_` `outer_` `shoes_` `acc_`
    - `acc_` 는 이름에 `bag/backpack/briefcase/handbag/tote` 가 있으면 **가방**, 아니면 **액세서리**로 분류됩니다.
    - 마지막 단어가 색상표(black, ivory, navy, gray, brown, beige, khaki, mint, charcoal, skyblue, white)에 있으면 색 점이 표시됩니다.
@@ -110,7 +111,7 @@ npm run assets                       # 보정을 반영해 public/assets 다시 
 3. `python tools-py/autofit_clothes.py` 로 맞춤값을 갱신하고(바지·스커트·원피스일 때 특히), `npm run assets` 를 실행하면 webp 변환, 썸네일, `src/data/items.json` 이 갱신됩니다.
 4. 새 색상이 필요하면 `scripts/build-assets.ts` 의 `COLORS` 에 추가하세요.
 
-에셋이 없거나 깨진 경우를 대비해 `npm run assets` 가 크기가 899×1536 이 아닌 파일에 경고를 출력합니다.
+에셋이 없거나 깨진 경우를 대비해 `npm run assets` 가 크기가 1024×1536 이 아닌 파일에 경고를 출력합니다.
 
 ## 새 가구·소품 추가하는 법
 
@@ -126,9 +127,9 @@ npm run assets                       # 보정을 반영해 public/assets 다시 
 
 ## 아바타(기본 몸) 바꾸는 법
 
-- 같은 캔버스(899×1536)로 맞춘 `body` `body_barefoot` `hair_front` 3개 PNG를 `assets-src/base/` 에 넣고 `npm run assets`.
-  - `body`: 머리까지 포함한 전신(신발 안 신었을 때 보이는 슬리퍼 포함), `body_barefoot`: 슬리퍼를 지운 맨발 몸, `hair_front`: 옷 위에 한 번 더 덮을 앞머리
-- `tools-py/make_bodysuit_layers.py <원본> assets-src/base` 가 원본(투명 PNG)을 899×1536 으로 줄여 `body.png` 를, 슬리퍼를 지운 `body_barefoot.png` 를 만들어 줍니다. `hair_front.png` 는 이 스크립트로 만들지 않고 이전 앞머리 레이어를 같은 위치로 옮긴 파일을 그대로 씁니다. 몸 그림을 바꾸면 옷과 앞머리도 그 몸 기준으로 다시 맞춰야 합니다.
+- 같은 캔버스(1024×1536)로 맞춘 `body` `body_barefoot` `hair_front` 3개 PNG를 `assets-src/base/` 에 넣고 `npm run assets`.
+  - `body`: 머리까지 포함한 전신, `body_barefoot`: 신발을 신었을 때 쓰는 맨발 몸(지금은 body 와 같음), `hair_front`: 옷 위에 한 번 더 덮을 앞머리
+- `tools-py/make_bodysuit_layers.py <원본> assets-src/base` 가 원본(투명 PNG)에서 1024×1536 몸(`body`, `body_barefoot`)을 만들고(늘리지 않고 좌우만 잘라 맞춤), 어깨 아래로 내려오는 머리카락만 따로 뽑아 `hair_front.png` 를 만듭니다. 새 아바타는 이미 맨발이라 `body` 와 `body_barefoot` 이 같은 이미지입니다.
 - 몸을 바꾸면 옷의 위치도 같이 확인하세요. 옷은 몸에 맞춰 정렬돼 있습니다.
 - 헤어스타일 변형을 추가하려면 `FigureLayers.tsx` 의 `body`/`hairFront` 를 선택 가능하게 확장하면 됩니다.
 

@@ -1,34 +1,46 @@
-"""속옷 차림 아바타 원본(투명 PNG)에서 body.png / body_barefoot.png 를 만든다.
+"""정면으로 선 속옷 아바타(1024×1536, 맨발)에서 body / body_barefoot / hair_front 를 만든다.
 
-원본: assets-src/base/source/bodysuit_avatar_transparent.png (959×1639)
-옷 PNG 는 이 원본을 899×1536 으로 줄인 크기를 기준으로 그려져 있어서(같은 비율, 이동 없음),
-아바타도 단순히 899×1536 으로 줄이면 옷이 (0,0) 에서 그대로 맞는다.
+원본: assets-src/base/source/standing_avatar_transparent.png (흰 배경을 지운 투명 PNG)
+       assets-src/base/source/standing_avatar_original.png    (흰 배경 원본)
 
-처리:
-1) 알파가 252~253 으로 조금 비쳐 있어서 255 로 늘린다 (가장자리 안티앨리어싱은 유지).
-2) 899×1536 으로 축소 → body.png
-3) body_barefoot.png: 슬리퍼를 지운 몸 (CUT 행 아래를 투명 처리 — 신발이 그 위를 덮는다)
+1) 캔버스 1024×1536: 원본 크기 그대로 쓴다 (늘리거나 자르지 않음).
+2) body.png, body_barefoot.png: 이 아바타는 이미 맨발이라 둘이 같은 이미지다.
+3) hair_front.png: 어깨 아래로 내려오는 머리카락(진한 색 큰 덩어리)만 따로 뽑아 옷 위에 한 번 더 덮는다.
+   귀 아래(Y0~Y1)부터 서서히 나타나게 해서 얼굴 쪽 머리와 이음매가 생기지 않게 한다.
 
-앞머리 레이어(hair_front.png)는 이 스크립트로 만들지 않는다. 이전 앞머리 레이어를
-같은 몸 위치에 맞춰 899×1536 으로 옮긴 파일을 그대로 쓴다.
-
-사용: python tools-py/make_bodysuit_layers.py assets-src/base/source/bodysuit_avatar_transparent.png assets-src/base
-의존성: pip install numpy opencv-python-headless pillow
+사용: python tools-py/make_bodysuit_layers.py assets-src/base/source/standing_avatar_transparent.png assets-src/base
+의존성: pip install numpy scipy opencv-python-headless pillow
 """
 import sys
 import cv2
 import numpy as np
 from PIL import Image
+from scipy import ndimage as ndi
 
 src, out = sys.argv[1], sys.argv[2]
-W, H = 899, 1536
-CUT = 1435  # 슬리퍼가 시작되는 행 (캔버스 좌표)
+W, H = 1024, 1536
+X0 = 0  # 원본 크기 그대로 (자르지 않음)
+Y0, Y1 = 430, 500  # 앞머리 레이어가 나타나기 시작/완전해지는 높이
 
 rgba = np.array(Image.open(src).convert('RGBA'))
-rgba[:, :, 3] = np.clip(rgba[:, :, 3].astype(np.float32) * 255 / 253, 0, 255).astype(np.uint8)
-body = cv2.resize(rgba, (W, H), interpolation=cv2.INTER_AREA)
+body = rgba[:, X0:X0 + W].copy()
+assert body.shape[:2] == (H, W), body.shape
 Image.fromarray(body).save(f'{out}/body.png')
-bare = body.copy()
-bare[CUT:, :, 3] = 0
-Image.fromarray(bare).save(f'{out}/body_barefoot.png')
-print('ok', body.shape)
+Image.fromarray(body).save(f'{out}/body_barefoot.png')
+
+rgb = body[:, :, :3].astype(np.float32)
+alpha = body[:, :, 3]
+lum = rgb @ np.array([0.299, 0.587, 0.114])
+dark = (lum < 100) & ((rgb[:, :, 0] - rgb[:, :, 2]) < 40) & (alpha > 128)
+dark = cv2.morphologyEx(dark.astype(np.uint8), cv2.MORPH_OPEN, np.ones((7, 7), np.uint8)).astype(bool)
+dark[700:, :] = False
+lab, n = ndi.label(dark)
+sizes = ndi.sum(dark, lab, range(1, n + 1))
+hair = np.isin(lab, [i + 1 for i, s in enumerate(sizes) if s > 6000]).astype(np.uint8)
+hair = cv2.morphologyEx(hair, cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8))
+hair = cv2.dilate(hair, np.ones((3, 3), np.uint8)).astype(np.float32) * (alpha > 8)
+ramp = np.clip((np.arange(H) - Y0) / (Y1 - Y0), 0, 1)[:, None]
+hm = cv2.GaussianBlur(hair, (0, 0), 1.0) * ramp
+front = np.dstack([body[:, :, :3], (alpha * hm).astype(np.uint8)])
+Image.fromarray(front).save(f'{out}/hair_front.png')
+print('ok', body.shape, 'hair px', int((hm > 0.5).sum()))

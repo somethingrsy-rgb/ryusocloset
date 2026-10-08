@@ -30,7 +30,7 @@ function makeCanvas(w: number, h: number) {
   return c
 }
 
-/** 아바타 + 옷을 화면과 같은 레이어 순서로 899x1536 캔버스에 합성 */
+/** 아바타 + 옷을 화면과 같은 레이어 순서로 1024x1536 캔버스에 합성 */
 export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}): Promise<HTMLCanvasElement> {
   const items = wornItems(outfit, ITEM_BY_ID)
   const barefoot = !!outfit.shoes

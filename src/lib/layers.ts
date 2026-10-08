@@ -17,5 +17,5 @@ export const LAYER_Z: Record<Category, number> = {
 export const HAIR_FRONT_Z = 60
 
 /** 아바타·옷 PNG 공통 캔버스 크기 (옷은 이 캔버스 전체를 (0,0)에 겹쳐 올린다) */
-export const CANVAS_W = 899
+export const CANVAS_W = 1024
 export const CANVAS_H = 1536
