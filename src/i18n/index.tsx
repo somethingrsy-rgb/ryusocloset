@@ -52,6 +52,12 @@ const ko = {
   goCloset: '코디 바꾸기',
   roomFull: '물건이 너무 많아요 (최대 {n}개)',
   roomResetDone: '방을 처음 모습으로 되돌렸어요',
+  dragHint: '옷을 길게 눌러 아바타에 끌어다 놓아요',
+  tweakHint: '옷을 눌러 끌어 옮기고, 핀치로 크기 조절',
+  tweakAria: '입은 옷 조절 화면. 방향키로 이동, +/-로 크기, 0으로 원래대로, Delete로 벗기',
+  tweakReset: '원래대로',
+  takeOff: '벗기',
+  dropHere: '여기에 놓아요',
 } as const
 
 type Dict = Record<keyof typeof ko, string>
@@ -105,6 +111,12 @@ const en: Dict = {
   goCloset: 'Change outfit',
   roomFull: 'Too many items (max {n})',
   roomResetDone: 'Room has been reset',
+  dragHint: 'Hold a piece and drag it onto the avatar',
+  tweakHint: 'Tap a piece, drag to move, pinch to resize',
+  tweakAria: 'Adjust worn clothes. Arrow keys move, +/- resize, 0 resets, Delete takes off',
+  tweakReset: 'Reset',
+  takeOff: 'Take off',
+  dropHere: 'Drop here',
 }
 
 export const MESSAGES: Record<Lang, Dict> = { ko, en }

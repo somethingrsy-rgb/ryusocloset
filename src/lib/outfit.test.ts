@@ -10,6 +10,7 @@ const mk = (id: string, category: Category): Item => ({
   color: null,
   colorName: null,
   colorHex: null,
+  box: { x: 0, y: 0, w: 10, h: 10 },
   image: `${id}.webp`,
   thumb: `${id}.webp`,
   zIndex: LAYER_Z[category],

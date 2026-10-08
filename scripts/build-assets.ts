@@ -11,7 +11,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
-import { makeThumb } from './lib/image.ts'
+import { alphaBBox, makeThumb } from './lib/image.ts'
 import { buildRoom } from './build-room.ts'
 import { CANVAS_H, CANVAS_W, CATEGORIES, LAYER_Z, type Category } from '../src/lib/layers.ts'
 import type { Item } from '../src/lib/types.ts'
@@ -97,6 +97,7 @@ async function main() {
     await makeThumb(src, path.join(OUT, 'thumbs', `${stem}.webp`)).catch((e) => {
       throw new Error(`${stem}: ${e.message}`)
     })
+    const box = await alphaBBox(src)
     const label = labels[stem] ?? (console.warn(`ℹ labels.json 에 ${stem} 없음 → 파일명으로 이름 생성`), {})
     const fb = fallbackName(stem)
     items.push({
@@ -106,6 +107,7 @@ async function main() {
       color: colorKey ?? null,
       colorName: colorKey ? { ko: COLORS[colorKey].ko, en: COLORS[colorKey].en } : null,
       colorHex: colorKey ? COLORS[colorKey].hex : null,
+      box: { x: box.left, y: box.top, w: box.width, h: box.height },
       image: `assets/clothes/${category}/${stem}.webp`,
       thumb: `assets/thumbs/${stem}.webp`,
       zIndex: LAYER_Z[category],

@@ -2,7 +2,8 @@ import { drawBackground, type Background } from './backgrounds'
 import { BASE_LAYERS, ITEM_BY_ID } from './items'
 import { CANVAS_H, CANVAS_W, HAIR_FRONT_Z } from './layers'
 import { wornItems } from './outfit'
-import type { Outfit } from './types'
+import { getTweak, pivotOf } from './tweaks'
+import type { Outfit, Tweaks } from './types'
 
 const imgCache = new Map<string, Promise<HTMLImageElement>>()
 export function loadImage(src: string): Promise<HTMLImageElement> {
@@ -30,7 +31,7 @@ function makeCanvas(w: number, h: number) {
 }
 
 /** 아바타 + 옷을 화면과 같은 레이어 순서로 899x1536 캔버스에 합성 */
-export async function renderFigure(outfit: Outfit): Promise<HTMLCanvasElement> {
+export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}): Promise<HTMLCanvasElement> {
   const items = wornItems(outfit, ITEM_BY_ID)
   const barefoot = !!outfit.shoes
   const [body, hair, ...imgs] = await Promise.all([
@@ -48,7 +49,18 @@ export async function renderFigure(outfit: Outfit): Promise<HTMLCanvasElement> {
       ctx.drawImage(hair, 0, 0, CANVAS_W, CANVAS_H)
       hairDrawn = true
     }
-    ctx.drawImage(imgs[idx], 0, 0, CANVAS_W, CANVAS_H)
+    const t = getTweak(tweaks, it.category)
+    if (t.dx === 0 && t.dy === 0 && t.scale === 1) {
+      ctx.drawImage(imgs[idx], 0, 0, CANVAS_W, CANVAS_H)
+    } else {
+      // 옷 영역의 중심을 기준으로 확대하고 이동 (화면의 CSS 변환과 같은 모양)
+      const p = pivotOf(it)
+      ctx.save()
+      ctx.translate(p.x + t.dx, p.y + t.dy)
+      ctx.scale(t.scale, t.scale)
+      ctx.drawImage(imgs[idx], -p.x, -p.y, CANVAS_W, CANVAS_H)
+      ctx.restore()
+    }
   })
   if (!hairDrawn) ctx.drawImage(hair, 0, 0, CANVAS_W, CANVAS_H)
   return canvas
@@ -88,8 +100,12 @@ function drawSticker(out: CanvasRenderingContext2D, figure: HTMLCanvasElement, o
   out.drawImage(sil, ox, oy)
 }
 
-export async function renderOutfitCanvas(outfit: Outfit, opts: ExportOptions): Promise<HTMLCanvasElement> {
-  const figure = await renderFigure(outfit)
+export async function renderOutfitCanvas(
+  outfit: Outfit,
+  opts: ExportOptions,
+  tweaks: Tweaks = {},
+): Promise<HTMLCanvasElement> {
+  const figure = await renderFigure(outfit, tweaks)
   const pad = opts.sticker ? STICKER_R + 28 : 0
   const out = makeCanvas(CANVAS_W + pad * 2, CANVAS_H + pad * 2)
   const ctx = out.getContext('2d')!
@@ -105,8 +121,8 @@ export const canvasToBlob = (c: HTMLCanvasElement) =>
   )
 
 /** "내 코디" 목록용 작은 미리보기(JPEG data URL) */
-export async function renderThumb(outfit: Outfit, background: Background): Promise<string> {
-  const full = await renderOutfitCanvas(outfit, { sticker: false, background })
+export async function renderThumb(outfit: Outfit, background: Background, tweaks: Tweaks = {}): Promise<string> {
+  const full = await renderOutfitCanvas(outfit, { sticker: false, background }, tweaks)
   const w = 170
   const h = Math.round((w * full.height) / full.width)
   const small = makeCanvas(w, h)

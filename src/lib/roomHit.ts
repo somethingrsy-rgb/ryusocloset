@@ -23,7 +23,7 @@ export function maskFromSource(src: CanvasImageSource, srcW: number, srcH: numbe
   return { w: mw, h: mh, data }
 }
 
-function opaqueAt(m: Mask, u: number, v: number): boolean {
+export function opaqueAt(m: Mask, u: number, v: number): boolean {
   const cx = Math.floor(u * m.w)
   const cy = Math.floor(v * m.h)
   // 손가락으로 누르기 쉽게 이웃 1칸까지 본다
@@ -59,3 +59,6 @@ export function hitTest(
   for (const d of list) if (d.group === 'light' && hits(d, px, py, getMask)) return d.sel
   return null
 }
+
+/** 알파 마스크 캐시 (방 아이템·옷·아바타 공용). 키는 아이템 id 또는 'avatar' */
+export const maskCache = new Map<string, Mask>()

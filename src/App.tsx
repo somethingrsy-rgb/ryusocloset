@@ -21,14 +21,17 @@ import {
   MAX_SAVED,
   loadCurrent,
   loadRoom,
+  loadTweaks,
   loadSaved,
   loadSettings,
   persistCurrent,
   persistRoom,
   persistSaved,
   persistSettings,
+  persistTweaks,
 } from './lib/storage'
-import type { Item, Outfit, SavedOutfit } from './lib/types'
+import { pruneTweaks, sanitizeTweaks } from './lib/tweaks'
+import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
 
 type ModalKind = null | 'bg' | 'saved' | 'export' | 'roomExport'
 type Mode = 'closet' | 'room'
@@ -45,6 +48,9 @@ export default function App() {
   )
   const [mode, setMode] = useState<Mode>('closet')
   const [outfit, setOutfit] = useState<Outfit>(loadCurrent)
+  const [tweaks, setTweaks] = useState<Tweaks>(() => loadTweaks(loadCurrent()))
+  const [selCat, setSelCat] = useState<Category | null>(null)
+  const [dragOver, setDragOver] = useState(false)
   const [category, setCategory] = useState<Category>('top')
   const [saved, setSaved] = useState<SavedOutfit[]>(loadSaved)
   const [room, setRoom] = useState<RoomState>(loadRoom)
@@ -52,6 +58,7 @@ export default function App() {
   const [modal, setModal] = useState<ModalKind>(null)
   const [toast, setToast] = useState<string | null>(null)
   const figureRef = useRef<HTMLDivElement>(null)
+  const dropRef = useRef<HTMLDivElement>(null)
   const toastTimer = useRef<number | undefined>(undefined)
 
   const i18n = useMemo(() => ({ lang, t: makeT(lang) }), [lang])
@@ -64,6 +71,7 @@ export default function App() {
   }, [lang])
   useEffect(() => void persistSettings({ lang, sound, bgId }), [lang, sound, bgId])
   useEffect(() => void persistCurrent(outfit), [outfit])
+  useEffect(() => void persistTweaks(tweaks), [tweaks])
   // 드래그 중에는 상태가 자주 바뀌므로 잠깐 모았다가 저장
   useEffect(() => {
     const id = window.setTimeout(() => persistRoom(room), 300)
@@ -105,14 +113,44 @@ export default function App() {
   }, [sound])
 
   /* ── 코디 ── */
+  /** 입은 옷을 바꾼다: 바뀐 카테고리의 위치·크기 조절은 버리고, 새로 입은 옷을 선택한다 */
+  const applyOutfit = (next: Outfit, picked?: Item) => {
+    setTweaks(pruneTweaks(outfit, next, tweaks))
+    setOutfit(next)
+    setSelCat((sel) => {
+      if (picked && next[picked.category] === picked.id) return picked.category
+      return sel && next[sel] ? sel : null
+    })
+  }
+
   const onToggle = (item: Item) => {
     const next = toggleItem(outfit, item)
-    setOutfit(next)
+    applyOutfit(next, item)
     if (next[item.category] === item.id) snap()
+  }
+
+  /** 옷을 끌어다 아바타에 놓았을 때: 이미 입고 있으면 선택만 하고, 아니면 입힌다 */
+  const wearItem = (item: Item) => {
+    if (outfit[item.category] === item.id) return setSelCat(item.category)
+    onToggle(item)
+  }
+
+  const takeOff = (c: Category) => {
+    const next = { ...outfit }
+    delete next[c]
+    applyOutfit(next)
+  }
+
+  const clearAll = () => {
+    setOutfit({})
+    setTweaks({})
+    setSelCat(null)
   }
 
   const onRandom = () => {
     setOutfit(randomOutfit(ITEMS_BY_CATEGORY))
+    setTweaks({})
+    setSelCat(null)
     snap()
   }
 
@@ -122,8 +160,8 @@ export default function App() {
     if (!hasClothes) return showToast(t('nothingToSave'))
     if (saved.length >= MAX_SAVED) return showToast(t('savedFull', { n: MAX_SAVED }))
     try {
-      const thumb = await renderThumb(outfit, bg)
-      const entry: SavedOutfit = { id: newUid(), createdAt: Date.now(), outfit, bgId, thumb }
+      const thumb = await renderThumb(outfit, bg, tweaks)
+      const entry: SavedOutfit = { id: newUid(), createdAt: Date.now(), outfit, tweaks, bgId, thumb }
       const next = [entry, ...saved]
       if (!persistSaved(next)) return showToast(t('saveFailed'))
       setSaved(next)
@@ -141,6 +179,8 @@ export default function App() {
 
   const loadOutfit = (s: SavedOutfit) => {
     setOutfit(s.outfit)
+    setTweaks(sanitizeTweaks(s.tweaks, s.outfit))
+    setSelCat(null)
     if (BACKGROUNDS.some((b) => b.id === s.bgId)) setBgId(s.bgId)
     snap()
     showToast(t('loaded'))
@@ -163,8 +203,8 @@ export default function App() {
     showToast(t('roomResetDone'))
   }
 
-  const renderOutfit = useCallback((o: RenderOptions) => renderOutfitCanvas(outfit, o), [outfit])
-  const renderRoom = useCallback(() => renderRoomCanvas(room, outfit), [room, outfit])
+  const renderOutfit = useCallback((o: RenderOptions) => renderOutfitCanvas(outfit, o, tweaks), [outfit, tweaks])
+  const renderRoom = useCallback(() => renderRoomCanvas(room, outfit, tweaks), [room, outfit, tweaks])
 
   const fab = (label: string, icon: string, onClick: () => void, badge?: number) => (
     <button
@@ -189,6 +229,7 @@ export default function App() {
       onClick={() => {
         setMode(m)
         setSelection(null)
+        setSelCat(null)
       }}
       className={`flex min-h-11 items-center gap-1 rounded-full px-3 text-sm font-bold transition ${
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
@@ -230,10 +271,21 @@ export default function App() {
 
           <div className="min-h-0 flex-1">
             {mode === 'closet' ? (
-              <Stage outfit={outfit} bg={bg} figureRef={figureRef}>
+              <Stage
+                outfit={outfit}
+                tweaks={tweaks}
+                bg={bg}
+                selected={selCat}
+                onSelect={setSelCat}
+                onTweaks={setTweaks}
+                onTakeOff={takeOff}
+                dropRef={dropRef}
+                dropActive={dragOver}
+                figureRef={figureRef}
+              >
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
                   {fab(t('random'), '🎲', onRandom)}
-                  {fab(t('reset'), '🧺', () => setOutfit({}))}
+                  {fab(t('reset'), '🧺', clearAll)}
                   {fab(t('background'), '🖼️', () => setModal('bg'))}
                   {fab(t('saveOutfit'), '💾', saveCurrent)}
                   {fab(t('myOutfits'), '📒', () => setModal('saved'), saved.length)}
@@ -241,7 +293,7 @@ export default function App() {
                 </div>
               </Stage>
             ) : (
-              <RoomView outfit={outfit} room={room} selection={selection} onSelect={setSelection} onChange={setRoom}>
+              <RoomView outfit={outfit} tweaks={tweaks} room={room} selection={selection} onSelect={setSelection} onChange={setRoom}>
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
                   {fab(t('goCloset'), '👗', () => setMode('closet'))}
                   {fab(t('roomReset'), '🧹', resetRoom)}
@@ -254,7 +306,15 @@ export default function App() {
 
         <aside className="flex h-[40dvh] shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]">
           {mode === 'closet' ? (
-            <Closet category={category} onCategory={setCategory} outfit={outfit} onToggle={onToggle} />
+            <Closet
+              category={category}
+              onCategory={setCategory}
+              outfit={outfit}
+              onToggle={onToggle}
+              onDragWear={wearItem}
+              dropRef={dropRef}
+              onDragOver={setDragOver}
+            />
           ) : (
             <RoomTray room={room} onAdd={addToRoom} />
           )}

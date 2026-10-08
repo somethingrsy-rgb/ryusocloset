@@ -18,14 +18,15 @@ import {
   toggleFlip,
 } from '../lib/room'
 import { ROOM_ASSETS } from '../lib/exportRoom'
-import { hitTest, maskFromSource, type Mask } from '../lib/roomHit'
+import { hitTest, maskCache, maskFromSource } from '../lib/roomHit'
 import { CANVAS_H, CANVAS_W } from '../lib/layers'
 import { FLOOR_H, ROOM_H, ROOM_W, type RoomState, type Selection } from '../lib/roomTypes'
-import type { Outfit } from '../lib/types'
+import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
 
 interface Props {
   outfit: Outfit
+  tweaks: Tweaks
   room: RoomState
   selection: Selection
   onSelect: (s: Selection) => void
@@ -36,10 +37,7 @@ interface Props {
 /** 논리 좌표(1086 기준) → 방 폭(cqw) 퍼센트 */
 const cq = (v: number) => `${(v / ROOM_W) * 100}cqw`
 
-/** 아이템 알파 마스크 캐시 (투명한 곳을 눌렀을 때 뒤의 물건을 고르기 위함) */
-const maskCache = new Map<string, Mask>()
-
-export function RoomView({ outfit, room, selection, onSelect, onChange, children }: Props) {
+export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, children }: Props) {
   const { lang, t } = useI18n()
   const roomRef = useRef<HTMLDivElement>(null)
   const pointers = useRef(new Map<number, { x: number; y: number }>())
@@ -62,7 +60,7 @@ export function RoomView({ outfit, room, selection, onSelect, onChange, children
   }, [])
   useEffect(() => {
     let alive = true
-    renderFigure(outfit)
+    renderFigure(outfit, tweaks)
       .then((c) => {
         if (!alive) return
         maskCache.set('avatar', maskFromSource(c, c.width, c.height, 64))
@@ -72,7 +70,7 @@ export function RoomView({ outfit, room, selection, onSelect, onChange, children
     return () => {
       alive = false
     }
-  }, [outfit])
+  }, [outfit, tweaks])
 
   const list = drawables(room)
   const selected = selection ? list.find((d) => sameSelection(d.sel, selection)) : undefined
@@ -226,7 +224,7 @@ export function RoomView({ outfit, room, selection, onSelect, onChange, children
                       zIndex: z,
                     }}
                   >
-                    <FigureLayers outfit={outfit} animate={false} />
+                    <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
                   </div>
                 ) : (
                   <img
