@@ -17,10 +17,10 @@ from PIL import Image
 
 SRC = 'assets-src/assemble/shoes'
 OUT = 'scripts/assemble-shoes-fit.json'
-# 정면 아바타(1024×1536)의 두 발: 가운데 x, 폭(114~115), 발끝 y (측정값)
-FOOT_CX = (420.5, 601.0)
-FOOT_W = 114.5
-FEET_Y = 1512
+# 정면 아바타(1024×1536)의 두 발: 가운데 x, 폭(110), 발끝 y (측정값)
+FOOT_CX = (423.3, 598.1)
+FOOT_W = 110.0
+FEET_Y = 1509
 
 fit = {}
 for f in sorted(os.listdir(SRC)):

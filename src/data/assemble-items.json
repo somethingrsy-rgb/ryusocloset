@@ -178,10 +178,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 365,
-      "y": 787,
-      "w": 294,
-      "h": 735
+      "x": 367,
+      "y": 795,
+      "w": 290,
+      "h": 725
     },
     "image": "assets/assemble/bottom_belt_skirt_black.webp",
     "thumb": "assets/assemble/thumbs/bottom_belt_skirt_black.webp"
@@ -195,10 +195,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 362,
-      "y": 777,
-      "w": 297,
-      "h": 744
+      "x": 365,
+      "y": 786,
+      "w": 294,
+      "h": 735
     },
     "image": "assets/assemble/bottom_belt_skirt_charcoal.webp",
     "thumb": "assets/assemble/thumbs/bottom_belt_skirt_charcoal.webp"
@@ -212,10 +212,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 319,
-      "y": 782,
-      "w": 388,
-      "h": 739
+      "x": 322,
+      "y": 791,
+      "w": 383,
+      "h": 731
     },
     "image": "assets/assemble/bottom_button_skirt_brown.webp",
     "thumb": "assets/assemble/thumbs/bottom_button_skirt_brown.webp"
@@ -229,10 +229,10 @@
     },
     "colorHex": "#3c5a8c",
     "box": {
-      "x": 332,
-      "y": 811,
-      "w": 356,
-      "h": 710
+      "x": 335,
+      "y": 819,
+      "w": 351,
+      "h": 701
     },
     "image": "assets/assemble/bottom_denim_skirt.webp",
     "thumb": "assets/assemble/thumbs/bottom_denim_skirt.webp"
@@ -246,10 +246,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 316,
-      "y": 775,
-      "w": 392,
-      "h": 746
+      "x": 319,
+      "y": 784,
+      "w": 387,
+      "h": 737
     },
     "image": "assets/assemble/bottom_flare_skirt_gray.webp",
     "thumb": "assets/assemble/thumbs/bottom_flare_skirt_gray.webp"
@@ -263,10 +263,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 366,
-      "y": 803,
-      "w": 288,
-      "h": 718
+      "x": 368,
+      "y": 812,
+      "w": 285,
+      "h": 709
     },
     "image": "assets/assemble/bottom_h_skirt_brown.webp",
     "thumb": "assets/assemble/thumbs/bottom_h_skirt_brown.webp"
@@ -280,10 +280,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 366,
-      "y": 797,
-      "w": 291,
-      "h": 723
+      "x": 368,
+      "y": 806,
+      "w": 288,
+      "h": 715
     },
     "image": "assets/assemble/bottom_pants_black.webp",
     "thumb": "assets/assemble/thumbs/bottom_pants_black.webp"
@@ -297,10 +297,10 @@
     },
     "colorHex": "#55565c",
     "box": {
-      "x": 358,
-      "y": 775,
-      "w": 307,
-      "h": 745
+      "x": 361,
+      "y": 784,
+      "w": 304,
+      "h": 736
     },
     "image": "assets/assemble/bottom_pants_charcoal.webp",
     "thumb": "assets/assemble/thumbs/bottom_pants_charcoal.webp"
@@ -314,10 +314,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 348,
-      "y": 809,
-      "w": 327,
-      "h": 712
+      "x": 352,
+      "y": 818,
+      "w": 323,
+      "h": 703
     },
     "image": "assets/assemble/bottom_white_denim_skirt.webp",
     "thumb": "assets/assemble/thumbs/bottom_white_denim_skirt.webp"
@@ -331,10 +331,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 363,
-      "y": 1380,
-      "w": 295,
-      "h": 133
+      "x": 369,
+      "y": 1381,
+      "w": 284,
+      "h": 129
     },
     "image": "assets/assemble/shoes_flats_black.webp",
     "thumb": "assets/assemble/thumbs/shoes_flats_black.webp"
@@ -348,10 +348,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 364,
-      "y": 1354,
-      "w": 293,
-      "h": 160
+      "x": 370,
+      "y": 1356,
+      "w": 282,
+      "h": 154
     },
     "image": "assets/assemble/shoes_maryjane_black.webp",
     "thumb": "assets/assemble/thumbs/shoes_maryjane_black.webp"
@@ -365,10 +365,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 364,
-      "y": 1374,
-      "w": 293,
-      "h": 139
+      "x": 370,
+      "y": 1376,
+      "w": 282,
+      "h": 134
     },
     "image": "assets/assemble/shoes_pumps_black.webp",
     "thumb": "assets/assemble/thumbs/shoes_pumps_black.webp"
@@ -382,10 +382,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 364,
-      "y": 1356,
-      "w": 294,
-      "h": 157
+      "x": 370,
+      "y": 1359,
+      "w": 282,
+      "h": 151
     },
     "image": "assets/assemble/shoes_sneakers_navy.webp",
     "thumb": "assets/assemble/thumbs/shoes_sneakers_navy.webp"
@@ -399,10 +399,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 363,
-      "y": 1356,
-      "w": 294,
-      "h": 157
+      "x": 369,
+      "y": 1359,
+      "w": 283,
+      "h": 151
     },
     "image": "assets/assemble/shoes_sneakers_white.webp",
     "thumb": "assets/assemble/thumbs/shoes_sneakers_white.webp"
