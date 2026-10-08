@@ -1,12 +1,96 @@
 {
-  "top_sailor_cardigan_ivory": { "ko": "세일러 카디건", "en": "Sailor Cardigan", "color": "ivory" },
-  "top_contrast_cardigan_black": { "ko": "배색 카디건", "en": "Contrast Cardigan", "color": "black" },
-  "top_cardigan_mint": { "ko": "민트 카디건", "en": "Mint Cardigan", "color": "mint" },
-  "top_check_cardigan_gray": { "ko": "체크 카디건", "en": "Check Cardigan", "color": "gray" },
-  "top_embroidered_cardigan_ivory": { "ko": "자수 카디건", "en": "Embroidered Cardigan", "color": "ivory" },
-  "top_inner_tee_black": { "ko": "이너 티", "en": "Inner Tee", "color": "black" },
-  "top_collar_knit_ivory": { "ko": "배색 카라 니트", "en": "Collar Knit", "color": "ivory" },
-  "top_pattern_vest_ivory": { "ko": "패턴 조끼", "en": "Pattern Vest", "color": "ivory" },
-  "top_inner_tee_ivory": { "ko": "이너 티", "en": "Inner Tee", "color": "ivory" },
-  "head_default": { "ko": "기본 머리", "en": "Default Hair" }
+  "top_sailor_cardigan_ivory": {
+    "ko": "세일러 카디건",
+    "en": "Sailor Cardigan",
+    "color": "ivory"
+  },
+  "top_contrast_cardigan_black": {
+    "ko": "배색 카디건",
+    "en": "Contrast Cardigan",
+    "color": "black"
+  },
+  "top_cardigan_mint": {
+    "ko": "민트 카디건",
+    "en": "Mint Cardigan",
+    "color": "mint"
+  },
+  "top_check_cardigan_gray": {
+    "ko": "체크 카디건",
+    "en": "Check Cardigan",
+    "color": "gray"
+  },
+  "top_embroidered_cardigan_ivory": {
+    "ko": "자수 카디건",
+    "en": "Embroidered Cardigan",
+    "color": "ivory"
+  },
+  "top_inner_tee_black": {
+    "ko": "이너 티",
+    "en": "Inner Tee",
+    "color": "black"
+  },
+  "top_collar_knit_ivory": {
+    "ko": "배색 카라 니트",
+    "en": "Collar Knit",
+    "color": "ivory"
+  },
+  "top_pattern_vest_ivory": {
+    "ko": "패턴 조끼",
+    "en": "Pattern Vest",
+    "color": "ivory"
+  },
+  "top_inner_tee_ivory": {
+    "ko": "이너 티",
+    "en": "Inner Tee",
+    "color": "ivory"
+  },
+  "head_default": {
+    "ko": "기본 머리",
+    "en": "Default Hair"
+  },
+  "bottom_belt_skirt_charcoal": {
+    "ko": "벨트 스커트",
+    "en": "Belt Skirt",
+    "color": "gray"
+  },
+  "bottom_flare_skirt_gray": {
+    "ko": "플레어 스커트",
+    "en": "Flare Skirt",
+    "color": "gray"
+  },
+  "bottom_belt_skirt_black": {
+    "ko": "벨트 스커트",
+    "en": "Belt Skirt",
+    "color": "black"
+  },
+  "bottom_denim_skirt": {
+    "ko": "데님 스커트",
+    "en": "Denim Skirt",
+    "color": "denim"
+  },
+  "bottom_button_skirt_brown": {
+    "ko": "버튼 스커트",
+    "en": "Button Skirt",
+    "color": "brown"
+  },
+  "bottom_white_denim_skirt": {
+    "ko": "화이트 데님 스커트",
+    "en": "White Denim Skirt",
+    "color": "white"
+  },
+  "bottom_pants_black": {
+    "ko": "와이드 팬츠",
+    "en": "Wide Pants",
+    "color": "black"
+  },
+  "bottom_h_skirt_brown": {
+    "ko": "H라인 스커트",
+    "en": "Pencil Skirt",
+    "color": "brown"
+  },
+  "bottom_pants_charcoal": {
+    "ko": "와이드 팬츠",
+    "en": "Wide Pants",
+    "color": "charcoal"
+  }
 }

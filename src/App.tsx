@@ -10,12 +10,12 @@ import { SavedSheet } from './components/SavedSheet'
 import { Stage } from './components/Stage'
 import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
-import { ASSEMBLE_PARTS, randomAssembly, togglePart, type Assembly } from './lib/assemble'
+import { ASSEMBLE_PARTS, randomAssembly, takeOffPart, togglePart, type Assembly, type AssembleTweaks, type Slot } from './lib/assemble'
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
 import { finishFigure, loadImage, renderAssembly, renderOutfitCanvas, renderThumb } from './lib/exportPng'
 import { ROOM_ASSETS, renderRoomCanvas } from './lib/exportRoom'
 import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, assetUrl } from './lib/items'
-import type { Category } from './lib/layers'
+import { CATEGORIES, type Category } from './lib/layers'
 import { randomOutfit, toggleItem } from './lib/outfit'
 import { ROOM_ITEMS, addItem, defaultRoom } from './lib/room'
 import { MAX_PLACED, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
@@ -35,7 +35,7 @@ import {
   persistSettings,
   persistTweaks,
 } from './lib/storage'
-import { pruneTweaks, sanitizeTweaks } from './lib/tweaks'
+import { getTweak, pruneTweaks, sanitizeTweaks } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
 
 type ModalKind = null | 'bg' | 'saved' | 'export' | 'roomExport' | 'assembleExport'
@@ -60,6 +60,7 @@ export default function App() {
   const [saved, setSaved] = useState<SavedOutfit[]>(loadSaved)
   const [room, setRoom] = useState<RoomState>(loadRoom)
   const [assembly, setAssembly] = useState<Assembly>(loadAssembly)
+  const [selSlot, setSelSlot] = useState<Slot | null>(null)
   const [selection, setSelection] = useState<Selection>(null)
   const [modal, setModal] = useState<ModalKind>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -123,7 +124,7 @@ export default function App() {
   /* ── 코디 ── */
   /** 입은 옷을 바꾼다: 바뀐 카테고리의 위치·크기 조절은 버리고, 새로 입은 옷을 선택한다 */
   const applyOutfit = (next: Outfit, picked?: Item) => {
-    setTweaks(pruneTweaks(outfit, next, tweaks))
+    setTweaks(pruneTweaks(CATEGORIES, outfit, next, tweaks))
     setOutfit(next)
     setSelCat((sel) => {
       if (picked && next[picked.category] === picked.id) return picked.category
@@ -187,7 +188,7 @@ export default function App() {
 
   const loadOutfit = (s: SavedOutfit) => {
     setOutfit(s.outfit)
-    setTweaks(sanitizeTweaks(s.tweaks, s.outfit))
+    setTweaks(sanitizeTweaks(s.tweaks, CATEGORIES, s.outfit))
     setSelCat(null)
     if (BACKGROUNDS.some((b) => b.id === s.bgId)) setBgId(s.bgId)
     snap()
@@ -212,12 +213,37 @@ export default function App() {
   }
 
   const renderAssembleExport = useCallback(
-    async (o: RenderOptions) => finishFigure(await renderAssembly(assemblyLayers(assembly)), o),
+    async (o: RenderOptions) =>
+      finishFigure(
+        await renderAssembly(
+          assemblyLayers(assembly).map((l) => ({ src: l.src, box: l.box, tweak: getTweak(assembly.tweaks ?? {}, l.key) })),
+        ),
+        o,
+      ),
     [assembly],
   )
-  const pickPart = (slot: 'head' | 'top' | 'bottom', id: string) => {
-    setAssembly((a) => togglePart(a, slot, id))
-    if (sound) playSnap()
+  /** 탭: 입고/벗기. 새로 입으면 그 부품을 선택해서 바로 옮기거나 키울 수 있게 한다 */
+  const pickPart = (slot: Slot, id: string) => {
+    const next = togglePart(assembly, slot, id)
+    setAssembly(next)
+    setSelSlot(next[slot] === id ? slot : selSlot === slot ? null : selSlot)
+    if (sound && next[slot] === id) playSnap()
+  }
+  /** 끌어다 놓기: 이미 입고 있으면 선택만 한다 */
+  const wearPart = (slot: Slot, id: string) => {
+    if (assembly[slot] === id) return setSelSlot(slot)
+    pickPart(slot, id)
+  }
+  const setAssembleTweaks = (tweaks: AssembleTweaks) =>
+    setAssembly((a) => {
+      const next = { ...a }
+      if (Object.keys(tweaks).length) next.tweaks = tweaks
+      else delete next.tweaks
+      return next
+    })
+  const takeOffSlot = (slot: Slot) => {
+    setAssembly((a) => takeOffPart(a, slot))
+    setSelSlot(null)
   }
 
   const renderOutfit = useCallback((o: RenderOptions) => renderOutfitCanvas(outfit, o, tweaks), [outfit, tweaks])
@@ -247,6 +273,7 @@ export default function App() {
         setMode(m)
         setSelection(null)
         setSelCat(null)
+        setSelSlot(null)
       }}
       className={`flex min-h-11 items-center gap-1 rounded-full px-2.5 text-[13px] font-bold whitespace-nowrap transition ${
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
@@ -289,13 +316,27 @@ export default function App() {
 
           <div className="min-h-0 flex-1">
             {mode === 'assemble' ? (
-              <AssembleStage assembly={assembly} bg={bg} figureRef={figureRef}>
+              <AssembleStage
+                assembly={assembly}
+                bg={bg}
+                selected={selSlot}
+                onSelect={setSelSlot}
+                onTweaks={setAssembleTweaks}
+                onTakeOff={takeOffSlot}
+                dropRef={dropRef}
+                dropActive={dragOver}
+                figureRef={figureRef}
+              >
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
                   {fab(t('random'), '🎲', () => {
                     setAssembly(randomAssembly())
+                    setSelSlot(null)
                     if (sound) playSnap()
                   })}
-                  {fab(t('reset'), '🧺', () => setAssembly((a) => ({ head: a.head })))}
+                  {fab(t('reset'), '🧺', () => {
+                    setAssembly((a) => ({ head: a.head }))
+                    setSelSlot(null)
+                  })}
                   {fab(t('background'), '🖼️', () => setModal('bg'))}
                   {fab(t('exportImage'), '📷', () => setModal('assembleExport'))}
                 </div>
@@ -336,7 +377,7 @@ export default function App() {
 
         <aside className="flex h-[40dvh] shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]">
           {mode === 'assemble' ? (
-            <AssembleTray assembly={assembly} onPick={pickPart} />
+            <AssembleTray assembly={assembly} onPick={pickPart} onDragWear={wearPart} dropRef={dropRef} onDragOver={setDragOver} />
           ) : mode === 'closet' ? (
             <Closet
               category={category}

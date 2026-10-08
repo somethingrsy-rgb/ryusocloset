@@ -1,60 +1,44 @@
 import type { ReactNode, RefObject } from 'react'
 import { useI18n } from '../i18n'
-import { bgToCss, type Background } from '../lib/backgrounds'
-import { BOTTOMS, HEADS, LOWER_IMAGE, TOPS, type Assembly } from '../lib/assemble'
+import type { Background } from '../lib/backgrounds'
+import { PART_BY_ID, SLOTS, SLOT_Z, type Assembly, type AssembleTweaks, type Slot } from '../lib/assemble'
 import { assetUrl } from '../lib/items'
-import { CANVAS_H, CANVAS_W } from '../lib/layers'
+import { LayerStage, type StageLayer } from './LayerStage'
 
-/**
- * 조립 탭에서 보이는 이미지들(아래→위): 다리(하의를 입었을 때만), 하의, 상의(팔 포함), 머리.
- * 몸통과 속옷은 없다 — 하의를 안 입으면 상의 아래가 비어 있다.
- */
-export function assemblyLayers(a: Assembly): string[] {
-  const urls: string[] = []
-  const bottom = BOTTOMS.find((b) => b.id === a.bottom)
-  if (bottom) urls.push(LOWER_IMAGE, assetUrl(bottom.image))
-  const top = TOPS.find((t) => t.id === a.top)
-  if (top) urls.push(assetUrl(top.image))
-  const head = HEADS.find((h) => h.id === a.head)
-  if (head) urls.push(assetUrl(head.image))
-  return urls
+/** 조립 탭에서 보이는 겹들(아래→위): 하의(다리·발 포함) < 상의(팔·손 포함) < 머리. 몸통과 속옷은 없다. */
+export function assemblyLayers(a: Assembly, lang: 'ko' | 'en' = 'ko'): StageLayer<Slot>[] {
+  const out: StageLayer<Slot>[] = []
+  for (const slot of SLOTS) {
+    const part = a[slot] ? PART_BY_ID[a[slot]!] : undefined
+    if (!part) continue
+    out.push({ key: slot, id: part.id, src: assetUrl(part.image), z: SLOT_Z[slot], box: part.box, label: part.name[lang] })
+  }
+  return out
 }
 
 interface Props {
   assembly: Assembly
   bg: Background
+  selected: Slot | null
+  onSelect: (s: Slot | null) => void
+  onTweaks: (next: AssembleTweaks) => void
+  onTakeOff: (s: Slot) => void
+  dropRef: RefObject<HTMLDivElement | null>
+  dropActive: boolean
   figureRef: RefObject<HTMLDivElement | null>
   children?: ReactNode
 }
 
-export function AssembleStage({ assembly, bg, figureRef, children }: Props) {
-  const { t } = useI18n()
-  const layers = assemblyLayers(assembly)
+export function AssembleStage({ assembly, ...rest }: Props) {
+  const { lang, t } = useI18n()
   return (
-    <div
-      className="relative h-full w-full overflow-hidden rounded-3xl shadow-inner ring-1 ring-black/5"
-      style={{ background: bgToCss(bg), containerType: 'size' }}
-    >
-      <div className="absolute inset-0 flex items-end justify-center pb-[3cqh]">
-        <div
-          ref={figureRef}
-          className="sticker relative"
-          style={{
-            width: `min(calc(92cqh * ${CANVAS_W / CANVAS_H}), 92cqw)`,
-            aspectRatio: `${CANVAS_W} / ${CANVAS_H}`,
-          }}
-        >
-          {layers.map((src, i) => (
-            <img key={src} src={src} alt="" className="layer" style={{ zIndex: i }} draggable={false} />
-          ))}
-        </div>
-      </div>
-      {children}
-      <div className="pointer-events-none absolute top-2 left-2 z-20 max-w-[calc(100%-4.5rem)]">
-        <p className="inline-block rounded-2xl bg-white/85 px-3 py-1.5 text-[11px] leading-tight font-semibold text-cocoa-soft shadow-sm">
-          {t('assembleHint')}
-        </p>
-      </div>
-    </div>
+    <LayerStage
+      base={[]}
+      layers={assemblyLayers(assembly, lang)}
+      tweaks={assembly.tweaks ?? {}}
+      hint={t('assembleHint')}
+      ariaLabel={t('tweakAria')}
+      {...rest}
+    />
   )
 }

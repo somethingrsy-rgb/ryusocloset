@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { BOTTOMS, HEADS, TOPS, defaultAssembly, randomAssembly, sanitizeAssembly, togglePart } from './assemble'
+import { BOTTOMS, HEADS, TOPS, defaultAssembly, randomAssembly, sanitizeAssembly, takeOffPart, togglePart } from './assemble'
 
 describe('assemble', () => {
-  it('부품이 있다 (머리 1+, 상의 9, 하의는 새로 그린 것만)', () => {
+  it('부품이 있다 (머리 1+, 상의 9, 하의 9)', () => {
     expect(HEADS.length).toBeGreaterThan(0)
     expect(TOPS.length).toBe(9)
-    expect(BOTTOMS.length).toBeGreaterThan(0)
-    for (const b of BOTTOMS) expect(b.category).toBe('bottom')
+    expect(BOTTOMS.length).toBe(9)
+    for (const p of [...HEADS, ...TOPS, ...BOTTOMS]) {
+      expect(p.box.w).toBeGreaterThan(0)
+      expect(p.box.h).toBeGreaterThan(0)
+    }
   })
   it('기본 조합은 머리가 있다', () => {
     expect(defaultAssembly().head).toBe(HEADS[0].id)
@@ -18,12 +21,25 @@ describe('assemble', () => {
     expect(togglePart(togglePart(a, 'top', t), 'top', t).top).toBeUndefined()
     expect(togglePart(a, 'head', a.head).head).toBe(a.head)
   })
-  it('저장 데이터 검증: 모르는 id 는 버리고 머리는 항상 있다', () => {
+  it('부품을 바꾸거나 벗으면 그 칸의 위치·크기 조절은 사라지고 다른 칸은 유지된다', () => {
+    const a = { head: HEADS[0].id, top: TOPS[0].id, bottom: BOTTOMS[0].id, tweaks: { top: { dx: 5, dy: 0, scale: 1.2 }, bottom: { dx: 0, dy: 9, scale: 1 } } }
+    const swapped = togglePart(a, 'top', TOPS[1].id)
+    expect(swapped.tweaks).toEqual({ bottom: { dx: 0, dy: 9, scale: 1 } })
+    expect(takeOffPart(swapped, 'bottom').tweaks).toBeUndefined()
+    expect(takeOffPart(a, 'head')).toBe(a) // 머리는 벗지 않는다
+  })
+  it('저장 데이터 검증: 모르는 id·잘못된 칸은 버리고 머리는 항상 있다', () => {
     expect(sanitizeAssembly(null).head).toBe(HEADS[0].id)
-    const s = sanitizeAssembly({ head: 'nope', top: 'nope', bottom: TOPS[0].id })
-    expect(s).toEqual({ head: HEADS[0].id })
-    const ok = sanitizeAssembly({ head: HEADS[0].id, top: TOPS[2].id, bottom: BOTTOMS[0].id })
-    expect(ok).toEqual({ head: HEADS[0].id, top: TOPS[2].id, bottom: BOTTOMS[0].id })
+    expect(sanitizeAssembly({ head: 'nope', top: 'nope', bottom: TOPS[0].id })).toEqual({ head: HEADS[0].id })
+    const ok = sanitizeAssembly({
+      head: HEADS[0].id,
+      top: TOPS[2].id,
+      bottom: BOTTOMS[0].id,
+      tweaks: { top: { dx: 10, dy: 0, scale: 9 }, head: { dx: 0, dy: 0, scale: 1 }, bottom: 'x' },
+    })
+    expect(ok.top).toBe(TOPS[2].id)
+    expect(ok.bottom).toBe(BOTTOMS[0].id)
+    expect(ok.tweaks).toEqual({ top: { dx: 10, dy: 0, scale: 1.6 } }) // 범위 보정, 원래 값(head)·잘못된 값은 제거
   })
   it('랜덤 조합은 유효하다', () => {
     for (let i = 0; i < 50; i++) {

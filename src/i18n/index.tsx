@@ -62,9 +62,10 @@ const ko = {
   partHead: '머리',
   partTop: '상의',
   partBottom: '하의',
-  assembleHint: '머리·상의·하의를 따로 골라 조립해요',
+  assembleHint: '머리·상의·하의를 골라 끌어 맞춰요',
   assembleTopHint: '상의는 팔과 손까지 한 벌이에요',
   noBottoms: '하의가 아직 없어요',
+  assembleBottomHint: '하의는 다리와 발까지 한 벌이에요',
 } as const
 
 type Dict = Record<keyof typeof ko, string>
@@ -128,9 +129,10 @@ const en: Dict = {
   partHead: 'Hair',
   partTop: 'Tops',
   partBottom: 'Bottoms',
-  assembleHint: 'Pick hair, top and bottom separately',
+  assembleHint: 'Pick, drag and resize each part',
   assembleTopHint: 'Each top includes the arms and hands',
   noBottoms: 'No bottoms yet',
+  assembleBottomHint: 'Each bottom includes the legs and feet',
 }
 
 export const MESSAGES: Record<Lang, Dict> = { ko, en }

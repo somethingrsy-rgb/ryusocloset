@@ -1,0 +1,47 @@
+{
+  "bottom_belt_skirt_black": {
+    "s": 0.4634,
+    "tx": 304.1,
+    "ty": 724.9
+  },
+  "bottom_belt_skirt_charcoal": {
+    "s": 0.4639,
+    "tx": 303.7,
+    "ty": 714.2
+  },
+  "bottom_button_skirt_brown": {
+    "s": 0.4725,
+    "tx": 302.2,
+    "ty": 719.6
+  },
+  "bottom_denim_skirt": {
+    "s": 0.4422,
+    "tx": 311.9,
+    "ty": 751.1
+  },
+  "bottom_flare_skirt_gray": {
+    "s": 0.4794,
+    "tx": 298.4,
+    "ty": 712.2
+  },
+  "bottom_h_skirt_brown": {
+    "s": 0.4505,
+    "tx": 304.0,
+    "ty": 742.9
+  },
+  "bottom_pants_black": {
+    "s": 0.4588,
+    "tx": 308.7,
+    "ty": 736.4
+  },
+  "bottom_pants_charcoal": {
+    "s": 0.4738,
+    "tx": 300.0,
+    "ty": 712.2
+  },
+  "bottom_white_denim_skirt": {
+    "s": 0.4481,
+    "tx": 311.9,
+    "ty": 749.3
+  }
+}

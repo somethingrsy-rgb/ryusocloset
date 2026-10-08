@@ -1,34 +1,28 @@
-import { useState } from 'react'
+import { useState, type RefObject } from 'react'
 import { useI18n } from '../i18n'
-import { BOTTOMS, HEADS, TOPS, type Assembly } from '../lib/assemble'
+import { partsOf, type Assembly, type Slot } from '../lib/assemble'
 import { assetUrl } from '../lib/items'
-
-type Slot = 'head' | 'top' | 'bottom'
-
-interface Cell {
-  id: string
-  name: { ko: string; en: string }
-  thumb: string
-  colorHex: string | null
-}
-
-const cellsFor = (slot: Slot): Cell[] =>
-  slot === 'head' ? HEADS : slot === 'top' ? TOPS : BOTTOMS.map((b) => ({ id: b.id, name: b.name, thumb: b.thumb, colorHex: b.colorHex }))
+import { DragGhost, useThumbDrag } from './useThumbDrag'
 
 interface Props {
   assembly: Assembly
+  /** 탭하면 입고/벗기, 끌어다 놓으면 입히기 */
   onPick: (slot: Slot, id: string) => void
+  onDragWear: (slot: Slot, id: string) => void
+  dropRef: RefObject<HTMLElement | null>
+  onDragOver: (over: boolean) => void
 }
 
-export function AssembleTray({ assembly, onPick }: Props) {
+export function AssembleTray({ assembly, onPick, onDragWear, dropRef, onDragOver }: Props) {
   const { lang, t } = useI18n()
   const [slot, setSlot] = useState<Slot>('top')
+  const { press, ghost, ignoreClick } = useThumbDrag(dropRef, onDragOver)
   const tabs: { id: Slot; icon: string; label: string }[] = [
     { id: 'head', icon: '💇', label: t('partHead') },
     { id: 'top', icon: '👚', label: t('partTop') },
     { id: 'bottom', icon: '👖', label: t('partBottom') },
   ]
-  const cells = cellsFor(slot)
+  const parts = partsOf(slot)
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div role="tablist" className="flex shrink-0 gap-1 px-2 pt-2 pb-1">
@@ -55,20 +49,23 @@ export function AssembleTray({ assembly, onPick }: Props) {
       </div>
       <div role="tabpanel" className="scroll-thin min-h-0 flex-1 overflow-y-auto p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {slot === 'top' && <p className="mb-2 px-1 text-[11px] font-semibold text-cocoa-soft">{t('assembleTopHint')}</p>}
-        {cells.length === 0 ? (
+        {slot === 'bottom' && <p className="mb-2 px-1 text-[11px] font-semibold text-cocoa-soft">{t('assembleBottomHint')}</p>}
+        {parts.length === 0 ? (
           <p className="py-8 text-center text-sm font-semibold text-cocoa-soft">{t('noBottoms')}</p>
         ) : (
           <ul className="grid grid-cols-4 gap-2">
-            {cells.map((c) => {
+            {parts.map((c) => {
               const worn = assembly[slot] === c.id
               return (
                 <li key={c.id}>
                   <button
-                    onClick={() => onPick(slot, c.id)}
+                    onPointerDown={(e) => press(e, c.thumb, () => onDragWear(slot, c.id))}
+                    onClick={() => !ignoreClick() && onPick(slot, c.id)}
+                    onContextMenu={(e) => e.preventDefault()}
                     aria-pressed={worn}
                     aria-label={c.name[lang]}
                     title={c.name[lang]}
-                    className={`relative flex aspect-square w-full items-center justify-center rounded-2xl bg-white p-1 ring-2 transition active:scale-95 ${
+                    className={`relative flex aspect-square w-full select-none items-center justify-center rounded-2xl bg-white p-1 ring-2 transition active:scale-95 [-webkit-touch-callout:none] ${
                       worn ? 'ring-blush shadow-md' : 'ring-petal hover:ring-blush/50'
                     }`}
                   >
@@ -89,6 +86,7 @@ export function AssembleTray({ assembly, onPick }: Props) {
           </ul>
         )}
       </div>
+      <DragGhost ghost={ghost} src={assetUrl} />
     </div>
   )
 }

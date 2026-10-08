@@ -1,4 +1,5 @@
 import { ID_ALIASES, ITEM_BY_ID } from './items'
+import { CATEGORIES } from './layers'
 import { sanitizeOutfit } from './outfit'
 import { sanitizeAssembly, type Assembly } from './assemble'
 import { sanitizeRoom } from './room'
@@ -41,7 +42,7 @@ export function loadSaved(): SavedOutfit[] {
     .filter((s) => s && typeof s.id === 'string' && typeof s.thumb === 'string')
     .map((s) => {
       const outfit = sanitizeOutfit(s.outfit, ITEM_BY_ID, ID_ALIASES)
-      return { ...s, outfit, tweaks: sanitizeTweaks(s.tweaks, outfit) }
+      return { ...s, outfit, tweaks: sanitizeTweaks(s.tweaks, CATEGORIES, outfit) }
     })
 }
 export const persistSaved = (list: SavedOutfit[]) => write(K_SAVED, list)
@@ -60,7 +61,7 @@ export const persistCurrent = (o: Outfit) => write(K_CURRENT, o)
 export const loadRoom = (): RoomState => sanitizeRoom(read<unknown>(K_ROOM))
 export const persistRoom = (r: RoomState) => write(K_ROOM, r)
 
-export const loadTweaks = (outfit: Outfit): Tweaks => sanitizeTweaks(read<unknown>(K_TWEAKS), outfit)
+export const loadTweaks = (outfit: Outfit): Tweaks => sanitizeTweaks(read<unknown>(K_TWEAKS), CATEGORIES, outfit)
 export const persistTweaks = (t: Tweaks) => write(K_TWEAKS, t)
 
 export const loadAssembly = (): Assembly => sanitizeAssembly(read<unknown>(K_ASSEMBLY))
