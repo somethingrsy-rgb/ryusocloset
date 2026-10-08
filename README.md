@@ -45,7 +45,7 @@ assets-src/                 원본 에셋 (직접 편집하는 곳)
   base/body.png             기본 몸 — 속옷 차림, 머리·슬리퍼 포함 (1024×1536)
   base/body_barefoot.png    맨발 몸 (신발 착용 시 이쪽으로 교체)
   base/hair_front.png       앞머리·옆머리 (옷 위에 덮는 레이어)
-  base/source/bodysuit_avatar_checkerboard.jpg   body 를 만든 원본(체크무늬 배경이 박힌 JPG)
+  base/source/bodysuit_avatar_transparent.png   body 를 만든 원본(투명 PNG, 959×1639)
   room/wall.webp, floor.webp            벽지(1086×1448, 아래쪽은 투명), 바닥
   room/items/<그룹>_<이름>.webp          가구·벽 장식·조명 (그룹: furniture / rug / wall / light)
 scripts/
@@ -54,7 +54,7 @@ scripts/
   room-items.json           방 아이템 이름, 기본 크기(baseWidth), 기본 위치(x, y)
   build-icons.ts            PWA 아이콘 생성
   labels.json               파일명 → 한/영 이름 (+ category/color 덮어쓰기)
-tools-py/                   아바타 가공용 1회성 파이썬 도구 (스티커 테두리 제거, 체크무늬 제거 + 캔버스 정렬)
+tools-py/                   아바타 가공용 1회성 파이썬 도구 (스티커 테두리 제거, 원본 → 캔버스 정렬 + 맨발 몸 생성)
 public/assets/              생성물 (webp) — 직접 수정하지 않기
 src/
   lib/layers.ts             카테고리, 레이어 순서(zIndex), 캔버스 크기
@@ -103,7 +103,7 @@ src/
 
 - 같은 캔버스(1024×1536)로 맞춘 `body` `body_barefoot` `hair_front` 3개 PNG를 `assets-src/base/` 에 넣고 `npm run assets`.
   - `body`: 머리까지 포함한 전신(신발 안 신었을 때 보이는 슬리퍼 포함), `body_barefoot`: 슬리퍼를 지운 맨발 몸, `hair_front`: 옷 위에 한 번 더 덮을 앞머리
-- 체크무늬가 박힌 이미지로 시작한다면 `tools-py/make_bodysuit_layers.py` 가 배경 제거 + 캔버스 정렬 + 맨발 몸 생성을 해 줍니다. (정렬 변환값은 스크립트 안에 고정, 새 이미지는 같은 위치·크기여야 함)
+- `tools-py/make_bodysuit_layers.py <원본> assets-src/base` 가 원본에서 `body.png`(1024×1536 캔버스로 정렬)와 `body_barefoot.png`(슬리퍼 제거)를 만들어 줍니다. 정렬 변환값은 스크립트 안에 고정돼 있어서, 다른 그림을 쓰려면 얼굴 기준으로 변환값을 다시 구해야 합니다. 체크무늬가 박힌 JPG 도 처리할 수 있습니다(`jpg` 옵션).
 - 몸을 바꾸면 옷의 위치도 같이 확인하세요. 옷은 몸에 맞춰 정렬돼 있습니다.
 - 헤어스타일 변형을 추가하려면 `FigureLayers.tsx` 의 `body`/`hairFront` 를 선택 가능하게 확장하면 됩니다.
 
