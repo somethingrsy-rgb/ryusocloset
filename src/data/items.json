@@ -1,0 +1,869 @@
+[
+  {
+    "id": "top_cardigan_black",
+    "category": "top",
+    "name": {
+      "ko": "트위드 가디건",
+      "en": "Tweed Cardigan"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/top/top_cardigan_black.webp",
+    "thumb": "assets/thumbs/top_cardigan_black.webp",
+    "zIndex": 30
+  },
+  {
+    "id": "top_cardigan_mint",
+    "category": "top",
+    "name": {
+      "ko": "가디건",
+      "en": "Cardigan"
+    },
+    "color": "mint",
+    "colorName": {
+      "ko": "민트",
+      "en": "Mint"
+    },
+    "colorHex": "#a9dcc8",
+    "image": "assets/clothes/top/top_cardigan_mint.webp",
+    "thumb": "assets/thumbs/top_cardigan_mint.webp",
+    "zIndex": 30
+  },
+  {
+    "id": "top_check_cardigan_gray",
+    "category": "top",
+    "name": {
+      "ko": "체크 가디건",
+      "en": "Check Cardigan"
+    },
+    "color": "gray",
+    "colorName": {
+      "ko": "그레이",
+      "en": "Gray"
+    },
+    "colorHex": "#a3a5ab",
+    "image": "assets/clothes/top/top_check_cardigan_gray.webp",
+    "thumb": "assets/thumbs/top_check_cardigan_gray.webp",
+    "zIndex": 30
+  },
+  {
+    "id": "top_inner_black",
+    "category": "top",
+    "name": {
+      "ko": "이너 티",
+      "en": "Inner Tee"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/top/top_inner_black.webp",
+    "thumb": "assets/thumbs/top_inner_black.webp",
+    "zIndex": 30
+  },
+  {
+    "id": "top_ivory",
+    "category": "top",
+    "name": {
+      "ko": "크롭 티",
+      "en": "Cropped Tee"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/top/top_ivory.webp",
+    "thumb": "assets/thumbs/top_ivory.webp",
+    "zIndex": 30
+  },
+  {
+    "id": "top_paisley_ivory",
+    "category": "top",
+    "name": {
+      "ko": "페이즐리 가디건",
+      "en": "Paisley Cardigan"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/top/top_paisley_ivory.webp",
+    "thumb": "assets/thumbs/top_paisley_ivory.webp",
+    "zIndex": 30
+  },
+  {
+    "id": "top_pattern_vest_ivory",
+    "category": "top",
+    "name": {
+      "ko": "패턴 조끼",
+      "en": "Patterned Vest"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/top/top_pattern_vest_ivory.webp",
+    "thumb": "assets/thumbs/top_pattern_vest_ivory.webp",
+    "zIndex": 30
+  },
+  {
+    "id": "top_sailor_ivory",
+    "category": "top",
+    "name": {
+      "ko": "세일러 가디건",
+      "en": "Sailor Cardigan"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/top/top_sailor_ivory.webp",
+    "thumb": "assets/thumbs/top_sailor_ivory.webp",
+    "zIndex": 30
+  },
+  {
+    "id": "top_vest_ivory",
+    "category": "top",
+    "name": {
+      "ko": "니트 조끼",
+      "en": "Knit Vest"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/top/top_vest_ivory.webp",
+    "thumb": "assets/thumbs/top_vest_ivory.webp",
+    "zIndex": 30
+  },
+  {
+    "id": "top_zip_ivory",
+    "category": "top",
+    "name": {
+      "ko": "집업",
+      "en": "Zip-up"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/top/top_zip_ivory.webp",
+    "thumb": "assets/thumbs/top_zip_ivory.webp",
+    "zIndex": 30
+  },
+  {
+    "id": "bottom_belt_skirt_black",
+    "category": "bottom",
+    "name": {
+      "ko": "벨트 스커트",
+      "en": "Belt Skirt"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/bottom/bottom_belt_skirt_black.webp",
+    "thumb": "assets/thumbs/bottom_belt_skirt_black.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "bottom_belt_skirt_charcoal",
+    "category": "bottom",
+    "name": {
+      "ko": "벨트 스커트",
+      "en": "Belt Skirt"
+    },
+    "color": "charcoal",
+    "colorName": {
+      "ko": "차콜",
+      "en": "Charcoal"
+    },
+    "colorHex": "#55565c",
+    "image": "assets/clothes/bottom/bottom_belt_skirt_charcoal.webp",
+    "thumb": "assets/thumbs/bottom_belt_skirt_charcoal.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "bottom_button_skirt_brown",
+    "category": "bottom",
+    "name": {
+      "ko": "버튼 플레어 스커트",
+      "en": "Button Skirt"
+    },
+    "color": "brown",
+    "colorName": {
+      "ko": "브라운",
+      "en": "Brown"
+    },
+    "colorHex": "#8a5a3b",
+    "image": "assets/clothes/bottom/bottom_button_skirt_brown.webp",
+    "thumb": "assets/thumbs/bottom_button_skirt_brown.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "bottom_denim",
+    "category": "bottom",
+    "name": {
+      "ko": "데님 스커트",
+      "en": "Denim Skirt"
+    },
+    "color": "denim",
+    "colorName": {
+      "ko": "데님",
+      "en": "Denim"
+    },
+    "colorHex": "#3c5a8c",
+    "image": "assets/clothes/bottom/bottom_denim.webp",
+    "thumb": "assets/thumbs/bottom_denim.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "bottom_denim_skirt_white",
+    "category": "bottom",
+    "name": {
+      "ko": "화이트 데님 스커트",
+      "en": "White Denim Skirt"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "image": "assets/clothes/bottom/bottom_denim_skirt_white.webp",
+    "thumb": "assets/thumbs/bottom_denim_skirt_white.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "bottom_flare_skirt_gray",
+    "category": "bottom",
+    "name": {
+      "ko": "플레어 스커트",
+      "en": "Flare Skirt"
+    },
+    "color": "gray",
+    "colorName": {
+      "ko": "그레이",
+      "en": "Gray"
+    },
+    "colorHex": "#a3a5ab",
+    "image": "assets/clothes/bottom/bottom_flare_skirt_gray.webp",
+    "thumb": "assets/thumbs/bottom_flare_skirt_gray.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "bottom_pants_black",
+    "category": "bottom",
+    "name": {
+      "ko": "와이드 팬츠",
+      "en": "Wide Pants"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/bottom/bottom_pants_black.webp",
+    "thumb": "assets/thumbs/bottom_pants_black.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "bottom_pants_charcoal",
+    "category": "bottom",
+    "name": {
+      "ko": "와이드 팬츠",
+      "en": "Wide Pants"
+    },
+    "color": "charcoal",
+    "colorName": {
+      "ko": "차콜",
+      "en": "Charcoal"
+    },
+    "colorHex": "#55565c",
+    "image": "assets/clothes/bottom/bottom_pants_charcoal.webp",
+    "thumb": "assets/thumbs/bottom_pants_charcoal.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "bottom_pants_ivory",
+    "category": "bottom",
+    "name": {
+      "ko": "와이드 팬츠",
+      "en": "Wide Pants"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/bottom/bottom_pants_ivory.webp",
+    "thumb": "assets/thumbs/bottom_pants_ivory.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "bottom_skirt_brown",
+    "category": "bottom",
+    "name": {
+      "ko": "H라인 스커트",
+      "en": "Pencil Skirt"
+    },
+    "color": "brown",
+    "colorName": {
+      "ko": "브라운",
+      "en": "Brown"
+    },
+    "colorHex": "#8a5a3b",
+    "image": "assets/clothes/bottom/bottom_skirt_brown.webp",
+    "thumb": "assets/thumbs/bottom_skirt_brown.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "dress_isaac_black",
+    "category": "dress",
+    "name": {
+      "ko": "스퀘어넥 원피스",
+      "en": "Square-neck Dress"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/dress/dress_isaac_black.webp",
+    "thumb": "assets/thumbs/dress_isaac_black.webp",
+    "zIndex": 40
+  },
+  {
+    "id": "dress_isaac_brown",
+    "category": "dress",
+    "name": {
+      "ko": "볼레로 원피스",
+      "en": "Bolero Dress"
+    },
+    "color": "brown",
+    "colorName": {
+      "ko": "브라운",
+      "en": "Brown"
+    },
+    "colorHex": "#8a5a3b",
+    "image": "assets/clothes/dress/dress_isaac_brown.webp",
+    "thumb": "assets/thumbs/dress_isaac_brown.webp",
+    "zIndex": 40
+  },
+  {
+    "id": "dress_isaac_navy",
+    "category": "dress",
+    "name": {
+      "ko": "볼레로 원피스",
+      "en": "Bolero Dress"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "image": "assets/clothes/dress/dress_isaac_navy.webp",
+    "thumb": "assets/thumbs/dress_isaac_navy.webp",
+    "zIndex": 40
+  },
+  {
+    "id": "dress_isaac_shirt_black",
+    "category": "dress",
+    "name": {
+      "ko": "셔츠 원피스",
+      "en": "Shirt Dress"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/dress/dress_isaac_shirt_black.webp",
+    "thumb": "assets/thumbs/dress_isaac_shirt_black.webp",
+    "zIndex": 40
+  },
+  {
+    "id": "dress_oxford_beige",
+    "category": "dress",
+    "name": {
+      "ko": "옥스포드 원피스",
+      "en": "Oxford Dress"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "image": "assets/clothes/dress/dress_oxford_beige.webp",
+    "thumb": "assets/thumbs/dress_oxford_beige.webp",
+    "zIndex": 40
+  },
+  {
+    "id": "dress_shesmiss_gray",
+    "category": "dress",
+    "name": {
+      "ko": "코트 원피스",
+      "en": "Coat Dress"
+    },
+    "color": "gray",
+    "colorName": {
+      "ko": "그레이",
+      "en": "Gray"
+    },
+    "colorHex": "#a3a5ab",
+    "image": "assets/clothes/dress/dress_shesmiss_gray.webp",
+    "thumb": "assets/thumbs/dress_shesmiss_gray.webp",
+    "zIndex": 40
+  },
+  {
+    "id": "dress_tweed_black",
+    "category": "dress",
+    "name": {
+      "ko": "트위드 원피스",
+      "en": "Tweed Dress"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/dress/dress_tweed_black.webp",
+    "thumb": "assets/thumbs/dress_tweed_black.webp",
+    "zIndex": 40
+  },
+  {
+    "id": "outer_coat_black",
+    "category": "outer",
+    "name": {
+      "ko": "롱 코트",
+      "en": "Long Coat"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/outer/outer_coat_black.webp",
+    "thumb": "assets/thumbs/outer_coat_black.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_coat_gray",
+    "category": "outer",
+    "name": {
+      "ko": "롱 코트",
+      "en": "Long Coat"
+    },
+    "color": "gray",
+    "colorName": {
+      "ko": "그레이",
+      "en": "Gray"
+    },
+    "colorHex": "#a3a5ab",
+    "image": "assets/clothes/outer/outer_coat_gray.webp",
+    "thumb": "assets/thumbs/outer_coat_gray.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_denim_jacket",
+    "category": "outer",
+    "name": {
+      "ko": "청자켓",
+      "en": "Denim Jacket"
+    },
+    "color": "denim",
+    "colorName": {
+      "ko": "데님",
+      "en": "Denim"
+    },
+    "colorHex": "#3c5a8c",
+    "image": "assets/clothes/outer/outer_denim_jacket.webp",
+    "thumb": "assets/thumbs/outer_denim_jacket.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_jacket_gray",
+    "category": "outer",
+    "name": {
+      "ko": "재킷",
+      "en": "Jacket"
+    },
+    "color": "gray",
+    "colorName": {
+      "ko": "그레이",
+      "en": "Gray"
+    },
+    "colorHex": "#a3a5ab",
+    "image": "assets/clothes/outer/outer_jacket_gray.webp",
+    "thumb": "assets/thumbs/outer_jacket_gray.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_nepa_black",
+    "category": "outer",
+    "name": {
+      "ko": "패딩 코트",
+      "en": "Puffer Coat"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/outer/outer_nepa_black.webp",
+    "thumb": "assets/thumbs/outer_nepa_black.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_short_trench_black",
+    "category": "outer",
+    "name": {
+      "ko": "숏 트렌치",
+      "en": "Short Trench"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/outer/outer_short_trench_black.webp",
+    "thumb": "assets/thumbs/outer_short_trench_black.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_trench_beige",
+    "category": "outer",
+    "name": {
+      "ko": "트렌치코트",
+      "en": "Trench Coat"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "image": "assets/clothes/outer/outer_trench_beige.webp",
+    "thumb": "assets/thumbs/outer_trench_beige.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_trench_black",
+    "category": "outer",
+    "name": {
+      "ko": "트렌치코트",
+      "en": "Trench Coat"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/outer/outer_trench_black.webp",
+    "thumb": "assets/thumbs/outer_trench_black.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_trench_khaki",
+    "category": "outer",
+    "name": {
+      "ko": "트렌치코트",
+      "en": "Trench Coat"
+    },
+    "color": "khaki",
+    "colorName": {
+      "ko": "카키",
+      "en": "Khaki"
+    },
+    "colorHex": "#6f7655",
+    "image": "assets/clothes/outer/outer_trench_khaki.webp",
+    "thumb": "assets/thumbs/outer_trench_khaki.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_tweed_navy",
+    "category": "outer",
+    "name": {
+      "ko": "트위드 재킷",
+      "en": "Tweed Jacket"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "image": "assets/clothes/outer/outer_tweed_navy.webp",
+    "thumb": "assets/thumbs/outer_tweed_navy.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_tweed_roem_black",
+    "category": "outer",
+    "name": {
+      "ko": "트위드 재킷",
+      "en": "Tweed Jacket"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/outer/outer_tweed_roem_black.webp",
+    "thumb": "assets/thumbs/outer_tweed_roem_black.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_tweed_skyblue",
+    "category": "outer",
+    "name": {
+      "ko": "트위드 크롭 재킷",
+      "en": "Cropped Tweed Jacket"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "image": "assets/clothes/outer/outer_tweed_skyblue.webp",
+    "thumb": "assets/thumbs/outer_tweed_skyblue.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_uniclo_beige",
+    "category": "outer",
+    "name": {
+      "ko": "바시티 점퍼",
+      "en": "Varsity Jacket"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "image": "assets/clothes/outer/outer_uniclo_beige.webp",
+    "thumb": "assets/thumbs/outer_uniclo_beige.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "shoes_flat_black",
+    "category": "shoes",
+    "name": {
+      "ko": "플랫슈즈",
+      "en": "Flats"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/shoes/shoes_flat_black.webp",
+    "thumb": "assets/thumbs/shoes_flat_black.webp",
+    "zIndex": 10
+  },
+  {
+    "id": "shoes_flat_ivory",
+    "category": "shoes",
+    "name": {
+      "ko": "플랫슈즈",
+      "en": "Flats"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/shoes/shoes_flat_ivory.webp",
+    "thumb": "assets/thumbs/shoes_flat_ivory.webp",
+    "zIndex": 10
+  },
+  {
+    "id": "shoes_maryjane_black",
+    "category": "shoes",
+    "name": {
+      "ko": "메리제인",
+      "en": "Mary Janes"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/shoes/shoes_maryjane_black.webp",
+    "thumb": "assets/thumbs/shoes_maryjane_black.webp",
+    "zIndex": 10
+  },
+  {
+    "id": "shoes_pumps_black",
+    "category": "shoes",
+    "name": {
+      "ko": "펌프스",
+      "en": "Pumps"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/shoes/shoes_pumps_black.webp",
+    "thumb": "assets/thumbs/shoes_pumps_black.webp",
+    "zIndex": 10
+  },
+  {
+    "id": "shoes_sneaker_navy",
+    "category": "shoes",
+    "name": {
+      "ko": "스니커즈",
+      "en": "Sneakers"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "image": "assets/clothes/shoes/shoes_sneaker_navy.webp",
+    "thumb": "assets/thumbs/shoes_sneaker_navy.webp",
+    "zIndex": 10
+  },
+  {
+    "id": "acc_lace_collar",
+    "category": "accessory",
+    "name": {
+      "ko": "레이스 카라",
+      "en": "Lace Collar"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "image": "assets/clothes/accessory/acc_lace_collar.webp",
+    "thumb": "assets/thumbs/acc_lace_collar.webp",
+    "zIndex": 70
+  },
+  {
+    "id": "acc_backpack_ivory",
+    "category": "bag",
+    "name": {
+      "ko": "백팩",
+      "en": "Backpack"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/bag/acc_backpack_ivory.webp",
+    "thumb": "assets/thumbs/acc_backpack_ivory.webp",
+    "zIndex": 80
+  },
+  {
+    "id": "acc_briefcase_brown",
+    "category": "bag",
+    "name": {
+      "ko": "서류가방",
+      "en": "Briefcase"
+    },
+    "color": "brown",
+    "colorName": {
+      "ko": "브라운",
+      "en": "Brown"
+    },
+    "colorHex": "#8a5a3b",
+    "image": "assets/clothes/bag/acc_briefcase_brown.webp",
+    "thumb": "assets/thumbs/acc_briefcase_brown.webp",
+    "zIndex": 80
+  },
+  {
+    "id": "acc_handbag_black",
+    "category": "bag",
+    "name": {
+      "ko": "핸드백",
+      "en": "Handbag"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/bag/acc_handbag_black.webp",
+    "thumb": "assets/thumbs/acc_handbag_black.webp",
+    "zIndex": 80
+  },
+  {
+    "id": "acc_kangol_tote_navy",
+    "category": "bag",
+    "name": {
+      "ko": "토트백",
+      "en": "Tote Bag"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "image": "assets/clothes/bag/acc_kangol_tote_navy.webp",
+    "thumb": "assets/thumbs/acc_kangol_tote_navy.webp",
+    "zIndex": 80
+  },
+  {
+    "id": "acc_mini_bag_ivory",
+    "category": "bag",
+    "name": {
+      "ko": "미니백",
+      "en": "Mini Bag"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/bag/acc_mini_bag_ivory.webp",
+    "thumb": "assets/thumbs/acc_mini_bag_ivory.webp",
+    "zIndex": 80
+  }
+]
