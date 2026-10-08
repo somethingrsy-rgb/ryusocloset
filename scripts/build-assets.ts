@@ -1,0 +1,154 @@
+/**
+ * assets-src/ 의 원본 PNG → public/assets/ (webp, 썸네일) + src/data/items.json 매니페스트 생성.
+ *
+ *   assets-src/clothes/<category>_<name>_<color>.png   (1024x1536, 투명 배경, 아바타와 같은 캔버스. 예전 851x1280 옷은 자동으로 옮겨 맞춤)
+ *   assets-src/base/{body,body_barefoot,hair_front}.png
+ *   scripts/labels.json                                 (파일명 → 한/영 이름, 선택적으로 category/color 덮어쓰기)
+ *
+ * 실행: npm run assets
+ */
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import sharp from 'sharp'
+import { makeThumb } from './lib/image.ts'
+import { buildRoom } from './build-room.ts'
+import { CANVAS_H, CANVAS_W, CATEGORIES, LAYER_Z, LEGACY_CANVAS, type Category } from '../src/lib/layers.ts'
+import type { Item } from '../src/lib/types.ts'
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const SRC = path.join(ROOT, 'assets-src')
+const OUT = path.join(ROOT, 'public/assets')
+
+const COLORS: Record<string, { ko: string; en: string; hex: string }> = {
+  black: { ko: '블랙', en: 'Black', hex: '#2b2b2f' },
+  charcoal: { ko: '차콜', en: 'Charcoal', hex: '#55565c' },
+  gray: { ko: '그레이', en: 'Gray', hex: '#a3a5ab' },
+  white: { ko: '화이트', en: 'White', hex: '#fbfbfb' },
+  ivory: { ko: '아이보리', en: 'Ivory', hex: '#f6ecd6' },
+  beige: { ko: '베이지', en: 'Beige', hex: '#dcc5a2' },
+  brown: { ko: '브라운', en: 'Brown', hex: '#8a5a3b' },
+  khaki: { ko: '카키', en: 'Khaki', hex: '#6f7655' },
+  navy: { ko: '네이비', en: 'Navy', hex: '#27355b' },
+  denim: { ko: '데님', en: 'Denim', hex: '#3c5a8c' },
+  skyblue: { ko: '스카이블루', en: 'Sky Blue', hex: '#8fb8e0' },
+  mint: { ko: '민트', en: 'Mint', hex: '#a9dcc8' },
+}
+
+type Labels = Record<string, { ko?: string; en?: string; category?: Category; color?: string }>
+const labels: Labels = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/labels.json'), 'utf8'))
+
+const BAG_WORDS = ['bag', 'backpack', 'briefcase', 'handbag', 'tote']
+
+function parseCategory(stem: string): Category {
+  const override = labels[stem]?.category
+  if (override) return override
+  const prefix = stem.split('_')[0]
+  if (prefix === 'acc') {
+    return BAG_WORDS.some((w) => stem.includes(w)) ? 'bag' : 'accessory'
+  }
+  if ((CATEGORIES as readonly string[]).includes(prefix)) return prefix as Category
+  throw new Error(`카테고리를 알 수 없는 파일명: ${stem} (top_/bottom_/dress_/outer_/shoes_/acc_ 로 시작해야 함)`)
+}
+
+function parseColor(stem: string): string | undefined {
+  const override = labels[stem]?.color
+  if (override) return override
+  const last = stem.split('_').pop()!
+  return COLORS[last] ? last : undefined
+}
+
+function fallbackName(stem: string) {
+  const words = stem.split('_').slice(1).filter((w) => !COLORS[w])
+  const text = words.join(' ') || stem
+  return { ko: text, en: text.replace(/\b\w/g, (c) => c.toUpperCase()) }
+}
+
+/**
+ * 옷 PNG 를 아바타 캔버스(1024x1536)에 맞춘 PNG 버퍼로 만든다.
+ * - 1024x1536: 그대로
+ * - 851x1280(예전 아바타용): LEGACY_CANVAS 변환(확대 + 이동)
+ */
+async function toAvatarCanvas(file: string): Promise<Buffer> {
+  const meta = await sharp(file).metadata()
+  if (meta.width === CANVAS_W && meta.height === CANVAS_H) return sharp(file).png().toBuffer()
+  if (meta.width !== LEGACY_CANVAS.w || meta.height !== LEGACY_CANVAS.h) {
+    console.warn(`⚠ ${path.basename(file)}: ${meta.width}x${meta.height} (1024x1536 또는 851x1280 이어야 아바타와 정렬됩니다)`)
+    return sharp(file).png().toBuffer()
+  }
+  const { scale, dx, dy } = LEGACY_CANVAS
+  const w = Math.round(LEGACY_CANVAS.w * scale)
+  const h = Math.round(LEGACY_CANVAS.h * scale)
+  const resized = await sharp(file).resize(w, h, { kernel: 'lanczos3' }).png().toBuffer()
+  // 캔버스 밖으로 나가는 부분은 잘라낸다
+  const srcX = Math.max(0, -dx)
+  const srcY = Math.max(0, -dy)
+  const dstX = Math.max(0, dx)
+  const dstY = Math.max(0, dy)
+  const cw = Math.min(w - srcX, CANVAS_W - dstX)
+  const ch = Math.min(h - srcY, CANVAS_H - dstY)
+  const part = await sharp(resized).extract({ left: srcX, top: srcY, width: cw, height: ch }).toBuffer()
+  return sharp({ create: { width: CANVAS_W, height: CANVAS_H, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([{ input: part, left: dstX, top: dstY }])
+    .png()
+    .toBuffer()
+}
+
+async function main() {
+  fs.mkdirSync(path.join(OUT, 'base'), { recursive: true })
+  fs.mkdirSync(path.join(OUT, 'thumbs'), { recursive: true })
+  for (const c of CATEGORIES) fs.rmSync(path.join(OUT, 'clothes', c), { recursive: true, force: true })
+
+  // 1) 아바타 베이스 레이어
+  for (const name of ['body', 'body_barefoot', 'hair_front']) {
+    const src = path.join(SRC, 'base', `${name}.png`)
+    if (!fs.existsSync(src)) throw new Error(`없음: ${src}`)
+    const bm = await sharp(src).metadata()
+    if (bm.width !== CANVAS_W || bm.height !== CANVAS_H) {
+      console.warn(`⚠ base/${name}: ${bm.width}x${bm.height} (기대: ${CANVAS_W}x${CANVAS_H})`)
+    }
+    await sharp(src).webp({ quality: 95, alphaQuality: 100 }).toFile(path.join(OUT, 'base', `${name}.webp`))
+  }
+
+  // 2) 옷
+  const files = fs.readdirSync(path.join(SRC, 'clothes')).filter((f) => f.toLowerCase().endsWith('.png')).sort()
+  const items: Item[] = []
+  for (const file of files) {
+    const stem = file.replace(/\.png$/i, '')
+    const category = parseCategory(stem)
+    const colorKey = parseColor(stem)
+    const src = await toAvatarCanvas(path.join(SRC, 'clothes', file))
+    fs.mkdirSync(path.join(OUT, 'clothes', category), { recursive: true })
+    await sharp(src).webp({ quality: 90, alphaQuality: 100 }).toFile(path.join(OUT, 'clothes', category, `${stem}.webp`))
+    await makeThumb(src, path.join(OUT, 'thumbs', `${stem}.webp`)).catch((e) => {
+      throw new Error(`${stem}: ${e.message}`)
+    })
+    const label = labels[stem] ?? (console.warn(`ℹ labels.json 에 ${stem} 없음 → 파일명으로 이름 생성`), {})
+    const fb = fallbackName(stem)
+    items.push({
+      id: stem,
+      category,
+      name: { ko: label.ko ?? fb.ko, en: label.en ?? fb.en },
+      color: colorKey ?? null,
+      colorName: colorKey ? { ko: COLORS[colorKey].ko, en: COLORS[colorKey].en } : null,
+      colorHex: colorKey ? COLORS[colorKey].hex : null,
+      image: `assets/clothes/${category}/${stem}.webp`,
+      thumb: `assets/thumbs/${stem}.webp`,
+      zIndex: LAYER_Z[category],
+    })
+  }
+  items.sort(
+    (a, b) =>
+      CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category) || a.id.localeCompare(b.id),
+  )
+  fs.writeFileSync(path.join(ROOT, 'src/data/items.json'), JSON.stringify(items, null, 2) + '\n')
+
+  const counts = Object.fromEntries(CATEGORIES.map((c) => [c, items.filter((i) => i.category === c).length]))
+  console.log(`✔ ${items.length}개 아이템`, counts)
+  await buildRoom()
+}
+
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

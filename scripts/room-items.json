@@ -1,0 +1,19 @@
+{
+  "furniture_sofa_bear":   { "ko": "곰돌이 소파",   "en": "Bear Sofa",     "baseWidth": 600, "x": 380, "y": 1255 },
+  "furniture_bed":         { "ko": "침대",          "en": "Bed",           "baseWidth": 700, "x": 543, "y": 1230 },
+  "furniture_dresser":     { "ko": "서랍장",        "en": "Dresser",       "baseWidth": 340, "x": 860, "y": 1230 },
+  "furniture_mirror_full": { "ko": "전신거울",      "en": "Full Mirror",   "baseWidth": 290, "x": 900, "y": 1250 },
+  "furniture_desk_chair":  { "ko": "책상과 의자",   "en": "Desk & Chair",  "baseWidth": 620, "x": 543, "y": 1230 },
+  "furniture_hanger":      { "ko": "행거",          "en": "Clothes Rack",  "baseWidth": 560, "x": 543, "y": 1240 },
+  "furniture_vanity":      { "ko": "화장대",        "en": "Vanity",        "baseWidth": 400, "x": 543, "y": 1240 },
+  "rug_stripe":            { "ko": "줄무늬 러그",   "en": "Striped Rug",   "baseWidth": 680, "x": 543, "y": 1350 },
+  "wall_window_day":       { "ko": "창문 (낮)",     "en": "Window (Day)",  "baseWidth": 440, "x": 543, "y": 640 },
+  "wall_window_night":     { "ko": "창문 (밤)",     "en": "Window (Night)","baseWidth": 440, "x": 543, "y": 640 },
+  "wall_frame":            { "ko": "빈 액자",       "en": "Empty Frame",   "baseWidth": 300, "x": 543, "y": 600 },
+  "wall_clock":            { "ko": "벽시계",        "en": "Wall Clock",    "baseWidth": 200, "x": 543, "y": 420 },
+  "wall_wreath":           { "ko": "꽃 화환",       "en": "Flower Wreath", "baseWidth": 240, "x": 543, "y": 520 },
+  "wall_shelf":            { "ko": "선반",          "en": "Shelf",         "baseWidth": 420, "x": 543, "y": 640 },
+  "wall_star_string":      { "ko": "별 조명줄",     "en": "Star Lights",   "baseWidth": 560, "x": 543, "y": 360 },
+  "light_sparkle":         { "ko": "반짝 별빛",     "en": "Sparkles",      "baseWidth": 620, "x": 543, "y": 900 },
+  "light_lamp_glow":       { "ko": "스탠드 불빛",   "en": "Lamp Glow",     "baseWidth": 420, "x": 543, "y": 1100 }
+}

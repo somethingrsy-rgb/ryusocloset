@@ -1,0 +1,73 @@
+import { useState } from 'react'
+import { useI18n } from '../i18n'
+import { ROOM_ITEMS } from '../lib/room'
+import { assetUrl } from '../lib/items'
+import type { RoomItemDef, RoomState, RoomTab } from '../lib/roomTypes'
+
+const TABS: { id: RoomTab; icon: string; ko: string; en: string }[] = [
+  { id: 'furniture', icon: '🛋️', ko: '가구', en: 'Furniture' },
+  { id: 'wall', icon: '🖼️', ko: '벽 장식', en: 'Wall' },
+  { id: 'light', icon: '✨', ko: '조명', en: 'Lights' },
+]
+
+const inTab = (d: RoomItemDef, tab: RoomTab) => (tab === 'furniture' ? d.group === 'furniture' || d.group === 'rug' : d.group === tab)
+
+interface Props {
+  room: RoomState
+  onAdd: (def: RoomItemDef) => void
+}
+
+export function RoomTray({ room, onAdd }: Props) {
+  const { lang } = useI18n()
+  const [tab, setTab] = useState<RoomTab>('furniture')
+  const items = ROOM_ITEMS.filter((d) => inTab(d, tab))
+  const count = (id: string) => room.items.filter((p) => p.itemId === id).length
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div role="tablist" className="flex shrink-0 gap-1 px-2 pt-2 pb-1">
+        {TABS.map((tb) => {
+          const active = tb.id === tab
+          return (
+            <button
+              key={tb.id}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setTab(tb.id)}
+              className={`flex min-h-14 flex-1 flex-col items-center justify-center rounded-2xl px-1 text-2xl transition ${
+                active ? 'bg-blush text-white shadow' : 'bg-petal/70 hover:bg-petal'
+              }`}
+            >
+              <span aria-hidden>{tb.icon}</span>
+              <span className={`text-[10px] leading-tight font-semibold ${active ? 'text-white' : 'text-cocoa-soft'}`}>{tb[lang]}</span>
+            </button>
+          )
+        })}
+      </div>
+      <div role="tabpanel" className="scroll-thin min-h-0 flex-1 overflow-y-auto p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <ul className="grid grid-cols-4 gap-2">
+          {items.map((d) => {
+            const n = count(d.id)
+            return (
+              <li key={d.id}>
+                <button
+                  onClick={() => onAdd(d)}
+                  aria-label={d.name[lang]}
+                  title={d.name[lang]}
+                  className="relative flex aspect-square w-full items-center justify-center rounded-2xl bg-white p-1 ring-2 ring-petal transition hover:ring-blush/50 active:scale-95"
+                >
+                  <img src={assetUrl(d.thumb)} alt="" loading="lazy" draggable={false} className="h-full w-full object-contain" />
+                  {n > 0 && (
+                    <span className="absolute top-1 right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blush px-1 text-[11px] font-bold text-white">
+                      {n}
+                    </span>
+                  )}
+                </button>
+                <p className="mt-0.5 truncate text-center text-[10px] font-semibold text-cocoa-soft">{d.name[lang]}</p>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    </div>
+  )
+}
