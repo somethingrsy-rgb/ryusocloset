@@ -5,11 +5,14 @@ import { BOTTOMS, HEADS, LOWER_IMAGE, TOPS, type Assembly } from '../lib/assembl
 import { assetUrl } from '../lib/items'
 import { CANVAS_H, CANVAS_W } from '../lib/layers'
 
-/** 조립 탭에서 보이는 이미지들(아래→위): 몸 아랫부분, 하의, 상의(팔 포함), 머리 */
+/**
+ * 조립 탭에서 보이는 이미지들(아래→위): 다리(하의를 입었을 때만), 하의, 상의(팔 포함), 머리.
+ * 몸통과 속옷은 없다 — 하의를 안 입으면 상의 아래가 비어 있다.
+ */
 export function assemblyLayers(a: Assembly): string[] {
-  const urls = [LOWER_IMAGE]
+  const urls: string[] = []
   const bottom = BOTTOMS.find((b) => b.id === a.bottom)
-  if (bottom) urls.push(assetUrl(bottom.image))
+  if (bottom) urls.push(LOWER_IMAGE, assetUrl(bottom.image))
   const top = TOPS.find((t) => t.id === a.top)
   if (top) urls.push(assetUrl(top.image))
   const head = HEADS.find((h) => h.id === a.head)

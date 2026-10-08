@@ -2,8 +2,8 @@
 
   head_default.png  assets-src/assemble/source/head_original.jpg (흰 배경, 1024×636, 목 위까지) 의 배경을 지우고
                     캔버스 맨 위(0,0)에 놓은 것. 아바타 머리와 위치가 같다.
-  lower.png         정면 아바타(assets-src/base/source/standing_avatar_transparent.png)에서 허리~다리만 남긴 것.
-                    가슴 위(y<700)와 팔·손(엉덩이 위쪽의 몸통 바깥)을 지운다. 상의가 팔을 가지고 있으므로.
+  lower.png         정면 아바타(assets-src/base/source/standing_avatar_transparent.png)에서 **다리와 발만** 남긴 것.
+                    몸통·속옷 반바지(y<LEGS_Y)와 팔·손은 지운다. 상의가 팔을 가지고 있고, 하의가 몸통을 덮으므로.
 
 사용: python tools-py/make_assemble_base.py
 의존성: pip install numpy scipy opencv-python-headless pillow
@@ -32,15 +32,13 @@ head = np.zeros((H, W, 4), np.uint8)
 head[: h.shape[0]] = np.dstack([h.astype(np.uint8), m])
 Image.fromarray(head).save(f'{OUT}/head_default.png')
 
-# --- 몸 아랫부분 ---
+# --- 다리와 발 ---
+LEGS_Y = 1092  # 속옷 반바지 밑단 바로 아래 (반바지는 y≈1095 에서 끝남)
 av = np.array(Image.open('assets-src/base/source/standing_avatar_transparent.png').convert('RGBA'))
 assert av.shape[:2] == (H, W), av.shape
 Y = np.arange(H)[:, None]
 X = np.arange(W)[None, :]
-narrow = (X >= 345) & (X <= 680)  # 엉덩이 위쪽은 몸통 열만 (팔·손 제거)
-keep = np.ones((H, W), np.float32)
-keep[Y[:, 0] < 700, :] = 0
-keep = np.where((Y < 1100) & ~narrow, 0, keep)
+keep = ((Y >= LEGS_Y) & ((Y >= 1150) | ((X >= 345) & (X <= 680)))).astype(np.float32)  # 밑단 근처의 손 끝은 제외
 low = av.copy()
 low[:, :, 3] = (low[:, :, 3].astype(np.float32) * keep).astype(np.uint8)
 Image.fromarray(low).save(f'{OUT}/lower.png')
