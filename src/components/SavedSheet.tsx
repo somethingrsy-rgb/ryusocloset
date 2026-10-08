@@ -41,7 +41,7 @@ export function SavedSheet({ list, onLoad, onDelete, onSaveCurrent, onClose }: P
                 className="block w-full overflow-hidden rounded-2xl ring-2 ring-petal active:scale-95"
                 aria-label={new Date(s.createdAt).toLocaleString()}
               >
-                <img src={s.thumb} alt="" className="block aspect-[851/1280] w-full object-cover" draggable={false} />
+                <img src={s.thumb} alt="" className="block aspect-[2/3] w-full object-cover" draggable={false} />
               </button>
               <button
                 onClick={() => window.confirm(t('deleteConfirm')) && onDelete(s.id)}

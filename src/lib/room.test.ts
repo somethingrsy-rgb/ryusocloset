@@ -12,7 +12,7 @@ import {
   toggleFlip,
 } from './room'
 import { hitTest, type Mask } from './roomHit'
-import { MAX_PLACED, MAX_SCALE, MIN_SCALE, ROOM_H, ROOM_W, type RoomState } from './roomTypes'
+import { AVATAR_FEET_RATIO, MAX_PLACED, MAX_SCALE, MIN_SCALE, ROOM_H, ROOM_W, type RoomState } from './roomTypes'
 
 const def = (group: string) => ROOM_ITEMS.find((d) => d.group === group)!
 const empty = (): RoomState => ({ avatar: { x: 500, y: 1300, scale: 1, flip: false }, items: [] })
@@ -106,6 +106,14 @@ describe('drawables 순서', () => {
     expect(drawables(s).map((d) => d.group).slice(-2)).toEqual(['furniture', 'avatar'])
     s = moveTo(s, { kind: 'item', uid: 'f' }, 500, 1390)
     expect(drawables(s).map((d) => d.group).slice(-2)).toEqual(['avatar', 'furniture'])
+  })
+})
+
+describe('아바타 기준점', () => {
+  it('아바타의 y 는 발바닥 위치다 (캔버스 아래 여백만큼 위로 올려 그린다)', () => {
+    const d = drawables(empty()).find((x) => x.group === 'avatar')!
+    expect(d.top + d.h * AVATAR_FEET_RATIO).toBeCloseTo(d.y)
+    expect(d.top + d.h).toBeGreaterThan(d.y)
   })
 })
 

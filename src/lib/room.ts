@@ -2,6 +2,7 @@ import roomData from '../data/room-items.json'
 import { CANVAS_H, CANVAS_W } from './layers'
 import {
   AVATAR_BASE_W,
+  AVATAR_FEET_RATIO,
   MAX_PLACED,
   MAX_SCALE,
   MIN_SCALE,
@@ -18,7 +19,7 @@ import {
 export const ROOM_ITEMS = roomData as RoomItemDef[]
 export const ROOM_ITEM_BY_ID: Record<string, RoomItemDef> = Object.fromEntries(ROOM_ITEMS.map((d) => [d.id, d]))
 
-export const DEFAULT_AVATAR: AvatarPlacement = { x: 760, y: 1385, scale: 1, flip: false }
+export const DEFAULT_AVATAR: AvatarPlacement = { x: 760, y: 1395, scale: 1, flip: false }
 
 /** 처음 보는 방: 창문 + 러그 + 곰돌이 소파 + 아바타 */
 export function defaultRoom(): RoomState {
@@ -181,7 +182,7 @@ export function drawables(state: RoomState): Drawable[] {
     group: 'avatar',
     z: zOf('avatar', av.y, 0) + 0.5,
     left: av.x - w / 2,
-    top: av.y - h,
+    top: av.y - h * AVATAR_FEET_RATIO,
     w,
     h,
     x: av.x,

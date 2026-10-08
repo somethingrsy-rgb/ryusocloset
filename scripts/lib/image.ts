@@ -3,7 +3,7 @@ import sharp from 'sharp'
 export interface Box { left: number; top: number; width: number; height: number }
 
 /** 알파가 threshold 보다 큰 픽셀의 경계 상자 */
-export async function alphaBBox(file: string, threshold = 16): Promise<Box> {
+export async function alphaBBox(file: string | Buffer, threshold = 16): Promise<Box> {
   const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   let minX = info.width, minY = info.height, maxX = -1, maxY = -1
   for (let y = 0; y < info.height; y++) {
@@ -21,7 +21,7 @@ export async function alphaBBox(file: string, threshold = 16): Promise<Box> {
 }
 
 /** 투명 여백을 자른 뒤 10% 여백을 둔 정사각형 webp 썸네일 */
-export async function makeThumb(file: string, out: string, size = 256, threshold = 16) {
+export async function makeThumb(file: string | Buffer, out: string, size = 256, threshold = 16) {
   const box = await alphaBBox(file, threshold)
   const pad = Math.round(Math.max(box.width, box.height) * 0.1)
   const side = Math.max(box.width, box.height) + pad * 2

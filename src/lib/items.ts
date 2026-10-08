@@ -12,7 +12,9 @@ export const ITEMS_BY_CATEGORY: Record<Category, Item[]> = Object.fromEntries(
 export const assetUrl = (p: string) => `${import.meta.env.BASE_URL}${p}`
 
 export const BASE_LAYERS = {
+  hairBack: assetUrl('assets/base/hair_back.webp'),
   body: assetUrl('assets/base/body.webp'),
+  slippers: assetUrl('assets/base/slippers.webp'),
   bodyBarefoot: assetUrl('assets/base/body_barefoot.webp'),
   hairFront: assetUrl('assets/base/hair_front.webp'),
 }

@@ -41,11 +41,12 @@ npm test           # 착용 규칙 단위 테스트
 
 ```
 assets-src/                 원본 에셋 (직접 편집하는 곳)
-  clothes/*.png             옷 PNG — 모두 851×1280 투명 배경, 아바타와 같은 캔버스
-  base/body.png             기본 몸(머리+몸+슬리퍼)
-  base/body_barefoot.png    슬리퍼를 지운 몸 (신발 착용 시)
-  base/hair_front.png       어깨 앞으로 내려온 머리카락만 (옷 위에 덮는 레이어)
-  base/source_avatar_with_sticker.png   스티커 테두리가 있던 원본 아바타
+  clothes/*.png             옷 PNG — 1024×1536 투명 배경(아바타와 같은 캔버스). 예전 851×1280 옷은 빌드 때 자동으로 옮겨 맞춤
+  base/hair_back.png        뒷머리 (맨 아래)
+  base/body.png             기본 몸 — 하트 잠옷 차림, 발은 없음 (슬리퍼가 덮음)
+  base/body_barefoot.png    맨발 몸 (신발 착용 시 이쪽으로 교체)
+  base/slippers.png         곰돌이 슬리퍼 (신발을 안 신었을 때만 표시)
+  base/hair_front.png       앞머리·옆머리 (옷 위에 덮는 레이어)
   room/wall.webp, floor.webp            벽지(1086×1448, 아래쪽은 투명), 바닥
   room/items/<그룹>_<이름>.webp          가구·벽 장식·조명 (그룹: furniture / rug / wall / light)
 scripts/
@@ -54,7 +55,7 @@ scripts/
   room-items.json           방 아이템 이름, 기본 크기(baseWidth), 기본 위치(x, y)
   build-icons.ts            PWA 아이콘 생성
   labels.json               파일명 → 한/영 이름 (+ category/color 덮어쓰기)
-tools-py/                   아바타 가공용 1회성 파이썬 도구 (스티커 제거, 레이어 분리)
+tools-py/                   아바타 가공용 1회성 파이썬 도구 (스티커 테두리 제거, 앞/뒷머리 이음매 메우기)
 public/assets/              생성물 (webp) — 직접 수정하지 않기
 src/
   lib/layers.ts             카테고리, 레이어 순서(zIndex), 캔버스 크기
@@ -70,13 +71,14 @@ src/
 
 ## 합성 규칙 (중요)
 
-- 모든 옷 PNG는 **851×1280** 이고, 아바타 위 **(0, 0)** 에 캔버스 전체를 그대로 겹칩니다. 자르거나 가운데 정렬하지 마세요.
-- 레이어 순서(아래→위): 몸 < 신발 < 하의 < 상의 < 원피스 < 아우터 < **앞머리** < 액세서리 < 가방
+- 아바타와 옷 PNG의 캔버스는 **1024×1536** 이고, 옷은 아바타 위 **(0, 0)** 에 캔버스 전체를 그대로 겹칩니다. 자르거나 가운데 정렬하지 마세요.
+- 예전 아바타(851×1280 캔버스)용으로 만든 옷은 `scripts/build-assets.ts` 가 `src/lib/layers.ts` 의 `LEGACY_CANVAS`(×1.145 확대, 이동 −45/+32)로 새 캔버스에 옮겨 줍니다. 새 아바타 기준으로 다시 만든 옷은 1024×1536 으로 넣으면 변환 없이 그대로 쓰입니다.
+- 레이어 순서(아래→위): 뒷머리 < 몸 < 슬리퍼(신발 안 신었을 때) < 신발 < 하의 < 상의 < 원피스 < 아우터 < **앞머리** < 액세서리 < 가방
 - 앞머리 레이어가 아우터 위에 한 번 더 올라가서 어깨 위로 내려온 머리가 옷 앞에 보입니다.
 
 ## 새 옷 추가하는 법
 
-1. 투명 배경 851×1280 PNG를 `assets-src/clothes/` 에 넣습니다. 파일명 규칙: `카테고리_이름_색상.png`
+1. 투명 배경 1024×1536 PNG(아바타와 같은 캔버스)를 `assets-src/clothes/` 에 넣습니다. 파일명 규칙: `카테고리_이름_색상.png`
    - 카테고리 접두사: `top_` `bottom_` `dress_` `outer_` `shoes_` `acc_`
    - `acc_` 는 이름에 `bag/backpack/briefcase/handbag/tote` 가 있으면 **가방**, 아니면 **액세서리**로 분류됩니다.
    - 마지막 단어가 색상표(black, ivory, navy, gray, brown, beige, khaki, mint, charcoal, skyblue, white)에 있으면 색 점이 표시됩니다.
@@ -84,7 +86,7 @@ src/
 3. `npm run assets` 를 실행하면 webp 변환, 썸네일, `src/data/items.json` 이 갱신됩니다.
 4. 새 색상이 필요하면 `scripts/build-assets.ts` 의 `COLORS` 에 추가하세요.
 
-에셋이 없거나 깨진 경우를 대비해 `npm run assets` 가 크기가 851×1280 이 아닌 파일에 경고를 출력합니다.
+에셋이 없거나 깨진 경우를 대비해 `npm run assets` 가 크기가 1024×1536(또는 예전 851×1280)이 아닌 파일에 경고를 출력합니다.
 
 ## 새 가구·소품 추가하는 법
 
@@ -92,7 +94,7 @@ src/
    - `furniture_`(가구) · `rug_`(러그, 가구 뒤 바닥에 깔림) · `wall_`(벽 장식) · `light_`(조명 효과, 맨 위에 겹쳐짐)
    - 캔버스 크기는 자유입니다. 투명 여백은 자동으로 잘리고, 아래 가운데가 기준점이 됩니다.
 2. `scripts/room-items.json` 에 이름과 기본 크기를 적습니다. 없으면 폭 400, 방 바닥 중앙에 놓입니다.
-   - `baseWidth`: 방에 놓일 때의 폭(방 폭 = 1086). 아바타 폭은 386 입니다.
+   - `baseWidth`: 방에 놓일 때의 폭(방 폭 = 1086). 아바타 폭은 405 입니다.
    - `x`, `y`: 처음 놓이는 위치(아래 가운데 기준). 바닥은 y≈1060~1448, 벽은 그 위입니다.
 3. `npm run assets` 를 실행하면 `src/data/room-items.json` 과 썸네일이 갱신됩니다.
 
@@ -100,9 +102,10 @@ src/
 
 ## 아바타(기본 몸) 바꾸는 법
 
-- 같은 캔버스(851×1280) 기준의 `body.png`, `body_barefoot.png`, `hair_front.png` 를 `assets-src/base/` 에 넣고 `npm run assets`.
-- `hair_front.png` 와 `body_barefoot.png` 는 현재 `tools-py/make_avatar_layers.py` 로 **자동 분리한 근사치**입니다. 머리끝이나 발 모양이 거슬리면 직접 그린 PNG로 교체하면 더 깔끔합니다.
-- 헤어스타일 변형을 추가하려면 `Stage.tsx` 의 `body`/`hairFront` 를 선택 가능하게 확장하면 됩니다.
+- 같은 캔버스(1024×1536)로 맞춘 `hair_back` `body` `body_barefoot` `slippers` `hair_front` 5개 PNG를 `assets-src/base/` 에 넣고 `npm run assets`.
+- 앞머리와 뒷머리가 만나는 경계에 얇은 선이 보이면 `python tools-py/fix_hair_seam.py assets-src/base` 로 틈을 메울 수 있습니다. (현재 `hair_back.png` 는 이미 처리된 파일)
+- **알려진 한계:** 현재 `body.png` 에는 하트 잠옷이 그려져 있어서, 옷이 잠옷보다 좁거나 짧으면 잠옷 소매·단이 옷 밖으로 살짝 비칩니다. 속옷/민살 몸 버전을 따로 만들어 `body.png` 로 쓰거나, 새 몸 기준으로 옷을 다시 만들면 깔끔해집니다.
+- 헤어스타일 변형을 추가하려면 `FigureLayers.tsx` 의 `body`/`hairFront` 를 선택 가능하게 확장하면 됩니다.
 
 ## 다음 단계 아이디어
 
