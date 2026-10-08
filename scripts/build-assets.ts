@@ -11,13 +11,14 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { makeThumb } from './lib/image.ts'
+import { buildRoom } from './build-room.ts'
 import { CATEGORIES, LAYER_Z, type Category } from '../src/lib/layers.ts'
 import type { Item } from '../src/lib/types.ts'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = path.join(ROOT, 'assets-src')
 const OUT = path.join(ROOT, 'public/assets')
-const THUMB_SIZE = 256
 
 const COLORS: Record<string, { ko: string; en: string; hex: string }> = {
   black: { ko: '블랙', en: 'Black', hex: '#2b2b2f' },
@@ -61,41 +62,6 @@ function fallbackName(stem: string) {
   const words = stem.split('_').slice(1).filter((w) => !COLORS[w])
   const text = words.join(' ') || stem
   return { ko: text, en: text.replace(/\b\w/g, (c) => c.toUpperCase()) }
-}
-
-async function alphaBBox(file: string) {
-  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
-  let minX = info.width, minY = info.height, maxX = -1, maxY = -1
-  for (let y = 0; y < info.height; y++) {
-    for (let x = 0; x < info.width; x++) {
-      if (data[(y * info.width + x) * 4 + 3] > 16) {
-        if (x < minX) minX = x
-        if (x > maxX) maxX = x
-        if (y < minY) minY = y
-        if (y > maxY) maxY = y
-      }
-    }
-  }
-  if (maxX < 0) return { left: 0, top: 0, width: info.width, height: info.height }
-  return { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 }
-}
-
-async function makeThumb(file: string, out: string) {
-  const box = await alphaBBox(file)
-  const pad = Math.round(Math.max(box.width, box.height) * 0.1)
-  const side = Math.max(box.width, box.height) + pad * 2
-  const cropped = await sharp(file).extract(box).toBuffer()
-  // sharp 는 resize 를 composite 보다 먼저 적용하므로, 정사각형 캔버스를 먼저 만든 뒤 따로 축소한다.
-  const square = await sharp({
-    create: { width: side, height: side, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
-  })
-    .composite([{ input: cropped, left: Math.round((side - box.width) / 2), top: Math.round((side - box.height) / 2) }])
-    .png()
-    .toBuffer()
-  await sharp(square)
-    .resize(THUMB_SIZE, THUMB_SIZE)
-    .webp({ quality: 88, alphaQuality: 100 })
-    .toFile(out)
 }
 
 async function main() {
@@ -147,6 +113,7 @@ async function main() {
 
   const counts = Object.fromEntries(CATEGORIES.map((c) => [c, items.filter((i) => i.category === c).length]))
   console.log(`✔ ${items.length}개 아이템`, counts)
+  await buildRoom()
 }
 
 main().catch((e) => {

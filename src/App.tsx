@@ -1,31 +1,40 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { Closet } from './components/Closet'
-import { ExportSheet } from './components/ExportSheet'
+import { ExportSheet, type RenderOptions } from './components/ExportSheet'
+import { RoomTray } from './components/RoomTray'
+import { RoomView } from './components/RoomView'
 import { SavedSheet } from './components/SavedSheet'
 import { Stage } from './components/Stage'
 import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
-import { loadImage, renderThumb } from './lib/exportPng'
+import { loadImage, renderOutfitCanvas, renderThumb } from './lib/exportPng'
+import { ROOM_ASSETS, renderRoomCanvas } from './lib/exportRoom'
 import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, assetUrl } from './lib/items'
 import type { Category } from './lib/layers'
 import { randomOutfit, toggleItem } from './lib/outfit'
+import { ROOM_ITEMS, addItem, defaultRoom } from './lib/room'
+import { MAX_PLACED, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
 import { playSnap } from './lib/sound'
 import {
   MAX_SAVED,
   loadCurrent,
+  loadRoom,
   loadSaved,
   loadSettings,
   persistCurrent,
+  persistRoom,
   persistSaved,
   persistSettings,
 } from './lib/storage'
 import type { Item, Outfit, SavedOutfit } from './lib/types'
 
-type ModalKind = null | 'bg' | 'saved' | 'export'
+type ModalKind = null | 'bg' | 'saved' | 'export' | 'roomExport'
+type Mode = 'closet' | 'room'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
 
 export default function App() {
   const initial = useMemo(loadSettings, [])
@@ -34,9 +43,12 @@ export default function App() {
   const [bgId, setBgId] = useState(
     initial.bgId && BACKGROUNDS.some((b) => b.id === initial.bgId) ? initial.bgId : DEFAULT_BG_ID,
   )
+  const [mode, setMode] = useState<Mode>('closet')
   const [outfit, setOutfit] = useState<Outfit>(loadCurrent)
   const [category, setCategory] = useState<Category>('top')
   const [saved, setSaved] = useState<SavedOutfit[]>(loadSaved)
+  const [room, setRoom] = useState<RoomState>(loadRoom)
+  const [selection, setSelection] = useState<Selection>(null)
   const [modal, setModal] = useState<ModalKind>(null)
   const [toast, setToast] = useState<string | null>(null)
   const figureRef = useRef<HTMLDivElement>(null)
@@ -52,10 +64,20 @@ export default function App() {
   }, [lang])
   useEffect(() => void persistSettings({ lang, sound, bgId }), [lang, sound, bgId])
   useEffect(() => void persistCurrent(outfit), [outfit])
+  // 드래그 중에는 상태가 자주 바뀌므로 잠깐 모았다가 저장
+  useEffect(() => {
+    const id = window.setTimeout(() => persistRoom(room), 300)
+    return () => window.clearTimeout(id)
+  }, [room])
 
   // 착용 순간 깜빡임이 없도록 모든 레이어를 한가할 때 미리 받아 둔다
   useEffect(() => {
-    const urls = [...Object.values(BASE_LAYERS), ...ITEMS.map((i) => assetUrl(i.image))]
+    const urls = [
+      ...Object.values(BASE_LAYERS),
+      ...ITEMS.map((i) => assetUrl(i.image)),
+      ...Object.values(ROOM_ASSETS),
+      ...ROOM_ITEMS.map((d) => assetUrl(d.image)),
+    ]
     const run = () => urls.forEach((u) => void loadImage(u).catch(() => undefined))
     const w = window as Window & { requestIdleCallback?: (cb: () => void) => number }
     if (w.requestIdleCallback) w.requestIdleCallback(run)
@@ -82,6 +104,7 @@ export default function App() {
     }
   }, [sound])
 
+  /* ── 코디 ── */
   const onToggle = (item: Item) => {
     const next = toggleItem(outfit, item)
     setOutfit(next)
@@ -100,13 +123,7 @@ export default function App() {
     if (saved.length >= MAX_SAVED) return showToast(t('savedFull', { n: MAX_SAVED }))
     try {
       const thumb = await renderThumb(outfit, bg)
-      const entry: SavedOutfit = {
-        id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-        createdAt: Date.now(),
-        outfit,
-        bgId,
-        thumb,
-      }
+      const entry: SavedOutfit = { id: newUid(), createdAt: Date.now(), outfit, bgId, thumb }
       const next = [entry, ...saved]
       if (!persistSaved(next)) return showToast(t('saveFailed'))
       setSaved(next)
@@ -129,6 +146,26 @@ export default function App() {
     showToast(t('loaded'))
   }
 
+  /* ── 방 ── */
+  const addToRoom = (def: RoomItemDef) => {
+    const uid = newUid()
+    const next = addItem(room, def, uid)
+    if (!next) return showToast(t('roomFull', { n: MAX_PLACED }))
+    setRoom(next)
+    setSelection({ kind: 'item', uid })
+    if (sound) playSnap()
+  }
+
+  const resetRoom = () => {
+    if (!window.confirm(t('roomResetConfirm'))) return
+    setRoom(defaultRoom())
+    setSelection(null)
+    showToast(t('roomResetDone'))
+  }
+
+  const renderOutfit = useCallback((o: RenderOptions) => renderOutfitCanvas(outfit, o), [outfit])
+  const renderRoom = useCallback(() => renderRoomCanvas(room, outfit), [room, outfit])
+
   const fab = (label: string, icon: string, onClick: () => void, badge?: number) => (
     <button
       onClick={onClick}
@@ -145,16 +182,34 @@ export default function App() {
     </button>
   )
 
+  const modeBtn = (m: Mode, icon: string, label: string) => (
+    <button
+      role="tab"
+      aria-selected={mode === m}
+      onClick={() => {
+        setMode(m)
+        setSelection(null)
+      }}
+      className={`flex min-h-11 items-center gap-1 rounded-full px-3 text-sm font-bold transition ${
+        mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
+      }`}
+    >
+      <span aria-hidden>{icon}</span>
+      {label}
+    </button>
+  )
+
   return (
     <I18nContext.Provider value={i18n}>
       <div className="mx-auto flex h-dvh max-w-[1100px] flex-col gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))] md:flex-row md:gap-4 md:p-4">
         <section className="flex min-h-0 flex-1 flex-col gap-2">
-          <header className="flex shrink-0 items-center justify-between px-1">
-            <h1 className="text-xl font-extrabold tracking-tight text-blush-deep">
-              <span aria-hidden>🪄 </span>
-              {t('title')}
-            </h1>
-            <div className="flex items-center gap-2">
+          <header className="flex shrink-0 items-center justify-between gap-2 px-1">
+            <h1 className="text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep">{t('title')}</h1>
+            <div role="tablist" className="flex rounded-full bg-white/80 p-0.5 shadow-sm">
+              {modeBtn('closet', '👗', t('modeCloset'))}
+              {modeBtn('room', '🏠', t('modeRoom'))}
+            </div>
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setSound((s) => !s)}
                 aria-label={sound ? t('soundOff') : t('soundOn')}
@@ -165,7 +220,8 @@ export default function App() {
               </button>
               <button
                 onClick={() => setLang((l) => (l === 'ko' ? 'en' : 'ko'))}
-                className="min-h-11 rounded-full bg-white/80 px-4 text-sm font-bold shadow-sm"
+                aria-label={lang === 'ko' ? 'English' : '한국어'}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-sm font-bold shadow-sm"
               >
                 {t('language')}
               </button>
@@ -173,21 +229,35 @@ export default function App() {
           </header>
 
           <div className="min-h-0 flex-1">
-            <Stage outfit={outfit} bg={bg} figureRef={figureRef}>
-              <div className="absolute top-2 right-2 flex flex-col gap-2">
-                {fab(t('random'), '🎲', onRandom)}
-                {fab(t('reset'), '🧺', () => setOutfit({}))}
-                {fab(t('background'), '🖼️', () => setModal('bg'))}
-                {fab(t('saveOutfit'), '💾', saveCurrent)}
-                {fab(t('myOutfits'), '📒', () => setModal('saved'), saved.length)}
-                {fab(t('exportImage'), '📷', () => (hasClothes ? setModal('export') : showToast(t('nothingToSave'))))}
-              </div>
-            </Stage>
+            {mode === 'closet' ? (
+              <Stage outfit={outfit} bg={bg} figureRef={figureRef}>
+                <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
+                  {fab(t('random'), '🎲', onRandom)}
+                  {fab(t('reset'), '🧺', () => setOutfit({}))}
+                  {fab(t('background'), '🖼️', () => setModal('bg'))}
+                  {fab(t('saveOutfit'), '💾', saveCurrent)}
+                  {fab(t('myOutfits'), '📒', () => setModal('saved'), saved.length)}
+                  {fab(t('exportImage'), '📷', () => (hasClothes ? setModal('export') : showToast(t('nothingToSave'))))}
+                </div>
+              </Stage>
+            ) : (
+              <RoomView outfit={outfit} room={room} selection={selection} onSelect={setSelection} onChange={setRoom}>
+                <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
+                  {fab(t('goCloset'), '👗', () => setMode('closet'))}
+                  {fab(t('roomReset'), '🧹', resetRoom)}
+                  {fab(t('roomExport'), '📷', () => setModal('roomExport'))}
+                </div>
+              </RoomView>
+            )}
           </div>
         </section>
 
         <aside className="flex h-[40dvh] shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]">
-          <Closet category={category} onCategory={setCategory} outfit={outfit} onToggle={onToggle} />
+          {mode === 'closet' ? (
+            <Closet category={category} onCategory={setCategory} outfit={outfit} onToggle={onToggle} />
+          ) : (
+            <RoomTray room={room} onAdd={addToRoom} />
+          )}
         </aside>
       </div>
 
@@ -203,8 +273,22 @@ export default function App() {
       )}
       {modal === 'export' && (
         <ExportSheet
-          outfit={outfit}
+          title={t('exportTitle')}
+          render={renderOutfit}
+          showOptions
           background={bg}
+          filePrefix="ryuso-closet"
+          onClose={() => setModal(null)}
+          onError={() => showToast(t('exportFailed'))}
+        />
+      )}
+      {modal === 'roomExport' && (
+        <ExportSheet
+          title={t('roomExportTitle')}
+          render={renderRoom}
+          showOptions={false}
+          background={bg}
+          filePrefix="ryuso-room"
           onClose={() => setModal(null)}
           onError={() => showToast(t('exportFailed'))}
         />

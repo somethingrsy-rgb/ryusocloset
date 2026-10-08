@@ -1,5 +1,7 @@
 import { ITEM_BY_ID } from './items'
 import { sanitizeOutfit } from './outfit'
+import { sanitizeRoom } from './room'
+import type { RoomState } from './roomTypes'
 import type { Outfit, SavedOutfit } from './types'
 
 export const MAX_SAVED = 30
@@ -7,6 +9,7 @@ export const MAX_SAVED = 30
 const K_SAVED = 'ryuso.saved.v1'
 const K_SETTINGS = 'ryuso.settings.v1'
 const K_CURRENT = 'ryuso.current.v1'
+const K_ROOM = 'ryuso.room.v1'
 
 function read<T>(key: string): T | null {
   try {
@@ -46,3 +49,6 @@ export const persistSettings = (s: Settings) => write(K_SETTINGS, s)
 
 export const loadCurrent = (): Outfit => sanitizeOutfit(read<Outfit>(K_CURRENT), ITEM_BY_ID)
 export const persistCurrent = (o: Outfit) => write(K_CURRENT, o)
+
+export const loadRoom = (): RoomState => sanitizeRoom(read<unknown>(K_ROOM))
+export const persistRoom = (r: RoomState) => write(K_ROOM, r)

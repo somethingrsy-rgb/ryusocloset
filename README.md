@@ -28,6 +28,15 @@ npm test           # 착용 규칙 단위 테스트
 - PNG 저장/공유: 배경 포함/투명, 스티커 테두리 켜기/끄기
 - 한국어/영어, 큰 터치 영역, 아이콘 중심 UI
 
+### 내 방 꾸미기 (상단 `🏠 내 방` 탭)
+
+- 하단 트레이(가구 / 벽 장식 / 조명)에서 탭하면 방에 놓이고, **끌어서 옮기기**
+- 선택하면 상단에 도구줄: 작게 · 크게 · 좌우 반전 · 치우기. 두 손가락 **핀치**, 마우스 **휠**, 키보드(방향키 이동, `+`/`-` 크기, `F` 반전, `Delete` 삭제)도 지원
+- **아바타도 방 안에서 옮기고 크기를 바꿀 수 있고**, 지금 입은 코디 그대로 서 있음. 가구와 아바타는 바닥 기준 y 위치로 앞뒤가 자동 정렬되고(아래쪽이 앞), 바닥에 닿는 물건에는 은은한 그림자가 생김
+- 레이어 순서: 바닥 < 벽지 < 러그 < 벽 장식 < (가구·아바타, y 순) < 조명 효과
+- 투명한 부분을 눌러도 뒤에 있는 물건이 선택되도록 알파 마스크로 터치 판정
+- 방 상태는 localStorage 에 자동 저장(최대 40개), `🧹` 로 처음 모습으로 초기화, `📷` 로 방 사진 PNG 저장/공유
+
 ## 폴더 구조
 
 ```
@@ -37,8 +46,12 @@ assets-src/                 원본 에셋 (직접 편집하는 곳)
   base/body_barefoot.png    슬리퍼를 지운 몸 (신발 착용 시)
   base/hair_front.png       어깨 앞으로 내려온 머리카락만 (옷 위에 덮는 레이어)
   base/source_avatar_with_sticker.png   스티커 테두리가 있던 원본 아바타
+  room/wall.webp, floor.webp            벽지(1086×1448, 아래쪽은 투명), 바닥
+  room/items/<그룹>_<이름>.webp          가구·벽 장식·조명 (그룹: furniture / rug / wall / light)
 scripts/
   build-assets.ts           assets-src → public/assets(webp, 썸네일) + src/data/items.json 생성
+  build-room.ts             assets-src/room → public/assets/room (여백 트림, webp, 썸네일) + src/data/room-items.json
+  room-items.json           방 아이템 이름, 기본 크기(baseWidth), 기본 위치(x, y)
   build-icons.ts            PWA 아이콘 생성
   labels.json               파일명 → 한/영 이름 (+ category/color 덮어쓰기)
 tools-py/                   아바타 가공용 1회성 파이썬 도구 (스티커 제거, 레이어 분리)
@@ -48,8 +61,11 @@ src/
   lib/outfit.ts             착용 규칙(toggle/랜덤/정리) — 테스트 있음
   lib/exportPng.ts          canvas 합성 + 스티커 테두리 + PNG 내보내기
   lib/backgrounds.ts        배경 정의 (화면 CSS와 canvas 공용)
+  lib/room.ts               방 상태(추가/이동/크기/반전/삭제), 그리기 순서, 검증 — 테스트 있음
+  lib/roomHit.ts            알파 마스크 터치 판정
+  lib/exportRoom.ts         방 + 가구 + 아바타 PNG 합성
   data/items.json           자동 생성 매니페스트 (id, 이름, 카테고리, 이미지, 색상, zIndex)
-  components/               Stage(합성 무대), Closet(탭+그리드), 모달들
+  components/               Stage(코디 무대), Closet, RoomView(방 무대), RoomTray, 모달들
 ```
 
 ## 합성 규칙 (중요)
@@ -70,6 +86,18 @@ src/
 
 에셋이 없거나 깨진 경우를 대비해 `npm run assets` 가 크기가 851×1280 이 아닌 파일에 경고를 출력합니다.
 
+## 새 가구·소품 추가하는 법
+
+1. 투명 배경 PNG(또는 webp)를 `assets-src/room/items/` 에 넣습니다. 파일명 규칙: `그룹_이름.png`
+   - `furniture_`(가구) · `rug_`(러그, 가구 뒤 바닥에 깔림) · `wall_`(벽 장식) · `light_`(조명 효과, 맨 위에 겹쳐짐)
+   - 캔버스 크기는 자유입니다. 투명 여백은 자동으로 잘리고, 아래 가운데가 기준점이 됩니다.
+2. `scripts/room-items.json` 에 이름과 기본 크기를 적습니다. 없으면 폭 400, 방 바닥 중앙에 놓입니다.
+   - `baseWidth`: 방에 놓일 때의 폭(방 폭 = 1086). 아바타 폭은 386 입니다.
+   - `x`, `y`: 처음 놓이는 위치(아래 가운데 기준). 바닥은 y≈1060~1448, 벽은 그 위입니다.
+3. `npm run assets` 를 실행하면 `src/data/room-items.json` 과 썸네일이 갱신됩니다.
+
+벽지·바닥을 바꾸려면 `assets-src/room/wall.*`(1086×1448, 아래 바닥 부분 투명) 과 `floor.*` 를 교체하세요.
+
 ## 아바타(기본 몸) 바꾸는 법
 
 - 같은 캔버스(851×1280) 기준의 `body.png`, `body_barefoot.png`, `hair_front.png` 를 `assets-src/base/` 에 넣고 `npm run assets`.
@@ -79,5 +107,5 @@ src/
 ## 다음 단계 아이디어
 
 - 레벨/경험치, 포인트, 일일 미션(TPO 코디), 컬렉션 도감
-- 포인트로 가구·배경을 사서 꾸미는 "내 방" 화면 (정면 시점 에셋)
+- 포인트로 가구·벽지를 사서 방을 꾸미는 상점 (지금은 모든 가구가 무료로 제공됨), 벽지/바닥 종류 늘리기
 - 헤어/표정 변형, 포즈 추가
