@@ -17,9 +17,9 @@ from PIL import Image
 
 SRC = 'assets-src/assemble/shoes'
 OUT = 'scripts/assemble-shoes-fit.json'
-# 정면 아바타(1024×1536)의 두 발: 가운데 x, 폭(둘 다 118), 발끝 y (측정값)
-FOOT_CX = (414.0, 608.0)
-FOOT_W = 118.0
+# 정면 아바타(1024×1536)의 두 발: 가운데 x, 폭(114~115), 발끝 y (측정값)
+FOOT_CX = (420.5, 601.0)
+FOOT_W = 114.5
 FEET_Y = 1512
 
 fit = {}

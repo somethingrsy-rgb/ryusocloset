@@ -47,7 +47,7 @@ npm test           # 착용 규칙 단위 테스트
 
 **에셋**
 - 상의: `assets-src/assemble/tops/top_*.png` (팔 포함 원본 1928×816). 빌드가 0.545배로 줄여 아바타 캔버스 (x −10, y 624)에 놓습니다.
-- 하의: `assets-src/assemble/bottoms/bottom_*.png` (다리·발 포함 889×1770). 위쪽의 맨살 허리 조각에서 가장 좁은 줄을 아바타 허리(y 840, 폭 208)에 맞추고, 발끝이 캔버스 안(y 1520)에 오도록 균일 배율을 정합니다. 계산: `python tools-py/fit_assemble_bottoms.py` → `scripts/assemble-bottoms-fit.json`
+- 하의: `assets-src/assemble/bottoms/bottom_*.png` (다리·발 포함 889×1770). 위쪽의 맨살 허리 조각에서 가장 좁은 줄을 아바타 허리(y 840, 폭 177)에 맞추고, 발끝이 캔버스 안(y 1520)에 오도록 균일 배율을 정합니다. 계산: `python tools-py/fit_assemble_bottoms.py` → `scripts/assemble-bottoms-fit.json`
 - 신발: `assets-src/assemble/shoes/shoes_*.png` (발목이 보이는 한 쌍, 2170×725). 두 짝의 가운데·폭을 아바타 두 발에 맞추고 발끝을 y 1512 에 두는 값을 `python tools-py/fit_assemble_shoes.py` → `scripts/assemble-shoes-fit.json` 으로 계산합니다. 하의는 맨발까지 그려져 있어 신발이 그 위를 덮습니다.
 - 머리: `assets-src/assemble/base/head_*.png` (1024×1536 캔버스). 원본에서 `python tools-py/make_assemble_base.py` 로 만듭니다.
 - 이름·색은 `scripts/assemble-items.json`. 새 부품을 넣고 `npm run assets` 를 실행하면 `src/data/assemble-items.json` 이 갱신됩니다.
