@@ -33,18 +33,14 @@ function makeCanvas(w: number, h: number) {
 export async function renderFigure(outfit: Outfit): Promise<HTMLCanvasElement> {
   const items = wornItems(outfit, ITEM_BY_ID)
   const barefoot = !!outfit.shoes
-  const [hairBack, body, slippers, hair, ...imgs] = await Promise.all([
-    loadImage(BASE_LAYERS.hairBack),
+  const [body, hair, ...imgs] = await Promise.all([
     loadImage(barefoot ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body),
-    loadImage(BASE_LAYERS.slippers),
     loadImage(BASE_LAYERS.hairFront),
     ...items.map((i) => loadImage(`${import.meta.env.BASE_URL}${i.image}`)),
   ])
   const canvas = makeCanvas(CANVAS_W, CANVAS_H)
   const ctx = canvas.getContext('2d')!
-  ctx.drawImage(hairBack, 0, 0, CANVAS_W, CANVAS_H)
   ctx.drawImage(body, 0, 0, CANVAS_W, CANVAS_H)
-  if (!barefoot) ctx.drawImage(slippers, 0, 0, CANVAS_W, CANVAS_H)
   // 앞머리(60)는 아우터(50) 위, 액세서리(70) 아래
   let hairDrawn = false
   items.forEach((it, idx) => {

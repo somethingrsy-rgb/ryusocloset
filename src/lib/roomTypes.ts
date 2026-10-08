@@ -6,7 +6,7 @@ export const FLOOR_H = 434
 /** 아바타 캔버스(1024×1536)를 방에 놓을 때 기본 폭 (캐릭터 키 ≈ 방 높이의 40%) */
 export const AVATAR_BASE_W = 405
 /** 아바타 캔버스에서 발바닥이 끝나는 높이 비율 — 방에서 아바타의 기준점(y)은 발바닥이다 */
-export const AVATAR_FEET_RATIO = 1480 / 1536
+export const AVATAR_FEET_RATIO = 1517 / 1536
 export const MAX_PLACED = 40
 export const MIN_SCALE = 0.3
 export const MAX_SCALE = 3

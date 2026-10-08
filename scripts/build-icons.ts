@@ -9,11 +9,7 @@ const OUT = path.join(ROOT, 'public/icons')
 const BG = { r: 255, g: 227, b: 236, alpha: 1 }
 
 async function icon(file: string, size: number, faceRatio: number) {
-  const layer = (n: string) => path.join(ROOT, `assets-src/base/${n}.png`)
-  const full = await sharp(layer('hair_back'))
-    .composite([{ input: layer('body') }, { input: layer('hair_front') }])
-    .png()
-    .toBuffer()
+  const full = path.join(ROOT, 'assets-src/base/body.png')
   const head = await sharp(full).extract({ left: 60, top: 10, width: 900, height: 900 }).toBuffer()
   const face = Math.round(size * faceRatio)
   const faceBuf = await sharp(head).resize(face, face).toBuffer()

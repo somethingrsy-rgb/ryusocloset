@@ -2,7 +2,7 @@
  * assets-src/ 의 원본 PNG → public/assets/ (webp, 썸네일) + src/data/items.json 매니페스트 생성.
  *
  *   assets-src/clothes/<category>_<name>_<color>.png   (1024x1536, 투명 배경, 아바타와 같은 캔버스. 예전 851x1280 옷은 자동으로 옮겨 맞춤)
- *   assets-src/base/{hair_back,body,body_barefoot,slippers,hair_front}.png
+ *   assets-src/base/{body,body_barefoot,hair_front}.png
  *   scripts/labels.json                                 (파일명 → 한/영 이름, 선택적으로 category/color 덮어쓰기)
  *
  * 실행: npm run assets
@@ -100,7 +100,7 @@ async function main() {
   for (const c of CATEGORIES) fs.rmSync(path.join(OUT, 'clothes', c), { recursive: true, force: true })
 
   // 1) 아바타 베이스 레이어
-  for (const name of ['hair_back', 'body', 'body_barefoot', 'slippers', 'hair_front']) {
+  for (const name of ['body', 'body_barefoot', 'hair_front']) {
     const src = path.join(SRC, 'base', `${name}.png`)
     if (!fs.existsSync(src)) throw new Error(`없음: ${src}`)
     const bm = await sharp(src).metadata()
