@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { BOTTOMS, HEADS, TOPS, defaultAssembly, randomAssembly, sanitizeAssembly, takeOffPart, togglePart } from './assemble'
+import { BOTTOMS, HEADS, SHOES, TOPS, defaultAssembly, randomAssembly, sanitizeAssembly, takeOffPart, togglePart } from './assemble'
 
 describe('assemble', () => {
-  it('부품이 있다 (머리 1+, 상의 9, 하의 9)', () => {
+  it('부품이 있다 (머리 1+, 상의 9, 하의 9, 신발 5)', () => {
     expect(HEADS.length).toBeGreaterThan(0)
     expect(TOPS.length).toBe(9)
     expect(BOTTOMS.length).toBe(9)
-    for (const p of [...HEADS, ...TOPS, ...BOTTOMS]) {
+    expect(SHOES.length).toBe(5)
+    for (const p of [...HEADS, ...TOPS, ...BOTTOMS, ...SHOES]) {
       expect(p.box.w).toBeGreaterThan(0)
       expect(p.box.h).toBeGreaterThan(0)
     }
@@ -41,11 +42,20 @@ describe('assemble', () => {
     expect(ok.bottom).toBe(BOTTOMS[0].id)
     expect(ok.tweaks).toEqual({ top: { dx: 10, dy: 0, scale: 1.6 } }) // 범위 보정, 원래 값(head)·잘못된 값은 제거
   })
+  it('신발도 입고 벗을 수 있고, 잘못된 칸의 id 는 버린다', () => {
+    const a = defaultAssembly()
+    const on = togglePart(a, 'shoes', SHOES[0].id)
+    expect(on.shoes).toBe(SHOES[0].id)
+    expect(takeOffPart(on, 'shoes').shoes).toBeUndefined()
+    expect(sanitizeAssembly({ head: HEADS[0].id, shoes: TOPS[0].id }).shoes).toBeUndefined()
+    expect(sanitizeAssembly({ head: HEADS[0].id, shoes: SHOES[1].id }).shoes).toBe(SHOES[1].id)
+  })
   it('랜덤 조합은 유효하다', () => {
     for (let i = 0; i < 50; i++) {
       const r = randomAssembly()
       expect(TOPS.some((t) => t.id === r.top)).toBe(true)
       expect(BOTTOMS.some((b) => b.id === r.bottom)).toBe(true)
+      expect(SHOES.some((b) => b.id === r.shoes)).toBe(true)
     }
   })
 })

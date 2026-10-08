@@ -92,5 +92,30 @@
     "ko": "와이드 팬츠",
     "en": "Wide Pants",
     "color": "charcoal"
+  },
+  "shoes_pumps_black": {
+    "ko": "구두",
+    "en": "Pumps",
+    "color": "black"
+  },
+  "shoes_maryjane_black": {
+    "ko": "메리제인",
+    "en": "Mary Janes",
+    "color": "black"
+  },
+  "shoes_sneakers_navy": {
+    "ko": "스니커즈",
+    "en": "Sneakers",
+    "color": "navy"
+  },
+  "shoes_sneakers_white": {
+    "ko": "스니커즈",
+    "en": "Sneakers",
+    "color": "white"
+  },
+  "shoes_flats_black": {
+    "ko": "플랫슈즈",
+    "en": "Flats",
+    "color": "black"
   }
 }

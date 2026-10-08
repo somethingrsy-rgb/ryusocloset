@@ -1,10 +1,10 @@
 import raw from '../data/assemble-items.json'
 import { sanitizeTweaks, type TweakMap } from './tweaks'
 
-/** 조립 탭의 부품: 머리(목 위), 상의(팔·손 포함), 하의(허리·다리·발 포함). 모두 1024×1536 캔버스 전체 이미지. */
+/** 조립 탭의 부품: 머리(목 위), 상의(팔·손 포함), 하의(허리·다리·발 포함), 신발. 모두 1024×1536 캔버스 전체 이미지. */
 export interface AssemblePart {
   id: string
-  kind: 'head' | 'top' | 'bottom'
+  kind: 'head' | 'top' | 'bottom' | 'shoes'
   name: { ko: string; en: string }
   colorHex: string | null
   /** 알파가 있는 영역의 경계 상자(캔버스 px) — 크기 조절의 기준점(중심) */
@@ -15,9 +15,9 @@ export interface AssemblePart {
 }
 
 export type Slot = AssemblePart['kind']
-export const SLOTS: readonly Slot[] = ['head', 'top', 'bottom']
-/** 쌓이는 순서(클수록 위): 하의 < 상의 < 머리 */
-export const SLOT_Z: Record<Slot, number> = { bottom: 10, top: 20, head: 30 }
+export const SLOTS: readonly Slot[] = ['head', 'top', 'bottom', 'shoes']
+/** 쌓이는 순서(클수록 위): 하의 < 신발 < 상의 < 머리 */
+export const SLOT_Z: Record<Slot, number> = { bottom: 10, shoes: 15, top: 20, head: 30 }
 
 export const ASSEMBLE_PARTS = raw as AssemblePart[]
 export const PART_BY_ID: Record<string, AssemblePart> = Object.fromEntries(ASSEMBLE_PARTS.map((p) => [p.id, p]))
@@ -25,6 +25,7 @@ export const partsOf = (kind: Slot) => ASSEMBLE_PARTS.filter((p) => p.kind === k
 export const HEADS = partsOf('head')
 export const TOPS = partsOf('top')
 export const BOTTOMS = partsOf('bottom')
+export const SHOES = partsOf('shoes')
 
 export type AssembleTweaks = TweakMap<Slot>
 
@@ -32,6 +33,7 @@ export interface Assembly {
   head: string
   top?: string
   bottom?: string
+  shoes?: string
   tweaks?: AssembleTweaks
 }
 
@@ -46,8 +48,10 @@ export function sanitizeAssembly(raw: unknown): Assembly {
   const out: Assembly = { head: pick(r.head, 'head') ?? base.head }
   const top = pick(r.top, 'top')
   const bottom = pick(r.bottom, 'bottom')
+  const shoes = pick(r.shoes, 'shoes')
   if (top) out.top = top
   if (bottom) out.bottom = bottom
+  if (shoes) out.shoes = shoes
   const tweaks = sanitizeTweaks(r.tweaks, SLOTS, out)
   if (Object.keys(tweaks).length) out.tweaks = tweaks
   return out
@@ -79,5 +83,6 @@ export const randomAssembly = (rng: () => number = Math.random): Assembly => {
   const out: Assembly = { head: pick(HEADS)?.id ?? '' }
   if (TOPS.length) out.top = pick(TOPS).id
   if (BOTTOMS.length) out.bottom = pick(BOTTOMS).id
+  if (SHOES.length) out.shoes = pick(SHOES).id
   return out
 }

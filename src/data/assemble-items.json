@@ -321,5 +321,90 @@
     },
     "image": "assets/assemble/bottom_white_denim_skirt.webp",
     "thumb": "assets/assemble/thumbs/bottom_white_denim_skirt.webp"
+  },
+  {
+    "id": "shoes_flats_black",
+    "kind": "shoes",
+    "name": {
+      "ko": "플랫슈즈",
+      "en": "Flats"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 356,
+      "y": 1373,
+      "w": 309,
+      "h": 140
+    },
+    "image": "assets/assemble/shoes_flats_black.webp",
+    "thumb": "assets/assemble/thumbs/shoes_flats_black.webp"
+  },
+  {
+    "id": "shoes_maryjane_black",
+    "kind": "shoes",
+    "name": {
+      "ko": "메리제인",
+      "en": "Mary Janes"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 356,
+      "y": 1345,
+      "w": 309,
+      "h": 168
+    },
+    "image": "assets/assemble/shoes_maryjane_black.webp",
+    "thumb": "assets/assemble/thumbs/shoes_maryjane_black.webp"
+  },
+  {
+    "id": "shoes_pumps_black",
+    "kind": "shoes",
+    "name": {
+      "ko": "구두",
+      "en": "Pumps"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 357,
+      "y": 1367,
+      "w": 308,
+      "h": 146
+    },
+    "image": "assets/assemble/shoes_pumps_black.webp",
+    "thumb": "assets/assemble/thumbs/shoes_pumps_black.webp"
+  },
+  {
+    "id": "shoes_sneakers_navy",
+    "kind": "shoes",
+    "name": {
+      "ko": "스니커즈",
+      "en": "Sneakers"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 357,
+      "y": 1347,
+      "w": 308,
+      "h": 166
+    },
+    "image": "assets/assemble/shoes_sneakers_navy.webp",
+    "thumb": "assets/assemble/thumbs/shoes_sneakers_navy.webp"
+  },
+  {
+    "id": "shoes_sneakers_white",
+    "kind": "shoes",
+    "name": {
+      "ko": "스니커즈",
+      "en": "Sneakers"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 357,
+      "y": 1348,
+      "w": 309,
+      "h": 165
+    },
+    "image": "assets/assemble/shoes_sneakers_white.webp",
+    "thumb": "assets/assemble/thumbs/shoes_sneakers_white.webp"
   }
 ]

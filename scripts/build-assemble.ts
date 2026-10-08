@@ -4,6 +4,7 @@
  *   assets-src/assemble/base/head_*.png         머리(목 위), 1024×1536 캔버스에 올려 둔 것. head_ 로 시작하면 머리 선택지가 됨
  *   assets-src/assemble/tops/top_*.png          팔·손이 붙은 상의. 크기 제한 없음 — 아래 TOP_PLACE 로 아바타 캔버스에 놓는다
  *   assets-src/assemble/bottoms/bottom_*.png    다리·발까지 붙은 하의. scripts/assemble-bottoms-fit.json 의 값으로 놓는다 (tools-py/fit_assemble_bottoms.py)
+ *   assets-src/assemble/shoes/shoes_*.png       발목이 보이는 신발 한 쌍. scripts/assemble-shoes-fit.json 의 값으로 놓는다 (tools-py/fit_assemble_shoes.py)
  *   scripts/assemble-items.json                 id → 한/영 이름, 색
  *
  * 실행: npm run assets
@@ -28,11 +29,15 @@ const TOP_PLACE: Place = { scale: 0.545, x0: -10, y0: 624 }
 
 const COLORS: Record<string, string> = {
   black: '#2b2b2f', charcoal: '#55565c', gray: '#a3a5ab', white: '#fbfbfb', ivory: '#f6ecd6',
-  brown: '#8a5a3b', denim: '#3c5a8c', mint: '#a9dcc8',
+  brown: '#8a5a3b', denim: '#3c5a8c', mint: '#a9dcc8', navy: '#27355b',
 }
 
 const bottomFit: Record<string, { s: number; tx: number; ty: number }> = JSON.parse(
   fs.readFileSync(path.join(ROOT, 'scripts/assemble-bottoms-fit.json'), 'utf8'),
+)
+
+const shoesFit: Record<string, { s: number; tx: number; ty: number }> = JSON.parse(
+  fs.readFileSync(path.join(ROOT, 'scripts/assemble-shoes-fit.json'), 'utf8'),
 )
 
 type Meta = Record<string, { ko?: string; en?: string; color?: string }>
@@ -100,6 +105,12 @@ export async function buildAssemble() {
     if (!p) throw new Error(`assemble-bottoms-fit.json 에 ${stem} 없음 — python tools-py/fit_assemble_bottoms.py 를 실행하세요`)
     await add(stem, 'bottom', await toCanvas(path.join(SRC, 'bottoms', f), { scale: p.s, x0: p.tx, y0: p.ty }))
   }
+  for (const f of fs.readdirSync(path.join(SRC, 'shoes')).filter((f) => /^shoes_.*\.png$/.test(f)).sort()) {
+    const stem = f.replace(/\.png$/, '')
+    const p = shoesFit[stem]
+    if (!p) throw new Error(`assemble-shoes-fit.json 에 ${stem} 없음 — python tools-py/fit_assemble_shoes.py 를 실행하세요`)
+    await add(stem, 'shoes', await toCanvas(path.join(SRC, 'shoes', f), { scale: p.s, x0: p.tx, y0: p.ty }))
+  }
   fs.writeFileSync(path.join(ROOT, 'src/data/assemble-items.json'), JSON.stringify(parts, null, 2) + '\n')
-  console.log(`✔ 조립 부품 ${parts.length}개`, Object.fromEntries(['head', 'top', 'bottom'].map((k) => [k, parts.filter((p) => p.kind === k).length])))
+  console.log(`✔ 조립 부품 ${parts.length}개`, Object.fromEntries(['head', 'top', 'bottom', 'shoes'].map((k) => [k, parts.filter((p) => p.kind === k).length])))
 }

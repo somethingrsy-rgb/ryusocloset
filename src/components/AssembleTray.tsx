@@ -21,6 +21,7 @@ export function AssembleTray({ assembly, onPick, onDragWear, dropRef, onDragOver
     { id: 'head', icon: '💇', label: t('partHead') },
     { id: 'top', icon: '👚', label: t('partTop') },
     { id: 'bottom', icon: '👖', label: t('partBottom') },
+    { id: 'shoes', icon: '👟', label: t('partShoes') },
   ]
   const parts = partsOf(slot)
   return (
@@ -49,6 +50,7 @@ export function AssembleTray({ assembly, onPick, onDragWear, dropRef, onDragOver
       </div>
       <div role="tabpanel" className="scroll-thin min-h-0 flex-1 overflow-y-auto p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {slot === 'top' && <p className="mb-2 px-1 text-[11px] font-semibold text-cocoa-soft">{t('assembleTopHint')}</p>}
+        {slot === 'shoes' && <p className="mb-2 px-1 text-[11px] font-semibold text-cocoa-soft">{t('assembleShoesHint')}</p>}
         {slot === 'bottom' && <p className="mb-2 px-1 text-[11px] font-semibold text-cocoa-soft">{t('assembleBottomHint')}</p>}
         {parts.length === 0 ? (
           <p className="py-8 text-center text-sm font-semibold text-cocoa-soft">{t('noBottoms')}</p>
