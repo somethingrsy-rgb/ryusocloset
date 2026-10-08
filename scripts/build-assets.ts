@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { alphaBBox, makeThumb } from './lib/image.ts'
 import { buildRoom } from './build-room.ts'
+import { buildAssemble } from './build-assemble.ts'
 import { CANVAS_H, CANVAS_W, CATEGORIES, LAYER_Z, type Category } from '../src/lib/layers.ts'
 import type { Item } from '../src/lib/types.ts'
 
@@ -36,7 +37,7 @@ const COLORS: Record<string, { ko: string; en: string; hex: string }> = {
   mint: { ko: '민트', en: 'Mint', hex: '#a9dcc8' },
 }
 
-type Labels = Record<string, { ko?: string; en?: string; category?: Category; color?: string }>
+type Labels = Record<string, { ko?: string; en?: string; category?: Category; color?: string; native?: boolean }>
 const labels: Labels = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/labels.json'), 'utf8'))
 
 const BAG_WORDS = ['bag', 'backpack', 'briefcase', 'handbag', 'tote']
@@ -148,6 +149,7 @@ async function main() {
       image: `assets/clothes/${category}/${stem}.webp`,
       thumb: `assets/thumbs/${stem}.webp`,
       zIndex: LAYER_Z[category],
+      ...(label.native ? { native: true } : {}),
     })
   }
   items.sort(
@@ -159,6 +161,7 @@ async function main() {
   const counts = Object.fromEntries(CATEGORIES.map((c) => [c, items.filter((i) => i.category === c).length]))
   console.log(`✔ ${items.length}개 아이템`, counts)
   await buildRoom()
+  await buildAssemble()
 }
 
 main().catch((e) => {

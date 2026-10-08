@@ -1,0 +1,112 @@
+[
+  {
+    "id": "head_default",
+    "kind": "head",
+    "name": {
+      "ko": "기본 머리",
+      "en": "Default Hair"
+    },
+    "colorHex": null,
+    "image": "assets/assemble/head_default.webp",
+    "thumb": "assets/assemble/thumbs/head_default.webp"
+  },
+  {
+    "id": "top_cardigan_mint",
+    "kind": "top",
+    "name": {
+      "ko": "민트 카디건",
+      "en": "Mint Cardigan"
+    },
+    "colorHex": "#a9dcc8",
+    "image": "assets/assemble/top_cardigan_mint.webp",
+    "thumb": "assets/assemble/thumbs/top_cardigan_mint.webp"
+  },
+  {
+    "id": "top_check_cardigan_gray",
+    "kind": "top",
+    "name": {
+      "ko": "체크 카디건",
+      "en": "Check Cardigan"
+    },
+    "colorHex": "#a3a5ab",
+    "image": "assets/assemble/top_check_cardigan_gray.webp",
+    "thumb": "assets/assemble/thumbs/top_check_cardigan_gray.webp"
+  },
+  {
+    "id": "top_collar_knit_ivory",
+    "kind": "top",
+    "name": {
+      "ko": "배색 카라 니트",
+      "en": "Collar Knit"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/assemble/top_collar_knit_ivory.webp",
+    "thumb": "assets/assemble/thumbs/top_collar_knit_ivory.webp"
+  },
+  {
+    "id": "top_contrast_cardigan_black",
+    "kind": "top",
+    "name": {
+      "ko": "배색 카디건",
+      "en": "Contrast Cardigan"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/assemble/top_contrast_cardigan_black.webp",
+    "thumb": "assets/assemble/thumbs/top_contrast_cardigan_black.webp"
+  },
+  {
+    "id": "top_embroidered_cardigan_ivory",
+    "kind": "top",
+    "name": {
+      "ko": "자수 카디건",
+      "en": "Embroidered Cardigan"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/assemble/top_embroidered_cardigan_ivory.webp",
+    "thumb": "assets/assemble/thumbs/top_embroidered_cardigan_ivory.webp"
+  },
+  {
+    "id": "top_inner_tee_black",
+    "kind": "top",
+    "name": {
+      "ko": "이너 티",
+      "en": "Inner Tee"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/assemble/top_inner_tee_black.webp",
+    "thumb": "assets/assemble/thumbs/top_inner_tee_black.webp"
+  },
+  {
+    "id": "top_inner_tee_ivory",
+    "kind": "top",
+    "name": {
+      "ko": "이너 티",
+      "en": "Inner Tee"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/assemble/top_inner_tee_ivory.webp",
+    "thumb": "assets/assemble/thumbs/top_inner_tee_ivory.webp"
+  },
+  {
+    "id": "top_pattern_vest_ivory",
+    "kind": "top",
+    "name": {
+      "ko": "패턴 조끼",
+      "en": "Pattern Vest"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/assemble/top_pattern_vest_ivory.webp",
+    "thumb": "assets/assemble/thumbs/top_pattern_vest_ivory.webp"
+  },
+  {
+    "id": "top_sailor_cardigan_ivory",
+    "kind": "top",
+    "name": {
+      "ko": "세일러 카디건",
+      "en": "Sailor Cardigan"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/assemble/top_sailor_cardigan_ivory.webp",
+    "thumb": "assets/assemble/thumbs/top_sailor_cardigan_ivory.webp"
+  }
+]

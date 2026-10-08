@@ -1,0 +1,12 @@
+{
+  "top_sailor_cardigan_ivory": { "ko": "세일러 카디건", "en": "Sailor Cardigan", "color": "ivory" },
+  "top_contrast_cardigan_black": { "ko": "배색 카디건", "en": "Contrast Cardigan", "color": "black" },
+  "top_cardigan_mint": { "ko": "민트 카디건", "en": "Mint Cardigan", "color": "mint" },
+  "top_check_cardigan_gray": { "ko": "체크 카디건", "en": "Check Cardigan", "color": "gray" },
+  "top_embroidered_cardigan_ivory": { "ko": "자수 카디건", "en": "Embroidered Cardigan", "color": "ivory" },
+  "top_inner_tee_black": { "ko": "이너 티", "en": "Inner Tee", "color": "black" },
+  "top_collar_knit_ivory": { "ko": "배색 카라 니트", "en": "Collar Knit", "color": "ivory" },
+  "top_pattern_vest_ivory": { "ko": "패턴 조끼", "en": "Pattern Vest", "color": "ivory" },
+  "top_inner_tee_ivory": { "ko": "이너 티", "en": "Inner Tee", "color": "ivory" },
+  "head_default": { "ko": "기본 머리", "en": "Default Hair" }
+}

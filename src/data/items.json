@@ -66,7 +66,8 @@
     },
     "image": "assets/clothes/top/top_check_cardigan_gray.webp",
     "thumb": "assets/thumbs/top_check_cardigan_gray.webp",
-    "zIndex": 30
+    "zIndex": 30,
+    "native": true
   },
   {
     "id": "top_inner_black",
@@ -89,7 +90,8 @@
     },
     "image": "assets/clothes/top/top_inner_black.webp",
     "thumb": "assets/thumbs/top_inner_black.webp",
-    "zIndex": 30
+    "zIndex": 30,
+    "native": true
   },
   {
     "id": "top_ivory",
@@ -112,7 +114,8 @@
     },
     "image": "assets/clothes/top/top_ivory.webp",
     "thumb": "assets/thumbs/top_ivory.webp",
-    "zIndex": 30
+    "zIndex": 30,
+    "native": true
   },
   {
     "id": "top_knit_vest_ivory",
@@ -158,7 +161,8 @@
     },
     "image": "assets/clothes/top/top_paisley_ivory.webp",
     "thumb": "assets/thumbs/top_paisley_ivory.webp",
-    "zIndex": 30
+    "zIndex": 30,
+    "native": true
   },
   {
     "id": "top_pattern_vest_ivory",
@@ -181,7 +185,8 @@
     },
     "image": "assets/clothes/top/top_pattern_vest_ivory.webp",
     "thumb": "assets/thumbs/top_pattern_vest_ivory.webp",
-    "zIndex": 30
+    "zIndex": 30,
+    "native": true
   },
   {
     "id": "top_sailor_ivory",
@@ -204,7 +209,8 @@
     },
     "image": "assets/clothes/top/top_sailor_ivory.webp",
     "thumb": "assets/thumbs/top_sailor_ivory.webp",
-    "zIndex": 30
+    "zIndex": 30,
+    "native": true
   },
   {
     "id": "top_zip_ivory",
@@ -273,7 +279,8 @@
     },
     "image": "assets/clothes/bottom/bottom_button_skirt_brown.webp",
     "thumb": "assets/thumbs/bottom_button_skirt_brown.webp",
-    "zIndex": 20
+    "zIndex": 20,
+    "native": true
   },
   {
     "id": "bottom_denim",
@@ -296,7 +303,8 @@
     },
     "image": "assets/clothes/bottom/bottom_denim.webp",
     "thumb": "assets/thumbs/bottom_denim.webp",
-    "zIndex": 20
+    "zIndex": 20,
+    "native": true
   },
   {
     "id": "bottom_denim_skirt_white",
@@ -365,7 +373,8 @@
     },
     "image": "assets/clothes/bottom/bottom_pants_black.webp",
     "thumb": "assets/thumbs/bottom_pants_black.webp",
-    "zIndex": 20
+    "zIndex": 20,
+    "native": true
   },
   {
     "id": "bottom_pants_charcoal",
@@ -411,7 +420,8 @@
     },
     "image": "assets/clothes/bottom/bottom_shezmig_skirt_brown.webp",
     "thumb": "assets/thumbs/bottom_shezmig_skirt_brown.webp",
-    "zIndex": 20
+    "zIndex": 20,
+    "native": true
   },
   {
     "id": "bottom_skirt_black",
@@ -434,7 +444,8 @@
     },
     "image": "assets/clothes/bottom/bottom_skirt_black.webp",
     "thumb": "assets/thumbs/bottom_skirt_black.webp",
-    "zIndex": 20
+    "zIndex": 20,
+    "native": true
   },
   {
     "id": "bottom_thick_pants_ivory",
@@ -457,7 +468,8 @@
     },
     "image": "assets/clothes/bottom/bottom_thick_pants_ivory.webp",
     "thumb": "assets/thumbs/bottom_thick_pants_ivory.webp",
-    "zIndex": 20
+    "zIndex": 20,
+    "native": true
   },
   {
     "id": "dress_deco_tweed_black",
@@ -480,7 +492,8 @@
     },
     "image": "assets/clothes/dress/dress_deco_tweed_black.webp",
     "thumb": "assets/thumbs/dress_deco_tweed_black.webp",
-    "zIndex": 40
+    "zIndex": 40,
+    "native": true
   },
   {
     "id": "dress_isaac_black",
@@ -503,7 +516,8 @@
     },
     "image": "assets/clothes/dress/dress_isaac_black.webp",
     "thumb": "assets/thumbs/dress_isaac_black.webp",
-    "zIndex": 40
+    "zIndex": 40,
+    "native": true
   },
   {
     "id": "dress_isaac_brown",
@@ -549,7 +563,8 @@
     },
     "image": "assets/clothes/dress/dress_isaac_navy.webp",
     "thumb": "assets/thumbs/dress_isaac_navy.webp",
-    "zIndex": 40
+    "zIndex": 40,
+    "native": true
   },
   {
     "id": "dress_isaac_shirt_black",
@@ -572,7 +587,8 @@
     },
     "image": "assets/clothes/dress/dress_isaac_shirt_black.webp",
     "thumb": "assets/thumbs/dress_isaac_shirt_black.webp",
-    "zIndex": 40
+    "zIndex": 40,
+    "native": true
   },
   {
     "id": "dress_oxford_beige",
@@ -595,7 +611,8 @@
     },
     "image": "assets/clothes/dress/dress_oxford_beige.webp",
     "thumb": "assets/thumbs/dress_oxford_beige.webp",
-    "zIndex": 40
+    "zIndex": 40,
+    "native": true
   },
   {
     "id": "dress_shesmiss_gray",
@@ -664,7 +681,8 @@
     },
     "image": "assets/clothes/outer/outer_coat_gray.webp",
     "thumb": "assets/thumbs/outer_coat_gray.webp",
-    "zIndex": 50
+    "zIndex": 50,
+    "native": true
   },
   {
     "id": "outer_cropped_denim",
@@ -733,7 +751,8 @@
     },
     "image": "assets/clothes/outer/outer_jacket_gray.webp",
     "thumb": "assets/thumbs/outer_jacket_gray.webp",
-    "zIndex": 50
+    "zIndex": 50,
+    "native": true
   },
   {
     "id": "outer_nepa_black",
@@ -756,7 +775,8 @@
     },
     "image": "assets/clothes/outer/outer_nepa_black.webp",
     "thumb": "assets/thumbs/outer_nepa_black.webp",
-    "zIndex": 50
+    "zIndex": 50,
+    "native": true
   },
   {
     "id": "outer_roem_tweed_black",
@@ -779,7 +799,8 @@
     },
     "image": "assets/clothes/outer/outer_roem_tweed_black.webp",
     "thumb": "assets/thumbs/outer_roem_tweed_black.webp",
-    "zIndex": 50
+    "zIndex": 50,
+    "native": true
   },
   {
     "id": "outer_short_trench_black",
@@ -825,7 +846,8 @@
     },
     "image": "assets/clothes/outer/outer_trench_beige.webp",
     "thumb": "assets/thumbs/outer_trench_beige.webp",
-    "zIndex": 50
+    "zIndex": 50,
+    "native": true
   },
   {
     "id": "outer_trench_black",
@@ -848,7 +870,8 @@
     },
     "image": "assets/clothes/outer/outer_trench_black.webp",
     "thumb": "assets/thumbs/outer_trench_black.webp",
-    "zIndex": 50
+    "zIndex": 50,
+    "native": true
   },
   {
     "id": "outer_trench_khaki",
@@ -963,7 +986,8 @@
     },
     "image": "assets/clothes/shoes/shoes_flats_ivory.webp",
     "thumb": "assets/thumbs/shoes_flats_ivory.webp",
-    "zIndex": 10
+    "zIndex": 10,
+    "native": true
   },
   {
     "id": "shoes_maryjane_black",
@@ -1009,7 +1033,8 @@
     },
     "image": "assets/clothes/shoes/shoes_pumps_black.webp",
     "thumb": "assets/thumbs/shoes_pumps_black.webp",
-    "zIndex": 10
+    "zIndex": 10,
+    "native": true
   },
   {
     "id": "shoes_sneakers_navy",
@@ -1032,7 +1057,8 @@
     },
     "image": "assets/clothes/shoes/shoes_sneakers_navy.webp",
     "thumb": "assets/thumbs/shoes_sneakers_navy.webp",
-    "zIndex": 10
+    "zIndex": 10,
+    "native": true
   },
   {
     "id": "acc_lace_collar_white",
@@ -1078,7 +1104,8 @@
     },
     "image": "assets/clothes/bag/acc_backpack_ivory.webp",
     "thumb": "assets/thumbs/acc_backpack_ivory.webp",
-    "zIndex": 80
+    "zIndex": 80,
+    "native": true
   },
   {
     "id": "acc_briefcase_brown",
@@ -1124,7 +1151,8 @@
     },
     "image": "assets/clothes/bag/acc_handbag_black.webp",
     "thumb": "assets/thumbs/acc_handbag_black.webp",
-    "zIndex": 80
+    "zIndex": 80,
+    "native": true
   },
   {
     "id": "acc_kangol_tote_navy",
@@ -1147,7 +1175,8 @@
     },
     "image": "assets/clothes/bag/acc_kangol_tote_navy.webp",
     "thumb": "assets/thumbs/acc_kangol_tote_navy.webp",
-    "zIndex": 80
+    "zIndex": 80,
+    "native": true
   },
   {
     "id": "acc_mini_bag_ivory",

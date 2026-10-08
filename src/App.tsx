@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { AssembleStage, assemblyLayers } from './components/AssembleStage'
+import { AssembleTray } from './components/AssembleTray'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { Closet } from './components/Closet'
 import { ExportSheet, type RenderOptions } from './components/ExportSheet'
@@ -8,8 +10,9 @@ import { SavedSheet } from './components/SavedSheet'
 import { Stage } from './components/Stage'
 import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
+import { ASSEMBLE_PARTS, randomAssembly, togglePart, type Assembly } from './lib/assemble'
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
-import { loadImage, renderOutfitCanvas, renderThumb } from './lib/exportPng'
+import { finishFigure, loadImage, renderAssembly, renderOutfitCanvas, renderThumb } from './lib/exportPng'
 import { ROOM_ASSETS, renderRoomCanvas } from './lib/exportRoom'
 import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, assetUrl } from './lib/items'
 import type { Category } from './lib/layers'
@@ -19,11 +22,13 @@ import { MAX_PLACED, type RoomItemDef, type RoomState, type Selection } from './
 import { playSnap } from './lib/sound'
 import {
   MAX_SAVED,
+  loadAssembly,
   loadCurrent,
   loadRoom,
   loadTweaks,
   loadSaved,
   loadSettings,
+  persistAssembly,
   persistCurrent,
   persistRoom,
   persistSaved,
@@ -33,8 +38,8 @@ import {
 import { pruneTweaks, sanitizeTweaks } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
 
-type ModalKind = null | 'bg' | 'saved' | 'export' | 'roomExport'
-type Mode = 'closet' | 'room'
+type ModalKind = null | 'bg' | 'saved' | 'export' | 'roomExport' | 'assembleExport'
+type Mode = 'closet' | 'room' | 'assemble'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
@@ -54,6 +59,7 @@ export default function App() {
   const [category, setCategory] = useState<Category>('top')
   const [saved, setSaved] = useState<SavedOutfit[]>(loadSaved)
   const [room, setRoom] = useState<RoomState>(loadRoom)
+  const [assembly, setAssembly] = useState<Assembly>(loadAssembly)
   const [selection, setSelection] = useState<Selection>(null)
   const [modal, setModal] = useState<ModalKind>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -72,6 +78,7 @@ export default function App() {
   useEffect(() => void persistSettings({ lang, sound, bgId }), [lang, sound, bgId])
   useEffect(() => void persistCurrent(outfit), [outfit])
   useEffect(() => void persistTweaks(tweaks), [tweaks])
+  useEffect(() => void persistAssembly(assembly), [assembly])
   // 드래그 중에는 상태가 자주 바뀌므로 잠깐 모았다가 저장
   useEffect(() => {
     const id = window.setTimeout(() => persistRoom(room), 300)
@@ -85,6 +92,7 @@ export default function App() {
       ...ITEMS.map((i) => assetUrl(i.image)),
       ...Object.values(ROOM_ASSETS),
       ...ROOM_ITEMS.map((d) => assetUrl(d.image)),
+      ...ASSEMBLE_PARTS.map((p) => assetUrl(p.image)),
     ]
     const run = () => urls.forEach((u) => void loadImage(u).catch(() => undefined))
     const w = window as Window & { requestIdleCallback?: (cb: () => void) => number }
@@ -203,6 +211,15 @@ export default function App() {
     showToast(t('roomResetDone'))
   }
 
+  const renderAssembleExport = useCallback(
+    async (o: RenderOptions) => finishFigure(await renderAssembly(assemblyLayers(assembly)), o),
+    [assembly],
+  )
+  const pickPart = (slot: 'head' | 'top' | 'bottom', id: string) => {
+    setAssembly((a) => togglePart(a, slot, id))
+    if (sound) playSnap()
+  }
+
   const renderOutfit = useCallback((o: RenderOptions) => renderOutfitCanvas(outfit, o, tweaks), [outfit, tweaks])
   const renderRoom = useCallback(() => renderRoomCanvas(room, outfit, tweaks), [room, outfit, tweaks])
 
@@ -231,7 +248,7 @@ export default function App() {
         setSelection(null)
         setSelCat(null)
       }}
-      className={`flex min-h-11 items-center gap-1 rounded-full px-3 text-sm font-bold transition ${
+      className={`flex min-h-11 items-center gap-1 rounded-full px-2.5 text-[13px] font-bold whitespace-nowrap transition ${
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
       }`}
     >
@@ -245,9 +262,10 @@ export default function App() {
       <div className="mx-auto flex h-dvh max-w-[1100px] flex-col gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))] md:flex-row md:gap-4 md:p-4">
         <section className="flex min-h-0 flex-1 flex-col gap-2">
           <header className="flex shrink-0 items-center justify-between gap-2 px-1">
-            <h1 className="text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep">{t('title')}</h1>
-            <div role="tablist" className="flex rounded-full bg-white/80 p-0.5 shadow-sm">
+            <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep min-[430px]:block">{t('title')}</h1>
+            <div role="tablist" className="flex shrink-0 rounded-full bg-white/80 p-0.5 shadow-sm">
               {modeBtn('closet', '👗', t('modeCloset'))}
+              {modeBtn('assemble', '🧩', t('modeAssemble'))}
               {modeBtn('room', '🏠', t('modeRoom'))}
             </div>
             <div className="flex items-center gap-1.5">
@@ -270,7 +288,19 @@ export default function App() {
           </header>
 
           <div className="min-h-0 flex-1">
-            {mode === 'closet' ? (
+            {mode === 'assemble' ? (
+              <AssembleStage assembly={assembly} bg={bg} figureRef={figureRef}>
+                <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
+                  {fab(t('random'), '🎲', () => {
+                    setAssembly(randomAssembly())
+                    if (sound) playSnap()
+                  })}
+                  {fab(t('reset'), '🧺', () => setAssembly((a) => ({ head: a.head })))}
+                  {fab(t('background'), '🖼️', () => setModal('bg'))}
+                  {fab(t('exportImage'), '📷', () => setModal('assembleExport'))}
+                </div>
+              </AssembleStage>
+            ) : mode === 'closet' ? (
               <Stage
                 outfit={outfit}
                 tweaks={tweaks}
@@ -305,7 +335,9 @@ export default function App() {
         </section>
 
         <aside className="flex h-[40dvh] shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]">
-          {mode === 'closet' ? (
+          {mode === 'assemble' ? (
+            <AssembleTray assembly={assembly} onPick={pickPart} />
+          ) : mode === 'closet' ? (
             <Closet
               category={category}
               onCategory={setCategory}
@@ -338,6 +370,17 @@ export default function App() {
           showOptions
           background={bg}
           filePrefix="ryuso-closet"
+          onClose={() => setModal(null)}
+          onError={() => showToast(t('exportFailed'))}
+        />
+      )}
+      {modal === 'assembleExport' && (
+        <ExportSheet
+          title={t('exportTitle')}
+          render={renderAssembleExport}
+          showOptions
+          background={bg}
+          filePrefix="ryuso-mix"
           onClose={() => setModal(null)}
           onError={() => showToast(t('exportFailed'))}
         />
