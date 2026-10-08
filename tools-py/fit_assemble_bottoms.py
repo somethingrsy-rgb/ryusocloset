@@ -18,7 +18,7 @@ from PIL import Image
 SRC = 'assets-src/assemble/bottoms'
 OUT = 'scripts/assemble-bottoms-fit.json'
 # 정면 아바타(1024×1536)의 허리: 속옷 몸통이 가장 좁은 높이/폭/가운데 x (측정값)
-WAIST_Y, WAIST_W, CX = 840, 208, 511.5
+WAIST_Y, WAIST_W, CX = 840, 177, 512.0
 FEET_Y = 1520  # 발끝 목표 (캔버스 높이 1536 안쪽)
 
 fit = {}
