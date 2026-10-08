@@ -1,23 +1,22 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject, type ReactNode } from 'react'
 import { useI18n } from '../i18n'
 import { loadImage, renderFigure } from '../lib/exportPng'
 import { assetUrl } from '../lib/items'
 import {
   ROOM_ITEMS,
+  roomBackgrounds,
   ROOM_ITEM_BY_ID,
   drawables,
   getPlacement,
   hasContactShadow,
   moveBy,
   moveTo,
-  removeItem,
   sameSelection,
   scaleBy,
   setScale,
   shadowWidthRatio,
   toggleFlip,
 } from '../lib/room'
-import { ROOM_ASSETS } from '../lib/exportRoom'
 import { hitTest, maskCache, maskFromSource } from '../lib/roomHit'
 import { CANVAS_H, CANVAS_W } from '../lib/layers'
 import { FLOOR_H, ROOM_H, ROOM_W, type RoomState, type Selection } from '../lib/roomTypes'
@@ -31,13 +30,15 @@ interface Props {
   selection: Selection
   onSelect: (s: Selection) => void
   onChange: (next: RoomState) => void
+  captureRef?: RefObject<HTMLDivElement | null>
+  onCloset?: () => void
   children?: ReactNode
 }
 
 /** 논리 좌표(1086 기준) → 방 폭(cqw) 퍼센트 */
 const cq = (v: number) => `${(v / ROOM_W) * 100}cqw`
 
-export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, children }: Props) {
+export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, onCloset, captureRef, children }: Props) {
   const { lang, t } = useI18n()
   const roomRef = useRef<HTMLDivElement>(null)
   const pointers = useRef(new Map<number, { x: number; y: number }>())
@@ -73,6 +74,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
   }, [outfit, tweaks])
 
   const list = drawables(room)
+  const backdrops = roomBackgrounds(room)
   const selected = selection ? list.find((d) => sameSelection(d.sel, selection)) : undefined
 
   const toLogical = (e: { clientX: number; clientY: number }) => {
@@ -84,7 +86,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
     roomRef.current?.focus({ preventScroll: true })
     ;(e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId)
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
-    if (pointers.current.size === 2 && selection) {
+    if (pointers.current.size === 2 && selection?.kind === 'avatar') {
       const [a, b] = [...pointers.current.values()]
       const p = getPlacement(roomState.current, selection)
       if (p) pinch.current = { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, scale: p.scale }
@@ -96,6 +98,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
     const hit = hitTest(roomState.current, x, y, (k) => maskCache.get(k))
     onSelect(hit)
     if (hit) {
+      if (hit.kind === 'item' && ['furniture_hanger', 'furniture_dresser', 'furniture_mirror_full'].includes(room.items.find(p => p.uid === hit.uid)?.itemId ?? '')) { onCloset?.(); return }
       const p = getPlacement(roomState.current, hit)!
       drag.current = { sel: hit, px: x, py: y, ox: p.x, oy: p.y }
     }
@@ -123,7 +126,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
   }
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (!selection) return
+    if (!selection || selection.kind !== 'avatar') return
     const step = e.shiftKey ? 40 : 10
     const move = (dx: number, dy: number) => {
       e.preventDefault()
@@ -138,12 +141,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
       case '-': case '_': return onChange(scaleBy(room, selection, 1 / 1.1))
       case 'f': case 'F': return onChange(toggleFlip(room, selection))
       case 'Escape': return onSelect(null)
-      case 'Delete': case 'Backspace':
-        if (selection.kind === 'item') {
-          e.preventDefault()
-          onChange(removeItem(room, selection.uid))
-          onSelect(null)
-        }
+
     }
   }
 
@@ -162,7 +160,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
     >
       <div className="absolute inset-0 flex items-center justify-center">
         <div
-          ref={roomRef}
+          ref={node => { roomRef.current = node; if (captureRef) captureRef.current = node }}
           tabIndex={0}
           role="application"
           aria-label={t('roomAria')}
@@ -171,7 +169,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
           onPointerUp={onPointerEnd}
           onPointerCancel={onPointerEnd}
           onKeyDown={onKeyDown}
-          onWheel={(e) => selection && onChange(scaleBy(room, selection, Math.exp(-e.deltaY * 0.0015)))}
+          onWheel={(e) => selection?.kind === 'avatar' && onChange(scaleBy(room, selection, Math.exp(-e.deltaY * 0.0015)))}
           className="relative isolate touch-none overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blush-deep/70"
           style={{
             width: `min(100cqw, calc(100cqh * ${ROOM_W / ROOM_H}))`,
@@ -180,14 +178,14 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
           }}
         >
           <img
-            src={ROOM_ASSETS.floor}
+            src={assetUrl(backdrops.floor)}
             alt=""
             draggable={false}
             className="pointer-events-none absolute left-0 w-full select-none"
             style={{ top: cq(ROOM_H - FLOOR_H), height: cq(FLOOR_H), zIndex: 0 }}
           />
           <img
-            src={ROOM_ASSETS.wall}
+            src={assetUrl(backdrops.wall)}
             alt=""
             draggable={false}
             className="pointer-events-none absolute inset-0 h-full w-full select-none"
@@ -229,6 +227,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
                 ) : (
                   <img
                     src={assetUrl(d.src!)}
+                    onError={e => { const img = e.currentTarget; if (!img.src.endsWith('placeholder.svg')) img.src = assetUrl('assets/room/placeholder.svg') }}
                     alt=""
                     draggable={false}
                     className="pointer-events-none absolute select-none"
@@ -241,7 +240,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
 
           {selected && (
             <div
-              className="pointer-events-none absolute rounded-lg border-2 border-dashed border-blush-deep"
+              data-export-ignore="true" className="pointer-events-none absolute rounded-lg border-2 border-dashed border-blush-deep"
               style={{
                 left: cq(selected.left),
                 top: cq(selected.top),
@@ -257,7 +256,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
       {children}
 
       <div className="pointer-events-none absolute top-2 left-2 z-20 max-w-[calc(100%-4.5rem)]">
-        {selection && selName ? (
+        {selection?.kind === 'avatar' && selName ? (
           <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-white/95 p-1 pl-3 shadow-lg ring-1 ring-black/5">
             <span className="mr-0.5 max-w-[4.5rem] truncate text-xs font-bold">{selName}</span>
             <button className={`${btn} bg-petal`} aria-label={t('smaller')} onClick={() => onChange(scaleBy(room, selection, 1 / 1.12))}>
@@ -269,22 +268,11 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
             <button className={`${btn} bg-petal`} aria-label={t('flip')} onClick={() => onChange(toggleFlip(room, selection))}>
               ↔
             </button>
-            {selection.kind === 'item' && (
-              <button
-                className={`${btn} bg-blush text-white`}
-                aria-label={t('remove')}
-                onClick={() => {
-                  onChange(removeItem(room, selection.uid))
-                  onSelect(null)
-                }}
-              >
-                🗑
-              </button>
-            )}
+
           </div>
         ) : (
           <p className="inline-block rounded-2xl bg-white/85 px-3 py-1.5 text-[11px] leading-tight font-semibold text-cocoa-soft shadow-sm">
-            {t('roomHint')}
+            {lang === 'ko' ? '물건은 아래에서 배치 · 아바타는 움직여 보세요' : 'Place items below · Move your avatar'}
           </p>
         )}
       </div>

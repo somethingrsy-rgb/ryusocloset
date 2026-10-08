@@ -47,7 +47,7 @@ npm test           # 착용 규칙 단위 테스트
 
 **에셋**
 - 상의: `assets-src/assemble/tops/top_*.png` (팔 포함 원본 1928×816). 빌드가 0.545배로 줄여 아바타 캔버스 (x −10, y 624)에 놓습니다.
-- 하의: `assets-src/assemble/bottoms/bottom_*.png` (다리·발 포함 889×1770). 위쪽의 맨살 허리 조각에서 가장 좁은 줄을 아바타 허리(y 840, 폭 177)에 맞추고, 발끝이 캔버스 안(y 1520)에 오도록 균일 배율을 정합니다. 계산: `python tools-py/fit_assemble_bottoms.py` → `scripts/assemble-bottoms-fit.json`
+- 하의: `assets-src/assemble/bottoms/bottom_*.png` (다리·발 포함 889×1770). 위쪽의 맨살 허리 조각에서 가장 좁은 줄을 아바타 허리(y 845, 폭 174)에 맞추고, 발끝이 캔버스 안(y 1520)에 오도록 균일 배율을 정합니다. 계산: `python tools-py/fit_assemble_bottoms.py` → `scripts/assemble-bottoms-fit.json`
 - 신발: `assets-src/assemble/shoes/shoes_*.png` (발목이 보이는 한 쌍, 2170×725). 두 짝의 가운데·폭을 아바타 두 발에 맞추고 발끝을 y 1512 에 두는 값을 `python tools-py/fit_assemble_shoes.py` → `scripts/assemble-shoes-fit.json` 으로 계산합니다. 하의는 맨발까지 그려져 있어 신발이 그 위를 덮습니다.
 - 머리: `assets-src/assemble/base/head_*.png` (1024×1536 캔버스). 원본에서 `python tools-py/make_assemble_base.py` 로 만듭니다.
 - 이름·색은 `scripts/assemble-items.json`. 새 부품을 넣고 `npm run assets` 를 실행하면 `src/data/assemble-items.json` 이 갱신됩니다.
@@ -61,6 +61,13 @@ npm test           # 착용 규칙 단위 테스트
 - 레이어 순서: 바닥 < 벽지 < 러그 < 벽 장식 < (가구·아바타, y 순) < 조명 효과
 - 투명한 부분을 눌러도 뒤에 있는 물건이 선택되도록 알파 마스크로 터치 판정
 - 방 상태는 localStorage 에 자동 저장(최대 40개), `🧹` 로 처음 모습으로 초기화, `📷` 로 방 사진 PNG 저장/공유
+
+### 별(포인트)·상점·방 슬롯 (MVP)
+- 별 경제(Zustand, 브라우저 저장): 출석 +5, 새 코디 저장 +10(하루 3회), 7일 연속 출석 +50, 일일 미션 +30, 레벨·XP. 현금 결제 없음.
+- 상점: 미리보기 → 구매, 테마 세트 15% 할인, 해금 조건(레벨·연속 출석 등). 보유 아이템만 방에 배치.
+- 방은 슬롯(벽지·바닥·왼쪽 가구·오른쪽 옷장·벽 중앙/오른쪽/위·앞 소품·조명) 방식이고, 방 프리셋 최대 6개, 백업 코드 내보내기/가져오기, 방 PNG 저장, 옷장 가구를 탭하면 옷장으로 이동.
+- 게임 설정(가격·슬롯·세트·해금)은 `src/data/room-items.json`, 규칙은 `src/data/economy.ts`. `npm run assets` 는 이 JSON 의 이미지 정보만 갱신하고 나머지는 보존하며 `assets-src/room/svg/*` 를 복사합니다.
+- 테스트: `npm test`(vitest) + `npm run test:room-mvp`(경제·슬롯).
 
 ## 폴더 구조
 

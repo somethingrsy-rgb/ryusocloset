@@ -1,6 +1,6 @@
 import { renderFigure, loadImage } from './exportPng'
 import { assetUrl } from './items'
-import { drawables, hasContactShadow, shadowWidthRatio } from './room'
+import { drawables, hasContactShadow, shadowWidthRatio, roomBackgrounds } from './room'
 import { FLOOR_H, ROOM_H, ROOM_W, type RoomState } from './roomTypes'
 import type { Outfit, Tweaks } from './types'
 
@@ -30,10 +30,10 @@ export function drawContactShadow(ctx: CanvasRenderingContext2D, cx: number, y: 
 export async function renderRoomCanvas(room: RoomState, outfit: Outfit, tweaks: Tweaks = {}): Promise<HTMLCanvasElement> {
   const list = drawables(room)
   const [floor, wall, figure, ...imgs] = await Promise.all([
-    loadImage(ROOM_ASSETS.floor),
-    loadImage(ROOM_ASSETS.wall),
+    loadImage(assetUrl(roomBackgrounds(room).floor)),
+    loadImage(assetUrl(roomBackgrounds(room).wall)),
     renderFigure(outfit, tweaks),
-    ...list.map((d) => (d.src ? loadImage(assetUrl(d.src)) : Promise.resolve(null))),
+    ...list.map((d) => (d.src ? loadImage(assetUrl(d.src)).catch(() => loadImage(assetUrl('assets/room/placeholder.svg'))) : Promise.resolve(null))),
   ])
   const canvas = document.createElement('canvas')
   canvas.width = ROOM_W
