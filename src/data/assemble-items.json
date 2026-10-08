@@ -7,6 +7,12 @@
       "en": "Default Hair"
     },
     "colorHex": null,
+    "box": {
+      "x": 82,
+      "y": 10,
+      "w": 845,
+      "h": 626
+    },
     "image": "assets/assemble/head_default.webp",
     "thumb": "assets/assemble/thumbs/head_default.webp"
   },
@@ -18,6 +24,12 @@
       "en": "Mint Cardigan"
     },
     "colorHex": "#a9dcc8",
+    "box": {
+      "x": 100,
+      "y": 624,
+      "w": 827,
+      "h": 420
+    },
     "image": "assets/assemble/top_cardigan_mint.webp",
     "thumb": "assets/assemble/thumbs/top_cardigan_mint.webp"
   },
@@ -29,6 +41,12 @@
       "en": "Check Cardigan"
     },
     "colorHex": "#a3a5ab",
+    "box": {
+      "x": 97,
+      "y": 624,
+      "w": 837,
+      "h": 421
+    },
     "image": "assets/assemble/top_check_cardigan_gray.webp",
     "thumb": "assets/assemble/thumbs/top_check_cardigan_gray.webp"
   },
@@ -40,6 +58,12 @@
       "en": "Collar Knit"
     },
     "colorHex": "#f6ecd6",
+    "box": {
+      "x": 124,
+      "y": 624,
+      "w": 783,
+      "h": 415
+    },
     "image": "assets/assemble/top_collar_knit_ivory.webp",
     "thumb": "assets/assemble/thumbs/top_collar_knit_ivory.webp"
   },
@@ -51,6 +75,12 @@
       "en": "Contrast Cardigan"
     },
     "colorHex": "#2b2b2f",
+    "box": {
+      "x": 119,
+      "y": 624,
+      "w": 793,
+      "h": 400
+    },
     "image": "assets/assemble/top_contrast_cardigan_black.webp",
     "thumb": "assets/assemble/thumbs/top_contrast_cardigan_black.webp"
   },
@@ -62,6 +92,12 @@
       "en": "Embroidered Cardigan"
     },
     "colorHex": "#f6ecd6",
+    "box": {
+      "x": 96,
+      "y": 624,
+      "w": 839,
+      "h": 426
+    },
     "image": "assets/assemble/top_embroidered_cardigan_ivory.webp",
     "thumb": "assets/assemble/thumbs/top_embroidered_cardigan_ivory.webp"
   },
@@ -73,6 +109,12 @@
       "en": "Inner Tee"
     },
     "colorHex": "#2b2b2f",
+    "box": {
+      "x": 102,
+      "y": 624,
+      "w": 820,
+      "h": 424
+    },
     "image": "assets/assemble/top_inner_tee_black.webp",
     "thumb": "assets/assemble/thumbs/top_inner_tee_black.webp"
   },
@@ -84,6 +126,12 @@
       "en": "Inner Tee"
     },
     "colorHex": "#f6ecd6",
+    "box": {
+      "x": 133,
+      "y": 624,
+      "w": 765,
+      "h": 407
+    },
     "image": "assets/assemble/top_inner_tee_ivory.webp",
     "thumb": "assets/assemble/thumbs/top_inner_tee_ivory.webp"
   },
@@ -95,6 +143,12 @@
       "en": "Pattern Vest"
     },
     "colorHex": "#f6ecd6",
+    "box": {
+      "x": 114,
+      "y": 624,
+      "w": 800,
+      "h": 430
+    },
     "image": "assets/assemble/top_pattern_vest_ivory.webp",
     "thumb": "assets/assemble/thumbs/top_pattern_vest_ivory.webp"
   },
@@ -106,7 +160,251 @@
       "en": "Sailor Cardigan"
     },
     "colorHex": "#f6ecd6",
+    "box": {
+      "x": 103,
+      "y": 624,
+      "w": 825,
+      "h": 412
+    },
     "image": "assets/assemble/top_sailor_cardigan_ivory.webp",
     "thumb": "assets/assemble/thumbs/top_sailor_cardigan_ivory.webp"
+  },
+  {
+    "id": "bottom_belt_skirt_black",
+    "kind": "bottom",
+    "name": {
+      "ko": "벨트 스커트",
+      "en": "Belt Skirt"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 352,
+      "y": 725,
+      "w": 318,
+      "h": 796
+    },
+    "image": "assets/assemble/bottom_belt_skirt_black.webp",
+    "thumb": "assets/assemble/thumbs/bottom_belt_skirt_black.webp"
+  },
+  {
+    "id": "bottom_belt_skirt_charcoal",
+    "kind": "bottom",
+    "name": {
+      "ko": "벨트 스커트",
+      "en": "Belt Skirt"
+    },
+    "colorHex": "#a3a5ab",
+    "box": {
+      "x": 350,
+      "y": 714,
+      "w": 322,
+      "h": 807
+    },
+    "image": "assets/assemble/bottom_belt_skirt_charcoal.webp",
+    "thumb": "assets/assemble/thumbs/bottom_belt_skirt_charcoal.webp"
+  },
+  {
+    "id": "bottom_button_skirt_brown",
+    "kind": "bottom",
+    "name": {
+      "ko": "버튼 스커트",
+      "en": "Button Skirt"
+    },
+    "colorHex": "#8a5a3b",
+    "box": {
+      "x": 302,
+      "y": 720,
+      "w": 420,
+      "h": 801
+    },
+    "image": "assets/assemble/bottom_button_skirt_brown.webp",
+    "thumb": "assets/assemble/thumbs/bottom_button_skirt_brown.webp"
+  },
+  {
+    "id": "bottom_denim_skirt",
+    "kind": "bottom",
+    "name": {
+      "ko": "데님 스커트",
+      "en": "Denim Skirt"
+    },
+    "colorHex": "#3c5a8c",
+    "box": {
+      "x": 317,
+      "y": 751,
+      "w": 385,
+      "h": 770
+    },
+    "image": "assets/assemble/bottom_denim_skirt.webp",
+    "thumb": "assets/assemble/thumbs/bottom_denim_skirt.webp"
+  },
+  {
+    "id": "bottom_flare_skirt_gray",
+    "kind": "bottom",
+    "name": {
+      "ko": "플레어 스커트",
+      "en": "Flare Skirt"
+    },
+    "colorHex": "#a3a5ab",
+    "box": {
+      "x": 299,
+      "y": 712,
+      "w": 425,
+      "h": 809
+    },
+    "image": "assets/assemble/bottom_flare_skirt_gray.webp",
+    "thumb": "assets/assemble/thumbs/bottom_flare_skirt_gray.webp"
+  },
+  {
+    "id": "bottom_h_skirt_brown",
+    "kind": "bottom",
+    "name": {
+      "ko": "H라인 스커트",
+      "en": "Pencil Skirt"
+    },
+    "colorHex": "#8a5a3b",
+    "box": {
+      "x": 354,
+      "y": 743,
+      "w": 311,
+      "h": 777
+    },
+    "image": "assets/assemble/bottom_h_skirt_brown.webp",
+    "thumb": "assets/assemble/thumbs/bottom_h_skirt_brown.webp"
+  },
+  {
+    "id": "bottom_pants_black",
+    "kind": "bottom",
+    "name": {
+      "ko": "와이드 팬츠",
+      "en": "Wide Pants"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 353,
+      "y": 736,
+      "w": 316,
+      "h": 784
+    },
+    "image": "assets/assemble/bottom_pants_black.webp",
+    "thumb": "assets/assemble/thumbs/bottom_pants_black.webp"
+  },
+  {
+    "id": "bottom_pants_charcoal",
+    "kind": "bottom",
+    "name": {
+      "ko": "와이드 팬츠",
+      "en": "Wide Pants"
+    },
+    "colorHex": "#55565c",
+    "box": {
+      "x": 344,
+      "y": 712,
+      "w": 334,
+      "h": 809
+    },
+    "image": "assets/assemble/bottom_pants_charcoal.webp",
+    "thumb": "assets/assemble/thumbs/bottom_pants_charcoal.webp"
+  },
+  {
+    "id": "bottom_white_denim_skirt",
+    "kind": "bottom",
+    "name": {
+      "ko": "화이트 데님 스커트",
+      "en": "White Denim Skirt"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 335,
+      "y": 749,
+      "w": 354,
+      "h": 772
+    },
+    "image": "assets/assemble/bottom_white_denim_skirt.webp",
+    "thumb": "assets/assemble/thumbs/bottom_white_denim_skirt.webp"
+  },
+  {
+    "id": "shoes_flats_black",
+    "kind": "shoes",
+    "name": {
+      "ko": "플랫슈즈",
+      "en": "Flats"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 356,
+      "y": 1373,
+      "w": 309,
+      "h": 140
+    },
+    "image": "assets/assemble/shoes_flats_black.webp",
+    "thumb": "assets/assemble/thumbs/shoes_flats_black.webp"
+  },
+  {
+    "id": "shoes_maryjane_black",
+    "kind": "shoes",
+    "name": {
+      "ko": "메리제인",
+      "en": "Mary Janes"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 356,
+      "y": 1345,
+      "w": 309,
+      "h": 168
+    },
+    "image": "assets/assemble/shoes_maryjane_black.webp",
+    "thumb": "assets/assemble/thumbs/shoes_maryjane_black.webp"
+  },
+  {
+    "id": "shoes_pumps_black",
+    "kind": "shoes",
+    "name": {
+      "ko": "구두",
+      "en": "Pumps"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 357,
+      "y": 1367,
+      "w": 308,
+      "h": 146
+    },
+    "image": "assets/assemble/shoes_pumps_black.webp",
+    "thumb": "assets/assemble/thumbs/shoes_pumps_black.webp"
+  },
+  {
+    "id": "shoes_sneakers_navy",
+    "kind": "shoes",
+    "name": {
+      "ko": "스니커즈",
+      "en": "Sneakers"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 357,
+      "y": 1347,
+      "w": 308,
+      "h": 166
+    },
+    "image": "assets/assemble/shoes_sneakers_navy.webp",
+    "thumb": "assets/assemble/thumbs/shoes_sneakers_navy.webp"
+  },
+  {
+    "id": "shoes_sneakers_white",
+    "kind": "shoes",
+    "name": {
+      "ko": "스니커즈",
+      "en": "Sneakers"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 357,
+      "y": 1348,
+      "w": 309,
+      "h": 165
+    },
+    "image": "assets/assemble/shoes_sneakers_white.webp",
+    "thumb": "assets/assemble/thumbs/shoes_sneakers_white.webp"
   }
 ]

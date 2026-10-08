@@ -1,0 +1,27 @@
+{
+  "shoes_flats_black": {
+    "s": 0.4338,
+    "tx": 40.3,
+    "ty": 1296.0
+  },
+  "shoes_maryjane_black": {
+    "s": 0.4286,
+    "tx": 45.8,
+    "ty": 1262.6
+  },
+  "shoes_pumps_black": {
+    "s": 0.4436,
+    "tx": 29.6,
+    "ty": 1290.7
+  },
+  "shoes_sneakers_navy": {
+    "s": 0.4253,
+    "tx": 50.1,
+    "ty": 1265.8
+  },
+  "shoes_sneakers_white": {
+    "s": 0.4295,
+    "tx": 44.8,
+    "ty": 1263.7
+  }
+}
