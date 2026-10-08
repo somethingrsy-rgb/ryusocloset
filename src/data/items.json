@@ -85,6 +85,23 @@
     "zIndex": 30
   },
   {
+    "id": "top_knit_vest_ivory",
+    "category": "top",
+    "name": {
+      "ko": "니트 조끼",
+      "en": "Knit Vest"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/top/top_knit_vest_ivory.webp",
+    "thumb": "assets/thumbs/top_knit_vest_ivory.webp",
+    "zIndex": 30
+  },
+  {
     "id": "top_paisley_ivory",
     "category": "top",
     "name": {
@@ -136,23 +153,6 @@
     "zIndex": 30
   },
   {
-    "id": "top_vest_ivory",
-    "category": "top",
-    "name": {
-      "ko": "니트 조끼",
-      "en": "Knit Vest"
-    },
-    "color": "ivory",
-    "colorName": {
-      "ko": "아이보리",
-      "en": "Ivory"
-    },
-    "colorHex": "#f6ecd6",
-    "image": "assets/clothes/top/top_vest_ivory.webp",
-    "thumb": "assets/thumbs/top_vest_ivory.webp",
-    "zIndex": 30
-  },
-  {
     "id": "top_zip_ivory",
     "category": "top",
     "name": {
@@ -168,23 +168,6 @@
     "image": "assets/clothes/top/top_zip_ivory.webp",
     "thumb": "assets/thumbs/top_zip_ivory.webp",
     "zIndex": 30
-  },
-  {
-    "id": "bottom_belt_skirt_black",
-    "category": "bottom",
-    "name": {
-      "ko": "벨트 스커트",
-      "en": "Belt Skirt"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "image": "assets/clothes/bottom/bottom_belt_skirt_black.webp",
-    "thumb": "assets/thumbs/bottom_belt_skirt_black.webp",
-    "zIndex": 20
   },
   {
     "id": "bottom_belt_skirt_charcoal",
@@ -306,24 +289,7 @@
     "zIndex": 20
   },
   {
-    "id": "bottom_pants_ivory",
-    "category": "bottom",
-    "name": {
-      "ko": "와이드 팬츠",
-      "en": "Wide Pants"
-    },
-    "color": "ivory",
-    "colorName": {
-      "ko": "아이보리",
-      "en": "Ivory"
-    },
-    "colorHex": "#f6ecd6",
-    "image": "assets/clothes/bottom/bottom_pants_ivory.webp",
-    "thumb": "assets/thumbs/bottom_pants_ivory.webp",
-    "zIndex": 20
-  },
-  {
-    "id": "bottom_skirt_brown",
+    "id": "bottom_shezmig_skirt_brown",
     "category": "bottom",
     "name": {
       "ko": "H라인 스커트",
@@ -335,9 +301,60 @@
       "en": "Brown"
     },
     "colorHex": "#8a5a3b",
-    "image": "assets/clothes/bottom/bottom_skirt_brown.webp",
-    "thumb": "assets/thumbs/bottom_skirt_brown.webp",
+    "image": "assets/clothes/bottom/bottom_shezmig_skirt_brown.webp",
+    "thumb": "assets/thumbs/bottom_shezmig_skirt_brown.webp",
     "zIndex": 20
+  },
+  {
+    "id": "bottom_skirt_black",
+    "category": "bottom",
+    "name": {
+      "ko": "벨트 스커트",
+      "en": "Belt Skirt"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/bottom/bottom_skirt_black.webp",
+    "thumb": "assets/thumbs/bottom_skirt_black.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "bottom_thick_pants_ivory",
+    "category": "bottom",
+    "name": {
+      "ko": "와이드 팬츠",
+      "en": "Wide Pants"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "image": "assets/clothes/bottom/bottom_thick_pants_ivory.webp",
+    "thumb": "assets/thumbs/bottom_thick_pants_ivory.webp",
+    "zIndex": 20
+  },
+  {
+    "id": "dress_deco_tweed_black",
+    "category": "dress",
+    "name": {
+      "ko": "트위드 원피스",
+      "en": "Tweed Dress"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/dress/dress_deco_tweed_black.webp",
+    "thumb": "assets/thumbs/dress_deco_tweed_black.webp",
+    "zIndex": 40
   },
   {
     "id": "dress_isaac_black",
@@ -442,23 +459,6 @@
     "zIndex": 40
   },
   {
-    "id": "dress_tweed_black",
-    "category": "dress",
-    "name": {
-      "ko": "트위드 원피스",
-      "en": "Tweed Dress"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "image": "assets/clothes/dress/dress_tweed_black.webp",
-    "thumb": "assets/thumbs/dress_tweed_black.webp",
-    "zIndex": 40
-  },
-  {
     "id": "outer_coat_black",
     "category": "outer",
     "name": {
@@ -493,7 +493,7 @@
     "zIndex": 50
   },
   {
-    "id": "outer_denim_jacket",
+    "id": "outer_cropped_denim",
     "category": "outer",
     "name": {
       "ko": "청자켓",
@@ -505,8 +505,25 @@
       "en": "Denim"
     },
     "colorHex": "#3c5a8c",
-    "image": "assets/clothes/outer/outer_denim_jacket.webp",
-    "thumb": "assets/thumbs/outer_denim_jacket.webp",
+    "image": "assets/clothes/outer/outer_cropped_denim.webp",
+    "thumb": "assets/thumbs/outer_cropped_denim.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_cropped_tweed_blue",
+    "category": "outer",
+    "name": {
+      "ko": "트위드 크롭 재킷",
+      "en": "Cropped Tweed Jacket"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "image": "assets/clothes/outer/outer_cropped_tweed_blue.webp",
+    "thumb": "assets/thumbs/outer_cropped_tweed_blue.webp",
     "zIndex": 50
   },
   {
@@ -541,6 +558,23 @@
     "colorHex": "#2b2b2f",
     "image": "assets/clothes/outer/outer_nepa_black.webp",
     "thumb": "assets/thumbs/outer_nepa_black.webp",
+    "zIndex": 50
+  },
+  {
+    "id": "outer_roem_tweed_black",
+    "category": "outer",
+    "name": {
+      "ko": "트위드 재킷",
+      "en": "Tweed Jacket"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "image": "assets/clothes/outer/outer_roem_tweed_black.webp",
+    "thumb": "assets/thumbs/outer_roem_tweed_black.webp",
     "zIndex": 50
   },
   {
@@ -629,40 +663,6 @@
     "zIndex": 50
   },
   {
-    "id": "outer_tweed_roem_black",
-    "category": "outer",
-    "name": {
-      "ko": "트위드 재킷",
-      "en": "Tweed Jacket"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "image": "assets/clothes/outer/outer_tweed_roem_black.webp",
-    "thumb": "assets/thumbs/outer_tweed_roem_black.webp",
-    "zIndex": 50
-  },
-  {
-    "id": "outer_tweed_skyblue",
-    "category": "outer",
-    "name": {
-      "ko": "트위드 크롭 재킷",
-      "en": "Cropped Tweed Jacket"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "image": "assets/clothes/outer/outer_tweed_skyblue.webp",
-    "thumb": "assets/thumbs/outer_tweed_skyblue.webp",
-    "zIndex": 50
-  },
-  {
     "id": "outer_uniclo_beige",
     "category": "outer",
     "name": {
@@ -697,7 +697,7 @@
     "zIndex": 10
   },
   {
-    "id": "shoes_flat_ivory",
+    "id": "shoes_flats_ivory",
     "category": "shoes",
     "name": {
       "ko": "플랫슈즈",
@@ -709,8 +709,8 @@
       "en": "Ivory"
     },
     "colorHex": "#f6ecd6",
-    "image": "assets/clothes/shoes/shoes_flat_ivory.webp",
-    "thumb": "assets/thumbs/shoes_flat_ivory.webp",
+    "image": "assets/clothes/shoes/shoes_flats_ivory.webp",
+    "thumb": "assets/thumbs/shoes_flats_ivory.webp",
     "zIndex": 10
   },
   {
@@ -748,7 +748,7 @@
     "zIndex": 10
   },
   {
-    "id": "shoes_sneaker_navy",
+    "id": "shoes_sneakers_navy",
     "category": "shoes",
     "name": {
       "ko": "스니커즈",
@@ -760,12 +760,12 @@
       "en": "Navy"
     },
     "colorHex": "#27355b",
-    "image": "assets/clothes/shoes/shoes_sneaker_navy.webp",
-    "thumb": "assets/thumbs/shoes_sneaker_navy.webp",
+    "image": "assets/clothes/shoes/shoes_sneakers_navy.webp",
+    "thumb": "assets/thumbs/shoes_sneakers_navy.webp",
     "zIndex": 10
   },
   {
-    "id": "acc_lace_collar",
+    "id": "acc_lace_collar_white",
     "category": "accessory",
     "name": {
       "ko": "레이스 카라",
@@ -777,8 +777,8 @@
       "en": "White"
     },
     "colorHex": "#fbfbfb",
-    "image": "assets/clothes/accessory/acc_lace_collar.webp",
-    "thumb": "assets/thumbs/acc_lace_collar.webp",
+    "image": "assets/clothes/accessory/acc_lace_collar_white.webp",
+    "thumb": "assets/thumbs/acc_lace_collar_white.webp",
     "zIndex": 70
   },
   {

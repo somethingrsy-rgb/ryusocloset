@@ -59,6 +59,10 @@ describe('sanitizeOutfit', () => {
   it('원피스와 상하의가 같이 있으면 원피스를 우선한다', () => {
     expect(sanitizeOutfit({ dress: 'dress1', top: 'top1' }, byId)).toEqual({ dress: 'dress1' })
   })
+  it('이름이 바뀐 id 는 별칭으로 이어받는다', () => {
+    expect(sanitizeOutfit({ top: 'old_top', shoes: 'shoes1' }, byId, { old_top: 'top1' })).toEqual({ top: 'top1', shoes: 'shoes1' })
+    expect(sanitizeOutfit({ top: 'old_top' }, byId, { old_top: 'bottom1' })).toEqual({})
+  })
   it('이상한 입력도 빈 코디로', () => {
     expect(sanitizeOutfit(null, byId)).toEqual({})
     expect(sanitizeOutfit('x', byId)).toEqual({})
