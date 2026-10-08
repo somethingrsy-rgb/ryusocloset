@@ -1,7 +1,8 @@
 {
   "acc_backpack_ivory": {
     "ko": "백팩",
-    "en": "Backpack"
+    "en": "Backpack",
+    "native": true
   },
   "acc_briefcase_brown": {
     "ko": "서류가방",
@@ -9,11 +10,13 @@
   },
   "acc_handbag_black": {
     "ko": "핸드백",
-    "en": "Handbag"
+    "en": "Handbag",
+    "native": true
   },
   "acc_kangol_tote_navy": {
     "ko": "토트백",
-    "en": "Tote Bag"
+    "en": "Tote Bag",
+    "native": true
   },
   "acc_lace_collar_white": {
     "ko": "레이스 카라",
@@ -30,12 +33,14 @@
   },
   "bottom_button_skirt_brown": {
     "ko": "버튼 플레어 스커트",
-    "en": "Button Skirt"
+    "en": "Button Skirt",
+    "native": true
   },
   "bottom_denim": {
     "ko": "데님 스커트",
     "en": "Denim Skirt",
-    "color": "denim"
+    "color": "denim",
+    "native": true
   },
   "bottom_denim_skirt_white": {
     "ko": "화이트 데님 스커트",
@@ -47,7 +52,8 @@
   },
   "bottom_pants_black": {
     "ko": "와이드 팬츠",
-    "en": "Wide Pants"
+    "en": "Wide Pants",
+    "native": true
   },
   "bottom_pants_charcoal": {
     "ko": "와이드 팬츠",
@@ -55,23 +61,28 @@
   },
   "bottom_shezmig_skirt_brown": {
     "ko": "H라인 스커트",
-    "en": "Pencil Skirt"
+    "en": "Pencil Skirt",
+    "native": true
   },
   "bottom_skirt_black": {
     "ko": "벨트 스커트",
-    "en": "Belt Skirt"
+    "en": "Belt Skirt",
+    "native": true
   },
   "bottom_thick_pants_ivory": {
     "ko": "와이드 팬츠",
-    "en": "Wide Pants"
+    "en": "Wide Pants",
+    "native": true
   },
   "dress_deco_tweed_black": {
     "ko": "트위드 원피스",
-    "en": "Tweed Dress"
+    "en": "Tweed Dress",
+    "native": true
   },
   "dress_isaac_black": {
     "ko": "스퀘어넥 원피스",
-    "en": "Square-neck Dress"
+    "en": "Square-neck Dress",
+    "native": true
   },
   "dress_isaac_brown": {
     "ko": "볼레로 원피스",
@@ -79,16 +90,19 @@
   },
   "dress_isaac_navy": {
     "ko": "볼레로 원피스",
-    "en": "Bolero Dress"
+    "en": "Bolero Dress",
+    "native": true
   },
   "dress_isaac_shirt_black": {
     "ko": "셔츠 원피스",
     "en": "Shirt Dress",
-    "color": "black"
+    "color": "black",
+    "native": true
   },
   "dress_oxford_beige": {
     "ko": "옥스포드 원피스",
-    "en": "Oxford Dress"
+    "en": "Oxford Dress",
+    "native": true
   },
   "dress_shesmiss_gray": {
     "ko": "코트 원피스",
@@ -100,7 +114,8 @@
   },
   "outer_coat_gray": {
     "ko": "롱 코트",
-    "en": "Long Coat"
+    "en": "Long Coat",
+    "native": true
   },
   "outer_cropped_denim": {
     "ko": "청자켓",
@@ -114,17 +129,20 @@
   "outer_jacket_gray": {
     "ko": "재킷",
     "en": "Jacket",
-    "color": "gray"
+    "color": "gray",
+    "native": true
   },
   "outer_nepa_black": {
     "ko": "패딩 코트",
     "en": "Puffer Coat",
-    "color": "black"
+    "color": "black",
+    "native": true
   },
   "outer_roem_tweed_black": {
     "ko": "트위드 재킷",
     "en": "Tweed Jacket",
-    "color": "black"
+    "color": "black",
+    "native": true
   },
   "outer_short_trench_black": {
     "ko": "숏 트렌치",
@@ -133,11 +151,13 @@
   },
   "outer_trench_beige": {
     "ko": "트렌치코트",
-    "en": "Trench Coat"
+    "en": "Trench Coat",
+    "native": true
   },
   "outer_trench_black": {
     "ko": "트렌치코트",
-    "en": "Trench Coat"
+    "en": "Trench Coat",
+    "native": true
   },
   "outer_trench_khaki": {
     "ko": "트렌치코트",
@@ -158,7 +178,8 @@
   },
   "shoes_flats_ivory": {
     "ko": "플랫슈즈",
-    "en": "Flats"
+    "en": "Flats",
+    "native": true
   },
   "shoes_maryjane_black": {
     "ko": "메리제인",
@@ -166,11 +187,13 @@
   },
   "shoes_pumps_black": {
     "ko": "펌프스",
-    "en": "Pumps"
+    "en": "Pumps",
+    "native": true
   },
   "shoes_sneakers_navy": {
     "ko": "스니커즈",
-    "en": "Sneakers"
+    "en": "Sneakers",
+    "native": true
   },
   "top_cardigan_black": {
     "ko": "트위드 가디건",
@@ -183,15 +206,18 @@
   "top_check_cardigan_gray": {
     "ko": "체크 가디건",
     "en": "Check Cardigan",
-    "color": "gray"
+    "color": "gray",
+    "native": true
   },
   "top_inner_black": {
     "ko": "이너 티",
-    "en": "Inner Tee"
+    "en": "Inner Tee",
+    "native": true
   },
   "top_ivory": {
     "ko": "크롭 티",
-    "en": "Cropped Tee"
+    "en": "Cropped Tee",
+    "native": true
   },
   "top_knit_vest_ivory": {
     "ko": "니트 조끼",
@@ -199,15 +225,18 @@
   },
   "top_paisley_ivory": {
     "ko": "페이즐리 가디건",
-    "en": "Paisley Cardigan"
+    "en": "Paisley Cardigan",
+    "native": true
   },
   "top_pattern_vest_ivory": {
     "ko": "패턴 조끼",
-    "en": "Patterned Vest"
+    "en": "Patterned Vest",
+    "native": true
   },
   "top_sailor_ivory": {
     "ko": "세일러 가디건",
-    "en": "Sailor Cardigan"
+    "en": "Sailor Cardigan",
+    "native": true
   },
   "top_zip_ivory": {
     "ko": "집업",

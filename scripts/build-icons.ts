@@ -10,7 +10,7 @@ const BG = { r: 255, g: 227, b: 236, alpha: 1 }
 
 async function icon(file: string, size: number, faceRatio: number) {
   const full = path.join(ROOT, 'assets-src/base/body.png')
-  const head = await sharp(full).extract({ left: 20, top: 10, width: 860, height: 860 }).toBuffer()
+  const head = await sharp(full).extract({ left: 60, top: 10, width: 900, height: 900 }).toBuffer()
   const face = Math.round(size * faceRatio)
   const faceBuf = await sharp(head).resize(face, face).toBuffer()
   await sharp({ create: { width: size, height: size, channels: 4, background: BG } })

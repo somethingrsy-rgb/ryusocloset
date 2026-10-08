@@ -1,7 +1,7 @@
 /**
  * assets-src/ 의 원본 PNG → public/assets/ (webp, 썸네일) + src/data/items.json 매니페스트 생성.
  *
- *   assets-src/clothes/<category>_<name>_<color>.png   (899x1536, 투명 배경, 아바타와 같은 캔버스)
+ *   assets-src/clothes/<category>_<name>_<color>.png   (1024x1536, 투명 배경, 아바타와 같은 캔버스)
  *   assets-src/base/{body,body_barefoot,hair_front}.png
  *   scripts/labels.json                                 (파일명 → 한/영 이름, 선택적으로 category/color 덮어쓰기)
  *   scripts/fit.json                                    (옷별 자동 맞춤값 sx/sy/dx/dy — tools-py/autofit_clothes.py 가 만듦)

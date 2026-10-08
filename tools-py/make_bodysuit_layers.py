@@ -3,7 +3,7 @@
 원본: assets-src/base/source/standing_avatar_transparent.png (흰 배경을 지운 투명 PNG)
        assets-src/base/source/standing_avatar_original.png    (흰 배경 원본)
 
-1) 캔버스 899×1536: 아바타를 늘리거나 줄이지 않고 좌우만 잘라 맞춘다 (원본 x 54~953).
+1) 캔버스 1024×1536: 원본 크기 그대로 쓴다 (늘리거나 자르지 않음).
 2) body.png, body_barefoot.png: 이 아바타는 이미 맨발이라 둘이 같은 이미지다.
 3) hair_front.png: 어깨 아래로 내려오는 머리카락(진한 색 큰 덩어리)만 따로 뽑아 옷 위에 한 번 더 덮는다.
    귀 아래(Y0~Y1)부터 서서히 나타나게 해서 얼굴 쪽 머리와 이음매가 생기지 않게 한다.
@@ -18,8 +18,8 @@ from PIL import Image
 from scipy import ndimage as ndi
 
 src, out = sys.argv[1], sys.argv[2]
-W, H = 899, 1536
-X0 = 54  # 원본에서 잘라 올 왼쪽 x (그림 범위 90~917 이 모두 들어감)
+W, H = 1024, 1536
+X0 = 0  # 원본 크기 그대로 (자르지 않음)
 Y0, Y1 = 430, 500  # 앞머리 레이어가 나타나기 시작/완전해지는 높이
 
 rgba = np.array(Image.open(src).convert('RGBA'))
