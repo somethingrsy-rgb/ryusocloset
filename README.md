@@ -14,6 +14,12 @@ npm test           # 착용 규칙 단위 테스트
 ```
 
 `dist/` 폴더를 Netlify · Vercel · GitHub Pages 등 정적 호스팅에 올리면 배포 끝입니다. (`base: './'` 라서 하위 경로에서도 동작)
+
+### GitHub Pages 자동 배포
+`main` 에 푸시(머지)할 때마다 `.github/workflows/deploy-pages.yml` 이 타입 검사 → 테스트 → 빌드 → 배포를 실행합니다.
+처음 한 번만 저장소 **Settings → Pages → Build and deployment → Source 를 `GitHub Actions`** 로 바꿔 주세요.
+배포 주소: `https://<계정>.github.io/<저장소 이름>/` (Actions 탭에서 `Deploy to GitHub Pages` 실행 결과에도 표시됨)
+※ 비공개 저장소는 요금제에 따라 Pages 를 쓸 수 없을 수 있습니다.
 휴대폰 브라우저에서 "홈 화면에 추가"하면 앱처럼 설치됩니다.
 
 ## 기능
