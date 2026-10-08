@@ -4,6 +4,7 @@
  *   assets-src/clothes/<category>_<name>_<color>.png   (899x1536, 투명 배경, 아바타와 같은 캔버스)
  *   assets-src/base/{body,body_barefoot,hair_front}.png
  *   scripts/labels.json                                 (파일명 → 한/영 이름, 선택적으로 category/color 덮어쓰기)
+ *   scripts/fit.json                                    (옷별 자동 맞춤값 sx/sy/dx/dy — tools-py/autofit_clothes.py 가 만듦)
  *
  * 실행: npm run assets
  */
@@ -64,6 +65,41 @@ function fallbackName(stem: string) {
   return { ko: text, en: text.replace(/\b\w/g, (c) => c.toUpperCase()) }
 }
 
+type Fit = { sx: number; sy: number; dx: number; dy: number }
+const fits: Record<string, Fit> = fs.existsSync(path.join(ROOT, 'scripts/fit.json'))
+  ? JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/fit.json'), 'utf8'))
+  : {}
+
+/**
+ * 자동 맞춤값 적용: 옷 영역의 중심을 기준으로 가로·세로 배율을 곱하고 이동한다.
+ * (tools-py/autofit_clothes.py 가 계산한 것과 같은 변환) 값이 없으면 원본 파일을 그대로 쓴다.
+ */
+async function applyFit(file: string, fit?: Fit): Promise<string | Buffer> {
+  if (!fit) return file
+  const W = CANVAS_W
+  const H = CANVAS_H
+  const box = await alphaBBox(file, 40)
+  const cx = box.left + box.width / 2
+  const cy = box.top + box.height / 2
+  const w = Math.round(W * fit.sx)
+  const h = Math.round(H * fit.sy)
+  const left = Math.round(cx - fit.sx * cx + fit.dx)
+  const top = Math.round(cy - fit.sy * cy + fit.dy)
+  const resized = await sharp(file).resize(w, h, { fit: 'fill', kernel: 'lanczos3' }).png().toBuffer()
+  // 캔버스 밖으로 나가는 부분은 잘라낸다
+  const srcX = Math.max(0, -left)
+  const srcY = Math.max(0, -top)
+  const dstX = Math.max(0, left)
+  const dstY = Math.max(0, top)
+  const part = await sharp(resized)
+    .extract({ left: srcX, top: srcY, width: Math.min(w - srcX, W - dstX), height: Math.min(h - srcY, H - dstY) })
+    .toBuffer()
+  return sharp({ create: { width: W, height: H, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([{ input: part, left: dstX, top: dstY }])
+    .png()
+    .toBuffer()
+}
+
 async function main() {
   fs.mkdirSync(path.join(OUT, 'base'), { recursive: true })
   fs.mkdirSync(path.join(OUT, 'thumbs'), { recursive: true })
@@ -87,11 +123,12 @@ async function main() {
     const stem = file.replace(/\.png$/i, '')
     const category = parseCategory(stem)
     const colorKey = parseColor(stem)
-    const src = path.join(SRC, 'clothes', file)
-    const meta = await sharp(src).metadata()
+    const srcFile = path.join(SRC, 'clothes', file)
+    const meta = await sharp(srcFile).metadata()
     if (meta.width !== CANVAS_W || meta.height !== CANVAS_H) {
       console.warn(`⚠ ${file}: ${meta.width}x${meta.height} (${CANVAS_W}x${CANVAS_H} 이어야 아바타와 정렬됩니다)`)
     }
+    const src = await applyFit(srcFile, fits[stem])
     fs.mkdirSync(path.join(OUT, 'clothes', category), { recursive: true })
     await sharp(src).webp({ quality: 90, alphaQuality: 100 }).toFile(path.join(OUT, 'clothes', category, `${stem}.webp`))
     await makeThumb(src, path.join(OUT, 'thumbs', `${stem}.webp`)).catch((e) => {

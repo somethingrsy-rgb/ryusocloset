@@ -62,7 +62,8 @@ scripts/
   room-items.json           방 아이템 이름, 기본 크기(baseWidth), 기본 위치(x, y)
   build-icons.ts            PWA 아이콘 생성
   labels.json               파일명 → 한/영 이름 (+ category/color 덮어쓰기)
-tools-py/                   아바타 가공용 1회성 파이썬 도구 (스티커 테두리 제거, 원본 → 캔버스 정렬 + 맨발 몸 생성)
+  fit.json                  옷별 자동 맞춤값 (가로·세로 배율, 이동) — tools-py/autofit_clothes.py 가 계산, 빌드 때 옷 이미지에 반영
+tools-py/                   파이썬 도구 (스티커 테두리 제거, 원본 → 캔버스 정렬 + 맨발 몸 생성, 옷 자동 맞춤)
 public/assets/              생성물 (webp) — 직접 수정하지 않기
 src/
   lib/layers.ts             카테고리, 레이어 순서(zIndex), 캔버스 크기
@@ -84,6 +85,21 @@ src/
 - 레이어 순서(아래→위): 몸 < 신발 < 하의 < 상의 < 원피스 < 아우터 < **앞머리** < 액세서리 < 가방
 - 앞머리 레이어가 아우터 위에 한 번 더 올라가서 어깨 위로 내려온 머리가 옷 앞에 보입니다.
 
+## 옷 자동 맞춤 (속옷이 옷 옆으로 비치는 것 줄이기)
+
+옷은 각각 따로 그려진 그림이라 몸에 대한 폭·높이가 조금씩 다릅니다. 특히 바지·스커트가 몸 엉덩이 폭보다 좁게 그려져 옆으로 속옷이 보였습니다.
+`tools-py/autofit_clothes.py` 가 아바타의 속옷(외곽선으로 둘러싸인 영역)을 찾고, 옷마다 **속옷이 옷의 가로 범위 밖으로 삐져나온 픽셀 수**를 줄이는 가로·세로 배율과 이동값을 계산해 `scripts/fit.json` 에 저장합니다.
+개선이 충분히 큰 옷(현재 11벌: 바지·스커트·일부 원피스·조끼)만 보정하고 나머지는 원본 그대로 둡니다. `npm run assets` 가 이 값을 읽어 옷 이미지에 적용합니다. 원본은 `assets-src/clothes` 에 그대로 있습니다.
+
+```bash
+pip install numpy scipy opencv-python-headless pillow
+python tools-py/autofit_clothes.py   # scripts/fit.json 갱신 (옷이나 아바타를 바꿨을 때)
+npm run assets                       # 보정을 반영해 public/assets 다시 생성
+```
+
+그래도 마음에 안 드는 옷은 앱에서 직접 손가락으로 옮기고 크기를 조절할 수 있습니다. (이 값은 보정 위에 얹힙니다)
+**한계:** 보정은 가로·세로 배율과 이동뿐이라 옷 모양 자체(어깨선, 소매 각도)를 바꾸지는 못합니다. 아바타 몸 비율이 달라지면 보정으로는 한계가 있고, 새 몸 기준으로 옷을 다시 그리는 것이 맞습니다.
+
 ## 새 옷 추가하는 법
 
 1. 투명 배경 899×1536 PNG(아바타와 같은 캔버스)를 `assets-src/clothes/` 에 넣습니다. 파일명 규칙: `카테고리_이름_색상.png`
@@ -91,7 +107,7 @@ src/
    - `acc_` 는 이름에 `bag/backpack/briefcase/handbag/tote` 가 있으면 **가방**, 아니면 **액세서리**로 분류됩니다.
    - 마지막 단어가 색상표(black, ivory, navy, gray, brown, beige, khaki, mint, charcoal, skyblue, white)에 있으면 색 점이 표시됩니다.
 2. (선택) `scripts/labels.json` 에 한/영 이름을 추가합니다. 없으면 파일명으로 이름이 만들어집니다.
-3. `npm run assets` 를 실행하면 webp 변환, 썸네일, `src/data/items.json` 이 갱신됩니다.
+3. `python tools-py/autofit_clothes.py` 로 맞춤값을 갱신하고(바지·스커트·원피스일 때 특히), `npm run assets` 를 실행하면 webp 변환, 썸네일, `src/data/items.json` 이 갱신됩니다.
 4. 새 색상이 필요하면 `scripts/build-assets.ts` 의 `COLORS` 에 추가하세요.
 
 에셋이 없거나 깨진 경우를 대비해 `npm run assets` 가 크기가 899×1536 이 아닌 파일에 경고를 출력합니다.
