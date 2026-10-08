@@ -58,6 +58,13 @@ const ko = {
   tweakReset: '원래대로',
   takeOff: '벗기',
   dropHere: '여기에 놓아요',
+  modeAssemble: '조립',
+  partHead: '머리',
+  partTop: '상의',
+  partBottom: '하의',
+  assembleHint: '머리·상의·하의를 따로 골라 조립해요',
+  assembleTopHint: '상의는 팔과 손까지 한 벌이에요',
+  noBottoms: '하의가 아직 없어요',
 } as const
 
 type Dict = Record<keyof typeof ko, string>
@@ -117,6 +124,13 @@ const en: Dict = {
   tweakReset: 'Reset',
   takeOff: 'Take off',
   dropHere: 'Drop here',
+  modeAssemble: 'Mix',
+  partHead: 'Hair',
+  partTop: 'Tops',
+  partBottom: 'Bottoms',
+  assembleHint: 'Pick hair, top and bottom separately',
+  assembleTopHint: 'Each top includes the arms and hands',
+  noBottoms: 'No bottoms yet',
 }
 
 export const MESSAGES: Record<Lang, Dict> = { ko, en }

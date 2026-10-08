@@ -13,6 +13,8 @@ export interface Item {
   image: string
   thumb: string
   zIndex: number
+  /** 현재 아바타 기준으로 새로 그린 옷 (조립 탭의 하의로 쓸 수 있음) */
+  native?: boolean
 }
 
 /** 카테고리 → 착용 중인 아이템 id */

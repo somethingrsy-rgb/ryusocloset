@@ -100,12 +100,8 @@ function drawSticker(out: CanvasRenderingContext2D, figure: HTMLCanvasElement, o
   out.drawImage(sil, ox, oy)
 }
 
-export async function renderOutfitCanvas(
-  outfit: Outfit,
-  opts: ExportOptions,
-  tweaks: Tweaks = {},
-): Promise<HTMLCanvasElement> {
-  const figure = await renderFigure(outfit, tweaks)
+/** 합성한 인물 그림에 배경·스티커 테두리를 입힌다 */
+export function finishFigure(figure: HTMLCanvasElement, opts: ExportOptions): HTMLCanvasElement {
   const pad = opts.sticker ? STICKER_R + 28 : 0
   const out = makeCanvas(CANVAS_W + pad * 2, CANVAS_H + pad * 2)
   const ctx = out.getContext('2d')!
@@ -113,6 +109,23 @@ export async function renderOutfitCanvas(
   if (opts.sticker) drawSticker(ctx, figure, pad, pad)
   ctx.drawImage(figure, pad, pad)
   return out
+}
+
+export async function renderOutfitCanvas(
+  outfit: Outfit,
+  opts: ExportOptions,
+  tweaks: Tweaks = {},
+): Promise<HTMLCanvasElement> {
+  return finishFigure(await renderFigure(outfit, tweaks), opts)
+}
+
+/** 조립 탭: 몸 아랫부분 < 하의 < 상의(팔 포함) < 머리 순서로 합성 */
+export async function renderAssembly(layerUrls: string[]): Promise<HTMLCanvasElement> {
+  const imgs = await Promise.all(layerUrls.map(loadImage))
+  const canvas = makeCanvas(CANVAS_W, CANVAS_H)
+  const ctx = canvas.getContext('2d')!
+  for (const img of imgs) ctx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H)
+  return canvas
 }
 
 export const canvasToBlob = (c: HTMLCanvasElement) =>

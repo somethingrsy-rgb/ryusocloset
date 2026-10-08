@@ -1,5 +1,6 @@
 import { ID_ALIASES, ITEM_BY_ID } from './items'
 import { sanitizeOutfit } from './outfit'
+import { sanitizeAssembly, type Assembly } from './assemble'
 import { sanitizeRoom } from './room'
 import { sanitizeTweaks } from './tweaks'
 import type { RoomState } from './roomTypes'
@@ -12,6 +13,7 @@ const K_SETTINGS = 'ryuso.settings.v1'
 const K_CURRENT = 'ryuso.current.v1'
 const K_ROOM = 'ryuso.room.v1'
 const K_TWEAKS = 'ryuso.tweaks.v1'
+const K_ASSEMBLY = 'ryuso.assembly.v1'
 
 function read<T>(key: string): T | null {
   try {
@@ -60,3 +62,6 @@ export const persistRoom = (r: RoomState) => write(K_ROOM, r)
 
 export const loadTweaks = (outfit: Outfit): Tweaks => sanitizeTweaks(read<unknown>(K_TWEAKS), outfit)
 export const persistTweaks = (t: Tweaks) => write(K_TWEAKS, t)
+
+export const loadAssembly = (): Assembly => sanitizeAssembly(read<unknown>(K_ASSEMBLY))
+export const persistAssembly = (a: Assembly) => write(K_ASSEMBLY, a)
