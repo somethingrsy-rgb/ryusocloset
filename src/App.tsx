@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
 import { SettingsSheet } from './components/SettingsSheet'
+import { startSync } from './lib/sync/manager'
 import { Closet } from './components/Closet'
 import { removeCustomItem, removeCustomRoomItem } from './lib/customItems'
 import { hideItem, restoreItems, visible } from './lib/hidden'
@@ -61,6 +62,7 @@ export default function App() {
   const [bgId, setBgId] = useState(
     initial.bgId && BACKGROUNDS.some((b) => b.id === initial.bgId) ? initial.bgId : DEFAULT_BG_ID,
   )
+  useEffect(() => void startSync(), [])
   const [mode, setMode] = useState<Mode>('closet')
   const [outfit, setOutfit] = useState<Outfit>(loadCurrent)
   const [tweaks, setTweaks] = useState<Tweaks>(() => loadTweaks(loadCurrent()))

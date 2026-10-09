@@ -1,5 +1,7 @@
 import { notifyItemsChanged } from './items'
 import { isRestoring } from './restoreGuard'
+import { emitLocalChange } from './sync/bus'
+import { touch } from './sync/meta'
 
 /**
  * 기본 옷·방 물건을 "삭제"하면 실제 파일을 지우는 대신 목록에서 숨긴다 (이미 저장해 둔 코디·방은 그대로 보인다).
@@ -20,7 +22,13 @@ let hidden = read()
 const save = () => {
   if (isRestoring()) return
   try {
-    localStorage.setItem(KEY, JSON.stringify([...hidden]))
+    const text = JSON.stringify([...hidden])
+    const changed = localStorage.getItem(KEY) !== text
+    localStorage.setItem(KEY, text)
+    if (changed) {
+      touch(KEY)
+      emitLocalChange()
+    }
   } catch {
     /* 저장 공간이 없으면 이번 접속에서만 숨겨진다 */
   }

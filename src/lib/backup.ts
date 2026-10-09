@@ -1,5 +1,6 @@
 import { exportCustom, replaceCustom } from './customItems'
 import { beginRestore, endRestore } from './restoreGuard'
+import { isSyncKey, touch } from './sync/meta'
 
 /**
  * 이 기기의 모든 데이터(코디·저장한 코디·방·캠핑·설정·숨긴 목록 + 내가 추가한 옷·소품)를 파일 하나로 묶거나,
@@ -23,7 +24,7 @@ export async function makeBackup(): Promise<BackupFile> {
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i)
-      const v = k?.startsWith(PREFIX) ? localStorage.getItem(k) : null
+      const v = k?.startsWith(PREFIX) && !isSyncKey(k) ? localStorage.getItem(k) : null
       if (k && v !== null) local[k] = v
     }
   } catch {
@@ -63,10 +64,13 @@ export async function restoreBackup(b: BackupFile): Promise<boolean> {
     const old: string[] = []
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i)
-      if (k?.startsWith(PREFIX)) old.push(k)
+      if (k?.startsWith(PREFIX) && !isSyncKey(k)) old.push(k)
     }
     old.forEach((k) => localStorage.removeItem(k))
-    for (const [k, v] of Object.entries(b.local)) localStorage.setItem(k, v)
+    for (const [k, v] of Object.entries(b.local)) {
+      localStorage.setItem(k, v)
+      touch(k) // 불러온 데이터를 "방금 고친 것"으로 표시해서 동기화가 켜져 있으면 다른 기기로 퍼지게 한다
+    }
     return true
   } catch {
     endRestore()
