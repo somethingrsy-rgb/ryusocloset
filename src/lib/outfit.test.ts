@@ -18,7 +18,7 @@ const mk = (id: string, category: Category): Item => ({
 
 const items = [
   mk('top1', 'top'), mk('top2', 'top'), mk('bottom1', 'bottom'), mk('dress1', 'dress'),
-  mk('outer1', 'outer'), mk('shoes1', 'shoes'), mk('acc1', 'accessory'), mk('bag1', 'bag'),
+  mk('costume1', 'costume'), mk('outer1', 'outer'), mk('shoes1', 'shoes'), mk('acc1', 'accessory'), mk('bag1', 'bag'),
 ]
 const byId = Object.fromEntries(items.map((i) => [i.id, i]))
 const byCategory = Object.fromEntries(
@@ -91,3 +91,24 @@ describe('randomOutfit', () => {
     expect(randomOutfit(byCategory, () => 0.99)).toEqual({ top: 'top2', bottom: 'bottom1' })
   })
 })
+
+describe('테마옷', () => {
+  it('테마옷을 입으면 상의·하의·원피스가 벗겨지고, 상의나 원피스를 입으면 테마옷이 벗겨진다', () => {
+    let o = toggleItem({}, byId.top1)
+    o = toggleItem(o, byId.bottom1)
+    o = toggleItem(o, byId.costume1)
+    expect(o).toEqual({ costume: 'costume1' })
+    expect(toggleItem(o, byId.dress1)).toEqual({ dress: 'dress1' })
+    expect(toggleItem(o, byId.top1)).toEqual({ top: 'top1' })
+    o = toggleItem(o, byId.shoes1)
+    expect(toggleItem(o, byId.outer1)).toEqual({ costume: 'costume1', shoes: 'shoes1', outer: 'outer1' })
+  })
+  it('저장 데이터: 예전에 원피스 칸에 저장한 옷이 지금 테마옷이면 테마옷 칸으로 옮기고, 상의·하의와 겹치면 정리한다', () => {
+    expect(sanitizeOutfit({ dress: 'costume1', top: 'top1', shoes: 'shoes1' }, byId)).toEqual({ costume: 'costume1', shoes: 'shoes1' })
+    expect(sanitizeOutfit({ dress: 'dress1', costume: 'costume1' }, byId)).toEqual({ costume: 'costume1' })
+  })
+  it('랜덤 코디에는 테마옷이 나오지 않는다', () => {
+    for (let i = 0; i < 30; i++) expect(randomOutfit(byCategory as never).costume).toBeUndefined()
+  })
+})
+

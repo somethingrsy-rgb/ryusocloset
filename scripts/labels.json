@@ -252,19 +252,22 @@
     "ko": "로리타 원피스",
     "en": "Lolita Dress",
     "color": "purple",
-    "native": true
+    "native": true,
+    "category": "costume"
   },
   "dress_maid_blue": {
     "ko": "메이드 원피스",
     "en": "Maid Dress",
     "color": "skyblue",
-    "native": true
+    "native": true,
+    "category": "costume"
   },
   "dress_lolita_black": {
     "ko": "고딕 로리타 원피스",
     "en": "Gothic Lolita Dress",
     "color": "black",
-    "native": true
+    "native": true,
+    "category": "costume"
   },
   "shoes_maryjane_bow_black": {
     "ko": "메리제인 구두",
@@ -300,31 +303,36 @@
     "ko": "요정 원피스",
     "en": "Fairy Dress",
     "color": "skyblue",
-    "native": true
+    "native": true,
+    "category": "costume"
   },
   "dress_midnight_navy": {
     "ko": "미드나잇 원피스",
     "en": "Midnight Dress",
     "color": "navy",
-    "native": true
+    "native": true,
+    "category": "costume"
   },
   "dress_starry_navy": {
     "ko": "별밤 원피스",
     "en": "Starry Dress",
     "color": "navy",
-    "native": true
+    "native": true,
+    "category": "costume"
   },
   "dress_card_red": {
     "ko": "카드 원피스",
     "en": "Card Dress",
     "color": "red",
-    "native": true
+    "native": true,
+    "category": "costume"
   },
   "dress_cape_red": {
     "ko": "케이프 원피스",
     "en": "Cape Dress",
     "color": "red",
-    "native": true
+    "native": true,
+    "category": "costume"
   },
   "shoes_strap_mint": {
     "ko": "리본 스트랩 구두",
@@ -378,7 +386,8 @@
     "ko": "조개 인어 원피스",
     "en": "Seashell Dress",
     "color": "skyblue",
-    "native": true
+    "native": true,
+    "category": "costume"
   },
   "shoes_slingback_cream": {
     "ko": "뮬 플랫",
@@ -390,6 +399,54 @@
     "ko": "뮬 플랫",
     "en": "Mule Flats",
     "color": "black",
+    "native": true
+  },
+  "costume_hanbok_starry": {
+    "ko": "별밤 한복 원피스",
+    "en": "Starry Hanbok Dress",
+    "color": "navy",
+    "native": true
+  },
+  "costume_floral_black": {
+    "ko": "꽃무늬 리본 원피스",
+    "en": "Floral Ribbon Dress",
+    "color": "black",
+    "native": true
+  },
+  "costume_tassel_pink": {
+    "ko": "핑크 술장식 원피스",
+    "en": "Pink Tassel Dress",
+    "color": "pink",
+    "native": true
+  },
+  "costume_sakura_blue": {
+    "ko": "벚꽃 프릴 드레스",
+    "en": "Sakura Frill Dress",
+    "color": "skyblue",
+    "native": true
+  },
+  "costume_forest_green": {
+    "ko": "숲속 요정 원피스",
+    "en": "Forest Fairy Dress",
+    "color": "green",
+    "native": true
+  },
+  "costume_petal_blue": {
+    "ko": "꽃잎 하이로우 드레스",
+    "en": "Petal Hi-Lo Dress",
+    "color": "navy",
+    "native": true
+  },
+  "costume_princess_pink": {
+    "ko": "핑크 공주 드레스",
+    "en": "Pink Princess Dress",
+    "color": "pink",
+    "native": true
+  },
+  "acc_hair_ribbon_green": {
+    "ko": "초록 머리 리본",
+    "en": "Green Hair Ribbon",
+    "category": "accessory",
     "native": true
   }
 }

@@ -1,8 +1,9 @@
 """투명 PNG 옷 한 장을 코디 탭용 아바타 캔버스(1024×1536)로 놓아 assets-src/clothes/<id>.png 로 저장한다.
 
   python tools-py/add_clothes.py dress  <원본.png> <id> [폭]     원피스: 옷 영역 폭을 맞추고(기본 700), 가로 가운데 x=512, 맨 위 y=604 (옷깃이 높아서 어깨선에 맞추려고 조금 위로)
-  python tools-py/add_clothes.py shoes  <원본.png> <id>          신발 한 쌍: 두 짝을 아바타 두 발에 맞춘다 (가운데 423.3/598.1, 폭 110, 발끝 y 1510)
+  python tools-py/add_clothes.py shoes  <원본.png> <id>          신발 한 쌍: 두 짝을 아바타 두 발에 맞춘다 (가운데 442.5/581.5, 폭 84, 발끝 y 1510)
   python tools-py/add_clothes.py top    <원본.png> <id> [맨위y]   상의: 폭 635, 맨 위 y (기본 630)
+  python tools-py/add_clothes.py acc    <원본.png> <id> <폭> <가운데x> <가운데y>   머리핀·리본 같은 장식: 폭과 놓을 가운데 위치를 직접 정한다
 
 (투명 가장자리의 희미한 번짐(알파 12 이하)은 지운다. 이름·색은 scripts/labels.json 에 직접 적는다.)
 의존성: pip install numpy scipy pillow
@@ -16,6 +17,7 @@ from scipy import ndimage as ndi
 W, H = 1024, 1536
 mode, src, oid = sys.argv[1:4]
 arg = float(sys.argv[4]) if len(sys.argv) > 4 else None
+extra = [float(v) for v in sys.argv[5:7]]
 
 im = Image.open(src).convert('RGBA')
 a = np.array(im)
@@ -30,7 +32,12 @@ def canvas_with(piece, x, y):
     return c
 
 
-if mode in ('dress', 'top'):
+if mode == 'acc':
+    im = im.crop(bb)
+    s = arg / im.width
+    im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
+    out = canvas_with(im, extra[0] - im.width / 2, extra[1] - im.height / 2)
+elif mode in ('dress', 'top'):
     im = im.crop(bb)
     if mode == 'dress':
         s, top = (arg or 700) / im.width, 604
@@ -47,8 +54,8 @@ else:
             parts.append((xs.mean(), xs.max() - xs.min() + 1, ys.max()))
     assert len(parts) == 2, f'신발 두 짝이 따로 보여야 해요: {parts}'
     (x1, w1, b1), (x2, w2, b2) = sorted(parts)
-    s = 0.5 * ((598.1 - 423.3) / (x2 - x1) + 110 / ((w1 + w2) / 2))
+    s = 0.5 * ((581.5 - 442.5) / (x2 - x1) + 84 / ((w1 + w2) / 2))
     im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
-    out = canvas_with(im, 0.5 * (423.3 + 598.1) - 0.5 * (x1 + x2) * s, 1510 - max(b1, b2) * s)
+    out = canvas_with(im, 0.5 * (442.5 + 581.5) - 0.5 * (x1 + x2) * s, 1510 - max(b1, b2) * s)
 out.save(f'assets-src/clothes/{oid}.png')
 print(oid, 'scale=%.3f' % s, out.getchannel('A').getbbox())

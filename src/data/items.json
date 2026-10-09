@@ -528,54 +528,6 @@
     "native": true
   },
   {
-    "id": "dress_cape_red",
-    "category": "dress",
-    "name": {
-      "ko": "케이프 원피스",
-      "en": "Cape Dress"
-    },
-    "color": "red",
-    "colorName": {
-      "ko": "레드",
-      "en": "Red"
-    },
-    "colorHex": "#c8283c",
-    "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 711
-    },
-    "image": "assets/clothes/dress/dress_cape_red.webp",
-    "thumb": "assets/thumbs/dress_cape_red.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "dress_card_red",
-    "category": "dress",
-    "name": {
-      "ko": "카드 원피스",
-      "en": "Card Dress"
-    },
-    "color": "red",
-    "colorName": {
-      "ko": "레드",
-      "en": "Red"
-    },
-    "colorHex": "#c8283c",
-    "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 792
-    },
-    "image": "assets/clothes/dress/dress_card_red.webp",
-    "thumb": "assets/thumbs/dress_card_red.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
     "id": "dress_deco_tweed_black",
     "category": "dress",
     "name": {
@@ -596,30 +548,6 @@
     },
     "image": "assets/clothes/dress/dress_deco_tweed_black.webp",
     "thumb": "assets/thumbs/dress_deco_tweed_black.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "dress_fairy_blue",
-    "category": "dress",
-    "name": {
-      "ko": "요정 원피스",
-      "en": "Fairy Dress"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 724
-    },
-    "image": "assets/clothes/dress/dress_fairy_blue.webp",
-    "thumb": "assets/thumbs/dress_fairy_blue.webp",
     "zIndex": 40,
     "native": true
   },
@@ -744,102 +672,6 @@
     "native": true
   },
   {
-    "id": "dress_lolita_black",
-    "category": "dress",
-    "name": {
-      "ko": "고딕 로리타 원피스",
-      "en": "Gothic Lolita Dress"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 550
-    },
-    "image": "assets/clothes/dress/dress_lolita_black.webp",
-    "thumb": "assets/thumbs/dress_lolita_black.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "dress_lolita_purple",
-    "category": "dress",
-    "name": {
-      "ko": "로리타 원피스",
-      "en": "Lolita Dress"
-    },
-    "color": "purple",
-    "colorName": {
-      "ko": "퍼플",
-      "en": "Purple"
-    },
-    "colorHex": "#b9a4e8",
-    "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 542
-    },
-    "image": "assets/clothes/dress/dress_lolita_purple.webp",
-    "thumb": "assets/thumbs/dress_lolita_purple.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "dress_maid_blue",
-    "category": "dress",
-    "name": {
-      "ko": "메이드 원피스",
-      "en": "Maid Dress"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 568
-    },
-    "image": "assets/clothes/dress/dress_maid_blue.webp",
-    "thumb": "assets/thumbs/dress_maid_blue.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "dress_midnight_navy",
-    "category": "dress",
-    "name": {
-      "ko": "미드나잇 원피스",
-      "en": "Midnight Dress"
-    },
-    "color": "navy",
-    "colorName": {
-      "ko": "네이비",
-      "en": "Navy"
-    },
-    "colorHex": "#27355b",
-    "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 744
-    },
-    "image": "assets/clothes/dress/dress_midnight_navy.webp",
-    "thumb": "assets/thumbs/dress_midnight_navy.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
     "id": "dress_oxford_beige",
     "category": "dress",
     "name": {
@@ -888,30 +720,6 @@
     "native": true
   },
   {
-    "id": "dress_seashell_blue",
-    "category": "dress",
-    "name": {
-      "ko": "조개 인어 원피스",
-      "en": "Seashell Dress"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 765
-    },
-    "image": "assets/clothes/dress/dress_seashell_blue.webp",
-    "thumb": "assets/thumbs/dress_seashell_blue.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
     "id": "dress_shesmiss_gray",
     "category": "dress",
     "name": {
@@ -936,8 +744,368 @@
     "native": true
   },
   {
+    "id": "costume_floral_black",
+    "category": "costume",
+    "name": {
+      "ko": "꽃무늬 리본 원피스",
+      "en": "Floral Ribbon Dress"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 642
+    },
+    "image": "assets/clothes/costume/costume_floral_black.webp",
+    "thumb": "assets/thumbs/costume_floral_black.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_forest_green",
+    "category": "costume",
+    "name": {
+      "ko": "숲속 요정 원피스",
+      "en": "Forest Fairy Dress"
+    },
+    "color": "green",
+    "colorName": {
+      "ko": "그린",
+      "en": "Green"
+    },
+    "colorHex": "#6f9a72",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 625
+    },
+    "image": "assets/clothes/costume/costume_forest_green.webp",
+    "thumb": "assets/thumbs/costume_forest_green.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_hanbok_starry",
+    "category": "costume",
+    "name": {
+      "ko": "별밤 한복 원피스",
+      "en": "Starry Hanbok Dress"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 679
+    },
+    "image": "assets/clothes/costume/costume_hanbok_starry.webp",
+    "thumb": "assets/thumbs/costume_hanbok_starry.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_petal_blue",
+    "category": "costume",
+    "name": {
+      "ko": "꽃잎 하이로우 드레스",
+      "en": "Petal Hi-Lo Dress"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 109,
+      "y": 640,
+      "w": 806,
+      "h": 870
+    },
+    "image": "assets/clothes/costume/costume_petal_blue.webp",
+    "thumb": "assets/thumbs/costume_petal_blue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_princess_pink",
+    "category": "costume",
+    "name": {
+      "ko": "핑크 공주 드레스",
+      "en": "Pink Princess Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 65,
+      "y": 662,
+      "w": 894,
+      "h": 848
+    },
+    "image": "assets/clothes/costume/costume_princess_pink.webp",
+    "thumb": "assets/thumbs/costume_princess_pink.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_sakura_blue",
+    "category": "costume",
+    "name": {
+      "ko": "벚꽃 프릴 드레스",
+      "en": "Sakura Frill Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 670
+    },
+    "image": "assets/clothes/costume/costume_sakura_blue.webp",
+    "thumb": "assets/thumbs/costume_sakura_blue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_tassel_pink",
+    "category": "costume",
+    "name": {
+      "ko": "핑크 술장식 원피스",
+      "en": "Pink Tassel Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/costume_tassel_pink.webp",
+    "thumb": "assets/thumbs/costume_tassel_pink.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_cape_red",
+    "category": "costume",
+    "name": {
+      "ko": "케이프 원피스",
+      "en": "Cape Dress"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 711
+    },
+    "image": "assets/clothes/costume/dress_cape_red.webp",
+    "thumb": "assets/thumbs/dress_cape_red.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_card_red",
+    "category": "costume",
+    "name": {
+      "ko": "카드 원피스",
+      "en": "Card Dress"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 792
+    },
+    "image": "assets/clothes/costume/dress_card_red.webp",
+    "thumb": "assets/thumbs/dress_card_red.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_fairy_blue",
+    "category": "costume",
+    "name": {
+      "ko": "요정 원피스",
+      "en": "Fairy Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 724
+    },
+    "image": "assets/clothes/costume/dress_fairy_blue.webp",
+    "thumb": "assets/thumbs/dress_fairy_blue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_lolita_black",
+    "category": "costume",
+    "name": {
+      "ko": "고딕 로리타 원피스",
+      "en": "Gothic Lolita Dress"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 550
+    },
+    "image": "assets/clothes/costume/dress_lolita_black.webp",
+    "thumb": "assets/thumbs/dress_lolita_black.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_lolita_purple",
+    "category": "costume",
+    "name": {
+      "ko": "로리타 원피스",
+      "en": "Lolita Dress"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 542
+    },
+    "image": "assets/clothes/costume/dress_lolita_purple.webp",
+    "thumb": "assets/thumbs/dress_lolita_purple.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_maid_blue",
+    "category": "costume",
+    "name": {
+      "ko": "메이드 원피스",
+      "en": "Maid Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 568
+    },
+    "image": "assets/clothes/costume/dress_maid_blue.webp",
+    "thumb": "assets/thumbs/dress_maid_blue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_midnight_navy",
+    "category": "costume",
+    "name": {
+      "ko": "미드나잇 원피스",
+      "en": "Midnight Dress"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 744
+    },
+    "image": "assets/clothes/costume/dress_midnight_navy.webp",
+    "thumb": "assets/thumbs/dress_midnight_navy.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_seashell_blue",
+    "category": "costume",
+    "name": {
+      "ko": "조개 인어 원피스",
+      "en": "Seashell Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 765
+    },
+    "image": "assets/clothes/costume/dress_seashell_blue.webp",
+    "thumb": "assets/thumbs/dress_seashell_blue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "dress_starry_navy",
-    "category": "dress",
+    "category": "costume",
     "name": {
       "ko": "별밤 원피스",
       "en": "Starry Dress"
@@ -954,9 +1122,9 @@
       "w": 700,
       "h": 813
     },
-    "image": "assets/clothes/dress/dress_starry_navy.webp",
+    "image": "assets/clothes/costume/dress_starry_navy.webp",
     "thumb": "assets/thumbs/dress_starry_navy.webp",
-    "zIndex": 40,
+    "zIndex": 41,
     "native": true
   },
   {
@@ -1213,10 +1381,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 369,
-      "y": 1383,
-      "w": 284,
-      "h": 129
+      "x": 401,
+      "y": 1412,
+      "w": 223,
+      "h": 98
     },
     "image": "assets/clothes/shoes/shoes_bow_flats_black.webp",
     "thumb": "assets/thumbs/shoes_bow_flats_black.webp",
@@ -1237,10 +1405,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 369,
-      "y": 1379,
-      "w": 284,
-      "h": 132
+      "x": 401,
+      "y": 1410,
+      "w": 223,
+      "h": 101
     },
     "image": "assets/clothes/shoes/shoes_flats_beige.webp",
     "thumb": "assets/thumbs/shoes_flats_beige.webp",
@@ -1261,10 +1429,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 368,
-      "y": 1297,
-      "w": 285,
-      "h": 214
+      "x": 400,
+      "y": 1347,
+      "w": 224,
+      "h": 164
     },
     "image": "assets/clothes/shoes/shoes_maryjane_bow_black.webp",
     "thumb": "assets/thumbs/shoes_maryjane_bow_black.webp",
@@ -1285,10 +1453,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 368,
-      "y": 1382,
-      "w": 285,
-      "h": 130
+      "x": 400,
+      "y": 1412,
+      "w": 224,
+      "h": 99
     },
     "image": "assets/clothes/shoes/shoes_slingback_black.webp",
     "thumb": "assets/thumbs/shoes_slingback_black.webp",
@@ -1309,10 +1477,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 368,
-      "y": 1382,
-      "w": 286,
-      "h": 130
+      "x": 400,
+      "y": 1412,
+      "w": 225,
+      "h": 99
     },
     "image": "assets/clothes/shoes/shoes_slingback_cream.webp",
     "thumb": "assets/thumbs/shoes_slingback_cream.webp",
@@ -1333,10 +1501,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 354,
-      "y": 1373,
-      "w": 316,
-      "h": 138
+      "x": 389,
+      "y": 1405,
+      "w": 248,
+      "h": 106
     },
     "image": "assets/clothes/shoes/shoes_sneakers_navy.webp",
     "thumb": "assets/thumbs/shoes_sneakers_navy.webp",
@@ -1357,10 +1525,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 349,
-      "y": 1288,
-      "w": 314,
-      "h": 224
+      "x": 386,
+      "y": 1339,
+      "w": 245,
+      "h": 172
     },
     "image": "assets/clothes/shoes/shoes_socks_heel_blue.webp",
     "thumb": "assets/thumbs/shoes_socks_heel_blue.webp",
@@ -1381,10 +1549,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 342,
-      "y": 1308,
-      "w": 329,
-      "h": 204
+      "x": 380,
+      "y": 1355,
+      "w": 258,
+      "h": 156
     },
     "image": "assets/clothes/shoes/shoes_socks_heel_purple.webp",
     "thumb": "assets/thumbs/shoes_socks_heel_purple.webp",
@@ -1405,10 +1573,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 368,
-      "y": 1320,
-      "w": 285,
-      "h": 191
+      "x": 400,
+      "y": 1365,
+      "w": 224,
+      "h": 146
     },
     "image": "assets/clothes/shoes/shoes_socks_mj_black.webp",
     "thumb": "assets/thumbs/shoes_socks_mj_black.webp",
@@ -1429,10 +1597,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 350,
-      "y": 1327,
-      "w": 321,
-      "h": 184
+      "x": 387,
+      "y": 1370,
+      "w": 250,
+      "h": 141
     },
     "image": "assets/clothes/shoes/shoes_socks_mj_mint.webp",
     "thumb": "assets/thumbs/shoes_socks_mj_mint.webp",
@@ -1453,10 +1621,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 368,
-      "y": 1342,
-      "w": 285,
-      "h": 170
+      "x": 400,
+      "y": 1381,
+      "w": 224,
+      "h": 130
     },
     "image": "assets/clothes/shoes/shoes_strap_black_bow.webp",
     "thumb": "assets/thumbs/shoes_strap_black_bow.webp",
@@ -1477,10 +1645,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 341,
-      "y": 1311,
-      "w": 364,
-      "h": 201
+      "x": 379,
+      "y": 1357,
+      "w": 284,
+      "h": 154
     },
     "image": "assets/clothes/shoes/shoes_strap_black_heart.webp",
     "thumb": "assets/thumbs/shoes_strap_black_heart.webp",
@@ -1501,10 +1669,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 358,
-      "y": 1334,
-      "w": 305,
-      "h": 178
+      "x": 392,
+      "y": 1374,
+      "w": 239,
+      "h": 136
     },
     "image": "assets/clothes/shoes/shoes_strap_blue_gem.webp",
     "thumb": "assets/thumbs/shoes_strap_blue_gem.webp",
@@ -1525,10 +1693,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 343,
-      "y": 1315,
-      "w": 335,
-      "h": 197
+      "x": 381,
+      "y": 1360,
+      "w": 262,
+      "h": 151
     },
     "image": "assets/clothes/shoes/shoes_strap_lavender.webp",
     "thumb": "assets/thumbs/shoes_strap_lavender.webp",
@@ -1549,10 +1717,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 347,
-      "y": 1333,
-      "w": 328,
-      "h": 179
+      "x": 384,
+      "y": 1374,
+      "w": 256,
+      "h": 137
     },
     "image": "assets/clothes/shoes/shoes_strap_mint.webp",
     "thumb": "assets/thumbs/shoes_strap_mint.webp",
@@ -1573,10 +1741,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 348,
-      "y": 1320,
-      "w": 325,
-      "h": 192
+      "x": 385,
+      "y": 1364,
+      "w": 254,
+      "h": 147
     },
     "image": "assets/clothes/shoes/shoes_strap_navy_gem.webp",
     "thumb": "assets/thumbs/shoes_strap_navy_gem.webp",
@@ -1597,10 +1765,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 341,
-      "y": 1306,
-      "w": 340,
-      "h": 206
+      "x": 379,
+      "y": 1353,
+      "w": 266,
+      "h": 158
     },
     "image": "assets/clothes/shoes/shoes_strap_navy_star.webp",
     "thumb": "assets/thumbs/shoes_strap_navy_star.webp",
@@ -1621,14 +1789,38 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 350,
-      "y": 1335,
-      "w": 321,
-      "h": 177
+      "x": 386,
+      "y": 1375,
+      "w": 251,
+      "h": 136
     },
     "image": "assets/clothes/shoes/shoes_strap_skyblue.webp",
     "thumb": "assets/thumbs/shoes_strap_skyblue.webp",
     "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "acc_hair_ribbon_green",
+    "category": "accessory",
+    "name": {
+      "ko": "초록 머리 리본",
+      "en": "Green Hair Ribbon"
+    },
+    "color": "green",
+    "colorName": {
+      "ko": "그린",
+      "en": "Green"
+    },
+    "colorHex": "#6f9a72",
+    "box": {
+      "x": 205,
+      "y": 55,
+      "w": 230,
+      "h": 320
+    },
+    "image": "assets/clothes/accessory/acc_hair_ribbon_green.webp",
+    "thumb": "assets/thumbs/acc_hair_ribbon_green.webp",
+    "zIndex": 70,
     "native": true
   },
   {

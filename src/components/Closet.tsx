@@ -11,6 +11,7 @@ export const CATEGORY_ICON: Record<Category, string> = {
   top: '👚',
   bottom: '👖',
   dress: '👗',
+  costume: '👑',
   outer: '🧥',
   shoes: '👟',
   accessory: '🎀',

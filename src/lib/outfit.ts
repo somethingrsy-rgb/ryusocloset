@@ -10,11 +10,14 @@ export function toggleItem(outfit: Outfit, item: Item): Outfit {
     return next
   }
   next[item.category] = item.id
-  if (item.category === 'dress') {
+  // 원피스·테마옷은 한 벌로 입는 옷이라 상의·하의, 그리고 서로와 함께 입지 않는다
+  if (item.category === 'dress' || item.category === 'costume') {
     delete next.top
     delete next.bottom
+    delete next[item.category === 'dress' ? 'costume' : 'dress']
   } else if (item.category === 'top' || item.category === 'bottom') {
     delete next.dress
+    delete next.costume
   }
   return next
 }
@@ -30,9 +33,12 @@ export function sanitizeOutfit(
   for (const c of CATEGORIES) {
     const rawId: unknown = (raw as Record<string, unknown>)[c]
     const id: string | undefined = typeof rawId === 'string' ? (aliases[rawId] ?? rawId) : undefined
-    if (id && byId[id]?.category === c) out[c] = id
+    // 예전에 원피스 칸에 저장한 옷이 지금은 테마옷이면 테마옷 칸으로 옮긴다
+    const cat = id ? byId[id]?.category : undefined
+    if (id && (cat === c || (c === 'dress' && cat === 'costume'))) out[cat as Category] = id
   }
-  if (out.dress) {
+  if (out.dress && out.costume) delete out.dress
+  if (out.dress || out.costume) {
     delete out.top
     delete out.bottom
   }
