@@ -31,6 +31,9 @@ interface Props {
   selection: Selection
   onSelect: (s: Selection) => void
   onChange: (next: RoomState) => void
+  /** 방 되돌리기 */
+  canUndo?: boolean
+  onUndo?: () => void
   children?: ReactNode
 }
 
@@ -40,7 +43,7 @@ const cq = (v: number) => `${(v / ROOM_W) * 100}cqw`
 /** ▲▼ 버튼을 한 번 누를 때 움직이는 거리 (방 논리 px, 폭 1086 기준) */
 const NUDGE = 6
 
-export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, children }: Props) {
+export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, canUndo, onUndo, children }: Props) {
   const { lang, t } = useI18n()
   const roomRef = useRef<HTMLDivElement>(null)
   const pointers = useRef(new Map<number, { x: number; y: number }>())
@@ -126,6 +129,10 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
   }
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault()
+      return onUndo?.()
+    }
     if (!selection) return
     const step = e.shiftKey ? 40 : 10
     const move = (dx: number, dy: number) => {
@@ -150,7 +157,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
     }
   }
 
-  const btn = 'flex h-10 min-w-10 items-center justify-center rounded-full text-base active:scale-90'
+  const btn = 'flex h-10 min-w-10 items-center justify-center rounded-full text-base active:scale-90 disabled:opacity-40'
   const selName =
     selection?.kind === 'item'
       ? ROOM_ITEM_BY_ID[room.items.find((p) => p.uid === selection.uid)?.itemId ?? '']?.name[lang]
@@ -298,6 +305,9 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('moveDown')} onClick={() => onChange(moveBy(room, selection, 0, NUDGE))}>
               ▼
+            </button>
+            <button className={`${btn} bg-petal`} aria-label={t('roomUndo')} title={t('roomUndo')} disabled={!canUndo} onClick={() => onUndo?.()}>
+              ↶
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('flip')} onClick={() => onChange(toggleFlip(room, selection))}>
               ↔
