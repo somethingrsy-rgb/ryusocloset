@@ -60,6 +60,21 @@
     "y": 1240
   },
   {
+    "id": "furniture_heart_cushion",
+    "group": "furniture",
+    "name": {
+      "ko": "하트 쿠션",
+      "en": "Heart Cushion"
+    },
+    "image": "assets/room/furniture_heart_cushion.webp",
+    "thumb": "assets/room/thumbs/furniture_heart_cushion.webp",
+    "w": 1238,
+    "h": 917,
+    "baseWidth": 230,
+    "x": 450,
+    "y": 1320
+  },
+  {
     "id": "furniture_mirror_full",
     "group": "furniture",
     "name": {
@@ -75,6 +90,51 @@
     "y": 1250
   },
   {
+    "id": "furniture_plush_bear",
+    "group": "furniture",
+    "name": {
+      "ko": "곰인형",
+      "en": "Teddy Bear"
+    },
+    "image": "assets/room/furniture_plush_bear.webp",
+    "thumb": "assets/room/thumbs/furniture_plush_bear.webp",
+    "w": 972,
+    "h": 1110,
+    "baseWidth": 220,
+    "x": 250,
+    "y": 1290
+  },
+  {
+    "id": "furniture_shoebox",
+    "group": "furniture",
+    "name": {
+      "ko": "신발 상자",
+      "en": "Shoebox"
+    },
+    "image": "assets/room/furniture_shoebox.webp",
+    "thumb": "assets/room/thumbs/furniture_shoebox.webp",
+    "w": 1186,
+    "h": 581,
+    "baseWidth": 210,
+    "x": 650,
+    "y": 1320
+  },
+  {
+    "id": "furniture_shopping_bag",
+    "group": "furniture",
+    "name": {
+      "ko": "쇼핑백",
+      "en": "Shopping Bag"
+    },
+    "image": "assets/room/furniture_shopping_bag.webp",
+    "thumb": "assets/room/thumbs/furniture_shopping_bag.webp",
+    "w": 787,
+    "h": 945,
+    "baseWidth": 200,
+    "x": 780,
+    "y": 1310
+  },
+  {
     "id": "furniture_sofa_bear",
     "group": "furniture",
     "name": {
@@ -88,6 +148,21 @@
     "baseWidth": 600,
     "x": 380,
     "y": 1255
+  },
+  {
+    "id": "furniture_succulent_pot",
+    "group": "furniture",
+    "name": {
+      "ko": "다육식물 화분",
+      "en": "Succulent Pot"
+    },
+    "image": "assets/room/furniture_succulent_pot.webp",
+    "thumb": "assets/room/thumbs/furniture_succulent_pot.webp",
+    "w": 852,
+    "h": 908,
+    "baseWidth": 180,
+    "x": 900,
+    "y": 1290
   },
   {
     "id": "furniture_vanity",

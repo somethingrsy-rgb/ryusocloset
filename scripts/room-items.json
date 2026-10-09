@@ -15,5 +15,10 @@
   "wall_shelf":            { "ko": "선반",          "en": "Shelf",         "baseWidth": 420, "x": 543, "y": 640 },
   "wall_star_string":      { "ko": "별 조명줄",     "en": "Star Lights",   "baseWidth": 560, "x": 543, "y": 360 },
   "light_sparkle":         { "ko": "반짝 별빛",     "en": "Sparkles",      "baseWidth": 620, "x": 543, "y": 900 },
-  "light_lamp_glow":       { "ko": "스탠드 불빛",   "en": "Lamp Glow",     "baseWidth": 420, "x": 543, "y": 1100 }
+  "light_lamp_glow":       { "ko": "스탠드 불빛",   "en": "Lamp Glow",     "baseWidth": 420, "x": 543, "y": 1100 },
+  "furniture_plush_bear":    { "ko": "곰인형",         "en": "Teddy Bear",     "baseWidth": 220, "x": 250,  "y": 1290 },
+  "furniture_succulent_pot": { "ko": "다육식물 화분",  "en": "Succulent Pot",  "baseWidth": 180, "x": 900,  "y": 1290 },
+  "furniture_shopping_bag":  { "ko": "쇼핑백",         "en": "Shopping Bag",   "baseWidth": 200, "x": 780,  "y": 1310 },
+  "furniture_shoebox":       { "ko": "신발 상자",      "en": "Shoebox",        "baseWidth": 210, "x": 650,  "y": 1320 },
+  "furniture_heart_cushion": { "ko": "하트 쿠션",      "en": "Heart Cushion",  "baseWidth": 230, "x": 450,  "y": 1320 }
 }
