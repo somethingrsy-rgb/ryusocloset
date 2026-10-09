@@ -15,7 +15,12 @@ from scipy import ndimage as ndi
 
 src, oid = sys.argv[1:3]
 W, H = 1024, 1536
-im = Image.open(src).convert('RGB')
+raw = Image.open(src)
+has_alpha = raw.mode == 'RGBA' and np.array(raw.getchannel('A')).min() < 10  # 이미 투명한 PNG 는 배경·다리 지우기를 건너뛴다
+if has_alpha:
+    bb = raw.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()
+    raw = raw.crop(bb)
+im = raw.convert('RGB')
 a = np.array(im).astype(int)
 h, w, _ = a.shape
 
@@ -25,6 +30,8 @@ lab, n = ndi.label(white)
 edge = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
 bg = np.isin(lab, list(edge))
 alpha = np.where(bg, 0, 255).astype(np.uint8)
+if has_alpha:
+    alpha = np.array(raw.getchannel('A'))
 
 # 2) 위쪽 가장자리에 닿은 살색(다리) 지우기
 r, g, b = a[..., 0], a[..., 1], a[..., 2]
@@ -33,17 +40,19 @@ lab2, _ = ndi.label(skin & ~bg)
 top = set(np.unique(lab2[:3])) - {0}
 leg = np.isin(lab2, list(top))
 leg = ndi.binary_dilation(leg, iterations=2)
-alpha[leg & ~bg] = 0
+if not has_alpha:
+    alpha[leg & ~bg] = 0
 
 # 가장자리 한 겹을 부드럽게
 solid = alpha > 0
-edge_px = solid & ~ndi.binary_erosion(solid)
-alpha[edge_px] = 170
+if not has_alpha:
+    edge_px = solid & ~ndi.binary_erosion(solid)
+    alpha[edge_px] = 170
 rgba = np.dstack([a.astype(np.uint8), alpha])
 rgba[alpha == 0] = 0
 piece = Image.fromarray(rgba, 'RGBA')
 
-# 3) 짝마다 따로, 아바타의 각 발(가운데 423.3 / 598.1, 폭 110, 발끝 y 1509)에 맞춘다.
+# 3) 짝마다 따로, 아바타의 각 발(가운데 438.2 / 587.1, 폭 113.5, 발끝 y 1510)에 맞춘다.
 #    두 짝 사이 간격이 발 간격과 달라도 신발이 발 위에 정확히 오도록 한 짝씩 놓는다. 크기는 신발 몸통(아래 30%)의 폭으로 정한다.
 lab3, n3 = ndi.label(alpha > 128)
 parts = []
@@ -64,13 +73,13 @@ def sole(mask):
 
 halves = [(alpha > 128) & (np.arange(w)[None, :] < split), (alpha > 128) & (np.arange(w)[None, :] >= split)]
 infos = [sole(m) for m in halves]
-s = 110 / np.mean([x1 - x0 + 1 for x0, x1, _ in infos])
+s = 113.5 / np.mean([x1 - x0 + 1 for x0, x1, _ in infos])
 out = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-for k, (m, (x0, x1, yb), cx) in enumerate(zip(halves, infos, (423.3, 598.1))):
+for k, (m, (x0, x1, yb), cx) in enumerate(zip(halves, infos, (438.2, 587.1))):
     side = rgba.copy()
     cols = np.arange(w)[None, :]
     side[~((cols < split) if k == 0 else (cols >= split)).repeat(h, axis=0)] = 0   # 이 짝만
     piece = Image.fromarray(side, 'RGBA').resize((round(w * s), round(h * s)), Image.LANCZOS)
-    out.alpha_composite(piece, (int(round(cx - 0.5 * (x0 + x1) * s)), int(round(1509 - yb * s))))
+    out.alpha_composite(piece, (int(round(cx - 0.5 * (x0 + x1) * s)), int(round(1510 - yb * s))))
 out.save(f'assets-src/clothes/{oid}.png')
 print(oid, 'scale=%.3f' % s, out.getchannel('A').getbbox())

@@ -49,6 +49,13 @@ npm test           # 착용 규칙 단위 테스트
 - 자동 동기화(서버)는 아직 없다. 코드: `src/lib/backup.ts`(만들기·검사·불러오기), `src/components/SettingsSheet.tsx`, `src/lib/restoreGuard.ts`(불러오는 동안 예전 상태가 저장소를 덮어쓰지 못하게 막음).
 - 효과음·언어 토글도 `설정` 안으로 옮겼다 (효과음 버튼은 헤더에 그대로 있음).
 
+### 아바타를 바꿨을 때 (순서)
+
+1. 새 아바타 PNG(1024×1536 투명)의 떠다니는 점·붉은 얼룩을 지우고 `assets-src/base/source/standing_avatar_*.png` 에 넣은 뒤 `python tools-py/make_bodysuit_layers.py assets-src/base/source/standing_avatar_transparent.png assets-src/base`
+2. 새 발 위치(가운데 두 개·폭·발끝)를 재서 `tools-py/cutout_shoes.py`, `tools-py/add_clothes.py`, `tools-py/refit_shoes.py` 의 값을 바꾸고, `python tools-py/refit_shoes.py <옛 가운데1> <옛 가운데2> <옛 폭>` 으로 이미 있는 신발을 새 발에 다시 맞춘다
+3. `npm run assets` (앱 아이콘도 다시 만들어짐)
+- 이미 투명한 신발 PNG 는 `python tools-py/cutout_shoes.py <PNG> <id>` 로 짝마다 발에 맞춰 넣는다. 테마 하나만 추가할 때는 `python tools-py/add_theme.py ...`.
+
 ### 겹치는 순서 정하기 (코디·내 방·캠핑 공통)
 
 - 조절 막대의 **앞 / 뒤** 버튼: 선택한 옷·물건을 한 칸 앞(위)으로, 또는 뒤(아래)로 보낸다. 이웃한 것과 자리를 맞바꾸는 방식이라 몇 번 눌러도 순서가 꼬이지 않고, 맨 앞·맨 뒤에서는 버튼이 꺼진다. 되돌리기(↶)로 취소할 수 있다.

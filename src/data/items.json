@@ -1189,10 +1189,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 370,
-      "y": 1382,
-      "w": 283,
-      "h": 129
+      "x": 382,
+      "y": 1378,
+      "w": 262,
+      "h": 133
     },
     "image": "assets/clothes/shoes/shoes_bow_flats_black.webp",
     "thumb": "assets/thumbs/shoes_bow_flats_black.webp",
@@ -1213,10 +1213,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 370,
-      "y": 1379,
-      "w": 283,
-      "h": 131
+      "x": 382,
+      "y": 1376,
+      "w": 262,
+      "h": 135
     },
     "image": "assets/clothes/shoes/shoes_flats_beige.webp",
     "thumb": "assets/thumbs/shoes_flats_beige.webp",
@@ -1237,10 +1237,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 369,
-      "y": 1296,
-      "w": 284,
-      "h": 214
+      "x": 381,
+      "y": 1290,
+      "w": 263,
+      "h": 222
     },
     "image": "assets/clothes/shoes/shoes_maryjane_bow_black.webp",
     "thumb": "assets/thumbs/shoes_maryjane_bow_black.webp",
@@ -1261,10 +1261,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 354,
-      "y": 1383,
-      "w": 317,
-      "h": 138
+      "x": 366,
+      "y": 1369,
+      "w": 296,
+      "h": 142
     },
     "image": "assets/clothes/shoes/shoes_sneakers_navy.webp",
     "thumb": "assets/thumbs/shoes_sneakers_navy.webp",
@@ -1285,10 +1285,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 349,
-      "y": 1287,
-      "w": 314,
-      "h": 224
+      "x": 361,
+      "y": 1280,
+      "w": 293,
+      "h": 231
     },
     "image": "assets/clothes/shoes/shoes_socks_heel_blue.webp",
     "thumb": "assets/thumbs/shoes_socks_heel_blue.webp",
@@ -1309,10 +1309,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 343,
-      "y": 1307,
-      "w": 329,
-      "h": 203
+      "x": 354,
+      "y": 1301,
+      "w": 309,
+      "h": 210
     },
     "image": "assets/clothes/shoes/shoes_socks_heel_purple.webp",
     "thumb": "assets/thumbs/shoes_socks_heel_purple.webp",
@@ -1333,10 +1333,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 368,
-      "y": 1320,
-      "w": 286,
-      "h": 190
+      "x": 380,
+      "y": 1315,
+      "w": 264,
+      "h": 197
     },
     "image": "assets/clothes/shoes/shoes_socks_mj_black.webp",
     "thumb": "assets/thumbs/shoes_socks_mj_black.webp",
@@ -1357,13 +1357,205 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 351,
-      "y": 1327,
-      "w": 320,
-      "h": 183
+      "x": 363,
+      "y": 1322,
+      "w": 299,
+      "h": 190
     },
     "image": "assets/clothes/shoes/shoes_socks_mj_mint.webp",
     "thumb": "assets/thumbs/shoes_socks_mj_mint.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_strap_black_bow",
+    "category": "shoes",
+    "name": {
+      "ko": "리본 메리제인",
+      "en": "Bow Mary Janes"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 381,
+      "y": 1336,
+      "w": 263,
+      "h": 175
+    },
+    "image": "assets/clothes/shoes/shoes_strap_black_bow.webp",
+    "thumb": "assets/thumbs/shoes_strap_black_bow.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_strap_black_heart",
+    "category": "shoes",
+    "name": {
+      "ko": "하트 스트랩 구두",
+      "en": "Heart Strap Shoes"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 353,
+      "y": 1304,
+      "w": 344,
+      "h": 207
+    },
+    "image": "assets/clothes/shoes/shoes_strap_black_heart.webp",
+    "thumb": "assets/thumbs/shoes_strap_black_heart.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_strap_blue_gem",
+    "category": "shoes",
+    "name": {
+      "ko": "보석 리본 구두",
+      "en": "Gem Bow Shoes"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 371,
+      "y": 1329,
+      "w": 283,
+      "h": 183
+    },
+    "image": "assets/clothes/shoes/shoes_strap_blue_gem.webp",
+    "thumb": "assets/thumbs/shoes_strap_blue_gem.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_strap_lavender",
+    "category": "shoes",
+    "name": {
+      "ko": "라벤더 리본 구두",
+      "en": "Lavender Bow Shoes"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 355,
+      "y": 1308,
+      "w": 315,
+      "h": 203
+    },
+    "image": "assets/clothes/shoes/shoes_strap_lavender.webp",
+    "thumb": "assets/thumbs/shoes_strap_lavender.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_strap_mint",
+    "category": "shoes",
+    "name": {
+      "ko": "리본 스트랩 구두",
+      "en": "Ribbon Strap Shoes"
+    },
+    "color": "mint",
+    "colorName": {
+      "ko": "민트",
+      "en": "Mint"
+    },
+    "colorHex": "#a9dcc8",
+    "box": {
+      "x": 360,
+      "y": 1326,
+      "w": 306,
+      "h": 184
+    },
+    "image": "assets/clothes/shoes/shoes_strap_mint.webp",
+    "thumb": "assets/thumbs/shoes_strap_mint.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_strap_navy_gem",
+    "category": "shoes",
+    "name": {
+      "ko": "보석 스트랩 구두",
+      "en": "Gem Strap Shoes"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 361,
+      "y": 1313,
+      "w": 303,
+      "h": 197
+    },
+    "image": "assets/clothes/shoes/shoes_strap_navy_gem.webp",
+    "thumb": "assets/thumbs/shoes_strap_navy_gem.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_strap_navy_star",
+    "category": "shoes",
+    "name": {
+      "ko": "별 스트랩 구두",
+      "en": "Star Strap Shoes"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 353,
+      "y": 1299,
+      "w": 320,
+      "h": 212
+    },
+    "image": "assets/clothes/shoes/shoes_strap_navy_star.webp",
+    "thumb": "assets/thumbs/shoes_strap_navy_star.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_strap_skyblue",
+    "category": "shoes",
+    "name": {
+      "ko": "하늘 리본 구두",
+      "en": "Sky Bow Shoes"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 363,
+      "y": 1329,
+      "w": 299,
+      "h": 182
+    },
+    "image": "assets/clothes/shoes/shoes_strap_skyblue.webp",
+    "thumb": "assets/thumbs/shoes_strap_skyblue.webp",
     "zIndex": 10,
     "native": true
   },

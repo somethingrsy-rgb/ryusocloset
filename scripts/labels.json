@@ -325,5 +325,53 @@
     "en": "Cape Dress",
     "color": "red",
     "native": true
+  },
+  "shoes_strap_mint": {
+    "ko": "리본 스트랩 구두",
+    "en": "Ribbon Strap Shoes",
+    "color": "mint",
+    "native": true
+  },
+  "shoes_strap_navy_gem": {
+    "ko": "보석 스트랩 구두",
+    "en": "Gem Strap Shoes",
+    "color": "navy",
+    "native": true
+  },
+  "shoes_strap_black_heart": {
+    "ko": "하트 스트랩 구두",
+    "en": "Heart Strap Shoes",
+    "color": "black",
+    "native": true
+  },
+  "shoes_strap_blue_gem": {
+    "ko": "보석 리본 구두",
+    "en": "Gem Bow Shoes",
+    "color": "skyblue",
+    "native": true
+  },
+  "shoes_strap_navy_star": {
+    "ko": "별 스트랩 구두",
+    "en": "Star Strap Shoes",
+    "color": "navy",
+    "native": true
+  },
+  "shoes_strap_black_bow": {
+    "ko": "리본 메리제인",
+    "en": "Bow Mary Janes",
+    "color": "black",
+    "native": true
+  },
+  "shoes_strap_skyblue": {
+    "ko": "하늘 리본 구두",
+    "en": "Sky Bow Shoes",
+    "color": "skyblue",
+    "native": true
+  },
+  "shoes_strap_lavender": {
+    "ko": "라벤더 리본 구두",
+    "en": "Lavender Bow Shoes",
+    "color": "purple",
+    "native": true
   }
 }
