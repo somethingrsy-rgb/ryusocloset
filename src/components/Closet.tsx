@@ -1,7 +1,8 @@
 import type { RefObject } from 'react'
 import { CATEGORIES, type Category } from '../lib/layers'
 import { CATEGORY_LABEL, useI18n } from '../i18n'
-import { ITEMS_BY_CATEGORY, assetUrl } from '../lib/items'
+import { ITEMS_BY_CATEGORY, assetUrl, isCustomItem } from '../lib/items'
+import { useItemsVersion } from '../lib/useItemsVersion'
 import type { Item, Outfit } from '../lib/types'
 import { DragGhost, useThumbDrag } from './useThumbDrag'
 
@@ -26,9 +27,14 @@ interface Props {
   dropRef: RefObject<HTMLElement | null>
   /** 끌고 있는 옷이 무대 위에 있는지 알린다 */
   onDragOver: (over: boolean) => void
+  /** '내 옷 추가' 버튼 */
+  onAdd: () => void
+  /** 내가 추가한 옷 삭제 */
+  onRemove: (item: Item) => void
 }
 
-export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dropRef, onDragOver }: Props) {
+export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dropRef, onDragOver, onAdd, onRemove }: Props) {
+  useItemsVersion()
   const { lang, t } = useI18n()
   const labels = CATEGORY_LABEL[lang]
   const items = ITEMS_BY_CATEGORY[category]
@@ -67,12 +73,23 @@ export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dro
 
       <div role="tabpanel" className="scroll-thin min-h-0 flex-1 overflow-y-auto p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <ul className="grid grid-cols-4 gap-2 md:grid-cols-4">
+          <li>
+            <button
+              onClick={onAdd}
+              aria-label={t('addItem')}
+              title={t('addItem')}
+              className="flex aspect-square w-full flex-col items-center justify-center rounded-2xl bg-petal/60 text-blush-deep ring-2 ring-dashed ring-blush/60 transition active:scale-95"
+            >
+              <span aria-hidden className="text-3xl leading-none font-bold">+</span>
+              <span className="mt-0.5 text-[10px] leading-tight font-semibold">{t('addItem')}</span>
+            </button>
+          </li>
           {items.map((it) => {
             const worn = outfit[it.category] === it.id
             const name = it.name[lang]
             const color = it.colorName?.[lang]
             return (
-              <li key={it.id}>
+              <li key={it.id} className="relative">
                 <button
                   onPointerDown={(e) => press(e, it.thumb, () => onDragWear(it))}
                   onClick={() => !ignoreClick() && onToggle(it)}
@@ -107,6 +124,16 @@ export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dro
                     </span>
                   )}
                 </button>
+                {isCustomItem(it) && (
+                  <button
+                    aria-label={`${t('removeItem')}: ${name}`}
+                    title={t('removeItem')}
+                    onClick={() => window.confirm(t('removeItemConfirm')) && onRemove(it)}
+                    className="absolute -top-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs text-cocoa-soft shadow ring-1 ring-black/10"
+                  >
+                    ✕
+                  </button>
+                )}
               </li>
             )
           })}

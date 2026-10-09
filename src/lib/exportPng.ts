@@ -1,5 +1,5 @@
 import { drawBackground, type Background } from './backgrounds'
-import { BASE_LAYERS, ITEM_BY_ID } from './items'
+import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from './items'
 import { CANVAS_H, CANVAS_W, HAIR_FRONT_Z } from './layers'
 import { wornItems } from './outfit'
 import { getTweak, pivotOf } from './tweaks'
@@ -37,7 +37,7 @@ export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}): Promise
   const [body, hair, ...imgs] = await Promise.all([
     loadImage(barefoot ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body),
     loadImage(BASE_LAYERS.hairFront),
-    ...items.map((i) => loadImage(`${import.meta.env.BASE_URL}${i.image}`)),
+    ...items.map((i) => loadImage(assetUrl(i.image))),
   ])
   const canvas = makeCanvas(CANVAS_W, CANVAS_H)
   const ctx = canvas.getContext('2d')!

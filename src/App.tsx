@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AssembleStage, assemblyLayers } from './components/AssembleStage'
 import { AssembleTray } from './components/AssembleTray'
 import { BackgroundPicker } from './components/BackgroundPicker'
+import { AddItemModal } from './components/AddItemModal'
 import { Closet } from './components/Closet'
+import { removeCustomItem } from './lib/customItems'
+import { useItemsVersion } from './lib/useItemsVersion'
 import { ExportSheet, type RenderOptions } from './components/ExportSheet'
 import { RoomTray } from './components/RoomTray'
 import { RoomView } from './components/RoomView'
@@ -38,7 +41,7 @@ import {
 import { getTweak, pruneTweaks, sanitizeTweaks } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
 
-type ModalKind = null | 'bg' | 'saved' | 'export' | 'roomExport' | 'assembleExport'
+type ModalKind = null | 'addItem' | 'bg' | 'saved' | 'export' | 'roomExport' | 'assembleExport'
 type Mode = 'closet' | 'room' | 'assemble'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -56,6 +59,7 @@ export default function App() {
   const [tweaks, setTweaks] = useState<Tweaks>(() => loadTweaks(loadCurrent()))
   const [selCat, setSelCat] = useState<Category | null>(null)
   const [dragOver, setDragOver] = useState(false)
+  useItemsVersion()
   const [category, setCategory] = useState<Category>('top')
   const [saved, setSaved] = useState<SavedOutfit[]>(loadSaved)
   const [room, setRoom] = useState<RoomState>(loadRoom)
@@ -142,6 +146,17 @@ export default function App() {
   const wearItem = (item: Item) => {
     if (outfit[item.category] === item.id) return setSelCat(item.category)
     onToggle(item)
+  }
+
+  /** 내가 추가한 옷 지우기 (입고 있으면 벗긴다) */
+  const removeMine = (item: Item) => {
+    if (outfit[item.category] === item.id) {
+      const next = { ...outfit }
+      delete next[item.category]
+      applyOutfit(next)
+    }
+    void removeCustomItem(item.id)
+    showToast(t('removed'))
   }
 
   const takeOff = (c: Category) => {
@@ -387,6 +402,8 @@ export default function App() {
               onDragWear={wearItem}
               dropRef={dropRef}
               onDragOver={setDragOver}
+              onAdd={() => setModal('addItem')}
+              onRemove={removeMine}
             />
           ) : (
             <RoomTray room={room} onAdd={addToRoom} />
@@ -394,6 +411,20 @@ export default function App() {
         </aside>
       </div>
 
+      {modal === 'addItem' && (
+        <AddItemModal
+          initialCategory={category}
+          onClose={() => setModal(null)}
+          onError={showToast}
+          onAdded={(item, persisted) => {
+            setModal(null)
+            setMode('closet')
+            setCategory(item.category)
+            applyOutfit(toggleItem(outfit, item), item)
+            showToast(t(persisted ? 'addDone' : 'addDoneNoSave'))
+          }}
+        />
+      )}
       {modal === 'bg' && <BackgroundPicker value={bgId} onPick={setBgId} onClose={() => setModal(null)} />}
       {modal === 'saved' && (
         <SavedSheet
