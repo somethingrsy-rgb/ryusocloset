@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useI18n } from '../i18n'
 import type { Background } from '../lib/backgrounds'
 import { canvasToBlob } from '../lib/exportPng'
@@ -12,7 +12,6 @@ export interface RenderOptions {
 
 interface Props {
   title: string
-  extra?: ReactNode
   /** 호출하는 쪽에서 useCallback 으로 감싸야 한다 (바뀔 때마다 미리보기를 다시 만든다) */
   render: (opts: RenderOptions) => Promise<HTMLCanvasElement>
   /** 배경 포함/스티커 테두리 옵션을 보여줄지 (코디 화면용) */
@@ -29,7 +28,7 @@ function stamp() {
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
 }
 
-export function ExportSheet({ title, extra, render, showOptions, background, filePrefix, onClose, onError }: Props) {
+export function ExportSheet({ title, render, showOptions, background, filePrefix, onClose, onError }: Props) {
   const { t } = useI18n()
   const [withBg, setWithBg] = useState(background.kind !== 'transparent')
   const [sticker, setSticker] = useState(true)
@@ -95,7 +94,6 @@ export function ExportSheet({ title, extra, render, showOptions, background, fil
 
   return (
     <Modal title={title} onClose={onClose}>
-      {extra && <div className="mb-3">{extra}</div>}
       <div
         className="mx-auto flex h-[44dvh] items-center justify-center rounded-2xl p-2"
         style={{ background: 'conic-gradient(#ececf1 25%, #fff 0 50%, #ececf1 0 75%, #fff 0) 0 0 / 20px 20px' }}

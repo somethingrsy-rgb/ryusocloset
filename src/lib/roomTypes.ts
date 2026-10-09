@@ -14,18 +14,10 @@ export const MAX_SCALE = 3
 export const ROOM_GROUPS = ['furniture', 'wall', 'light'] as const
 /** furniture 탭에는 rug(러그)도 함께 보인다 */
 export type RoomTab = (typeof ROOM_GROUPS)[number]
-export type RoomGroup = 'furniture' | 'rug' | 'wall' | 'light' | 'wallpaper' | 'floor'
+export type RoomGroup = 'furniture' | 'rug' | 'wall' | 'light'
 
 export interface RoomItemDef {
   id: string
-  category: 'wallpaper' | 'floor' | 'furniture' | 'wall' | 'props' | 'lighting' | 'sticker'
-  price: number
-  size: { width: number; height: number }
-  anchor: 'bottom-center'
-  zIndex: number
-  slot?: string
-  setId?: string | null
-  unlock?: { type: 'level' | 'streak' | 'points' | 'event'; value: number | string } | null
   group: RoomGroup
   name: { ko: string; en: string }
   /** 투명 여백을 잘라낸 webp (public 기준 상대 경로) */
@@ -59,9 +51,6 @@ export interface AvatarPlacement {
 }
 
 export interface RoomState {
-  layoutMode?: 'slots' | 'free'
-  wallpaperId?: string
-  floorId?: string
   avatar: AvatarPlacement
   items: Placed[]
 }
