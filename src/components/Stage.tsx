@@ -41,6 +41,5 @@ export function Stage({ outfit, ...rest }: Props) {
     { src: outfit.shoes ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body, z: 0 },
     { src: BASE_LAYERS.hairFront, z: HAIR_FRONT_Z },
   ]
-  const hint = Object.keys(outfit).length > 0 ? t('tweakHint') : t('dragHint')
-  return <LayerStage base={base} layers={layers} hint={hint} ariaLabel={t('tweakAria')} {...rest} />
+  return <LayerStage base={base} layers={layers} ariaLabel={t('tweakAria')} {...rest} />
 }

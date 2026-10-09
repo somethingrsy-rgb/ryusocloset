@@ -48,7 +48,6 @@ interface Props<K extends string> {
   dropActive: boolean
   figureRef: RefObject<HTMLDivElement | null>
   /** 아무것도 선택하지 않았을 때 보이는 안내 */
-  hint: string
   ariaLabel: string
   children?: ReactNode
 }
@@ -75,7 +74,6 @@ export function LayerStage<K extends string>({
   dropRef,
   dropActive,
   figureRef,
-  hint,
   ariaLabel,
   children,
 }: Props<K>) {
@@ -294,9 +292,7 @@ export function LayerStage<K extends string>({
               ✕
             </button>
           </div>
-        ) : (
-          <p className="inline-block rounded-2xl bg-white/85 px-3 py-1.5 text-[11px] leading-tight font-semibold text-cocoa-soft shadow-sm">{hint}</p>
-        )}
+        ) : null}
       </div>
     </div>
   )
