@@ -1,0 +1,434 @@
+[
+  {
+    "id": "theme_winter_sled",
+    "group": "furniture",
+    "theme": "winter",
+    "name": {
+      "ko": "썰매",
+      "en": "Sled"
+    },
+    "image": "assets/themes/winter/theme_winter_sled.webp",
+    "thumb": "assets/themes/winter/thumbs/theme_winter_sled.webp",
+    "w": 640,
+    "h": 319,
+    "baseWidth": 340,
+    "x": 300,
+    "y": 1330
+  },
+  {
+    "id": "theme_winter_snowflake",
+    "group": "wall",
+    "theme": "winter",
+    "name": {
+      "ko": "눈꽃",
+      "en": "Snowflake"
+    },
+    "image": "assets/themes/winter/theme_winter_snowflake.webp",
+    "thumb": "assets/themes/winter/thumbs/theme_winter_snowflake.webp",
+    "w": 582,
+    "h": 640,
+    "baseWidth": 170,
+    "x": 300,
+    "y": 520
+  },
+  {
+    "id": "theme_winter_snowman",
+    "group": "furniture",
+    "theme": "winter",
+    "name": {
+      "ko": "눈사람",
+      "en": "Snowman"
+    },
+    "image": "assets/themes/winter/theme_winter_snowman.webp",
+    "thumb": "assets/themes/winter/thumbs/theme_winter_snowman.webp",
+    "w": 462,
+    "h": 640,
+    "baseWidth": 260,
+    "x": 780,
+    "y": 1300
+  },
+  {
+    "id": "theme_valentine_bouquet",
+    "group": "furniture",
+    "theme": "valentine",
+    "name": {
+      "ko": "꽃다발",
+      "en": "Bouquet"
+    },
+    "image": "assets/themes/valentine/theme_valentine_bouquet.webp",
+    "thumb": "assets/themes/valentine/thumbs/theme_valentine_bouquet.webp",
+    "w": 589,
+    "h": 640,
+    "baseWidth": 220,
+    "x": 760,
+    "y": 1300
+  },
+  {
+    "id": "theme_valentine_chocolate",
+    "group": "furniture",
+    "theme": "valentine",
+    "name": {
+      "ko": "초콜릿 상자",
+      "en": "Chocolates"
+    },
+    "image": "assets/themes/valentine/theme_valentine_chocolate.webp",
+    "thumb": "assets/themes/valentine/thumbs/theme_valentine_chocolate.webp",
+    "w": 640,
+    "h": 619,
+    "baseWidth": 280,
+    "x": 300,
+    "y": 1320
+  },
+  {
+    "id": "theme_valentine_heart_cushion",
+    "group": "furniture",
+    "theme": "valentine",
+    "name": {
+      "ko": "하트 쿠션",
+      "en": "Heart Cushion"
+    },
+    "image": "assets/themes/valentine/theme_valentine_heart_cushion.webp",
+    "thumb": "assets/themes/valentine/thumbs/theme_valentine_heart_cushion.webp",
+    "w": 640,
+    "h": 476,
+    "baseWidth": 300,
+    "x": 560,
+    "y": 1340
+  },
+  {
+    "id": "theme_spring_bento",
+    "group": "furniture",
+    "theme": "spring",
+    "name": {
+      "ko": "도시락",
+      "en": "Bento"
+    },
+    "image": "assets/themes/spring/theme_spring_bento.webp",
+    "thumb": "assets/themes/spring/thumbs/theme_spring_bento.webp",
+    "w": 640,
+    "h": 590,
+    "baseWidth": 260,
+    "x": 420,
+    "y": 1310
+  },
+  {
+    "id": "theme_spring_blossom",
+    "group": "wall",
+    "theme": "spring",
+    "name": {
+      "ko": "벚꽃 가지",
+      "en": "Cherry Blossom"
+    },
+    "image": "assets/themes/spring/theme_spring_blossom.webp",
+    "thumb": "assets/themes/spring/thumbs/theme_spring_blossom.webp",
+    "w": 524,
+    "h": 640,
+    "baseWidth": 220,
+    "x": 800,
+    "y": 560
+  },
+  {
+    "id": "theme_spring_picnic_mat",
+    "group": "rug",
+    "theme": "spring",
+    "name": {
+      "ko": "돗자리",
+      "en": "Picnic Mat"
+    },
+    "image": "assets/themes/spring/theme_spring_picnic_mat.webp",
+    "thumb": "assets/themes/spring/thumbs/theme_spring_picnic_mat.webp",
+    "w": 640,
+    "h": 224,
+    "baseWidth": 520,
+    "x": 543,
+    "y": 1360
+  },
+  {
+    "id": "theme_birthday_balloons",
+    "group": "furniture",
+    "theme": "birthday",
+    "name": {
+      "ko": "풍선",
+      "en": "Balloons"
+    },
+    "image": "assets/themes/birthday/theme_birthday_balloons.webp",
+    "thumb": "assets/themes/birthday/thumbs/theme_birthday_balloons.webp",
+    "w": 439,
+    "h": 640,
+    "baseWidth": 210,
+    "x": 900,
+    "y": 1250
+  },
+  {
+    "id": "theme_birthday_cake",
+    "group": "furniture",
+    "theme": "birthday",
+    "name": {
+      "ko": "케이크",
+      "en": "Cake"
+    },
+    "image": "assets/themes/birthday/theme_birthday_cake.webp",
+    "thumb": "assets/themes/birthday/thumbs/theme_birthday_cake.webp",
+    "w": 640,
+    "h": 538,
+    "baseWidth": 300,
+    "x": 560,
+    "y": 1330
+  },
+  {
+    "id": "theme_birthday_gift",
+    "group": "furniture",
+    "theme": "birthday",
+    "name": {
+      "ko": "선물 상자",
+      "en": "Gift Box"
+    },
+    "image": "assets/themes/birthday/theme_birthday_gift.webp",
+    "thumb": "assets/themes/birthday/thumbs/theme_birthday_gift.webp",
+    "w": 640,
+    "h": 568,
+    "baseWidth": 240,
+    "x": 300,
+    "y": 1320
+  },
+  {
+    "id": "theme_birthday_party_hat",
+    "group": "furniture",
+    "theme": "birthday",
+    "name": {
+      "ko": "파티 모자",
+      "en": "Party Hat"
+    },
+    "image": "assets/themes/birthday/theme_birthday_party_hat.webp",
+    "thumb": "assets/themes/birthday/thumbs/theme_birthday_party_hat.webp",
+    "w": 518,
+    "h": 640,
+    "baseWidth": 170,
+    "x": 800,
+    "y": 1320
+  },
+  {
+    "id": "theme_summer_float",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "튜브",
+      "en": "Swim Ring"
+    },
+    "image": "assets/themes/summer/theme_summer_float.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_float.webp",
+    "w": 640,
+    "h": 609,
+    "baseWidth": 250,
+    "x": 300,
+    "y": 1320
+  },
+  {
+    "id": "theme_summer_parasol",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "파라솔",
+      "en": "Parasol"
+    },
+    "image": "assets/themes/summer/theme_summer_parasol.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_parasol.webp",
+    "w": 640,
+    "h": 623,
+    "baseWidth": 330,
+    "x": 840,
+    "y": 1280
+  },
+  {
+    "id": "theme_summer_pool",
+    "group": "rug",
+    "theme": "summer",
+    "name": {
+      "ko": "튜브 수영장",
+      "en": "Kiddie Pool"
+    },
+    "image": "assets/themes/summer/theme_summer_pool.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_pool.webp",
+    "w": 640,
+    "h": 331,
+    "baseWidth": 520,
+    "x": 543,
+    "y": 1360
+  },
+  {
+    "id": "theme_christmas_fireplace",
+    "group": "furniture",
+    "theme": "christmas",
+    "name": {
+      "ko": "벽난로",
+      "en": "Fireplace"
+    },
+    "image": "assets/themes/christmas/theme_christmas_fireplace.webp",
+    "thumb": "assets/themes/christmas/thumbs/theme_christmas_fireplace.webp",
+    "w": 640,
+    "h": 488,
+    "baseWidth": 440,
+    "x": 330,
+    "y": 1250
+  },
+  {
+    "id": "theme_christmas_gift",
+    "group": "furniture",
+    "theme": "christmas",
+    "name": {
+      "ko": "선물 상자",
+      "en": "Gift Box"
+    },
+    "image": "assets/themes/christmas/theme_christmas_gift.webp",
+    "thumb": "assets/themes/christmas/thumbs/theme_christmas_gift.webp",
+    "w": 640,
+    "h": 625,
+    "baseWidth": 230,
+    "x": 760,
+    "y": 1330
+  },
+  {
+    "id": "theme_christmas_tree",
+    "group": "furniture",
+    "theme": "christmas",
+    "name": {
+      "ko": "트리",
+      "en": "Tree"
+    },
+    "image": "assets/themes/christmas/theme_christmas_tree.webp",
+    "thumb": "assets/themes/christmas/thumbs/theme_christmas_tree.webp",
+    "w": 449,
+    "h": 640,
+    "baseWidth": 300,
+    "x": 800,
+    "y": 1300
+  },
+  {
+    "id": "theme_christmas_wreath",
+    "group": "wall",
+    "theme": "christmas",
+    "name": {
+      "ko": "리스",
+      "en": "Wreath"
+    },
+    "image": "assets/themes/christmas/theme_christmas_wreath.webp",
+    "thumb": "assets/themes/christmas/thumbs/theme_christmas_wreath.webp",
+    "w": 640,
+    "h": 602,
+    "baseWidth": 220,
+    "x": 543,
+    "y": 600
+  },
+  {
+    "id": "theme_halloween_bat",
+    "group": "wall",
+    "theme": "halloween",
+    "name": {
+      "ko": "박쥐 장식",
+      "en": "Bat Decor"
+    },
+    "image": "assets/themes/halloween/theme_halloween_bat.webp",
+    "thumb": "assets/themes/halloween/thumbs/theme_halloween_bat.webp",
+    "w": 640,
+    "h": 402,
+    "baseWidth": 200,
+    "x": 800,
+    "y": 560
+  },
+  {
+    "id": "theme_halloween_black_cat",
+    "group": "furniture",
+    "theme": "halloween",
+    "name": {
+      "ko": "검은 고양이 인형",
+      "en": "Black Cat Doll"
+    },
+    "image": "assets/themes/halloween/theme_halloween_black_cat.webp",
+    "thumb": "assets/themes/halloween/thumbs/theme_halloween_black_cat.webp",
+    "w": 594,
+    "h": 640,
+    "baseWidth": 230,
+    "x": 400,
+    "y": 1330
+  },
+  {
+    "id": "theme_halloween_candy_basket",
+    "group": "furniture",
+    "theme": "halloween",
+    "name": {
+      "ko": "사탕 바구니",
+      "en": "Candy Basket"
+    },
+    "image": "assets/themes/halloween/theme_halloween_candy_basket.webp",
+    "thumb": "assets/themes/halloween/thumbs/theme_halloween_candy_basket.webp",
+    "w": 625,
+    "h": 640,
+    "baseWidth": 250,
+    "x": 900,
+    "y": 1320
+  },
+  {
+    "id": "theme_halloween_cauldron",
+    "group": "furniture",
+    "theme": "halloween",
+    "name": {
+      "ko": "마녀 가마솥",
+      "en": "Witch Cauldron"
+    },
+    "image": "assets/themes/halloween/theme_halloween_cauldron.webp",
+    "thumb": "assets/themes/halloween/thumbs/theme_halloween_cauldron.webp",
+    "w": 640,
+    "h": 534,
+    "baseWidth": 270,
+    "x": 680,
+    "y": 1320
+  },
+  {
+    "id": "theme_halloween_ghost",
+    "group": "furniture",
+    "theme": "halloween",
+    "name": {
+      "ko": "유령",
+      "en": "Ghost"
+    },
+    "image": "assets/themes/halloween/theme_halloween_ghost.webp",
+    "thumb": "assets/themes/halloween/thumbs/theme_halloween_ghost.webp",
+    "w": 640,
+    "h": 614,
+    "baseWidth": 230,
+    "x": 780,
+    "y": 1300
+  },
+  {
+    "id": "theme_halloween_pumpkin",
+    "group": "furniture",
+    "theme": "halloween",
+    "name": {
+      "ko": "호박",
+      "en": "Pumpkin"
+    },
+    "image": "assets/themes/halloween/theme_halloween_pumpkin.webp",
+    "thumb": "assets/themes/halloween/thumbs/theme_halloween_pumpkin.webp",
+    "w": 640,
+    "h": 539,
+    "baseWidth": 250,
+    "x": 540,
+    "y": 1330
+  },
+  {
+    "id": "theme_halloween_witch_hat",
+    "group": "furniture",
+    "theme": "halloween",
+    "name": {
+      "ko": "마녀 모자",
+      "en": "Witch Hat"
+    },
+    "image": "assets/themes/halloween/theme_halloween_witch_hat.webp",
+    "thumb": "assets/themes/halloween/thumbs/theme_halloween_witch_hat.webp",
+    "w": 640,
+    "h": 482,
+    "baseWidth": 250,
+    "x": 300,
+    "y": 1320
+  }
+]
