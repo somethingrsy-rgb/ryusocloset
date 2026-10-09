@@ -1,29 +1,59 @@
 import { useEffect, useRef, useState } from 'react'
 import { CATEGORY_LABEL, useI18n } from '../i18n'
 import { CATEGORIES, type Category } from '../lib/layers'
-import { MAX_CUSTOM, addCustomItem, buildCustomItem, customCount } from '../lib/customItems'
+import {
+  MAX_CUSTOM,
+  addCustomItem,
+  addCustomRoomItem,
+  buildCustomItem,
+  buildCustomRoomItem,
+  customCount,
+  customRoomCount,
+} from '../lib/customItems'
+import type { RoomGroup, RoomItemDef } from '../lib/roomTypes'
 import type { Item } from '../lib/types'
 import { CATEGORY_ICON } from './Closet'
 import { Modal } from './Modal'
 
-interface Props {
-  initialCategory: Category
-  onClose: () => void
-  /** 추가가 끝났을 때 (saved: 기기에 저장됐는지) */
-  onAdded: (item: Item, saved: boolean) => void
-  onError: (message: string) => void
-}
+const ROOM_KINDS: { id: RoomGroup; icon: string; ko: string; en: string }[] = [
+  { id: 'furniture', icon: '🛋️', ko: '가구·소품', en: 'Furniture' },
+  { id: 'rug', icon: '🟫', ko: '러그', en: 'Rug' },
+  { id: 'wall', icon: '🖼️', ko: '벽 장식', en: 'Wall' },
+  { id: 'light', icon: '✨', ko: '조명', en: 'Lights' },
+]
 
-export function AddItemModal({ initialCategory, onClose, onAdded, onError }: Props) {
+type Props = {
+  onClose: () => void
+  onError: (message: string) => void
+} & (
+  | {
+      kind: 'closet'
+      initial: Category
+      /** 추가가 끝났을 때 (saved: 기기에 저장됐는지) */
+      onAdded: (item: Item, saved: boolean) => void
+    }
+  | {
+      kind: 'room'
+      initial: RoomGroup
+      onAdded: (item: RoomItemDef, saved: boolean) => void
+    }
+)
+
+export function AddItemModal(props: Props) {
+  const { onClose, onError } = props
   const { lang, t } = useI18n()
   const labels = CATEGORY_LABEL[lang]
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
-  const [category, setCategory] = useState<Category>(initialCategory)
+  const [category, setCategory] = useState<string>(props.initial)
   const [name, setName] = useState('')
   const [erase, setErase] = useState(true)
   const [busy, setBusy] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const options =
+    props.kind === 'room'
+      ? ROOM_KINDS.map((k) => ({ id: k.id as string, icon: k.icon, label: k[lang] }))
+      : CATEGORIES.map((c) => ({ id: c as string, icon: CATEGORY_ICON[c], label: labels[c] }))
 
   useEffect(() => {
     if (!file) return setPreview(null)
@@ -34,12 +64,16 @@ export function AddItemModal({ initialCategory, onClose, onAdded, onError }: Pro
 
   const submit = async () => {
     if (!file || busy) return
-    if (customCount() >= MAX_CUSTOM) return onError(t('addLimit', { n: MAX_CUSTOM }))
+    if ((props.kind === 'room' ? customRoomCount() : customCount()) >= MAX_CUSTOM) return onError(t('addLimit', { n: MAX_CUSTOM }))
     setBusy(true)
     try {
-      const item = await buildCustomItem({ file, category, name, eraseBackground: erase })
-      const saved = await addCustomItem(item)
-      onAdded(item, saved)
+      if (props.kind === 'room') {
+        const item = await buildCustomRoomItem({ file, group: category as RoomGroup, name, eraseBackground: erase })
+        props.onAdded(item, await addCustomRoomItem(item))
+      } else {
+        const item = await buildCustomItem({ file, category: category as Category, name, eraseBackground: erase })
+        props.onAdded(item, await addCustomItem(item))
+      }
     } catch (e) {
       onError(e instanceof Error && e.message === 'empty' ? t('addEmpty') : t('addReadFail'))
       setBusy(false)
@@ -47,8 +81,8 @@ export function AddItemModal({ initialCategory, onClose, onAdded, onError }: Pro
   }
 
   return (
-    <Modal title={t('addItem')} onClose={onClose}>
-      <p className="mb-3 text-sm text-cocoa-soft">{t('addItemHint')}</p>
+    <Modal title={props.kind === 'room' ? t('addProp') : t('addItem')} onClose={onClose}>
+      <p className="mb-3 text-sm text-cocoa-soft">{props.kind === 'room' ? t('addPropHint') : t('addItemHint')}</p>
       <input
         ref={inputRef}
         type="file"
@@ -70,15 +104,15 @@ export function AddItemModal({ initialCategory, onClose, onAdded, onError }: Pro
 
       <div className="mb-1 text-xs font-bold text-cocoa-soft">{t('itemCategory')}</div>
       <div role="radiogroup" aria-label={t('itemCategory')} className="mb-3 flex flex-wrap gap-1.5">
-        {CATEGORIES.map((c) => (
+        {options.map((o) => (
           <button
-            key={c}
+            key={o.id}
             role="radio"
-            aria-checked={c === category}
-            onClick={() => setCategory(c)}
-            className={`min-h-11 rounded-full px-3 text-sm font-semibold ${c === category ? 'bg-blush text-white' : 'bg-petal/70'}`}
+            aria-checked={o.id === category}
+            onClick={() => setCategory(o.id)}
+            className={`min-h-11 rounded-full px-3 text-sm font-semibold ${o.id === category ? 'bg-blush text-white' : 'bg-petal/70'}`}
           >
-            {CATEGORY_ICON[c]} {labels[c]}
+            {o.icon} {o.label}
           </button>
         ))}
       </div>

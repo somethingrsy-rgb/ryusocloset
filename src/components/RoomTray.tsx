@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useI18n } from '../i18n'
-import { ROOM_ITEMS } from '../lib/room'
+import { ROOM_ITEMS, isCustomRoomItem } from '../lib/room'
 import { assetUrl } from '../lib/items'
+import { useItemsVersion } from '../lib/useItemsVersion'
 import type { RoomItemDef, RoomState, RoomTab } from '../lib/roomTypes'
 
 const TABS: { id: RoomTab; icon: string; ko: string; en: string }[] = [
@@ -15,10 +16,14 @@ const inTab = (d: RoomItemDef, tab: RoomTab) => (tab === 'furniture' ? d.group =
 interface Props {
   room: RoomState
   onAdd: (def: RoomItemDef) => void
+  /** '내 소품 추가' 버튼 (지금 보고 있는 탭을 알려준다) */
+  onAddCustom: (tab: RoomTab) => void
+  onRemoveCustom: (def: RoomItemDef) => void
 }
 
-export function RoomTray({ room, onAdd }: Props) {
-  const { lang } = useI18n()
+export function RoomTray({ room, onAdd, onAddCustom, onRemoveCustom }: Props) {
+  useItemsVersion()
+  const { lang, t } = useI18n()
   const [tab, setTab] = useState<RoomTab>('furniture')
   const items = ROOM_ITEMS.filter((d) => inTab(d, tab))
   const count = (id: string) => room.items.filter((p) => p.itemId === id).length
@@ -45,10 +50,21 @@ export function RoomTray({ room, onAdd }: Props) {
       </div>
       <div role="tabpanel" className="scroll-thin min-h-0 flex-1 overflow-y-auto p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <ul className="grid grid-cols-4 gap-2">
+          <li>
+            <button
+              onClick={() => onAddCustom(tab)}
+              aria-label={t('addProp')}
+              title={t('addProp')}
+              className="flex aspect-square w-full flex-col items-center justify-center rounded-2xl bg-petal/60 text-blush-deep ring-2 ring-dashed ring-blush/60 transition active:scale-95"
+            >
+              <span aria-hidden className="text-3xl leading-none font-bold">+</span>
+              <span className="mt-0.5 text-[10px] leading-tight font-semibold">{t('addProp')}</span>
+            </button>
+          </li>
           {items.map((d) => {
             const n = count(d.id)
             return (
-              <li key={d.id}>
+              <li key={d.id} className="relative">
                 <button
                   onClick={() => onAdd(d)}
                   aria-label={d.name[lang]}
@@ -62,6 +78,16 @@ export function RoomTray({ room, onAdd }: Props) {
                     </span>
                   )}
                 </button>
+                {isCustomRoomItem(d) && (
+                  <button
+                    aria-label={`${t('removeItem')}: ${d.name[lang]}`}
+                    title={t('removeItem')}
+                    onClick={() => window.confirm(t('removeItemConfirm')) && onRemoveCustom(d)}
+                    className="absolute -top-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs text-cocoa-soft shadow ring-1 ring-black/10"
+                  >
+                    ✕
+                  </button>
+                )}
                 <p className="mt-0.5 truncate text-center text-[10px] font-semibold text-cocoa-soft">{d.name[lang]}</p>
               </li>
             )

@@ -4,7 +4,7 @@ import { AssembleTray } from './components/AssembleTray'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
 import { Closet } from './components/Closet'
-import { removeCustomItem } from './lib/customItems'
+import { removeCustomItem, removeCustomRoomItem } from './lib/customItems'
 import { useItemsVersion } from './lib/useItemsVersion'
 import { ExportSheet, type RenderOptions } from './components/ExportSheet'
 import { RoomTray } from './components/RoomTray'
@@ -21,7 +21,7 @@ import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, assetUrl } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
 import { randomOutfit, toggleItem } from './lib/outfit'
 import { ROOM_ITEMS, addItem, defaultRoom } from './lib/room'
-import { MAX_PLACED, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
+import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
 import { playSnap } from './lib/sound'
 import {
   MAX_SAVED,
@@ -41,7 +41,7 @@ import {
 import { getTweak, pruneTweaks, sanitizeTweaks } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
 
-type ModalKind = null | 'addItem' | 'bg' | 'saved' | 'export' | 'roomExport' | 'assembleExport'
+type ModalKind = null | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport' | 'assembleExport'
 type Mode = 'closet' | 'room' | 'assemble'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -61,6 +61,7 @@ export default function App() {
   const [dragOver, setDragOver] = useState(false)
   useItemsVersion()
   const [category, setCategory] = useState<Category>('top')
+  const [propGroup, setPropGroup] = useState<RoomGroup>('furniture')
   const [saved, setSaved] = useState<SavedOutfit[]>(loadSaved)
   const [room, setRoom] = useState<RoomState>(loadRoom)
   const [assembly, setAssembly] = useState<Assembly>(loadAssembly)
@@ -156,6 +157,14 @@ export default function App() {
       applyOutfit(next)
     }
     void removeCustomItem(item.id)
+    showToast(t('removed'))
+  }
+
+  /** 내가 추가한 방 소품 지우기 (방에 놓인 것도 함께 치운다) */
+  const removeMyProp = (def: RoomItemDef) => {
+    setRoom((r) => ({ ...r, items: r.items.filter((p) => p.itemId !== def.id) }))
+    setSelection(null)
+    void removeCustomRoomItem(def.id)
     showToast(t('removed'))
   }
 
@@ -406,14 +415,15 @@ export default function App() {
               onRemove={removeMine}
             />
           ) : (
-            <RoomTray room={room} onAdd={addToRoom} />
+            <RoomTray room={room} onAdd={addToRoom} onAddCustom={(tab) => { setPropGroup(tab); setModal('addProp') }} onRemoveCustom={removeMyProp} />
           )}
         </aside>
       </div>
 
       {modal === 'addItem' && (
         <AddItemModal
-          initialCategory={category}
+          kind="closet"
+          initial={category}
           onClose={() => setModal(null)}
           onError={showToast}
           onAdded={(item, persisted) => {
@@ -421,6 +431,19 @@ export default function App() {
             setMode('closet')
             setCategory(item.category)
             applyOutfit(toggleItem(outfit, item), item)
+            showToast(t(persisted ? 'addDone' : 'addDoneNoSave'))
+          }}
+        />
+      )}
+      {modal === 'addProp' && (
+        <AddItemModal
+          kind="room"
+          initial={propGroup}
+          onClose={() => setModal(null)}
+          onError={showToast}
+          onAdded={(def, persisted) => {
+            setModal(null)
+            addToRoom(def)
             showToast(t(persisted ? 'addDone' : 'addDoneNoSave'))
           }}
         />

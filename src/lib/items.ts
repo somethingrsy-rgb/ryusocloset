@@ -40,7 +40,7 @@ const listeners = new Set<() => void>()
 let customVersion = 0
 export const subscribeItems = (fn: () => void) => (listeners.add(fn), () => void listeners.delete(fn))
 export const itemsVersion = () => customVersion
-const notify = () => {
+export const notifyItemsChanged = () => {
   customVersion++
   listeners.forEach((fn) => fn())
 }
@@ -51,7 +51,7 @@ export function registerCustomItem(item: Item, silent = false) {
   ITEMS.unshift(item)
   ITEM_BY_ID[item.id] = item
   ITEMS_BY_CATEGORY[item.category].unshift(item)
-  if (!silent) notify()
+  if (!silent) notifyItemsChanged()
 }
 
 export function unregisterCustomItem(id: string, silent = false) {
@@ -61,5 +61,5 @@ export function unregisterCustomItem(id: string, silent = false) {
   const list = ITEMS_BY_CATEGORY[it.category]
   list.splice(list.indexOf(it), 1)
   delete ITEM_BY_ID[id]
-  if (!silent) notify()
+  if (!silent) notifyItemsChanged()
 }
