@@ -271,5 +271,29 @@
     "en": "Mary Janes",
     "color": "black",
     "native": true
+  },
+  "shoes_socks_mj_black": {
+    "ko": "양말 메리제인",
+    "en": "Mary Janes & Socks",
+    "color": "black",
+    "native": true
+  },
+  "shoes_socks_mj_mint": {
+    "ko": "양말 메리제인",
+    "en": "Mary Janes & Socks",
+    "color": "mint",
+    "native": true
+  },
+  "shoes_socks_heel_purple": {
+    "ko": "양말 굽 구두",
+    "en": "Heels & Socks",
+    "color": "purple",
+    "native": true
+  },
+  "shoes_socks_heel_blue": {
+    "ko": "양말 굽 구두",
+    "en": "Heels & Socks",
+    "color": "skyblue",
+    "native": true
   }
 }

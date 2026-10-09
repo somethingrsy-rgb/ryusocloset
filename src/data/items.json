@@ -1152,6 +1152,102 @@
     "native": true
   },
   {
+    "id": "shoes_socks_heel_blue",
+    "category": "shoes",
+    "name": {
+      "ko": "양말 굽 구두",
+      "en": "Heels & Socks"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 349,
+      "y": 1287,
+      "w": 314,
+      "h": 224
+    },
+    "image": "assets/clothes/shoes/shoes_socks_heel_blue.webp",
+    "thumb": "assets/thumbs/shoes_socks_heel_blue.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_socks_heel_purple",
+    "category": "shoes",
+    "name": {
+      "ko": "양말 굽 구두",
+      "en": "Heels & Socks"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 343,
+      "y": 1307,
+      "w": 329,
+      "h": 203
+    },
+    "image": "assets/clothes/shoes/shoes_socks_heel_purple.webp",
+    "thumb": "assets/thumbs/shoes_socks_heel_purple.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_socks_mj_black",
+    "category": "shoes",
+    "name": {
+      "ko": "양말 메리제인",
+      "en": "Mary Janes & Socks"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 368,
+      "y": 1320,
+      "w": 286,
+      "h": 190
+    },
+    "image": "assets/clothes/shoes/shoes_socks_mj_black.webp",
+    "thumb": "assets/thumbs/shoes_socks_mj_black.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_socks_mj_mint",
+    "category": "shoes",
+    "name": {
+      "ko": "양말 메리제인",
+      "en": "Mary Janes & Socks"
+    },
+    "color": "mint",
+    "colorName": {
+      "ko": "민트",
+      "en": "Mint"
+    },
+    "colorHex": "#a9dcc8",
+    "box": {
+      "x": 351,
+      "y": 1327,
+      "w": 320,
+      "h": 183
+    },
+    "image": "assets/clothes/shoes/shoes_socks_mj_mint.webp",
+    "thumb": "assets/thumbs/shoes_socks_mj_mint.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "acc_briefcase_brown",
     "category": "bag",
     "name": {
