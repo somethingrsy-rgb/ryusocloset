@@ -13,10 +13,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 217,
+      "x": 218,
       "y": 606,
-      "w": 589,
-      "h": 392
+      "w": 587,
+      "h": 413
     },
     "image": "assets/clothes/top/top_anorak_ivory.webp",
     "thumb": "assets/thumbs/top_anorak_ivory.webp",
@@ -37,9 +37,9 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 217,
+      "x": 218,
       "y": 608,
-      "w": 589,
+      "w": 588,
       "h": 351
     },
     "image": "assets/clothes/top/top_cable_vest_shirt_ivory.webp",
@@ -48,50 +48,26 @@
     "native": true
   },
   {
-    "id": "top_cardigan_black",
+    "id": "top_cardigan_skyblue",
     "category": "top",
     "name": {
-      "ko": "트위드 가디건",
-      "en": "Tweed Cardigan"
+      "ko": "하늘색 가디건",
+      "en": "Sky Cardigan"
     },
-    "color": "black",
+    "color": "skyblue",
     "colorName": {
-      "ko": "블랙",
-      "en": "Black"
+      "ko": "스카이블루",
+      "en": "Sky Blue"
     },
-    "colorHex": "#2b2b2f",
+    "colorHex": "#8fb8e0",
     "box": {
-      "x": 201,
-      "y": 626,
-      "w": 617,
-      "h": 358
+      "x": 218,
+      "y": 631,
+      "w": 587,
+      "h": 344
     },
-    "image": "assets/clothes/top/top_cardigan_black.webp",
-    "thumb": "assets/thumbs/top_cardigan_black.webp",
-    "zIndex": 30,
-    "native": true
-  },
-  {
-    "id": "top_cardigan_mint",
-    "category": "top",
-    "name": {
-      "ko": "가디건",
-      "en": "Cardigan"
-    },
-    "color": "mint",
-    "colorName": {
-      "ko": "민트",
-      "en": "Mint"
-    },
-    "colorHex": "#a9dcc8",
-    "box": {
-      "x": 205,
-      "y": 613,
-      "w": 614,
-      "h": 363
-    },
-    "image": "assets/clothes/top/top_cardigan_mint.webp",
-    "thumb": "assets/thumbs/top_cardigan_mint.webp",
+    "image": "assets/clothes/top/top_cardigan_skyblue.webp",
+    "thumb": "assets/thumbs/top_cardigan_skyblue.webp",
     "zIndex": 30,
     "native": true
   },
@@ -109,9 +85,9 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 219,
+      "x": 218,
       "y": 625,
-      "w": 586,
+      "w": 588,
       "h": 343
     },
     "image": "assets/clothes/top/top_check_cardigan_gray.webp",
@@ -168,54 +144,6 @@
     "native": true
   },
   {
-    "id": "top_ivory",
-    "category": "top",
-    "name": {
-      "ko": "크롭 티",
-      "en": "Cropped Tee"
-    },
-    "color": "ivory",
-    "colorName": {
-      "ko": "아이보리",
-      "en": "Ivory"
-    },
-    "colorHex": "#f6ecd6",
-    "box": {
-      "x": 269,
-      "y": 618,
-      "w": 487,
-      "h": 278
-    },
-    "image": "assets/clothes/top/top_ivory.webp",
-    "thumb": "assets/thumbs/top_ivory.webp",
-    "zIndex": 30,
-    "native": true
-  },
-  {
-    "id": "top_knit_vest_ivory",
-    "category": "top",
-    "name": {
-      "ko": "니트 조끼",
-      "en": "Knit Vest"
-    },
-    "color": "ivory",
-    "colorName": {
-      "ko": "아이보리",
-      "en": "Ivory"
-    },
-    "colorHex": "#f6ecd6",
-    "box": {
-      "x": 387,
-      "y": 630,
-      "w": 250,
-      "h": 308
-    },
-    "image": "assets/clothes/top/top_knit_vest_ivory.webp",
-    "thumb": "assets/thumbs/top_knit_vest_ivory.webp",
-    "zIndex": 30,
-    "native": true
-  },
-  {
     "id": "top_paisley_ivory",
     "category": "top",
     "name": {
@@ -230,36 +158,12 @@
     "colorHex": "#f6ecd6",
     "box": {
       "x": 217,
-      "y": 624,
+      "y": 623,
       "w": 590,
-      "h": 351
+      "h": 352
     },
     "image": "assets/clothes/top/top_paisley_ivory.webp",
     "thumb": "assets/thumbs/top_paisley_ivory.webp",
-    "zIndex": 30,
-    "native": true
-  },
-  {
-    "id": "top_pattern_vest_ivory",
-    "category": "top",
-    "name": {
-      "ko": "패턴 조끼",
-      "en": "Patterned Vest"
-    },
-    "color": "ivory",
-    "colorName": {
-      "ko": "아이보리",
-      "en": "Ivory"
-    },
-    "colorHex": "#f6ecd6",
-    "box": {
-      "x": 394,
-      "y": 631,
-      "w": 236,
-      "h": 266
-    },
-    "image": "assets/clothes/top/top_pattern_vest_ivory.webp",
-    "thumb": "assets/thumbs/top_pattern_vest_ivory.webp",
     "zIndex": 30,
     "native": true
   },
@@ -278,9 +182,9 @@
     "colorHex": "#f6ecd6",
     "box": {
       "x": 215,
-      "y": 624,
+      "y": 623,
       "w": 594,
-      "h": 350
+      "h": 352
     },
     "image": "assets/clothes/top/top_sailor_ivory.webp",
     "thumb": "assets/thumbs/top_sailor_ivory.webp",
@@ -301,10 +205,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 217,
+      "x": 218,
       "y": 630,
-      "w": 588,
-      "h": 330
+      "w": 587,
+      "h": 329
     },
     "image": "assets/clothes/top/top_trim_cardigan_black.webp",
     "thumb": "assets/thumbs/top_trim_cardigan_black.webp",
@@ -349,9 +253,9 @@
     },
     "colorHex": "#55565c",
     "box": {
-      "x": 327,
+      "x": 326,
       "y": 854,
-      "w": 371,
+      "w": 372,
       "h": 498
     },
     "image": "assets/clothes/bottom/bottom_belt_skirt_charcoal.webp",
@@ -373,9 +277,9 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 320,
+      "x": 319,
       "y": 891,
-      "w": 387,
+      "w": 388,
       "h": 508
     },
     "image": "assets/clothes/bottom/bottom_button_skirt_brown.webp",
@@ -398,9 +302,9 @@
     "colorHex": "#3c5a8c",
     "box": {
       "x": 310,
-      "y": 855,
-      "w": 406,
-      "h": 498
+      "y": 854,
+      "w": 407,
+      "h": 499
     },
     "image": "assets/clothes/bottom/bottom_denim.webp",
     "thumb": "assets/thumbs/bottom_denim.webp",
@@ -422,9 +326,9 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 326,
-      "y": 856,
+      "y": 855,
       "w": 372,
-      "h": 495
+      "h": 496
     },
     "image": "assets/clothes/bottom/bottom_denim_skirt_white.webp",
     "thumb": "assets/thumbs/bottom_denim_skirt_white.webp",
@@ -448,7 +352,7 @@
       "x": 315,
       "y": 886,
       "w": 392,
-      "h": 474
+      "h": 475
     },
     "image": "assets/clothes/bottom/bottom_flare_skirt_gray.webp",
     "thumb": "assets/thumbs/bottom_flare_skirt_gray.webp",
@@ -469,9 +373,9 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 360,
-      "y": 859,
-      "w": 305,
+      "x": 359,
+      "y": 858,
+      "w": 306,
       "h": 537
     },
     "image": "assets/clothes/bottom/bottom_pants_black.webp",
@@ -494,9 +398,9 @@
     "colorHex": "#55565c",
     "box": {
       "x": 360,
-      "y": 887,
-      "w": 304,
-      "h": 508
+      "y": 885,
+      "w": 305,
+      "h": 510
     },
     "image": "assets/clothes/bottom/bottom_pants_charcoal.webp",
     "thumb": "assets/thumbs/bottom_pants_charcoal.webp",
@@ -520,7 +424,7 @@
       "x": 322,
       "y": 865,
       "w": 384,
-      "h": 490
+      "h": 491
     },
     "image": "assets/clothes/bottom/bottom_shezmig_skirt_brown.webp",
     "thumb": "assets/thumbs/bottom_shezmig_skirt_brown.webp",
@@ -566,9 +470,9 @@
     "colorHex": "#f6ecd6",
     "box": {
       "x": 360,
-      "y": 891,
+      "y": 890,
       "w": 305,
-      "h": 505
+      "h": 506
     },
     "image": "assets/clothes/bottom/bottom_thick_pants_ivory.webp",
     "thumb": "assets/thumbs/bottom_thick_pants_ivory.webp",
@@ -592,7 +496,7 @@
       "x": 184,
       "y": 622,
       "w": 656,
-      "h": 657
+      "h": 656
     },
     "image": "assets/clothes/dress/dress_deco_tweed_black.webp",
     "thumb": "assets/thumbs/dress_deco_tweed_black.webp",
@@ -616,7 +520,7 @@
       "x": 240,
       "y": 622,
       "w": 545,
-      "h": 596
+      "h": 595
     },
     "image": "assets/clothes/dress/dress_isaac_black.webp",
     "thumb": "assets/thumbs/dress_isaac_black.webp",
@@ -687,11 +591,35 @@
     "box": {
       "x": 189,
       "y": 622,
-      "w": 646,
-      "h": 682
+      "w": 645,
+      "h": 680
     },
     "image": "assets/clothes/dress/dress_isaac_shirt_black.webp",
     "thumb": "assets/thumbs/dress_isaac_shirt_black.webp",
+    "zIndex": 40,
+    "native": true
+  },
+  {
+    "id": "dress_isaac_shirt_navy",
+    "category": "dress",
+    "name": {
+      "ko": "셔츠 원피스",
+      "en": "Shirt Dress"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 190,
+      "y": 615,
+      "w": 644,
+      "h": 766
+    },
+    "image": "assets/clothes/dress/dress_isaac_shirt_navy.webp",
+    "thumb": "assets/thumbs/dress_isaac_shirt_navy.webp",
     "zIndex": 40,
     "native": true
   },
@@ -712,10 +640,34 @@
       "x": 232,
       "y": 622,
       "w": 561,
-      "h": 649
+      "h": 642
     },
     "image": "assets/clothes/dress/dress_oxford_beige.webp",
     "thumb": "assets/thumbs/dress_oxford_beige.webp",
+    "zIndex": 40,
+    "native": true
+  },
+  {
+    "id": "dress_oxford_slim_beige",
+    "category": "dress",
+    "name": {
+      "ko": "옥스포드 원피스 (슬림)",
+      "en": "Oxford Dress (Slim)"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 308,
+      "y": 635,
+      "w": 409,
+      "h": 754
+    },
+    "image": "assets/clothes/dress/dress_oxford_slim_beige.webp",
+    "thumb": "assets/thumbs/dress_oxford_slim_beige.webp",
     "zIndex": 40,
     "native": true
   },
@@ -736,59 +688,11 @@
       "x": 207,
       "y": 622,
       "w": 610,
-      "h": 601
+      "h": 602
     },
     "image": "assets/clothes/dress/dress_shesmiss_gray.webp",
     "thumb": "assets/thumbs/dress_shesmiss_gray.webp",
     "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "outer_coat_black",
-    "category": "outer",
-    "name": {
-      "ko": "롱 코트",
-      "en": "Long Coat"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 222,
-      "y": 638,
-      "w": 580,
-      "h": 485
-    },
-    "image": "assets/clothes/outer/outer_coat_black.webp",
-    "thumb": "assets/thumbs/outer_coat_black.webp",
-    "zIndex": 50,
-    "native": true
-  },
-  {
-    "id": "outer_coat_gray",
-    "category": "outer",
-    "name": {
-      "ko": "롱 코트",
-      "en": "Long Coat"
-    },
-    "color": "gray",
-    "colorName": {
-      "ko": "그레이",
-      "en": "Gray"
-    },
-    "colorHex": "#a3a5ab",
-    "box": {
-      "x": 216,
-      "y": 651,
-      "w": 593,
-      "h": 625
-    },
-    "image": "assets/clothes/outer/outer_coat_gray.webp",
-    "thumb": "assets/thumbs/outer_coat_gray.webp",
-    "zIndex": 50,
     "native": true
   },
   {
@@ -806,36 +710,12 @@
     "colorHex": "#3c5a8c",
     "box": {
       "x": 222,
-      "y": 638,
+      "y": 637,
       "w": 579,
-      "h": 342
+      "h": 343
     },
     "image": "assets/clothes/outer/outer_cropped_denim.webp",
     "thumb": "assets/thumbs/outer_cropped_denim.webp",
-    "zIndex": 50,
-    "native": true
-  },
-  {
-    "id": "outer_cropped_tweed_blue",
-    "category": "outer",
-    "name": {
-      "ko": "트위드 크롭 재킷",
-      "en": "Cropped Tweed Jacket"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 219,
-      "y": 642,
-      "w": 583,
-      "h": 344
-    },
-    "image": "assets/clothes/outer/outer_cropped_tweed_blue.webp",
-    "thumb": "assets/thumbs/outer_cropped_tweed_blue.webp",
     "zIndex": 50,
     "native": true
   },
@@ -855,7 +735,7 @@
     "box": {
       "x": 212,
       "y": 639,
-      "w": 599,
+      "w": 600,
       "h": 349
     },
     "image": "assets/clothes/outer/outer_jacket_gray.webp",
@@ -902,9 +782,9 @@
     "colorHex": "#2b2b2f",
     "box": {
       "x": 213,
-      "y": 642,
-      "w": 598,
-      "h": 373
+      "y": 641,
+      "w": 599,
+      "h": 374
     },
     "image": "assets/clothes/outer/outer_roem_tweed_black.webp",
     "thumb": "assets/thumbs/outer_roem_tweed_black.webp",
@@ -974,7 +854,7 @@
     "colorHex": "#2b2b2f",
     "box": {
       "x": 215,
-      "y": 644,
+      "y": 645,
       "w": 594,
       "h": 614
     },
@@ -997,10 +877,10 @@
     },
     "colorHex": "#6f7655",
     "box": {
-      "x": 196,
-      "y": 640,
-      "w": 632,
-      "h": 638
+      "x": 195,
+      "y": 639,
+      "w": 634,
+      "h": 639
     },
     "image": "assets/clothes/outer/outer_trench_khaki.webp",
     "thumb": "assets/thumbs/outer_trench_khaki.webp",
@@ -1022,9 +902,9 @@
     "colorHex": "#27355b",
     "box": {
       "x": 227,
-      "y": 642,
+      "y": 641,
       "w": 569,
-      "h": 324
+      "h": 325
     },
     "image": "assets/clothes/outer/outer_tweed_navy.webp",
     "thumb": "assets/thumbs/outer_tweed_navy.webp",
@@ -1045,9 +925,9 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 199,
+      "x": 198,
       "y": 637,
-      "w": 623,
+      "w": 624,
       "h": 405
     },
     "image": "assets/clothes/outer/outer_uniclo_beige.webp",
@@ -1069,37 +949,13 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 369,
-      "y": 1381,
+      "x": 370,
+      "y": 1382,
       "w": 283,
       "h": 129
     },
     "image": "assets/clothes/shoes/shoes_bow_flats_black.webp",
     "thumb": "assets/thumbs/shoes_bow_flats_black.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_flat_black",
-    "category": "shoes",
-    "name": {
-      "ko": "플랫슈즈",
-      "en": "Flats"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 354,
-      "y": 1369,
-      "w": 317,
-      "h": 155
-    },
-    "image": "assets/clothes/shoes/shoes_flat_black.webp",
-    "thumb": "assets/thumbs/shoes_flat_black.webp",
     "zIndex": 10,
     "native": true
   },
@@ -1117,85 +973,13 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 369,
+      "x": 370,
       "y": 1379,
       "w": 283,
       "h": 131
     },
     "image": "assets/clothes/shoes/shoes_flats_beige.webp",
     "thumb": "assets/thumbs/shoes_flats_beige.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_flats_ivory",
-    "category": "shoes",
-    "name": {
-      "ko": "플랫슈즈",
-      "en": "Flats"
-    },
-    "color": "ivory",
-    "colorName": {
-      "ko": "아이보리",
-      "en": "Ivory"
-    },
-    "colorHex": "#f6ecd6",
-    "box": {
-      "x": 356,
-      "y": 1397,
-      "w": 313,
-      "h": 125
-    },
-    "image": "assets/clothes/shoes/shoes_flats_ivory.webp",
-    "thumb": "assets/thumbs/shoes_flats_ivory.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_maryjane_black",
-    "category": "shoes",
-    "name": {
-      "ko": "메리제인",
-      "en": "Mary Janes"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 344,
-      "y": 1389,
-      "w": 336,
-      "h": 138
-    },
-    "image": "assets/clothes/shoes/shoes_maryjane_black.webp",
-    "thumb": "assets/thumbs/shoes_maryjane_black.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_pumps_black",
-    "category": "shoes",
-    "name": {
-      "ko": "펌프스",
-      "en": "Pumps"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 357,
-      "y": 1402,
-      "w": 311,
-      "h": 116
-    },
-    "image": "assets/clothes/shoes/shoes_pumps_black.webp",
-    "thumb": "assets/thumbs/shoes_pumps_black.webp",
     "zIndex": 10,
     "native": true
   },
@@ -1215,60 +999,12 @@
     "box": {
       "x": 354,
       "y": 1383,
-      "w": 316,
+      "w": 317,
       "h": 138
     },
     "image": "assets/clothes/shoes/shoes_sneakers_navy.webp",
     "thumb": "assets/thumbs/shoes_sneakers_navy.webp",
     "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "acc_lace_collar_white",
-    "category": "accessory",
-    "name": {
-      "ko": "레이스 카라",
-      "en": "Lace Collar"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 380,
-      "y": 627,
-      "w": 264,
-      "h": 165
-    },
-    "image": "assets/clothes/accessory/acc_lace_collar_white.webp",
-    "thumb": "assets/thumbs/acc_lace_collar_white.webp",
-    "zIndex": 70,
-    "native": true
-  },
-  {
-    "id": "acc_backpack_ivory",
-    "category": "bag",
-    "name": {
-      "ko": "백팩",
-      "en": "Backpack"
-    },
-    "color": "ivory",
-    "colorName": {
-      "ko": "아이보리",
-      "en": "Ivory"
-    },
-    "colorHex": "#f6ecd6",
-    "box": {
-      "x": 609,
-      "y": 729,
-      "w": 196,
-      "h": 257
-    },
-    "image": "assets/clothes/bag/acc_backpack_ivory.webp",
-    "thumb": "assets/thumbs/acc_backpack_ivory.webp",
-    "zIndex": 80,
     "native": true
   },
   {
@@ -1285,9 +1021,9 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 657,
+      "x": 656,
       "y": 959,
-      "w": 278,
+      "w": 280,
       "h": 300
     },
     "image": "assets/clothes/bag/acc_briefcase_brown.webp",
@@ -1310,9 +1046,9 @@
     "colorHex": "#2b2b2f",
     "box": {
       "x": 663,
-      "y": 980,
-      "w": 262,
-      "h": 198
+      "y": 979,
+      "w": 263,
+      "h": 200
     },
     "image": "assets/clothes/bag/acc_handbag_black.webp",
     "thumb": "assets/thumbs/acc_handbag_black.webp",
@@ -1333,10 +1069,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 687,
-      "y": 974,
-      "w": 230,
-      "h": 208
+      "x": 686,
+      "y": 973,
+      "w": 231,
+      "h": 209
     },
     "image": "assets/clothes/bag/acc_kangol_tote_navy.webp",
     "thumb": "assets/thumbs/acc_kangol_tote_navy.webp",
@@ -1358,9 +1094,9 @@
     "colorHex": "#f6ecd6",
     "box": {
       "x": 555,
-      "y": 581,
+      "y": 580,
       "w": 405,
-      "h": 547
+      "h": 548
     },
     "image": "assets/clothes/bag/acc_mini_bag_ivory.webp",
     "thumb": "assets/thumbs/acc_mini_bag_ivory.webp",

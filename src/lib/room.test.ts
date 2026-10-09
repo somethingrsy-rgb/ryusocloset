@@ -6,6 +6,7 @@ import {
   defaultRoom,
   drawables,
   moveTo,
+  registerCustomRoomItem,
   removeItem,
   sanitizeRoom,
   scaleBy,
@@ -92,11 +93,14 @@ describe('sanitizeRoom', () => {
 
 describe('drawables 순서', () => {
   it('러그 < 벽 장식 < 가구·아바타(y 순) < 조명', () => {
+    // 지금 기본 물건에는 러그가 없어서, 러그 순서를 확인하려고 가짜 러그를 등록한다
+    const rug = { ...def('furniture'), id: 'customroom_testrug', group: 'rug' as const }
+    registerCustomRoomItem(rug, true)
     let s = empty()
     s = addItem(s, def('light'), 'l')!
     s = addItem(s, def('furniture'), 'f')!
     s = addItem(s, def('wall'), 'w')!
-    s = addItem(s, def('rug'), 'r')!
+    s = addItem(s, rug, 'r')!
     s = moveTo(s, { kind: 'item', uid: 'f' }, 400, 1200)
     const order = drawables(s).map((d) => d.group)
     expect(order).toEqual(['rug', 'wall', 'furniture', 'avatar', 'light'])

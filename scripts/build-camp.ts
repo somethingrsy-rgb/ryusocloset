@@ -41,8 +41,9 @@ export async function buildCamp() {
   for (const name of ['wall_day', 'wall_night']) {
     const src = findSource(path.join(SRC, name))
     const m = await sharp(src).metadata()
-    if (m.width !== ROOM_W || m.height !== ROOM_H) console.warn(`⚠ ${name}: ${m.width}x${m.height} (기대: ${ROOM_W}x${ROOM_H})`)
-    await sharp(src).webp({ quality: 90, alphaQuality: 100 }).toFile(path.join(OUT, `${name}.webp`))
+    if (Math.abs(m.width! / m.height! - ROOM_W / ROOM_H) > 0.01) console.warn(`⚠ ${name}: ${m.width}x${m.height} (가로세로 비율이 ${ROOM_W}:${ROOM_H} 와 달라요)`)
+    // 받은 그림이 작아도(예: 576×768) 방 크기에 맞춰 늘린다
+    await sharp(src).resize(ROOM_W, ROOM_H, { fit: 'fill', kernel: 'lanczos3' }).webp({ quality: 90, alphaQuality: 100 }).toFile(path.join(OUT, `${name}.webp`))
   }
   await sharp(findSource(path.join(SRC, 'floor')))
     .resize(ROOM_W, CAMP_FLOOR_H, { fit: 'fill' })
