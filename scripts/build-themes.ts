@@ -7,15 +7,15 @@
  *   scripts/themes.json                        테마 목록 (id, 이름, 아이콘)
  *   scripts/theme-items.json                   소품 이름·그룹·기본 크기·위치
  *
- * 내 방의 '테마' 탭에서 벽지·바닥을 통째로 바꾸고 그 테마의 소품을 놓는다. npm run assets 가 호출한다.
- * 바닥 높이(floorH)는 벽지 그림이 끝나는 곳에 맞춰 자동으로 정한다.
+ * 내 방의 '배경' 탭에서 벽과 바닥을 따로 고르고(기본 + 각 테마의 벽지·바닥), '테마' 탭에서는 그 테마의 소품을 놓는다. npm run assets 가 호출한다.
+ * floorH 는 그 벽지가 끝나는 높이에 맞춘 바닥 높이(논리 px)다. 어떤 벽에 어떤 바닥을 골라도 이어 붙도록 화면에서 바닥을 이 높이로 늘린다.
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { alphaBBox, makeThumb } from './lib/image.ts'
-import { ROOM_H, ROOM_W, type RoomGroup, type RoomItemDef } from '../src/lib/roomTypes.ts'
+import { FLOOR_H, ROOM_H, ROOM_W, type RoomGroup, type RoomItemDef } from '../src/lib/roomTypes.ts'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = path.join(ROOT, 'assets-src/themes')
@@ -45,7 +45,11 @@ export async function buildThemes() {
     const box = await alphaBBox(wall, 8)
     const wallBottom = Math.round(((box.top + box.height) / wm.height!) * ROOM_H)
     const floorH = Math.min(ROOM_H, ROOM_H - wallBottom + 30)
-    await sharp(path.join(dir, 'floor.png')).resize(ROOM_W, floorH, { fit: 'fill' }).webp({ quality: 86 }).toFile(path.join(out, 'floor.webp'))
+    // 바닥은 기본 높이로 저장해 두고, 화면에서 고른 벽지가 끝나는 높이(floorH)에 맞춰 늘린다 (벽과 바닥을 따로 고르므로)
+    await sharp(path.join(dir, 'floor.png')).resize(ROOM_W, FLOOR_H, { fit: 'fill' }).webp({ quality: 86 }).toFile(path.join(out, 'floor.webp'))
+    // 고르는 화면용 작은 그림
+    await sharp(wall).resize(180, Math.round((180 * ROOM_H) / ROOM_W), { fit: 'fill' }).webp({ quality: 80 }).toFile(path.join(out, 'wall_thumb.webp'))
+    await sharp(path.join(dir, 'floor.png')).resize(180, 90, { fit: 'fill' }).webp({ quality: 80 }).toFile(path.join(out, 'floor_thumb.webp'))
     themes.push({ ...th, floorH })
 
     const itemsDir = path.join(dir, 'items')

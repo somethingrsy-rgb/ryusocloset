@@ -138,10 +138,13 @@ export function getPlacement(state: RoomState, sel: NonNullable<Selection>) {
 /** 저장된 데이터를 검증해 안전한 상태로 만든다 */
 export function sanitizeRoom(raw: unknown, base: RoomState = defaultRoom()): RoomState {
   if (!raw || typeof raw !== 'object') return base
-  const r = raw as { avatar?: unknown; items?: unknown; night?: unknown; themeId?: unknown }
+  const r = raw as { avatar?: unknown; items?: unknown; night?: unknown; themeId?: unknown; wallId?: unknown; floorId?: unknown }
   const night = r.night === true ? { night: true } : {}
-  const themeId = typeof r.themeId === 'string' && ROOM_THEME_BY_ID[r.themeId] ? { themeId: r.themeId } : {}
-  const extra = { ...night, ...themeId }
+  const known = (v: unknown) => (typeof v === 'string' && ROOM_THEME_BY_ID[v] ? v : undefined)
+  // 예전에 테마 하나로 벽·바닥을 함께 저장했던 방(themeId)은 벽과 바닥에 같은 걸 고른 것으로 옮긴다
+  const wall = known(r.wallId) ?? known(r.themeId)
+  const floor = known(r.floorId) ?? known(r.themeId)
+  const extra = { ...night, ...(wall ? { wallId: wall } : {}), ...(floor ? { floorId: floor } : {}) }
   const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d)
   const a = (r.avatar ?? {}) as Record<string, unknown>
   const avatar: AvatarPlacement = {

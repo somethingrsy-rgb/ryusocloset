@@ -15,7 +15,7 @@ export const ROOM_EXTRA = 700
 export const MIN_SCALE = 0.3
 export const MAX_SCALE = 3
 
-export const ROOM_GROUPS = ['furniture', 'wall', 'light', 'camp', 'theme'] as const
+export const ROOM_GROUPS = ['furniture', 'wall', 'light', 'camp', 'theme', 'background'] as const
 /** furniture 탭에는 rug(러그)도 함께 보인다 */
 export type RoomTab = (typeof ROOM_GROUPS)[number]
 export type RoomGroup = 'furniture' | 'rug' | 'wall' | 'light' | 'camp'
@@ -57,8 +57,9 @@ export interface AvatarPlacement {
 }
 
 export interface RoomState {
-  /** 내 방의 테마 배경 (없으면 기본 벽지·바닥) */
-  themeId?: string
+  /** 내 방의 벽지·바닥 (테마 id, 없으면 기본). 벽과 바닥을 따로 고른다 */
+  wallId?: string
+  floorId?: string
   /** 캠핑 탭: true 면 밤 배경 */
   night?: boolean
   avatar: AvatarPlacement
