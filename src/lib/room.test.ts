@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ROOM_ITEMS,
   addItem,
+  defaultCamp,
   defaultRoom,
   drawables,
   moveTo,
@@ -153,5 +154,20 @@ describe('hitTest', () => {
     const at2 = (u: number) => hitTest(flipped, d2.left + d2.w * u, d2.top + d2.h / 2, (k) => (k === d2.key ? left : undefined))
     expect(at2(0.05)).toBeNull()
     expect(at2(0.95)).not.toBeNull()
+  })
+})
+
+describe('camping', () => {
+  it('캠핑 용품이 목록에 있고 기본 캠핑장은 유효한 것만 담는다', () => {
+    expect(ROOM_ITEMS.filter((d) => d.group === 'camp').length).toBeGreaterThanOrEqual(7)
+    const camp = defaultCamp()
+    expect(camp.items.length).toBeGreaterThan(0)
+    expect(camp.items.every((p) => ROOM_ITEMS.some((d) => d.id === p.itemId && d.group === 'camp'))).toBe(true)
+  })
+  it('저장된 캠핑장의 밤 설정을 지킨다 (없으면 낮)', () => {
+    const night = sanitizeRoom({ ...defaultCamp(), night: true }, defaultCamp())
+    expect(night.night).toBe(true)
+    expect(sanitizeRoom({ ...defaultCamp() }, defaultCamp()).night).toBeUndefined()
+    expect(sanitizeRoom(null, defaultCamp()).items.length).toBe(defaultCamp().items.length)
   })
 })

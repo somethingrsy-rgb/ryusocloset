@@ -1,7 +1,7 @@
 import { ID_ALIASES, ITEM_BY_ID } from './items'
 import { CATEGORIES } from './layers'
 import { sanitizeOutfit } from './outfit'
-import { sanitizeRoom } from './room'
+import { defaultCamp, sanitizeRoom } from './room'
 import { sanitizeTweaks } from './tweaks'
 import type { RoomState } from './roomTypes'
 import type { Outfit, SavedOutfit, Tweaks } from './types'
@@ -12,6 +12,7 @@ const K_SAVED = 'ryuso.saved.v1'
 const K_SETTINGS = 'ryuso.settings.v1'
 const K_CURRENT = 'ryuso.current.v1'
 const K_ROOM = 'ryuso.room.v1'
+const K_CAMP = 'ryuso.camp.v1'
 const K_TWEAKS = 'ryuso.tweaks.v1'
 
 function read<T>(key: string): T | null {
@@ -58,6 +59,9 @@ export const persistCurrent = (o: Outfit) => write(K_CURRENT, o)
 
 export const loadRoom = (): RoomState => sanitizeRoom(read<unknown>(K_ROOM))
 export const persistRoom = (r: RoomState) => write(K_ROOM, r)
+
+export const loadCamp = (): RoomState => sanitizeRoom(read<unknown>(K_CAMP), defaultCamp())
+export const persistCamp = (r: RoomState) => write(K_CAMP, r)
 
 export const loadTweaks = (outfit: Outfit): Tweaks => sanitizeTweaks(read<unknown>(K_TWEAKS), CATEGORIES, outfit)
 export const persistTweaks = (t: Tweaks) => write(K_TWEAKS, t)

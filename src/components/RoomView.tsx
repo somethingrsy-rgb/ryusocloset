@@ -17,10 +17,10 @@ import {
   shadowWidthRatio,
   toggleFlip,
 } from '../lib/room'
-import { ROOM_ASSETS } from '../lib/exportRoom'
+import { ROOM_ASSETS, type SceneAssets } from '../lib/exportRoom'
 import { hitTest, maskCache, maskFromSource } from '../lib/roomHit'
 import { CANVAS_H, CANVAS_W } from '../lib/layers'
-import { FLOOR_H, ROOM_H, ROOM_W, type RoomState, type Selection } from '../lib/roomTypes'
+import { ROOM_H, ROOM_W, type RoomState, type Selection } from '../lib/roomTypes'
 import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
 
@@ -31,6 +31,11 @@ interface Props {
   selection: Selection
   onSelect: (s: Selection) => void
   onChange: (next: RoomState) => void
+  /** 벽(배경)·바닥 이미지 (없으면 내 방) */
+  assets?: SceneAssets
+  /** 방 되돌리기 */
+  canUndo?: boolean
+  onUndo?: () => void
   children?: ReactNode
 }
 
@@ -40,7 +45,7 @@ const cq = (v: number) => `${(v / ROOM_W) * 100}cqw`
 /** ▲▼ 버튼을 한 번 누를 때 움직이는 거리 (방 논리 px, 폭 1086 기준) */
 const NUDGE = 6
 
-export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, children }: Props) {
+export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, canUndo, onUndo, assets = ROOM_ASSETS, children }: Props) {
   const { lang, t } = useI18n()
   const roomRef = useRef<HTMLDivElement>(null)
   const pointers = useRef(new Map<number, { x: number; y: number }>())
@@ -126,6 +131,10 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
   }
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault()
+      return onUndo?.()
+    }
     if (!selection) return
     const step = e.shiftKey ? 40 : 10
     const move = (dx: number, dy: number) => {
@@ -150,7 +159,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
     }
   }
 
-  const btn = 'flex h-10 min-w-10 items-center justify-center rounded-full text-base active:scale-90'
+  const btn = 'flex h-10 min-w-10 items-center justify-center rounded-full text-base active:scale-90 disabled:opacity-40'
   const selName =
     selection?.kind === 'item'
       ? ROOM_ITEM_BY_ID[room.items.find((p) => p.uid === selection.uid)?.itemId ?? '']?.name[lang]
@@ -176,13 +185,13 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
               style={{ left: `${k * 100}%`, transform: Math.abs(k) % 2 ? 'scaleX(-1)' : undefined }}
             >
               <img
-                src={ROOM_ASSETS.floor}
+                src={assets.floor}
                 alt=""
                 draggable={false}
                 className="absolute left-0 w-full select-none"
-                style={{ top: `${((ROOM_H - FLOOR_H) / ROOM_H) * 100}%`, height: `${(FLOOR_H / ROOM_H) * 100}%` }}
+                style={{ top: `${((ROOM_H - assets.floorH) / ROOM_H) * 100}%`, height: `${(assets.floorH / ROOM_H) * 100}%` }}
               />
-              <img src={ROOM_ASSETS.wall} alt="" draggable={false} className="absolute inset-0 h-full w-full select-none" />
+              <img src={assets.wall} alt="" draggable={false} className="absolute inset-0 h-full w-full select-none" />
             </div>
           ))}
         </div>
@@ -207,14 +216,14 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
           }}
         >
           <img
-            src={ROOM_ASSETS.floor}
+            src={assets.floor}
             alt=""
             draggable={false}
             className="pointer-events-none absolute left-0 w-full select-none"
-            style={{ top: cq(ROOM_H - FLOOR_H), height: cq(FLOOR_H), zIndex: 0 }}
+            style={{ top: cq(ROOM_H - assets.floorH), height: cq(assets.floorH), zIndex: 0 }}
           />
           <img
-            src={ROOM_ASSETS.wall}
+            src={assets.wall}
             alt=""
             draggable={false}
             className="pointer-events-none absolute inset-0 h-full w-full select-none"
@@ -298,6 +307,9 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('moveDown')} onClick={() => onChange(moveBy(room, selection, 0, NUDGE))}>
               ▼
+            </button>
+            <button className={`${btn} bg-petal`} aria-label={t('roomUndo')} title={t('roomUndo')} disabled={!canUndo} onClick={() => onUndo?.()}>
+              ↶
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('flip')} onClick={() => onChange(toggleFlip(room, selection))}>
               ↔

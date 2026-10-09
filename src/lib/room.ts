@@ -1,4 +1,5 @@
 import roomData from '../data/room-items.json'
+import campData from '../data/camp-items.json'
 import { notifyItemsChanged } from './items'
 import { CANVAS_H, CANVAS_W } from './layers'
 import {
@@ -17,7 +18,8 @@ import {
   type Selection,
 } from './roomTypes'
 
-export const ROOM_ITEMS: RoomItemDef[] = [...(roomData as RoomItemDef[])]
+/** 내 방 물건과 캠핑 용품(group: 'camp')은 같은 목록에 들어 있고, 화면(트레이)에서 group 으로 나눠 보여 준다 */
+export const ROOM_ITEMS: RoomItemDef[] = [...(roomData as RoomItemDef[]), ...(campData as RoomItemDef[])]
 export const ROOM_ITEM_BY_ID: Record<string, RoomItemDef> = Object.fromEntries(ROOM_ITEMS.map((d) => [d.id, d]))
 
 /** 내가 추가한 방 물건 (customItems.ts 가 불러오고 저장한다) */
@@ -36,6 +38,16 @@ export function registerCustomRoomItem(d: RoomItemDef, silent = false) {
   ROOM_ITEMS.unshift(d)
   ROOM_ITEM_BY_ID[d.id] = d
   if (!silent) notifyItemsChanged()
+}
+
+/** 처음 보는 캠핑장: 텐트 + 모닥불 + 의자 + 랜턴 + 아바타 */
+export function defaultCamp(): RoomState {
+  const mk = (itemId: string, uid: string): Placed => {
+    const d = ROOM_ITEM_BY_ID[itemId]
+    return { uid, itemId, x: d?.x ?? ROOM_W / 2, y: d?.y ?? 1300, scale: 1, flip: false }
+  }
+  const items = [mk('camp_tent', 'c1'), mk('camp_campfire', 'c2'), mk('camp_chair', 'c3'), mk('camp_lantern', 'c4')].filter((p) => ROOM_ITEM_BY_ID[p.itemId])
+  return { avatar: { x: 720, y: 1420, scale: 1, flip: false }, items }
 }
 
 export const DEFAULT_AVATAR: AvatarPlacement = { x: 760, y: 1395, scale: 1, flip: false }
@@ -106,10 +118,10 @@ export function getPlacement(state: RoomState, sel: NonNullable<Selection>) {
 }
 
 /** 저장된 데이터를 검증해 안전한 상태로 만든다 */
-export function sanitizeRoom(raw: unknown): RoomState {
-  const base = defaultRoom()
+export function sanitizeRoom(raw: unknown, base: RoomState = defaultRoom()): RoomState {
   if (!raw || typeof raw !== 'object') return base
-  const r = raw as { avatar?: unknown; items?: unknown }
+  const r = raw as { avatar?: unknown; items?: unknown; night?: unknown }
+  const night = r.night === true ? { night: true } : {}
   const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d)
   const a = (r.avatar ?? {}) as Record<string, unknown>
   const avatar: AvatarPlacement = {
@@ -118,7 +130,7 @@ export function sanitizeRoom(raw: unknown): RoomState {
     scale: clampScale(num(a.scale, 1)),
     flip: a.flip === true,
   }
-  if (!Array.isArray(r.items)) return { avatar, items: base.items }
+  if (!Array.isArray(r.items)) return { ...night, avatar, items: base.items }
   const seen = new Set<string>()
   const items: Placed[] = []
   for (const it of r.items as Record<string, unknown>[]) {
@@ -136,7 +148,7 @@ export function sanitizeRoom(raw: unknown): RoomState {
     })
     if (items.length >= MAX_PLACED) break
   }
-  return { avatar, items }
+  return { ...night, avatar, items }
 }
 
 /* ───── 그리기 순서와 영역 (화면, 터치 판정, PNG 내보내기가 같이 쓴다) ─────
@@ -212,7 +224,7 @@ export function drawables(state: RoomState): Drawable[] {
 }
 
 /** 바닥에 닿는 물건(그림자를 그린다) */
-export const hasContactShadow = (g: Drawable['group']) => g === 'furniture' || g === 'avatar'
+export const hasContactShadow = (g: Drawable['group']) => g === 'furniture' || g === 'camp' || g === 'avatar'
 /** 접지 그림자 크기 비율(폭 기준) */
 export const shadowWidthRatio = (g: Drawable['group']) => (g === 'avatar' ? 0.5 : 0.82)
 

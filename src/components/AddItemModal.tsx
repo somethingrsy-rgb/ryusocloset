@@ -20,6 +20,7 @@ const ROOM_KINDS: { id: RoomGroup; icon: string; ko: string; en: string }[] = [
   { id: 'rug', icon: '🟫', ko: '러그', en: 'Rug' },
   { id: 'wall', icon: '🖼️', ko: '벽 장식', en: 'Wall' },
   { id: 'light', icon: '✨', ko: '조명', en: 'Lights' },
+  { id: 'camp', icon: '⛺', ko: '캠핑 용품', en: 'Camp gear' },
 ]
 
 type Props = {
@@ -52,7 +53,7 @@ export function AddItemModal(props: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const options =
     props.kind === 'room'
-      ? ROOM_KINDS.map((k) => ({ id: k.id as string, icon: k.icon, label: k[lang] }))
+      ? ROOM_KINDS.filter((k) => (k.id === 'camp') === (props.initial === 'camp')).map((k) => ({ id: k.id as string, icon: k.icon, label: k[lang] }))
       : CATEGORIES.map((c) => ({ id: c as string, icon: CATEGORY_ICON[c], label: labels[c] }))
 
   useEffect(() => {

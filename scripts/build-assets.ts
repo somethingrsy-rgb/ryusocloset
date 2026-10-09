@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { alphaBBox, makeThumb } from './lib/image.ts'
 import { buildRoom } from './build-room.ts'
+import { buildCamp } from './build-camp.ts'
 import { CANVAS_H, CANVAS_W, CATEGORIES, LAYER_Z, type Category } from '../src/lib/layers.ts'
 import type { Item } from '../src/lib/types.ts'
 
@@ -180,6 +181,7 @@ async function main() {
   const counts = Object.fromEntries(CATEGORIES.map((c) => [c, items.filter((i) => i.category === c).length]))
   console.log(`✔ ${items.length}개 아이템`, counts)
   await buildRoom()
+  await buildCamp()
 }
 
 main().catch((e) => {

@@ -39,6 +39,12 @@ npm test           # 착용 규칙 단위 테스트
 ### (삭제됨) 조립 탭
 조립 탭(머리·상의·하의 따로 고르기)은 앱에서 없앴습니다. 조립용 원본 이미지와 맞춤 도구(`assets-src/assemble`, `tools-py/fit_assemble_*.py`, `tools-py/make_assemble_base.py`, `scripts/assemble-*.json`)는 남겨 두었고, `tools-py/place_shoes.py` 가 신발 맞춤값을 쓰기 때문에 지우지 않았습니다. 빌드(`npm run assets`)와 앱에는 쓰이지 않습니다.
 
+### 캠핑 탭 (상단 `⛺ 캠핑`)
+
+- 내 방과 같은 꾸미기 방식(눌러 놓기 → 끌어 옮기기·크기·뒤집기·치우기·되돌리기·미세 이동·사진 저장)을 캠핑장에서 쓴다. 캠핑장은 내 방과 따로 저장된다(`ryuso.camp.v1`).
+- 낮/밤 배경 전환(🌙/☀️), 캠핑 용품 7종(텐트, 모닥불, 캠핑 의자, 테이블, 랜턴, 아이스박스, 그릴), `+ 내 소품 추가`로 내 사진 용품 추가.
+- 에셋: `assets-src/camp/{wall_day,wall_night,floor}.png` 와 `assets-src/camp/items/camp_*.png`, 이름·크기·위치는 `scripts/camp-items.json`. `npm run assets` 가 `public/assets/camp` 와 `src/data/camp-items.json` 을 만든다. 용품은 `group: 'camp'` 로 내 방 물건과 같은 목록에 들어 있다.
+
 ### 내 방 꾸미기 (상단 `🏠 내 방` 탭)
 
 - 하단 트레이(가구 / 벽 장식 / 조명)에서 탭하면 방에 놓이고, **끌어서 옮기기**
