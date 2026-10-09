@@ -1,4 +1,60 @@
 {
+  "furniture_sofa_bear": {
+    "ko": "곰돌이 소파",
+    "en": "Bear Sofa",
+    "baseWidth": 600,
+    "x": 380,
+    "y": 1255
+  },
+  "furniture_bed": {
+    "ko": "침대",
+    "en": "Bed",
+    "baseWidth": 700,
+    "x": 543,
+    "y": 1230
+  },
+  "furniture_dresser": {
+    "ko": "서랍장",
+    "en": "Dresser",
+    "baseWidth": 340,
+    "x": 860,
+    "y": 1230
+  },
+  "furniture_mirror_full": {
+    "ko": "전신거울",
+    "en": "Full Mirror",
+    "baseWidth": 290,
+    "x": 900,
+    "y": 1250
+  },
+  "furniture_desk_chair": {
+    "ko": "책상과 의자",
+    "en": "Desk & Chair",
+    "baseWidth": 620,
+    "x": 543,
+    "y": 1230
+  },
+  "furniture_hanger": {
+    "ko": "행거",
+    "en": "Clothes Rack",
+    "baseWidth": 560,
+    "x": 543,
+    "y": 1240
+  },
+  "furniture_vanity": {
+    "ko": "화장대",
+    "en": "Vanity",
+    "baseWidth": 400,
+    "x": 543,
+    "y": 1240
+  },
+  "rug_stripe": {
+    "ko": "줄무늬 러그",
+    "en": "Striped Rug",
+    "baseWidth": 680,
+    "x": 543,
+    "y": 1350
+  },
   "wall_window_day": {
     "ko": "창문 (낮)",
     "en": "Window (Day)",
@@ -96,5 +152,19 @@
     "baseWidth": 230,
     "x": 450,
     "y": 1320
+  },
+  "furniture_xmas_tree_redwhite": {
+    "ko": "크리스마스 트리 (레드·화이트)",
+    "en": "Christmas Tree (Red & White)",
+    "baseWidth": 300,
+    "x": 300,
+    "y": 1290
+  },
+  "furniture_xmas_tree_pastel": {
+    "ko": "크리스마스 트리 (파스텔)",
+    "en": "Christmas Tree (Pastel)",
+    "baseWidth": 300,
+    "x": 800,
+    "y": 1290
   }
 }

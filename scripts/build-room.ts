@@ -40,10 +40,14 @@ export async function buildRoom() {
   // 벽지 / 바닥
   const wallSrc = findSource(path.join(SRC, 'wall'))
   const wm = await sharp(wallSrc).metadata()
-  if (wm.width !== ROOM_W || wm.height !== ROOM_H) {
-    console.warn(`⚠ wall: ${wm.width}x${wm.height} (기대: ${ROOM_W}x${ROOM_H})`)
+  if (Math.abs(wm.width! / wm.height! - ROOM_W / ROOM_H) > 0.01) {
+    console.warn(`⚠ wall: ${wm.width}x${wm.height} (가로세로 비율이 ${ROOM_W}:${ROOM_H} 와 달라요)`)
   }
-  await sharp(wallSrc).webp({ quality: 92, alphaQuality: 100 }).toFile(path.join(OUT, 'wall.webp'))
+  // 받은 그림이 작아도(예: 728×970) 방 크기에 맞춰 늘린다
+  await sharp(wallSrc)
+    .resize(ROOM_W, ROOM_H, { fit: 'fill', kernel: 'lanczos3' })
+    .webp({ quality: 92, alphaQuality: 100 })
+    .toFile(path.join(OUT, 'wall.webp'))
   await sharp(findSource(path.join(SRC, 'floor')))
     .resize(ROOM_W, FLOOR_H, { fit: 'fill' })
     .webp({ quality: 90 })

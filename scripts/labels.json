@@ -166,6 +166,17 @@
     "color": "beige",
     "native": true
   },
+  "top_cardigan_skyblue": {
+    "ko": "하늘색 가디건",
+    "en": "Sky Cardigan",
+    "native": true,
+    "color": "skyblue"
+  },
+  "dress_oxford_beige": {
+    "ko": "옥스포드 원피스",
+    "en": "Oxford Dress",
+    "native": true
+  },
   "top_trim_cardigan_black": {
     "ko": "배색 가디건",
     "en": "Trim Cardigan",
@@ -225,17 +236,6 @@
   "shoes_flats_beige": {
     "ko": "베이지 구두",
     "en": "Beige Flats",
-    "native": true
-  },
-  "top_cardigan_skyblue": {
-    "ko": "하늘색 가디건",
-    "en": "Sky Cardigan",
-    "native": true,
-    "color": "skyblue"
-  },
-  "dress_oxford_beige": {
-    "ko": "옥스포드 원피스",
-    "en": "Oxford Dress",
     "native": true
   }
 }
