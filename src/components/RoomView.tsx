@@ -37,6 +37,9 @@ interface Props {
 /** 논리 좌표(1086 기준) → 방 폭(cqw) 퍼센트 */
 const cq = (v: number) => `${(v / ROOM_W) * 100}cqw`
 
+/** ▲▼ 버튼을 한 번 누를 때 움직이는 거리 (방 논리 px, 폭 1086 기준) */
+const NUDGE = 6
+
 export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, children }: Props) {
   const { lang, t } = useI18n()
   const roomRef = useRef<HTMLDivElement>(null)
@@ -282,13 +285,19 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
 
       <div className="pointer-events-none absolute top-2 left-2 z-20 max-w-[calc(100%-4.5rem)]">
         {selection && selName ? (
-          <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-white/95 p-1 pl-3 shadow-lg ring-1 ring-black/5">
-            <span className="mr-0.5 max-w-[4.5rem] truncate text-xs font-bold">{selName}</span>
+          <div className="pointer-events-auto flex w-12 flex-col items-center gap-1 rounded-3xl bg-white/95 px-1 pt-2 pb-1 shadow-lg ring-1 ring-black/5">
+            <span className="max-w-full truncate text-[10px] leading-tight font-bold">{selName}</span>
             <button className={`${btn} bg-petal`} aria-label={t('smaller')} onClick={() => onChange(scaleBy(room, selection, 1 / 1.12))}>
               ➖
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('bigger')} onClick={() => onChange(scaleBy(room, selection, 1.12))}>
               ➕
+            </button>
+            <button className={`${btn} bg-petal`} aria-label={t('moveUp')} onClick={() => onChange(moveBy(room, selection, 0, -NUDGE))}>
+              ▲
+            </button>
+            <button className={`${btn} bg-petal`} aria-label={t('moveDown')} onClick={() => onChange(moveBy(room, selection, 0, NUDGE))}>
+              ▼
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('flip')} onClick={() => onChange(toggleFlip(room, selection))}>
               ↔
