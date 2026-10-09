@@ -9,15 +9,11 @@
     "preview": "vite preview --host",
     "assets": "tsx scripts/build-assets.ts && tsx scripts/build-icons.ts",
     "test": "vitest run",
-    "typecheck": "tsc -b",
-    "test:economy": "node --experimental-strip-types --test tests/economy.test.ts",
-    "test:room-mvp": "node --experimental-loader ./tests/loader.mjs --test tests/economy.test.ts tests/roomSlots.test.ts"
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "zustand": "^5.0.8",
-    "html-to-image": "^1.11.13"
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
