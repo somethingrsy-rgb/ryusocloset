@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   ROOM_ITEMS,
+  ROOM_THEMES,
   addItem,
   defaultCamp,
   defaultRoom,
@@ -174,5 +175,22 @@ describe('camping', () => {
     expect(night.night).toBe(true)
     expect(sanitizeRoom({ ...defaultCamp() }, defaultCamp()).night).toBeUndefined()
     expect(sanitizeRoom(null, defaultCamp()).items.length).toBe(defaultCamp().items.length)
+  })
+})
+
+describe('테마', () => {
+  it('테마와 테마 소품이 있고, 소품은 모두 존재하는 테마에 속한다', () => {
+    expect(ROOM_THEMES.length).toBeGreaterThanOrEqual(7)
+    const themed = ROOM_ITEMS.filter((d) => d.theme)
+    expect(themed.length).toBeGreaterThan(20)
+    expect(themed.every((d) => ROOM_THEMES.some((t) => t.id === d.theme))).toBe(true)
+    // 바닥은 방 높이 안에서 벽지 아래부터 깔린다
+    expect(ROOM_THEMES.every((t) => t.floorH > 300 && t.floorH <= ROOM_H)).toBe(true)
+  })
+  it('저장된 테마 id 는 있는 것만 지킨다', () => {
+    const id = ROOM_THEMES[0].id
+    expect(sanitizeRoom({ ...defaultRoom(), themeId: id }).themeId).toBe(id)
+    expect(sanitizeRoom({ ...defaultRoom(), themeId: 'nope' }).themeId).toBeUndefined()
+    expect(sanitizeRoom({ ...defaultRoom() }).themeId).toBeUndefined()
   })
 })

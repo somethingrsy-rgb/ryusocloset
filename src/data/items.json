@@ -672,6 +672,78 @@
     "native": true
   },
   {
+    "id": "dress_lolita_black",
+    "category": "dress",
+    "name": {
+      "ko": "고딕 로리타 원피스",
+      "en": "Gothic Lolita Dress"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 550
+    },
+    "image": "assets/clothes/dress/dress_lolita_black.webp",
+    "thumb": "assets/thumbs/dress_lolita_black.webp",
+    "zIndex": 40,
+    "native": true
+  },
+  {
+    "id": "dress_lolita_purple",
+    "category": "dress",
+    "name": {
+      "ko": "로리타 원피스",
+      "en": "Lolita Dress"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 542
+    },
+    "image": "assets/clothes/dress/dress_lolita_purple.webp",
+    "thumb": "assets/thumbs/dress_lolita_purple.webp",
+    "zIndex": 40,
+    "native": true
+  },
+  {
+    "id": "dress_maid_blue",
+    "category": "dress",
+    "name": {
+      "ko": "메이드 원피스",
+      "en": "Maid Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 568
+    },
+    "image": "assets/clothes/dress/dress_maid_blue.webp",
+    "thumb": "assets/thumbs/dress_maid_blue.webp",
+    "zIndex": 40,
+    "native": true
+  },
+  {
     "id": "dress_oxford_beige",
     "category": "dress",
     "name": {
@@ -1028,6 +1100,30 @@
     },
     "image": "assets/clothes/shoes/shoes_flats_beige.webp",
     "thumb": "assets/thumbs/shoes_flats_beige.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_maryjane_bow_black",
+    "category": "shoes",
+    "name": {
+      "ko": "메리제인 구두",
+      "en": "Mary Janes"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 369,
+      "y": 1296,
+      "w": 284,
+      "h": 214
+    },
+    "image": "assets/clothes/shoes/shoes_maryjane_bow_black.webp",
+    "thumb": "assets/thumbs/shoes_maryjane_bow_black.webp",
     "zIndex": 10,
     "native": true
   },

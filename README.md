@@ -43,6 +43,13 @@ npm test           # 착용 규칙 단위 테스트
 
 - `python tools-py/import_pack.py <묶음 폴더(옷/방/캠핑)>` 후 `npm run assets`: 기존 옷·방 물건·캠핑 용품을 모두 지우고 묶음으로 바꾼다. 512×768 캔버스 옷은 2배로 키워 쓰고(기존 옷과 겹치면 같은 id 를 이어받아 저장한 코디가 유지됨), 크기가 제각각인 원피스·깃 높은 상의·신발 한 쌍은 이전과 같은 조건으로 아바타에 맞춘다. 방 폴더에 벽지·바닥(`wall`, `floor`)이 있으면 그것도 바꾼다. 작은 그림은 빌드가 방 크기로 늘린다.
 
+### 내 방 테마 (내 방 > `🎀 테마` 탭)
+
+- 위쪽 칩(기본 / 겨울왕국 / 밸런타인데이 / 봄소풍 / 생일파티 / 여름휴가 / 크리스마스 / 핼러윈)을 누르면 **벽지와 바닥이 통째로 바뀌고**, 그 테마의 소품(눈사람, 케이크, 호박 …)이 아래에 나온다. 고른 테마는 방과 함께 저장되고(되돌리기 포함) 방 사진에도 반영된다.
+- 에셋: `assets-src/themes/<id>/{wall,floor}.png` + `items/theme_<id>_<name>.png`, 테마 목록은 `scripts/themes.json`, 소품 이름·그룹·크기·위치는 `scripts/theme-items.json`. `npm run assets` 가 `public/assets/themes` 와 `src/data/themes.json`, `src/data/theme-items.json` 을 만든다 (바닥 높이는 벽지가 끝나는 곳에 맞춰 자동). 새 묶음은 `python tools-py/import_themes.py <폴더>` 로 옮긴다.
+- 테마 소품은 `theme` 값이 있어서 가구·벽 장식 탭에는 나오지 않고 테마 탭에만 나온다 (`group` 은 겹치는 순서: 바닥에 깔리는 것=rug, 벽에 거는 것=wall, 서 있는 것=furniture).
+- 옷 한 벌을 아바타에 맞춰 넣는 도구: `python tools-py/add_clothes.py dress|shoes|top <PNG> <id>`.
+
 ### 캠핑 탭 (상단 `⛺ 캠핑`)
 
 - 내 방과 같은 꾸미기 방식(눌러 놓기 → 끌어 옮기기·크기·뒤집기·치우기·되돌리기·미세 이동·사진 저장)을 캠핑장에서 쓴다. 캠핑장은 내 방과 따로 저장된다(`ryuso.camp.v1`).

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "winter",
+    "ko": "겨울왕국",
+    "en": "Winter Wonderland",
+    "icon": "❄️"
+  },
+  {
+    "id": "valentine",
+    "ko": "밸런타인데이",
+    "en": "Valentine's Day",
+    "icon": "💝"
+  },
+  {
+    "id": "spring",
+    "ko": "봄소풍",
+    "en": "Spring Picnic",
+    "icon": "🌸"
+  },
+  {
+    "id": "birthday",
+    "ko": "생일파티",
+    "en": "Birthday Party",
+    "icon": "🎂"
+  },
+  {
+    "id": "summer",
+    "ko": "여름휴가",
+    "en": "Summer Vacation",
+    "icon": "🏖️"
+  },
+  {
+    "id": "christmas",
+    "ko": "크리스마스",
+    "en": "Christmas",
+    "icon": "🎄"
+  },
+  {
+    "id": "halloween",
+    "ko": "핼러윈",
+    "en": "Halloween",
+    "icon": "🎃"
+  }
+]

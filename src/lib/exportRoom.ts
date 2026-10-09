@@ -1,6 +1,6 @@
 import { renderFigure, loadImage } from './exportPng'
 import { assetUrl } from './items'
-import { drawables, hasContactShadow, shadowWidthRatio } from './room'
+import { ROOM_THEME_BY_ID, drawables, hasContactShadow, shadowWidthRatio } from './room'
 import { CAMP_FLOOR_H, FLOOR_H, ROOM_H, ROOM_W, type RoomState } from './roomTypes'
 import type { Outfit, Tweaks } from './types'
 
@@ -25,8 +25,12 @@ export const CAMP_ASSETS = {
 }
 
 /** 방 또는 캠핑장의 벽(배경)·바닥 이미지 */
-export const sceneAssets = (scene: 'room' | 'camp', night = false): SceneAssets =>
-  scene === 'camp' ? { wall: night ? CAMP_ASSETS.night : CAMP_ASSETS.day, floor: CAMP_ASSETS.floor, floorH: CAMP_FLOOR_H } : ROOM_ASSETS
+export function sceneAssets(scene: 'room' | 'camp', night = false, themeId?: string): SceneAssets {
+  if (scene === 'camp') return { wall: night ? CAMP_ASSETS.night : CAMP_ASSETS.day, floor: CAMP_ASSETS.floor, floorH: CAMP_FLOOR_H }
+  const th = themeId ? ROOM_THEME_BY_ID[themeId] : undefined
+  if (!th) return ROOM_ASSETS
+  return { wall: assetUrl(`assets/themes/${th.id}/wall.webp`), floor: assetUrl(`assets/themes/${th.id}/floor.webp`), floorH: th.floorH }
+}
 
 /** 바닥에 닿는 물건 아래의 은은한 타원 그림자 (화면의 CSS 그림자와 같은 모양) */
 export function drawContactShadow(ctx: CanvasRenderingContext2D, cx: number, y: number, w: number) {
@@ -53,7 +57,7 @@ export async function renderRoomCanvas(
   scene: 'room' | 'camp' = 'room',
 ): Promise<HTMLCanvasElement> {
   const list = drawables(room)
-  const assets = sceneAssets(scene, room.night)
+  const assets = sceneAssets(scene, room.night, room.themeId)
   const [floor, wall, figure, ...imgs] = await Promise.all([
     loadImage(assets.floor),
     loadImage(assets.wall),

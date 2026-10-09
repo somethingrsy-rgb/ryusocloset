@@ -247,5 +247,29 @@
     "ko": "트위드 가디건",
     "en": "Tweed Cardigan",
     "native": true
+  },
+  "dress_lolita_purple": {
+    "ko": "로리타 원피스",
+    "en": "Lolita Dress",
+    "color": "purple",
+    "native": true
+  },
+  "dress_maid_blue": {
+    "ko": "메이드 원피스",
+    "en": "Maid Dress",
+    "color": "skyblue",
+    "native": true
+  },
+  "dress_lolita_black": {
+    "ko": "고딕 로리타 원피스",
+    "en": "Gothic Lolita Dress",
+    "color": "black",
+    "native": true
+  },
+  "shoes_maryjane_bow_black": {
+    "ko": "메리제인 구두",
+    "en": "Mary Janes",
+    "color": "black",
+    "native": true
   }
 }

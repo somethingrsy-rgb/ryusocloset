@@ -15,6 +15,7 @@ import sharp from 'sharp'
 import { alphaBBox, makeThumb } from './lib/image.ts'
 import { buildRoom } from './build-room.ts'
 import { buildCamp } from './build-camp.ts'
+import { buildThemes } from './build-themes.ts'
 import { CANVAS_H, CANVAS_W, CATEGORIES, LAYER_Z, type Category } from '../src/lib/layers.ts'
 import type { Item } from '../src/lib/types.ts'
 
@@ -35,6 +36,7 @@ const COLORS: Record<string, { ko: string; en: string; hex: string }> = {
   denim: { ko: '데님', en: 'Denim', hex: '#3c5a8c' },
   skyblue: { ko: '스카이블루', en: 'Sky Blue', hex: '#8fb8e0' },
   mint: { ko: '민트', en: 'Mint', hex: '#a9dcc8' },
+  purple: { ko: '퍼플', en: 'Purple', hex: '#b9a4e8' },
 }
 
 /** 코디 탭 옷의 기본 크기: 앱의 '−' 한 번(1/1.08 ≈ 0.93배)만큼 줄여서 만든다. 옷 영역의 중심을 기준으로 줄이는 것도 '−' 와 같다. */
@@ -182,6 +184,7 @@ async function main() {
   console.log(`✔ ${items.length}개 아이템`, counts)
   await buildRoom()
   await buildCamp()
+  await buildThemes()
 }
 
 main().catch((e) => {

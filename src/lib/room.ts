@@ -1,5 +1,7 @@
 import roomData from '../data/room-items.json'
 import campData from '../data/camp-items.json'
+import themeData from '../data/themes.json'
+import themeItemData from '../data/theme-items.json'
 import { notifyItemsChanged } from './items'
 import { CANVAS_H, CANVAS_W } from './layers'
 import {
@@ -20,7 +22,22 @@ import {
 } from './roomTypes'
 
 /** 내 방 물건과 캠핑 용품(group: 'camp')은 같은 목록에 들어 있고, 화면(트레이)에서 group 으로 나눠 보여 준다 */
-export const ROOM_ITEMS: RoomItemDef[] = [...(roomData as RoomItemDef[]), ...(campData as RoomItemDef[])]
+export const ROOM_ITEMS: RoomItemDef[] = [
+  ...(roomData as RoomItemDef[]),
+  ...(campData as RoomItemDef[]),
+  ...(themeItemData as RoomItemDef[]),
+]
+
+/** 내 방의 테마(벽지·바닥 묶음). floorH 는 바닥 이미지 높이(논리 px) */
+export interface RoomTheme {
+  id: string
+  ko: string
+  en: string
+  icon: string
+  floorH: number
+}
+export const ROOM_THEMES = themeData as RoomTheme[]
+export const ROOM_THEME_BY_ID: Record<string, RoomTheme> = Object.fromEntries(ROOM_THEMES.map((t) => [t.id, t]))
 export const ROOM_ITEM_BY_ID: Record<string, RoomItemDef> = Object.fromEntries(ROOM_ITEMS.map((d) => [d.id, d]))
 
 /** 내가 추가한 방 물건 (customItems.ts 가 불러오고 저장한다) */
@@ -121,8 +138,10 @@ export function getPlacement(state: RoomState, sel: NonNullable<Selection>) {
 /** 저장된 데이터를 검증해 안전한 상태로 만든다 */
 export function sanitizeRoom(raw: unknown, base: RoomState = defaultRoom()): RoomState {
   if (!raw || typeof raw !== 'object') return base
-  const r = raw as { avatar?: unknown; items?: unknown; night?: unknown }
+  const r = raw as { avatar?: unknown; items?: unknown; night?: unknown; themeId?: unknown }
   const night = r.night === true ? { night: true } : {}
+  const themeId = typeof r.themeId === 'string' && ROOM_THEME_BY_ID[r.themeId] ? { themeId: r.themeId } : {}
+  const extra = { ...night, ...themeId }
   const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d)
   const a = (r.avatar ?? {}) as Record<string, unknown>
   const avatar: AvatarPlacement = {
@@ -131,7 +150,7 @@ export function sanitizeRoom(raw: unknown, base: RoomState = defaultRoom()): Roo
     scale: clampScale(num(a.scale, 1)),
     flip: a.flip === true,
   }
-  if (!Array.isArray(r.items)) return { ...night, avatar, items: base.items }
+  if (!Array.isArray(r.items)) return { ...extra, avatar, items: base.items }
   const seen = new Set<string>()
   const items: Placed[] = []
   for (const it of r.items as Record<string, unknown>[]) {
@@ -149,7 +168,7 @@ export function sanitizeRoom(raw: unknown, base: RoomState = defaultRoom()): Roo
     })
     if (items.length >= MAX_PLACED) break
   }
-  return { ...night, avatar, items }
+  return { ...extra, avatar, items }
 }
 
 /* ───── 그리기 순서와 영역 (화면, 터치 판정, PNG 내보내기가 같이 쓴다) ─────
