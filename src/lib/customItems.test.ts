@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CANVAS_H, CANVAS_W, CATEGORIES } from './layers'
-import { alphaBounds, defaultBox, removeBackground, roomBaseWidth } from './customItems'
+import { alphaBounds, categoryStats, components, defaultBox, removeBackground, roomBaseWidth, shoePairFit } from './customItems'
 
 function image(w: number, h: number, fill: [number, number, number, number]) {
   const d = new Uint8ClampedArray(w * h * 4)
@@ -61,5 +61,51 @@ describe('roomBaseWidth', () => {
     expect(roomBaseWidth('furniture', 800, 400)).toBe(320)
     expect(roomBaseWidth('furniture', 200, 1000)).toBe(104)
     expect(roomBaseWidth('wall', 10, 1000)).toBe(40)
+  })
+})
+
+describe('사이트의 기본 옷 조건에 맞추기', () => {
+  const box = (x: number, y: number, w: number, h: number) => ({ x, y, w, h })
+  const items = [
+    { id: 'top_a', category: 'top' as const, box: box(200, 620, 600, 340) },
+    { id: 'top_b', category: 'top' as const, box: box(220, 630, 580, 350) },
+    { id: 'top_c', category: 'top' as const, box: box(210, 640, 620, 360) },
+    { id: 'custom_x', category: 'top' as const, box: box(0, 0, 10, 10) },
+  ]
+  it('내 옷은 빼고 기본 옷의 중앙값을 구한다', () => {
+    const st = categoryStats('top', items)!
+    expect(st.w).toBe(600)
+    expect(st.y).toBe(630)
+    expect(categoryStats('dress', items)).toBeNull()
+  })
+  it('기본 옷과 같은 폭·가운데·맨 위(어깨선)에 놓는다', () => {
+    const st = categoryStats('top', items)!
+    const b = defaultBox('top', 1200, 700, st)
+    expect(b.w).toBe(600)
+    expect(b.y).toBe(630)
+    expect(Math.abs(b.x + b.w / 2 - st.cx)).toBeLessThanOrEqual(1)
+  })
+  it('세로로 너무 긴 옷은 높이 한도에 맞춰 줄인다', () => {
+    const st = categoryStats('top', items)!
+    expect(defaultBox('top', 300, 900, st).h).toBeLessThanOrEqual(Math.round(st.h * 1.3))
+  })
+  it('두 덩어리를 찾는다 (작은 점은 무시)', () => {
+    const w = 60, h = 20
+    const d = image(w, h, [0, 0, 0, 0])
+    paint(d, w, 2, 2, 22, 18, [10, 10, 10, 255])
+    paint(d, w, 36, 2, 56, 18, [10, 10, 10, 255])
+    paint(d, w, 30, 5, 31, 6, [10, 10, 10, 255])
+    const parts = components(d, w, h, 50)
+    expect(parts).toHaveLength(2)
+    expect(parts[0]).toEqual({ x: 2, y: 2, w: 20, h: 16 })
+  })
+  it('신발 두 짝은 아바타 발 가운데·바닥에 맞춘다', () => {
+    const parts = [box(100, 40, 200, 100), box(500, 40, 200, 100)]
+    const f = shoePairFit(parts, box(0, 0, 800, 140))!
+    // 두 발 가운데 사이가 175 이어야 한다 → 배율 ≈ 175/400 근처
+    expect(f.s).toBeGreaterThan(0.3)
+    expect(f.s).toBeLessThan(0.5)
+    expect(f.ty + 140 * f.s).toBeCloseTo(1509, 0)
+    expect(shoePairFit([box(0, 0, 10, 10)], box(0, 0, 10, 10))).toBeNull()
   })
 })
