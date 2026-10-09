@@ -25,11 +25,16 @@ export const CAMP_ASSETS = {
 }
 
 /** 방 또는 캠핑장의 벽(배경)·바닥 이미지 */
-export function sceneAssets(scene: 'room' | 'camp', night = false, themeId?: string): SceneAssets {
+export function sceneAssets(scene: 'room' | 'camp', night = false, wallId?: string, floorId?: string): SceneAssets {
   if (scene === 'camp') return { wall: night ? CAMP_ASSETS.night : CAMP_ASSETS.day, floor: CAMP_ASSETS.floor, floorH: CAMP_FLOOR_H }
-  const th = themeId ? ROOM_THEME_BY_ID[themeId] : undefined
-  if (!th) return ROOM_ASSETS
-  return { wall: assetUrl(`assets/themes/${th.id}/wall.webp`), floor: assetUrl(`assets/themes/${th.id}/floor.webp`), floorH: th.floorH }
+  // 벽과 바닥은 따로 고른다. 바닥이 깔리기 시작하는 높이는 고른 벽지가 끝나는 곳에 맞춘다
+  const wall = wallId ? ROOM_THEME_BY_ID[wallId] : undefined
+  const floor = floorId ? ROOM_THEME_BY_ID[floorId] : undefined
+  return {
+    wall: wall ? assetUrl(`assets/themes/${wall.id}/wall.webp`) : ROOM_ASSETS.wall,
+    floor: floor ? assetUrl(`assets/themes/${floor.id}/floor.webp`) : ROOM_ASSETS.floor,
+    floorH: wall ? wall.floorH : ROOM_ASSETS.floorH,
+  }
 }
 
 /** 바닥에 닿는 물건 아래의 은은한 타원 그림자 (화면의 CSS 그림자와 같은 모양) */
@@ -57,7 +62,7 @@ export async function renderRoomCanvas(
   scene: 'room' | 'camp' = 'room',
 ): Promise<HTMLCanvasElement> {
   const list = drawables(room)
-  const assets = sceneAssets(scene, room.night, room.themeId)
+  const assets = sceneAssets(scene, room.night, room.wallId, room.floorId)
   const [floor, wall, figure, ...imgs] = await Promise.all([
     loadImage(assets.floor),
     loadImage(assets.wall),

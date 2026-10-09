@@ -187,10 +187,19 @@ describe('테마', () => {
     // 바닥은 방 높이 안에서 벽지 아래부터 깔린다
     expect(ROOM_THEMES.every((t) => t.floorH > 300 && t.floorH <= ROOM_H)).toBe(true)
   })
-  it('저장된 테마 id 는 있는 것만 지킨다', () => {
+  it('벽과 바닥은 따로 저장되고, 있는 것만 지킨다', () => {
+    const [a, b] = [ROOM_THEMES[0].id, ROOM_THEMES[1].id]
+    const r = sanitizeRoom({ ...defaultRoom(), wallId: a, floorId: b })
+    expect([r.wallId, r.floorId]).toEqual([a, b])
+    const only = sanitizeRoom({ ...defaultRoom(), wallId: a })
+    expect(only.wallId).toBe(a)
+    expect(only.floorId).toBeUndefined()
+    const bad = sanitizeRoom({ ...defaultRoom(), wallId: 'nope', floorId: 'nope' })
+    expect([bad.wallId, bad.floorId]).toEqual([undefined, undefined])
+  })
+  it('예전에 테마 하나로 저장한 방은 벽과 바닥을 같은 테마로 옮긴다', () => {
     const id = ROOM_THEMES[0].id
-    expect(sanitizeRoom({ ...defaultRoom(), themeId: id }).themeId).toBe(id)
-    expect(sanitizeRoom({ ...defaultRoom(), themeId: 'nope' }).themeId).toBeUndefined()
-    expect(sanitizeRoom({ ...defaultRoom() }).themeId).toBeUndefined()
+    const r = sanitizeRoom({ ...defaultRoom(), themeId: id })
+    expect([r.wallId, r.floorId]).toEqual([id, id])
   })
 })

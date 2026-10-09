@@ -10,13 +10,15 @@ const TABS: { id: RoomTab; icon: string; ko: string; en: string }[] = [
   { id: 'furniture', icon: '🛋️', ko: '가구', en: 'Furniture' },
   { id: 'wall', icon: '🖼️', ko: '벽 장식', en: 'Wall' },
   { id: 'light', icon: '✨', ko: '조명', en: 'Lights' },
-  { id: 'theme', icon: '🎀', ko: '테마', en: 'Themes' },
+  { id: 'theme', icon: '🎀', ko: '테마 소품', en: 'Theme props' },
+  { id: 'background', icon: '🏠', ko: '벽·바닥', en: 'Wall & floor' },
 ]
 
 const CAMP_TABS: typeof TABS = [{ id: 'camp', icon: '⛺', ko: '캠핑 용품', en: 'Camp gear' }]
 
-/** 테마 탭: 지금 고른 테마의 소품(테마를 안 골랐으면 전부). 다른 탭에는 테마 소품이 나오지 않는다 */
+/** 테마 소품 탭: 위쪽 칩으로 고른 테마의 소품(안 골랐으면 전부). 다른 탭에는 테마 소품이 나오지 않는다 */
 const inTab = (d: RoomItemDef, tab: RoomTab, themeId?: string) => {
+  if (tab === 'background') return false
   if (tab === 'theme') return !!d.theme && (!themeId || d.theme === themeId)
   if (d.theme) return false
   return tab === 'furniture' ? d.group === 'furniture' || d.group === 'rug' : d.group === tab
@@ -32,16 +34,18 @@ interface Props {
   onRemoveCustom: (def: RoomItemDef) => void
   /** 이 탭에서 숨긴 물건 되돌리기 */
   onRestore: (defs: RoomItemDef[]) => void
-  /** 테마(벽지·바닥) 고르기. undefined 는 기본 */
-  onTheme?: (id: string | undefined) => void
+  /** 벽(배경)·바닥 고르기. id 가 undefined 면 기본 */
+  onBackground?: (part: 'wall' | 'floor', id: string | undefined) => void
 }
 
-export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCustom, onRestore, onTheme }: Props) {
+export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCustom, onRestore, onBackground }: Props) {
   useItemsVersion()
   const { lang, t } = useI18n()
   const tabs = scene === 'camp' ? CAMP_TABS : TABS
   const [tab, setTab] = useState<RoomTab>(tabs[0].id)
-  const inThisTab = ROOM_ITEMS.filter((d) => inTab(d, tab, room.themeId))
+  /** 테마 소품 탭에서 보는 테마 (벽·바닥과는 상관없이 소품 목록만 거른다) */
+  const [themeFilter, setThemeFilter] = useState<string | undefined>(undefined)
+  const inThisTab = ROOM_ITEMS.filter((d) => inTab(d, tab, themeFilter))
   const items = visible(inThisTab)
   const nHidden = hiddenCount(inThisTab.map((d) => d.id))
   const count = (id: string) => room.items.filter((p) => p.itemId === id).length
@@ -68,13 +72,13 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
       </div>
       {tab === 'theme' && scene === 'room' && (
         <div className="scroll-thin flex shrink-0 gap-1.5 overflow-x-auto px-2 pb-1">
-          {[{ id: undefined as string | undefined, icon: '🏠', ko: '기본', en: 'Default' }, ...ROOM_THEMES].map((th) => {
-            const on = (room.themeId ?? undefined) === th.id
+          {[{ id: undefined as string | undefined, icon: '✨', ko: '전체', en: 'All' }, ...ROOM_THEMES].map((th) => {
+            const on = themeFilter === th.id
             return (
               <button
                 key={th.id ?? 'default'}
                 aria-pressed={on}
-                onClick={() => onTheme?.(th.id)}
+                onClick={() => setThemeFilter(th.id)}
                 className={`flex min-h-10 shrink-0 items-center gap-1 rounded-full px-3 text-[13px] font-bold whitespace-nowrap ring-2 transition ${
                   on ? 'bg-blush text-white ring-blush' : 'bg-white text-cocoa-soft ring-petal'
                 }`}
@@ -86,6 +90,50 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
           })}
         </div>
       )}
+      {tab === 'background' && scene === 'room' ? (
+        <div role="tabpanel" className="scroll-thin min-h-0 flex-1 overflow-y-auto p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          {(['wall', 'floor'] as const).map((part) => {
+            const current = part === 'wall' ? room.wallId : room.floorId
+            const options = [{ id: undefined as string | undefined, ko: '기본', en: 'Default', icon: '🏠' }, ...ROOM_THEMES]
+            return (
+              <section key={part} className="mb-3">
+                <h3 className="mb-1.5 text-xs font-bold text-cocoa-soft">{part === 'wall' ? t('wallTitle') : t('floorTitle')}</h3>
+                <ul className="grid grid-cols-4 gap-2">
+                  {options.map((o) => {
+                    const on = current === o.id
+                    const dir = o.id ? `assets/themes/${o.id}` : 'assets/room'
+                    return (
+                      <li key={o.id ?? 'default'}>
+                        <button
+                          aria-pressed={on}
+                          aria-label={`${part === 'wall' ? t('wallTitle') : t('floorTitle')}: ${o[lang]}`}
+                          onClick={() => onBackground?.(part, o.id)}
+                          className={`flex w-full flex-col items-center gap-1 rounded-2xl bg-white p-1 ring-2 transition active:scale-95 ${
+                            on ? 'ring-blush shadow-md' : 'ring-petal hover:ring-blush/50'
+                          }`}
+                        >
+                          <span
+                            className={`block w-full overflow-hidden rounded-xl bg-petal ${part === 'wall' ? 'aspect-[3/4]' : 'aspect-[2/1]'}`}
+                          >
+                            <img
+                              src={assetUrl(`${dir}/${part}_thumb.webp`)}
+                              alt=""
+                              loading="lazy"
+                              draggable={false}
+                              className="h-full w-full object-cover"
+                            />
+                          </span>
+                          <span className="max-w-full truncate text-[10px] leading-tight font-semibold text-cocoa-soft">{o[lang]}</span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            )
+          })}
+        </div>
+      ) : (
       <div role="tabpanel" className="scroll-thin min-h-0 flex-1 overflow-y-auto p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <ul className="grid grid-cols-4 gap-2">
           <li>
@@ -140,6 +188,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
           </button>
         )}
       </div>
+      )}
     </div>
   )
 }
