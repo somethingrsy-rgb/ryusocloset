@@ -447,3 +447,27 @@ export async function removeCustomRoomItem(id: string): Promise<void> {
     /* 무시 */
   }
 }
+
+/** 백업용: 내가 추가한 옷·방 물건을 통째로 꺼낸다 */
+export async function exportCustom(): Promise<{ items: Item[]; roomItems: RoomItemDef[] }> {
+  try {
+    const items = ((await tx('readonly', (s) => s.getAll())) as unknown[]).filter(isItem)
+    const roomItems = ((await tx('readonly', (s) => s.getAll(), ROOM_STORE)) as unknown[]).filter(isRoomItem)
+    return { items, roomItems }
+  } catch {
+    return { items: [], roomItems: [] }
+  }
+}
+
+/** 백업 불러오기용: 이 기기에 있던 내 옷·방 물건을 모두 지우고 주어진 것으로 바꾼다. 실패하면 false */
+export async function replaceCustom(items: unknown[], roomItems: unknown[]): Promise<boolean> {
+  try {
+    await tx('readwrite', (s) => s.clear())
+    await tx('readwrite', (s) => s.clear(), ROOM_STORE)
+    for (const it of items.filter(isItem)) await tx('readwrite', (s) => s.put(it))
+    for (const d of roomItems.filter(isRoomItem)) await tx('readwrite', (s) => s.put(d), ROOM_STORE)
+    return true
+  } catch {
+    return false
+  }
+}

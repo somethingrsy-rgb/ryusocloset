@@ -1,4 +1,5 @@
 import { notifyItemsChanged } from './items'
+import { isRestoring } from './restoreGuard'
 
 /**
  * 기본 옷·방 물건을 "삭제"하면 실제 파일을 지우는 대신 목록에서 숨긴다 (이미 저장해 둔 코디·방은 그대로 보인다).
@@ -17,6 +18,7 @@ function read(): Set<string> {
 
 let hidden = read()
 const save = () => {
+  if (isRestoring()) return
   try {
     localStorage.setItem(KEY, JSON.stringify([...hidden]))
   } catch {
