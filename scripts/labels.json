@@ -448,5 +448,24 @@
     "en": "Green Hair Ribbon",
     "category": "accessory",
     "native": true
+  },
+  "shoes_sneakers_mule_navy": {
+    "ko": "뮬 스니커즈",
+    "en": "Mule Sneakers",
+    "color": "navy",
+    "native": true
+  },
+  "shoes_platform_cream_heart": {
+    "ko": "하트 리본 통굽",
+    "en": "Heart Ribbon Platforms",
+    "color": "beige",
+    "native": true
+  },
+  "costume_checker_queen": {
+    "ko": "체스판 여왕 원피스",
+    "en": "Checkerboard Queen Dress",
+    "category": "costume",
+    "color": "black",
+    "native": true
   }
 }
