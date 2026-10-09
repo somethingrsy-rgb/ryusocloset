@@ -160,6 +160,30 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
       className="relative h-full w-full overflow-hidden rounded-3xl bg-petal shadow-inner ring-1 ring-black/5"
       style={{ containerType: 'size' }}
     >
+      {/* 방 양옆의 빈 자리: 벽지·바닥을 좌우로 뒤집어 이어 붙여 화면 가득 채운다 (이음매가 자연스럽다) */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div
+          className="relative"
+          style={{ width: `min(100cqw, calc(100cqh * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` }}
+        >
+          {[-2, -1, 1, 2].map((k) => (
+            <div
+              key={k}
+              className="absolute top-0 h-full w-full"
+              style={{ left: `${k * 100}%`, transform: Math.abs(k) % 2 ? 'scaleX(-1)' : undefined }}
+            >
+              <img
+                src={ROOM_ASSETS.floor}
+                alt=""
+                draggable={false}
+                className="absolute left-0 w-full select-none"
+                style={{ top: `${((ROOM_H - FLOOR_H) / ROOM_H) * 100}%`, height: `${(FLOOR_H / ROOM_H) * 100}%` }}
+              />
+              <img src={ROOM_ASSETS.wall} alt="" draggable={false} className="absolute inset-0 h-full w-full select-none" />
+            </div>
+          ))}
+        </div>
+      </div>
       <div className="absolute inset-0 flex items-center justify-center">
         <div
           ref={roomRef}
