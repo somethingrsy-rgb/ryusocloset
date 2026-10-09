@@ -37,6 +37,10 @@ import {
 import { pruneTweaks, sanitizeTweaks } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
 
+/** 방 되돌리기: 이 시간(ms) 안에 이어지는 조절(끌기·핀치)은 한 번으로 묶고, 최대 이만큼 기억한다 */
+const ROOM_UNDO_GAP_MS = 500
+const ROOM_UNDO_LIMIT = 50
+
 type ModalKind = null | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport'
 type Mode = 'closet' | 'room'
 
@@ -60,6 +64,10 @@ export default function App() {
   const [propGroup, setPropGroup] = useState<RoomGroup>('furniture')
   const [saved, setSaved] = useState<SavedOutfit[]>(loadSaved)
   const [room, setRoom] = useState<RoomState>(loadRoom)
+  /** 방 되돌리기 기록 (놓기·옮기기·크기·뒤집기·삭제·초기화 모두) */
+  const roomHistory = useRef<RoomState[]>([])
+  const lastRoomEdit = useRef(0)
+  const [canUndoRoom, setCanUndoRoom] = useState(false)
   const [selection, setSelection] = useState<Selection>(null)
   const [modal, setModal] = useState<ModalKind>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -153,9 +161,28 @@ export default function App() {
     showToast(t('removed'))
   }
 
+  /** 방을 바꾼다 (되돌릴 수 있게 이전 상태를 기록) */
+  const editRoom = (next: RoomState) => {
+    const now = Date.now()
+    if (now - lastRoomEdit.current > ROOM_UNDO_GAP_MS) {
+      roomHistory.current = [...roomHistory.current, room].slice(-ROOM_UNDO_LIMIT)
+      setCanUndoRoom(true)
+    }
+    lastRoomEdit.current = now
+    setRoom(next)
+  }
+  const undoRoom = () => {
+    const prev = roomHistory.current.pop()
+    if (!prev) return
+    lastRoomEdit.current = 0
+    setRoom(prev)
+    setSelection(null)
+    setCanUndoRoom(roomHistory.current.length > 0)
+  }
+
   /** 내가 추가한 방 소품 지우기 (방에 놓인 것도 함께 치운다) */
   const removeMyProp = (def: RoomItemDef) => {
-    setRoom((r) => ({ ...r, items: r.items.filter((p) => p.itemId !== def.id) }))
+    editRoom({ ...room, items: room.items.filter((p) => p.itemId !== def.id) })
     setSelection(null)
     if (isCustomRoomItem(def)) void removeCustomRoomItem(def.id)
     else hideItem(def.id)
@@ -218,14 +245,14 @@ export default function App() {
     const uid = newUid()
     const next = addItem(room, def, uid)
     if (!next) return showToast(t('roomFull', { n: MAX_PLACED }))
-    setRoom(next)
+    editRoom(next)
     setSelection({ kind: 'item', uid })
     if (sound) playSnap()
   }
 
   const resetRoom = () => {
     if (!window.confirm(t('roomResetConfirm'))) return
-    setRoom(defaultRoom())
+    editRoom(defaultRoom())
     setSelection(null)
     showToast(t('roomResetDone'))
   }
@@ -233,12 +260,13 @@ export default function App() {
   const renderOutfit = useCallback((o: RenderOptions) => renderOutfitCanvas(outfit, o, tweaks), [outfit, tweaks])
   const renderRoom = useCallback(() => renderRoomCanvas(room, outfit, tweaks), [room, outfit, tweaks])
 
-  const fab = (label: string, icon: string, onClick: () => void, badge?: number) => (
+  const fab = (label: string, icon: string, onClick: () => void, badge?: number, disabled?: boolean) => (
     <button
       onClick={onClick}
+      disabled={disabled}
       aria-label={label}
       title={label}
-      className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-xl shadow-md ring-1 ring-black/5 backdrop-blur transition active:scale-90"
+      className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-xl shadow-md ring-1 ring-black/5 backdrop-blur transition active:scale-90 disabled:opacity-40"
     >
       <span aria-hidden>{icon}</span>
       {!!badge && (
@@ -320,9 +348,10 @@ export default function App() {
                 </div>
               </Stage>
             ) : (
-              <RoomView outfit={outfit} tweaks={tweaks} room={room} selection={selection} onSelect={setSelection} onChange={setRoom}>
+              <RoomView outfit={outfit} tweaks={tweaks} room={room} selection={selection} onSelect={setSelection} onChange={editRoom} canUndo={canUndoRoom} onUndo={undoRoom}>
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
                   {fab(t('goCloset'), '👗', () => setMode('closet'))}
+                  {fab(t('roomUndo'), '↶', undoRoom, undefined, !canUndoRoom)}
                   {fab(t('roomReset'), '🧹', resetRoom)}
                   {fab(t('roomExport'), '📷', () => setModal('roomExport'))}
                 </div>
