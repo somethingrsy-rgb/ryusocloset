@@ -273,5 +273,9 @@
     "ko": "베이지 구두",
     "en": "Beige Flats",
     "native": true
-  }
+  },
+  "top_anorak_ivory": { "ko": "아노락", "en": "Anorak", "native": true },
+  "top_trim_cardigan_black": { "ko": "배색 가디건", "en": "Trim Cardigan", "native": true },
+  "top_cable_vest_shirt_ivory": { "ko": "니트 조끼 셔츠", "en": "Knit Vest & Shirt", "native": true },
+  "top_floral_vest_shirt_ivory": { "ko": "꽃무늬 조끼 셔츠", "en": "Floral Vest & Shirt", "native": true }
 }
