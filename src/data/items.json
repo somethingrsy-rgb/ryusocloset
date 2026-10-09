@@ -888,6 +888,30 @@
     "native": true
   },
   {
+    "id": "dress_seashell_blue",
+    "category": "dress",
+    "name": {
+      "ko": "조개 인어 원피스",
+      "en": "Seashell Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 765
+    },
+    "image": "assets/clothes/dress/dress_seashell_blue.webp",
+    "thumb": "assets/thumbs/dress_seashell_blue.webp",
+    "zIndex": 40,
+    "native": true
+  },
+  {
     "id": "dress_shesmiss_gray",
     "category": "dress",
     "name": {
@@ -1244,6 +1268,54 @@
     },
     "image": "assets/clothes/shoes/shoes_maryjane_bow_black.webp",
     "thumb": "assets/thumbs/shoes_maryjane_bow_black.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_slingback_black",
+    "category": "shoes",
+    "name": {
+      "ko": "뮬 플랫",
+      "en": "Mule Flats"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 381,
+      "y": 1377,
+      "w": 263,
+      "h": 133
+    },
+    "image": "assets/clothes/shoes/shoes_slingback_black.webp",
+    "thumb": "assets/thumbs/shoes_slingback_black.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_slingback_cream",
+    "category": "shoes",
+    "name": {
+      "ko": "뮬 플랫",
+      "en": "Mule Flats"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "box": {
+      "x": 381,
+      "y": 1377,
+      "w": 264,
+      "h": 133
+    },
+    "image": "assets/clothes/shoes/shoes_slingback_cream.webp",
+    "thumb": "assets/thumbs/shoes_slingback_cream.webp",
     "zIndex": 10,
     "native": true
   },
