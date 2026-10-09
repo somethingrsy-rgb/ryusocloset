@@ -373,5 +373,23 @@
     "en": "Lavender Bow Shoes",
     "color": "purple",
     "native": true
+  },
+  "dress_seashell_blue": {
+    "ko": "조개 인어 원피스",
+    "en": "Seashell Dress",
+    "color": "skyblue",
+    "native": true
+  },
+  "shoes_slingback_cream": {
+    "ko": "뮬 플랫",
+    "en": "Mule Flats",
+    "color": "ivory",
+    "native": true
+  },
+  "shoes_slingback_black": {
+    "ko": "뮬 플랫",
+    "en": "Mule Flats",
+    "color": "black",
+    "native": true
   }
 }
