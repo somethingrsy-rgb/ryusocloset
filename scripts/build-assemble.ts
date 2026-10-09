@@ -25,7 +25,16 @@ const OUT = path.join(ROOT, 'public/assets/assemble')
  * 팔 포함 상의 원본(1928×816)을 아바타 캔버스에 놓는 변환: 0.545배로 줄여 (x0, y0) 에 둔다.
  * 아바타의 팔·손 실루엣과 94% 겹치도록 맞춘 값 (이너티 기준, 나머지 상의도 같은 크기로 그려져 있음).
  */
-const TOP_PLACE: Place = { scale: 0.545, x0: -10, y0: 624 }
+const SHRINK = 0.95 // 상의·하의를 5% 줄인다 (상의는 가로 가운데·어깨선 기준, 하의는 허리 기준으로 줄어든다)
+const TOP_SRC_W = 1928
+const TOP_CX = -10 + (TOP_SRC_W * 0.545) / 2
+const TOP_PLACE: Place = { scale: 0.545 * SHRINK, x0: TOP_CX - (TOP_SRC_W * 0.545 * SHRINK) / 2, y0: 624 }
+const WAIST = { x: 512.5, y: 845 } // 아바타 허리 (fit_assemble_bottoms.py 의 WAIST_Y, CX)
+const shrinkAtWaist = (p: { s: number; tx: number; ty: number }): Place => ({
+  scale: p.s * SHRINK,
+  x0: WAIST.x + (p.tx - WAIST.x) * SHRINK,
+  y0: WAIST.y + (p.ty - WAIST.y) * SHRINK,
+})
 
 const COLORS: Record<string, string> = {
   black: '#2b2b2f', charcoal: '#55565c', gray: '#a3a5ab', white: '#fbfbfb', ivory: '#f6ecd6',
@@ -103,7 +112,7 @@ export async function buildAssemble() {
     const stem = f.replace(/\.png$/, '')
     const p = bottomFit[stem]
     if (!p) throw new Error(`assemble-bottoms-fit.json 에 ${stem} 없음 — python tools-py/fit_assemble_bottoms.py 를 실행하세요`)
-    await add(stem, 'bottom', await toCanvas(path.join(SRC, 'bottoms', f), { scale: p.s, x0: p.tx, y0: p.ty }))
+    await add(stem, 'bottom', await toCanvas(path.join(SRC, 'bottoms', f), shrinkAtWaist(p)))
   }
   for (const f of fs.readdirSync(path.join(SRC, 'shoes')).filter((f) => /^shoes_.*\.png$/.test(f)).sort()) {
     const stem = f.replace(/\.png$/, '')
