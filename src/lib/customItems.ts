@@ -1,4 +1,6 @@
 import { CUSTOM_PREFIX, ITEM_BY_ID, ITEMS, registerCustomItem, unregisterCustomItem } from './items'
+import { CUSTOM_ROOM_PREFIX, ROOM_ITEMS, registerCustomRoomItem, unregisterCustomRoomItem } from './room'
+import type { RoomGroup, RoomItemDef } from './roomTypes'
 import { CANVAS_H, CANVAS_W, LAYER_Z, type Category } from './layers'
 import type { Item } from './types'
 
@@ -133,8 +135,8 @@ export interface NewCustomItem {
   eraseBackground: boolean
 }
 
-/** 사진 → 1024×1536 투명 레이어 + 썸네일을 만들어 Item 으로 돌려준다 (저장은 하지 않는다) */
-export async function buildCustomItem({ file, category, name, eraseBackground }: NewCustomItem): Promise<Item> {
+/** 사진을 읽어 (긴 변 1024 이하로 줄이고) 배경을 지운 뒤, 옷이 있는 영역만 돌려준다 */
+async function prepare(file: File, eraseBackground: boolean) {
   const img = await readImage(file).catch(() => {
     throw new Error('read' satisfies AddError)
   })
@@ -149,23 +151,40 @@ export async function buildCustomItem({ file, category, name, eraseBackground }:
   sctx.putImageData(px, 0, 0)
   const bounds = alphaBounds(px.data, sw, sh)
   if (!bounds) throw new Error('empty' satisfies AddError)
+  return { src, bounds }
+}
 
+/** 잘라낸 영역을 w×h 로 그린 새 캔버스 */
+function crop(src: HTMLCanvasElement, b: Rect, w: number, h: number) {
+  const c = canvas(w, h)
+  const ctx = c.getContext('2d')!
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(src, b.x, b.y, b.w, b.h, 0, 0, w, h)
+  return c
+}
+
+function thumbOf(src: HTMLCanvasElement, b: Rect) {
+  const thumb = canvas(THUMB, THUMB)
+  const ctx = thumb.getContext('2d')!
+  ctx.imageSmoothingQuality = 'high'
+  const ts = Math.min(THUMB / b.w, THUMB / b.h) * 0.92
+  ctx.drawImage(src, b.x, b.y, b.w, b.h, (THUMB - b.w * ts) / 2, (THUMB - b.h * ts) / 2, b.w * ts, b.h * ts)
+  return thumb.toDataURL('image/webp', 0.9)
+}
+
+const newId = (prefix: string) => `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+
+/** 사진 → 1024×1536 투명 레이어 + 썸네일을 만들어 Item 으로 돌려준다 (저장은 하지 않는다) */
+export async function buildCustomItem({ file, category, name, eraseBackground }: NewCustomItem): Promise<Item> {
+  const { src, bounds } = await prepare(file, eraseBackground)
   const box = defaultBox(category, bounds.w, bounds.h)
   const layer = canvas(CANVAS_W, CANVAS_H)
   const lctx = layer.getContext('2d')!
   lctx.imageSmoothingQuality = 'high'
   lctx.drawImage(src, bounds.x, bounds.y, bounds.w, bounds.h, box.x, box.y, box.w, box.h)
-
-  const thumb = canvas(THUMB, THUMB)
-  const tctx = thumb.getContext('2d')!
-  tctx.imageSmoothingQuality = 'high'
-  const ts = Math.min(THUMB / bounds.w, THUMB / bounds.h) * 0.92
-  tctx.drawImage(src, bounds.x, bounds.y, bounds.w, bounds.h, (THUMB - bounds.w * ts) / 2, (THUMB - bounds.h * ts) / 2, bounds.w * ts, bounds.h * ts)
-
-  const id = `${CUSTOM_PREFIX}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
   const label = name.trim().slice(0, 20)
   return {
-    id,
+    id: newId(CUSTOM_PREFIX),
     category,
     name: { ko: label || '내 옷', en: label || 'My item' },
     color: null,
@@ -173,29 +192,73 @@ export async function buildCustomItem({ file, category, name, eraseBackground }:
     colorHex: null,
     box,
     image: layer.toDataURL('image/webp', 0.92),
-    thumb: thumb.toDataURL('image/webp', 0.9),
+    thumb: thumbOf(src, bounds),
     zIndex: LAYER_Z[category],
+  }
+}
+
+/** 방 물건의 기본 크기·위치 (논리 좌표 1086×1448, 위치는 이미지 아래 가운데) */
+const ROOM_DEFAULTS: Record<RoomGroup, { baseWidth: number; maxH: number; x: number; y: number }> = {
+  furniture: { baseWidth: 320, maxH: 520, x: 543, y: 1260 },
+  rug: { baseWidth: 560, maxH: 260, x: 543, y: 1350 },
+  wall: { baseWidth: 280, maxH: 380, x: 543, y: 600 },
+  light: { baseWidth: 520, maxH: 700, x: 543, y: 900 },
+}
+
+/** 방 물건의 기본 표시 폭: 가로 기준 폭을 쓰되 세로가 너무 길어지지 않게 줄인다 */
+export function roomBaseWidth(group: RoomGroup, w: number, h: number) {
+  const d = ROOM_DEFAULTS[group]
+  return Math.max(40, Math.round(Math.min(d.baseWidth, (d.maxH * w) / h)))
+}
+
+export interface NewCustomRoomItem {
+  file: File
+  group: RoomGroup
+  name: string
+  eraseBackground: boolean
+}
+
+/** 사진 → 방 물건 (잘라낸 이미지 + 썸네일) */
+export async function buildCustomRoomItem({ file, group, name, eraseBackground }: NewCustomRoomItem): Promise<RoomItemDef> {
+  const { src, bounds } = await prepare(file, eraseBackground)
+  const d = ROOM_DEFAULTS[group]
+  const label = name.trim().slice(0, 20)
+  return {
+    id: newId(CUSTOM_ROOM_PREFIX),
+    group,
+    name: { ko: label || '내 소품', en: label || 'My prop' },
+    image: crop(src, bounds, bounds.w, bounds.h).toDataURL('image/webp', 0.92),
+    thumb: thumbOf(src, bounds),
+    w: bounds.w,
+    h: bounds.h,
+    baseWidth: roomBaseWidth(group, bounds.w, bounds.h),
+    x: d.x,
+    y: d.y,
   }
 }
 
 /* ---- 저장 (IndexedDB: 사진이 커서 localStorage 대신 사용) ---- */
 const DB = 'ryuso-custom'
 const STORE = 'items'
+const ROOM_STORE = 'roomItems'
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB, 1)
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: 'id' })
+    const req = indexedDB.open(DB, 2)
+    req.onupgradeneeded = () => {
+      const db = req.result
+      for (const name of [STORE, ROOM_STORE]) if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath: 'id' })
+    }
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error)
   })
 }
 
-async function tx<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+async function tx<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<T>, store = STORE): Promise<T> {
   const db = await open()
   try {
     return await new Promise<T>((resolve, reject) => {
-      const req = run(db.transaction(STORE, mode).objectStore(STORE))
+      const req = run(db.transaction(store, mode).objectStore(store))
       req.onsuccess = () => resolve(req.result)
       req.onerror = () => reject(req.error)
     })
@@ -222,6 +285,26 @@ export async function loadCustomItems(): Promise<void> {
   }
 }
 
+const isRoomItem = (v: unknown): v is RoomItemDef => {
+  const d = v as RoomItemDef
+  return !!d && typeof d.id === 'string' && d.id.startsWith(CUSTOM_ROOM_PREFIX) && typeof d.image === 'string' && typeof d.thumb === 'string' && d.w > 0 && d.h > 0 && d.baseWidth > 0
+}
+
+export async function loadCustomRoomItems(): Promise<void> {
+  try {
+    const list = (await tx('readonly', (s) => s.getAll(), ROOM_STORE)) as unknown[]
+    list
+      .filter(isRoomItem)
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .forEach((d) => registerCustomRoomItem(d, true))
+  } catch {
+    /* 무시 */
+  }
+}
+
+export const customRoomCount = () => ROOM_ITEMS_CUSTOM().length
+const ROOM_ITEMS_CUSTOM = () => ROOM_ITEMS.filter((d) => d.id.startsWith(CUSTOM_ROOM_PREFIX))
+
 export const customCount = () => ITEMS.filter((i) => i.id.startsWith(CUSTOM_PREFIX)).length
 export const hasItem = (id: string) => !!ITEM_BY_ID[id]
 
@@ -240,6 +323,25 @@ export async function removeCustomItem(id: string): Promise<void> {
   unregisterCustomItem(id)
   try {
     await tx('readwrite', (s) => s.delete(id))
+  } catch {
+    /* 무시 */
+  }
+}
+
+export async function addCustomRoomItem(def: RoomItemDef): Promise<boolean> {
+  registerCustomRoomItem(def)
+  try {
+    await tx('readwrite', (s) => s.put(def), ROOM_STORE)
+    return true
+  } catch {
+    return false
+  }
+}
+
+export async function removeCustomRoomItem(id: string): Promise<void> {
+  unregisterCustomRoomItem(id)
+  try {
+    await tx('readwrite', (s) => s.delete(id), ROOM_STORE)
   } catch {
     /* 무시 */
   }

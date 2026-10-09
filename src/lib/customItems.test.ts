@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CANVAS_H, CANVAS_W, CATEGORIES } from './layers'
-import { alphaBounds, defaultBox, removeBackground } from './customItems'
+import { alphaBounds, defaultBox, removeBackground, roomBaseWidth } from './customItems'
 
 function image(w: number, h: number, fill: [number, number, number, number]) {
   const d = new Uint8ClampedArray(w * h * 4)
@@ -54,4 +54,12 @@ describe('removeBackground', () => {
 
 describe('alphaBounds', () => {
   it('완전히 투명하면 null', () => expect(alphaBounds(image(4, 4, [0, 0, 0, 0]), 4, 4)).toBeNull())
+})
+
+describe('roomBaseWidth', () => {
+  it('가로로 넓은 물건은 기본 폭, 세로로 긴 물건은 높이 한도에 맞춰 좁아진다', () => {
+    expect(roomBaseWidth('furniture', 800, 400)).toBe(320)
+    expect(roomBaseWidth('furniture', 200, 1000)).toBe(104)
+    expect(roomBaseWidth('wall', 10, 1000)).toBe(40)
+  })
 })

@@ -1,4 +1,5 @@
 import roomData from '../data/room-items.json'
+import { notifyItemsChanged } from './items'
 import { CANVAS_H, CANVAS_W } from './layers'
 import {
   AVATAR_BASE_W,
@@ -16,8 +17,26 @@ import {
   type Selection,
 } from './roomTypes'
 
-export const ROOM_ITEMS = roomData as RoomItemDef[]
+export const ROOM_ITEMS: RoomItemDef[] = [...(roomData as RoomItemDef[])]
 export const ROOM_ITEM_BY_ID: Record<string, RoomItemDef> = Object.fromEntries(ROOM_ITEMS.map((d) => [d.id, d]))
+
+/** 내가 추가한 방 물건 (customItems.ts 가 불러오고 저장한다) */
+export const CUSTOM_ROOM_PREFIX = 'customroom_'
+export const isCustomRoomItem = (d: Pick<RoomItemDef, 'id'>) => d.id.startsWith(CUSTOM_ROOM_PREFIX)
+
+export function unregisterCustomRoomItem(id: string, silent = false) {
+  const d = ROOM_ITEM_BY_ID[id]
+  if (!d) return
+  ROOM_ITEMS.splice(ROOM_ITEMS.indexOf(d), 1)
+  delete ROOM_ITEM_BY_ID[id]
+  if (!silent) notifyItemsChanged()
+}
+export function registerCustomRoomItem(d: RoomItemDef, silent = false) {
+  unregisterCustomRoomItem(d.id, true)
+  ROOM_ITEMS.unshift(d)
+  ROOM_ITEM_BY_ID[d.id] = d
+  if (!silent) notifyItemsChanged()
+}
 
 export const DEFAULT_AVATAR: AvatarPlacement = { x: 760, y: 1395, scale: 1, flip: false }
 
