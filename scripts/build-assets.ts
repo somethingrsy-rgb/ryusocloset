@@ -37,6 +37,8 @@ const COLORS: Record<string, { ko: string; en: string; hex: string }> = {
   skyblue: { ko: '스카이블루', en: 'Sky Blue', hex: '#8fb8e0' },
   mint: { ko: '민트', en: 'Mint', hex: '#a9dcc8' },
   red: { ko: '레드', en: 'Red', hex: '#c8283c' },
+  pink: { ko: '핑크', en: 'Pink', hex: '#f4a9bd' },
+  green: { ko: '그린', en: 'Green', hex: '#6f9a72' },
   purple: { ko: '퍼플', en: 'Purple', hex: '#b9a4e8' },
 }
 

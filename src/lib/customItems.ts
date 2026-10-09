@@ -21,6 +21,7 @@ const PLACEMENT: Record<Category, { cx: number; cy: number; w: number; maxH: num
   top: { cx: 512, cy: 800, w: 520, maxH: 420 },
   bottom: { cx: 512, cy: 1130, w: 380, maxH: 560 },
   dress: { cx: 512, cy: 1000, w: 440, maxH: 760 },
+  costume: { cx: 512, cy: 1000, w: 440, maxH: 760 },
   outer: { cx: 512, cy: 830, w: 620, maxH: 520 },
   shoes: { cx: 512, cy: 1485, w: 320, maxH: 120 },
   accessory: { cx: 512, cy: 230, w: 300, maxH: 250 },
@@ -56,7 +57,7 @@ export function categoryStats(category: Category, items: Pick<Item, 'id' | 'cate
 }
 
 /** 기본 옷 기준값을 쓰는 카테고리 (나머지는 PLACEMENT 의 고정 위치) */
-const FOLLOWS_SITE: Category[] = ['top', 'bottom', 'dress', 'outer', 'bag']
+const FOLLOWS_SITE: Category[] = ['top', 'bottom', 'dress', 'costume', 'outer', 'bag']
 
 function clampBox(x: number, y: number, w: number, h: number): Rect {
   const bw = Math.max(1, Math.round(w))
