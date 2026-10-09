@@ -264,8 +264,8 @@ export function LayerStage<K extends string>({
 
       <div className="pointer-events-none absolute top-2 left-2 z-20 max-w-[calc(100%-4.5rem)]">
         {sel && selected ? (
-          <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-white/95 p-1 pl-3 shadow-lg ring-1 ring-black/5">
-            <span className="mr-0.5 max-w-[4.5rem] truncate text-xs font-bold">{sel.label}</span>
+          <div className="pointer-events-auto flex w-12 flex-col items-center gap-1 rounded-3xl bg-white/95 px-1 pt-2 pb-1 shadow-lg ring-1 ring-black/5">
+            <span className="max-w-full truncate text-[10px] leading-tight font-bold">{sel.label}</span>
             <button className={`${btn} bg-petal`} aria-label={t('smaller')} onClick={() => onTweaks(scaleTweak(tweaks, selected, 1 / 1.1))}>
               ➖
             </button>
