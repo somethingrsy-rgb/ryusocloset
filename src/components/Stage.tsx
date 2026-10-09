@@ -15,6 +15,8 @@ interface Props {
   onSelect: (c: Category | null) => void
   onTweaks: (next: Tweaks) => void
   onTakeOff: (c: Category) => void
+  canUndo?: boolean
+  onUndo?: () => void
   /** 옷을 끌어다 놓을 수 있는 영역(바깥 상자) */
   dropRef: RefObject<HTMLDivElement | null>
   /** 드래그 중인 옷이 무대 위에 있을 때 */
