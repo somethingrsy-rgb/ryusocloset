@@ -1,65 +1,5 @@
 [
   {
-    "id": "furniture_bed",
-    "group": "furniture",
-    "name": {
-      "ko": "침대",
-      "en": "Bed"
-    },
-    "image": "assets/room/furniture_bed.webp",
-    "thumb": "assets/room/thumbs/furniture_bed.webp",
-    "w": 1252,
-    "h": 1082,
-    "baseWidth": 700,
-    "x": 543,
-    "y": 1230
-  },
-  {
-    "id": "furniture_desk_chair",
-    "group": "furniture",
-    "name": {
-      "ko": "책상과 의자",
-      "en": "Desk & Chair"
-    },
-    "image": "assets/room/furniture_desk_chair.webp",
-    "thumb": "assets/room/thumbs/furniture_desk_chair.webp",
-    "w": 1226,
-    "h": 882,
-    "baseWidth": 620,
-    "x": 543,
-    "y": 1230
-  },
-  {
-    "id": "furniture_dresser",
-    "group": "furniture",
-    "name": {
-      "ko": "서랍장",
-      "en": "Dresser"
-    },
-    "image": "assets/room/furniture_dresser.webp",
-    "thumb": "assets/room/thumbs/furniture_dresser.webp",
-    "w": 842,
-    "h": 1214,
-    "baseWidth": 340,
-    "x": 860,
-    "y": 1230
-  },
-  {
-    "id": "furniture_hanger",
-    "group": "furniture",
-    "name": {
-      "ko": "행거",
-      "en": "Clothes Rack"
-    },
-    "image": "assets/room/furniture_hanger.webp",
-    "thumb": "assets/room/thumbs/furniture_hanger.webp",
-    "w": 1231,
-    "h": 1105,
-    "baseWidth": 560,
-    "x": 543,
-    "y": 1240
-  },
-  {
     "id": "furniture_heart_cushion",
     "group": "furniture",
     "name": {
@@ -68,26 +8,11 @@
     },
     "image": "assets/room/furniture_heart_cushion.webp",
     "thumb": "assets/room/thumbs/furniture_heart_cushion.webp",
-    "w": 1238,
-    "h": 917,
+    "w": 759,
+    "h": 562,
     "baseWidth": 230,
     "x": 450,
     "y": 1320
-  },
-  {
-    "id": "furniture_mirror_full",
-    "group": "furniture",
-    "name": {
-      "ko": "전신거울",
-      "en": "Full Mirror"
-    },
-    "image": "assets/room/furniture_mirror_full.webp",
-    "thumb": "assets/room/thumbs/furniture_mirror_full.webp",
-    "w": 638,
-    "h": 1223,
-    "baseWidth": 290,
-    "x": 900,
-    "y": 1250
   },
   {
     "id": "furniture_plush_bear",
@@ -98,8 +23,8 @@
     },
     "image": "assets/room/furniture_plush_bear.webp",
     "thumb": "assets/room/thumbs/furniture_plush_bear.webp",
-    "w": 972,
-    "h": 1110,
+    "w": 596,
+    "h": 681,
     "baseWidth": 220,
     "x": 250,
     "y": 1290
@@ -113,8 +38,8 @@
     },
     "image": "assets/room/furniture_shoebox.webp",
     "thumb": "assets/room/thumbs/furniture_shoebox.webp",
-    "w": 1186,
-    "h": 581,
+    "w": 726,
+    "h": 357,
     "baseWidth": 210,
     "x": 650,
     "y": 1320
@@ -128,26 +53,11 @@
     },
     "image": "assets/room/furniture_shopping_bag.webp",
     "thumb": "assets/room/thumbs/furniture_shopping_bag.webp",
-    "w": 787,
-    "h": 945,
+    "w": 483,
+    "h": 579,
     "baseWidth": 200,
     "x": 780,
     "y": 1310
-  },
-  {
-    "id": "furniture_sofa_bear",
-    "group": "furniture",
-    "name": {
-      "ko": "곰돌이 소파",
-      "en": "Bear Sofa"
-    },
-    "image": "assets/room/furniture_sofa_bear.webp",
-    "thumb": "assets/room/thumbs/furniture_sofa_bear.webp",
-    "w": 1254,
-    "h": 836,
-    "baseWidth": 600,
-    "x": 380,
-    "y": 1255
   },
   {
     "id": "furniture_succulent_pot",
@@ -158,41 +68,11 @@
     },
     "image": "assets/room/furniture_succulent_pot.webp",
     "thumb": "assets/room/thumbs/furniture_succulent_pot.webp",
-    "w": 852,
-    "h": 908,
+    "w": 522,
+    "h": 556,
     "baseWidth": 180,
     "x": 900,
     "y": 1290
-  },
-  {
-    "id": "furniture_vanity",
-    "group": "furniture",
-    "name": {
-      "ko": "화장대",
-      "en": "Vanity"
-    },
-    "image": "assets/room/furniture_vanity.webp",
-    "thumb": "assets/room/thumbs/furniture_vanity.webp",
-    "w": 1076,
-    "h": 1239,
-    "baseWidth": 400,
-    "x": 543,
-    "y": 1240
-  },
-  {
-    "id": "rug_stripe",
-    "group": "rug",
-    "name": {
-      "ko": "줄무늬 러그",
-      "en": "Striped Rug"
-    },
-    "image": "assets/room/rug_stripe.webp",
-    "thumb": "assets/room/thumbs/rug_stripe.webp",
-    "w": 1242,
-    "h": 387,
-    "baseWidth": 680,
-    "x": 543,
-    "y": 1350
   },
   {
     "id": "wall_clock",
@@ -203,8 +83,8 @@
     },
     "image": "assets/room/wall_clock.webp",
     "thumb": "assets/room/thumbs/wall_clock.webp",
-    "w": 1031,
-    "h": 1032,
+    "w": 632,
+    "h": 633,
     "baseWidth": 200,
     "x": 543,
     "y": 420
@@ -218,8 +98,8 @@
     },
     "image": "assets/room/wall_frame.webp",
     "thumb": "assets/room/thumbs/wall_frame.webp",
-    "w": 1094,
-    "h": 1040,
+    "w": 670,
+    "h": 637,
     "baseWidth": 300,
     "x": 543,
     "y": 600
@@ -233,8 +113,8 @@
     },
     "image": "assets/room/wall_shelf.webp",
     "thumb": "assets/room/thumbs/wall_shelf.webp",
-    "w": 1187,
-    "h": 290,
+    "w": 728,
+    "h": 177,
     "baseWidth": 420,
     "x": 543,
     "y": 640
@@ -248,8 +128,8 @@
     },
     "image": "assets/room/wall_star_string.webp",
     "thumb": "assets/room/thumbs/wall_star_string.webp",
-    "w": 1187,
-    "h": 447,
+    "w": 728,
+    "h": 274,
     "baseWidth": 560,
     "x": 543,
     "y": 360
@@ -263,8 +143,8 @@
     },
     "image": "assets/room/wall_window_day.webp",
     "thumb": "assets/room/thumbs/wall_window_day.webp",
-    "w": 1189,
-    "h": 1025,
+    "w": 728,
+    "h": 628,
     "baseWidth": 440,
     "x": 543,
     "y": 640
@@ -278,8 +158,8 @@
     },
     "image": "assets/room/wall_window_night.webp",
     "thumb": "assets/room/thumbs/wall_window_night.webp",
-    "w": 1144,
-    "h": 937,
+    "w": 702,
+    "h": 574,
     "baseWidth": 440,
     "x": 543,
     "y": 640
@@ -293,8 +173,8 @@
     },
     "image": "assets/room/wall_wreath.webp",
     "thumb": "assets/room/thumbs/wall_wreath.webp",
-    "w": 1131,
-    "h": 1130,
+    "w": 694,
+    "h": 692,
     "baseWidth": 240,
     "x": 543,
     "y": 520
@@ -308,8 +188,8 @@
     },
     "image": "assets/room/light_lamp_glow.webp",
     "thumb": "assets/room/thumbs/light_lamp_glow.webp",
-    "w": 1117,
-    "h": 1200,
+    "w": 681,
+    "h": 735,
     "baseWidth": 420,
     "x": 543,
     "y": 1100
@@ -323,8 +203,8 @@
     },
     "image": "assets/room/light_sparkle.webp",
     "thumb": "assets/room/thumbs/light_sparkle.webp",
-    "w": 1052,
-    "h": 1072,
+    "w": 644,
+    "h": 655,
     "baseWidth": 620,
     "x": 543,
     "y": 900
