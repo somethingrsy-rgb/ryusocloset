@@ -3,6 +3,8 @@ import { CUSTOM_ROOM_PREFIX, ROOM_ITEMS, registerCustomRoomItem, unregisterCusto
 import type { RoomGroup, RoomItemDef } from './roomTypes'
 import { CANVAS_H, CANVAS_W, LAYER_Z, type Category } from './layers'
 import type { Item } from './types'
+import { emitLocalChange } from './sync/bus'
+import { queueDelete } from './sync/meta'
 
 export const MAX_CUSTOM = 60
 /** 올린 사진은 긴 변을 이 크기로 줄여서 쓴다 */
@@ -406,6 +408,11 @@ export async function loadCustomRoomItems(): Promise<void> {
 export const customRoomCount = () => ROOM_ITEMS_CUSTOM().length
 const ROOM_ITEMS_CUSTOM = () => ROOM_ITEMS.filter((d) => d.id.startsWith(CUSTOM_ROOM_PREFIX))
 
+export const customIds = () => ({
+  items: ITEMS.filter((i) => i.id.startsWith(CUSTOM_PREFIX)).map((i) => i.id),
+  roomItems: ROOM_ITEMS.filter((d) => d.id.startsWith(CUSTOM_ROOM_PREFIX)).map((d) => d.id),
+})
+
 export const customCount = () => ITEMS.filter((i) => i.id.startsWith(CUSTOM_PREFIX)).length
 export const hasItem = (id: string) => !!ITEM_BY_ID[id]
 
@@ -414,6 +421,7 @@ export async function addCustomItem(item: Item): Promise<boolean> {
   registerCustomItem(item)
   try {
     await tx('readwrite', (s) => s.put(item))
+    emitLocalChange()
     return true
   } catch {
     return false
@@ -422,17 +430,20 @@ export async function addCustomItem(item: Item): Promise<boolean> {
 
 export async function removeCustomItem(id: string): Promise<void> {
   unregisterCustomItem(id)
+  queueDelete('items', id)
   try {
     await tx('readwrite', (s) => s.delete(id))
   } catch {
     /* 무시 */
   }
+  emitLocalChange()
 }
 
 export async function addCustomRoomItem(def: RoomItemDef): Promise<boolean> {
   registerCustomRoomItem(def)
   try {
     await tx('readwrite', (s) => s.put(def), ROOM_STORE)
+    emitLocalChange()
     return true
   } catch {
     return false
@@ -441,11 +452,13 @@ export async function addCustomRoomItem(def: RoomItemDef): Promise<boolean> {
 
 export async function removeCustomRoomItem(id: string): Promise<void> {
   unregisterCustomRoomItem(id)
+  queueDelete('roomItems', id)
   try {
     await tx('readwrite', (s) => s.delete(id), ROOM_STORE)
   } catch {
     /* 무시 */
   }
+  emitLocalChange()
 }
 
 /** 백업용: 내가 추가한 옷·방 물건을 통째로 꺼낸다 */
@@ -469,5 +482,32 @@ export async function replaceCustom(items: unknown[], roomItems: unknown[]): Pro
     return true
   } catch {
     return false
+  }
+}
+
+/* ---- 동기화용: 한 개씩 꺼내기·넣기·지우기 (화면 목록은 건드리지 않고 저장소만. 끝나면 화면을 다시 불러온다) ---- */
+const storeOf = (c: 'items' | 'roomItems') => (c === 'items' ? STORE : ROOM_STORE)
+export async function getCustomRaw(c: 'items' | 'roomItems', id: string): Promise<Item | RoomItemDef | null> {
+  try {
+    const v = (await tx('readonly', (s) => s.get(id), storeOf(c))) as unknown
+    return (c === 'items' ? isItem(v) : isRoomItem(v)) ? (v as Item | RoomItemDef) : null
+  } catch {
+    return null
+  }
+}
+export async function putCustomRaw(c: 'items' | 'roomItems', value: unknown): Promise<boolean> {
+  if (!(c === 'items' ? isItem(value) : isRoomItem(value))) return false
+  try {
+    await tx('readwrite', (s) => s.put(value), storeOf(c))
+    return true
+  } catch {
+    return false
+  }
+}
+export async function deleteCustomRaw(c: 'items' | 'roomItems', id: string): Promise<void> {
+  try {
+    await tx('readwrite', (s) => s.delete(id), storeOf(c))
+  } catch {
+    /* 무시 */
   }
 }

@@ -1,5 +1,7 @@
 import { ID_ALIASES, ITEM_BY_ID } from './items'
 import { isRestoring } from './restoreGuard'
+import { emitLocalChange } from './sync/bus'
+import { touch } from './sync/meta'
 import { CATEGORIES } from './layers'
 import { sanitizeOutfit } from './outfit'
 import { defaultCamp, sanitizeRoom } from './room'
@@ -29,7 +31,14 @@ function read<T>(key: string): T | null {
 function write(key: string, value: unknown): boolean {
   if (isRestoring()) return true
   try {
-    localStorage.setItem(key, JSON.stringify(value))
+    const text = JSON.stringify(value)
+    const changed = localStorage.getItem(key) !== text
+    localStorage.setItem(key, text)
+    // 같은 값을 다시 저장한 것은 "고친 것"이 아니다 (앱을 켤 때마다 저장하므로, 아니면 기기끼리 서로 계속 덮어쓰게 된다)
+    if (changed) {
+      touch(key)
+      emitLocalChange()
+    }
     return true
   } catch {
     return false
