@@ -3,7 +3,7 @@ import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from './items'
 import { CANVAS_H, CANVAS_W, HAIR_FRONT_Z } from './layers'
 import { wornItems } from './outfit'
 import { getTweak, pivotOf } from './tweaks'
-import type { Outfit, Tweak, Tweaks } from './types'
+import type { Outfit, Tweaks } from './types'
 
 const imgCache = new Map<string, Promise<HTMLImageElement>>()
 export function loadImage(src: string): Promise<HTMLImageElement> {
@@ -117,26 +117,6 @@ export async function renderOutfitCanvas(
   tweaks: Tweaks = {},
 ): Promise<HTMLCanvasElement> {
   return finishFigure(await renderFigure(outfit, tweaks), opts)
-}
-
-/** 조립 탭: 겹들을 아래→위 순서로 합성 (옮기기·크기 조절은 각 겹의 중심을 기준으로 화면과 같은 모양으로 적용) */
-export async function renderAssembly(
-  layers: { src: string; box: { x: number; y: number; w: number; h: number }; tweak: Tweak }[],
-): Promise<HTMLCanvasElement> {
-  const imgs = await Promise.all(layers.map((l) => loadImage(l.src)))
-  const canvas = makeCanvas(CANVAS_W, CANVAS_H)
-  const ctx = canvas.getContext('2d')!
-  layers.forEach((l, i) => {
-    const t = l.tweak
-    if (t.dx === 0 && t.dy === 0 && t.scale === 1) return void ctx.drawImage(imgs[i], 0, 0, CANVAS_W, CANVAS_H)
-    const p = pivotOf(l)
-    ctx.save()
-    ctx.translate(p.x + t.dx, p.y + t.dy)
-    ctx.scale(t.scale, t.scale)
-    ctx.drawImage(imgs[i], -p.x, -p.y, CANVAS_W, CANVAS_H)
-    ctx.restore()
-  })
-  return canvas
 }
 
 export const canvasToBlob = (c: HTMLCanvasElement) =>

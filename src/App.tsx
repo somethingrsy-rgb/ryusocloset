@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AssembleStage, assemblyLayers } from './components/AssembleStage'
-import { AssembleTray } from './components/AssembleTray'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
 import { Closet } from './components/Closet'
@@ -14,9 +12,8 @@ import { SavedSheet } from './components/SavedSheet'
 import { Stage } from './components/Stage'
 import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
-import { ASSEMBLE_PARTS, randomAssembly, takeOffPart, togglePart, type Assembly, type AssembleTweaks, type Slot } from './lib/assemble'
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
-import { finishFigure, loadImage, renderAssembly, renderOutfitCanvas, renderThumb } from './lib/exportPng'
+import { loadImage, renderOutfitCanvas, renderThumb } from './lib/exportPng'
 import { ROOM_ASSETS, renderRoomCanvas } from './lib/exportRoom'
 import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
@@ -26,24 +23,22 @@ import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Sele
 import { playSnap } from './lib/sound'
 import {
   MAX_SAVED,
-  loadAssembly,
   loadCurrent,
   loadRoom,
   loadTweaks,
   loadSaved,
   loadSettings,
-  persistAssembly,
   persistCurrent,
   persistRoom,
   persistSaved,
   persistSettings,
   persistTweaks,
 } from './lib/storage'
-import { getTweak, pruneTweaks, sanitizeTweaks } from './lib/tweaks'
+import { pruneTweaks, sanitizeTweaks } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
 
-type ModalKind = null | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport' | 'assembleExport'
-type Mode = 'closet' | 'room' | 'assemble'
+type ModalKind = null | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport'
+type Mode = 'closet' | 'room'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
@@ -65,8 +60,6 @@ export default function App() {
   const [propGroup, setPropGroup] = useState<RoomGroup>('furniture')
   const [saved, setSaved] = useState<SavedOutfit[]>(loadSaved)
   const [room, setRoom] = useState<RoomState>(loadRoom)
-  const [assembly, setAssembly] = useState<Assembly>(loadAssembly)
-  const [selSlot, setSelSlot] = useState<Slot | null>(null)
   const [selection, setSelection] = useState<Selection>(null)
   const [modal, setModal] = useState<ModalKind>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -85,7 +78,6 @@ export default function App() {
   useEffect(() => void persistSettings({ lang, sound, bgId }), [lang, sound, bgId])
   useEffect(() => void persistCurrent(outfit), [outfit])
   useEffect(() => void persistTweaks(tweaks), [tweaks])
-  useEffect(() => void persistAssembly(assembly), [assembly])
   // 드래그 중에는 상태가 자주 바뀌므로 잠깐 모았다가 저장
   useEffect(() => {
     const id = window.setTimeout(() => persistRoom(room), 300)
@@ -99,7 +91,6 @@ export default function App() {
       ...ITEMS.map((i) => assetUrl(i.image)),
       ...Object.values(ROOM_ASSETS),
       ...ROOM_ITEMS.map((d) => assetUrl(d.image)),
-      ...ASSEMBLE_PARTS.map((p) => assetUrl(p.image)),
     ]
     const run = () => urls.forEach((u) => void loadImage(u).catch(() => undefined))
     const w = window as Window & { requestIdleCallback?: (cb: () => void) => number }
@@ -239,40 +230,6 @@ export default function App() {
     showToast(t('roomResetDone'))
   }
 
-  const renderAssembleExport = useCallback(
-    async (o: RenderOptions) =>
-      finishFigure(
-        await renderAssembly(
-          assemblyLayers(assembly).map((l) => ({ src: l.src, box: l.box, tweak: getTweak(assembly.tweaks ?? {}, l.key) })),
-        ),
-        o,
-      ),
-    [assembly],
-  )
-  /** 탭: 입고/벗기. 새로 입으면 그 부품을 선택해서 바로 옮기거나 키울 수 있게 한다 */
-  const pickPart = (slot: Slot, id: string) => {
-    const next = togglePart(assembly, slot, id)
-    setAssembly(next)
-    setSelSlot(next[slot] === id ? slot : selSlot === slot ? null : selSlot)
-    if (sound && next[slot] === id) playSnap()
-  }
-  /** 끌어다 놓기: 이미 입고 있으면 선택만 한다 */
-  const wearPart = (slot: Slot, id: string) => {
-    if (assembly[slot] === id) return setSelSlot(slot)
-    pickPart(slot, id)
-  }
-  const setAssembleTweaks = (tweaks: AssembleTweaks) =>
-    setAssembly((a) => {
-      const next = { ...a }
-      if (Object.keys(tweaks).length) next.tweaks = tweaks
-      else delete next.tweaks
-      return next
-    })
-  const takeOffSlot = (slot: Slot) => {
-    setAssembly((a) => takeOffPart(a, slot))
-    setSelSlot(null)
-  }
-
   const renderOutfit = useCallback((o: RenderOptions) => renderOutfitCanvas(outfit, o, tweaks), [outfit, tweaks])
   const renderRoom = useCallback(() => renderRoomCanvas(room, outfit, tweaks), [room, outfit, tweaks])
 
@@ -300,7 +257,6 @@ export default function App() {
         setMode(m)
         setSelection(null)
         setSelCat(null)
-        setSelSlot(null)
       }}
       className={`flex min-h-11 items-center gap-1 rounded-full px-2.5 text-[13px] font-bold whitespace-nowrap transition ${
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
@@ -319,7 +275,6 @@ export default function App() {
             <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep min-[430px]:block">{t('title')}</h1>
             <div role="tablist" className="flex shrink-0 rounded-full bg-white/80 p-0.5 shadow-sm">
               {modeBtn('closet', '👗', t('modeCloset'))}
-              {modeBtn('assemble', '🧩', t('modeAssemble'))}
               {modeBtn('room', '🏠', t('modeRoom'))}
             </div>
             <div className="flex items-center gap-1.5">
@@ -342,33 +297,7 @@ export default function App() {
           </header>
 
           <div className="min-h-0 flex-1">
-            {mode === 'assemble' ? (
-              <AssembleStage
-                assembly={assembly}
-                bg={bg}
-                selected={selSlot}
-                onSelect={setSelSlot}
-                onTweaks={setAssembleTweaks}
-                onTakeOff={takeOffSlot}
-                dropRef={dropRef}
-                dropActive={dragOver}
-                figureRef={figureRef}
-              >
-                <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
-                  {fab(t('random'), '🎲', () => {
-                    setAssembly(randomAssembly())
-                    setSelSlot(null)
-                    if (sound) playSnap()
-                  })}
-                  {fab(t('reset'), '🧺', () => {
-                    setAssembly((a) => ({ head: a.head }))
-                    setSelSlot(null)
-                  })}
-                  {fab(t('background'), '🖼️', () => setModal('bg'))}
-                  {fab(t('exportImage'), '📷', () => setModal('assembleExport'))}
-                </div>
-              </AssembleStage>
-            ) : mode === 'closet' ? (
+            {mode === 'closet' ? (
               <Stage
                 outfit={outfit}
                 tweaks={tweaks}
@@ -403,9 +332,7 @@ export default function App() {
         </section>
 
         <aside className="flex h-[40dvh] shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]">
-          {mode === 'assemble' ? (
-            <AssembleTray assembly={assembly} onPick={pickPart} onDragWear={wearPart} dropRef={dropRef} onDragOver={setDragOver} />
-          ) : mode === 'closet' ? (
+          {mode === 'closet' ? (
             <Closet
               category={category}
               onCategory={setCategory}
@@ -469,17 +396,6 @@ export default function App() {
           showOptions
           background={bg}
           filePrefix="ryuso-closet"
-          onClose={() => setModal(null)}
-          onError={() => showToast(t('exportFailed'))}
-        />
-      )}
-      {modal === 'assembleExport' && (
-        <ExportSheet
-          title={t('exportTitle')}
-          render={renderAssembleExport}
-          showOptions
-          background={bg}
-          filePrefix="ryuso-mix"
           onClose={() => setModal(null)}
           onError={() => showToast(t('exportFailed'))}
         />
