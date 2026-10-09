@@ -5,6 +5,7 @@ import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
 import { Closet } from './components/Closet'
 import { removeCustomItem, removeCustomRoomItem } from './lib/customItems'
+import { hideItem, restoreItems, visible } from './lib/hidden'
 import { useItemsVersion } from './lib/useItemsVersion'
 import { ExportSheet, type RenderOptions } from './components/ExportSheet'
 import { RoomTray } from './components/RoomTray'
@@ -17,10 +18,10 @@ import { ASSEMBLE_PARTS, randomAssembly, takeOffPart, togglePart, type Assembly,
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
 import { finishFigure, loadImage, renderAssembly, renderOutfitCanvas, renderThumb } from './lib/exportPng'
 import { ROOM_ASSETS, renderRoomCanvas } from './lib/exportRoom'
-import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, assetUrl } from './lib/items'
+import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
 import { randomOutfit, toggleItem } from './lib/outfit'
-import { ROOM_ITEMS, addItem, defaultRoom } from './lib/room'
+import { ROOM_ITEMS, addItem, defaultRoom, isCustomRoomItem } from './lib/room'
 import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
 import { playSnap } from './lib/sound'
 import {
@@ -156,7 +157,8 @@ export default function App() {
       delete next[item.category]
       applyOutfit(next)
     }
-    void removeCustomItem(item.id)
+    if (isCustomItem(item)) void removeCustomItem(item.id)
+    else hideItem(item.id)
     showToast(t('removed'))
   }
 
@@ -164,7 +166,8 @@ export default function App() {
   const removeMyProp = (def: RoomItemDef) => {
     setRoom((r) => ({ ...r, items: r.items.filter((p) => p.itemId !== def.id) }))
     setSelection(null)
-    void removeCustomRoomItem(def.id)
+    if (isCustomRoomItem(def)) void removeCustomRoomItem(def.id)
+    else hideItem(def.id)
     showToast(t('removed'))
   }
 
@@ -181,7 +184,7 @@ export default function App() {
   }
 
   const onRandom = () => {
-    setOutfit(randomOutfit(ITEMS_BY_CATEGORY))
+    setOutfit(randomOutfit(Object.fromEntries(CATEGORIES.map((c) => [c, visible(ITEMS_BY_CATEGORY[c])])) as typeof ITEMS_BY_CATEGORY))
     setTweaks({})
     setSelCat(null)
     snap()
@@ -413,9 +416,10 @@ export default function App() {
               onDragOver={setDragOver}
               onAdd={() => setModal('addItem')}
               onRemove={removeMine}
+              onRestore={(list) => { restoreItems(list.map((i) => i.id)); showToast(t('restored')) }}
             />
           ) : (
-            <RoomTray room={room} onAdd={addToRoom} onAddCustom={(tab) => { setPropGroup(tab); setModal('addProp') }} onRemoveCustom={removeMyProp} />
+            <RoomTray room={room} onAdd={addToRoom} onAddCustom={(tab) => { setPropGroup(tab); setModal('addProp') }} onRemoveCustom={removeMyProp} onRestore={(list) => { restoreItems(list.map((d) => d.id)); showToast(t('restored')) }} />
           )}
         </aside>
       </div>

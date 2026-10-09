@@ -2,6 +2,7 @@ import type { RefObject } from 'react'
 import { CATEGORIES, type Category } from '../lib/layers'
 import { CATEGORY_LABEL, useI18n } from '../i18n'
 import { ITEMS_BY_CATEGORY, assetUrl, isCustomItem } from '../lib/items'
+import { hiddenCount, visible } from '../lib/hidden'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import type { Item, Outfit } from '../lib/types'
 import { DragGhost, useThumbDrag } from './useThumbDrag'
@@ -29,15 +30,19 @@ interface Props {
   onDragOver: (over: boolean) => void
   /** '내 옷 추가' 버튼 */
   onAdd: () => void
-  /** 내가 추가한 옷 삭제 */
+  /** 옷 삭제 (내가 추가한 옷은 진짜 삭제, 기본 옷은 목록에서 숨김) */
   onRemove: (item: Item) => void
+  /** 이 카테고리에서 숨긴 옷 되돌리기 */
+  onRestore: (items: Item[]) => void
 }
 
-export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dropRef, onDragOver, onAdd, onRemove }: Props) {
+export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dropRef, onDragOver, onAdd, onRemove, onRestore }: Props) {
   useItemsVersion()
   const { lang, t } = useI18n()
   const labels = CATEGORY_LABEL[lang]
-  const items = ITEMS_BY_CATEGORY[category]
+  const all = ITEMS_BY_CATEGORY[category]
+  const items = visible(all)
+  const nHidden = hiddenCount(all.map((i) => i.id))
   const { press, ghost, ignoreClick } = useThumbDrag(dropRef, onDragOver)
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -124,11 +129,11 @@ export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dro
                     </span>
                   )}
                 </button>
-                {isCustomItem(it) && (
+                {(
                   <button
                     aria-label={`${t('removeItem')}: ${name}`}
                     title={t('removeItem')}
-                    onClick={() => window.confirm(t('removeItemConfirm')) && onRemove(it)}
+                    onClick={() => window.confirm(t(isCustomItem(it) ? 'removeItemConfirm' : 'hideItemConfirm')) && onRemove(it)}
                     className="absolute -top-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs text-cocoa-soft shadow ring-1 ring-black/10"
                   >
                     ✕
@@ -138,6 +143,14 @@ export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dro
             )
           })}
         </ul>
+        {nHidden > 0 && (
+          <button
+            onClick={() => onRestore(all)}
+            className="mt-3 min-h-11 w-full rounded-full bg-petal/70 px-4 text-sm font-semibold text-cocoa-soft"
+          >
+            ↩ {t('restoreHidden', { n: nHidden })}
+          </button>
+        )}
       </div>
       <DragGhost ghost={ghost} src={assetUrl} />
     </div>

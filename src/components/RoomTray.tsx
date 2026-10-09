@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useI18n } from '../i18n'
 import { ROOM_ITEMS, isCustomRoomItem } from '../lib/room'
 import { assetUrl } from '../lib/items'
+import { hiddenCount, visible } from '../lib/hidden'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import type { RoomItemDef, RoomState, RoomTab } from '../lib/roomTypes'
 
@@ -19,13 +20,17 @@ interface Props {
   /** '내 소품 추가' 버튼 (지금 보고 있는 탭을 알려준다) */
   onAddCustom: (tab: RoomTab) => void
   onRemoveCustom: (def: RoomItemDef) => void
+  /** 이 탭에서 숨긴 물건 되돌리기 */
+  onRestore: (defs: RoomItemDef[]) => void
 }
 
-export function RoomTray({ room, onAdd, onAddCustom, onRemoveCustom }: Props) {
+export function RoomTray({ room, onAdd, onAddCustom, onRemoveCustom, onRestore }: Props) {
   useItemsVersion()
   const { lang, t } = useI18n()
   const [tab, setTab] = useState<RoomTab>('furniture')
-  const items = ROOM_ITEMS.filter((d) => inTab(d, tab))
+  const inThisTab = ROOM_ITEMS.filter((d) => inTab(d, tab))
+  const items = visible(inThisTab)
+  const nHidden = hiddenCount(inThisTab.map((d) => d.id))
   const count = (id: string) => room.items.filter((p) => p.itemId === id).length
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -78,11 +83,11 @@ export function RoomTray({ room, onAdd, onAddCustom, onRemoveCustom }: Props) {
                     </span>
                   )}
                 </button>
-                {isCustomRoomItem(d) && (
+                {(
                   <button
                     aria-label={`${t('removeItem')}: ${d.name[lang]}`}
                     title={t('removeItem')}
-                    onClick={() => window.confirm(t('removeItemConfirm')) && onRemoveCustom(d)}
+                    onClick={() => window.confirm(t(isCustomRoomItem(d) ? 'removeItemConfirm' : 'hideItemConfirm')) && onRemoveCustom(d)}
                     className="absolute -top-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs text-cocoa-soft shadow ring-1 ring-black/10"
                   >
                     ✕
@@ -93,6 +98,14 @@ export function RoomTray({ room, onAdd, onAddCustom, onRemoveCustom }: Props) {
             )
           })}
         </ul>
+        {nHidden > 0 && (
+          <button
+            onClick={() => onRestore(inThisTab)}
+            className="mt-3 min-h-11 w-full rounded-full bg-petal/70 px-4 text-sm font-semibold text-cocoa-soft"
+          >
+            ↩ {t('restoreHidden', { n: nHidden })}
+          </button>
+        )}
       </div>
     </div>
   )
