@@ -37,6 +37,23 @@ const COLORS: Record<string, { ko: string; en: string; hex: string }> = {
   mint: { ko: '민트', en: 'Mint', hex: '#a9dcc8' },
 }
 
+/** 코디 탭 옷의 기본 크기: 앱의 '−' 한 번(1/1.08 ≈ 0.93배)만큼 줄여서 만든다. 옷 영역의 중심을 기준으로 줄이는 것도 '−' 와 같다. */
+const CLOSET_SHRINK = 1 / 1.08
+const SHRINK_CATEGORIES: Category[] = ['top', 'bottom', 'dress', 'outer']
+
+async function shrinkAboutCenter(png: string | Buffer, k: number): Promise<Buffer> {
+  const box = await alphaBBox(png)
+  const cx = box.left + box.width / 2
+  const cy = box.top + box.height / 2
+  const w = Math.round(CANVAS_W * k)
+  const h = Math.round(CANVAS_H * k)
+  const small = await sharp(png).resize(w, h, { kernel: 'lanczos3' }).png().toBuffer()
+  return sharp({ create: { width: CANVAS_W, height: CANVAS_H, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([{ input: small, left: Math.round(cx - cx * k), top: Math.round(cy - cy * k) }])
+    .png()
+    .toBuffer()
+}
+
 type Labels = Record<string, { ko?: string; en?: string; category?: Category; color?: string; native?: boolean }>
 const labels: Labels = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/labels.json'), 'utf8'))
 
@@ -129,7 +146,8 @@ async function main() {
     if (meta.width !== CANVAS_W || meta.height !== CANVAS_H) {
       console.warn(`⚠ ${file}: ${meta.width}x${meta.height} (${CANVAS_W}x${CANVAS_H} 이어야 아바타와 정렬됩니다)`)
     }
-    const src = await applyFit(srcFile, fits[stem])
+    let src = await applyFit(srcFile, fits[stem])
+    if (SHRINK_CATEGORIES.includes(category)) src = await shrinkAboutCenter(src, CLOSET_SHRINK)
     fs.mkdirSync(path.join(OUT, 'clothes', category), { recursive: true })
     await sharp(src).webp({ quality: 90, alphaQuality: 100 }).toFile(path.join(OUT, 'clothes', category, `${stem}.webp`))
     await makeThumb(src, path.join(OUT, 'thumbs', `${stem}.webp`)).catch((e) => {
