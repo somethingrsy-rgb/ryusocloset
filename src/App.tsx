@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
+import { SettingsSheet } from './components/SettingsSheet'
 import { Closet } from './components/Closet'
 import { removeCustomItem, removeCustomRoomItem } from './lib/customItems'
 import { hideItem, restoreItems, visible } from './lib/hidden'
@@ -47,7 +48,7 @@ const UNDO_LIMIT = 50
 const ROOM_UNDO_GAP_MS = 500
 const ROOM_UNDO_LIMIT = 50
 
-type ModalKind = null | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport'
+type ModalKind = null | 'settings' | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport'
 type Mode = 'closet' | 'room' | 'camp'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -361,11 +362,12 @@ export default function App() {
                 <span aria-hidden>{sound ? '🔊' : '🔇'}</span>
               </button>
               <button
-                onClick={() => setLang((l) => (l === 'ko' ? 'en' : 'ko'))}
-                aria-label={lang === 'ko' ? 'English' : '한국어'}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-sm font-bold shadow-sm"
+                onClick={() => setModal('settings')}
+                aria-label={t('settings')}
+                title={t('settings')}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-lg shadow-sm"
               >
-                {t('language')}
+                <span aria-hidden>⚙️</span>
               </button>
             </div>
           </header>
@@ -429,6 +431,15 @@ export default function App() {
         </aside>
       </div>
 
+      {modal === 'settings' && (
+        <SettingsSheet
+          sound={sound}
+          onSound={() => setSound((v) => !v)}
+          onLang={() => setLang((l) => (l === 'ko' ? 'en' : 'ko'))}
+          onClose={() => setModal(null)}
+          onToast={showToast}
+        />
+      )}
       {modal === 'addItem' && (
         <AddItemModal
           kind="closet"

@@ -1,4 +1,5 @@
 import { ID_ALIASES, ITEM_BY_ID } from './items'
+import { isRestoring } from './restoreGuard'
 import { CATEGORIES } from './layers'
 import { sanitizeOutfit } from './outfit'
 import { defaultCamp, sanitizeRoom } from './room'
@@ -26,6 +27,7 @@ function read<T>(key: string): T | null {
 
 /** 용량 초과·사생활 보호 모드 등으로 실패하면 false */
 function write(key: string, value: unknown): boolean {
+  if (isRestoring()) return true
   try {
     localStorage.setItem(key, JSON.stringify(value))
     return true
