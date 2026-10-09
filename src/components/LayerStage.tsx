@@ -47,8 +47,10 @@ interface Props<K extends string> {
   dropRef: RefObject<HTMLDivElement | null>
   dropActive: boolean
   figureRef: RefObject<HTMLDivElement | null>
-  /** 아무것도 선택하지 않았을 때 보이는 안내 */
   ariaLabel: string
+  /** 위치·크기 조절을 직전 상태로 되돌릴 수 있는지, 되돌리기 */
+  canUndo?: boolean
+  onUndo?: () => void
   children?: ReactNode
 }
 
@@ -75,6 +77,8 @@ export function LayerStage<K extends string>({
   dropActive,
   figureRef,
   ariaLabel,
+  canUndo,
+  onUndo,
   children,
 }: Props<K>) {
   const { t } = useI18n()
@@ -164,6 +168,10 @@ export function LayerStage<K extends string>({
   }
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault()
+      return onUndo?.()
+    }
     if (!selected) return
     const step = e.shiftKey ? 40 : 10
     const move = (dx: number, dy: number) => {
@@ -278,6 +286,9 @@ export function LayerStage<K extends string>({
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('moveDown')} onClick={() => onTweaks(moveTweak(tweaks, selected, 0, NUDGE))}>
               ▼
+            </button>
+            <button className={`${btn} bg-petal`} aria-label={t('undo')} title={t('undo')} disabled={!canUndo} onClick={() => onUndo?.()}>
+              ↶
             </button>
             <button
               className={`${btn} bg-petal`}

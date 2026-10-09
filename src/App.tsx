@@ -37,6 +37,10 @@ import {
 import { pruneTweaks, sanitizeTweaks } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
 
+/** 되돌리기: 이 시간(ms) 안에 이어지는 조절은 한 번으로 묶고, 최대 이만큼 기억한다 */
+const UNDO_GAP_MS = 500
+const UNDO_LIMIT = 50
+
 type ModalKind = null | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport'
 type Mode = 'closet' | 'room'
 
@@ -53,6 +57,10 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('closet')
   const [outfit, setOutfit] = useState<Outfit>(loadCurrent)
   const [tweaks, setTweaks] = useState<Tweaks>(() => loadTweaks(loadCurrent()))
+  /** 위치·크기 조절의 실행 취소 기록 (옷을 바꾸면 비운다) */
+  const tweakHistory = useRef<Tweaks[]>([])
+  const lastTweakEdit = useRef(0)
+  const [canUndo, setCanUndo] = useState(false)
   const [selCat, setSelCat] = useState<Category | null>(null)
   const [dragOver, setDragOver] = useState(false)
   useItemsVersion()
@@ -78,6 +86,28 @@ export default function App() {
   useEffect(() => void persistSettings({ lang, sound, bgId }), [lang, sound, bgId])
   useEffect(() => void persistCurrent(outfit), [outfit])
   useEffect(() => void persistTweaks(tweaks), [tweaks])
+  useEffect(() => {
+    tweakHistory.current = []
+    setCanUndo(false)
+  }, [outfit])
+
+  /** 조절값을 바꾼다. 끌기·핀치처럼 0.5초 안에 이어지는 변경은 하나로 묶어 한 번에 되돌린다 */
+  const editTweaks = (next: Tweaks) => {
+    const now = Date.now()
+    if (now - lastTweakEdit.current > UNDO_GAP_MS) {
+      tweakHistory.current = [...tweakHistory.current, tweaks].slice(-UNDO_LIMIT)
+      setCanUndo(true)
+    }
+    lastTweakEdit.current = now
+    setTweaks(next)
+  }
+  const undoTweaks = () => {
+    const prev = tweakHistory.current.pop()
+    if (!prev) return
+    lastTweakEdit.current = 0
+    setTweaks(prev)
+    setCanUndo(tweakHistory.current.length > 0)
+  }
   // 드래그 중에는 상태가 자주 바뀌므로 잠깐 모았다가 저장
   useEffect(() => {
     const id = window.setTimeout(() => persistRoom(room), 300)
@@ -304,7 +334,9 @@ export default function App() {
                 bg={bg}
                 selected={selCat}
                 onSelect={setSelCat}
-                onTweaks={setTweaks}
+                onTweaks={editTweaks}
+                canUndo={canUndo}
+                onUndo={undoTweaks}
                 onTakeOff={takeOff}
                 dropRef={dropRef}
                 dropActive={dragOver}
