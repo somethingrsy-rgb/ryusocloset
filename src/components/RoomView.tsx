@@ -315,11 +315,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
               </button>
             )}
           </div>
-        ) : (
-          <p className="inline-block rounded-2xl bg-white/85 px-3 py-1.5 text-[11px] leading-tight font-semibold text-cocoa-soft shadow-sm">
-            {t('roomHint')}
-          </p>
-        )}
+                ) : null}
       </div>
     </div>
   )
