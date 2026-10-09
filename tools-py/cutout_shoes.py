@@ -52,7 +52,7 @@ rgba = np.dstack([a.astype(np.uint8), alpha])
 rgba[alpha == 0] = 0
 piece = Image.fromarray(rgba, 'RGBA')
 
-# 3) 짝마다 따로, 아바타의 각 발(가운데 438.2 / 587.1, 폭 113.5, 발끝 y 1510)에 맞춘다.
+# 3) 짝마다 따로, 아바타의 각 발(가운데 423.3 / 598.1, 폭 110, 발끝 y 1510)에 맞춘다.
 #    두 짝 사이 간격이 발 간격과 달라도 신발이 발 위에 정확히 오도록 한 짝씩 놓는다. 크기는 신발 몸통(아래 30%)의 폭으로 정한다.
 lab3, n3 = ndi.label(alpha > 128)
 parts = []
@@ -73,9 +73,9 @@ def sole(mask):
 
 halves = [(alpha > 128) & (np.arange(w)[None, :] < split), (alpha > 128) & (np.arange(w)[None, :] >= split)]
 infos = [sole(m) for m in halves]
-s = 113.5 / np.mean([x1 - x0 + 1 for x0, x1, _ in infos])
+s = 110 / np.mean([x1 - x0 + 1 for x0, x1, _ in infos])
 out = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-for k, (m, (x0, x1, yb), cx) in enumerate(zip(halves, infos, (438.2, 587.1))):
+for k, (m, (x0, x1, yb), cx) in enumerate(zip(halves, infos, (423.3, 598.1))):
     side = rgba.copy()
     cols = np.arange(w)[None, :]
     side[~((cols < split) if k == 0 else (cols >= split)).repeat(h, axis=0)] = 0   # 이 짝만

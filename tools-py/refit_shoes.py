@@ -10,7 +10,7 @@ import sys
 import numpy as np
 from PIL import Image
 
-NEW_CX, NEW_W, NEW_Y = (438.2, 587.1), 113.5, 1510
+NEW_CX, NEW_W, NEW_Y = (423.3, 598.1), 110, 1510
 W, H = 1024, 1536
 old_cx, old_w = (float(sys.argv[1]), float(sys.argv[2])), float(sys.argv[3])
 k = NEW_W / old_w
