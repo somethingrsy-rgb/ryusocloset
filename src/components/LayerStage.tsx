@@ -60,6 +60,9 @@ const DRAG_DEAD_ZONE = 6
  * 인물 합성 무대 (코디 탭·조립 탭 공용): 배경 위에 스티커 테두리가 있는 합성 그림.
  * 겹을 눌러 선택하면 한 손가락으로 옮기고, 두 손가락(핀치)·마우스 휠·버튼으로 크기를 바꾼다.
  */
+/** ▲▼ 버튼을 한 번 누를 때 옷이 움직이는 거리 (캔버스 px) */
+const NUDGE = 8
+
 export function LayerStage<K extends string>({
   base,
   layers,
@@ -271,6 +274,12 @@ export function LayerStage<K extends string>({
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('bigger')} onClick={() => onTweaks(scaleTweak(tweaks, selected, 1.1))}>
               ➕
+            </button>
+            <button className={`${btn} bg-petal`} aria-label={t('moveUp')} onClick={() => onTweaks(moveTweak(tweaks, selected, 0, -NUDGE))}>
+              ▲
+            </button>
+            <button className={`${btn} bg-petal`} aria-label={t('moveDown')} onClick={() => onTweaks(moveTweak(tweaks, selected, 0, NUDGE))}>
+              ▼
             </button>
             <button
               className={`${btn} bg-petal`}
