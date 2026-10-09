@@ -1,7 +1,7 @@
 """투명 PNG 옷 한 장을 코디 탭용 아바타 캔버스(1024×1536)로 놓아 assets-src/clothes/<id>.png 로 저장한다.
 
   python tools-py/add_clothes.py dress  <원본.png> <id> [폭]     원피스: 옷 영역 폭을 맞추고(기본 700), 가로 가운데 x=512, 맨 위 y=604 (옷깃이 높아서 어깨선에 맞추려고 조금 위로)
-  python tools-py/add_clothes.py shoes  <원본.png> <id>          신발 한 쌍: 두 짝을 아바타 두 발에 맞춘다 (가운데 442.5/581.5, 폭 84, 발끝 y 1510)
+  python tools-py/add_clothes.py shoes  <원본.png> <id>          신발 한 쌍: 두 짝을 아바타 두 발에 맞춘다 (가운데 450/573, 폭 78, 발끝 y 1503)
   python tools-py/add_clothes.py top    <원본.png> <id> [맨위y]   상의: 폭 635, 맨 위 y (기본 630)
   python tools-py/add_clothes.py acc    <원본.png> <id> <폭> <가운데x> <가운데y>   머리핀·리본 같은 장식: 폭과 놓을 가운데 위치를 직접 정한다
 
@@ -54,8 +54,8 @@ else:
             parts.append((xs.mean(), xs.max() - xs.min() + 1, ys.max()))
     assert len(parts) == 2, f'신발 두 짝이 따로 보여야 해요: {parts}'
     (x1, w1, b1), (x2, w2, b2) = sorted(parts)
-    s = 0.5 * ((581.5 - 442.5) / (x2 - x1) + 84 / ((w1 + w2) / 2))
+    s = 0.5 * ((573 - 450) / (x2 - x1) + 78 / ((w1 + w2) / 2))
     im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
-    out = canvas_with(im, 0.5 * (442.5 + 581.5) - 0.5 * (x1 + x2) * s, 1510 - max(b1, b2) * s)
+    out = canvas_with(im, 0.5 * (450 + 573) - 0.5 * (x1 + x2) * s, 1503 - max(b1, b2) * s)
 out.save(f'assets-src/clothes/{oid}.png')
 print(oid, 'scale=%.3f' % s, out.getchannel('A').getbbox())
