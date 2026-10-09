@@ -430,5 +430,133 @@
     "baseWidth": 250,
     "x": 300,
     "y": 1320
+  },
+  {
+    "id": "theme_alice_mushroom",
+    "group": "furniture",
+    "theme": "alice",
+    "name": {
+      "ko": "동화 버섯",
+      "en": "Fairy Mushroom"
+    },
+    "image": "assets/themes/alice/theme_alice_mushroom.webp",
+    "thumb": "assets/themes/alice/thumbs/theme_alice_mushroom.webp",
+    "w": 640,
+    "h": 605,
+    "baseWidth": 260,
+    "x": 300,
+    "y": 1330
+  },
+  {
+    "id": "theme_alice_pocket_watch",
+    "group": "wall",
+    "theme": "alice",
+    "name": {
+      "ko": "토끼 회중시계",
+      "en": "Rabbit Pocket Watch"
+    },
+    "image": "assets/themes/alice/theme_alice_pocket_watch.webp",
+    "thumb": "assets/themes/alice/thumbs/theme_alice_pocket_watch.webp",
+    "w": 557,
+    "h": 640,
+    "baseWidth": 220,
+    "x": 800,
+    "y": 620
+  },
+  {
+    "id": "theme_alice_queen_chair",
+    "group": "furniture",
+    "theme": "alice",
+    "name": {
+      "ko": "하트 여왕의 의자",
+      "en": "Queen of Hearts Chair"
+    },
+    "image": "assets/themes/alice/theme_alice_queen_chair.webp",
+    "thumb": "assets/themes/alice/thumbs/theme_alice_queen_chair.webp",
+    "w": 609,
+    "h": 640,
+    "baseWidth": 340,
+    "x": 820,
+    "y": 1330
+  },
+  {
+    "id": "theme_alice_tea_table",
+    "group": "furniture",
+    "theme": "alice",
+    "name": {
+      "ko": "티파티 테이블",
+      "en": "Tea Party Table"
+    },
+    "image": "assets/themes/alice/theme_alice_tea_table.webp",
+    "thumb": "assets/themes/alice/thumbs/theme_alice_tea_table.webp",
+    "w": 640,
+    "h": 590,
+    "baseWidth": 380,
+    "x": 560,
+    "y": 1350
+  },
+  {
+    "id": "theme_palace_mirror",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "궁전 전신거울",
+      "en": "Palace Mirror"
+    },
+    "image": "assets/themes/palace/theme_palace_mirror.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_mirror.webp",
+    "w": 395,
+    "h": 640,
+    "baseWidth": 230,
+    "x": 880,
+    "y": 1340
+  },
+  {
+    "id": "theme_palace_ribbon_chair",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "왕실 리본 의자",
+      "en": "Royal Ribbon Chair"
+    },
+    "image": "assets/themes/palace/theme_palace_ribbon_chair.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_ribbon_chair.webp",
+    "w": 602,
+    "h": 640,
+    "baseWidth": 340,
+    "x": 300,
+    "y": 1330
+  },
+  {
+    "id": "theme_palace_rose_vase",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "장미 화병",
+      "en": "Rose Vase"
+    },
+    "image": "assets/themes/palace/theme_palace_rose_vase.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_rose_vase.webp",
+    "w": 594,
+    "h": 640,
+    "baseWidth": 230,
+    "x": 560,
+    "y": 1320
+  },
+  {
+    "id": "theme_palace_tea_table",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "리본 티테이블",
+      "en": "Ribbon Tea Table"
+    },
+    "image": "assets/themes/palace/theme_palace_tea_table.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_tea_table.webp",
+    "w": 640,
+    "h": 624,
+    "baseWidth": 380,
+    "x": 600,
+    "y": 1350
   }
 ]

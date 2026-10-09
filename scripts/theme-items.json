@@ -241,5 +241,77 @@
     "baseWidth": 250,
     "x": 900,
     "y": 1320
+  },
+  "theme_alice_mushroom": {
+    "ko": "동화 버섯",
+    "en": "Fairy Mushroom",
+    "theme": "alice",
+    "group": "furniture",
+    "baseWidth": 260,
+    "x": 300,
+    "y": 1330
+  },
+  "theme_alice_tea_table": {
+    "ko": "티파티 테이블",
+    "en": "Tea Party Table",
+    "theme": "alice",
+    "group": "furniture",
+    "baseWidth": 380,
+    "x": 560,
+    "y": 1350
+  },
+  "theme_alice_pocket_watch": {
+    "ko": "토끼 회중시계",
+    "en": "Rabbit Pocket Watch",
+    "theme": "alice",
+    "group": "wall",
+    "baseWidth": 220,
+    "x": 800,
+    "y": 620
+  },
+  "theme_alice_queen_chair": {
+    "ko": "하트 여왕의 의자",
+    "en": "Queen of Hearts Chair",
+    "theme": "alice",
+    "group": "furniture",
+    "baseWidth": 340,
+    "x": 820,
+    "y": 1330
+  },
+  "theme_palace_ribbon_chair": {
+    "ko": "왕실 리본 의자",
+    "en": "Royal Ribbon Chair",
+    "theme": "palace",
+    "group": "furniture",
+    "baseWidth": 340,
+    "x": 300,
+    "y": 1330
+  },
+  "theme_palace_mirror": {
+    "ko": "궁전 전신거울",
+    "en": "Palace Mirror",
+    "theme": "palace",
+    "group": "furniture",
+    "baseWidth": 230,
+    "x": 880,
+    "y": 1340
+  },
+  "theme_palace_rose_vase": {
+    "ko": "장미 화병",
+    "en": "Rose Vase",
+    "theme": "palace",
+    "group": "furniture",
+    "baseWidth": 230,
+    "x": 560,
+    "y": 1320
+  },
+  "theme_palace_tea_table": {
+    "ko": "리본 티테이블",
+    "en": "Ribbon Tea Table",
+    "theme": "palace",
+    "group": "furniture",
+    "baseWidth": 380,
+    "x": 600,
+    "y": 1350
   }
 }

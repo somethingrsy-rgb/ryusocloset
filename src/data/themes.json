@@ -47,5 +47,19 @@
     "en": "Halloween",
     "icon": "🎃",
     "floorH": 449
+  },
+  {
+    "id": "alice",
+    "ko": "앨리스",
+    "en": "Alice's Tea Party",
+    "icon": "🫖",
+    "floorH": 431
+  },
+  {
+    "id": "palace",
+    "ko": "궁전",
+    "en": "Palace Tea Room",
+    "icon": "👑",
+    "floorH": 493
   }
 ]
