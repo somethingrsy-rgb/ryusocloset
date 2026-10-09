@@ -4,6 +4,7 @@ import type { Background } from '../lib/backgrounds'
 import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from '../lib/items'
 import { HAIR_FRONT_Z, type Category } from '../lib/layers'
 import { wornItems } from '../lib/outfit'
+import { effectiveZ } from '../lib/tweaks'
 import type { Outfit, Tweaks } from '../lib/types'
 import { LayerStage, type BaseLayer, type StageLayer } from './LayerStage'
 
@@ -31,11 +32,11 @@ interface Props {
  */
 export function Stage({ outfit, ...rest }: Props) {
   const { lang, t } = useI18n()
-  const layers: StageLayer<Category>[] = wornItems(outfit, ITEM_BY_ID).map((it) => ({
+  const layers: StageLayer<Category>[] = wornItems(outfit, ITEM_BY_ID, rest.tweaks).map((it) => ({
     key: it.category,
     id: it.id,
     src: assetUrl(it.image),
-    z: it.zIndex,
+    z: effectiveZ(it.zIndex, rest.tweaks[it.category]),
     box: it.box,
     label: it.name[lang],
   }))

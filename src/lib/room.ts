@@ -114,7 +114,7 @@ export function removeItem(state: RoomState, uid: string): RoomState {
 function mapSel(
   state: RoomState,
   sel: NonNullable<Selection>,
-  f: (p: { x: number; y: number; scale: number; flip: boolean }) => { x: number; y: number; scale: number; flip: boolean },
+  f: (p: { x: number; y: number; scale: number; flip: boolean; zb?: number }) => { x: number; y: number; scale: number; flip: boolean; zb?: number },
 ): RoomState {
   if (sel.kind === 'avatar') return { ...state, avatar: { ...state.avatar, ...f(state.avatar) } }
   return { ...state, items: state.items.map((p) => (p.uid === sel.uid ? { ...p, ...f(p) } : p)) }
@@ -130,10 +130,33 @@ export const scaleBy = (s: RoomState, sel: NonNullable<Selection>, factor: numbe
   mapSel(s, sel, (p) => ({ ...p, scale: clampScale(p.scale * factor) }))
 export const toggleFlip = (s: RoomState, sel: NonNullable<Selection>) => mapSel(s, sel, (p) => ({ ...p, flip: !p.flip }))
 
+/** 겹치는 순서 한 칸 바꾸기: 앞(dir=1)/뒤(dir=-1)로 이웃한 물건과 쌓이는 값을 맞바꾼다. 갈 데가 없으면 그대로. */
+export function shiftLayer(state: RoomState, sel: NonNullable<Selection>, dir: 1 | -1): RoomState {
+  const order = drawables(state)
+  const i = order.findIndex((d) => sameSelection(d.sel, sel))
+  const j = i + dir
+  if (i < 0 || j < 0 || j >= order.length) return state
+  const [a, b] = [order[i], order[j]]
+  const round = (v: number) => Math.round(v * 100) / 100
+  // 기본 순서 = 지금 쌓이는 값 - 지금 순서 조절값
+  const zb = (d: Drawable) => (d.sel.kind === 'avatar' ? state.avatar.zb : state.items.find((p) => d.sel.kind === 'item' && p.uid === d.sel.uid)?.zb) ?? 0
+  let next = mapSel(state, a.sel, (p) => ({ ...p, zb: round(b.z - (a.z - zb(a))) }))
+  next = mapSel(next, b.sel, (p) => ({ ...p, zb: round(a.z - (b.z - zb(b))) }))
+  return next
+}
+export function canShiftLayer(state: RoomState, sel: NonNullable<Selection>, dir: 1 | -1): boolean {
+  const order = drawables(state)
+  const i = order.findIndex((d) => sameSelection(d.sel, sel))
+  return i >= 0 && i + dir >= 0 && i + dir < order.length
+}
+
 export function getPlacement(state: RoomState, sel: NonNullable<Selection>) {
   if (sel.kind === 'avatar') return state.avatar
   return state.items.find((p) => p.uid === sel.uid)
 }
+
+/** 저장된 겹침 순서 조절값 검증 (없거나 0 이면 넣지 않는다) */
+const zbOf = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v !== 0 ? { zb: clamp(v, -6000, 6000) } : {})
 
 /** 저장된 데이터를 검증해 안전한 상태로 만든다 */
 export function sanitizeRoom(raw: unknown, base: RoomState = defaultRoom()): RoomState {
@@ -152,6 +175,7 @@ export function sanitizeRoom(raw: unknown, base: RoomState = defaultRoom()): Roo
     y: clampY(num(a.y, DEFAULT_AVATAR.y)),
     scale: clampScale(num(a.scale, 1)),
     flip: a.flip === true,
+    ...zbOf(a.zb),
   }
   if (!Array.isArray(r.items)) return { ...extra, avatar, items: base.items }
   const seen = new Set<string>()
@@ -168,6 +192,7 @@ export function sanitizeRoom(raw: unknown, base: RoomState = defaultRoom()): Roo
       y: clampY(num(it.y, 1240)),
       scale: clampScale(num(it.scale, 1)),
       flip: it.flip === true,
+      ...zbOf(it.zb),
     })
     if (items.length >= MAX_PLACED) break
   }
@@ -216,7 +241,7 @@ export function drawables(state: RoomState): Drawable[] {
       sel: { kind: 'item', uid: p.uid },
       key: def.id,
       group: def.group,
-      z: zOf(def.group, p.y, i),
+      z: zOf(def.group, p.y, i) + (p.zb ?? 0),
       left: p.x - w / 2,
       top: p.y - h,
       w,
@@ -234,7 +259,7 @@ export function drawables(state: RoomState): Drawable[] {
     sel: { kind: 'avatar' },
     key: 'avatar',
     group: 'avatar',
-    z: zOf('avatar', av.y, 0) + 0.5,
+    z: zOf('avatar', av.y, 0) + 0.5 + (av.zb ?? 0),
     left: av.x - w / 2,
     top: av.y - h * AVATAR_FEET_RATIO,
     w,

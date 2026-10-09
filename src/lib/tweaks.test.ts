@@ -4,6 +4,7 @@ import {
   MAX_TWEAK_MOVE,
   MAX_TWEAK_SCALE,
   MIN_TWEAK_SCALE,
+  canShiftLayer,
   cssTransform,
   moveTweak,
   pickLayer,
@@ -13,6 +14,8 @@ import {
   sanitizeTweaks,
   scaleTweak,
   setScaleTweak,
+  shiftLayer,
+  stripZ,
   toItemSpace,
 } from './tweaks'
 import type { Mask } from './roomHit'
@@ -105,3 +108,49 @@ describe('pickLayer', () => {
     expect(pickLayer(layers, {}, 300, 350, () => solid)).toBe('head')
   })
 })
+
+describe('겹치는 순서', () => {
+  const layers = [
+    { key: 'bottom', z: 20 },
+    { key: 'top', z: 30 },
+    { key: 'outer', z: 50 },
+  ] as const
+  const orderOf = (tw: Parameters<typeof shiftLayer>[0]) =>
+    layers
+      .map((l) => ({ key: l.key, z: l.z + (tw[l.key as keyof typeof tw]?.z ?? 0) }))
+      .sort((a, b) => a.z - b.z)
+      .map((l) => l.key)
+
+  it('앞으로 보내면 이웃한 위의 것과 자리를 바꾼다', () => {
+    const tw = shiftLayer({}, [...layers], 'top', 1)
+    expect(orderOf(tw)).toEqual(['bottom', 'outer', 'top'])
+  })
+  it('뒤로 보내면 아래 것과 바꾸고, 다시 앞으로 보내면 처음 순서로 돌아와 조절값이 사라진다', () => {
+    let tw = shiftLayer({}, [...layers], 'top', -1)
+    expect(orderOf(tw)).toEqual(['top', 'bottom', 'outer'])
+    const now = layers.map((l) => ({ key: l.key, z: l.z + (tw[l.key as keyof typeof tw]?.z ?? 0) }))
+    tw = shiftLayer(tw, now, 'top', 1)
+    expect(orderOf(tw)).toEqual(['bottom', 'top', 'outer'])
+    expect(Object.keys(tw)).toEqual([])
+  })
+  it('맨 위·맨 아래는 더 못 가고 그대로다', () => {
+    expect(canShiftLayer([...layers], 'outer', 1)).toBe(false)
+    expect(canShiftLayer([...layers], 'bottom', -1)).toBe(false)
+    expect(canShiftLayer([...layers], 'top', 1)).toBe(true)
+    expect(shiftLayer({}, [...layers], 'outer', 1)).toEqual({})
+  })
+  it('위치·크기 조절은 그대로 두고 순서만 바꾼다. stripZ 는 순서만 지운다', () => {
+    const tw = shiftLayer({ top: { dx: 5, dy: 0, scale: 1.2 } }, [...layers], 'top', 1)
+    expect(tw.top?.dx).toBe(5)
+    expect(tw.top?.scale).toBe(1.2)
+    expect(tw.top?.z).toBe(20)
+    const stripped = stripZ(tw)
+    expect(stripped.top).toEqual({ dx: 5, dy: 0, scale: 1.2 })
+    expect(stripped.outer).toBeUndefined()
+  })
+  it('저장된 순서 조절값을 읽는다', () => {
+    const raw = { top: { dx: 0, dy: 0, scale: 1, z: 20 } }
+    expect(sanitizeTweaks(raw, ['top'] as const, { top: 'x' }).top?.z).toBe(20)
+  })
+})
+
