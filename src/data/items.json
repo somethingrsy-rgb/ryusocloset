@@ -493,10 +493,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 215,
-      "y": 653,
-      "w": 595,
-      "h": 717
+      "x": 208,
+      "y": 645,
+      "w": 608,
+      "h": 609
     },
     "image": "assets/clothes/dress/dress_deco_tweed_black.webp",
     "thumb": "assets/thumbs/dress_deco_tweed_black.webp",
@@ -517,10 +517,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 295,
-      "y": 659,
-      "w": 435,
-      "h": 689
+      "x": 260,
+      "y": 644,
+      "w": 505,
+      "h": 552
     },
     "image": "assets/clothes/dress/dress_isaac_black.webp",
     "thumb": "assets/thumbs/dress_isaac_black.webp",
@@ -541,10 +541,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 219,
-      "y": 655,
-      "w": 587,
-      "h": 698
+      "x": 235,
+      "y": 643,
+      "w": 554,
+      "h": 529
     },
     "image": "assets/clothes/dress/dress_isaac_brown.webp",
     "thumb": "assets/thumbs/dress_isaac_brown.webp",
@@ -565,10 +565,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 214,
-      "y": 643,
-      "w": 596,
-      "h": 709
+      "x": 203,
+      "y": 648,
+      "w": 619,
+      "h": 637
     },
     "image": "assets/clothes/dress/dress_isaac_navy.webp",
     "thumb": "assets/thumbs/dress_isaac_navy.webp",
@@ -589,10 +589,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 222,
-      "y": 652,
-      "w": 580,
-      "h": 701
+      "x": 213,
+      "y": 647,
+      "w": 598,
+      "h": 631
     },
     "image": "assets/clothes/dress/dress_isaac_shirt_black.webp",
     "thumb": "assets/thumbs/dress_isaac_shirt_black.webp",
@@ -613,10 +613,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 323,
-      "y": 663,
-      "w": 378,
-      "h": 697
+      "x": 253,
+      "y": 646,
+      "w": 520,
+      "h": 601
     },
     "image": "assets/clothes/dress/dress_oxford_beige.webp",
     "thumb": "assets/thumbs/dress_oxford_beige.webp",
@@ -637,10 +637,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 217,
-      "y": 656,
-      "w": 591,
-      "h": 693
+      "x": 229,
+      "y": 644,
+      "w": 566,
+      "h": 556
     },
     "image": "assets/clothes/dress/dress_shesmiss_gray.webp",
     "thumb": "assets/thumbs/dress_shesmiss_gray.webp",
