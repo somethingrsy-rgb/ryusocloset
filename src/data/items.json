@@ -144,6 +144,30 @@
     "native": true
   },
   {
+    "id": "top_ivory",
+    "category": "top",
+    "name": {
+      "ko": "크롭 티",
+      "en": "Crop Tee"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "box": {
+      "x": 269,
+      "y": 618,
+      "w": 487,
+      "h": 278
+    },
+    "image": "assets/clothes/top/top_ivory.webp",
+    "thumb": "assets/thumbs/top_ivory.webp",
+    "zIndex": 30,
+    "native": true
+  },
+  {
     "id": "top_paisley_ivory",
     "category": "top",
     "name": {
@@ -212,6 +236,30 @@
     },
     "image": "assets/clothes/top/top_trim_cardigan_black.webp",
     "thumb": "assets/thumbs/top_trim_cardigan_black.webp",
+    "zIndex": 30,
+    "native": true
+  },
+  {
+    "id": "top_tweed_cardigan_mint",
+    "category": "top",
+    "name": {
+      "ko": "트위드 가디건",
+      "en": "Tweed Cardigan"
+    },
+    "color": "mint",
+    "colorName": {
+      "ko": "민트",
+      "en": "Mint"
+    },
+    "colorHex": "#a9dcc8",
+    "box": {
+      "x": 205,
+      "y": 613,
+      "w": 614,
+      "h": 363
+    },
+    "image": "assets/clothes/top/top_tweed_cardigan_mint.webp",
+    "thumb": "assets/thumbs/top_tweed_cardigan_mint.webp",
     "zIndex": 30,
     "native": true
   },

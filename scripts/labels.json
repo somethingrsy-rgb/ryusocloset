@@ -237,5 +237,15 @@
     "ko": "베이지 구두",
     "en": "Beige Flats",
     "native": true
+  },
+  "top_ivory": {
+    "ko": "크롭 티",
+    "en": "Crop Tee",
+    "native": true
+  },
+  "top_tweed_cardigan_mint": {
+    "ko": "트위드 가디건",
+    "en": "Tweed Cardigan",
+    "native": true
   }
 }
