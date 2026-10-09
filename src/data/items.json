@@ -1,5 +1,53 @@
 [
   {
+    "id": "top_anorak_ivory",
+    "category": "top",
+    "name": {
+      "ko": "아노락",
+      "en": "Anorak"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "box": {
+      "x": 217,
+      "y": 606,
+      "w": 589,
+      "h": 392
+    },
+    "image": "assets/clothes/top/top_anorak_ivory.webp",
+    "thumb": "assets/thumbs/top_anorak_ivory.webp",
+    "zIndex": 30,
+    "native": true
+  },
+  {
+    "id": "top_cable_vest_shirt_ivory",
+    "category": "top",
+    "name": {
+      "ko": "니트 조끼 셔츠",
+      "en": "Knit Vest & Shirt"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "box": {
+      "x": 217,
+      "y": 608,
+      "w": 589,
+      "h": 351
+    },
+    "image": "assets/clothes/top/top_cable_vest_shirt_ivory.webp",
+    "thumb": "assets/thumbs/top_cable_vest_shirt_ivory.webp",
+    "zIndex": 30,
+    "native": true
+  },
+  {
     "id": "top_cardigan_black",
     "category": "top",
     "name": {
@@ -68,6 +116,30 @@
     },
     "image": "assets/clothes/top/top_check_cardigan_gray.webp",
     "thumb": "assets/thumbs/top_check_cardigan_gray.webp",
+    "zIndex": 30,
+    "native": true
+  },
+  {
+    "id": "top_floral_vest_shirt_ivory",
+    "category": "top",
+    "name": {
+      "ko": "꽃무늬 조끼 셔츠",
+      "en": "Floral Vest & Shirt"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "box": {
+      "x": 217,
+      "y": 608,
+      "w": 589,
+      "h": 347
+    },
+    "image": "assets/clothes/top/top_floral_vest_shirt_ivory.webp",
+    "thumb": "assets/thumbs/top_floral_vest_shirt_ivory.webp",
     "zIndex": 30,
     "native": true
   },
@@ -212,6 +284,30 @@
     },
     "image": "assets/clothes/top/top_sailor_ivory.webp",
     "thumb": "assets/thumbs/top_sailor_ivory.webp",
+    "zIndex": 30,
+    "native": true
+  },
+  {
+    "id": "top_trim_cardigan_black",
+    "category": "top",
+    "name": {
+      "ko": "배색 가디건",
+      "en": "Trim Cardigan"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 217,
+      "y": 630,
+      "w": 588,
+      "h": 330
+    },
+    "image": "assets/clothes/top/top_trim_cardigan_black.webp",
+    "thumb": "assets/thumbs/top_trim_cardigan_black.webp",
     "zIndex": 30,
     "native": true
   },
