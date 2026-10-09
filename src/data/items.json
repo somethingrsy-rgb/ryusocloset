@@ -13,10 +13,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 177,
-      "y": 626,
-      "w": 666,
-      "h": 387
+      "x": 201,
+      "y": 641,
+      "w": 617,
+      "h": 358
     },
     "image": "assets/clothes/top/top_cardigan_black.webp",
     "thumb": "assets/thumbs/top_cardigan_black.webp",
@@ -37,10 +37,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 181,
-      "y": 614,
-      "w": 662,
-      "h": 391
+      "x": 205,
+      "y": 628,
+      "w": 614,
+      "h": 363
     },
     "image": "assets/clothes/top/top_cardigan_mint.webp",
     "thumb": "assets/thumbs/top_cardigan_mint.webp",
@@ -61,10 +61,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 195,
-      "y": 626,
-      "w": 634,
-      "h": 369
+      "x": 219,
+      "y": 639,
+      "w": 586,
+      "h": 343
     },
     "image": "assets/clothes/top/top_check_cardigan_gray.webp",
     "thumb": "assets/thumbs/top_check_cardigan_gray.webp",
@@ -85,10 +85,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 287,
-      "y": 631,
-      "w": 451,
-      "h": 303
+      "x": 303,
+      "y": 642,
+      "w": 418,
+      "h": 281
     },
     "image": "assets/clothes/top/top_inner_black.webp",
     "thumb": "assets/thumbs/top_inner_black.webp",
@@ -109,10 +109,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 250,
-      "y": 618,
-      "w": 525,
-      "h": 300
+      "x": 269,
+      "y": 629,
+      "w": 487,
+      "h": 278
     },
     "image": "assets/clothes/top/top_ivory.webp",
     "thumb": "assets/thumbs/top_ivory.webp",
@@ -133,10 +133,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 377,
-      "y": 629,
-      "w": 270,
-      "h": 333
+      "x": 387,
+      "y": 642,
+      "w": 250,
+      "h": 308
     },
     "image": "assets/clothes/top/top_knit_vest_ivory.webp",
     "thumb": "assets/thumbs/top_knit_vest_ivory.webp",
@@ -157,10 +157,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 194,
-      "y": 624,
-      "w": 637,
-      "h": 380
+      "x": 217,
+      "y": 638,
+      "w": 590,
+      "h": 351
     },
     "image": "assets/clothes/top/top_paisley_ivory.webp",
     "thumb": "assets/thumbs/top_paisley_ivory.webp",
@@ -181,10 +181,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 385,
-      "y": 631,
-      "w": 255,
-      "h": 287
+      "x": 394,
+      "y": 641,
+      "w": 236,
+      "h": 266
     },
     "image": "assets/clothes/top/top_pattern_vest_ivory.webp",
     "thumb": "assets/thumbs/top_pattern_vest_ivory.webp",
@@ -205,10 +205,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 192,
-      "y": 624,
-      "w": 641,
-      "h": 379
+      "x": 215,
+      "y": 638,
+      "w": 594,
+      "h": 350
     },
     "image": "assets/clothes/top/top_sailor_ivory.webp",
     "thumb": "assets/thumbs/top_sailor_ivory.webp",
@@ -229,10 +229,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 194,
-      "y": 625,
-      "w": 636,
-      "h": 384
+      "x": 217,
+      "y": 639,
+      "w": 590,
+      "h": 356
     },
     "image": "assets/clothes/top/top_zip_ivory.webp",
     "thumb": "assets/thumbs/top_zip_ivory.webp",
@@ -253,10 +253,10 @@
     },
     "colorHex": "#55565c",
     "box": {
-      "x": 312,
-      "y": 834,
-      "w": 400,
-      "h": 537
+      "x": 327,
+      "y": 854,
+      "w": 371,
+      "h": 498
     },
     "image": "assets/clothes/bottom/bottom_belt_skirt_charcoal.webp",
     "thumb": "assets/thumbs/bottom_belt_skirt_charcoal.webp",
@@ -277,10 +277,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 304,
-      "y": 871,
-      "w": 419,
-      "h": 548
+      "x": 320,
+      "y": 891,
+      "w": 387,
+      "h": 508
     },
     "image": "assets/clothes/bottom/bottom_button_skirt_brown.webp",
     "thumb": "assets/thumbs/bottom_button_skirt_brown.webp",
@@ -301,10 +301,10 @@
     },
     "colorHex": "#3c5a8c",
     "box": {
-      "x": 294,
-      "y": 835,
-      "w": 439,
-      "h": 537
+      "x": 310,
+      "y": 855,
+      "w": 406,
+      "h": 498
     },
     "image": "assets/clothes/bottom/bottom_denim.webp",
     "thumb": "assets/thumbs/bottom_denim.webp",
@@ -325,10 +325,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 312,
-      "y": 836,
-      "w": 400,
-      "h": 535
+      "x": 326,
+      "y": 856,
+      "w": 372,
+      "h": 495
     },
     "image": "assets/clothes/bottom/bottom_denim_skirt_white.webp",
     "thumb": "assets/thumbs/bottom_denim_skirt_white.webp",
@@ -349,10 +349,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 300,
-      "y": 868,
-      "w": 423,
-      "h": 512
+      "x": 315,
+      "y": 886,
+      "w": 392,
+      "h": 474
     },
     "image": "assets/clothes/bottom/bottom_flare_skirt_gray.webp",
     "thumb": "assets/thumbs/bottom_flare_skirt_gray.webp",
@@ -373,10 +373,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 347,
-      "y": 838,
-      "w": 330,
-      "h": 579
+      "x": 360,
+      "y": 859,
+      "w": 305,
+      "h": 537
     },
     "image": "assets/clothes/bottom/bottom_pants_black.webp",
     "thumb": "assets/thumbs/bottom_pants_black.webp",
@@ -397,10 +397,10 @@
     },
     "colorHex": "#55565c",
     "box": {
-      "x": 348,
-      "y": 866,
-      "w": 328,
-      "h": 550
+      "x": 360,
+      "y": 887,
+      "w": 304,
+      "h": 508
     },
     "image": "assets/clothes/bottom/bottom_pants_charcoal.webp",
     "thumb": "assets/thumbs/bottom_pants_charcoal.webp",
@@ -421,10 +421,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 307,
-      "y": 846,
-      "w": 415,
-      "h": 530
+      "x": 322,
+      "y": 865,
+      "w": 384,
+      "h": 490
     },
     "image": "assets/clothes/bottom/bottom_shezmig_skirt_brown.webp",
     "thumb": "assets/thumbs/bottom_shezmig_skirt_brown.webp",
@@ -445,10 +445,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 312,
-      "y": 842,
-      "w": 401,
-      "h": 529
+      "x": 326,
+      "y": 862,
+      "w": 372,
+      "h": 489
     },
     "image": "assets/clothes/bottom/bottom_skirt_black.webp",
     "thumb": "assets/thumbs/bottom_skirt_black.webp",
@@ -469,10 +469,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 348,
-      "y": 870,
-      "w": 329,
-      "h": 546
+      "x": 360,
+      "y": 891,
+      "w": 305,
+      "h": 505
     },
     "image": "assets/clothes/bottom/bottom_thick_pants_ivory.webp",
     "thumb": "assets/thumbs/bottom_thick_pants_ivory.webp",
@@ -493,10 +493,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 191,
-      "y": 624,
-      "w": 642,
-      "h": 775
+      "x": 215,
+      "y": 653,
+      "w": 595,
+      "h": 717
     },
     "image": "assets/clothes/dress/dress_deco_tweed_black.webp",
     "thumb": "assets/thumbs/dress_deco_tweed_black.webp",
@@ -517,10 +517,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 277,
-      "y": 632,
-      "w": 470,
-      "h": 744
+      "x": 295,
+      "y": 659,
+      "w": 435,
+      "h": 689
     },
     "image": "assets/clothes/dress/dress_isaac_black.webp",
     "thumb": "assets/thumbs/dress_isaac_black.webp",
@@ -541,10 +541,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 196,
-      "y": 627,
-      "w": 633,
-      "h": 755
+      "x": 219,
+      "y": 655,
+      "w": 587,
+      "h": 698
     },
     "image": "assets/clothes/dress/dress_isaac_brown.webp",
     "thumb": "assets/thumbs/dress_isaac_brown.webp",
@@ -565,10 +565,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 190,
-      "y": 615,
-      "w": 643,
-      "h": 765
+      "x": 214,
+      "y": 643,
+      "w": 596,
+      "h": 709
     },
     "image": "assets/clothes/dress/dress_isaac_navy.webp",
     "thumb": "assets/thumbs/dress_isaac_navy.webp",
@@ -589,10 +589,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 199,
-      "y": 625,
-      "w": 627,
-      "h": 756
+      "x": 222,
+      "y": 652,
+      "w": 580,
+      "h": 701
     },
     "image": "assets/clothes/dress/dress_isaac_shirt_black.webp",
     "thumb": "assets/thumbs/dress_isaac_shirt_black.webp",
@@ -613,10 +613,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 308,
-      "y": 635,
-      "w": 408,
-      "h": 753
+      "x": 323,
+      "y": 663,
+      "w": 378,
+      "h": 697
     },
     "image": "assets/clothes/dress/dress_oxford_beige.webp",
     "thumb": "assets/thumbs/dress_oxford_beige.webp",
@@ -637,10 +637,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 193,
-      "y": 629,
-      "w": 639,
-      "h": 748
+      "x": 217,
+      "y": 656,
+      "w": 591,
+      "h": 693
     },
     "image": "assets/clothes/dress/dress_shesmiss_gray.webp",
     "thumb": "assets/thumbs/dress_shesmiss_gray.webp",
@@ -661,10 +661,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 198,
-      "y": 619,
-      "w": 627,
-      "h": 523
+      "x": 222,
+      "y": 638,
+      "w": 580,
+      "h": 485
     },
     "image": "assets/clothes/outer/outer_coat_black.webp",
     "thumb": "assets/thumbs/outer_coat_black.webp",
@@ -685,10 +685,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 193,
-      "y": 626,
-      "w": 639,
-      "h": 675
+      "x": 216,
+      "y": 651,
+      "w": 593,
+      "h": 625
     },
     "image": "assets/clothes/outer/outer_coat_gray.webp",
     "thumb": "assets/thumbs/outer_coat_gray.webp",
@@ -709,10 +709,10 @@
     },
     "colorHex": "#3c5a8c",
     "box": {
-      "x": 199,
-      "y": 624,
-      "w": 625,
-      "h": 369
+      "x": 222,
+      "y": 638,
+      "w": 579,
+      "h": 342
     },
     "image": "assets/clothes/outer/outer_cropped_denim.webp",
     "thumb": "assets/thumbs/outer_cropped_denim.webp",
@@ -733,10 +733,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 196,
-      "y": 628,
-      "w": 630,
-      "h": 372
+      "x": 219,
+      "y": 642,
+      "w": 583,
+      "h": 344
     },
     "image": "assets/clothes/outer/outer_cropped_tweed_blue.webp",
     "thumb": "assets/thumbs/outer_cropped_tweed_blue.webp",
@@ -757,10 +757,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 188,
-      "y": 625,
-      "w": 647,
-      "h": 377
+      "x": 212,
+      "y": 639,
+      "w": 599,
+      "h": 349
     },
     "image": "assets/clothes/outer/outer_jacket_gray.webp",
     "thumb": "assets/thumbs/outer_jacket_gray.webp",
@@ -781,10 +781,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 196,
-      "y": 585,
-      "w": 632,
-      "h": 677
+      "x": 219,
+      "y": 610,
+      "w": 586,
+      "h": 626
     },
     "image": "assets/clothes/outer/outer_nepa_black.webp",
     "thumb": "assets/thumbs/outer_nepa_black.webp",
@@ -805,10 +805,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 189,
-      "y": 627,
-      "w": 646,
-      "h": 404
+      "x": 213,
+      "y": 642,
+      "w": 598,
+      "h": 373
     },
     "image": "assets/clothes/outer/outer_roem_tweed_black.webp",
     "thumb": "assets/thumbs/outer_roem_tweed_black.webp",
@@ -829,10 +829,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 179,
-      "y": 627,
-      "w": 663,
-      "h": 403
+      "x": 203,
+      "y": 641,
+      "w": 614,
+      "h": 374
     },
     "image": "assets/clothes/outer/outer_short_trench_black.webp",
     "thumb": "assets/thumbs/outer_short_trench_black.webp",
@@ -853,10 +853,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 191,
-      "y": 627,
-      "w": 643,
-      "h": 657
+      "x": 215,
+      "y": 651,
+      "w": 595,
+      "h": 609
     },
     "image": "assets/clothes/outer/outer_trench_beige.webp",
     "thumb": "assets/thumbs/outer_trench_beige.webp",
@@ -877,10 +877,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 191,
-      "y": 620,
-      "w": 641,
-      "h": 663
+      "x": 215,
+      "y": 644,
+      "w": 594,
+      "h": 614
     },
     "image": "assets/clothes/outer/outer_trench_black.webp",
     "thumb": "assets/thumbs/outer_trench_black.webp",
@@ -901,10 +901,10 @@
     },
     "colorHex": "#6f7655",
     "box": {
-      "x": 171,
-      "y": 614,
-      "w": 683,
-      "h": 689
+      "x": 196,
+      "y": 640,
+      "w": 632,
+      "h": 638
     },
     "image": "assets/clothes/outer/outer_trench_khaki.webp",
     "thumb": "assets/thumbs/outer_trench_khaki.webp",
@@ -925,10 +925,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 204,
-      "y": 628,
-      "w": 614,
-      "h": 351
+      "x": 227,
+      "y": 642,
+      "w": 569,
+      "h": 324
     },
     "image": "assets/clothes/outer/outer_tweed_navy.webp",
     "thumb": "assets/thumbs/outer_tweed_navy.webp",
@@ -949,10 +949,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 174,
-      "y": 621,
-      "w": 673,
-      "h": 437
+      "x": 199,
+      "y": 637,
+      "w": 623,
+      "h": 405
     },
     "image": "assets/clothes/outer/outer_uniclo_beige.webp",
     "thumb": "assets/thumbs/outer_uniclo_beige.webp",
