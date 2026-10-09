@@ -42,10 +42,11 @@ const CLOSET_SHRINK = 1 / 1.08
 // 원피스는 한 단계(+) 크게 보이도록 줄이지 않는다 (= 위 값의 1/1.08 을 되돌린 것)
 const SHRINK_CATEGORIES: Category[] = ['top', 'bottom', 'outer']
 
-async function shrinkAboutCenter(png: string | Buffer, k: number): Promise<Buffer> {
+/** anchor 'top': 옷 맨 위(어깨선)를 고정하고 줄인다 (상의가 어깨선에서 내려오지 않게). 'center': 영역 중심 기준 (앱의 − 와 같음) */
+async function shrinkAboutCenter(png: string | Buffer, k: number, anchor: 'center' | 'top' = 'center'): Promise<Buffer> {
   const box = await alphaBBox(png)
   const cx = box.left + box.width / 2
-  const cy = box.top + box.height / 2
+  const cy = anchor === 'top' ? box.top : box.top + box.height / 2
   const w = Math.round(CANVAS_W * k)
   const h = Math.round(CANVAS_H * k)
   const small = await sharp(png).resize(w, h, { kernel: 'lanczos3' }).png().toBuffer()
@@ -148,7 +149,7 @@ async function main() {
       console.warn(`⚠ ${file}: ${meta.width}x${meta.height} (${CANVAS_W}x${CANVAS_H} 이어야 아바타와 정렬됩니다)`)
     }
     let src = await applyFit(srcFile, fits[stem])
-    if (SHRINK_CATEGORIES.includes(category)) src = await shrinkAboutCenter(src, CLOSET_SHRINK)
+    if (SHRINK_CATEGORIES.includes(category)) src = await shrinkAboutCenter(src, CLOSET_SHRINK, category === 'top' ? 'top' : 'center')
     fs.mkdirSync(path.join(OUT, 'clothes', category), { recursive: true })
     await sharp(src).webp({ quality: 90, alphaQuality: 100 }).toFile(path.join(OUT, 'clothes', category, `${stem}.webp`))
     await makeThumb(src, path.join(OUT, 'thumbs', `${stem}.webp`)).catch((e) => {
