@@ -36,22 +36,8 @@ npm test           # 착용 규칙 단위 테스트
 - PNG 저장/공유: 배경 포함/투명, 스티커 테두리 켜기/끄기
 - 한국어/영어, 큰 터치 영역, 아이콘 중심 UI
 
-### 조립 탭 (상단 `🧩 조립`) — 머리 · 상의 · 하의를 따로 고르기
-
-옷이 몸과 어긋나는 문제를 피하려고 몸통을 없애고 **머리 / 팔·손이 붙은 상의 / 다리·발이 붙은 하의** 로 나눠 조립합니다. 상의와 하의가 각자 팔·손, 허리·다리·발을 가지고 있어서 몸에 맞출 필요가 없습니다.
-- 탭: 머리 · 상의 · 하의 · 신발. 탭하면 입고, 같은 상의·하의를 다시 탭하면 벗습니다(머리는 교체만).
-- **코디 탭과 같은 조작:** 썸네일을 꾹 눌러(마우스는 바로) **아바타 쪽으로 끌어다 놓기**, 입은 부품을 눌러 선택하면 점선 테두리 → **한 손가락으로 옮기기**, **두 손가락 핀치**(휠, ➖➕ 버튼, 키보드 `+` `-` 방향키 포함)로 크기 조절(60%~160%), `↺` 원래대로, `✕` 벗기. 새로 입은 부품은 바로 선택됩니다.
-- 위치·크기 조절은 부품마다 저장되고 이미지 저장에도 반영됩니다. 다른 부품으로 바꾸면 그 칸의 조절값은 초기화됩니다.
-- 랜덤, 전체 벗기기(머리만 남김), 배경, 이미지 저장(스티커 테두리 포함)이 있고 선택은 자동 저장됩니다.
-- 레이어(아래→위): 하의 < 신발 < 상의(팔 포함) < 머리. 몸통과 속옷은 없어서, 하의를 안 입으면 상의 아래가 비어 있습니다.
-
-**에셋**
-- 상의: `assets-src/assemble/tops/top_*.png` (팔 포함 원본 1928×816). 빌드가 0.545배로 줄여 아바타 캔버스 (x −10, y 624)에 놓습니다.
-- 하의: `assets-src/assemble/bottoms/bottom_*.png` (다리·발 포함 889×1770). 위쪽의 맨살 허리 조각에서 가장 좁은 줄을 아바타 허리(y 840, 폭 177)에 맞추고, 발끝이 캔버스 안(y 1520)에 오도록 균일 배율을 정합니다. 계산: `python tools-py/fit_assemble_bottoms.py` → `scripts/assemble-bottoms-fit.json`
-- 신발: `assets-src/assemble/shoes/shoes_*.png` (발목이 보이는 한 쌍, 2170×725). 두 짝의 가운데·폭을 아바타 두 발에 맞추고 발끝을 y 1512 에 두는 값을 `python tools-py/fit_assemble_shoes.py` → `scripts/assemble-shoes-fit.json` 으로 계산합니다. 하의는 맨발까지 그려져 있어 신발이 그 위를 덮습니다.
-- 머리: `assets-src/assemble/base/head_*.png` (1024×1536 캔버스). 원본에서 `python tools-py/make_assemble_base.py` 로 만듭니다.
-- 이름·색은 `scripts/assemble-items.json`. 새 부품을 넣고 `npm run assets` 를 실행하면 `src/data/assemble-items.json` 이 갱신됩니다.
-- 한계: 이 탭에는 아우터·원피스·액세서리·코디 저장이 없습니다. 하의 이미지마다 다리 길이가 달라 균일 배율로 맞추면 허리나 발 위치가 조금 차이 날 수 있으니 앱에서 손가락으로 맞추세요.
+### (삭제됨) 조립 탭
+조립 탭(머리·상의·하의 따로 고르기)은 앱에서 없앴습니다. 조립용 원본 이미지와 맞춤 도구(`assets-src/assemble`, `tools-py/fit_assemble_*.py`, `tools-py/make_assemble_base.py`, `scripts/assemble-*.json`)는 남겨 두었고, `tools-py/place_shoes.py` 가 신발 맞춤값을 쓰기 때문에 지우지 않았습니다. 빌드(`npm run assets`)와 앱에는 쓰이지 않습니다.
 
 ### 내 방 꾸미기 (상단 `🏠 내 방` 탭)
 
@@ -96,7 +82,7 @@ src/
   lib/roomHit.ts            알파 마스크 터치 판정
   lib/exportRoom.ts         방 + 가구 + 아바타 PNG 합성
   data/items.json           자동 생성 매니페스트 (id, 이름, 카테고리, 이미지, 색상, zIndex)
-  components/               LayerStage(코디·조립 공용 무대: 선택/이동/핀치), Stage, AssembleStage, Closet, AssembleTray, useThumbDrag(끌어다 놓기), RoomView, RoomTray, 모달들
+  components/               LayerStage(무대: 선택/이동/핀치), Stage, Closet, useThumbDrag(끌어다 놓기), RoomView, RoomTray, 모달들
 ```
 
 ## 합성 규칙 (중요)
