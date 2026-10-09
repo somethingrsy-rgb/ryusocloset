@@ -48,6 +48,7 @@ const NUDGE = 6
 export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, canUndo, onUndo, assets = ROOM_ASSETS, children }: Props) {
   const { lang, t } = useI18n()
   const roomRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const drag = useRef<{ sel: NonNullable<Selection>; px: number; py: number; ox: number; oy: number } | null>(null)
   const pinch = useRef<{ dist: number; scale: number } | null>(null)
@@ -82,6 +83,14 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
 
   const list = drawables(room)
   const selected = selection ? list.find((d) => sameSelection(d.sel, selection)) : undefined
+
+  /** 화면에 보이는 가로 범위(논리 좌표): 방 폭보다 화면이 넓으면 양옆 배경까지 */
+  const visibleX = () => {
+    const o = stageRef.current?.getBoundingClientRect()
+    const r = roomRef.current?.getBoundingClientRect()
+    if (!o || !r || !r.width) return { min: 0, max: ROOM_W }
+    return { min: ((o.left - r.left) / r.width) * ROOM_W, max: ((o.right - r.left) / r.width) * ROOM_W }
+  }
 
   const toLogical = (e: { clientX: number; clientY: number }) => {
     const r = roomRef.current!.getBoundingClientRect()
@@ -121,7 +130,8 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
     const d = drag.current
     if (!d) return
     const { x, y } = toLogical(e)
-    onChange(moveTo(roomState.current, d.sel, d.ox + (x - d.px), d.oy + (y - d.py)))
+    const v = visibleX() // 화면 밖으로 끌어내서 잃어버리지 않게
+    onChange(moveTo(roomState.current, d.sel, Math.min(v.max, Math.max(v.min, d.ox + (x - d.px))), d.oy + (y - d.py)))
   }
 
   const onPointerEnd = (e: PointerEvent<HTMLDivElement>) => {
@@ -169,6 +179,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
 
   return (
     <div
+      ref={stageRef}
       className="relative h-full w-full overflow-hidden rounded-3xl bg-petal shadow-inner ring-1 ring-black/5"
       style={{ containerType: 'size' }}
     >
@@ -208,13 +219,15 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
           onPointerCancel={onPointerEnd}
           onKeyDown={onKeyDown}
           onWheel={(e) => selection && onChange(scaleBy(room, selection, Math.exp(-e.deltaY * 0.0015)))}
-          className="relative isolate touch-none overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blush-deep/70"
+          className="relative isolate touch-none outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blush-deep/70"
           style={{
             width: `min(100cqw, calc(100cqh * ${ROOM_W / ROOM_H}))`,
             aspectRatio: `${ROOM_W} / ${ROOM_H}`,
             containerType: 'inline-size',
           }}
         >
+          {/* 방 양옆 배경 위도 눌러서 옮길 수 있도록 방 폭의 양옆을 투명하게 덮는다 */}
+          <div aria-hidden className="absolute top-0 bottom-0" style={{ left: '-100%', right: '-100%', zIndex: 0 }} />
           <img
             src={assets.floor}
             alt=""

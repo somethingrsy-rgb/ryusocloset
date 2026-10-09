@@ -10,6 +10,8 @@ export const AVATAR_BASE_W = 396
 /** 아바타 캔버스에서 발바닥이 끝나는 높이 비율 — 방에서 아바타의 기준점(y)은 발바닥이다 */
 export const AVATAR_FEET_RATIO = 1508 / 1536
 export const MAX_PLACED = 40
+/** 방 폭(0~ROOM_W) 밖, 화면 양옆 배경 위에도 물건을 놓을 수 있는 최대 거리 (논리 px). 실제로는 화면에 보이는 범위까지만 옮겨진다 */
+export const ROOM_EXTRA = 700
 export const MIN_SCALE = 0.3
 export const MAX_SCALE = 3
 
