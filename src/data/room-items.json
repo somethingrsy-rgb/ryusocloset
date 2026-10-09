@@ -12,18 +12,7 @@
     "h": 1082,
     "baseWidth": 700,
     "x": 543,
-    "y": 1230,
-    "category": "furniture",
-    "price": 90,
-    "size": {
-      "width": 700,
-      "height": 605
-    },
-    "anchor": "bottom-center",
-    "zIndex": 2000,
-    "slot": "furniture-left",
-    "setId": "pink",
-    "unlock": null
+    "y": 1230
   },
   {
     "id": "furniture_desk_chair",
@@ -38,18 +27,7 @@
     "h": 882,
     "baseWidth": 620,
     "x": 543,
-    "y": 1230,
-    "category": "furniture",
-    "price": 65,
-    "size": {
-      "width": 620,
-      "height": 446
-    },
-    "anchor": "bottom-center",
-    "zIndex": 2000,
-    "slot": "furniture-left",
-    "setId": "wood",
-    "unlock": null
+    "y": 1230
   },
   {
     "id": "furniture_dresser",
@@ -64,18 +42,7 @@
     "h": 1214,
     "baseWidth": 340,
     "x": 860,
-    "y": 1230,
-    "category": "furniture",
-    "price": 55,
-    "size": {
-      "width": 340,
-      "height": 490
-    },
-    "anchor": "bottom-center",
-    "zIndex": 2000,
-    "slot": "wardrobe-right",
-    "setId": "white",
-    "unlock": null
+    "y": 1230
   },
   {
     "id": "furniture_hanger",
@@ -90,18 +57,22 @@
     "h": 1105,
     "baseWidth": 560,
     "x": 543,
-    "y": 1240,
-    "category": "furniture",
-    "price": 45,
-    "size": {
-      "width": 560,
-      "height": 503
+    "y": 1240
+  },
+  {
+    "id": "furniture_heart_cushion",
+    "group": "furniture",
+    "name": {
+      "ko": "하트 쿠션",
+      "en": "Heart Cushion"
     },
-    "anchor": "bottom-center",
-    "zIndex": 2000,
-    "slot": "wardrobe-right",
-    "setId": "white",
-    "unlock": null
+    "image": "assets/room/furniture_heart_cushion.webp",
+    "thumb": "assets/room/thumbs/furniture_heart_cushion.webp",
+    "w": 1238,
+    "h": 917,
+    "baseWidth": 230,
+    "x": 450,
+    "y": 1320
   },
   {
     "id": "furniture_mirror_full",
@@ -116,18 +87,52 @@
     "h": 1223,
     "baseWidth": 290,
     "x": 900,
-    "y": 1250,
-    "category": "furniture",
-    "price": 40,
-    "size": {
-      "width": 290,
-      "height": 556
+    "y": 1250
+  },
+  {
+    "id": "furniture_plush_bear",
+    "group": "furniture",
+    "name": {
+      "ko": "곰인형",
+      "en": "Teddy Bear"
     },
-    "anchor": "bottom-center",
-    "zIndex": 2000,
-    "slot": "wardrobe-right",
-    "setId": "white",
-    "unlock": null
+    "image": "assets/room/furniture_plush_bear.webp",
+    "thumb": "assets/room/thumbs/furniture_plush_bear.webp",
+    "w": 972,
+    "h": 1110,
+    "baseWidth": 220,
+    "x": 250,
+    "y": 1290
+  },
+  {
+    "id": "furniture_shoebox",
+    "group": "furniture",
+    "name": {
+      "ko": "신발 상자",
+      "en": "Shoebox"
+    },
+    "image": "assets/room/furniture_shoebox.webp",
+    "thumb": "assets/room/thumbs/furniture_shoebox.webp",
+    "w": 1186,
+    "h": 581,
+    "baseWidth": 210,
+    "x": 650,
+    "y": 1320
+  },
+  {
+    "id": "furniture_shopping_bag",
+    "group": "furniture",
+    "name": {
+      "ko": "쇼핑백",
+      "en": "Shopping Bag"
+    },
+    "image": "assets/room/furniture_shopping_bag.webp",
+    "thumb": "assets/room/thumbs/furniture_shopping_bag.webp",
+    "w": 787,
+    "h": 945,
+    "baseWidth": 200,
+    "x": 780,
+    "y": 1310
   },
   {
     "id": "furniture_sofa_bear",
@@ -142,18 +147,22 @@
     "h": 836,
     "baseWidth": 600,
     "x": 380,
-    "y": 1255,
-    "category": "furniture",
-    "price": 75,
-    "size": {
-      "width": 600,
-      "height": 400
+    "y": 1255
+  },
+  {
+    "id": "furniture_succulent_pot",
+    "group": "furniture",
+    "name": {
+      "ko": "다육식물 화분",
+      "en": "Succulent Pot"
     },
-    "anchor": "bottom-center",
-    "zIndex": 2000,
-    "slot": "furniture-left",
-    "setId": null,
-    "unlock": null
+    "image": "assets/room/furniture_succulent_pot.webp",
+    "thumb": "assets/room/thumbs/furniture_succulent_pot.webp",
+    "w": 852,
+    "h": 908,
+    "baseWidth": 180,
+    "x": 900,
+    "y": 1290
   },
   {
     "id": "furniture_vanity",
@@ -168,21 +177,7 @@
     "h": 1239,
     "baseWidth": 400,
     "x": 543,
-    "y": 1240,
-    "category": "furniture",
-    "price": 95,
-    "size": {
-      "width": 400,
-      "height": 461
-    },
-    "anchor": "bottom-center",
-    "zIndex": 2000,
-    "slot": "furniture-left",
-    "setId": "pink",
-    "unlock": {
-      "type": "level",
-      "value": 2
-    }
+    "y": 1240
   },
   {
     "id": "rug_stripe",
@@ -197,18 +192,7 @@
     "h": 387,
     "baseWidth": 680,
     "x": 543,
-    "y": 1350,
-    "category": "props",
-    "price": 25,
-    "size": {
-      "width": 680,
-      "height": 212
-    },
-    "anchor": "bottom-center",
-    "zIndex": 4000,
-    "slot": "foreground",
-    "setId": "wood",
-    "unlock": null
+    "y": 1350
   },
   {
     "id": "wall_clock",
@@ -223,18 +207,7 @@
     "h": 1032,
     "baseWidth": 200,
     "x": 543,
-    "y": 420,
-    "category": "wall",
-    "price": 30,
-    "size": {
-      "width": 200,
-      "height": 200
-    },
-    "anchor": "bottom-center",
-    "zIndex": 1000,
-    "slot": "wall-right",
-    "setId": null,
-    "unlock": null
+    "y": 420
   },
   {
     "id": "wall_frame",
@@ -249,18 +222,7 @@
     "h": 1040,
     "baseWidth": 300,
     "x": 543,
-    "y": 600,
-    "category": "wall",
-    "price": 30,
-    "size": {
-      "width": 300,
-      "height": 285
-    },
-    "anchor": "bottom-center",
-    "zIndex": 1000,
-    "slot": "wall-center",
-    "setId": null,
-    "unlock": null
+    "y": 600
   },
   {
     "id": "wall_shelf",
@@ -275,18 +237,7 @@
     "h": 290,
     "baseWidth": 420,
     "x": 543,
-    "y": 640,
-    "category": "wall",
-    "price": 30,
-    "size": {
-      "width": 420,
-      "height": 103
-    },
-    "anchor": "bottom-center",
-    "zIndex": 1000,
-    "slot": "wall-center",
-    "setId": "wood",
-    "unlock": null
+    "y": 640
   },
   {
     "id": "wall_star_string",
@@ -301,18 +252,7 @@
     "h": 447,
     "baseWidth": 560,
     "x": 543,
-    "y": 360,
-    "category": "wall",
-    "price": 30,
-    "size": {
-      "width": 560,
-      "height": 211
-    },
-    "anchor": "bottom-center",
-    "zIndex": 1000,
-    "slot": "wall-top",
-    "setId": null,
-    "unlock": null
+    "y": 360
   },
   {
     "id": "wall_window_day",
@@ -327,18 +267,7 @@
     "h": 1025,
     "baseWidth": 440,
     "x": 543,
-    "y": 640,
-    "category": "wall",
-    "price": 30,
-    "size": {
-      "width": 440,
-      "height": 379
-    },
-    "anchor": "bottom-center",
-    "zIndex": 1000,
-    "slot": "wall-center",
-    "setId": "pink",
-    "unlock": null
+    "y": 640
   },
   {
     "id": "wall_window_night",
@@ -353,18 +282,7 @@
     "h": 937,
     "baseWidth": 440,
     "x": 543,
-    "y": 640,
-    "category": "wall",
-    "price": 30,
-    "size": {
-      "width": 440,
-      "height": 360
-    },
-    "anchor": "bottom-center",
-    "zIndex": 1000,
-    "slot": "wall-center",
-    "setId": null,
-    "unlock": null
+    "y": 640
   },
   {
     "id": "wall_wreath",
@@ -379,18 +297,7 @@
     "h": 1130,
     "baseWidth": 240,
     "x": 543,
-    "y": 520,
-    "category": "wall",
-    "price": 30,
-    "size": {
-      "width": 240,
-      "height": 240
-    },
-    "anchor": "bottom-center",
-    "zIndex": 1000,
-    "slot": "wall-right",
-    "setId": "pink",
-    "unlock": null
+    "y": 520
   },
   {
     "id": "light_lamp_glow",
@@ -405,18 +312,7 @@
     "h": 1200,
     "baseWidth": 420,
     "x": 543,
-    "y": 1100,
-    "category": "lighting",
-    "price": 50,
-    "size": {
-      "width": 420,
-      "height": 451
-    },
-    "anchor": "bottom-center",
-    "zIndex": 5000,
-    "slot": "lighting",
-    "setId": null,
-    "unlock": null
+    "y": 1100
   },
   {
     "id": "light_sparkle",
@@ -431,150 +327,6 @@
     "h": 1072,
     "baseWidth": 620,
     "x": 543,
-    "y": 900,
-    "category": "lighting",
-    "price": 50,
-    "size": {
-      "width": 620,
-      "height": 632
-    },
-    "anchor": "bottom-center",
-    "zIndex": 5000,
-    "slot": "lighting",
-    "setId": null,
-    "unlock": {
-      "type": "streak",
-      "value": 3
-    }
-  },
-  {
-    "id": "wallpaper_heart",
-    "group": "wallpaper",
-    "category": "wallpaper",
-    "name": {
-      "ko": "하트 벽지",
-      "en": "Heart wallpaper"
-    },
-    "image": "assets/room/wall.webp",
-    "thumb": "assets/room/wall.webp",
-    "w": 1086,
-    "h": 1448,
-    "baseWidth": 1086,
-    "x": 543,
-    "y": 1448,
-    "price": 0,
-    "size": {
-      "width": 1086,
-      "height": 1448
-    },
-    "anchor": "bottom-center",
-    "zIndex": 1,
-    "slot": "wallpaper",
-    "setId": null,
-    "unlock": null
-  },
-  {
-    "id": "floor_wood",
-    "group": "floor",
-    "category": "floor",
-    "name": {
-      "ko": "밝은 원목",
-      "en": "Light wood floor"
-    },
-    "image": "assets/room/floor.webp",
-    "thumb": "assets/room/floor.webp",
-    "w": 1086,
-    "h": 434,
-    "baseWidth": 1086,
-    "x": 543,
-    "y": 1448,
-    "price": 0,
-    "size": {
-      "width": 1086,
-      "height": 434
-    },
-    "anchor": "bottom-center",
-    "zIndex": 0,
-    "slot": "floor",
-    "setId": null,
-    "unlock": null
-  },
-  {
-    "id": "wallpaper_white",
-    "group": "wallpaper",
-    "category": "wallpaper",
-    "name": {
-      "ko": "미니멀 화이트 벽지",
-      "en": "Minimal white wallpaper"
-    },
-    "image": "assets/room/white-wall.svg",
-    "thumb": "assets/room/white-wall.svg",
-    "w": 1086,
-    "h": 1448,
-    "baseWidth": 1086,
-    "x": 543,
-    "y": 1448,
-    "price": 20,
-    "size": {
-      "width": 1086,
-      "height": 1448
-    },
-    "anchor": "bottom-center",
-    "zIndex": 1,
-    "slot": "wallpaper",
-    "setId": "white",
-    "unlock": null
-  },
-  {
-    "id": "wallpaper_pink",
-    "group": "wallpaper",
-    "category": "wallpaper",
-    "name": {
-      "ko": "핑크 로맨틱 벽지",
-      "en": "Pink romantic wallpaper"
-    },
-    "image": "assets/room/pink-wall.svg",
-    "thumb": "assets/room/pink-wall.svg",
-    "w": 1086,
-    "h": 1448,
-    "baseWidth": 1086,
-    "x": 543,
-    "y": 1448,
-    "price": 30,
-    "size": {
-      "width": 1086,
-      "height": 1448
-    },
-    "anchor": "bottom-center",
-    "zIndex": 1,
-    "slot": "wallpaper",
-    "setId": "pink",
-    "unlock": null
-  },
-  {
-    "id": "floor_vintage",
-    "group": "floor",
-    "category": "floor",
-    "name": {
-      "ko": "빈티지 우드 바닥",
-      "en": "Vintage wood floor"
-    },
-    "image": "assets/room/vintage-floor.svg",
-    "thumb": "assets/room/vintage-floor.svg",
-    "w": 1086,
-    "h": 434,
-    "baseWidth": 1086,
-    "x": 543,
-    "y": 1448,
-    "price": 25,
-    "size": {
-      "width": 1086,
-      "height": 434
-    },
-    "anchor": "bottom-center",
-    "zIndex": 0,
-    "slot": "floor",
-    "setId": "wood",
-    "unlock": null
+    "y": 900
   }
 ]

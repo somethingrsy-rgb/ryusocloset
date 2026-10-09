@@ -1,4 +1,5 @@
 import roomData from '../data/room-items.json'
+import { notifyItemsChanged } from './items'
 import { CANVAS_H, CANVAS_W } from './layers'
 import {
   AVATAR_BASE_W,
@@ -16,13 +17,26 @@ import {
   type Selection,
 } from './roomTypes'
 
-export const ROOM_CATALOG: RoomItemDef[] = (roomData as RoomItemDef[]).map(raw => {
-  const group = raw.group ?? ({ wallpaper: 'wallpaper', floor: 'floor', furniture: 'furniture', wall: 'wall', lighting: 'light', props: 'rug', sticker: 'wall' } as const)[raw.category]
-  const size = raw.size ?? { width: raw.baseWidth, height: raw.baseWidth * raw.h / raw.w }
-  return { ...raw, group, image: /^(?!https?:|\/\/|data:)[a-zA-Z0-9_./-]+$/.test(raw.image) ? raw.image : 'assets/room/placeholder.svg', thumb: raw.thumb ?? raw.image, w: raw.w ?? size.width, h: raw.h ?? size.height, baseWidth: raw.baseWidth ?? size.width, x: raw.x ?? 543, y: raw.y ?? 1230, price: Number.isSafeInteger(raw.price) && raw.price >= 0 ? raw.price : 0, size, anchor: raw.anchor ?? 'bottom-center', zIndex: raw.zIndex ?? (group === 'wall' ? 1000 : group === 'light' ? 5000 : 2000) }
-})
-export const ROOM_ITEMS = ROOM_CATALOG.filter(d => d.group !== 'wallpaper' && d.group !== 'floor')
+export const ROOM_ITEMS: RoomItemDef[] = [...(roomData as RoomItemDef[])]
 export const ROOM_ITEM_BY_ID: Record<string, RoomItemDef> = Object.fromEntries(ROOM_ITEMS.map((d) => [d.id, d]))
+
+/** 내가 추가한 방 물건 (customItems.ts 가 불러오고 저장한다) */
+export const CUSTOM_ROOM_PREFIX = 'customroom_'
+export const isCustomRoomItem = (d: Pick<RoomItemDef, 'id'>) => d.id.startsWith(CUSTOM_ROOM_PREFIX)
+
+export function unregisterCustomRoomItem(id: string, silent = false) {
+  const d = ROOM_ITEM_BY_ID[id]
+  if (!d) return
+  ROOM_ITEMS.splice(ROOM_ITEMS.indexOf(d), 1)
+  delete ROOM_ITEM_BY_ID[id]
+  if (!silent) notifyItemsChanged()
+}
+export function registerCustomRoomItem(d: RoomItemDef, silent = false) {
+  unregisterCustomRoomItem(d.id, true)
+  ROOM_ITEMS.unshift(d)
+  ROOM_ITEM_BY_ID[d.id] = d
+  if (!silent) notifyItemsChanged()
+}
 
 export const DEFAULT_AVATAR: AvatarPlacement = { x: 760, y: 1395, scale: 1, flip: false }
 
@@ -37,7 +51,7 @@ export function defaultRoom(): RoomState {
     mk('rug_stripe', 'd2', { x: 543, y: 1350 }),
     mk('furniture_sofa_bear', 'd3', { x: 360, y: 1255 }),
   ].filter((p) => ROOM_ITEM_BY_ID[p.itemId])
-  return { layoutMode: 'slots', wallpaperId: 'wallpaper_heart', floorId: 'floor_wood', avatar: { ...DEFAULT_AVATAR }, items }
+  return { avatar: { ...DEFAULT_AVATAR }, items }
 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
@@ -95,8 +109,7 @@ export function getPlacement(state: RoomState, sel: NonNullable<Selection>) {
 export function sanitizeRoom(raw: unknown): RoomState {
   const base = defaultRoom()
   if (!raw || typeof raw !== 'object') return base
-  const r = raw as { avatar?: unknown; items?: unknown; wallpaperId?: unknown; floorId?: unknown; layoutMode?: unknown }
-  const backdrops = { layoutMode: r.layoutMode === 'slots' ? 'slots' as const : 'free' as const, wallpaperId: ROOM_CATALOG.find(d => d.id === r.wallpaperId && d.group === 'wallpaper')?.id ?? 'wallpaper_heart', floorId: ROOM_CATALOG.find(d => d.id === r.floorId && d.group === 'floor')?.id ?? 'floor_wood' }
+  const r = raw as { avatar?: unknown; items?: unknown }
   const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d)
   const a = (r.avatar ?? {}) as Record<string, unknown>
   const avatar: AvatarPlacement = {
@@ -105,7 +118,7 @@ export function sanitizeRoom(raw: unknown): RoomState {
     scale: clampScale(num(a.scale, 1)),
     flip: a.flip === true,
   }
-  if (!Array.isArray(r.items)) return { ...backdrops, avatar, items: base.items }
+  if (!Array.isArray(r.items)) return { avatar, items: base.items }
   const seen = new Set<string>()
   const items: Placed[] = []
   for (const it of r.items as Record<string, unknown>[]) {
@@ -123,7 +136,7 @@ export function sanitizeRoom(raw: unknown): RoomState {
     })
     if (items.length >= MAX_PLACED) break
   }
-  return { ...backdrops, avatar, items }
+  return { avatar, items }
 }
 
 /* ───── 그리기 순서와 영역 (화면, 터치 판정, PNG 내보내기가 같이 쓴다) ─────
@@ -145,7 +158,18 @@ export interface Drawable {
   src?: string
 }
 
-const zOf = (group: RoomGroup | 'avatar', y: number, index: number) => group === 'rug' ? 100 + index : group === 'wall' ? 1000 + index : group === 'light' ? 5000 + index : 2000 + y
+const zOf = (group: RoomGroup | 'avatar', y: number, index: number) => {
+  switch (group) {
+    case 'rug':
+      return 100 + index
+    case 'wall':
+      return 1000 + index
+    case 'light':
+      return 5000 + index
+    default:
+      return 2000 + y // furniture, avatar
+  }
+}
 
 export function drawables(state: RoomState): Drawable[] {
   const out: Drawable[] = []
@@ -157,7 +181,7 @@ export function drawables(state: RoomState): Drawable[] {
       sel: { kind: 'item', uid: p.uid },
       key: def.id,
       group: def.group,
-      z: state.layoutMode === 'slots' ? def.zIndex + i : zOf(def.group, p.y, i),
+      z: zOf(def.group, p.y, i),
       left: p.x - w / 2,
       top: p.y - h,
       w,
@@ -175,7 +199,7 @@ export function drawables(state: RoomState): Drawable[] {
     sel: { kind: 'avatar' },
     key: 'avatar',
     group: 'avatar',
-    z: state.layoutMode === 'slots' ? 3000 : zOf('avatar', av.y, 0) + 0.5,
+    z: zOf('avatar', av.y, 0) + 0.5,
     left: av.x - w / 2,
     top: av.y - h * AVATAR_FEET_RATIO,
     w,
@@ -197,19 +221,3 @@ export function sameSelection(a: Selection, b: Selection): boolean {
   if (a.kind !== b.kind) return false
   return a.kind === 'avatar' || (b.kind === 'item' && a.uid === b.uid)
 }
-
-/** MVP slots replace existing slot occupants; never place an unowned object. */
-export function placeInSlot(state: RoomState, def: RoomItemDef, owned: string[]): RoomState {
-  if (!owned.includes(def.id)) throw new Error('NOT_OWNED')
-  if (def.group === 'wallpaper') return { ...state, wallpaperId: def.id }
-  if (def.group === 'floor') return { ...state, floorId: def.id }
-  const coords: Record<string, [number, number]> = { 'furniture-left': [370, 1250], 'wardrobe-right': [875, 1240], 'wall-center': [500, 650], 'wall-right': [885, 480], 'wall-top': [540, 320], foreground: [540, 1400], lighting: [540, 1180] }
-  const slot = def.slot ?? def.id
-  const [x,y] = coords[slot] ?? [def.x, def.y]
-  const safeX = Math.max(def.baseWidth / 2, Math.min(ROOM_W - def.baseWidth / 2, x))
-  return { ...state, layoutMode: 'slots', items: [...state.items.filter(p => (ROOM_ITEM_BY_ID[p.itemId]?.slot ?? p.itemId) !== slot), { uid: `slot-${slot}`, itemId: def.id, x: safeX, y, scale: 1, flip: false }] }
-}
-export const roomBackgrounds = (room: RoomState) => ({
-  wall: ROOM_CATALOG.find(d => d.id === room.wallpaperId)?.image ?? 'assets/room/wall.webp',
-  floor: ROOM_CATALOG.find(d => d.id === room.floorId)?.image ?? 'assets/room/floor.webp',
-})

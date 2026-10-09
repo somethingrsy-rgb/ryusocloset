@@ -25,10 +25,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 100,
+      "x": 121,
       "y": 624,
-      "w": 827,
-      "h": 420
+      "w": 785,
+      "h": 399
     },
     "image": "assets/assemble/top_cardigan_mint.webp",
     "thumb": "assets/assemble/thumbs/top_cardigan_mint.webp"
@@ -42,10 +42,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 97,
+      "x": 117,
       "y": 624,
-      "w": 837,
-      "h": 421
+      "w": 796,
+      "h": 400
     },
     "image": "assets/assemble/top_check_cardigan_gray.webp",
     "thumb": "assets/assemble/thumbs/top_check_cardigan_gray.webp"
@@ -59,10 +59,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 124,
+      "x": 143,
       "y": 624,
-      "w": 783,
-      "h": 415
+      "w": 744,
+      "h": 394
     },
     "image": "assets/assemble/top_collar_knit_ivory.webp",
     "thumb": "assets/assemble/thumbs/top_collar_knit_ivory.webp"
@@ -76,10 +76,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 119,
+      "x": 138,
       "y": 624,
-      "w": 793,
-      "h": 400
+      "w": 754,
+      "h": 379
     },
     "image": "assets/assemble/top_contrast_cardigan_black.webp",
     "thumb": "assets/assemble/thumbs/top_contrast_cardigan_black.webp"
@@ -93,10 +93,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 96,
+      "x": 116,
       "y": 624,
-      "w": 839,
-      "h": 426
+      "w": 797,
+      "h": 405
     },
     "image": "assets/assemble/top_embroidered_cardigan_ivory.webp",
     "thumb": "assets/assemble/thumbs/top_embroidered_cardigan_ivory.webp"
@@ -110,10 +110,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 102,
+      "x": 122,
       "y": 624,
-      "w": 820,
-      "h": 424
+      "w": 779,
+      "h": 403
     },
     "image": "assets/assemble/top_inner_tee_black.webp",
     "thumb": "assets/assemble/thumbs/top_inner_tee_black.webp"
@@ -127,10 +127,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 133,
+      "x": 152,
       "y": 624,
-      "w": 765,
-      "h": 407
+      "w": 726,
+      "h": 386
     },
     "image": "assets/assemble/top_inner_tee_ivory.webp",
     "thumb": "assets/assemble/thumbs/top_inner_tee_ivory.webp"
@@ -144,10 +144,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 114,
+      "x": 134,
       "y": 624,
-      "w": 800,
-      "h": 430
+      "w": 759,
+      "h": 408
     },
     "image": "assets/assemble/top_pattern_vest_ivory.webp",
     "thumb": "assets/assemble/thumbs/top_pattern_vest_ivory.webp"
@@ -161,10 +161,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 103,
+      "x": 124,
       "y": 624,
-      "w": 825,
-      "h": 412
+      "w": 783,
+      "h": 391
     },
     "image": "assets/assemble/top_sailor_cardigan_ivory.webp",
     "thumb": "assets/assemble/thumbs/top_sailor_cardigan_ivory.webp"
@@ -178,10 +178,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 367,
-      "y": 795,
-      "w": 290,
-      "h": 725
+      "x": 374,
+      "y": 798,
+      "w": 276,
+      "h": 689
     },
     "image": "assets/assemble/bottom_belt_skirt_black.webp",
     "thumb": "assets/assemble/thumbs/bottom_belt_skirt_black.webp"
@@ -195,10 +195,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 365,
-      "y": 786,
-      "w": 294,
-      "h": 735
+      "x": 373,
+      "y": 789,
+      "w": 279,
+      "h": 699
     },
     "image": "assets/assemble/bottom_belt_skirt_charcoal.webp",
     "thumb": "assets/assemble/thumbs/bottom_belt_skirt_charcoal.webp"
@@ -212,10 +212,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 322,
-      "y": 791,
-      "w": 383,
-      "h": 731
+      "x": 331,
+      "y": 793,
+      "w": 364,
+      "h": 694
     },
     "image": "assets/assemble/bottom_button_skirt_brown.webp",
     "thumb": "assets/assemble/thumbs/bottom_button_skirt_brown.webp"
@@ -229,10 +229,10 @@
     },
     "colorHex": "#3c5a8c",
     "box": {
-      "x": 335,
-      "y": 819,
-      "w": 351,
-      "h": 701
+      "x": 344,
+      "y": 821,
+      "w": 333,
+      "h": 666
     },
     "image": "assets/assemble/bottom_denim_skirt.webp",
     "thumb": "assets/assemble/thumbs/bottom_denim_skirt.webp"
@@ -246,10 +246,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 319,
-      "y": 784,
-      "w": 387,
-      "h": 737
+      "x": 329,
+      "y": 787,
+      "w": 368,
+      "h": 701
     },
     "image": "assets/assemble/bottom_flare_skirt_gray.webp",
     "thumb": "assets/assemble/thumbs/bottom_flare_skirt_gray.webp"
@@ -263,10 +263,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 368,
-      "y": 812,
-      "w": 285,
-      "h": 709
+      "x": 376,
+      "y": 813,
+      "w": 270,
+      "h": 673
     },
     "image": "assets/assemble/bottom_h_skirt_brown.webp",
     "thumb": "assets/assemble/thumbs/bottom_h_skirt_brown.webp"
@@ -280,10 +280,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 368,
-      "y": 806,
-      "w": 288,
-      "h": 715
+      "x": 375,
+      "y": 808,
+      "w": 274,
+      "h": 679
     },
     "image": "assets/assemble/bottom_pants_black.webp",
     "thumb": "assets/assemble/thumbs/bottom_pants_black.webp"
@@ -297,10 +297,10 @@
     },
     "colorHex": "#55565c",
     "box": {
-      "x": 361,
-      "y": 784,
-      "w": 304,
-      "h": 736
+      "x": 368,
+      "y": 787,
+      "w": 289,
+      "h": 700
     },
     "image": "assets/assemble/bottom_pants_charcoal.webp",
     "thumb": "assets/assemble/thumbs/bottom_pants_charcoal.webp"
@@ -314,10 +314,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 352,
-      "y": 818,
-      "w": 323,
-      "h": 703
+      "x": 360,
+      "y": 819,
+      "w": 307,
+      "h": 668
     },
     "image": "assets/assemble/bottom_white_denim_skirt.webp",
     "thumb": "assets/assemble/thumbs/bottom_white_denim_skirt.webp"

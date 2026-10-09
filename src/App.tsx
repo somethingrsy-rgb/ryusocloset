@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AssembleStage, assemblyLayers } from './components/AssembleStage'
 import { AssembleTray } from './components/AssembleTray'
 import { BackgroundPicker } from './components/BackgroundPicker'
+import { AddItemModal } from './components/AddItemModal'
 import { Closet } from './components/Closet'
+import { removeCustomItem, removeCustomRoomItem } from './lib/customItems'
+import { useItemsVersion } from './lib/useItemsVersion'
 import { ExportSheet, type RenderOptions } from './components/ExportSheet'
-import { RoomEconomyPanel } from './components/RoomEconomyPanel'
-import { useEconomy } from './state/useEconomy'
-import { toCanvas } from 'html-to-image'
+import { RoomTray } from './components/RoomTray'
 import { RoomView } from './components/RoomView'
 import { SavedSheet } from './components/SavedSheet'
 import { Stage } from './components/Stage'
@@ -19,8 +20,8 @@ import { ROOM_ASSETS, renderRoomCanvas } from './lib/exportRoom'
 import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, assetUrl } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
 import { randomOutfit, toggleItem } from './lib/outfit'
-import { ROOM_ITEMS, defaultRoom, placeInSlot } from './lib/room'
-import { type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
+import { ROOM_ITEMS, addItem, defaultRoom } from './lib/room'
+import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
 import { playSnap } from './lib/sound'
 import {
   MAX_SAVED,
@@ -40,8 +41,8 @@ import {
 import { getTweak, pruneTweaks, sanitizeTweaks } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
 
-type ModalKind = null | 'bg' | 'saved' | 'export' | 'roomExport' | 'assembleExport'
-type Mode = 'closet' | 'room' | 'assemble' | 'shop' | 'collection'
+type ModalKind = null | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport' | 'assembleExport'
+type Mode = 'closet' | 'room' | 'assemble'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
@@ -58,14 +59,11 @@ export default function App() {
   const [tweaks, setTweaks] = useState<Tweaks>(() => loadTweaks(loadCurrent()))
   const [selCat, setSelCat] = useState<Category | null>(null)
   const [dragOver, setDragOver] = useState(false)
+  useItemsVersion()
   const [category, setCategory] = useState<Category>('top')
+  const [propGroup, setPropGroup] = useState<RoomGroup>('furniture')
   const [saved, setSaved] = useState<SavedOutfit[]>(loadSaved)
   const [room, setRoom] = useState<RoomState>(loadRoom)
-  const [preview, setPreview] = useState<RoomState | null>(null)
-  const [roomAsBackground, setRoomAsBackground] = useState(false)
-  const economy = useEconomy()
-  const roomCaptureRef = useRef<HTMLDivElement>(null)
-  const savingRef = useRef(false)
   const [assembly, setAssembly] = useState<Assembly>(loadAssembly)
   const [selSlot, setSelSlot] = useState<Slot | null>(null)
   const [selection, setSelection] = useState<Selection>(null)
@@ -151,6 +149,25 @@ export default function App() {
     onToggle(item)
   }
 
+  /** 내가 추가한 옷 지우기 (입고 있으면 벗긴다) */
+  const removeMine = (item: Item) => {
+    if (outfit[item.category] === item.id) {
+      const next = { ...outfit }
+      delete next[item.category]
+      applyOutfit(next)
+    }
+    void removeCustomItem(item.id)
+    showToast(t('removed'))
+  }
+
+  /** 내가 추가한 방 소품 지우기 (방에 놓인 것도 함께 치운다) */
+  const removeMyProp = (def: RoomItemDef) => {
+    setRoom((r) => ({ ...r, items: r.items.filter((p) => p.itemId !== def.id) }))
+    setSelection(null)
+    void removeCustomRoomItem(def.id)
+    showToast(t('removed'))
+  }
+
   const takeOff = (c: Category) => {
     const next = { ...outfit }
     delete next[c]
@@ -175,20 +192,16 @@ export default function App() {
   const saveCurrent = async () => {
     if (!hasClothes) return showToast(t('nothingToSave'))
     if (saved.length >= MAX_SAVED) return showToast(t('savedFull', { n: MAX_SAVED }))
-    if (savingRef.current) return
-    savingRef.current = true
     try {
       const thumb = await renderThumb(outfit, bg, tweaks)
       const entry: SavedOutfit = { id: newUid(), createdAt: Date.now(), outfit, tweaks, bgId, thumb }
       const next = [entry, ...saved]
       if (!persistSaved(next)) return showToast(t('saveFailed'))
       setSaved(next)
-      const before = useEconomy.getState().data.points
-      const rewarded = economy.saveReward(JSON.stringify(Object.entries(outfit).sort(([a],[b]) => a.localeCompare(b))))
-      showToast(rewarded && useEconomy.getState().data.points > before ? `${t('saved')} · ★ +${useEconomy.getState().data.points-before}` : t('saved'))
+      showToast(t('saved'))
     } catch {
       showToast(t('exportFailed'))
-    } finally { savingRef.current = false }
+    }
   }
 
   const deleteSaved = (id: string) => {
@@ -208,14 +221,17 @@ export default function App() {
 
   /* ── 방 ── */
   const addToRoom = (def: RoomItemDef) => {
-    try { setRoom(placeInSlot(room, def, economy.data.owned)); setPreview(null); setSelection(null); if (sound) playSnap() }
-    catch { showToast(lang === 'ko' ? '먼저 상점에서 구매해 주세요.' : 'Purchase this item first.') }
+    const uid = newUid()
+    const next = addItem(room, def, uid)
+    if (!next) return showToast(t('roomFull', { n: MAX_PLACED }))
+    setRoom(next)
+    setSelection({ kind: 'item', uid })
+    if (sound) playSnap()
   }
 
   const resetRoom = () => {
     if (!window.confirm(t('roomResetConfirm'))) return
     setRoom(defaultRoom())
-    setPreview(null)
     setSelection(null)
     showToast(t('roomResetDone'))
   }
@@ -254,11 +270,8 @@ export default function App() {
     setSelSlot(null)
   }
 
-  const renderOutfit = useCallback((o: RenderOptions) => roomAsBackground ? renderRoomCanvas(room, outfit, tweaks) : renderOutfitCanvas(outfit, o, tweaks), [outfit, tweaks, room, roomAsBackground])
-  const renderRoom = useCallback(async () => {
-    if (roomCaptureRef.current) { try { return await toCanvas(roomCaptureRef.current, { canvasWidth: 1086, canvasHeight: 1448, pixelRatio: 1, filter: node => !(node instanceof HTMLElement && node.dataset.exportIgnore === 'true') }) } catch { /* Canvas fallback also supports offline export. */ } }
-    return renderRoomCanvas(room, outfit, tweaks)
-  }, [room, outfit, tweaks])
+  const renderOutfit = useCallback((o: RenderOptions) => renderOutfitCanvas(outfit, o, tweaks), [outfit, tweaks])
+  const renderRoom = useCallback(() => renderRoomCanvas(room, outfit, tweaks), [room, outfit, tweaks])
 
   const fab = (label: string, icon: string, onClick: () => void, badge?: number) => (
     <button
@@ -282,7 +295,6 @@ export default function App() {
       aria-selected={mode === m}
       onClick={() => {
         setMode(m)
-        setPreview(null)
         setSelection(null)
         setSelCat(null)
         setSelSlot(null)
@@ -298,13 +310,14 @@ export default function App() {
 
   return (
     <I18nContext.Provider value={i18n}>
-      <div className="mx-auto flex h-dvh max-w-[1100px] flex-col gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-20 md:flex-row md:gap-4 md:p-4 md:pb-20">
+      <div className="mx-auto flex h-dvh max-w-[1100px] flex-col gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))] md:flex-row md:gap-4 md:p-4">
         <section className="flex min-h-0 flex-1 flex-col gap-2">
           <header className="flex shrink-0 items-center justify-between gap-2 px-1">
             <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep min-[430px]:block">{t('title')}</h1>
             <div role="tablist" className="flex shrink-0 rounded-full bg-white/80 p-0.5 shadow-sm">
+              {modeBtn('closet', '👗', t('modeCloset'))}
               {modeBtn('assemble', '🧩', t('modeAssemble'))}
-              <button className="flex min-h-11 items-center rounded-full px-3 font-bold text-blush-deep" onClick={() => {setMode('shop');setPreview(null)}} aria-label={lang === 'ko' ? '별과 상점' : 'Stars and shop'}>★ {economy.data.points}</button>
+              {modeBtn('room', '🏠', t('modeRoom'))}
             </div>
             <div className="flex items-center gap-1.5">
               <button
@@ -375,11 +388,11 @@ export default function App() {
                 </div>
               </Stage>
             ) : (
-              <RoomView outfit={outfit} tweaks={tweaks} room={preview ?? room} selection={selection} onSelect={setSelection} onChange={mode === 'room' ? setRoom : () => undefined} onCloset={() => {setMode('closet');setPreview(null)}} captureRef={roomCaptureRef}>
+              <RoomView outfit={outfit} tweaks={tweaks} room={room} selection={selection} onSelect={setSelection} onChange={setRoom}>
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
                   {fab(t('goCloset'), '👗', () => setMode('closet'))}
                   {fab(t('roomReset'), '🧹', resetRoom)}
-                  {fab(t('roomExport'), '📷', () => {setPreview(null);setSelection(null);setModal('roomExport')})}
+                  {fab(t('roomExport'), '📷', () => setModal('roomExport'))}
                 </div>
               </RoomView>
             )}
@@ -398,14 +411,43 @@ export default function App() {
               onDragWear={wearItem}
               dropRef={dropRef}
               onDragOver={setDragOver}
+              onAdd={() => setModal('addItem')}
+              onRemove={removeMine}
             />
           ) : (
-            <RoomEconomyPanel view={mode === 'shop' ? 'shop' : mode === 'collection' ? 'collection' : 'room'} room={room} outfit={outfit} tweaks={tweaks} onPlace={addToRoom} onRoom={setRoom} onPreview={d => setPreview(d ? placeInSlot(room, d, [...economy.data.owned, d.id]) : null)} onRestore={(r,o,tw) => {setRoom(r);setOutfit(o);setTweaks(tw);setSelection(null)}} onToast={showToast} />
+            <RoomTray room={room} onAdd={addToRoom} onAddCustom={(tab) => { setPropGroup(tab); setModal('addProp') }} onRemoveCustom={removeMyProp} />
           )}
         </aside>
       </div>
 
-      <nav className="bottom-nav" aria-label={lang === 'ko' ? '메인 메뉴' : 'Main navigation'}>{modeBtn('closet','👗',t('modeCloset'))}{modeBtn('room','🏠',t('modeRoom'))}{modeBtn('shop','🛍️',lang === 'ko' ? '상점' : 'Shop')}{modeBtn('collection','📖',lang === 'ko' ? '도감' : 'Collection')}</nav>
+      {modal === 'addItem' && (
+        <AddItemModal
+          kind="closet"
+          initial={category}
+          onClose={() => setModal(null)}
+          onError={showToast}
+          onAdded={(item, persisted) => {
+            setModal(null)
+            setMode('closet')
+            setCategory(item.category)
+            applyOutfit(toggleItem(outfit, item), item)
+            showToast(t(persisted ? 'addDone' : 'addDoneNoSave'))
+          }}
+        />
+      )}
+      {modal === 'addProp' && (
+        <AddItemModal
+          kind="room"
+          initial={propGroup}
+          onClose={() => setModal(null)}
+          onError={showToast}
+          onAdded={(def, persisted) => {
+            setModal(null)
+            addToRoom(def)
+            showToast(t(persisted ? 'addDone' : 'addDoneNoSave'))
+          }}
+        />
+      )}
       {modal === 'bg' && <BackgroundPicker value={bgId} onPick={setBgId} onClose={() => setModal(null)} />}
       {modal === 'saved' && (
         <SavedSheet
@@ -420,8 +462,7 @@ export default function App() {
         <ExportSheet
           title={t('exportTitle')}
           render={renderOutfit}
-          extra={<button className="primary-action" aria-pressed={roomAsBackground} onClick={() => setRoomAsBackground(v => !v)}>{lang === 'ko' ? (roomAsBackground ? '배경: 내 방 ✓' : '내 방을 완성샷 배경으로 사용') : (roomAsBackground ? 'Background: My room ✓' : 'Use my room as photo background')}</button>}
-          showOptions={!roomAsBackground}
+          showOptions
           background={bg}
           filePrefix="ryuso-closet"
           onClose={() => setModal(null)}
