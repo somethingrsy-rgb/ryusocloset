@@ -744,6 +744,30 @@
     "native": true
   },
   {
+    "id": "costume_checker_queen",
+    "category": "costume",
+    "name": {
+      "ko": "체스판 여왕 원피스",
+      "en": "Checkerboard Queen Dress"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 111,
+      "y": 640,
+      "w": 802,
+      "h": 874
+    },
+    "image": "assets/clothes/costume/costume_checker_queen.webp",
+    "thumb": "assets/thumbs/costume_checker_queen.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_floral_black",
     "category": "costume",
     "name": {
@@ -1440,6 +1464,30 @@
     "native": true
   },
   {
+    "id": "shoes_platform_cream_heart",
+    "category": "shoes",
+    "name": {
+      "ko": "하트 리본 통굽",
+      "en": "Heart Ribbon Platforms"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 413,
+      "y": 1370,
+      "w": 210,
+      "h": 133
+    },
+    "image": "assets/clothes/shoes/shoes_platform_cream_heart.webp",
+    "thumb": "assets/thumbs/shoes_platform_cream_heart.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_slingback_black",
     "category": "shoes",
     "name": {
@@ -1484,6 +1532,30 @@
     },
     "image": "assets/clothes/shoes/shoes_slingback_cream.webp",
     "thumb": "assets/thumbs/shoes_slingback_cream.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_sneakers_mule_navy",
+    "category": "shoes",
+    "name": {
+      "ko": "뮬 스니커즈",
+      "en": "Mule Sneakers"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 413,
+      "y": 1386,
+      "w": 198,
+      "h": 118
+    },
+    "image": "assets/clothes/shoes/shoes_sneakers_mule_navy.webp",
+    "thumb": "assets/thumbs/shoes_sneakers_mule_navy.webp",
     "zIndex": 10,
     "native": true
   },
