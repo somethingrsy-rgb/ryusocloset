@@ -8,6 +8,7 @@ import {
   MAX_PLACED,
   MAX_SCALE,
   MIN_SCALE,
+  ROOM_EXTRA,
   ROOM_H,
   ROOM_W,
   type AvatarPlacement,
@@ -67,7 +68,7 @@ export function defaultRoom(): RoomState {
 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
-const clampX = (x: number) => clamp(x, 0, ROOM_W)
+const clampX = (x: number) => clamp(x, -ROOM_EXTRA, ROOM_W + ROOM_EXTRA)
 const clampY = (y: number) => clamp(y, 0, ROOM_H + 30)
 export const clampScale = (s: number) => clamp(s, MIN_SCALE, MAX_SCALE)
 

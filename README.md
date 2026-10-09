@@ -46,6 +46,7 @@ npm test           # 착용 규칙 단위 테스트
 ### 캠핑 탭 (상단 `⛺ 캠핑`)
 
 - 내 방과 같은 꾸미기 방식(눌러 놓기 → 끌어 옮기기·크기·뒤집기·치우기·되돌리기·미세 이동·사진 저장)을 캠핑장에서 쓴다. 캠핑장은 내 방과 따로 저장된다(`ryuso.camp.v1`).
+- 물건·아바타는 방 폭 밖, 화면 양옆 배경 위에도 놓을 수 있다(화면에 보이는 가장자리까지). 방 사진은 방 밖에 놓은 물건이 있으면 그만큼 옆으로 넓어진다.
 - 낮/밤 배경 전환(🌙/☀️), 캠핑 용품 7종(텐트, 모닥불, 캠핑 의자, 테이블, 랜턴, 아이스박스, 그릴), `+ 내 소품 추가`로 내 사진 용품 추가.
 - 에셋: `assets-src/camp/{wall_day,wall_night,floor}.png` 와 `assets-src/camp/items/camp_*.png`, 이름·크기·위치는 `scripts/camp-items.json`. `npm run assets` 가 `public/assets/camp` 와 `src/data/camp-items.json` 을 만든다. 용품은 `group: 'camp'` 로 내 방 물건과 같은 목록에 들어 있다.
 

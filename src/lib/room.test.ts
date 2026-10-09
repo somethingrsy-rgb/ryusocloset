@@ -14,7 +14,7 @@ import {
   toggleFlip,
 } from './room'
 import { hitTest, type Mask } from './roomHit'
-import { AVATAR_FEET_RATIO, MAX_PLACED, MAX_SCALE, MIN_SCALE, ROOM_H, ROOM_W, type RoomState } from './roomTypes'
+import { AVATAR_FEET_RATIO, MAX_PLACED, MAX_SCALE, MIN_SCALE, ROOM_EXTRA, ROOM_H, ROOM_W, type RoomState } from './roomTypes'
 
 const def = (group: string) => ROOM_ITEMS.find((d) => d.group === group)!
 const empty = (): RoomState => ({ avatar: { x: 500, y: 1300, scale: 1, flip: false }, items: [] })
@@ -38,12 +38,13 @@ describe('room state', () => {
     expect(s!.items).toHaveLength(MAX_PLACED)
     expect(addItem(s!, def('wall'), 'over')).toBeNull()
   })
-  it('이동은 방 안으로 제한된다', () => {
+  it('이동은 방 양옆 배경까지만 제한된다', () => {
     const s = addItem(empty(), def('furniture'), 'a')!
-    const m = moveTo(s, { kind: 'item', uid: 'a' }, -50, 99999)
-    expect(m.items[0].x).toBe(0)
+    expect(moveTo(s, { kind: 'item', uid: 'a' }, -50, 500).items[0].x).toBe(-50) // 방 왼쪽 밖(배경 위)도 가능
+    const m = moveTo(s, { kind: 'item', uid: 'a' }, -99999, 99999)
+    expect(m.items[0].x).toBe(-ROOM_EXTRA)
     expect(m.items[0].y).toBeLessThanOrEqual(ROOM_H + 30)
-    expect(moveTo(s, { kind: 'avatar' }, 9999, 10).avatar.x).toBe(ROOM_W)
+    expect(moveTo(s, { kind: 'avatar' }, 99999, 10).avatar.x).toBe(ROOM_W + ROOM_EXTRA)
   })
   it('크기는 범위로 제한된다', () => {
     const s = empty()
@@ -81,9 +82,9 @@ describe('sanitizeRoom', () => {
     })
     expect(r.items).toHaveLength(2)
     expect(new Set(r.items.map((p) => p.uid)).size).toBe(2)
-    expect(r.items[0].x).toBe(ROOM_W)
+    expect(r.items[0].x).toBe(ROOM_W + ROOM_EXTRA)
     expect(r.items[0].scale).toBe(MIN_SCALE)
-    expect(r.avatar.x).toBe(0)
+    expect(r.avatar.x).toBe(-5)
     expect(r.avatar.scale).toBe(MAX_SCALE)
   })
   it('빈 배열이면 빈 방을 존중한다', () => {
