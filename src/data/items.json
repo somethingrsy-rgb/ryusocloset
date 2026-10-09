@@ -1213,10 +1213,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 382,
-      "y": 1378,
-      "w": 262,
-      "h": 133
+      "x": 369,
+      "y": 1383,
+      "w": 284,
+      "h": 129
     },
     "image": "assets/clothes/shoes/shoes_bow_flats_black.webp",
     "thumb": "assets/thumbs/shoes_bow_flats_black.webp",
@@ -1237,10 +1237,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 382,
-      "y": 1376,
-      "w": 262,
-      "h": 135
+      "x": 369,
+      "y": 1379,
+      "w": 284,
+      "h": 132
     },
     "image": "assets/clothes/shoes/shoes_flats_beige.webp",
     "thumb": "assets/thumbs/shoes_flats_beige.webp",
@@ -1261,10 +1261,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 381,
-      "y": 1290,
-      "w": 263,
-      "h": 222
+      "x": 368,
+      "y": 1297,
+      "w": 285,
+      "h": 214
     },
     "image": "assets/clothes/shoes/shoes_maryjane_bow_black.webp",
     "thumb": "assets/thumbs/shoes_maryjane_bow_black.webp",
@@ -1285,10 +1285,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 381,
-      "y": 1377,
-      "w": 263,
-      "h": 133
+      "x": 368,
+      "y": 1382,
+      "w": 285,
+      "h": 130
     },
     "image": "assets/clothes/shoes/shoes_slingback_black.webp",
     "thumb": "assets/thumbs/shoes_slingback_black.webp",
@@ -1309,10 +1309,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 381,
-      "y": 1377,
-      "w": 264,
-      "h": 133
+      "x": 368,
+      "y": 1382,
+      "w": 286,
+      "h": 130
     },
     "image": "assets/clothes/shoes/shoes_slingback_cream.webp",
     "thumb": "assets/thumbs/shoes_slingback_cream.webp",
@@ -1333,10 +1333,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 366,
-      "y": 1369,
-      "w": 296,
-      "h": 142
+      "x": 354,
+      "y": 1373,
+      "w": 316,
+      "h": 138
     },
     "image": "assets/clothes/shoes/shoes_sneakers_navy.webp",
     "thumb": "assets/thumbs/shoes_sneakers_navy.webp",
@@ -1357,10 +1357,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 361,
-      "y": 1280,
-      "w": 293,
-      "h": 231
+      "x": 349,
+      "y": 1288,
+      "w": 314,
+      "h": 224
     },
     "image": "assets/clothes/shoes/shoes_socks_heel_blue.webp",
     "thumb": "assets/thumbs/shoes_socks_heel_blue.webp",
@@ -1381,10 +1381,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 354,
-      "y": 1301,
-      "w": 309,
-      "h": 210
+      "x": 342,
+      "y": 1308,
+      "w": 329,
+      "h": 204
     },
     "image": "assets/clothes/shoes/shoes_socks_heel_purple.webp",
     "thumb": "assets/thumbs/shoes_socks_heel_purple.webp",
@@ -1405,10 +1405,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 380,
-      "y": 1315,
-      "w": 264,
-      "h": 197
+      "x": 368,
+      "y": 1320,
+      "w": 285,
+      "h": 191
     },
     "image": "assets/clothes/shoes/shoes_socks_mj_black.webp",
     "thumb": "assets/thumbs/shoes_socks_mj_black.webp",
@@ -1429,10 +1429,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 363,
-      "y": 1322,
-      "w": 299,
-      "h": 190
+      "x": 350,
+      "y": 1327,
+      "w": 321,
+      "h": 184
     },
     "image": "assets/clothes/shoes/shoes_socks_mj_mint.webp",
     "thumb": "assets/thumbs/shoes_socks_mj_mint.webp",
@@ -1453,10 +1453,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 381,
-      "y": 1336,
-      "w": 263,
-      "h": 175
+      "x": 368,
+      "y": 1342,
+      "w": 285,
+      "h": 170
     },
     "image": "assets/clothes/shoes/shoes_strap_black_bow.webp",
     "thumb": "assets/thumbs/shoes_strap_black_bow.webp",
@@ -1477,10 +1477,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 353,
-      "y": 1304,
-      "w": 344,
-      "h": 207
+      "x": 341,
+      "y": 1311,
+      "w": 364,
+      "h": 201
     },
     "image": "assets/clothes/shoes/shoes_strap_black_heart.webp",
     "thumb": "assets/thumbs/shoes_strap_black_heart.webp",
@@ -1501,10 +1501,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 371,
-      "y": 1329,
-      "w": 283,
-      "h": 183
+      "x": 358,
+      "y": 1334,
+      "w": 305,
+      "h": 178
     },
     "image": "assets/clothes/shoes/shoes_strap_blue_gem.webp",
     "thumb": "assets/thumbs/shoes_strap_blue_gem.webp",
@@ -1525,10 +1525,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 355,
-      "y": 1308,
-      "w": 315,
-      "h": 203
+      "x": 343,
+      "y": 1315,
+      "w": 335,
+      "h": 197
     },
     "image": "assets/clothes/shoes/shoes_strap_lavender.webp",
     "thumb": "assets/thumbs/shoes_strap_lavender.webp",
@@ -1549,10 +1549,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 360,
-      "y": 1326,
-      "w": 306,
-      "h": 184
+      "x": 347,
+      "y": 1333,
+      "w": 328,
+      "h": 179
     },
     "image": "assets/clothes/shoes/shoes_strap_mint.webp",
     "thumb": "assets/thumbs/shoes_strap_mint.webp",
@@ -1573,10 +1573,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 361,
-      "y": 1313,
-      "w": 303,
-      "h": 197
+      "x": 348,
+      "y": 1320,
+      "w": 325,
+      "h": 192
     },
     "image": "assets/clothes/shoes/shoes_strap_navy_gem.webp",
     "thumb": "assets/thumbs/shoes_strap_navy_gem.webp",
@@ -1597,10 +1597,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 353,
-      "y": 1299,
-      "w": 320,
-      "h": 212
+      "x": 341,
+      "y": 1306,
+      "w": 340,
+      "h": 206
     },
     "image": "assets/clothes/shoes/shoes_strap_navy_star.webp",
     "thumb": "assets/thumbs/shoes_strap_navy_star.webp",
@@ -1621,10 +1621,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 363,
-      "y": 1329,
-      "w": 299,
-      "h": 182
+      "x": 350,
+      "y": 1335,
+      "w": 321,
+      "h": 177
     },
     "image": "assets/clothes/shoes/shoes_strap_skyblue.webp",
     "thumb": "assets/thumbs/shoes_strap_skyblue.webp",
