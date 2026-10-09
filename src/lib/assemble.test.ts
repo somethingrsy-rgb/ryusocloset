@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { BOTTOMS, HEADS, SHOES, TOPS, defaultAssembly, randomAssembly, sanitizeAssembly, takeOffPart, togglePart } from './assemble'
 
 describe('assemble', () => {
-  it('부품이 있다 (머리 1+, 상의 9, 하의 9, 신발 5)', () => {
+  it('부품이 있다 (머리 1+, 상의 9, 하의 9, 신발 7)', () => {
     expect(HEADS.length).toBeGreaterThan(0)
     expect(TOPS.length).toBe(9)
     expect(BOTTOMS.length).toBe(9)
-    expect(SHOES.length).toBe(5)
+    expect(SHOES.length).toBe(7)
     for (const p of [...HEADS, ...TOPS, ...BOTTOMS, ...SHOES]) {
       expect(p.box.w).toBeGreaterThan(0)
       expect(p.box.h).toBeGreaterThan(0)
