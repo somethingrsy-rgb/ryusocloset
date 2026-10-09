@@ -528,6 +528,54 @@
     "native": true
   },
   {
+    "id": "dress_cape_red",
+    "category": "dress",
+    "name": {
+      "ko": "케이프 원피스",
+      "en": "Cape Dress"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 711
+    },
+    "image": "assets/clothes/dress/dress_cape_red.webp",
+    "thumb": "assets/thumbs/dress_cape_red.webp",
+    "zIndex": 40,
+    "native": true
+  },
+  {
+    "id": "dress_card_red",
+    "category": "dress",
+    "name": {
+      "ko": "카드 원피스",
+      "en": "Card Dress"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 792
+    },
+    "image": "assets/clothes/dress/dress_card_red.webp",
+    "thumb": "assets/thumbs/dress_card_red.webp",
+    "zIndex": 40,
+    "native": true
+  },
+  {
     "id": "dress_deco_tweed_black",
     "category": "dress",
     "name": {
@@ -548,6 +596,30 @@
     },
     "image": "assets/clothes/dress/dress_deco_tweed_black.webp",
     "thumb": "assets/thumbs/dress_deco_tweed_black.webp",
+    "zIndex": 40,
+    "native": true
+  },
+  {
+    "id": "dress_fairy_blue",
+    "category": "dress",
+    "name": {
+      "ko": "요정 원피스",
+      "en": "Fairy Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 724
+    },
+    "image": "assets/clothes/dress/dress_fairy_blue.webp",
+    "thumb": "assets/thumbs/dress_fairy_blue.webp",
     "zIndex": 40,
     "native": true
   },
@@ -744,6 +816,30 @@
     "native": true
   },
   {
+    "id": "dress_midnight_navy",
+    "category": "dress",
+    "name": {
+      "ko": "미드나잇 원피스",
+      "en": "Midnight Dress"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 744
+    },
+    "image": "assets/clothes/dress/dress_midnight_navy.webp",
+    "thumb": "assets/thumbs/dress_midnight_navy.webp",
+    "zIndex": 40,
+    "native": true
+  },
+  {
     "id": "dress_oxford_beige",
     "category": "dress",
     "name": {
@@ -812,6 +908,30 @@
     },
     "image": "assets/clothes/dress/dress_shesmiss_gray.webp",
     "thumb": "assets/thumbs/dress_shesmiss_gray.webp",
+    "zIndex": 40,
+    "native": true
+  },
+  {
+    "id": "dress_starry_navy",
+    "category": "dress",
+    "name": {
+      "ko": "별밤 원피스",
+      "en": "Starry Dress"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 813
+    },
+    "image": "assets/clothes/dress/dress_starry_navy.webp",
+    "thumb": "assets/thumbs/dress_starry_navy.webp",
     "zIndex": 40,
     "native": true
   },

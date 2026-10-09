@@ -295,5 +295,35 @@
     "en": "Heels & Socks",
     "color": "skyblue",
     "native": true
+  },
+  "dress_fairy_blue": {
+    "ko": "요정 원피스",
+    "en": "Fairy Dress",
+    "color": "skyblue",
+    "native": true
+  },
+  "dress_midnight_navy": {
+    "ko": "미드나잇 원피스",
+    "en": "Midnight Dress",
+    "color": "navy",
+    "native": true
+  },
+  "dress_starry_navy": {
+    "ko": "별밤 원피스",
+    "en": "Starry Dress",
+    "color": "navy",
+    "native": true
+  },
+  "dress_card_red": {
+    "ko": "카드 원피스",
+    "en": "Card Dress",
+    "color": "red",
+    "native": true
+  },
+  "dress_cape_red": {
+    "ko": "케이프 원피스",
+    "en": "Cape Dress",
+    "color": "red",
+    "native": true
   }
 }
