@@ -1,7 +1,7 @@
 import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from '../lib/items'
 import { HAIR_FRONT_Z } from '../lib/layers'
 import { wornItems } from '../lib/outfit'
-import { cssTransform } from '../lib/tweaks'
+import { cssTransform, effectiveZ } from '../lib/tweaks'
 import type { Outfit, Tweaks } from '../lib/types'
 
 /**
@@ -19,7 +19,7 @@ export function FigureLayers({
   tweaks?: Tweaks
   animate?: boolean
 }) {
-  const items = wornItems(outfit, ITEM_BY_ID)
+  const items = wornItems(outfit, ITEM_BY_ID, tweaks)
   const body = outfit.shoes ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body
   return (
     <>
@@ -27,7 +27,7 @@ export function FigureLayers({
       {items.map((it) => {
         const t = tweaks[it.category]
         return (
-          <div key={it.id} className="layer" style={{ zIndex: it.zIndex, ...(t ? cssTransform(it, t) : null) }}>
+          <div key={it.id} className="layer" style={{ zIndex: effectiveZ(it.zIndex, t), ...(t ? cssTransform(it, t) : null) }}>
             <img
               src={assetUrl(it.image)}
               alt=""

@@ -36,7 +36,7 @@ import {
   persistSettings,
   persistTweaks,
 } from './lib/storage'
-import { pruneTweaks, sanitizeTweaks } from './lib/tweaks'
+import { pruneTweaks, sanitizeTweaks, stripZ } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
 
 /** 되돌리기: 이 시간(ms) 안에 이어지는 조절은 한 번으로 묶고, 최대 이만큼 기억한다 */
@@ -173,7 +173,8 @@ export default function App() {
   /* ── 코디 ── */
   /** 입은 옷을 바꾼다: 바뀐 카테고리의 위치·크기 조절은 버리고, 새로 입은 옷을 선택한다 */
   const applyOutfit = (next: Outfit, picked?: Item) => {
-    setTweaks(pruneTweaks(CATEGORIES, outfit, next, tweaks))
+    // 옷을 바꾸면 겹치는 순서는 처음 순서로 돌아간다 (위치·크기 조절은 같은 옷이면 그대로)
+    setTweaks(stripZ(pruneTweaks(CATEGORIES, outfit, next, tweaks)))
     setOutfit(next)
     setSelCat((sel) => {
       if (picked && next[picked.category] === picked.id) return picked.category

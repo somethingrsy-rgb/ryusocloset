@@ -12,6 +12,8 @@ import {
   sanitizeRoom,
   scaleBy,
   setScale,
+  shiftLayer,
+  canShiftLayer,
   toggleFlip,
 } from './room'
 import { hitTest, type Mask } from './roomHit'
@@ -203,3 +205,41 @@ describe('테마', () => {
     expect([r.wallId, r.floorId]).toEqual([id, id])
   })
 })
+
+describe('겹치는 순서 (방)', () => {
+  const two = () => {
+    let s = empty()
+    s = addItem(s, def('furniture'), 'a')!
+    s = addItem(s, ROOM_ITEMS.filter((d) => d.group === 'furniture')[1], 'b')!
+    s = moveTo(s, { kind: 'item', uid: 'a' }, 400, 1200)
+    s = moveTo(s, { kind: 'item', uid: 'b' }, 420, 1300) // b 가 a 보다 아래(y 큼) → 앞에 그려진다
+    return s
+  }
+  const order = (s: RoomState) => drawables(s).map((d) => (d.sel.kind === 'item' ? d.sel.uid : 'avatar'))
+
+  it('앞으로/뒤로 보내면 이웃한 것과 순서가 바뀐다', () => {
+    const s = two()
+    const before = order(s)
+    const i = before.indexOf('a')
+    const moved = shiftLayer(s, { kind: 'item', uid: 'a' }, 1)
+    const after = order(moved)
+    expect(after.indexOf('a')).toBe(i + 1)
+    expect(order(shiftLayer(moved, { kind: 'item', uid: 'a' }, -1))).toEqual(before)
+  })
+  it('맨 앞/맨 뒤에서는 더 못 간다', () => {
+    const s = two()
+    const list = drawables(s)
+    expect(canShiftLayer(s, list[list.length - 1].sel, 1)).toBe(false)
+    expect(canShiftLayer(s, list[0].sel, -1)).toBe(false)
+    expect(shiftLayer(s, list[0].sel, -1)).toBe(s)
+  })
+  it('아바타도 순서를 바꿀 수 있고, 저장된 순서 조절값을 읽는다', () => {
+    const s = two()
+    const moved = shiftLayer(s, { kind: 'avatar' }, -1)
+    expect(moved.avatar.zb).toBeDefined()
+    const back = sanitizeRoom(JSON.parse(JSON.stringify(moved)))
+    expect(order(back)).toEqual(order(moved))
+    expect(sanitizeRoom({ ...s, avatar: { ...s.avatar, zb: 'x' } }).avatar.zb).toBeUndefined()
+  })
+})
+

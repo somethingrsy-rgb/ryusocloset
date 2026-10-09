@@ -1,5 +1,6 @@
 import { CATEGORIES, HAIR_FRONT_Z, type Category } from './layers'
-import type { Item, Outfit } from './types'
+import { effectiveZ } from './tweaks'
+import type { Item, Outfit, Tweaks } from './types'
 
 /** 같은 옷을 다시 누르면 벗기고, 아니면 카테고리당 1개로 교체한다. 원피스 ↔ 상의/하의는 서로 해제. */
 export function toggleItem(outfit: Outfit, item: Item): Outfit {
@@ -39,10 +40,10 @@ export function sanitizeOutfit(
 }
 
 /** 레이어 렌더링 순서(아래→위)로 정렬된 착용 아이템 */
-export function wornItems(outfit: Outfit, byId: Record<string, Item>): Item[] {
+export function wornItems(outfit: Outfit, byId: Record<string, Item>, tweaks: Tweaks = {}): Item[] {
   return CATEGORIES.map((c) => (outfit[c] ? byId[outfit[c]!] : undefined))
     .filter((i): i is Item => !!i)
-    .sort((a, b) => a.zIndex - b.zIndex)
+    .sort((a, b) => effectiveZ(a.zIndex, tweaks[a.category]) - effectiveZ(b.zIndex, tweaks[b.category]))
 }
 
 export const HAIR_FRONT_LAYER_Z = HAIR_FRONT_Z

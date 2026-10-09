@@ -8,11 +8,13 @@ import {
   drawables,
   getPlacement,
   hasContactShadow,
+  canShiftLayer,
   moveBy,
   moveTo,
   removeItem,
   sameSelection,
   scaleBy,
+  shiftLayer,
   setScale,
   shadowWidthRatio,
   toggleFlip,
@@ -320,6 +322,24 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('moveDown')} onClick={() => onChange(moveBy(room, selection, 0, NUDGE))}>
               ▼
+            </button>
+            <button
+              className={`${btn} bg-petal text-[11px] font-bold`}
+              aria-label={t('layerFront')}
+              title={t('layerFront')}
+              disabled={!canShiftLayer(room, selection, 1)}
+              onClick={() => onChange(shiftLayer(room, selection, 1))}
+            >
+              {t('layerFrontShort')}
+            </button>
+            <button
+              className={`${btn} bg-petal text-[11px] font-bold`}
+              aria-label={t('layerBack')}
+              title={t('layerBack')}
+              disabled={!canShiftLayer(room, selection, -1)}
+              onClick={() => onChange(shiftLayer(room, selection, -1))}
+            >
+              {t('layerBackShort')}
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('roomUndo')} title={t('roomUndo')} disabled={!canUndo} onClick={() => onUndo?.()}>
               ↶

@@ -47,6 +47,8 @@ export interface Placed {
   y: number
   scale: number
   flip: boolean
+  /** 겹치는 순서 조절: 기본 순서에 더하는 값 (없으면 기본). 앞으로/뒤로 버튼이 정한다 */
+  zb?: number
 }
 
 export interface AvatarPlacement {
@@ -54,6 +56,7 @@ export interface AvatarPlacement {
   y: number
   scale: number
   flip: boolean
+  zb?: number
 }
 
 export interface RoomState {

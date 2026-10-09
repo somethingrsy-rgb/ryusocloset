@@ -7,11 +7,13 @@ import { maskCache, maskFromSource } from '../lib/roomHit'
 import {
   cssTransform,
   getTweak,
+  canShiftLayer,
   moveTweak,
   pickLayer,
   pivotOf,
   resetTweak,
   scaleTweak,
+  shiftLayer,
   setScaleTweak,
   type Boxed,
   type TweakMap,
@@ -286,6 +288,24 @@ export function LayerStage<K extends string>({
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('moveDown')} onClick={() => onTweaks(moveTweak(tweaks, selected, 0, NUDGE))}>
               ▼
+            </button>
+            <button
+              className={`${btn} bg-petal text-[11px] font-bold`}
+              aria-label={t('layerFront')}
+              title={t('layerFront')}
+              disabled={!canShiftLayer(layers, selected, 1)}
+              onClick={() => onTweaks(shiftLayer(tweaks, layers, selected, 1))}
+            >
+              {t('layerFrontShort')}
+            </button>
+            <button
+              className={`${btn} bg-petal text-[11px] font-bold`}
+              aria-label={t('layerBack')}
+              title={t('layerBack')}
+              disabled={!canShiftLayer(layers, selected, -1)}
+              onClick={() => onTweaks(shiftLayer(tweaks, layers, selected, -1))}
+            >
+              {t('layerBackShort')}
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('undo')} title={t('undo')} disabled={!canUndo} onClick={() => onUndo?.()}>
               ↶
