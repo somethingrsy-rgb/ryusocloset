@@ -263,5 +263,15 @@
     "ko": "집업",
     "en": "Zip-up",
     "native": true
+  },
+  "shoes_bow_flats_black": {
+    "ko": "리본 구두",
+    "en": "Bow Flats",
+    "native": true
+  },
+  "shoes_flats_beige": {
+    "ko": "베이지 구두",
+    "en": "Beige Flats",
+    "native": true
   }
 }

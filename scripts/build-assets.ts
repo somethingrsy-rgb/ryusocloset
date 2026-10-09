@@ -39,7 +39,8 @@ const COLORS: Record<string, { ko: string; en: string; hex: string }> = {
 
 /** 코디 탭 옷의 기본 크기: 앱의 '−' 한 번(1/1.08 ≈ 0.93배)만큼 줄여서 만든다. 옷 영역의 중심을 기준으로 줄이는 것도 '−' 와 같다. */
 const CLOSET_SHRINK = 1 / 1.08
-const SHRINK_CATEGORIES: Category[] = ['top', 'bottom', 'dress', 'outer']
+// 원피스는 한 단계(+) 크게 보이도록 줄이지 않는다 (= 위 값의 1/1.08 을 되돌린 것)
+const SHRINK_CATEGORIES: Category[] = ['top', 'bottom', 'outer']
 
 async function shrinkAboutCenter(png: string | Buffer, k: number): Promise<Buffer> {
   const box = await alphaBBox(png)

@@ -117,5 +117,15 @@
     "ko": "플랫슈즈",
     "en": "Flats",
     "color": "black"
+  },
+  "shoes_bow_flats_black": {
+    "ko": "리본 구두",
+    "en": "Bow Flats",
+    "color": "black"
+  },
+  "shoes_flats_beige": {
+    "ko": "베이지 구두",
+    "en": "Beige Flats",
+    "color": "beige"
   }
 }

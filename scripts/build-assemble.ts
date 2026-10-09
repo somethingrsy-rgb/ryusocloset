@@ -38,7 +38,7 @@ const shrinkAtWaist = (p: { s: number; tx: number; ty: number }): Place => ({
 
 const COLORS: Record<string, string> = {
   black: '#2b2b2f', charcoal: '#55565c', gray: '#a3a5ab', white: '#fbfbfb', ivory: '#f6ecd6',
-  brown: '#8a5a3b', denim: '#3c5a8c', mint: '#a9dcc8', navy: '#27355b',
+  brown: '#8a5a3b', beige: '#dcc5a2', denim: '#3c5a8c', mint: '#a9dcc8', navy: '#27355b',
 }
 
 const bottomFit: Record<string, { s: number; tx: number; ty: number }> = JSON.parse(

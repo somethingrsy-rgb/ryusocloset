@@ -1,4 +1,14 @@
 {
+  "shoes_bow_flats_black": {
+    "s": 0.3854,
+    "tx": 92.0,
+    "ty": 1278.1
+  },
+  "shoes_flats_beige": {
+    "s": 0.3685,
+    "tx": 111.9,
+    "ty": 1284.6
+  },
   "shoes_flats_black": {
     "s": 0.3973,
     "tx": 79.6,
