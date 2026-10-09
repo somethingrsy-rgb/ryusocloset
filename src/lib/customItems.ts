@@ -27,17 +27,112 @@ const PLACEMENT: Record<Category, { cx: number; cy: number; w: number; maxH: num
   bag: { cx: 770, cy: 1050, w: 230, maxH: 300 },
 }
 
-/** 잘라낸 옷(가로 w × 세로 h)을 카테고리의 기본 자리에 놓을 때의 영역 */
-export function defaultBox(category: Category, w: number, h: number): Rect {
-  const p = PLACEMENT[category]
-  const s = Math.min(p.w / w, p.maxH / h)
-  const bw = Math.max(1, Math.round(w * s))
-  const bh = Math.max(1, Math.round(h * s))
+/** 사이트에 있는 기본 옷들의 위치·크기 (경계 상자의 중앙값) — 내 옷을 이 조건에 맞춰 놓는다 */
+export interface Stats {
+  w: number
+  h: number
+  /** 옷 맨 위(어깨선·허리선) */
+  y: number
+  /** 가로 가운데 */
+  cx: number
+}
+
+const median = (v: number[]) => {
+  const a = [...v].sort((x, y) => x - y)
+  const m = a.length >> 1
+  return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2
+}
+
+/** 내 옷이 아닌 기본 옷만으로 카테고리의 기준값을 구한다 (옷이 없으면 null) */
+export function categoryStats(category: Category, items: Pick<Item, 'id' | 'category' | 'box'>[]): Stats | null {
+  const list = items.filter((i) => i.category === category && !i.id.startsWith(CUSTOM_PREFIX))
+  if (!list.length) return null
   return {
-    x: Math.min(CANVAS_W - bw, Math.max(0, Math.round(p.cx - bw / 2))),
-    y: Math.min(CANVAS_H - bh, Math.max(0, Math.round(p.cy - bh / 2))),
+    w: median(list.map((i) => i.box.w)),
+    h: median(list.map((i) => i.box.h)),
+    y: median(list.map((i) => i.box.y)),
+    cx: median(list.map((i) => i.box.x + i.box.w / 2)),
+  }
+}
+
+/** 기본 옷 기준값을 쓰는 카테고리 (나머지는 PLACEMENT 의 고정 위치) */
+const FOLLOWS_SITE: Category[] = ['top', 'bottom', 'dress', 'outer', 'bag']
+
+function clampBox(x: number, y: number, w: number, h: number): Rect {
+  const bw = Math.max(1, Math.round(w))
+  const bh = Math.max(1, Math.round(h))
+  return {
+    x: Math.min(CANVAS_W - bw, Math.max(0, Math.round(x))),
+    y: Math.min(CANVAS_H - bh, Math.max(0, Math.round(y))),
     w: bw,
     h: bh,
+  }
+}
+
+/**
+ * 잘라낸 옷(가로 w × 세로 h)을 놓을 영역.
+ * 기본 옷 기준값(stats)이 있으면 그 폭에 맞추되 너무 길어지지 않게 하고, 가로 가운데·맨 위(어깨선/허리선)를 기본 옷과 같게 한다.
+ * 없으면 PLACEMENT 의 고정 위치를 쓴다.
+ */
+export function defaultBox(category: Category, w: number, h: number, stats?: Stats | null): Rect {
+  if (stats && FOLLOWS_SITE.includes(category)) {
+    const s = Math.min(stats.w / w, (stats.h * 1.3) / h)
+    return clampBox(stats.cx - (w * s) / 2, stats.y, w * s, h * s)
+  }
+  const p = PLACEMENT[category]
+  const s = Math.min(p.w / w, p.maxH / h)
+  return clampBox(p.cx - (w * s) / 2, p.cy - (h * s) / 2, w * s, h * s)
+}
+
+/* 신발: 두 짝이 따로 있으면 아바타 발(가운데·폭·바닥)에 맞춘다 (tools-py/fit_assemble_shoes.py 와 같은 값) */
+const FOOT_CX = [423.3, 598.1]
+const FOOT_W = 110
+const FEET_Y = 1509
+
+/** 투명하지 않은 덩어리들의 경계 상자 (작은 점은 무시) */
+export function components(data: Uint8ClampedArray, w: number, h: number, minArea = 400): Rect[] {
+  const seen = new Uint8Array(w * h)
+  const out: Rect[] = []
+  const stack: number[] = []
+  for (let start = 0; start < seen.length; start++) {
+    if (seen[start] || data[start * 4 + 3] <= 128) continue
+    let x0 = w, y0 = h, x1 = 0, y1 = 0, area = 0
+    seen[start] = 1
+    stack.push(start)
+    while (stack.length) {
+      const p = stack.pop()!
+      const x = p % w
+      const y = (p - x) / w
+      area++
+      if (x < x0) x0 = x
+      if (x > x1) x1 = x
+      if (y < y0) y0 = y
+      if (y > y1) y1 = y
+      for (const q of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1]) {
+        if (q >= 0 && !seen[q] && data[q * 4 + 3] > 128) {
+          seen[q] = 1
+          stack.push(q)
+        }
+      }
+    }
+    if (area >= minArea) out.push({ x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 })
+  }
+  return out
+}
+
+/** 신발 두 짝(왼쪽·오른쪽 덩어리)을 아바타 발에 맞추는 배율과 위치. 두 덩어리가 아니면 null. */
+export function shoePairFit(parts: Rect[], crop: Rect): { s: number; tx: number; ty: number } | null {
+  if (parts.length !== 2) return null
+  const [a, b] = [...parts].sort((p, q) => p.x - q.x)
+  const x1 = a.x + a.w / 2
+  const x2 = b.x + b.w / 2
+  if (x2 - x1 < 1) return null
+  const s = 0.5 * ((FOOT_CX[1] - FOOT_CX[0]) / (x2 - x1) + FOOT_W / ((a.w + b.w) / 2))
+  const bottom = Math.max(a.y + a.h, b.y + b.h)
+  return {
+    s,
+    tx: 0.5 * (FOOT_CX[0] + FOOT_CX[1]) - s * (0.5 * (x1 + x2) - crop.x),
+    ty: FEET_Y - s * (bottom - crop.y),
   }
 }
 
@@ -177,7 +272,12 @@ const newId = (prefix: string) => `${prefix}${Date.now().toString(36)}${Math.ran
 /** 사진 → 1024×1536 투명 레이어 + 썸네일을 만들어 Item 으로 돌려준다 (저장은 하지 않는다) */
 export async function buildCustomItem({ file, category, name, eraseBackground }: NewCustomItem): Promise<Item> {
   const { src, bounds } = await prepare(file, eraseBackground)
-  const box = defaultBox(category, bounds.w, bounds.h)
+  let box = defaultBox(category, bounds.w, bounds.h, categoryStats(category, ITEMS))
+  if (category === 'shoes') {
+    const px = src.getContext('2d', { willReadFrequently: true })!.getImageData(bounds.x, bounds.y, bounds.w, bounds.h)
+    const fit = shoePairFit(components(px.data, bounds.w, bounds.h), { x: 0, y: 0, w: bounds.w, h: bounds.h })
+    if (fit) box = clampBox(fit.tx, fit.ty, bounds.w * fit.s, bounds.h * fit.s)
+  }
   const layer = canvas(CANVAS_W, CANVAS_H)
   const lctx = layer.getContext('2d')!
   lctx.imageSmoothingQuality = 'high'
