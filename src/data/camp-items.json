@@ -1,0 +1,107 @@
+[
+  {
+    "id": "camp_tent",
+    "group": "camp",
+    "name": {
+      "ko": "텐트",
+      "en": "Tent"
+    },
+    "image": "assets/camp/camp_tent.webp",
+    "thumb": "assets/camp/thumbs/camp_tent.webp",
+    "w": 1249,
+    "h": 1032,
+    "baseWidth": 520,
+    "x": 270,
+    "y": 1230
+  },
+  {
+    "id": "camp_campfire",
+    "group": "camp",
+    "name": {
+      "ko": "모닥불",
+      "en": "Campfire"
+    },
+    "image": "assets/camp/camp_campfire.webp",
+    "thumb": "assets/camp/thumbs/camp_campfire.webp",
+    "w": 1025,
+    "h": 1117,
+    "baseWidth": 250,
+    "x": 640,
+    "y": 1330
+  },
+  {
+    "id": "camp_chair",
+    "group": "camp",
+    "name": {
+      "ko": "캠핑 의자",
+      "en": "Camp Chair"
+    },
+    "image": "assets/camp/camp_chair.webp",
+    "thumb": "assets/camp/thumbs/camp_chair.webp",
+    "w": 1162,
+    "h": 1158,
+    "baseWidth": 230,
+    "x": 890,
+    "y": 1340
+  },
+  {
+    "id": "camp_table",
+    "group": "camp",
+    "name": {
+      "ko": "캠핑 테이블",
+      "en": "Camp Table"
+    },
+    "image": "assets/camp/camp_table.webp",
+    "thumb": "assets/camp/thumbs/camp_table.webp",
+    "w": 1227,
+    "h": 572,
+    "baseWidth": 420,
+    "x": 560,
+    "y": 1400
+  },
+  {
+    "id": "camp_lantern",
+    "group": "camp",
+    "name": {
+      "ko": "랜턴",
+      "en": "Lantern"
+    },
+    "image": "assets/camp/camp_lantern.webp",
+    "thumb": "assets/camp/thumbs/camp_lantern.webp",
+    "w": 666,
+    "h": 1125,
+    "baseWidth": 150,
+    "x": 520,
+    "y": 1330
+  },
+  {
+    "id": "camp_icebox",
+    "group": "camp",
+    "name": {
+      "ko": "아이스박스",
+      "en": "Cooler"
+    },
+    "image": "assets/camp/camp_icebox.webp",
+    "thumb": "assets/camp/thumbs/camp_icebox.webp",
+    "w": 1113,
+    "h": 769,
+    "baseWidth": 230,
+    "x": 130,
+    "y": 1390
+  },
+  {
+    "id": "camp_grill",
+    "group": "camp",
+    "name": {
+      "ko": "고기 그릴",
+      "en": "BBQ Grill"
+    },
+    "image": "assets/camp/camp_grill.webp",
+    "thumb": "assets/camp/thumbs/camp_grill.webp",
+    "w": 1168,
+    "h": 996,
+    "baseWidth": 290,
+    "x": 890,
+    "y": 1260
+  }
+]

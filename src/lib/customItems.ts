@@ -303,6 +303,7 @@ const ROOM_DEFAULTS: Record<RoomGroup, { baseWidth: number; maxH: number; x: num
   rug: { baseWidth: 560, maxH: 260, x: 543, y: 1350 },
   wall: { baseWidth: 280, maxH: 380, x: 543, y: 600 },
   light: { baseWidth: 520, maxH: 700, x: 543, y: 900 },
+  camp: { baseWidth: 280, maxH: 420, x: 543, y: 1330 },
 }
 
 /** 방 물건의 기본 표시 폭: 가로 기준 폭을 쓰되 세로가 너무 길어지지 않게 줄인다 */

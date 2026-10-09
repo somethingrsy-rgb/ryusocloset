@@ -12,9 +12,13 @@ const TABS: { id: RoomTab; icon: string; ko: string; en: string }[] = [
   { id: 'light', icon: '✨', ko: '조명', en: 'Lights' },
 ]
 
+const CAMP_TABS: typeof TABS = [{ id: 'camp', icon: '⛺', ko: '캠핑 용품', en: 'Camp gear' }]
+
 const inTab = (d: RoomItemDef, tab: RoomTab) => (tab === 'furniture' ? d.group === 'furniture' || d.group === 'rug' : d.group === tab)
 
 interface Props {
+  /** 내 방(기본) 또는 캠핑 */
+  scene?: 'room' | 'camp'
   room: RoomState
   onAdd: (def: RoomItemDef) => void
   /** '내 소품 추가' 버튼 (지금 보고 있는 탭을 알려준다) */
@@ -24,10 +28,11 @@ interface Props {
   onRestore: (defs: RoomItemDef[]) => void
 }
 
-export function RoomTray({ room, onAdd, onAddCustom, onRemoveCustom, onRestore }: Props) {
+export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCustom, onRestore }: Props) {
   useItemsVersion()
   const { lang, t } = useI18n()
-  const [tab, setTab] = useState<RoomTab>('furniture')
+  const tabs = scene === 'camp' ? CAMP_TABS : TABS
+  const [tab, setTab] = useState<RoomTab>(tabs[0].id)
   const inThisTab = ROOM_ITEMS.filter((d) => inTab(d, tab))
   const items = visible(inThisTab)
   const nHidden = hiddenCount(inThisTab.map((d) => d.id))
@@ -35,7 +40,7 @@ export function RoomTray({ room, onAdd, onAddCustom, onRemoveCustom, onRestore }
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div role="tablist" className="flex shrink-0 gap-1 px-2 pt-2 pb-1">
-        {TABS.map((tb) => {
+        {tabs.map((tb) => {
           const active = tb.id === tab
           return (
             <button

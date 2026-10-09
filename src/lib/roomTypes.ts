@@ -3,6 +3,8 @@ export const ROOM_W = 1086
 export const ROOM_H = 1448
 /** 바닥 PNG 를 방 폭에 맞췄을 때의 높이 (1983×793 → 1086 폭) */
 export const FLOOR_H = 434
+/** 캠핑 탭의 잔디 높이 (배경 그림이 더 위에서 끝나서 잔디를 더 위부터 깐다) */
+export const CAMP_FLOOR_H = 500
 /** 아바타 캔버스(1024×1536)를 방에 놓을 때 기본 폭 (캐릭터 키 ≈ 방 높이의 40%) */
 export const AVATAR_BASE_W = 396
 /** 아바타 캔버스에서 발바닥이 끝나는 높이 비율 — 방에서 아바타의 기준점(y)은 발바닥이다 */
@@ -11,10 +13,10 @@ export const MAX_PLACED = 40
 export const MIN_SCALE = 0.3
 export const MAX_SCALE = 3
 
-export const ROOM_GROUPS = ['furniture', 'wall', 'light'] as const
+export const ROOM_GROUPS = ['furniture', 'wall', 'light', 'camp'] as const
 /** furniture 탭에는 rug(러그)도 함께 보인다 */
 export type RoomTab = (typeof ROOM_GROUPS)[number]
-export type RoomGroup = 'furniture' | 'rug' | 'wall' | 'light'
+export type RoomGroup = 'furniture' | 'rug' | 'wall' | 'light' | 'camp'
 
 export interface RoomItemDef {
   id: string
@@ -51,6 +53,8 @@ export interface AvatarPlacement {
 }
 
 export interface RoomState {
+  /** 캠핑 탭: true 면 밤 배경 */
+  night?: boolean
   avatar: AvatarPlacement
   items: Placed[]
 }

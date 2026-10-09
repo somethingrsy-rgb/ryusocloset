@@ -1,0 +1,9 @@
+{
+  "camp_tent":     { "ko": "텐트",         "en": "Tent",       "baseWidth": 520, "x": 270, "y": 1230 },
+  "camp_campfire": { "ko": "모닥불",       "en": "Campfire",   "baseWidth": 250, "x": 640, "y": 1330 },
+  "camp_chair":    { "ko": "캠핑 의자",    "en": "Camp Chair", "baseWidth": 230, "x": 890, "y": 1340 },
+  "camp_table":    { "ko": "캠핑 테이블",  "en": "Camp Table", "baseWidth": 420, "x": 560, "y": 1400 },
+  "camp_lantern":  { "ko": "랜턴",         "en": "Lantern",    "baseWidth": 150, "x": 520, "y": 1330 },
+  "camp_icebox":   { "ko": "아이스박스",   "en": "Cooler",     "baseWidth": 230, "x": 130, "y": 1390 },
+  "camp_grill":    { "ko": "고기 그릴",    "en": "BBQ Grill",  "baseWidth": 290, "x": 890, "y": 1260 }
+}

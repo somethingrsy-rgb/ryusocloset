@@ -14,21 +14,23 @@ import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
 import { loadImage, renderOutfitCanvas, renderThumb } from './lib/exportPng'
-import { ROOM_ASSETS, renderRoomCanvas } from './lib/exportRoom'
+import { CAMP_ASSETS, ROOM_ASSETS, renderRoomCanvas, sceneAssets } from './lib/exportRoom'
 import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
 import { randomOutfit, toggleItem } from './lib/outfit'
-import { ROOM_ITEMS, addItem, defaultRoom, isCustomRoomItem } from './lib/room'
+import { ROOM_ITEMS, addItem, defaultCamp, defaultRoom, isCustomRoomItem } from './lib/room'
 import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
 import { playSnap } from './lib/sound'
 import {
   MAX_SAVED,
   loadCurrent,
+  loadCamp,
   loadRoom,
   loadTweaks,
   loadSaved,
   loadSettings,
   persistCurrent,
+  persistCamp,
   persistRoom,
   persistSaved,
   persistSettings,
@@ -46,7 +48,7 @@ const ROOM_UNDO_GAP_MS = 500
 const ROOM_UNDO_LIMIT = 50
 
 type ModalKind = null | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport'
-type Mode = 'closet' | 'room'
+type Mode = 'closet' | 'room' | 'camp'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
@@ -72,8 +74,13 @@ export default function App() {
   const [propGroup, setPropGroup] = useState<RoomGroup>('furniture')
   const [saved, setSaved] = useState<SavedOutfit[]>(loadSaved)
   const [room, setRoom] = useState<RoomState>(loadRoom)
+  const [camp, setCamp] = useState<RoomState>(loadCamp)
+  /** 내 방과 캠핑 탭은 같은 꾸미기 화면을 쓰고, 지금 보는 쪽이 scene */
+  const scene: 'room' | 'camp' = mode === 'camp' ? 'camp' : 'room'
+  const sceneState = scene === 'camp' ? camp : room
+  const setScene = scene === 'camp' ? setCamp : setRoom
   /** 방 되돌리기 기록 (놓기·옮기기·크기·뒤집기·삭제·초기화 모두) */
-  const roomHistory = useRef<RoomState[]>([])
+  const sceneHistory = useRef<Record<'room' | 'camp', RoomState[]>>({ room: [], camp: [] })
   const lastRoomEdit = useRef(0)
   const [canUndoRoom, setCanUndoRoom] = useState(false)
   const [selection, setSelection] = useState<Selection>(null)
@@ -121,6 +128,12 @@ export default function App() {
     const id = window.setTimeout(() => persistRoom(room), 300)
     return () => window.clearTimeout(id)
   }, [room])
+  useEffect(() => {
+    const id = window.setTimeout(() => persistCamp(camp), 300)
+    return () => window.clearTimeout(id)
+  }, [camp])
+  // 탭을 옮기면 그 탭의 되돌리기 가능 여부로 바꾼다
+  useEffect(() => setCanUndoRoom(sceneHistory.current[scene].length > 0), [scene])
 
   // 착용 순간 깜빡임이 없도록 모든 레이어를 한가할 때 미리 받아 둔다
   useEffect(() => {
@@ -128,6 +141,7 @@ export default function App() {
       ...Object.values(BASE_LAYERS),
       ...ITEMS.map((i) => assetUrl(i.image)),
       ...Object.values(ROOM_ASSETS),
+      ...Object.values(CAMP_ASSETS),
       ...ROOM_ITEMS.map((d) => assetUrl(d.image)),
     ]
     const run = () => urls.forEach((u) => void loadImage(u).catch(() => undefined))
@@ -195,24 +209,24 @@ export default function App() {
   const editRoom = (next: RoomState) => {
     const now = Date.now()
     if (now - lastRoomEdit.current > ROOM_UNDO_GAP_MS) {
-      roomHistory.current = [...roomHistory.current, room].slice(-ROOM_UNDO_LIMIT)
+      sceneHistory.current[scene] = [...sceneHistory.current[scene], sceneState].slice(-ROOM_UNDO_LIMIT)
       setCanUndoRoom(true)
     }
     lastRoomEdit.current = now
-    setRoom(next)
+    setScene(next)
   }
   const undoRoom = () => {
-    const prev = roomHistory.current.pop()
+    const prev = sceneHistory.current[scene].pop()
     if (!prev) return
     lastRoomEdit.current = 0
-    setRoom(prev)
+    setScene(prev)
     setSelection(null)
-    setCanUndoRoom(roomHistory.current.length > 0)
+    setCanUndoRoom(sceneHistory.current[scene].length > 0)
   }
 
   /** 내가 추가한 방 소품 지우기 (방에 놓인 것도 함께 치운다) */
   const removeMyProp = (def: RoomItemDef) => {
-    editRoom({ ...room, items: room.items.filter((p) => p.itemId !== def.id) })
+    editRoom({ ...sceneState, items: sceneState.items.filter((p) => p.itemId !== def.id) })
     setSelection(null)
     if (isCustomRoomItem(def)) void removeCustomRoomItem(def.id)
     else hideItem(def.id)
@@ -273,7 +287,7 @@ export default function App() {
   /* ── 방 ── */
   const addToRoom = (def: RoomItemDef) => {
     const uid = newUid()
-    const next = addItem(room, def, uid)
+    const next = addItem(sceneState, def, uid)
     if (!next) return showToast(t('roomFull', { n: MAX_PLACED }))
     editRoom(next)
     setSelection({ kind: 'item', uid })
@@ -281,14 +295,14 @@ export default function App() {
   }
 
   const resetRoom = () => {
-    if (!window.confirm(t('roomResetConfirm'))) return
-    editRoom(defaultRoom())
+    if (!window.confirm(t(scene === 'camp' ? 'campResetConfirm' : 'roomResetConfirm'))) return
+    editRoom(scene === 'camp' ? { ...defaultCamp(), night: camp.night } : defaultRoom())
     setSelection(null)
     showToast(t('roomResetDone'))
   }
 
   const renderOutfit = useCallback((o: RenderOptions) => renderOutfitCanvas(outfit, o, tweaks), [outfit, tweaks])
-  const renderRoom = useCallback(() => renderRoomCanvas(room, outfit, tweaks), [room, outfit, tweaks])
+  const renderRoom = useCallback(() => renderRoomCanvas(sceneState, outfit, tweaks, scene), [sceneState, outfit, tweaks, scene])
 
   const fab = (label: string, icon: string, onClick: () => void, badge?: number, disabled?: boolean) => (
     <button
@@ -316,7 +330,7 @@ export default function App() {
         setSelection(null)
         setSelCat(null)
       }}
-      className={`flex min-h-11 items-center gap-1 rounded-full px-2.5 text-[13px] font-bold whitespace-nowrap transition ${
+      className={`flex min-h-11 items-center gap-0.5 rounded-full px-2 text-[12.5px] font-bold whitespace-nowrap transition ${
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
       }`}
     >
@@ -334,6 +348,7 @@ export default function App() {
             <div role="tablist" className="flex shrink-0 rounded-full bg-white/80 p-0.5 shadow-sm">
               {modeBtn('closet', '👗', t('modeCloset'))}
               {modeBtn('room', '🏠', t('modeRoom'))}
+              {modeBtn('camp', '⛺', t('modeCamp'))}
             </div>
             <div className="flex items-center gap-1.5">
               <button
@@ -380,9 +395,10 @@ export default function App() {
                 </div>
               </Stage>
             ) : (
-              <RoomView outfit={outfit} tweaks={tweaks} room={room} selection={selection} onSelect={setSelection} onChange={editRoom} canUndo={canUndoRoom} onUndo={undoRoom}>
+              <RoomView key={scene} assets={sceneAssets(scene, sceneState.night)} outfit={outfit} tweaks={tweaks} room={sceneState} selection={selection} onSelect={setSelection} onChange={editRoom} canUndo={canUndoRoom} onUndo={undoRoom}>
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
                   {fab(t('goCloset'), '👗', () => setMode('closet'))}
+                  {scene === 'camp' && fab(camp.night ? t('campDay') : t('campNight'), camp.night ? '☀️' : '🌙', () => editRoom({ ...camp, night: !camp.night }))}
                   {fab(t('roomUndo'), '↶', undoRoom, undefined, !canUndoRoom)}
                   {fab(t('roomReset'), '🧹', resetRoom)}
                   {fab(t('roomExport'), '📷', () => setModal('roomExport'))}
@@ -407,7 +423,7 @@ export default function App() {
               onRestore={(list) => { restoreItems(list.map((i) => i.id)); showToast(t('restored')) }}
             />
           ) : (
-            <RoomTray room={room} onAdd={addToRoom} onAddCustom={(tab) => { setPropGroup(tab); setModal('addProp') }} onRemoveCustom={removeMyProp} onRestore={(list) => { restoreItems(list.map((d) => d.id)); showToast(t('restored')) }} />
+            <RoomTray key={scene} scene={scene} room={sceneState} onAdd={addToRoom} onAddCustom={(tab) => { setPropGroup(tab); setModal('addProp') }} onRemoveCustom={removeMyProp} onRestore={(list) => { restoreItems(list.map((d) => d.id)); showToast(t('restored')) }} />
           )}
         </aside>
       </div>
@@ -467,7 +483,7 @@ export default function App() {
           render={renderRoom}
           showOptions={false}
           background={bg}
-          filePrefix="ryuso-room"
+          filePrefix={scene === 'camp' ? 'ryuso-camp' : 'ryuso-room'}
           onClose={() => setModal(null)}
           onError={() => showToast(t('exportFailed'))}
         />
