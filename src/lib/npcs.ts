@@ -1,16 +1,9 @@
 import type { Lang } from '../i18n'
 
-/** 장소마다 NPC 한 명과 이벤트 하나: quiz(퀴즈) / rps(가위바위보) / gift(선물 상자) */
+/** 장소마다 NPC 한 명과 이벤트 하나: quiz(영어 문제, questions.ts) / rps(가위바위보) / gift(선물 상자) */
 export type EventKind = 'quiz' | 'rps' | 'gift'
 
 type L = Record<Lang, string>
-
-export interface Quiz {
-  q: L
-  /** 보기와 정답 번호 */
-  choices: L[]
-  answer: number
-}
 
 export interface Npc {
   emoji: string
@@ -18,7 +11,6 @@ export interface Npc {
   /** 말 걸 때 하는 말 (돌아가며) */
   lines: L[]
   event: EventKind
-  quiz?: Quiz
   /** 이벤트를 알리는 한마디 */
   pitch: L
 }
@@ -29,8 +21,7 @@ export const NPCS: Record<string, Npc> = {
   spring: {
     emoji: '🐰', name: l('토끼 소풍지기', 'Picnic Bunny'),
     lines: [l('벚꽃이 한창이야! 도시락 먹고 갈래?', 'The blossoms are in full bloom!'), l('나무 사이를 잘 봐, 반짝이는 게 있을 거야.', 'Look between the trees for sparkles.')],
-    event: 'quiz', pitch: l('퀴즈를 맞히면 선물을 줄게!', 'Answer my quiz for a gift!'),
-    quiz: { q: l('봄에 피는 분홍색 꽃은?', 'Which pink flower blooms in spring?'), choices: [l('벚꽃', 'Cherry blossom'), l('해바라기', 'Sunflower'), l('국화', 'Chrysanthemum')], answer: 0 },
+    event: 'quiz', pitch: l('영어 문제를 맞히면 선물을 줄게!', 'Answer my English question for a gift!'),
   },
   summer: {
     emoji: '🦀', name: l('게 구조대원', 'Lifeguard Crab'),
@@ -50,14 +41,12 @@ export const NPCS: Record<string, Npc> = {
   halloween: {
     emoji: '🦇', name: l('박쥐 집사', 'Butler Bat'),
     lines: [l('으스스하지만 무서워하지 마.', 'Spooky, but do not be afraid.'), l('호박 근처가 수상해…', 'Something is odd near the pumpkins...')],
-    event: 'quiz', pitch: l('수수께끼를 풀면 보물을 줄게.', 'Solve my riddle for a treasure.'),
-    quiz: { q: l('핼러윈에 꼭 만드는 주황색 채소는?', 'Which orange vegetable do we carve at Halloween?'), choices: [l('당근', 'Carrot'), l('호박', 'Pumpkin'), l('귤', 'Tangerine')], answer: 1 },
+    event: 'quiz', pitch: l('영어 문제를 풀면 보물을 줄게.', 'Solve my English question for a treasure.'),
   },
   alice: {
     emoji: '🐇', name: l('흰 토끼', 'White Rabbit'),
     lines: [l('늦었어, 늦었어! 티파티에 늦겠어!', 'I am late, I am late!'), l('찻잔 속도 들여다봐.', 'Peek into the teacups.')],
-    event: 'quiz', pitch: l('내 질문에 답하면 선물을 줄게.', 'Answer my question and get a gift.'),
-    quiz: { q: l('앨리스가 따라간 동물은?', 'Which animal did Alice follow?'), choices: [l('흰 토끼', 'White rabbit'), l('고양이', 'Cat'), l('여우', 'Fox')], answer: 0 },
+    event: 'quiz', pitch: l('영어 문제에 답하면 선물을 줄게.', 'Answer my English question for a gift.'),
   },
   valentine: {
     emoji: '💌', name: l('우체부 큐피드', 'Cupid Postman'),
@@ -77,8 +66,7 @@ export const NPCS: Record<string, Npc> = {
   winter: {
     emoji: '⛄', name: l('눈사람', 'Snowman'),
     lines: [l('추워도 괜찮아, 난 눈사람이니까!', 'I do not mind the cold!'), l('눈 속에 반짝이는 게 있어.', 'Something sparkles in the snow.')],
-    event: 'quiz', pitch: l('퀴즈를 맞히면 선물을 줄게!', 'Answer my quiz for a gift!'),
-    quiz: { q: l('눈의 결정은 몇 각형일까?', 'How many sides does a snowflake have?'), choices: [l('4각형', '4'), l('6각형', '6'), l('8각형', '8')], answer: 1 },
+    event: 'quiz', pitch: l('영어 문제를 맞히면 선물을 줄게!', 'Answer my English question for a gift!'),
   },
 }
 

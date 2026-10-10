@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { CATEGORY_LABEL, useI18n } from '../i18n'
-import { PLACES, currentAssignment, inPool, isFound, resetGame, setLock } from '../lib/game'
+import { PLACES, SOLVED_PER_BONUS, currentAssignment, inPool, isFound, resetGame, setLock } from '../lib/game'
 import { ITEMS, assetUrl } from '../lib/items'
 import { useItemsVersion } from '../lib/useItemsVersion'
+import { QuestionEditor } from './QuestionEditor'
 import { useGame } from './TravelGame'
 
 const TEXT = {
@@ -13,6 +14,9 @@ const TEXT = {
     unknown: '아직 못 찾았어요',
     where: '숨은 곳',
     reset: '여행 처음부터 다시',
+    english: '영어 정답',
+    editor: '📝 내 영어 문제 추가',
+    nextBonus: '개 더 맞히면 보너스',
     resetConfirm: '찾은 아이템 기록을 지우고 처음부터 시작할까요?',
   },
   en: {
@@ -22,6 +26,9 @@ const TEXT = {
     unknown: 'Not found yet',
     where: 'Hidden at',
     reset: 'Start over',
+    english: 'English correct',
+    editor: '📝 Add my English questions',
+    nextBonus: ' more for a bonus',
     resetConfirm: 'Clear your found items and start over?',
   },
 }
@@ -38,6 +45,7 @@ export function TravelBook() {
     for (const p of PLACES) for (const id of assign[p.id] ?? []) m[id] = lang === 'ko' ? p.ko : p.en
     return m
   }, [assign, lang])
+  const [editor, setEditor] = useState(false)
   const pool = ITEMS.filter(inPool)
   const got = pool.filter((i) => isFound(i.id)).length
 
@@ -53,6 +61,10 @@ export function TravelBook() {
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-petal">
           <div className="h-full rounded-full bg-blush transition-all" style={{ width: `${pool.length ? (got / pool.length) * 100 : 0}%` }} />
         </div>
+        <p className="mt-2 text-xs font-bold">
+          📚 {tx.english} {game.solved} · {SOLVED_PER_BONUS - (game.solved % SOLVED_PER_BONUS)}
+          {tx.nextBonus}
+        </p>
         <label className="mt-2 flex items-center gap-2 text-xs font-bold">
           <input type="checkbox" checked={game.lock} onChange={(e) => setLock(e.target.checked)} className="h-4 w-4" />
           {tx.lock}
@@ -78,13 +90,17 @@ export function TravelBook() {
             )
           })}
         </div>
+        <button className="mx-auto mt-4 block rounded-full bg-petal px-4 py-2 text-xs font-bold" onClick={() => setEditor(true)}>
+          {tx.editor}
+        </button>
         <button
-          className="mx-auto mt-4 block rounded-full bg-white px-4 py-2 text-xs font-bold text-cocoa-soft ring-1 ring-black/10"
+          className="mx-auto mt-2 block rounded-full bg-white px-4 py-2 text-xs font-bold text-cocoa-soft ring-1 ring-black/10"
           onClick={() => window.confirm(tx.resetConfirm) && resetGame()}
         >
           {tx.reset}
         </button>
       </div>
+    {editor && <QuestionEditor onClose={() => setEditor(false)} />}
     </div>
   )
 }

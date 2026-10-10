@@ -3,6 +3,7 @@ import { NPCS, rpsResult } from './npcs'
 import { WALK_BOUNDS, clampToBounds, depthScale, stepToward } from './walk'
 import { DOOR_Y, GROUND, cameraX, chunksNeeded, clampWalk, decorFor, gateAt, gateX, metersOf, placeOfChunk, startPos, stepWorld, worldWidth } from './world'
 import { CYCLE_MS, clockAt, skipOffset, skipToNext, tintOf } from './daynight'
+import { BUILTIN_QUESTIONS, parseQuestions, pickQuestion } from './questions'
 import { PLACES, assignPlaces, inPool, pickReward, spotFor } from './game'
 
 describe('여행 게임', () => {
@@ -55,7 +56,6 @@ describe('NPC', () => {
       const n = NPCS[p.id]
       expect(n, p.id).toBeTruthy()
       expect(n.lines.length).toBeGreaterThan(0)
-      if (n.event === 'quiz') expect(n.quiz!.answer).toBeLessThan(n.quiz!.choices.length)
     }
   })
   it('가위바위보 판정', () => {
@@ -149,5 +149,53 @@ describe('낮과 밤', () => {
   })
   it('낮에는 색을 덮지 않는다', () => {
     expect(tintOf({ f: 0.25, dark: 0, phase: 'day' })).toBeNull()
+  })
+})
+
+describe('영어 문제', () => {
+  it('내장 문제는 모두 형식이 맞고 정답이 보기 안에 있다', () => {
+    expect(BUILTIN_QUESTIONS.length).toBeGreaterThanOrEqual(60)
+    const ids = new Set<string>()
+    for (const q of BUILTIN_QUESTIONS) {
+      expect(ids.has(q.id)).toBe(false)
+      ids.add(q.id)
+      expect(q.choices.length).toBeGreaterThanOrEqual(3)
+      expect(new Set(q.choices).size).toBe(q.choices.length)
+      expect(q.answer).toBeGreaterThanOrEqual(0)
+      expect(q.answer).toBeLessThan(q.choices.length)
+      expect(q.q.length).toBeGreaterThan(8)
+      expect(q.explain.length).toBeGreaterThan(2)
+      expect(PLACES.some((p) => p.id === q.place)).toBe(true)
+    }
+  })
+  it('장소마다 단어와 문법 문제가 있다', () => {
+    for (const p of PLACES) {
+      const qs = BUILTIN_QUESTIONS.filter((q) => q.place === p.id)
+      expect(qs.some((q) => q.type === 'vocab')).toBe(true)
+      expect(qs.some((q) => q.type === 'grammar')).toBe(true)
+    }
+  })
+  it('최근에 푼 문제는 피해서 고른다', () => {
+    const all = BUILTIN_QUESTIONS.filter((q) => q.place === 'spring')
+    const recent = all.slice(1).map((q) => q.id)
+    expect(pickQuestion('spring', recent, () => 0, all)?.id).toBe(all[0].id)
+    expect(pickQuestion('spring', all.map((q) => q.id), () => 0, all)).toBeTruthy()
+    expect(pickQuestion('nowhere', [], () => 0, [])).toBeNull()
+  })
+  it('붙여넣은 문제를 읽는다', () => {
+    const text = [
+      '# 주석',
+      '단어 | He is ___ at math. | good / well / nice | 1 | be good at ~: ~을 잘하다 | 봄소풍',
+      'grammar | She ___ here since 2020. | lives / has lived | 2 | 현재완료',
+      '문법 | 보기 하나 | a | 1',
+      '단어 | q | a / b | 3',
+      '시험 | q | a / b | 1',
+    ].join('\n')
+    const { ok, errors } = parseQuestions(text, PLACES, 1)
+    expect(ok).toHaveLength(2)
+    expect(ok[0]).toMatchObject({ type: 'vocab', answer: 0, place: 'spring', choices: ['good', 'well', 'nice'] })
+    expect(ok[1]).toMatchObject({ type: 'grammar', answer: 1 })
+    expect(ok[1].place).toBeUndefined()
+    expect(errors).toHaveLength(3)
   })
 })

@@ -71,6 +71,15 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
     [assign, placeId],
   )
 
+  /** 영어 문제 5개 맞힘 보너스: 아무 장소의 아이템 하나 */
+  const bonus = () => {
+    const id = pickReward(assign, getGame().found, placeId, 'any')
+    if (id && findItem(id)) {
+      playSnap()
+      setPopup(id)
+    }
+  }
+
   const pick = useCallback((id: string) => {
     if (findItem(id)) {
       playSnap()
@@ -230,6 +239,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
           npc={npc}
           placeId={placeId}
           onReward={() => reward('here')}
+          onBonus={() => bonus()}
           onHint={() => {
             if (!left.length) return false
             setHint(left[Math.floor(Math.random() * left.length)])

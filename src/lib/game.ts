@@ -91,8 +91,10 @@ export interface GameState {
   reach: number
   /** 마지막으로 들어간 문의 구간 번호 (나오면 그 앞에서 시작) */
   chunk: number
+  /** 영어 문제를 맞힌 개수 */
+  solved: number
 }
-const DEFAULT: GameState = { found: [], lock: true, at: PLACES[0].id, events: [], reach: 3, chunk: 0 }
+const DEFAULT: GameState = { found: [], lock: true, at: PLACES[0].id, events: [], reach: 3, chunk: 0, solved: 0 }
 
 function read(): GameState {
   try {
@@ -105,6 +107,7 @@ function read(): GameState {
       events: Array.isArray(r.events) ? r.events.filter((x): x is string => typeof x === 'string' && !!PLACE_BY_ID[x]) : [],
       reach: typeof r.reach === 'number' && Number.isFinite(r.reach) ? Math.min(300, Math.max(3, Math.floor(r.reach))) : DEFAULT.reach,
       chunk: typeof r.chunk === 'number' && Number.isFinite(r.chunk) ? Math.min(300, Math.max(0, Math.floor(r.chunk))) : 0,
+      solved: typeof r.solved === 'number' && Number.isFinite(r.solved) ? Math.max(0, Math.floor(r.solved)) : 0,
       at: typeof r.at === 'string' && PLACE_BY_ID[r.at] ? r.at : DEFAULT.at,
     }
   } catch {
@@ -163,6 +166,13 @@ export function pickReward(
   const here = left(assign[placeId] ?? [])
   const pool = scope === 'here' && here.length ? here : left(Object.values(assign).flat())
   return pool.length ? pool[Math.floor(rnd() * pool.length)] : null
+}
+/** 영어 문제를 맞힐 때마다 부르고, 보너스 아이템을 줄 차례(5개마다)면 true */
+export const SOLVED_PER_BONUS = 5
+export function addSolved(): boolean {
+  const solved = state.solved + 1
+  set({ ...state, solved })
+  return solved % SOLVED_PER_BONUS === 0
 }
 export const setLock = (lock: boolean) => set({ ...state, lock })
 export const travelTo = (at: string, chunk = PLACES.findIndex((p) => p.id === at)) => PLACE_BY_ID[at] && set({ ...state, at, chunk: Math.max(0, chunk) })
