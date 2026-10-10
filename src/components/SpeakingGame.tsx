@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useI18n } from '../i18n'
-import { matchesReply, SPEAKING_LESSONS } from '../lib/speakingLessons'
+import { checkReply, SPEAKING_LESSONS, type ReplyCheck } from '../lib/speakingLessons'
 import { isRestoring } from '../lib/restoreGuard'
 import { Modal } from './Modal'
 import { useSpeechPractice } from './useSpeechPractice'
@@ -22,17 +22,20 @@ export function SpeakingGame({ onClose }: { onClose: () => void }) {
   const [turnIndex, setTurnIndex] = useState(0)
   const [hint, setHint] = useState(false)
   const [transcript, setTranscript] = useState('')
-  const [feedback, setFeedback] = useState<'matched' | 'retry' | 'self' | null>(null)
+  const [feedback, setFeedback] = useState<'matched' | 'almost' | 'retry' | 'self' | null>(null)
+  const [check, setCheck] = useState<ReplyCheck | null>(null)
   const [progress, setProgress] = useState(readProgress)
   const [saveError, setSaveError] = useState(false)
   const lesson = SPEAKING_LESSONS.find(l => l.id === lessonId)
   const turn = lesson?.turns[turnIndex]
   const speech = useSpeechPractice(text => {
     setTranscript(text)
-    setFeedback(turn && matchesReply(text, turn) ? 'matched' : 'retry')
+    const c = turn ? checkReply(text, turn) : null
+    setCheck(c)
+    setFeedback(c ? (c.level === 'match' ? 'matched' : c.level) : 'retry')
   })
   const btn = 'min-h-12 rounded-2xl px-4 py-2 text-sm font-bold'
-  const resetTurn = () => { speech.stop(); setHint(false); setTranscript(''); setFeedback(null) }
+  const resetTurn = () => { speech.stop(); setHint(false); setTranscript(''); setFeedback(null); setCheck(null) }
   const next = () => {
     resetTurn()
     if (turnIndex < 2) setTurnIndex(turnIndex + 1)
@@ -77,8 +80,8 @@ export function SpeakingGame({ onClose }: { onClose: () => void }) {
         {!speech.supported && <p className="text-xs">{ko ? '이 기기에서는 음성 인식을 사용할 수 없어요. 예시를 듣고 소리 내어 말한 뒤 직접 완료해주세요.' : 'Recognition is unavailable here. Say your reply aloud, then continue yourself.'}</p>}
         {speech.error && <p role="alert" className="text-xs text-red-700">{ko ? (speech.error === 'not-allowed' || speech.error === 'service-not-allowed' ? '마이크 권한이 없어요. 권한을 허용하거나 소리 내어 말한 뒤 직접 완료해주세요.' : '말을 인식하지 못했어요. 다시 시도하거나 직접 완료해주세요.') : 'Could not recognize speech. Retry or speak aloud and continue yourself.'}</p>}
         {transcript && <p className="text-sm">{ko ? '인식된 말: ' : 'Heard: '}<span lang="en">{transcript}</span></p>}
-        {feedback && <div role="status" className="mt-3 rounded-2xl bg-cream p-3"><p className="m-0 text-sm font-bold">{feedback === 'matched' ? (ko ? '🌟 이번 답변과 잘 맞아요!' : '🌟 Your reply fits!') : feedback === 'self' ? (ko ? '🌷 직접 말하기를 완료했어요!' : '🌷 Speaking practice complete!') : (ko ? '괜찮아요. 예시를 듣고 다시 말해볼까요?' : 'That is okay. Hear the model and try again.')}</p><p className="mb-0 text-xs">{ko ? '음성 인식은 발음 점수가 아니에요. 인식이 틀릴 수도 있어요.' : 'Recognition checks words, not pronunciation. It can mishear you.'}</p></div>}
-        {(feedback === 'matched' || feedback === 'self') && <button className={`${btn} mt-3 w-full bg-blush text-white`} onClick={next}>{turnIndex === 2 && round === 2 ? (ko ? '연습 마치기 🌷' : 'Finish practice 🌷') : (ko ? '다음 대화 →' : 'Next →')}</button>}
+        {feedback && <div role="status" className="mt-3 rounded-2xl bg-cream p-3"><p className="m-0 text-sm font-bold">{feedback === 'matched' ? (ko ? '🌟 이번 답변과 잘 맞아요!' : '🌟 Your reply fits!') : feedback === 'self' ? (ko ? '🌷 직접 말하기를 완료했어요!' : '🌷 Speaking practice complete!') : feedback === 'almost' ? (ko ? '거의 다 왔어요! 빠진 단어만 더해서 다시 말해 볼까요?' : 'Almost! Add the missing words and try again.') : (ko ? '괜찮아요. 예시를 듣고 다시 말해볼까요?' : 'That is okay. Hear the model and try again.')}</p>{check && feedback !== 'matched' && feedback !== 'self' && <p lang="en" className="my-1 text-sm">{check.words.map((w, i) => <span key={i} className={w.heard ? 'font-bold text-emerald-700' : 'font-bold text-red-700 underline'}>{w.word}{' '}</span>)}</p>}<p className="mb-0 text-xs">{ko ? '음성 인식은 발음 점수가 아니에요. 인식이 틀릴 수도 있어요.' : 'Recognition checks words, not pronunciation. It can mishear you.'}</p></div>}
+        {(feedback === 'matched' || feedback === 'self' || feedback === 'almost') && <button className={`${btn} mt-3 w-full bg-blush text-white`} onClick={next}>{turnIndex === 2 && round === 2 ? (ko ? '연습 마치기 🌷' : 'Finish practice 🌷') : (ko ? '다음 대화 →' : 'Next →')}</button>}
       </>}
     </>}
   </Modal>

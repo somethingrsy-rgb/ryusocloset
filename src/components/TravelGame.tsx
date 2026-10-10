@@ -35,7 +35,7 @@ export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Pr
       paused={speaking} reach={game.reach} chunk={game.chunk} assign={assign} outfit={outfit} tweaks={tweaks}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
     />}
-    <button className="absolute top-16 right-3 z-30 min-h-12 rounded-full bg-blush px-4 text-sm font-bold text-white shadow-lg" onClick={() => setSpeaking(true)}>🎤 {lang === 'ko' ? '한마디 영어' : 'Speaking practice'}</button>
+    {!scene && <button className="absolute top-16 right-3 z-30 min-h-12 rounded-full bg-blush px-4 text-sm font-bold text-white shadow-lg" onClick={() => setSpeaking(true)}>🎤 {lang === 'ko' ? '한마디 영어' : 'Speaking practice'}</button>}
     {speaking && <SpeakingGame onClose={() => setSpeaking(false)} />}
   </div>
 }

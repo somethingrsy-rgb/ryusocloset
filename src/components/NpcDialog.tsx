@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useI18n } from '../i18n'
 import { eventDone } from '../lib/game'
 import { RPS_ICON, rpsResult, type Npc, type Rps } from '../lib/npcs'
+import { MissionGame } from './MissionGame'
 import { SpeakingGame } from './SpeakingGame'
 import { EnglishQuiz } from './EnglishQuiz'
 
@@ -16,16 +17,18 @@ interface Props {
   /** 보상을 준다 (이벤트 성공) */
   onReward: () => void
   onEnglishReward: () => boolean
+  /** 영어 대화 미션 보상: 아이템 1개 (첫 완료, 별 3개 첫 달성에 각각 한 번씩 호출) */
+  onMissionReward: () => void
   /** 힌트: 표시한 게 있으면 true */
   onHint: () => boolean
   onClose: () => void
 }
 
-export function NpcDialog({ npc, onReward, onEnglishReward, onHint, onClose, placeId }: Props) {
+export function NpcDialog({ npc, onReward, onEnglishReward, onMissionReward, onHint, onClose, placeId }: Props) {
   const { lang } = useI18n()
   const tx = TEXT[lang]
   const [line, setLine] = useState(() => npc.lines[Math.floor(Math.random() * npc.lines.length)][lang])
-  const [mode, setMode] = useState<'talk' | 'quiz' | 'rps' | 'english' | 'speaking'>('talk')
+  const [mode, setMode] = useState<'talk' | 'quiz' | 'rps' | 'english' | 'speaking' | 'mission'>('talk')
   const done = eventDone(placeId)
 
   const startEvent = () => {
@@ -46,6 +49,7 @@ export function NpcDialog({ npc, onReward, onEnglishReward, onHint, onClose, pla
   }
 
   const btn = 'min-h-11 rounded-full px-4 text-sm font-bold'
+  if (mode === 'mission') return <MissionGame onReward={onMissionReward} onClose={() => setMode('talk')} />
   if (mode === 'speaking') return <SpeakingGame onClose={() => setMode('talk')} />
   if (mode === 'english') return (
     <div className="absolute inset-x-2 bottom-2 z-20 max-h-[90%] overflow-y-auto rounded-3xl bg-white/95 p-3 shadow-2xl ring-1 ring-black/10">
@@ -94,7 +98,8 @@ export function NpcDialog({ npc, onReward, onEnglishReward, onHint, onClose, pla
       )}
       {mode === 'talk' && (
         <div className="mt-2 flex flex-wrap gap-2">
-          <button className={`${btn} bg-blush text-white`} onClick={() => setMode('speaking')}>🎤 {lang === 'ko' ? '영어로 직접 말하기' : 'Speak English'}</button>
+          <button className={`${btn} bg-blush text-white`} onClick={() => setMode('mission')}>💼 {lang === 'ko' ? '영어 대화 미션' : 'English missions'}</button>
+          <button className={`${btn} bg-petal`} onClick={() => setMode('speaking')}>🎤 {lang === 'ko' ? '영어로 직접 말하기' : 'Speak English'}</button>
           <button className={`${btn} bg-petal`} onClick={() => setMode('english')}>
             💬 {lang === 'ko' ? '영어 회화 퀴즈' : 'English conversation quiz'}
           </button>
