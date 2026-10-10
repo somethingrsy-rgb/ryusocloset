@@ -30,6 +30,7 @@ const TEXT = {
 }
 
 interface Props {
+  paused?: boolean
   /** 저장된 맵 길이(구간 수) */
   reach: number
   /** 마지막으로 들어간 문의 구간 (그 앞에서 시작) */
@@ -40,7 +41,7 @@ interface Props {
   onEnter: (placeId: string, chunk: number) => void
 }
 
-export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Props) {
+export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, paused = false }: Props) {
   const { lang } = useI18n()
   const tx = TEXT[lang]
   const { clock, skip } = useClock()
@@ -140,9 +141,11 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Pro
     setWalking(false)
     setDestination(null)
   }
+  useEffect(() => { if (paused) stop() }, [paused])
   const keys = useWalkKeys(
     (x, y) => walkTo(posRef.current.x + x * 120, posRef.current.y + y * 120),
     stop,
+    !paused,
   )
 
   const figW = 145 * (0.75 + 0.25 * ((pos.y - 540) / 220))

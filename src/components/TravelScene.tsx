@@ -34,6 +34,7 @@ const TALK_R = 130 // NPC 가까이 가면 말을 건다
 const TALK_AGAIN_R = 220 // 이만큼 멀어졌다가 다시 오면 또 말을 건다
 
 interface Props {
+  paused?: boolean
   placeId: string
   assign: Record<string, string[]>
   outfit: Outfit
@@ -42,7 +43,7 @@ interface Props {
   onWear: (id: string) => void
 }
 
-export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }: Props) {
+export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, paused = false }: Props) {
   const { lang } = useI18n()
   const tx = TEXT[lang]
   useGame()
@@ -72,7 +73,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
   const target = useRef<Vec | null>(null)
   const talkLock = useRef(false)
   const boxRef = useRef<HTMLDivElement>(null)
-  const blocked = !!popup || talk
+  const blocked = !!popup || talk || paused
 
   const reward = useCallback(
     (scope: 'here' | 'any') => {
@@ -171,6 +172,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
     setWalking(false)
     setDestination(null)
   }
+  useEffect(() => { if (paused) stop() }, [paused])
   const keys = useWalkKeys(
     (x, y) => walkTo({ x: posRef.current.x + x * 12, y: posRef.current.y + y * 9 }),
     stop,
