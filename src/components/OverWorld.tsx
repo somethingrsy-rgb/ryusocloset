@@ -24,10 +24,11 @@ import {
 } from '../lib/world'
 import { FigureLayers } from './FigureLayers'
 import { useClock } from './useClock'
+import { useWalkKeys } from './useWalkKeys'
 
 const TEXT = {
-  ko: { hint: '앞으로 걸어가면 맵이 계속 이어져요! 집을 누르면 그 장소로 들어가요', found: '찾음' },
-  en: { hint: 'Keep walking: the map keeps growing! Tap a house to enter', found: 'Found' },
+  ko: { hint: '바닥을 눌러 이동 · 방향키 / WASD · 집을 눌러 입장', found: '찾음' },
+  en: { hint: 'Tap to walk · Arrow keys / WASD · Tap a house to enter', found: 'Found' },
 }
 
 interface Props {
@@ -54,6 +55,7 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Pro
   const [pos, setPos] = useState(() => startPos(chunk))
   const [dir, setDir] = useState<1 | -1>(1)
   const [walking, setWalking] = useState(false)
+  const [destination, setDestination] = useState<{ x: number; y: number } | null>(null)
   const posRef = useRef(pos)
   const target = useRef<{ x: number; y: number } | null>(null)
   const frame = useRef(0)
@@ -100,12 +102,14 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Pro
         entered.current = true
         target.current = null
         setWalking(false)
+        setDestination(null)
         onEnter(placeOfChunk(g).id, g)
         return
       }
       if (r.arrived) {
         target.current = null
         setWalking(false)
+        setDestination(null)
         return
       }
       frame.current = requestAnimationFrame(tick)
@@ -117,6 +121,7 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Pro
   const walkTo = (x: number, y: number, gate: number | null = null) => {
     intent.current = gate
     target.current = clampWalk(x, y, chunksRef.current)
+    setDestination(target.current)
     setWalking(true)
     cancelAnimationFrame(frame.current)
     last.current = performance.now()
@@ -124,15 +129,29 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Pro
   }
 
   const onTap = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return
+    hostRef.current?.focus({ preventScroll: true })
     const r = hostRef.current!.getBoundingClientRect()
     walkTo((e.clientX - r.left) / scale + cam, (e.clientY - r.top) / scale)
   }
+
+  const stop = () => {
+    cancelAnimationFrame(frame.current)
+    target.current = null
+    intent.current = null
+    setWalking(false)
+    setDestination(null)
+  }
+  const keys = useWalkKeys(
+    (x, y) => walkTo(posRef.current.x + x * 120, posRef.current.y + y * 120),
+    stop,
+  )
 
   const figW = 190 * (0.75 + 0.25 * ((pos.y - 540) / 220))
   const range = Array.from({ length: lastChunk - first + 1 }, (_, k) => first + k)
 
   return (
-    <div ref={hostRef} className="relative h-full touch-none overflow-hidden rounded-3xl shadow-inner ring-1 ring-black/5 select-none" onPointerUp={onTap}>
+    <div ref={hostRef} tabIndex={0} aria-label={lang === 'ko' ? '여행 마을, 방향키로 이동' : 'Village, move with arrow keys'} {...keys} className="travel-world relative h-full touch-none overflow-hidden rounded-3xl shadow-inner ring-1 ring-black/5 select-none" onPointerUp={onTap}>
       <div className="absolute top-0 left-0 origin-top-left" style={{ width: worldWidth(chunks), height: WORLD_H, transform: `scale(${scale}) translateX(${-cam}px)` }}>
         {range.map((c) => {
           const zone = c % ZONE_SKY.length
@@ -147,7 +166,8 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Pro
               <div className="absolute inset-x-0 top-0" style={{ height: 520, background: `linear-gradient(90deg, ${ZONE_SKY[zone]}, ${ZONE_SKY[next]})` }} />
               <div className="absolute inset-x-0 bottom-0" style={{ top: 520, background: `linear-gradient(90deg, ${ZONE_GROUND[zone]}, ${ZONE_GROUND[next]})` }} />
               <div className="absolute inset-x-0" style={{ top: 520, height: 8, background: 'rgba(255,255,255,0.5)' }} />
-              <div className="absolute inset-x-0 rounded-full" style={{ top: 690, height: 70, background: 'rgba(255,255,255,0.35)' }} />
+              <div className="village-path absolute inset-x-0 rounded-full" style={{ top: 690, height: 70 }} />
+              <div className="pointer-events-none absolute inset-x-0 top-20 flex justify-around text-7xl opacity-65" aria-hidden><span>☁️</span><span>☁️</span><span>☁️</span></div>
               {tint && <div className="pointer-events-none absolute inset-0" style={{ background: tint }} />}
               {clock.dark > 0.3 && (
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0" style={{ height: 500, opacity: Math.min(1, (clock.dark - 0.3) / 0.5) }}>
@@ -164,6 +184,7 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Pro
                 </span>
               ))}
               <button
+                onPointerUp={(e) => e.stopPropagation()}
                 aria-label={`${lang === 'ko' ? p.ko : p.en} ${c}`}
                 onClick={() => walkTo(gateX(c), DOOR_Y + 40, c)}
                 className="absolute flex -translate-x-1/2 flex-col items-center"
@@ -179,12 +200,16 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Pro
           )
         })}
 
+        {destination && <div aria-hidden className="walk-destination pointer-events-none absolute" style={{ left: destination.x, top: destination.y, zIndex: 3 }} />}
         <div
           className="pointer-events-none absolute"
           style={{ left: pos.x, top: pos.y, width: figW, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -100%)', zIndex: Math.round(pos.y) }}
         >
-          <div className={`relative h-full w-full ${walking ? 'walk-bob' : ''}`} style={{ transform: `scaleX(${dir})` }}>
+          <div className="avatar-ground-shadow" />
+          <div className="relative h-full w-full" style={{ transform: `scaleX(${dir})` }}>
+            <div className={`h-full w-full ${walking ? 'walk-bob' : ''}`}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
+            </div>
           </div>
         </div>
       </div>
@@ -204,7 +229,8 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Pro
         <span aria-hidden>{PHASE_ICON[clock.phase]}</span>
         {PHASE_LABEL[clock.phase][lang]}
       </button>
-      <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-xs font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">{tx.hint}</p>
+      <p className="travel-hint pointer-events-none absolute inset-x-3 bottom-3 z-10 text-center text-xs font-bold">{tx.hint}</p>
     </div>
   )
 }
+

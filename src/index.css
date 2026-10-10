@@ -140,3 +140,42 @@ button:focus-visible {
 .chunk-in {
   animation: chunk-in 0.7s ease-out both;
 }
+
+.travel-world:focus-visible {
+  outline: 3px solid var(--color-blush-deep);
+  outline-offset: 3px;
+}
+.village-path {
+  background: #efdbb4;
+  border-block: 5px solid #fff4d5;
+  box-shadow: 0 5px 0 #7c99652b;
+}
+.avatar-ground-shadow {
+  position: absolute;
+  bottom: -1%;
+  left: 27%;
+  width: 46%;
+  height: 7%;
+  border-radius: 50%;
+  background: #354c3940;
+  filter: blur(3px);
+}
+.walk-destination {
+  width: 38px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #ff8fab70;
+  box-shadow: 0 0 0 5px #ffffff30;
+}
+.travel-hint {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid #ffffff90;
+  border-radius: 18px;
+  color: #4a3b3b;
+  background: #fff7f0ed;
+  box-shadow: 0 3px 12px #354c391a;
+}
+
