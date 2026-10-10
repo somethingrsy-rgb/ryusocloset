@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { NPCS, rpsResult } from './npcs'
 import { WALK_BOUNDS, clampToBounds, depthScale, stepToward } from './walk'
+import { DOOR_Y, GROUND, WORLD_W, cameraX, clampWalk, gateAt, gateX, startPos, stepWorld } from './world'
 import { PLACES, assignPlaces, inPool, pickReward, spotFor } from './game'
 
 describe('여행 게임', () => {
@@ -81,5 +82,29 @@ describe('걷기', () => {
   })
   it('아래쪽일수록 크다', () => {
     expect(depthScale(90)).toBeGreaterThan(depthScale(55))
+  })
+})
+
+describe('넓은 맵', () => {
+  it('문은 왼쪽에서 오른쪽으로 순서대로, 맵 안에 있다', () => {
+    const xs = PLACES.map((_, i) => gateX(i))
+    for (let i = 1; i < xs.length; i++) expect(xs[i]).toBeGreaterThan(xs[i - 1])
+    expect(xs[0]).toBeGreaterThan(0)
+    expect(xs[xs.length - 1]).toBeLessThan(WORLD_W)
+  })
+  it('카메라는 맵 밖을 보여주지 않는다', () => {
+    expect(cameraX(0, 800)).toBe(0)
+    expect(cameraX(WORLD_W, 800)).toBe(WORLD_W - 800)
+    expect(cameraX(2000, 800)).toBe(1600)
+  })
+  it('문 앞에 서면 그 장소, 시작 위치는 문 앞이지만 닿지는 않는다', () => {
+    expect(gateAt({ x: gateX(3), y: DOOR_Y + 40 })).toBe(3)
+    expect(gateAt(startPos(3))).toBe(-1)
+  })
+  it('걷기: 다가가고, 땅 밖은 맞춘다', () => {
+    const r = stepWorld({ x: 100, y: 700 }, { x: 2000, y: 700 }, 0.1)
+    expect(r.arrived).toBe(false)
+    expect(r.pos.x).toBeGreaterThan(100)
+    expect(clampWalk(-50, 10)).toEqual({ x: 60, y: GROUND.minY })
   })
 })
