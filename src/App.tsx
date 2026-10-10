@@ -12,6 +12,8 @@ import { RoomView } from './components/RoomView'
 import { SavedSheet } from './components/SavedSheet'
 import { Stage } from './components/Stage'
 import { TravelBook } from './components/TravelBook'
+import { SendToGameSheet } from './components/SendToGameSheet'
+import { travelTo } from './lib/game'
 import { TravelGame } from './components/TravelGame'
 import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
@@ -50,7 +52,7 @@ const UNDO_LIMIT = 50
 const ROOM_UNDO_GAP_MS = 500
 const ROOM_UNDO_LIMIT = 50
 
-type ModalKind = null | 'settings' | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport'
+type ModalKind = null | 'settings' | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport' | 'sendToGame'
 type Mode = 'closet' | 'room' | 'camp' | 'travel'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -63,6 +65,7 @@ export default function App() {
   const [bgId, setBgId] = useState(
     initial.bgId && BACKGROUNDS.some((b) => b.id === initial.bgId) ? initial.bgId : DEFAULT_BG_ID,
   )
+  const [travelPreview, setTravelPreview] = useState<string | null>(null)
   const [mode, setMode] = useState<Mode>('closet')
   const [outfit, setOutfit] = useState<Outfit>(loadCurrent)
   const [tweaks, setTweaks] = useState<Tweaks>(() => loadTweaks(loadCurrent()))
@@ -330,6 +333,7 @@ export default function App() {
       role="tab"
       aria-selected={mode === m}
       onClick={() => {
+        setTravelPreview(null)
         setMode(m)
         setSelection(null)
         setSelCat(null)
@@ -378,6 +382,7 @@ export default function App() {
           <div className="min-h-0 flex-1">
             {mode === 'travel' ? (
               <TravelGame
+                initialPlaceId={travelPreview}
                 outfit={outfit}
                 tweaks={tweaks}
                 onWear={(id) => {
@@ -421,6 +426,7 @@ export default function App() {
                   {fab(t('roomReset'), '🧹', resetRoom)}
                   {fab(t('roomExport'), '📷', () => setModal('roomExport'))}
                 </div>
+              <button onClick={() => setModal('sendToGame')} className="absolute bottom-3 left-3 z-20 min-h-12 rounded-full bg-blush px-4 font-bold text-white shadow-md">🎮 {lang === 'ko' ? '게임에 보내기' : 'Send to game'}</button>
               </RoomView>
             )}
           </div>
@@ -506,6 +512,14 @@ export default function App() {
           onError={() => showToast(t('exportFailed'))}
         />
       )}
+      {modal === 'sendToGame' && <SendToGameSheet scene={scene} room={sceneState} onClose={() => setModal(null)} onApplied={(id) => {
+        travelTo(id)
+        setTravelPreview(id)
+        setMode('travel')
+        setSelection(null)
+        setModal(null)
+        showToast(lang === 'ko' ? '꾸민 방을 게임에 적용했어요!' : 'Your room is now in the game!')
+      }} />}
       {modal === 'roomExport' && (
         <ExportSheet
           title={t('roomExportTitle')}
@@ -521,3 +535,4 @@ export default function App() {
     </I18nContext.Provider>
   )
 }
+
