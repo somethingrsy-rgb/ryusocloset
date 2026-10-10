@@ -87,8 +87,12 @@ export interface GameState {
   at: string
   /** 이벤트를 끝낸 장소 */
   events: string[]
+  /** 맵이 오른쪽으로 얼마나 늘어났는지(구간 수). 한 번 늘어난 맵은 그대로 남는다 */
+  reach: number
+  /** 마지막으로 들어간 문의 구간 번호 (나오면 그 앞에서 시작) */
+  chunk: number
 }
-const DEFAULT: GameState = { found: [], lock: true, at: PLACES[0].id, events: [] }
+const DEFAULT: GameState = { found: [], lock: true, at: PLACES[0].id, events: [], reach: 3, chunk: 0 }
 
 function read(): GameState {
   try {
@@ -99,6 +103,8 @@ function read(): GameState {
       found: Array.isArray(r.found) ? r.found.filter((x): x is string => typeof x === 'string') : [],
       lock: r.lock !== false,
       events: Array.isArray(r.events) ? r.events.filter((x): x is string => typeof x === 'string' && !!PLACE_BY_ID[x]) : [],
+      reach: typeof r.reach === 'number' && Number.isFinite(r.reach) ? Math.min(300, Math.max(3, Math.floor(r.reach))) : DEFAULT.reach,
+      chunk: typeof r.chunk === 'number' && Number.isFinite(r.chunk) ? Math.min(300, Math.max(0, Math.floor(r.chunk))) : 0,
       at: typeof r.at === 'string' && PLACE_BY_ID[r.at] ? r.at : DEFAULT.at,
     }
   } catch {
@@ -159,7 +165,9 @@ export function pickReward(
   return pool.length ? pool[Math.floor(rnd() * pool.length)] : null
 }
 export const setLock = (lock: boolean) => set({ ...state, lock })
-export const travelTo = (at: string) => PLACE_BY_ID[at] && set({ ...state, at })
+export const travelTo = (at: string, chunk = PLACES.findIndex((p) => p.id === at)) => PLACE_BY_ID[at] && set({ ...state, at, chunk: Math.max(0, chunk) })
+/** 맵을 오른쪽으로 늘린다 (줄어들지는 않는다) */
+export const extendReach = (reach: number) => reach > state.reach && set({ ...state, reach: Math.min(300, reach) })
 export const resetGame = () => set({ ...DEFAULT })
 
 /** 현재 아이템 목록 기준 장소별 숨은 아이템 */
