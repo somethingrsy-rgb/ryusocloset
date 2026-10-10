@@ -126,3 +126,8 @@ button:focus-visible {
 .walk-bob {
   animation: walk-bob 0.38s ease-in-out infinite;
 }
+
+.sparkle-night {
+  filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 16px #ffd86b);
+  font-size: 1.9rem;
+}

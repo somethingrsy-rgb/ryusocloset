@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
 import { useI18n } from '../i18n'
+import { PHASE_ICON, PHASE_LABEL, tintOf } from '../lib/daynight'
 import { PLACES, isFound } from '../lib/game'
 import type { Outfit, Tweaks } from '../lib/types'
 import { DOOR_Y, WORLD_H, WORLD_W, ZONE_DECOR, ZONE_GROUND, ZONE_SKY, cameraX, clampWalk, gateAt, gateX, startPos, stepWorld } from '../lib/world'
 import { FigureLayers } from './FigureLayers'
+import { useClock } from './useClock'
 
 const TEXT = {
   ko: { hint: '화면을 눌러 걸어가요! 집(문)에 들어가면 그 장소로 들어가요', found: '찾음' },
@@ -22,6 +24,8 @@ interface Props {
 export function OverWorld({ at, assign, outfit, tweaks, onEnter }: Props) {
   const { lang } = useI18n()
   const tx = TEXT[lang]
+  const { clock, skip } = useClock()
+  const tint = tintOf(clock)
   const hostRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 400, h: 500 })
   const [pos, setPos] = useState(() => startPos(PLACES.findIndex((p) => p.id === at)))
@@ -101,6 +105,17 @@ export function OverWorld({ at, assign, outfit, tweaks, onEnter }: Props) {
         <div className="absolute inset-x-0 top-0" style={{ height: 520, background: `linear-gradient(90deg, ${ZONE_SKY.join(',')})` }} />
         <div className="absolute inset-x-0 bottom-0" style={{ top: 520, background: `linear-gradient(90deg, ${ZONE_GROUND.join(',')})` }} />
         <div className="absolute inset-x-0" style={{ top: 520, height: 8, background: 'rgba(255,255,255,0.5)' }} />
+        {/* 밤이 되면 하늘과 땅이 어두워진다 */}
+        {tint && <div className="pointer-events-none absolute inset-0" style={{ background: tint, zIndex: 0 }} />}
+        {clock.dark > 0.3 && (
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0" style={{ height: 500, opacity: Math.min(1, (clock.dark - 0.3) / 0.5) }}>
+            {Array.from({ length: 46 }, (_, k) => (
+              <span key={k} className="absolute text-2xl text-white" style={{ left: (k * 337) % WORLD_W, top: (k * 83) % 420, opacity: 0.5 + ((k * 7) % 5) / 10 }}>
+                {k % 9 === 0 ? '⭐' : '✦'}
+              </span>
+            ))}
+          </div>
+        )}
         {/* 길 */}
         <div className="absolute inset-x-0 rounded-full" style={{ top: 690, height: 70, background: 'rgba(255,255,255,0.35)' }} />
 
@@ -152,6 +167,18 @@ export function OverWorld({ at, assign, outfit, tweaks, onEnter }: Props) {
           </div>
         </div>
       </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          skip()
+        }}
+        onPointerUp={(e) => e.stopPropagation()}
+        aria-label={PHASE_LABEL[clock.phase][lang]}
+        className="absolute top-2 right-2 z-10 flex h-12 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-bold shadow-md ring-1 ring-black/5"
+      >
+        <span aria-hidden>{PHASE_ICON[clock.phase]}</span>
+        {PHASE_LABEL[clock.phase][lang]}
+      </button>
       <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-xs font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">{tx.hint}</p>
     </div>
   )

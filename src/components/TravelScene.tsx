@@ -8,11 +8,15 @@ import type { Outfit, Tweaks } from '../lib/types'
 import { clampToBounds, depthScale, distPx, stepToward, type Vec } from '../lib/walk'
 import { FigureLayers } from './FigureLayers'
 import { NpcDialog } from './NpcDialog'
+import { PHASE_ICON, PHASE_LABEL, tintOf } from '../lib/daynight'
+import { useClock } from './useClock'
 import { useGame } from './TravelGame'
 
 const TEXT = {
-  ko: { map: '지도', found: '찾음', hint: '화면을 눌러 걸어가요! 반짝이는 곳 위를 지나가면 주워요', done: '이 곳의 아이템을 모두 찾았어요 ⭐', got: '찾았다!', wear: '옷장에서 입어보기', keep: '계속 걷기', talkTo: '말 걸기' },
-  en: { map: 'Map', found: 'Found', hint: 'Tap to walk! Walk over sparkles to pick them up', done: 'You found everything here ⭐', got: 'Found it!', wear: 'Try it on', keep: 'Keep walking', talkTo: 'Talk' },
+  ko: { map: '지도', found: '찾음', hint: '화면을 눌러 걸어가요! 반짝이는 곳 위를 지나가면 주워요',
+    nightHint: '밤에는 반짝임이 더 잘 보여요 ✨', done: '이 곳의 아이템을 모두 찾았어요 ⭐', got: '찾았다!', wear: '옷장에서 입어보기', keep: '계속 걷기', talkTo: '말 걸기' },
+  en: { map: 'Map', found: 'Found', hint: 'Tap to walk! Walk over sparkles to pick them up',
+    nightHint: 'Sparkles glow brighter at night ✨', done: 'You found everything here ⭐', got: 'Found it!', wear: 'Try it on', keep: 'Keep walking', talkTo: 'Talk' },
 }
 
 const NPC_POS: Vec = { x: 84, y: 84 }
@@ -34,6 +38,9 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
   const { lang } = useI18n()
   const tx = TEXT[lang]
   useGame()
+  const { clock, skip } = useClock()
+  const tint = tintOf(clock)
+  const night = clock.dark > 0.5
   const p = PLACE_BY_ID[placeId]
   const npc = NPCS[placeId]
   const ids = assign[placeId] ?? []
@@ -143,8 +150,10 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
   return (
     <div className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5">
       <div ref={boxRef} className="relative isolate h-full max-w-full touch-none select-none" style={{ aspectRatio: '1086 / 1448' }} onPointerUp={onTap}>
-        <img src={assetUrl(p.wall)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
+        <img src={assetUrl(night && p.wallNight ? p.wallNight : p.wall)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
         <img src={assetUrl(p.floor)} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${(p.floorH / 1448) * 100}%` }} draggable={false} />
+
+        {tint && !(night && p.wallNight) && <div className="pointer-events-none absolute inset-0" style={{ background: tint, zIndex: 1 }} />}
 
         {ids.map((id, i) => {
           if (isFound(id)) return null
@@ -154,7 +163,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
               key={id}
               aria-label={tx.hint}
               onClick={() => walkTo(s)}
-              className="sparkle absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-2xl"
+              className={`sparkle ${night ? 'sparkle-night' : ''} absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-2xl`}
               style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: Math.round(s.y) }}
             >
               <span aria-hidden>✨</span>
@@ -197,6 +206,14 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
         </div>
       </div>
 
+      <button
+        onClick={skip}
+        aria-label={PHASE_LABEL[clock.phase][lang]}
+        className="absolute top-2 right-2 z-10 flex h-12 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-bold shadow-md ring-1 ring-black/5"
+      >
+        <span aria-hidden>{PHASE_ICON[clock.phase]}</span>
+        {PHASE_LABEL[clock.phase][lang]}
+      </button>
       <div className="absolute top-2 left-2 z-10 flex items-center gap-2">
         <button onClick={onExit} className="flex h-12 items-center gap-1 rounded-full bg-white/90 px-4 text-sm font-bold shadow-md ring-1 ring-black/5">
           <span aria-hidden>🗺️</span>
@@ -206,7 +223,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
           {p.icon} {lang === 'ko' ? p.ko : p.en} · {tx.found} {got}/{ids.length}
         </span>
       </div>
-      <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-xs font-bold text-white drop-shadow">{left.length === 0 ? tx.done : tx.hint}</p>
+      <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-xs font-bold text-white drop-shadow">{left.length === 0 ? tx.done : night ? tx.nightHint : tx.hint}</p>
 
       {talk && npc && (
         <NpcDialog

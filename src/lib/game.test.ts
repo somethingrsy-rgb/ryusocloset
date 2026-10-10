@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { NPCS, rpsResult } from './npcs'
 import { WALK_BOUNDS, clampToBounds, depthScale, stepToward } from './walk'
 import { DOOR_Y, GROUND, WORLD_W, cameraX, clampWalk, gateAt, gateX, startPos, stepWorld } from './world'
+import { CYCLE_MS, clockAt, skipOffset, skipToNext, tintOf } from './daynight'
 import { PLACES, assignPlaces, inPool, pickReward, spotFor } from './game'
 
 describe('여행 게임', () => {
@@ -106,5 +107,35 @@ describe('넓은 맵', () => {
     expect(r.arrived).toBe(false)
     expect(r.pos.x).toBeGreaterThan(100)
     expect(clampWalk(-50, 10)).toEqual({ x: 60, y: GROUND.minY })
+  })
+})
+
+describe('낮과 밤', () => {
+  it('한낮은 밝고 한밤은 어둡다', () => {
+    const t0 = -skipOffset()
+    expect(clockAt(t0 + CYCLE_MS * 0.25).dark).toBe(0)
+    expect(clockAt(t0 + CYCLE_MS * 0.75).dark).toBe(1)
+    expect(clockAt(t0 + CYCLE_MS * 0.75).phase).toBe('night')
+  })
+  it('저녁과 새벽은 중간 어둠이다', () => {
+    const t0 = -skipOffset()
+    let dusk = false
+    let dawn = false
+    for (let i = 0; i < 480; i++) {
+      const c = clockAt(t0 + i * 1000)
+      if (c.phase === 'dusk') dusk = c.dark > 0 && c.dark < 1
+      if (c.phase === 'dawn') dawn = c.dark > 0 && c.dark < 1
+    }
+    expect(dusk).toBe(true)
+    expect(dawn).toBe(true)
+  })
+  it('건너뛰기는 다음 시간대로 간다', () => {
+    const now = -skipOffset() + CYCLE_MS * 0.25
+    expect(clockAt(now).phase).toBe('day')
+    skipToNext(now)
+    expect(clockAt(now).phase).toBe('dusk')
+  })
+  it('낮에는 색을 덮지 않는다', () => {
+    expect(tintOf({ f: 0.25, dark: 0, phase: 'day' })).toBeNull()
   })
 })
