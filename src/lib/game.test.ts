@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { NPCS, rpsResult } from './npcs'
+import { WALK_BOUNDS, clampToBounds, depthScale, stepToward } from './walk'
 import { PLACES, assignPlaces, inPool, pickReward, spotFor } from './game'
 
 describe('여행 게임', () => {
@@ -59,5 +60,26 @@ describe('NPC', () => {
     expect(rpsResult('rock', 'scissors')).toBe('win')
     expect(rpsResult('rock', 'paper')).toBe('lose')
     expect(rpsResult('paper', 'paper')).toBe('draw')
+  })
+})
+
+describe('걷기', () => {
+  it('목표에 닿으면 도착', () => {
+    const r = stepToward({ x: 10, y: 80 }, { x: 11, y: 80 }, 1)
+    expect(r.arrived).toBe(true)
+    expect(r.pos).toEqual({ x: 11, y: 80 })
+  })
+  it('조금씩 다가간다', () => {
+    const r = stepToward({ x: 10, y: 80 }, { x: 90, y: 80 }, 0.1)
+    expect(r.arrived).toBe(false)
+    expect(r.pos.x).toBeGreaterThan(10)
+    expect(r.pos.x).toBeLessThan(90)
+    expect(r.pos.y).toBe(80)
+  })
+  it('범위 밖은 안으로 맞춘다', () => {
+    expect(clampToBounds({ x: -5, y: 10 })).toEqual({ x: WALK_BOUNDS.minX, y: WALK_BOUNDS.minY })
+  })
+  it('아래쪽일수록 크다', () => {
+    expect(depthScale(90)).toBeGreaterThan(depthScale(55))
   })
 })

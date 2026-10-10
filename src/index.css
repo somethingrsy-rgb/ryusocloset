@@ -106,6 +106,7 @@ button:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .sparkle,
+  .walk-bob,
   .item-in,
   .sheet-in,
   .toast-in {
@@ -116,4 +117,12 @@ button:focus-visible {
 .scroll-thin {
   scrollbar-width: thin;
   scrollbar-color: #f3c3d1 transparent;
+}
+
+@keyframes walk-bob {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50% { transform: translateY(-3.5%) rotate(1.5deg); }
+}
+.walk-bob {
+  animation: walk-bob 0.38s ease-in-out infinite;
 }
