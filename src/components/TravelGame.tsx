@@ -11,6 +11,7 @@ export const useGame = () => {
 }
 
 interface Props {
+  initialPlaceId?: string | null
   outfit: Outfit
   tweaks: Tweaks
   /** 찾은 아이템을 옷장에서 입어보러 간다 */
@@ -18,12 +19,12 @@ interface Props {
 }
 
 /** 여행 탭: 넓은 맵(OverWorld)을 걸어다니다가 문에 들어가면 그 장소 장면(TravelScene)으로 */
-export function TravelGame({ outfit, tweaks, onWear }: Props) {
+export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Props) {
   const game = useGame()
   const ver = useItemsVersion()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const assign = useMemo(currentAssignment, [ver])
-  const [scene, setScene] = useState<string | null>(null)
+  const [scene, setScene] = useState<string | null>(initialPlaceId)
 
   if (scene) {
     return <TravelScene key={scene} placeId={scene} assign={assign} outfit={outfit} tweaks={tweaks} onExit={() => setScene(null)} onWear={onWear} />
@@ -42,3 +43,4 @@ export function TravelGame({ outfit, tweaks, onWear }: Props) {
     />
   )
 }
+

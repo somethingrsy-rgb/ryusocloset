@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from 'react'
 import { useI18n } from '../i18n'
 import { PLACE_BY_ID, eventDone, finishEnglish, finishEvent, findItem, getGame, isFound, pickReward, spotFor } from '../lib/game'
 import { ITEM_BY_ID, assetUrl } from '../lib/items'
@@ -13,6 +13,12 @@ import { useClock } from './useClock'
 import { useGame } from './TravelGame'
 import { useWalkKeys } from './useWalkKeys'
 import { TravelDecor } from './TravelDecor'
+
+import { getTravelRoom, subscribeTravelRooms, travelRoomsVersion } from '../lib/travelRooms'
+import { useItemsVersion } from '../lib/useItemsVersion'
+import { sceneAssets } from '../lib/exportRoom'
+import { drawables } from '../lib/room'
+import { AVATAR_BASE_W, ROOM_W, ROOM_H } from '../lib/roomTypes'
 
 const TEXT = {
   ko: { map: '지도', found: '찾음', hint: '바닥: 이동 · 방향키/WASD · 소품: 살펴보기',
@@ -43,13 +49,19 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
   const { clock, skip } = useClock()
   const tint = tintOf(clock)
   const night = clock.dark > 0.5
+  const roomVersion = useSyncExternalStore(subscribeTravelRooms, travelRoomsVersion)
+  const itemVersion = useItemsVersion()
+  const layout = useMemo(() => getTravelRoom(placeId), [placeId, roomVersion, itemVersion])
+  const assets = layout ? sceneAssets(layout.scene, layout.scene === 'camp' ? night : layout.room.night, layout.room.wallId, layout.room.floorId) : null
+  const minY = assets ? Math.min(88, 100 - assets.floorH / ROOM_H * 100 + 2) : WALK_BOUNDS.minY
+  const layerZ = (y: number) => layout ? 2000 + y / 100 * ROOM_H : Math.round(y)
   const p = PLACE_BY_ID[placeId]
   const npc = NPCS[placeId]
   const ids = assign[placeId] ?? []
   const left = ids.filter((id) => !isFound(id))
 
-  const [pos, setPos] = useState<Vec>({ x: 20, y: 86 })
-  const [dir, setDir] = useState<1 | -1>(1)
+  const [pos, setPos] = useState<Vec>(() => layout ? { x: clampToBounds({ x: layout.room.avatar.x / ROOM_W * 100, y: 86 }).x, y: Math.max(minY, Math.min(92, layout.room.avatar.y / ROOM_H * 100)) } : { x: 20, y: 86 })
+  const [dir, setDir] = useState<1 | -1>(layout?.room.avatar.flip ? -1 : 1)
   const [walking, setWalking] = useState(false)
   const [destination, setDestination] = useState<Vec | null>(null)
   const [popup, setPopup] = useState<string | null>(null)
@@ -137,7 +149,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
 
   const walkTo = (v: Vec) => {
     if (blocked) return
-    target.current = clampToBounds(v)
+    target.current = { ...clampToBounds(v), y: Math.max(minY, clampToBounds(v).y) }
     setDestination(target.current)
     setWalking(true)
     cancelAnimationFrame(frame.current)
@@ -171,12 +183,15 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
   return (
     <div className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5">
       <div ref={boxRef} tabIndex={0} aria-label={lang === 'ko' ? p.ko : p.en} {...keys} className="relative isolate h-full max-w-full touch-none select-none" style={{ aspectRatio: '1086 / 1448' }} onPointerUp={onTap}>
-        <img src={assetUrl(night && p.wallNight ? p.wallNight : p.wall)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
-        <img src={assetUrl(p.floor)} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${(p.floorH / 1448) * 100}%` }} draggable={false} />
-
-        {tint && !(night && p.wallNight) && <div className="pointer-events-none absolute inset-0" style={{ background: tint, zIndex: 1 }} />}
-
-        <TravelDecor placeId={placeId} blocked={blocked} onInteract={stop} />
+        {assets ? <>
+          <img src={assets.floor} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${assets.floorH / ROOM_H * 100}%` }} draggable={false} />
+          <img src={assets.wall} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
+        </> : <>
+          <img src={assetUrl(night && p.wallNight ? p.wallNight : p.wall)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
+          <img src={assetUrl(p.floor)} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${p.floorH / ROOM_H * 100}%` }} draggable={false} />
+        </>}
+        {tint && (layout || !(night && p.wallNight)) && <div className="pointer-events-none absolute inset-0" style={{ background: tint, zIndex: 1 }} />}
+        {layout ? drawables(layout.room).filter(d => d.group !== 'avatar').map(d => <img key={d.key} src={d.src ? assetUrl(d.src) : undefined} alt="" draggable={false} className="pointer-events-none absolute" style={{ left: `${d.left / ROOM_W * 100}%`, top: `${d.top / ROOM_H * 100}%`, width: `${d.w / ROOM_W * 100}%`, height: `${d.h / ROOM_H * 100}%`, zIndex: d.z, transform: d.flip ? 'scaleX(-1)' : undefined }} />) : <TravelDecor placeId={placeId} blocked={blocked} onInteract={stop} />}
 
         {ids.map((id, i) => {
           if (isFound(id)) return null
@@ -188,13 +203,13 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
               disabled={blocked}
               onClick={() => {
                 if (blocked) return
-                if (s.y < WALK_BOUNDS.minY) {
+                if (s.y < minY) {
                   stop()
                   pick(id)
                 } else walkTo(s)
               }}
               className={`sparkle ${night ? 'sparkle-night' : ''} absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-2xl`}
-              style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: 110 }}
+              style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: layout ? 10000 : 110 }}
             >
               <span aria-hidden>✨</span>
               {hint === id && <span className="absolute -top-3 -right-1 text-lg" aria-hidden>💡</span>}
@@ -207,7 +222,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
             aria-label="gift"
             onClick={() => walkTo(CHEST_POS)}
             className="sparkle absolute flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-4xl"
-            style={{ left: `${CHEST_POS.x}%`, top: `${CHEST_POS.y}%`, zIndex: Math.round(CHEST_POS.y) }}
+            style={{ left: `${CHEST_POS.x}%`, top: `${CHEST_POS.y}%`, zIndex: layerZ(CHEST_POS.y) }}
           >
             <span aria-hidden>🎁</span>
           </button>
@@ -218,7 +233,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
             aria-label={npc.name[lang]}
             onClick={() => (distPx(posRef.current, NPC_POS) < TALK_R ? setTalk(true) : walkTo({ x: NPC_POS.x - 10, y: NPC_POS.y }))}
             className="absolute flex h-16 w-16 -translate-x-1/2 -translate-y-full items-center justify-center text-5xl transition active:scale-90"
-            style={{ left: `${NPC_POS.x}%`, top: `${NPC_POS.y}%`, zIndex: Math.round(NPC_POS.y) }}
+            style={{ left: `${NPC_POS.x}%`, top: `${NPC_POS.y}%`, zIndex: layerZ(NPC_POS.y) }}
           >
             <span aria-hidden>{npc.emoji}</span>
             {!eventDone(placeId) && <span className="absolute -top-1 -right-1 rounded-full bg-blush px-1.5 text-xs font-bold text-white">!</span>}
@@ -229,7 +244,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
         {/* 류소: 발 위치(pos)에 서고, 아래쪽일수록 크게. 걸을 땐 통통 튀고 가는 방향을 바라본다 */}
         <div
           className="pointer-events-none absolute"
-          style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${30 * scale}%`, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -100%)', zIndex: Math.round(pos.y) }}
+          style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${(layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30) * scale}%`, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -100%)', zIndex: layerZ(pos.y) + (layout?.room.avatar.zb ?? 0) + 0.5 }}
         >
           <div className="avatar-ground-shadow" />
           <div className="relative h-full w-full" style={{ transform: `scaleX(${dir})` }}>
