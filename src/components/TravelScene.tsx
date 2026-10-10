@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
 import { useI18n } from '../i18n'
-import { PLACE_BY_ID, eventDone, finishEvent, findItem, getGame, isFound, pickReward, spotFor } from '../lib/game'
+import { PLACE_BY_ID, eventDone, finishEnglish, finishEvent, findItem, getGame, isFound, pickReward, spotFor } from '../lib/game'
 import { ITEM_BY_ID, assetUrl } from '../lib/items'
 import { NPCS } from '../lib/npcs'
 import { playSnap } from '../lib/sound'
@@ -264,6 +264,13 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
           npc={npc}
           placeId={placeId}
           onReward={() => reward('here')}
+          onEnglishReward={() => {
+            if (!finishEnglish(placeId)) return false
+            const id = pickReward(assign, getGame().found, placeId, 'here')
+            if (!id) return false
+            pick(id)
+            return true
+          }}
           onHint={() => {
             if (!left.length) return false
             setHint(left[Math.floor(Math.random() * left.length)])

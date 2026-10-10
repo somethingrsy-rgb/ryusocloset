@@ -87,12 +87,14 @@ export interface GameState {
   at: string
   /** 이벤트를 끝낸 장소 */
   events: string[]
+  /** 영어 대화 학습을 완료하고 첫 보상을 받은 장소 */ 
+  english: string[]
   /** 맵이 오른쪽으로 얼마나 늘어났는지(구간 수). 한 번 늘어난 맵은 그대로 남는다 */
   reach: number
   /** 마지막으로 들어간 문의 구간 번호 (나오면 그 앞에서 시작) */
   chunk: number
 }
-const DEFAULT: GameState = { found: [], lock: true, at: PLACES[0].id, events: [], reach: 3, chunk: 0 }
+const DEFAULT: GameState = { found: [], lock: true, at: PLACES[0].id, events: [], english: [], reach: 3, chunk: 0 }
 
 function read(): GameState {
   try {
@@ -103,6 +105,7 @@ function read(): GameState {
       found: Array.isArray(r.found) ? r.found.filter((x): x is string => typeof x === 'string') : [],
       lock: r.lock !== false,
       events: Array.isArray(r.events) ? r.events.filter((x): x is string => typeof x === 'string' && !!PLACE_BY_ID[x]) : [],
+      english: Array.isArray(r.english) ? [...new Set(r.english.filter((x): x is string => typeof x === 'string' && Object.hasOwn(PLACE_BY_ID, x)))] : [],
       reach: typeof r.reach === 'number' && Number.isFinite(r.reach) ? Math.min(300, Math.max(3, Math.floor(r.reach))) : DEFAULT.reach,
       chunk: typeof r.chunk === 'number' && Number.isFinite(r.chunk) ? Math.min(300, Math.max(0, Math.floor(r.chunk))) : 0,
       at: typeof r.at === 'string' && PLACE_BY_ID[r.at] ? r.at : DEFAULT.at,
@@ -144,6 +147,13 @@ export function findItem(id: string): boolean {
   return true
 }
 export const eventDone = (placeId: string) => state.events.includes(placeId)
+export const englishDone = (placeId: string) => state.english.includes(placeId)
+/** First completion only; independent of the resident's original event. */
+export function finishEnglish(placeId: string): boolean {
+  if (!Object.hasOwn(PLACE_BY_ID, placeId) || englishDone(placeId) || isRestoring()) return false
+  set({ ...state, english: [...state.english, placeId] })
+  return true
+}
 export const finishEvent = (placeId: string) => {
   if (!state.events.includes(placeId)) set({ ...state, events: [...state.events, placeId] })
 }
@@ -172,3 +182,4 @@ export const resetGame = () => set({ ...DEFAULT })
 
 /** 현재 아이템 목록 기준 장소별 숨은 아이템 */
 export const currentAssignment = () => assignPlaces(ITEMS.filter(inPool).map((i) => i.id))
+
