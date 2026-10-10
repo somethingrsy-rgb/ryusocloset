@@ -50,7 +50,7 @@ export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}): Promise
       hairDrawn = true
     }
     const t = getTweak(tweaks, it.category)
-    if (t.dx === 0 && t.dy === 0 && t.scale === 1) {
+    if (t.dx === 0 && t.dy === 0 && t.scale === 1 && !t.rot) {
       ctx.drawImage(imgs[idx], 0, 0, CANVAS_W, CANVAS_H)
     } else {
       // 옷 영역의 중심을 기준으로 확대하고 이동 (화면의 CSS 변환과 같은 모양)
@@ -58,6 +58,7 @@ export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}): Promise
       ctx.save()
       ctx.translate(p.x + t.dx, p.y + t.dy)
       ctx.scale(t.scale, t.scale)
+      ctx.rotate(((t.rot ?? 0) * Math.PI) / 180)
       ctx.drawImage(imgs[idx], -p.x, -p.y, CANVAS_W, CANVAS_H)
       ctx.restore()
     }

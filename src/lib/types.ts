@@ -27,6 +27,8 @@ export interface Tweak {
   scale: number
   /** 겹치는 순서 조절: 기본 순서(zIndex)에 더하는 값. 없으면 기본 순서 */
   z?: number
+  /** 기울기(도, 시계 방향이 +). 없으면 0 */
+  rot?: number
 }
 /** 카테고리 → 조절값 (없으면 원래 위치·크기) */
 export type Tweaks = Partial<Record<Category, Tweak>>

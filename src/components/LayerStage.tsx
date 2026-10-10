@@ -12,6 +12,8 @@ import {
   pickLayer,
   pivotOf,
   resetTweak,
+  rotateTweak,
+  setRotTweak,
   scaleTweak,
   shiftLayer,
   setScaleTweak,
@@ -87,7 +89,7 @@ export function LayerStage<K extends string>({
   const areaRef = useRef<HTMLDivElement>(null)
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const drag = useRef<{ key: K; sx: number; sy: number; px: number; py: number; moved: boolean } | null>(null)
-  const pinch = useRef<{ dist: number; scale: number } | null>(null)
+  const pinch = useRef<{ dist: number; scale: number; ang: number; rot: number } | null>(null)
   /** 빈 곳을 눌렀을 때: 손을 뗄 때까지 선택 해제를 미룬다 (두 번째 손가락이 닿으면 핀치로 쓰려고) */
   const pendingDeselect = useRef(false)
   const missStart = useRef<{ x: number; y: number } | null>(null)
@@ -118,7 +120,12 @@ export function LayerStage<K extends string>({
     const { layers, tweaks, selected } = live.current
     if (pointers.current.size === 2 && selected) {
       const [a, b] = [...pointers.current.values()]
-      pinch.current = { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, scale: getTweak(tweaks, selected).scale }
+      pinch.current = {
+        dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+        scale: getTweak(tweaks, selected).scale,
+        ang: Math.atan2(b.y - a.y, b.x - a.x),
+        rot: getTweak(tweaks, selected).rot ?? 0,
+      }
       drag.current = null
       pendingDeselect.current = false
       return
@@ -140,7 +147,10 @@ export function LayerStage<K extends string>({
     if (pinch.current && selected && pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()]
       const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1
-      onTweaks(setScaleTweak(tweaks, selected, (pinch.current.scale * dist) / pinch.current.dist))
+      // 두 손가락을 모으면 크기, 비틀면 기울기
+      const turn = ((Math.atan2(b.y - a.y, b.x - a.x) - pinch.current.ang) * 180) / Math.PI
+      const next = setScaleTweak(tweaks, selected, (pinch.current.scale * dist) / pinch.current.dist)
+      onTweaks(setRotTweak(next, selected, pinch.current.rot + turn))
       return
     }
     const d = drag.current
@@ -187,6 +197,8 @@ export function LayerStage<K extends string>({
       case 'ArrowDown': return move(0, step)
       case '+': case '=': return onTweaks(scaleTweak(tweaks, selected, 1.08))
       case '-': case '_': return onTweaks(scaleTweak(tweaks, selected, 1 / 1.08))
+      case '[': return onTweaks(rotateTweak(tweaks, selected, e.shiftKey ? -15 : -5))
+      case ']': return onTweaks(rotateTweak(tweaks, selected, e.shiftKey ? 15 : 5))
       case '0': return onTweaks(resetTweak(tweaks, selected))
       case 'Escape': return onSelect(null)
       case 'Delete': case 'Backspace':
@@ -282,6 +294,12 @@ export function LayerStage<K extends string>({
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('bigger')} onClick={() => onTweaks(scaleTweak(tweaks, selected, 1.1))}>
               ➕
+            </button>
+            <button className={`${btn} bg-petal`} aria-label={t('rotateLeft')} title={t('rotateLeft')} onClick={() => onTweaks(rotateTweak(tweaks, selected, -7))}>
+              ⟲
+            </button>
+            <button className={`${btn} bg-petal`} aria-label={t('rotateRight')} title={t('rotateRight')} onClick={() => onTweaks(rotateTweak(tweaks, selected, 7))}>
+              ⟳
             </button>
             <button className={`${btn} bg-petal`} aria-label={t('moveUp')} onClick={() => onTweaks(moveTweak(tweaks, selected, 0, -NUDGE))}>
               ▲

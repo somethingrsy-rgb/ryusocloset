@@ -1896,6 +1896,102 @@
     "native": true
   },
   {
+    "id": "acc_headdress_black_heart",
+    "category": "accessory",
+    "name": {
+      "ko": "블랙 레이스 하트 머리장식",
+      "en": "Black Lace Heart Headdress"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 195,
+      "y": 100,
+      "w": 250,
+      "h": 230
+    },
+    "image": "assets/clothes/accessory/acc_headdress_black_heart.webp",
+    "thumb": "assets/thumbs/acc_headdress_black_heart.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_headdress_blue_rose",
+    "category": "accessory",
+    "name": {
+      "ko": "블루 장미 머리장식",
+      "en": "Blue Rose Headdress"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 195,
+      "y": 94,
+      "w": 250,
+      "h": 242
+    },
+    "image": "assets/clothes/accessory/acc_headdress_blue_rose.webp",
+    "thumb": "assets/thumbs/acc_headdress_blue_rose.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_headdress_navy_jewel",
+    "category": "accessory",
+    "name": {
+      "ko": "네이비 보석 머리장식",
+      "en": "Navy Jewel Headdress"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 195,
+      "y": 101,
+      "w": 250,
+      "h": 228
+    },
+    "image": "assets/clothes/accessory/acc_headdress_navy_jewel.webp",
+    "thumb": "assets/thumbs/acc_headdress_navy_jewel.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_headdress_red_heart",
+    "category": "accessory",
+    "name": {
+      "ko": "레드 하트 머리장식",
+      "en": "Red Heart Headdress"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 195,
+      "y": 92,
+      "w": 250,
+      "h": 247
+    },
+    "image": "assets/clothes/accessory/acc_headdress_red_heart.webp",
+    "thumb": "assets/thumbs/acc_headdress_red_heart.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
     "id": "acc_briefcase_brown",
     "category": "bag",
     "name": {

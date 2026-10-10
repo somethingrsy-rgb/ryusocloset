@@ -24,18 +24,24 @@ export const pivotOf = (item: Boxed) => ({ x: item.box.x + item.box.w / 2, y: it
 
 export const getTweak = <K extends string>(tweaks: TweakMap<K>, k: K): Tweak => tweaks[k] ?? IDENTITY
 
-const isIdentity = (t: Tweak) => Math.abs(t.dx) < EPS && Math.abs(t.dy) < EPS && Math.abs(t.scale - 1) < 0.005 && !t.z
+const isIdentity = (t: Tweak) =>
+  Math.abs(t.dx) < EPS && Math.abs(t.dy) < EPS && Math.abs(t.scale - 1) < 0.005 && !t.z && Math.abs(t.rot ?? 0) < 0.5
 
 /** 순서 조절값(z)의 한도: 어떤 옷끼리도 자리를 바꿀 수 있을 만큼 */
 const MAX_Z = 200
 
+/** 각도를 -180~180 도로 */
+const normDeg = (d: number) => ((((d + 180) % 360) + 360) % 360) - 180
+
 function clampTweak(t: Tweak): Tweak {
   const z = Math.round(clamp(t.z ?? 0, -MAX_Z, MAX_Z) * 100) / 100
+  const rot = Math.round(normDeg(t.rot ?? 0) * 10) / 10
   return {
     dx: clamp(t.dx, -MAX_TWEAK_MOVE, MAX_TWEAK_MOVE),
     dy: clamp(t.dy, -MAX_TWEAK_MOVE, MAX_TWEAK_MOVE),
     scale: clamp(t.scale, MIN_TWEAK_SCALE, MAX_TWEAK_SCALE),
     ...(z ? { z } : {}),
+    ...(Math.abs(rot) >= 0.5 ? { rot } : {}),
   }
 }
 
@@ -53,6 +59,11 @@ export const moveTweak = <K extends string>(tweaks: TweakMap<K>, k: K, dx: numbe
 }
 export const setScaleTweak = <K extends string>(tweaks: TweakMap<K>, k: K, scale: number) =>
   setTweak(tweaks, k, { ...getTweak(tweaks, k), scale })
+export const setRotTweak = <K extends string>(tweaks: TweakMap<K>, k: K, rot: number) =>
+  setTweak(tweaks, k, { ...getTweak(tweaks, k), rot })
+/** 기울기를 deg 도만큼 더한다 (시계 방향이 +) */
+export const rotateTweak = <K extends string>(tweaks: TweakMap<K>, k: K, deg: number) =>
+  setRotTweak(tweaks, k, (getTweak(tweaks, k).rot ?? 0) + deg)
 export const scaleTweak = <K extends string>(tweaks: TweakMap<K>, k: K, factor: number) =>
   setScaleTweak(tweaks, k, getTweak(tweaks, k).scale * factor)
 export function resetTweak<K extends string>(tweaks: TweakMap<K>, k: K): TweakMap<K> {
@@ -85,7 +96,7 @@ export function sanitizeTweaks<K extends string>(
     const t = (raw as Record<string, unknown>)[k] as Partial<Tweak> | undefined
     if (!present[k] || !t || typeof t !== 'object') continue
     const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d)
-    const v = clampTweak({ dx: num(t.dx, 0), dy: num(t.dy, 0), scale: num(t.scale, 1), z: num(t.z, 0) })
+    const v = clampTweak({ dx: num(t.dx, 0), dy: num(t.dy, 0), scale: num(t.scale, 1), z: num(t.z, 0), rot: num(t.rot, 0) })
     if (!isIdentity(v)) out[k] = v
   }
   return out
@@ -136,14 +147,20 @@ export function cssTransform(item: Boxed, t: Tweak): { transformOrigin: string; 
   const p = pivotOf(item)
   return {
     transformOrigin: `${(p.x / CANVAS_W) * 100}% ${(p.y / CANVAS_H) * 100}%`,
-    transform: `translate(${(t.dx / CANVAS_W) * 100}%, ${(t.dy / CANVAS_H) * 100}%) scale(${t.scale})`,
+    transform: `translate(${(t.dx / CANVAS_W) * 100}%, ${(t.dy / CANVAS_H) * 100}%) scale(${t.scale})${t.rot ? ` rotate(${t.rot}deg)` : ''}`,
   }
 }
 
 /** 화면에 보이는 좌표 → 조절 전 이미지 좌표 (터치 판정용) */
 export function toItemSpace(item: Boxed, t: Tweak, x: number, y: number) {
   const p = pivotOf(item)
-  return { x: p.x + (x - p.x - t.dx) / t.scale, y: p.y + (y - p.y - t.dy) / t.scale }
+  const ux = (x - p.x - t.dx) / t.scale
+  const uy = (y - p.y - t.dy) / t.scale
+  const a = ((t.rot ?? 0) * Math.PI) / 180
+  const c = Math.cos(a)
+  const s = Math.sin(a)
+  // 기울기의 반대로 돌려서 원래 이미지 좌표로 되돌린다
+  return { x: p.x + ux * c + uy * s, y: p.y - ux * s + uy * c }
 }
 
 /** 판정 대상 한 겹: 키, 이미지/마스크 id, 쌓이는 순서(클수록 위), 경계 상자 */
