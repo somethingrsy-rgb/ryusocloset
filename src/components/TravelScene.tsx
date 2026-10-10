@@ -5,7 +5,7 @@ import { ITEM_BY_ID, assetUrl } from '../lib/items'
 import { NPCS } from '../lib/npcs'
 import { playSnap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
-import { clampToBounds, depthScale, distPx, stepToward, type Vec } from '../lib/walk'
+import { WALK_BOUNDS, clampToBounds, depthScale, distPx, stepToward, type Vec } from '../lib/walk'
 import { FigureLayers } from './FigureLayers'
 import { NpcDialog } from './NpcDialog'
 import { PHASE_ICON, PHASE_LABEL, tintOf } from '../lib/daynight'
@@ -184,8 +184,15 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
           return (
             <button
               key={id}
-              aria-label={tx.hint}
-              onClick={() => walkTo(s)}
+              aria-label={lang === 'ko' ? '반짝이는 아이템 줍기' : 'Collect sparkling item'}
+              disabled={blocked}
+              onClick={() => {
+                if (blocked) return
+                if (s.y < WALK_BOUNDS.minY) {
+                  stop()
+                  pick(id)
+                } else walkTo(s)
+              }}
               className={`sparkle ${night ? 'sparkle-night' : ''} absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-2xl`}
               style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: 110 }}
             >
