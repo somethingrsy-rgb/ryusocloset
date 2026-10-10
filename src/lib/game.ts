@@ -19,6 +19,8 @@ export interface Place {
   y: number
   /** 장면 배경 (벽 / 바닥) 과 바닥 높이 비율(전체 1448 기준 px) */
   wall: string
+  /** 밤 배경이 따로 있으면 (캠핑장) */
+  wallNight?: string
   floor: string
   floorH: number
 }
@@ -33,7 +35,7 @@ const theme = (id: string, ko: string, en: string, icon: string, x: number, y: n
 export const PLACES: Place[] = [
   theme('spring', '봄소풍', 'Spring Picnic', '🌸', 14, 84, 481),
   theme('summer', '여름휴가', 'Summer Vacation', '🏖️', 40, 90, 512),
-  { id: 'camp', ko: '캠핑장', en: 'Campsite', icon: '⛺', x: 68, y: 86, wall: 'assets/camp/wall_day.webp', floor: 'assets/camp/floor.webp', floorH: 500 },
+  { id: 'camp', ko: '캠핑장', en: 'Campsite', icon: '⛺', x: 68, y: 86, wall: 'assets/camp/wall_day.webp', wallNight: 'assets/camp/wall_night.webp', floor: 'assets/camp/floor.webp', floorH: 500 },
   theme('birthday', '생일파티', 'Birthday Party', '🎂', 88, 68, 521),
   theme('halloween', '핼러윈', 'Halloween', '🎃', 68, 54, 449),
   theme('alice', '앨리스', "Alice's Tea Party", '🫖', 44, 60, 431),
