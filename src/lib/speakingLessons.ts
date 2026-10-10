@@ -45,3 +45,25 @@ export function matchesReply(text: string, turn: SpeakingTurn): boolean {
   const input = withoutPlease(text)
   return !!input && [turn.answer, ...(turn.alternatives ?? [])].some(reply => withoutPlease(reply) === input)
 }
+
+export interface ReplyCheck {
+  /** match: 인정되는 대답 / almost: 단어가 꽤 맞음 / retry: 많이 다름 */
+  level: 'match' | 'almost' | 'retry'
+  /** 가장 가까운 정답의 단어와 들렸는지 여부 */
+  words: { word: string; heard: boolean }[]
+}
+
+/** 말한 내용을 정답과 단어 단위로 비교한다 (발음 점수가 아니라 인식된 단어 기준). */
+export function checkReply(text: string, turn: SpeakingTurn): ReplyCheck {
+  const heard = new Set(normalizeSpeech(text).split(' ').filter(Boolean))
+  const strip = (v: string) => normalizeSpeech(v).replace(/\s+please$/, '').split(' ').filter(Boolean)
+  let best: ReplyCheck['words'] = strip(turn.answer).map(word => ({ word, heard: false }))
+  let bestRatio = -1
+  for (const reply of [turn.answer, ...(turn.alternatives ?? [])]) {
+    const words = strip(reply).map(word => ({ word, heard: heard.has(word) }))
+    const ratio = words.length ? words.filter(w => w.heard).length / words.length : 0
+    if (ratio > bestRatio) { bestRatio = ratio; best = words }
+  }
+  const level = matchesReply(text, turn) ? 'match' : bestRatio >= 0.5 ? 'almost' : 'retry'
+  return { level, words: best }
+}

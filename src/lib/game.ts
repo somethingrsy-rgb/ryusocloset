@@ -89,12 +89,23 @@ export interface GameState {
   events: string[]
   /** 영어 대화 학습을 완료하고 첫 보상을 받은 장소 */ 
   english: string[]
+  /** 영어 대화 미션별 최고 별 개수 (1~3) */
+  missions: Record<string, number>
   /** 맵이 오른쪽으로 얼마나 늘어났는지(구간 수). 한 번 늘어난 맵은 그대로 남는다 */
   reach: number
   /** 마지막으로 들어간 문의 구간 번호 (나오면 그 앞에서 시작) */
   chunk: number
 }
-const DEFAULT: GameState = { found: [], lock: true, at: PLACES[0].id, events: [], english: [], reach: 3, chunk: 0 }
+const DEFAULT: GameState = { found: [], lock: true, at: PLACES[0].id, events: [], english: [], missions: {}, reach: 3, chunk: 0 }
+
+function sanitizeMissions(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out: Record<string, number> = {}
+  for (const [id, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (id.length <= 40 && typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 3) out[id] = v
+  }
+  return out
+}
 
 function read(): GameState {
   try {
@@ -106,6 +117,7 @@ function read(): GameState {
       lock: r.lock !== false,
       events: Array.isArray(r.events) ? r.events.filter((x): x is string => typeof x === 'string' && !!PLACE_BY_ID[x]) : [],
       english: Array.isArray(r.english) ? [...new Set(r.english.filter((x): x is string => typeof x === 'string' && Object.hasOwn(PLACE_BY_ID, x)))] : [],
+      missions: sanitizeMissions(r.missions),
       reach: typeof r.reach === 'number' && Number.isFinite(r.reach) ? Math.min(300, Math.max(3, Math.floor(r.reach))) : DEFAULT.reach,
       chunk: typeof r.chunk === 'number' && Number.isFinite(r.chunk) ? Math.min(300, Math.max(0, Math.floor(r.chunk))) : 0,
       at: typeof r.at === 'string' && PLACE_BY_ID[r.at] ? r.at : DEFAULT.at,
@@ -153,6 +165,17 @@ export function finishEnglish(placeId: string): boolean {
   if (!Object.hasOwn(PLACE_BY_ID, placeId) || englishDone(placeId) || isRestoring()) return false
   set({ ...state, english: [...state.english, placeId] })
   return true
+}
+/**
+ * 영어 대화 미션을 마쳤다. 별은 최고 기록만 남긴다.
+ * 처음 마쳤으면 first, 처음으로 별 3개를 받았으면 perfect 가 true (각각 보상 아이템 1개).
+ */
+export function finishMission(id: string, stars: number): { first: boolean; perfect: boolean } {
+  const s = Math.min(3, Math.max(1, Math.floor(stars)))
+  if (id.length > 40 || isRestoring()) return { first: false, perfect: false }
+  const prev = state.missions[id] ?? 0
+  if (s > prev) set({ ...state, missions: { ...state.missions, [id]: s } })
+  return { first: prev === 0, perfect: s === 3 && prev < 3 }
 }
 export const finishEvent = (placeId: string) => {
   if (!state.events.includes(placeId)) set({ ...state, events: [...state.events, placeId] })

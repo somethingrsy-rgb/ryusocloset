@@ -287,6 +287,10 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
             pick(id)
             return true
           }}
+          onMissionReward={() => {
+            const id = pickReward(assign, getGame().found, placeId, 'any')
+            if (id) pick(id)
+          }}
           onHint={() => {
             if (!left.length) return false
             setHint(left[Math.floor(Math.random() * left.length)])
