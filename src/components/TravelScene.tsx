@@ -12,12 +12,13 @@ import { PHASE_ICON, PHASE_LABEL, tintOf } from '../lib/daynight'
 import { useClock } from './useClock'
 import { useGame } from './TravelGame'
 import { useWalkKeys } from './useWalkKeys'
+import { TravelDecor } from './TravelDecor'
 
 const TEXT = {
-  ko: { map: '지도', found: '찾음', hint: '바닥을 눌러 이동 · 방향키 / WASD · 반짝임을 찾아봐요',
-    nightHint: '밤에는 반짝임이 더 잘 보여요 ✨', done: '이 곳의 아이템을 모두 찾았어요 ⭐', got: '찾았다!', wear: '옷장에서 입어보기', keep: '계속 걷기', talkTo: '말 걸기' },
-  en: { map: 'Map', found: 'Found', hint: 'Tap to walk · Arrow keys / WASD · Find the sparkles',
-    nightHint: 'Sparkles glow brighter at night ✨', done: 'You found everything here ⭐', got: 'Found it!', wear: 'Try it on', keep: 'Keep walking', talkTo: 'Talk' },
+  ko: { map: '지도', found: '찾음', hint: '바닥: 이동 · 방향키/WASD · 소품: 살펴보기',
+    nightHint: '밤에는 반짝임이 더 잘 보여요 ✨ 소품도 눌러봐요', done: '모두 찾았어요 ⭐ 이제 소품을 살펴볼까요?', got: '찾았다!', wear: '옷장에서 입어보기', keep: '계속 걷기', talkTo: '말 걸기' },
+  en: { map: 'Map', found: 'Found', hint: 'Tap to walk · Arrow keys/WASD · Tap props to explore',
+    nightHint: 'Sparkles glow at night ✨ Try tapping the props, too', done: 'All found ⭐ Time to explore the furnishings!', got: 'Found it!', wear: 'Try it on', keep: 'Keep walking', talkTo: 'Talk' },
 }
 
 const NPC_POS: Vec = { x: 84, y: 84 }
@@ -175,6 +176,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
 
         {tint && !(night && p.wallNight) && <div className="pointer-events-none absolute inset-0" style={{ background: tint, zIndex: 1 }} />}
 
+        <TravelDecor placeId={placeId} blocked={blocked} onInteract={stop} />
+
         {ids.map((id, i) => {
           if (isFound(id)) return null
           const s = spotFor(id, i)
@@ -184,7 +187,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
               aria-label={tx.hint}
               onClick={() => walkTo(s)}
               className={`sparkle ${night ? 'sparkle-night' : ''} absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-2xl`}
-              style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: Math.round(s.y) }}
+              style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: 110 }}
             >
               <span aria-hidden>✨</span>
               {hint === id && <span className="absolute -top-3 -right-1 text-lg" aria-hidden>💡</span>}
