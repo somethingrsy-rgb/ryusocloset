@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { PLACES, assignPlaces, inPool, spotFor } from './game'
+import { NPCS, rpsResult } from './npcs'
+import { WALK_BOUNDS, clampToBounds, depthScale, stepToward } from './walk'
+import { PLACES, assignPlaces, inPool, pickReward, spotFor } from './game'
 
 describe('여행 게임', () => {
   const ids = Array.from({ length: 53 }, (_, i) => `item_${i}`)
@@ -29,5 +31,55 @@ describe('여행 게임', () => {
     expect(inPool({ id: 'top_a', category: 'top', native: true })).toBe(false)
     expect(inPool({ id: 'custom_1', category: 'costume', native: true })).toBe(false)
     expect(inPool({ id: 'costume_a', category: 'costume', native: true })).toBe(true)
+  })
+})
+
+describe('이벤트 보상', () => {
+  const assign = { a: ['a1', 'a2'], b: ['b1'] }
+  it('이 장소에 남은 것 중에서 고른다', () => {
+    expect(pickReward(assign, ['a1'], 'a', 'here', () => 0)).toBe('a2')
+  })
+  it('이 장소가 다 찼으면 다른 곳에서 고른다', () => {
+    expect(pickReward(assign, ['a1', 'a2'], 'a', 'here', () => 0)).toBe('b1')
+  })
+  it('전부 찾았으면 null', () => {
+    expect(pickReward(assign, ['a1', 'a2', 'b1'], 'a', 'any')).toBeNull()
+  })
+})
+
+describe('NPC', () => {
+  it('모든 장소에 NPC 가 있고 퀴즈 NPC 는 정답이 보기 안에 있다', () => {
+    for (const p of PLACES) {
+      const n = NPCS[p.id]
+      expect(n, p.id).toBeTruthy()
+      expect(n.lines.length).toBeGreaterThan(0)
+      if (n.event === 'quiz') expect(n.quiz!.answer).toBeLessThan(n.quiz!.choices.length)
+    }
+  })
+  it('가위바위보 판정', () => {
+    expect(rpsResult('rock', 'scissors')).toBe('win')
+    expect(rpsResult('rock', 'paper')).toBe('lose')
+    expect(rpsResult('paper', 'paper')).toBe('draw')
+  })
+})
+
+describe('걷기', () => {
+  it('목표에 닿으면 도착', () => {
+    const r = stepToward({ x: 10, y: 80 }, { x: 11, y: 80 }, 1)
+    expect(r.arrived).toBe(true)
+    expect(r.pos).toEqual({ x: 11, y: 80 })
+  })
+  it('조금씩 다가간다', () => {
+    const r = stepToward({ x: 10, y: 80 }, { x: 90, y: 80 }, 0.1)
+    expect(r.arrived).toBe(false)
+    expect(r.pos.x).toBeGreaterThan(10)
+    expect(r.pos.x).toBeLessThan(90)
+    expect(r.pos.y).toBe(80)
+  })
+  it('범위 밖은 안으로 맞춘다', () => {
+    expect(clampToBounds({ x: -5, y: 10 })).toEqual({ x: WALK_BOUNDS.minX, y: WALK_BOUNDS.minY })
+  })
+  it('아래쪽일수록 크다', () => {
+    expect(depthScale(90)).toBeGreaterThan(depthScale(55))
   })
 })

@@ -4,19 +4,16 @@ import {
   PLACES,
   PLACE_BY_ID,
   currentAssignment,
-  findItem,
   gameVersion,
   getGame,
   isFound,
-  spotFor,
   subscribeGame,
   travelTo,
 } from '../lib/game'
-import { ITEM_BY_ID, assetUrl } from '../lib/items'
-import { playSnap } from '../lib/sound'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
+import { TravelScene } from './TravelScene'
 
 export const useGame = () => {
   useSyncExternalStore(subscribeGame, gameVersion)
@@ -64,7 +61,6 @@ export function TravelGame({ outfit, tweaks, onWear }: Props) {
   const assign = useMemo(currentAssignment, [ver])
   const [scene, setScene] = useState<string | null>(null)
   const [walking, setWalking] = useState(false)
-  const [popup, setPopup] = useState<string | null>(null)
   const timer = useRef<number>(0)
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
@@ -87,85 +83,7 @@ export function TravelGame({ outfit, tweaks, onWear }: Props) {
   const here = place(game.at)
 
   if (scene) {
-    const p = place(scene)
-    const ids = assign[scene] ?? []
-    const pr = progress(scene)
-    return (
-      <div className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5">
-        <div className="relative h-full max-w-full" style={{ aspectRatio: '1086 / 1448' }}>
-          <img src={assetUrl(p.wall)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
-          <img
-            src={assetUrl(p.floor)}
-            alt=""
-            className="absolute inset-x-0 bottom-0 w-full"
-            style={{ height: `${(p.floorH / 1448) * 100}%` }}
-            draggable={false}
-          />
-          <div className="absolute bottom-[4%] left-[3%] w-[34%]" style={{ aspectRatio: '1024 / 1536' }}>
-            <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
-          </div>
-          {ids.map((id, i) => {
-            if (isFound(id)) return null
-            const s = spotFor(id, i)
-            return (
-              <button
-                key={id}
-                aria-label={tx.hint}
-                onClick={() => {
-                  if (findItem(id)) {
-                    playSnap()
-                    setPopup(id)
-                  }
-                }}
-                className="sparkle absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-2xl"
-                style={{ left: `${s.x}%`, top: `${s.y}%` }}
-              >
-                <span aria-hidden>✨</span>
-              </button>
-            )
-          })}
-        </div>
-        <div className="absolute top-2 left-2 z-10 flex items-center gap-2">
-          <button
-            onClick={() => setScene(null)}
-            className="flex h-12 items-center gap-1 rounded-full bg-white/90 px-4 text-sm font-bold shadow-md ring-1 ring-black/5"
-          >
-            <span aria-hidden>🗺️</span>
-            {tx.map}
-          </button>
-          <span className="rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
-            {p.icon} {lang === 'ko' ? p.ko : p.en} · {tx.found} {pr.got}/{pr.total}
-          </span>
-        </div>
-        <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-xs font-bold text-white drop-shadow">
-          {pr.got === pr.total ? tx.done : tx.hint}
-        </p>
-        {popup && ITEM_BY_ID[popup] && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 p-6" onClick={() => setPopup(null)}>
-            <div className="w-64 rounded-3xl bg-white p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <p className="text-lg font-extrabold text-blush-deep">🎉 {tx.got}</p>
-              <img src={assetUrl(ITEM_BY_ID[popup].thumb)} alt="" className="mx-auto my-3 h-32 w-32 object-contain" />
-              <p className="mb-3 font-bold">{ITEM_BY_ID[popup].name[lang]}</p>
-              <div className="flex flex-col gap-2">
-                <button
-                  className="h-11 rounded-full bg-blush font-bold text-white"
-                  onClick={() => {
-                    const id = popup
-                    setPopup(null)
-                    onWear(id)
-                  }}
-                >
-                  {tx.wear}
-                </button>
-                <button className="h-11 rounded-full bg-petal font-bold" onClick={() => setPopup(null)}>
-                  {tx.keep}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    )
+    return <TravelScene key={scene} placeId={scene} assign={assign} outfit={outfit} tweaks={tweaks} onExit={() => setScene(null)} onWear={onWear} />
   }
 
   return (

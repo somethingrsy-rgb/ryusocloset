@@ -83,8 +83,10 @@ export interface GameState {
   found: string[]
   lock: boolean
   at: string
+  /** 이벤트를 끝낸 장소 */
+  events: string[]
 }
-const DEFAULT: GameState = { found: [], lock: true, at: PLACES[0].id }
+const DEFAULT: GameState = { found: [], lock: true, at: PLACES[0].id, events: [] }
 
 function read(): GameState {
   try {
@@ -94,6 +96,7 @@ function read(): GameState {
     return {
       found: Array.isArray(r.found) ? r.found.filter((x): x is string => typeof x === 'string') : [],
       lock: r.lock !== false,
+      events: Array.isArray(r.events) ? r.events.filter((x): x is string => typeof x === 'string' && !!PLACE_BY_ID[x]) : [],
       at: typeof r.at === 'string' && PLACE_BY_ID[r.at] ? r.at : DEFAULT.at,
     }
   } catch {
@@ -131,6 +134,27 @@ export function findItem(id: string): boolean {
   if (state.found.includes(id)) return false
   set({ ...state, found: [...state.found, id] })
   return true
+}
+export const eventDone = (placeId: string) => state.events.includes(placeId)
+export const finishEvent = (placeId: string) => {
+  if (!state.events.includes(placeId)) set({ ...state, events: [...state.events, placeId] })
+}
+
+/**
+ * 이벤트 보상으로 줄 아이템을 고른다. 아직 못 찾은 것 중에서, 'here' 면 이 장소에 숨은 것, 'any' 면 아무거나.
+ * 이 장소에 남은 게 없으면 다른 곳에서 고른다. 다 찾았으면 null.
+ */
+export function pickReward(
+  assign: Record<string, string[]>,
+  found: readonly string[],
+  placeId: string,
+  scope: 'here' | 'any',
+  rnd: () => number = Math.random,
+): string | null {
+  const left = (ids: string[]) => ids.filter((id) => !found.includes(id))
+  const here = left(assign[placeId] ?? [])
+  const pool = scope === 'here' && here.length ? here : left(Object.values(assign).flat())
+  return pool.length ? pool[Math.floor(rnd() * pool.length)] : null
 }
 export const setLock = (lock: boolean) => set({ ...state, lock })
 export const travelTo = (at: string) => PLACE_BY_ID[at] && set({ ...state, at })
