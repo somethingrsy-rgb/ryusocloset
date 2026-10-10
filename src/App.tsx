@@ -432,7 +432,7 @@ export default function App() {
           </div>
         </section>
 
-        <aside className="flex h-[40dvh] shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]">
+        <aside className={`flex ${mode === 'travel' ? 'h-[28dvh]' : 'h-[40dvh]'} shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]`}>
           {mode === 'travel' ? (
             <TravelBook />
           ) : mode === 'closet' ? (
