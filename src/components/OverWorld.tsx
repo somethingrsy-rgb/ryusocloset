@@ -8,12 +8,9 @@ import {
   DOOR_Y,
   MIN_CHUNKS,
   WORLD_H,
-  ZONE_GROUND,
-  ZONE_SKY,
   cameraX,
   chunksNeeded,
   clampWalk,
-  decorFor,
   gateAt,
   gateX,
   metersOf,
@@ -25,6 +22,7 @@ import {
 import { FigureLayers } from './FigureLayers'
 import { useClock } from './useClock'
 import { useWalkKeys } from './useWalkKeys'
+import { VillageHouse, VillageScenery } from './VillageScenery'
 
 const TEXT = {
   ko: { hint: '바닥을 눌러 이동 · 방향키 / WASD · 집을 눌러 입장', found: '찾음' },
@@ -147,27 +145,21 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Pro
     stop,
   )
 
-  const figW = 190 * (0.75 + 0.25 * ((pos.y - 540) / 220))
+  const figW = 145 * (0.75 + 0.25 * ((pos.y - 540) / 220))
   const range = Array.from({ length: lastChunk - first + 1 }, (_, k) => first + k)
 
   return (
     <div ref={hostRef} tabIndex={0} aria-label={lang === 'ko' ? '여행 마을, 방향키로 이동' : 'Village, move with arrow keys'} {...keys} className="travel-world relative h-full touch-none overflow-hidden rounded-3xl shadow-inner ring-1 ring-black/5 select-none" onPointerUp={onTap}>
       <div className="absolute top-0 left-0 origin-top-left" style={{ width: worldWidth(chunks), height: WORLD_H, transform: `scale(${scale}) translateX(${-cam}px)` }}>
         {range.map((c) => {
-          const zone = c % ZONE_SKY.length
-          const next = (c + 1) % ZONE_SKY.length
+          const zone = c % 10
           const p = placeOfChunk(c)
           const ids = assign[p.id] ?? []
           const got = ids.filter(isFound).length
           const done = ids.length > 0 && got === ids.length
           return (
             <div key={c} className={`absolute top-0 ${c >= firstChunks.current && c >= chunks - 2 ? 'chunk-in' : ''}`} style={{ left: c * CHUNK_W, width: CHUNK_W + 2, height: WORLD_H }}>
-              {/* 하늘과 땅: 다음 지역 색으로 서서히 바뀐다 */}
-              <div className="absolute inset-x-0 top-0" style={{ height: 520, background: `linear-gradient(90deg, ${ZONE_SKY[zone]}, ${ZONE_SKY[next]})` }} />
-              <div className="absolute inset-x-0 bottom-0" style={{ top: 520, background: `linear-gradient(90deg, ${ZONE_GROUND[zone]}, ${ZONE_GROUND[next]})` }} />
-              <div className="absolute inset-x-0" style={{ top: 520, height: 8, background: 'rgba(255,255,255,0.5)' }} />
-              <div className="village-path absolute inset-x-0 rounded-full" style={{ top: 690, height: 70 }} />
-              <div className="pointer-events-none absolute inset-x-0 top-20 flex justify-around text-7xl opacity-65" aria-hidden><span>☁️</span><span>☁️</span><span>☁️</span></div>
+              <VillageScenery zone={zone} />
               {tint && <div className="pointer-events-none absolute inset-0" style={{ background: tint }} />}
               {clock.dark > 0.3 && (
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0" style={{ height: 500, opacity: Math.min(1, (clock.dark - 0.3) / 0.5) }}>
@@ -178,22 +170,17 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter }: Pro
                   ))}
                 </div>
               )}
-              {decorFor(c).map((d, k) => (
-                <span key={k} aria-hidden className="absolute" style={{ left: d.x - c * CHUNK_W, top: d.y, fontSize: d.big ? 96 : 64, opacity: 0.9, zIndex: 1 }}>
-                  {d.emoji}
-                </span>
-              ))}
               <button
                 onPointerUp={(e) => e.stopPropagation()}
                 aria-label={`${lang === 'ko' ? p.ko : p.en} ${c}`}
                 onClick={() => walkTo(gateX(c), DOOR_Y + 40, c)}
-                className="absolute flex -translate-x-1/2 flex-col items-center"
-                style={{ left: gateX(c) - c * CHUNK_W, top: DOOR_Y - 150, zIndex: 2 }}
+                className="village-house absolute flex -translate-x-1/2 flex-col items-center"
+                style={{ left: gateX(c) - c * CHUNK_W, top: DOOR_Y - 260, zIndex: 2 }}
               >
-                <span className={`flex h-36 w-36 items-center justify-center rounded-[2.5rem] text-8xl shadow-lg ring-4 ${done ? 'bg-amber-100 ring-amber-400' : 'bg-white/90 ring-white'}`}>{p.icon}</span>
-                <span className="mt-2 rounded-full bg-white/95 px-5 py-1 text-3xl font-bold whitespace-nowrap shadow">{lang === 'ko' ? p.ko : p.en}</span>
-                <span className="mt-1 rounded-full bg-blush px-4 text-2xl font-bold text-white">
-                  {tx.found} {got}/{ids.length}
+                <span className="village-nameplate">{lang === 'ko' ? p.ko : p.en}</span>
+                <VillageHouse zone={zone} icon={p.icon} />
+                <span className={`village-progress \${done ? 'village-progress-done' : ''}`}>
+                  {done ? '✓ ' : ''}{tx.found} {got}/{ids.length}
                 </span>
               </button>
             </div>

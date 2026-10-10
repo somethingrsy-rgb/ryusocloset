@@ -217,3 +217,43 @@ button:focus-visible {
   pointer-events: none;
 }
 
+.village-house {
+  width: 280px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.village-house > svg {
+  transition: filter 150ms ease;
+}
+.village-house:hover > svg,
+.village-house:focus-visible > svg {
+  filter: drop-shadow(0 0 8px #fff7dd);
+}
+.village-nameplate {
+  position: absolute;
+  top: -13px;
+  padding: 8px 20px;
+  border: 3px solid #ffffffb0;
+  border-radius: 18px;
+  background: #fff7e8;
+  color: #72604d;
+  box-shadow: 0 4px 0 #66784920;
+  font-size: 23px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.village-progress {
+  margin-top: -4px;
+  padding: 5px 14px;
+  border-radius: 14px;
+  color: #72604d;
+  background: #fff7e8ed;
+  font-size: 19px;
+  font-weight: 700;
+}
+.village-progress-done {
+  color: #537047;
+  background: #eaf3d6;
+}
+
