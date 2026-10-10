@@ -182,7 +182,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
 
   return (
     <div className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5">
-      <div ref={boxRef} tabIndex={0} aria-label={lang === 'ko' ? p.ko : p.en} {...keys} className="relative isolate h-full max-w-full touch-none select-none" style={{ aspectRatio: '1086 / 1448' }} onPointerUp={onTap}>
+      <div ref={boxRef} tabIndex={0} aria-label={lang === 'ko' ? p.ko : p.en} {...keys} className="relative isolate h-full w-full touch-none select-none" onPointerUp={onTap}>
         {assets ? <>
           <img src={assets.floor} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${assets.floorH / ROOM_H * 100}%` }} draggable={false} />
           <img src={assets.wall} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
@@ -272,7 +272,6 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
           {p.icon} {lang === 'ko' ? p.ko : p.en} · {tx.found} {got}/{ids.length}
         </span>
       </div>
-      <p className="travel-hint pointer-events-none absolute inset-x-3 bottom-3 z-10 text-center text-xs font-bold">{left.length === 0 ? tx.done : night ? tx.nightHint : tx.hint}</p>
 
       {talk && npc && (
         <NpcDialog
