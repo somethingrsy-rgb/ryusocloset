@@ -11,11 +11,12 @@ import { NpcDialog } from './NpcDialog'
 import { PHASE_ICON, PHASE_LABEL, tintOf } from '../lib/daynight'
 import { useClock } from './useClock'
 import { useGame } from './TravelGame'
+import { useWalkKeys } from './useWalkKeys'
 
 const TEXT = {
-  ko: { map: '지도', found: '찾음', hint: '화면을 눌러 걸어가요! 반짝이는 곳 위를 지나가면 주워요',
+  ko: { map: '지도', found: '찾음', hint: '바닥을 눌러 이동 · 방향키 / WASD · 반짝임을 찾아봐요',
     nightHint: '밤에는 반짝임이 더 잘 보여요 ✨', done: '이 곳의 아이템을 모두 찾았어요 ⭐', got: '찾았다!', wear: '옷장에서 입어보기', keep: '계속 걷기', talkTo: '말 걸기' },
-  en: { map: 'Map', found: 'Found', hint: 'Tap to walk! Walk over sparkles to pick them up',
+  en: { map: 'Map', found: 'Found', hint: 'Tap to walk · Arrow keys / WASD · Find the sparkles',
     nightHint: 'Sparkles glow brighter at night ✨', done: 'You found everything here ⭐', got: 'Found it!', wear: 'Try it on', keep: 'Keep walking', talkTo: 'Talk' },
 }
 
@@ -49,6 +50,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
   const [pos, setPos] = useState<Vec>({ x: 20, y: 86 })
   const [dir, setDir] = useState<1 | -1>(1)
   const [walking, setWalking] = useState(false)
+  const [destination, setDestination] = useState<Vec | null>(null)
   const [popup, setPopup] = useState<string | null>(null)
   const [talk, setTalk] = useState(false)
   const [hint, setHint] = useState<string | null>(null)
@@ -94,6 +96,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
         if (r.arrived) {
           target.current = null
           setWalking(false)
+          setDestination(null)
         }
       }
       // 지나가다 가까워지면 줍고, NPC 에게 다가가면 말을 건다
@@ -103,12 +106,14 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
       if (hitSpot >= 0) {
         target.current = null
         setWalking(false)
+        setDestination(null)
         pick(ids[hitSpot])
         return
       }
       if (npc?.event === 'gift' && !eventDone(placeId) && distPx(me, CHEST_POS) < PICK_R) {
         target.current = null
         setWalking(false)
+        setDestination(null)
         reward('any')
         return
       }
@@ -119,6 +124,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
           talkLock.current = true
           target.current = null
           setWalking(false)
+          setDestination(null)
           setTalk(true)
           return
         }
@@ -131,6 +137,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
   const walkTo = (v: Vec) => {
     if (blocked) return
     target.current = clampToBounds(v)
+    setDestination(target.current)
     setWalking(true)
     cancelAnimationFrame(frame.current)
     last.current = performance.now()
@@ -139,17 +146,30 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
   useEffect(() => () => cancelAnimationFrame(frame.current), [])
 
   const onTap = (e: PointerEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).closest('button')) return
+    if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return
+    boxRef.current?.focus({ preventScroll: true })
     const r = boxRef.current!.getBoundingClientRect()
     walkTo({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 })
   }
+
+  const stop = () => {
+    cancelAnimationFrame(frame.current)
+    target.current = null
+    setWalking(false)
+    setDestination(null)
+  }
+  const keys = useWalkKeys(
+    (x, y) => walkTo({ x: posRef.current.x + x * 12, y: posRef.current.y + y * 9 }),
+    stop,
+    !blocked,
+  )
 
   const got = ids.length - left.length
   const scale = depthScale(pos.y)
 
   return (
     <div className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5">
-      <div ref={boxRef} className="relative isolate h-full max-w-full touch-none select-none" style={{ aspectRatio: '1086 / 1448' }} onPointerUp={onTap}>
+      <div ref={boxRef} tabIndex={0} aria-label={lang === 'ko' ? p.ko : p.en} {...keys} className="relative isolate h-full max-w-full touch-none select-none" style={{ aspectRatio: '1086 / 1448' }} onPointerUp={onTap}>
         <img src={assetUrl(night && p.wallNight ? p.wallNight : p.wall)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
         <img src={assetUrl(p.floor)} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${(p.floorH / 1448) * 100}%` }} draggable={false} />
 
@@ -195,13 +215,17 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
           </button>
         )}
 
+        {destination && <div aria-hidden className="walk-destination pointer-events-none absolute" style={{ left: `${destination.x}%`, top: `${destination.y}%`, zIndex: 2 }} />}
         {/* 류소: 발 위치(pos)에 서고, 아래쪽일수록 크게. 걸을 땐 통통 튀고 가는 방향을 바라본다 */}
         <div
           className="pointer-events-none absolute"
           style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${30 * scale}%`, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -100%)', zIndex: Math.round(pos.y) }}
         >
-          <div className={`relative h-full w-full ${walking ? 'walk-bob' : ''}`} style={{ transform: `scaleX(${dir})` }}>
+          <div className="avatar-ground-shadow" />
+          <div className="relative h-full w-full" style={{ transform: `scaleX(${dir})` }}>
+            <div className={`h-full w-full ${walking ? 'walk-bob' : ''}`}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
+            </div>
           </div>
         </div>
       </div>
@@ -223,7 +247,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
           {p.icon} {lang === 'ko' ? p.ko : p.en} · {tx.found} {got}/{ids.length}
         </span>
       </div>
-      <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-xs font-bold text-white drop-shadow">{left.length === 0 ? tx.done : night ? tx.nightHint : tx.hint}</p>
+      <p className="travel-hint pointer-events-none absolute inset-x-3 bottom-3 z-10 text-center text-xs font-bold">{left.length === 0 ? tx.done : night ? tx.nightHint : tx.hint}</p>
 
       {talk && npc && (
         <NpcDialog
@@ -265,3 +289,4 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear }:
     </div>
   )
 }
+
