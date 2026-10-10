@@ -95,7 +95,17 @@ button:focus-visible {
   animation: toast-in 0.18s ease-out both;
 }
 
+@keyframes sparkle {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.55; }
+  50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+}
+.sparkle {
+  animation: sparkle 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px #fff);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .sparkle,
   .item-in,
   .sheet-in,
   .toast-in {

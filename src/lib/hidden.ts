@@ -1,4 +1,5 @@
-import { notifyItemsChanged } from './items'
+import { isLocked, subscribeGame } from './game'
+import { ITEM_BY_ID, notifyItemsChanged } from './items'
 import { isRestoring } from './restoreGuard'
 
 /**
@@ -44,4 +45,12 @@ export function restoreItems(ids: Iterable<string>) {
   notifyItemsChanged()
 }
 
-export const visible = <T extends { id: string }>(list: T[]): T[] => list.filter((i) => !hidden.has(i.id))
+/** 게임에서 아직 못 찾은 아이템은 목록에 나오지 않는다 */
+const lockedId = (id: string) => {
+  const it = ITEM_BY_ID[id]
+  return !!it && isLocked(it)
+}
+// 아이템을 찾거나 잠금을 바꾸면 옷장 목록도 다시 그린다
+subscribeGame(notifyItemsChanged)
+
+export const visible = <T extends { id: string }>(list: T[]): T[] => list.filter((i) => !hidden.has(i.id) && !lockedId(i.id))

@@ -11,12 +11,14 @@ import { RoomTray } from './components/RoomTray'
 import { RoomView } from './components/RoomView'
 import { SavedSheet } from './components/SavedSheet'
 import { Stage } from './components/Stage'
+import { TravelBook } from './components/TravelBook'
+import { TravelGame } from './components/TravelGame'
 import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
 import { loadImage, renderOutfitCanvas, renderThumb } from './lib/exportPng'
 import { CAMP_ASSETS, ROOM_ASSETS, renderRoomCanvas, sceneAssets } from './lib/exportRoom'
-import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, assetUrl, isCustomItem } from './lib/items'
+import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, ITEM_BY_ID, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
 import { randomOutfit, toggleItem } from './lib/outfit'
 import { ROOM_ITEMS, addItem, defaultCamp, defaultRoom, isCustomRoomItem } from './lib/room'
@@ -49,7 +51,7 @@ const ROOM_UNDO_GAP_MS = 500
 const ROOM_UNDO_LIMIT = 50
 
 type ModalKind = null | 'settings' | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport'
-type Mode = 'closet' | 'room' | 'camp'
+type Mode = 'closet' | 'room' | 'camp' | 'travel'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
@@ -351,6 +353,7 @@ export default function App() {
               {modeBtn('closet', '👗', t('modeCloset'))}
               {modeBtn('room', '🏠', t('modeRoom'))}
               {modeBtn('camp', '⛺', t('modeCamp'))}
+              {modeBtn('travel', '🧭', t('modeTravel'))}
             </div>
             <div className="flex items-center gap-1.5">
               <button
@@ -373,7 +376,19 @@ export default function App() {
           </header>
 
           <div className="min-h-0 flex-1">
-            {mode === 'closet' ? (
+            {mode === 'travel' ? (
+              <TravelGame
+                outfit={outfit}
+                tweaks={tweaks}
+                onWear={(id) => {
+                  const it = ITEM_BY_ID[id]
+                  if (!it) return
+                  setCategory(it.category)
+                  setMode('closet')
+                  wearItem(it)
+                }}
+              />
+            ) : mode === 'closet' ? (
               <Stage
                 outfit={outfit}
                 tweaks={tweaks}
@@ -412,7 +427,9 @@ export default function App() {
         </section>
 
         <aside className="flex h-[40dvh] shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]">
-          {mode === 'closet' ? (
+          {mode === 'travel' ? (
+            <TravelBook />
+          ) : mode === 'closet' ? (
             <Closet
               category={category}
               onCategory={setCategory}
