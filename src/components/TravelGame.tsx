@@ -30,12 +30,13 @@ export function TravelGame({ outfit, tweaks, onWear }: Props) {
   }
   return (
     <OverWorld
-      at={game.at}
+      reach={game.reach}
+      chunk={game.chunk}
       assign={assign}
       outfit={outfit}
       tweaks={tweaks}
-      onEnter={(id) => {
-        travelTo(id)
+      onEnter={(id, chunk) => {
+        travelTo(id, chunk)
         setScene(id)
       }}
     />
