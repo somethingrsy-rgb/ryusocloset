@@ -1896,6 +1896,294 @@
     "native": true
   },
   {
+    "id": "acc_hairpin_01",
+    "category": "accessory",
+    "name": {
+      "ko": "하늘 보석 깃털 핀",
+      "en": "Sky Jewel Feather Pin"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 205,
+      "y": 100,
+      "w": 230,
+      "h": 229
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_01.webp",
+    "thumb": "assets/thumbs/acc_hairpin_01.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_hairpin_02",
+    "category": "accessory",
+    "name": {
+      "ko": "진주 꽃 핀",
+      "en": "Pearl Flower Pin"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 205,
+      "y": 103,
+      "w": 230,
+      "h": 224
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_02.webp",
+    "thumb": "assets/thumbs/acc_hairpin_02.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_hairpin_03",
+    "category": "accessory",
+    "name": {
+      "ko": "파랑 보석 리본핀",
+      "en": "Blue Jewel Ribbon Pin"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 205,
+      "y": 97,
+      "w": 230,
+      "h": 236
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_03.webp",
+    "thumb": "assets/thumbs/acc_hairpin_03.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_hairpin_04",
+    "category": "accessory",
+    "name": {
+      "ko": "핑크 하트 리본핀",
+      "en": "Pink Heart Ribbon Pin"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 205,
+      "y": 103,
+      "w": 230,
+      "h": 224
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_04.webp",
+    "thumb": "assets/thumbs/acc_hairpin_04.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_hairpin_05",
+    "category": "accessory",
+    "name": {
+      "ko": "줄무늬 장미 리본핀",
+      "en": "Striped Rose Ribbon Pin"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 205,
+      "y": 95,
+      "w": 230,
+      "h": 240
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_05.webp",
+    "thumb": "assets/thumbs/acc_hairpin_05.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_hairpin_06",
+    "category": "accessory",
+    "name": {
+      "ko": "핑크 보석 리본핀",
+      "en": "Pink Gem Ribbon Pin"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 205,
+      "y": 120,
+      "w": 230,
+      "h": 191
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_06.webp",
+    "thumb": "assets/thumbs/acc_hairpin_06.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_hairpin_07",
+    "category": "accessory",
+    "name": {
+      "ko": "블루 크리스탈 리본핀",
+      "en": "Blue Crystal Ribbon Pin"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 205,
+      "y": 97,
+      "w": 230,
+      "h": 236
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_07.webp",
+    "thumb": "assets/thumbs/acc_hairpin_07.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_hairpin_08",
+    "category": "accessory",
+    "name": {
+      "ko": "라벤더 프릴 핀",
+      "en": "Lavender Frill Pin"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 205,
+      "y": 126,
+      "w": 230,
+      "h": 177
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_08.webp",
+    "thumb": "assets/thumbs/acc_hairpin_08.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_hairpin_09",
+    "category": "accessory",
+    "name": {
+      "ko": "별밤 리본핀",
+      "en": "Starry Ribbon Pin"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 205,
+      "y": 92,
+      "w": 230,
+      "h": 245
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_09.webp",
+    "thumb": "assets/thumbs/acc_hairpin_09.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_hairpin_10",
+    "category": "accessory",
+    "name": {
+      "ko": "크림 꽃 리본핀",
+      "en": "Cream Flower Ribbon Pin"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 205,
+      "y": 101,
+      "w": 230,
+      "h": 228
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_10.webp",
+    "thumb": "assets/thumbs/acc_hairpin_10.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_hairpin_11",
+    "category": "accessory",
+    "name": {
+      "ko": "벚꽃 리본핀",
+      "en": "Sakura Ribbon Pin"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 206,
+      "y": 86,
+      "w": 229,
+      "h": 258
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_11.webp",
+    "thumb": "assets/thumbs/acc_hairpin_11.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_hairpin_12",
+    "category": "accessory",
+    "name": {
+      "ko": "파랑 꽃 장식핀",
+      "en": "Blue Flower Pin"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 205,
+      "y": 108,
+      "w": 230,
+      "h": 214
+    },
+    "image": "assets/clothes/accessory/acc_hairpin_12.webp",
+    "thumb": "assets/thumbs/acc_hairpin_12.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
     "id": "acc_briefcase_brown",
     "category": "bag",
     "name": {

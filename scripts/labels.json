@@ -467,5 +467,89 @@
     "category": "costume",
     "color": "black",
     "native": true
+  },
+  "acc_hairpin_01": {
+    "ko": "하늘 보석 깃털 핀",
+    "en": "Sky Jewel Feather Pin",
+    "category": "accessory",
+    "color": "skyblue",
+    "native": true
+  },
+  "acc_hairpin_02": {
+    "ko": "진주 꽃 핀",
+    "en": "Pearl Flower Pin",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_hairpin_03": {
+    "ko": "파랑 보석 리본핀",
+    "en": "Blue Jewel Ribbon Pin",
+    "category": "accessory",
+    "color": "skyblue",
+    "native": true
+  },
+  "acc_hairpin_04": {
+    "ko": "핑크 하트 리본핀",
+    "en": "Pink Heart Ribbon Pin",
+    "category": "accessory",
+    "color": "pink",
+    "native": true
+  },
+  "acc_hairpin_05": {
+    "ko": "줄무늬 장미 리본핀",
+    "en": "Striped Rose Ribbon Pin",
+    "category": "accessory",
+    "color": "navy",
+    "native": true
+  },
+  "acc_hairpin_06": {
+    "ko": "핑크 보석 리본핀",
+    "en": "Pink Gem Ribbon Pin",
+    "category": "accessory",
+    "color": "pink",
+    "native": true
+  },
+  "acc_hairpin_07": {
+    "ko": "블루 크리스탈 리본핀",
+    "en": "Blue Crystal Ribbon Pin",
+    "category": "accessory",
+    "color": "skyblue",
+    "native": true
+  },
+  "acc_hairpin_08": {
+    "ko": "라벤더 프릴 핀",
+    "en": "Lavender Frill Pin",
+    "category": "accessory",
+    "color": "purple",
+    "native": true
+  },
+  "acc_hairpin_09": {
+    "ko": "별밤 리본핀",
+    "en": "Starry Ribbon Pin",
+    "category": "accessory",
+    "color": "navy",
+    "native": true
+  },
+  "acc_hairpin_10": {
+    "ko": "크림 꽃 리본핀",
+    "en": "Cream Flower Ribbon Pin",
+    "category": "accessory",
+    "color": "beige",
+    "native": true
+  },
+  "acc_hairpin_11": {
+    "ko": "벚꽃 리본핀",
+    "en": "Sakura Ribbon Pin",
+    "category": "accessory",
+    "color": "pink",
+    "native": true
+  },
+  "acc_hairpin_12": {
+    "ko": "파랑 꽃 장식핀",
+    "en": "Blue Flower Pin",
+    "category": "accessory",
+    "color": "skyblue",
+    "native": true
   }
 }
