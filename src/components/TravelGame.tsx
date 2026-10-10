@@ -4,7 +4,10 @@ import {
   PLACES,
   PLACE_BY_ID,
   currentAssignment,
+  eventDone,
   findItem,
+  finishEvent,
+  pickReward,
   gameVersion,
   getGame,
   isFound,
@@ -16,7 +19,9 @@ import { ITEM_BY_ID, assetUrl } from '../lib/items'
 import { playSnap } from '../lib/sound'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import type { Outfit, Tweaks } from '../lib/types'
+import { NPCS } from '../lib/npcs'
 import { FigureLayers } from './FigureLayers'
+import { NpcDialog } from './NpcDialog'
 
 export const useGame = () => {
   useSyncExternalStore(subscribeGame, gameVersion)
@@ -65,6 +70,8 @@ export function TravelGame({ outfit, tweaks, onWear }: Props) {
   const [scene, setScene] = useState<string | null>(null)
   const [walking, setWalking] = useState(false)
   const [popup, setPopup] = useState<string | null>(null)
+  const [talk, setTalk] = useState(false)
+  const [hint, setHint] = useState<string | null>(null)
   const timer = useRef<number>(0)
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
@@ -81,7 +88,25 @@ export function TravelGame({ outfit, tweaks, onWear }: Props) {
     timer.current = window.setTimeout(() => {
       setWalking(false)
       setScene(id)
+      setTalk(false)
+      setHint(null)
     }, 900)
+  }
+
+  /** 이벤트 보상: 아이템을 주고 팝업으로 보여준다 */
+  const reward = (placeId: string, scope: 'here' | 'any') => {
+    const id = pickReward(assign, getGame().found, placeId, scope)
+    finishEvent(placeId)
+    if (id && findItem(id)) {
+      playSnap()
+      setPopup(id)
+    }
+  }
+  const giveHint = (placeId: string) => {
+    const left = (assign[placeId] ?? []).filter((id) => !isFound(id))
+    if (!left.length) return false
+    setHint(left[Math.floor(Math.random() * left.length)])
+    return true
   }
 
   const here = place(game.at)
@@ -121,9 +146,30 @@ export function TravelGame({ outfit, tweaks, onWear }: Props) {
                 style={{ left: `${s.x}%`, top: `${s.y}%` }}
               >
                 <span aria-hidden>✨</span>
+                {hint === id && <span className="absolute -top-3 -right-1 text-lg" aria-hidden>💡</span>}
               </button>
             )
           })}
+          {NPCS[scene] && (
+            <button
+              aria-label={NPCS[scene].name[lang]}
+              onClick={() => setTalk(true)}
+              className="absolute right-[6%] bottom-[8%] flex h-16 w-16 items-center justify-center text-5xl transition active:scale-90"
+            >
+              <span aria-hidden>{NPCS[scene].emoji}</span>
+              {!eventDone(scene) && <span className="absolute -top-1 -right-1 rounded-full bg-blush px-1.5 text-xs font-bold text-white">!</span>}
+            </button>
+          )}
+          {NPCS[scene]?.event === 'gift' && !eventDone(scene) && (
+            <button
+              aria-label="gift"
+              onClick={() => reward(scene, 'any')}
+              className="sparkle absolute flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-4xl"
+              style={{ left: '52%', top: '74%' }}
+            >
+              <span aria-hidden>🎁</span>
+            </button>
+          )}
         </div>
         <div className="absolute top-2 left-2 z-10 flex items-center gap-2">
           <button
@@ -140,6 +186,9 @@ export function TravelGame({ outfit, tweaks, onWear }: Props) {
         <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-xs font-bold text-white drop-shadow">
           {pr.got === pr.total ? tx.done : tx.hint}
         </p>
+        {talk && NPCS[scene] && (
+          <NpcDialog npc={NPCS[scene]} placeId={scene} onReward={() => reward(scene, 'here')} onHint={() => giveHint(scene)} onClose={() => setTalk(false)} />
+        )}
         {popup && ITEM_BY_ID[popup] && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 p-6" onClick={() => setPopup(null)}>
             <div className="w-64 rounded-3xl bg-white p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
