@@ -7,6 +7,7 @@ import {
   canShiftLayer,
   cssTransform,
   moveTweak,
+  rotateTweak,
   pickLayer,
   pivotOf,
   pruneTweaks,
@@ -74,6 +75,29 @@ describe('변환 수학', () => {
     const q = { x: 180, y: 260 }
     const p = pivotOf(top)
     const shown = { x: p.x + (q.x - p.x) * t.scale + t.dx, y: p.y + (q.y - p.y) * t.scale + t.dy }
+    const back = toItemSpace(top, t, shown.x, shown.y)
+    expect(back.x).toBeCloseTo(q.x); expect(back.y).toBeCloseTo(q.y)
+  })
+})
+
+describe('기울기', () => {
+  it('기울기를 더하고 0 으로 돌아오면 항목을 지운다', () => {
+    const a = rotateTweak({}, 'top', 20)
+    expect(a.top?.rot).toBe(20)
+    expect(rotateTweak(a, 'top', -20)).toEqual({})
+  })
+  it('-180~180 도로 맞춘다', () => {
+    expect(rotateTweak({}, 'top', 190).top?.rot).toBe(-170)
+  })
+  it('CSS 에 rotate 가 들어가고, 화면 ↔ 이미지 좌표는 기울여도 역변환이다', () => {
+    const t = { dx: 10, dy: -5, scale: 1.2, rot: 30 }
+    expect(cssTransform(top, t).transform).toContain('rotate(30deg)')
+    const q = { x: 180, y: 260 }
+    const p = pivotOf(top)
+    const a = (30 * Math.PI) / 180
+    const ux = (q.x - p.x) * t.scale
+    const uy = (q.y - p.y) * t.scale
+    const shown = { x: p.x + ux * Math.cos(a) - uy * Math.sin(a) + t.dx, y: p.y + ux * Math.sin(a) + uy * Math.cos(a) + t.dy }
     const back = toItemSpace(top, t, shown.x, shown.y)
     expect(back.x).toBeCloseTo(q.x); expect(back.y).toBeCloseTo(q.y)
   })

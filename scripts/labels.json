@@ -467,5 +467,33 @@
     "category": "costume",
     "color": "black",
     "native": true
+  },
+  "acc_headdress_black_heart": {
+    "ko": "블랙 레이스 하트 머리장식",
+    "en": "Black Lace Heart Headdress",
+    "category": "accessory",
+    "color": "black",
+    "native": true
+  },
+  "acc_headdress_navy_jewel": {
+    "ko": "네이비 보석 머리장식",
+    "en": "Navy Jewel Headdress",
+    "category": "accessory",
+    "color": "navy",
+    "native": true
+  },
+  "acc_headdress_blue_rose": {
+    "ko": "블루 장미 머리장식",
+    "en": "Blue Rose Headdress",
+    "category": "accessory",
+    "color": "navy",
+    "native": true
+  },
+  "acc_headdress_red_heart": {
+    "ko": "레드 하트 머리장식",
+    "en": "Red Heart Headdress",
+    "category": "accessory",
+    "color": "red",
+    "native": true
   }
 }
