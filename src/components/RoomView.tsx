@@ -308,7 +308,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
 
       {children}
 
-      {selection && selName && <AdjustmentPanel key={selection.kind === 'item' ? selection.uid : 'avatar'} name={selName}
+      {selection && selName && <AdjustmentPanel key={selection.kind === 'item' ? selection.uid : 'avatar'} name={selName} removeLabel={t('remove')} onRemove={selection.kind === 'item' ? () => { onChange(removeItem(roomState.current, selection.uid)); onSelect(null) } : undefined}
         onMove={(x,y) => onChange(moveBy(roomState.current, selection, x * NUDGE, y * NUDGE))}
         onSmaller={() => onChange(scaleBy(room, selection, 1 / 1.12))}
         onBigger={() => onChange(scaleBy(room, selection, 1.12))} onClose={() => onSelect(null)}>
@@ -316,7 +316,6 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
         <button className={`${btn} bg-petal`} disabled={!canShiftLayer(room, selection, -1)} onClick={() => onChange(shiftLayer(room, selection, -1))}>{t('layerBack')}</button>
         <button className={`${btn} bg-petal`} disabled={!canUndo} onClick={() => onUndo?.()}>{t('roomUndo')}</button>
         <button className={`${btn} bg-petal`} onClick={() => onChange(toggleFlip(room, selection))}>{t('flip')}</button>
-        {selection.kind === 'item' && <button className={`${btn} bg-blush text-white`} onClick={() => { onChange(removeItem(room, selection.uid)); onSelect(null) }}>{t('remove')}</button>}
       </AdjustmentPanel>}
 
     </div>
