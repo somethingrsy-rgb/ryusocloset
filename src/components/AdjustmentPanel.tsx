@@ -1,4 +1,6 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { Modal } from './Modal'
 import { useI18n } from '../i18n'
 
 /** One tap nudges once; holding repeats until release, cancellation or blur. */
@@ -33,21 +35,23 @@ export function AdjustmentPanel({ name, onMove, onSmaller, onBigger, onClose, ch
 }) {
   const { lang, t } = useI18n()
   const ko = lang === 'ko'
-  return <div role="group" aria-label={ko ? '선택한 물건 조정' : 'Adjust selection'} className="absolute inset-x-2 bottom-2 z-30 max-h-[calc(100%-1rem)] overflow-y-auto overscroll-contain rounded-2xl bg-white/95 p-2 shadow-lg ring-1 ring-black/10 md:left-2 md:right-auto md:w-[290px]">
-    <div className="flex min-w-0 items-center justify-between gap-2"><span className="min-w-0 truncate px-1 text-xs font-bold">{name}</span><button className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-petal" aria-label={ko?'조정 닫기':'Close adjustments'} onClick={onClose}>✕</button></div>
-    <div className="flex items-center justify-center gap-3">
-      <div className="grid shrink-0 grid-cols-3 gap-1">
-        <span/><NudgeButton label={t('moveUp')} onMove={() => onMove(0,-1)}>↑</NudgeButton><span/>
-        <NudgeButton label={ko?'왼쪽으로 조금 이동':'Move slightly left'} onMove={() => onMove(-1,0)}>←</NudgeButton>
-        <span className="flex h-11 w-11 items-center justify-center text-[10px] font-bold text-cocoa-soft">{ko?'이동':'Move'}</span>
-        <NudgeButton label={ko?'오른쪽으로 조금 이동':'Move slightly right'} onMove={() => onMove(1,0)}>→</NudgeButton>
-        <span/><NudgeButton label={t('moveDown')} onMove={() => onMove(0,1)}>↓</NudgeButton><span/>
-      </div>
-      <div className="flex min-w-0 flex-col gap-2">
-        <div className="flex items-center gap-1"><button className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-petal text-xl" aria-label={t('smaller')} onClick={onSmaller}>−</button><span className="text-xs font-bold">{ko?'크기':'Size'}</span><button className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-petal text-xl" aria-label={t('bigger')} onClick={onBigger}>+</button></div>
-        <span className="text-center text-[10px] text-cocoa-soft">{ko?'방향키를 꾹 누르면 연속 이동':'Hold an arrow to keep moving'}</span>
-      </div>
+  const [more, setMore] = useState(false)
+  const host = document.getElementById('adjustment-controls')
+  if (!host) return null
+  const button = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-petal text-xl'
+  return createPortal(<>
+    <div role="group" aria-label={`${ko ? '선택한 물건 조정' : 'Adjust selection'}: ${name}`} className="flex items-center gap-1 overflow-x-auto overscroll-contain border-b border-black/5 bg-white px-2 py-1">
+      <NudgeButton label={ko?'왼쪽으로 조금 이동':'Move slightly left'} onMove={() => onMove(-1,0)}>←</NudgeButton>
+      <NudgeButton label={ko?'오른쪽으로 조금 이동':'Move slightly right'} onMove={() => onMove(1,0)}>→</NudgeButton>
+      <NudgeButton label={t('moveUp')} onMove={() => onMove(0,-1)}>↑</NudgeButton>
+      <NudgeButton label={t('moveDown')} onMove={() => onMove(0,1)}>↓</NudgeButton>
+      <button className={button} aria-label={t('smaller')} onClick={onSmaller}>−</button>
+      <button className={button} aria-label={t('bigger')} onClick={onBigger}>+</button>
+      <button className={button} aria-label={ko?'조정 더보기':'More adjustments'} onClick={() => setMore(true)}>⋯</button>
     </div>
-    <details className="mt-1"><summary className="flex min-h-11 cursor-pointer list-none items-center justify-center rounded-xl bg-petal text-xs font-bold">⋯ {ko?'더보기':'More'}</summary><div className="mt-2 grid grid-cols-3 gap-2">{children}</div></details>
-  </div>
+    {more && <Modal title={name} onClose={() => setMore(false)}>
+      <div className="grid grid-cols-3 gap-2">{children}</div>
+      <button className="mt-3 min-h-11 w-full rounded-xl bg-petal text-sm font-bold" onClick={() => { setMore(false); onClose() }}>{ko?'선택 해제 · 조정 닫기':'Deselect · close adjustments'}</button>
+    </Modal>}
+  </>, host)
 }

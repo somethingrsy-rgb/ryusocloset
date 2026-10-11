@@ -433,6 +433,7 @@ export default function App() {
         </section>
 
         <aside className={`flex ${mode === 'travel' ? 'h-[28dvh]' : 'h-[40dvh]'} shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]`}>
+          <div id="adjustment-controls" className="shrink-0" />
           {mode === 'travel' ? (
             <TravelBook />
           ) : mode === 'closet' ? (
