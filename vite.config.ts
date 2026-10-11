@@ -10,7 +10,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['icons/apple-touch-icon.png'],
       manifest: {
         name: '류소 옷장',
@@ -30,6 +30,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,webp,png,svg,json}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
