@@ -2,15 +2,16 @@ import { useId } from 'react'
 
 const ROOFS = ['#cf8590', '#70aab2', '#729c7b', '#c58fa5', '#a487b1', '#9c9ac7', '#ca879e', '#beaa70', '#799e95', '#91a8bf']
 
-function Tree({ x, y, size = 1, winter = false }: { x: number; y: number; size?: number; winter?: boolean }) {
+function Tree({ x, y, size = 1, winter = false, autumn = 'gold' }: { x: number; y: number; size?: number; winter?: boolean; autumn?: 'gold' | 'red' | 'green' }) {
+  const leaves = autumn === 'red' ? ['#c97665', '#e59d7b', '#a55e53'] : autumn === 'gold' ? ['#d6ad59', '#efce7e', '#a88547'] : ['#91ad77', '#a7cd93', '#71865c']
   return (
     <g transform={`translate(${x} ${y}) scale(${size})`}>
       <ellipse cy="6" rx="54" ry="13" fill="#557e5630" />
       <path d="M-16 3L-9-8L-7-88H9L12-8L19 3Z" fill="#997657" />
       <path d="M-23 5q7-13 9-3q4-13 8-3q3-15 7-3q4-8 9 2q4-11 10 5Z" fill="#8eae74" />
       <path d="M0-30L-24-64M1-49L23-79" fill="none" stroke="#997657" strokeWidth="9" strokeLinecap="round" />
-      <path d="M-55-83C-85-99-69-148-39-154C-37-185 15-193 35-158C76-165 90-110 60-88C64-60-34-52-55-83Z" fill={winter ? '#c6dfd8' : '#91ad77'} stroke="#71865c" strokeWidth="2.5" />
-      <path d="M-51-111C-62-133-41-155-21-154C-11-183 28-172 35-148C62-147 66-121 52-111C22-130-11-111-51-111Z" fill={winter ? '#f0f7ee' : '#a7cd93'} />
+      <path d="M-55-83C-85-99-69-148-39-154C-37-185 15-193 35-158C76-165 90-110 60-88C64-60-34-52-55-83Z" fill={winter ? '#c6dfd8' : leaves[0]} stroke={winter ? '#71865c' : leaves[2]} strokeWidth="2.5" />
+      <path d="M-51-111C-62-133-41-155-21-154C-11-183 28-172 35-148C62-147 66-121 52-111C22-130-11-111-51-111Z" fill={winter ? '#f0f7ee' : leaves[1]} />
       <path d="M-3-6L-1-78M5-6L5-39M-7-48L-26-75M7-55L24-86" stroke="#785c43" strokeWidth="2" fill="none" opacity=".5" />
       <g fill="#637d51" opacity=".55">{Array.from({ length: 12 }, (_, k) => <ellipse key={k} cx={-44 + (k * 23) % 94} cy={-86 - (k * 19) % 66} rx="3" ry="5" transform={`rotate(${k * 31} ${-44 + (k * 23) % 94} ${-86 - (k * 19) % 66})`} />)}</g>
       {!winter && <><circle cx="-32" cy="-122" r="6" fill="#eab5b0" /><circle cx="22" cy="-148" r="5" fill="#f2c6b8" /><circle cx="42" cy="-100" r="6" fill="#eab5b0" /></>}
@@ -104,12 +105,12 @@ export function VillageScenery({ zone }: { zone: number }) {
         {Array.from({length:20}, (_, k) => <ellipse key={k} cx={k*76+14} cy={700+Math.sin(k*.7)*15} rx="4" ry="2" />)}
       </g>
       <Pine x={90} y={555} size={1.2} /><Pine x={1400} y={574} size={1.35} />
-      <Tree x={190} y={590} size={1.65} winter={winter} />
-      <Tree x={1305} y={594} size={1.7} winter={winter} />
-      <Tree x={360} y={625} size={.85} winter={winter} />
-      <Tree x={490} y={570} size={.7} winter={winter} />
-      <Tree x={1035} y={580} size={1.05} winter={winter} />
-      <Tree x={1170} y={627} size={.8} winter={winter} />
+      <Tree x={190} y={590} size={1.65} winter={winter} autumn="gold" />
+      <Tree x={1305} y={594} size={1.7} winter={winter} autumn="red" />
+      <Tree x={360} y={625} size={.85} winter={winter} autumn="red" />
+      <Tree x={490} y={570} size={.7} winter={winter} autumn="green" />
+      <Tree x={1035} y={580} size={1.05} winter={winter} autumn="gold" />
+      <Tree x={1170} y={627} size={.8} winter={winter} autumn="red" />
       <g fill="#8caf73">
         <ellipse cx="520" cy="596" rx="63" ry="25" /><ellipse cx="885" cy="596" rx="60" ry="24" />
       </g>
@@ -117,6 +118,7 @@ export function VillageScenery({ zone }: { zone: number }) {
       <Flowers x={220} y={635} color="#e7b5a9" /><Flowers x={1200} y={650} color="#fff3ca" />
       <Flowers x={420} y={790} color={flowers} /><Flowers x={1000} y={794} color="#fff3ca" />
       <g fill="#fff2cd" opacity=".85">{Array.from({ length: 38 }, (_, k) => <g key={k} transform={`translate(${23 + k * 39} ${573 + (k * 47) % 89})`}><path d="M-5 0H5M0-5V5" stroke="#f8f0d7" strokeWidth="4" strokeLinecap="round" /><circle r="2" fill="#dbb46c" /></g>)}</g>
+      {!winter && <g opacity=".8">{Array.from({ length: 18 }, (_, k) => <ellipse key={k} cx={90 + k * 76} cy={636 + (k * 23) % 41} rx="6" ry="3" fill={k % 2 ? '#ca7963' : '#e6bc60'} transform={`rotate(${k * 29} ${90 + k * 76} ${636 + (k * 23) % 41})`} />)}</g>}
       {/* A low garden fence and a lantern beside the approach. */}
       <g stroke="#f7edd5" strokeWidth="10" strokeLinecap="round">
         <path d="M434 591H554M434 615H554M442 581V627M478 581V627M514 581V627M550 581V627" />
