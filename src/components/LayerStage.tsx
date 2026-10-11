@@ -1,4 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from 'react'
+import { AdjustmentPanel } from './AdjustmentPanel'
 import { useI18n } from '../i18n'
 import { bgToCss, type Background } from '../lib/backgrounds'
 import { loadImage } from '../lib/exportPng'
@@ -221,7 +222,7 @@ export function LayerStage<K extends string>({
     }
   }
   const selTweak = selected ? tweaks[selected] : undefined
-  const btn = 'flex h-10 min-w-10 items-center justify-center rounded-full text-base active:scale-90 disabled:opacity-40'
+  const btn = 'flex min-h-11 items-center justify-center rounded-xl px-2 text-xs font-bold active:scale-95 disabled:opacity-40'
 
   return (
     <div
@@ -285,64 +286,19 @@ export function LayerStage<K extends string>({
 
       {children}
 
-      <div className="pointer-events-none absolute top-2 left-2 z-20 max-w-[calc(100%-4.5rem)]">
-        {sel && selected ? (
-          <div className="pointer-events-auto flex w-12 flex-col items-center gap-1 rounded-3xl bg-white/95 px-1 pt-2 pb-1 shadow-lg ring-1 ring-black/5">
-            <span className="max-w-full truncate text-[10px] leading-tight font-bold">{sel.label}</span>
-            <button className={`${btn} bg-petal`} aria-label={t('smaller')} onClick={() => onTweaks(scaleTweak(tweaks, selected, 1 / 1.1))}>
-              ➖
-            </button>
-            <button className={`${btn} bg-petal`} aria-label={t('bigger')} onClick={() => onTweaks(scaleTweak(tweaks, selected, 1.1))}>
-              ➕
-            </button>
-            <button className={`${btn} bg-petal`} aria-label={t('rotateLeft')} title={t('rotateLeft')} onClick={() => onTweaks(rotateTweak(tweaks, selected, -7))}>
-              ⟲
-            </button>
-            <button className={`${btn} bg-petal`} aria-label={t('rotateRight')} title={t('rotateRight')} onClick={() => onTweaks(rotateTweak(tweaks, selected, 7))}>
-              ⟳
-            </button>
-            <button className={`${btn} bg-petal`} aria-label={t('moveUp')} onClick={() => onTweaks(moveTweak(tweaks, selected, 0, -NUDGE))}>
-              ▲
-            </button>
-            <button className={`${btn} bg-petal`} aria-label={t('moveDown')} onClick={() => onTweaks(moveTweak(tweaks, selected, 0, NUDGE))}>
-              ▼
-            </button>
-            <button
-              className={`${btn} bg-petal text-[11px] font-bold`}
-              aria-label={t('layerFront')}
-              title={t('layerFront')}
-              disabled={!canShiftLayer(layers, selected, 1)}
-              onClick={() => onTweaks(shiftLayer(tweaks, layers, selected, 1))}
-            >
-              {t('layerFrontShort')}
-            </button>
-            <button
-              className={`${btn} bg-petal text-[11px] font-bold`}
-              aria-label={t('layerBack')}
-              title={t('layerBack')}
-              disabled={!canShiftLayer(layers, selected, -1)}
-              onClick={() => onTweaks(shiftLayer(tweaks, layers, selected, -1))}
-            >
-              {t('layerBackShort')}
-            </button>
-            <button className={`${btn} bg-petal`} aria-label={t('undo')} title={t('undo')} disabled={!canUndo} onClick={() => onUndo?.()}>
-              ↶
-            </button>
-            <button
-              className={`${btn} bg-petal`}
-              aria-label={t('tweakReset')}
-              title={t('tweakReset')}
-              disabled={!selTweak}
-              onClick={() => onTweaks(resetTweak(tweaks, selected))}
-            >
-              ↺
-            </button>
-            <button className={`${btn} bg-blush text-white`} aria-label={t('takeOff')} title={t('takeOff')} onClick={() => onTakeOff(selected)}>
-              ✕
-            </button>
-          </div>
-        ) : null}
-      </div>
+      {sel && selected && <AdjustmentPanel key={sel.id} name={sel.label}
+        onMove={(x,y) => onTweaks(moveTweak(live.current.tweaks, selected, x * NUDGE, y * NUDGE))}
+        onSmaller={() => onTweaks(scaleTweak(tweaks, selected, 1 / 1.1))}
+        onBigger={() => onTweaks(scaleTweak(tweaks, selected, 1.1))} onClose={() => onSelect(null)}>
+        <button className={`${btn} bg-petal`} onClick={() => onTweaks(rotateTweak(tweaks, selected, -7))}>{t('rotateLeft')}</button>
+        <button className={`${btn} bg-petal`} onClick={() => onTweaks(rotateTweak(tweaks, selected, 7))}>{t('rotateRight')}</button>
+        <button className={`${btn} bg-petal`} disabled={!canShiftLayer(layers, selected, 1)} onClick={() => onTweaks(shiftLayer(tweaks, layers, selected, 1))}>{t('layerFront')}</button>
+        <button className={`${btn} bg-petal`} disabled={!canShiftLayer(layers, selected, -1)} onClick={() => onTweaks(shiftLayer(tweaks, layers, selected, -1))}>{t('layerBack')}</button>
+        <button className={`${btn} bg-petal`} disabled={!canUndo} onClick={() => onUndo?.()}>{t('undo')}</button>
+        <button className={`${btn} bg-petal`} disabled={!selTweak} onClick={() => onTweaks(resetTweak(tweaks, selected))}>{t('tweakReset')}</button>
+        <button className={`${btn} bg-blush text-white`} onClick={() => onTakeOff(selected)}>{t('takeOff')}</button>
+      </AdjustmentPanel>}
+
     </div>
   )
 }

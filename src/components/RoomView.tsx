@@ -24,6 +24,7 @@ import { hitTest, maskCache, maskFromSource } from '../lib/roomHit'
 import { CANVAS_H, CANVAS_W } from '../lib/layers'
 import { ROOM_H, ROOM_W, type RoomState, type Selection } from '../lib/roomTypes'
 import type { Outfit, Tweaks } from '../lib/types'
+import { AdjustmentPanel } from './AdjustmentPanel'
 import { FigureLayers } from './FigureLayers'
 
 interface Props {
@@ -171,7 +172,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
     }
   }
 
-  const btn = 'flex h-10 min-w-10 items-center justify-center rounded-full text-base active:scale-90 disabled:opacity-40'
+  const btn = 'flex min-h-11 items-center justify-center rounded-xl px-2 text-xs font-bold active:scale-95 disabled:opacity-40'
   const selName =
     selection?.kind === 'item'
       ? ROOM_ITEM_BY_ID[room.items.find((p) => p.uid === selection.uid)?.itemId ?? '']?.name[lang]
@@ -307,61 +308,17 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
 
       {children}
 
-      <div className="pointer-events-none absolute top-2 left-2 z-20 max-w-[calc(100%-4.5rem)]">
-        {selection && selName ? (
-          <div className="pointer-events-auto flex w-12 flex-col items-center gap-1 rounded-3xl bg-white/95 px-1 pt-2 pb-1 shadow-lg ring-1 ring-black/5">
-            <span className="max-w-full truncate text-[10px] leading-tight font-bold">{selName}</span>
-            <button className={`${btn} bg-petal`} aria-label={t('smaller')} onClick={() => onChange(scaleBy(room, selection, 1 / 1.12))}>
-              ➖
-            </button>
-            <button className={`${btn} bg-petal`} aria-label={t('bigger')} onClick={() => onChange(scaleBy(room, selection, 1.12))}>
-              ➕
-            </button>
-            <button className={`${btn} bg-petal`} aria-label={t('moveUp')} onClick={() => onChange(moveBy(room, selection, 0, -NUDGE))}>
-              ▲
-            </button>
-            <button className={`${btn} bg-petal`} aria-label={t('moveDown')} onClick={() => onChange(moveBy(room, selection, 0, NUDGE))}>
-              ▼
-            </button>
-            <button
-              className={`${btn} bg-petal text-[11px] font-bold`}
-              aria-label={t('layerFront')}
-              title={t('layerFront')}
-              disabled={!canShiftLayer(room, selection, 1)}
-              onClick={() => onChange(shiftLayer(room, selection, 1))}
-            >
-              {t('layerFrontShort')}
-            </button>
-            <button
-              className={`${btn} bg-petal text-[11px] font-bold`}
-              aria-label={t('layerBack')}
-              title={t('layerBack')}
-              disabled={!canShiftLayer(room, selection, -1)}
-              onClick={() => onChange(shiftLayer(room, selection, -1))}
-            >
-              {t('layerBackShort')}
-            </button>
-            <button className={`${btn} bg-petal`} aria-label={t('roomUndo')} title={t('roomUndo')} disabled={!canUndo} onClick={() => onUndo?.()}>
-              ↶
-            </button>
-            <button className={`${btn} bg-petal`} aria-label={t('flip')} onClick={() => onChange(toggleFlip(room, selection))}>
-              ↔
-            </button>
-            {selection.kind === 'item' && (
-              <button
-                className={`${btn} bg-blush text-white`}
-                aria-label={t('remove')}
-                onClick={() => {
-                  onChange(removeItem(room, selection.uid))
-                  onSelect(null)
-                }}
-              >
-                🗑
-              </button>
-            )}
-          </div>
-                ) : null}
-      </div>
+      {selection && selName && <AdjustmentPanel key={selection.kind === 'item' ? selection.uid : 'avatar'} name={selName}
+        onMove={(x,y) => onChange(moveBy(roomState.current, selection, x * NUDGE, y * NUDGE))}
+        onSmaller={() => onChange(scaleBy(room, selection, 1 / 1.12))}
+        onBigger={() => onChange(scaleBy(room, selection, 1.12))} onClose={() => onSelect(null)}>
+        <button className={`${btn} bg-petal`} disabled={!canShiftLayer(room, selection, 1)} onClick={() => onChange(shiftLayer(room, selection, 1))}>{t('layerFront')}</button>
+        <button className={`${btn} bg-petal`} disabled={!canShiftLayer(room, selection, -1)} onClick={() => onChange(shiftLayer(room, selection, -1))}>{t('layerBack')}</button>
+        <button className={`${btn} bg-petal`} disabled={!canUndo} onClick={() => onUndo?.()}>{t('roomUndo')}</button>
+        <button className={`${btn} bg-petal`} onClick={() => onChange(toggleFlip(room, selection))}>{t('flip')}</button>
+        {selection.kind === 'item' && <button className={`${btn} bg-blush text-white`} onClick={() => { onChange(removeItem(room, selection.uid)); onSelect(null) }}>{t('remove')}</button>}
+      </AdjustmentPanel>}
+
     </div>
   )
 }

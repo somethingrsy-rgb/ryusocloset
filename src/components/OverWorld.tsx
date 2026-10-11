@@ -219,7 +219,6 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
         <span aria-hidden>{PHASE_ICON[clock.phase]}</span>
         {PHASE_LABEL[clock.phase][lang]}
       </button>
-      <p className="travel-hint pointer-events-none absolute inset-x-3 bottom-3 z-10 text-center text-xs font-bold">{tx.hint}</p>
     </div>
   )
 }
