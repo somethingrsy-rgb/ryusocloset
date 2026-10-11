@@ -286,7 +286,7 @@ export function LayerStage<K extends string>({
 
       {children}
 
-      {sel && selected && <AdjustmentPanel key={sel.id} name={sel.label}
+      {sel && selected && <AdjustmentPanel key={sel.id} name={sel.label} onRemove={() => onTakeOff(selected)} removeLabel={t('takeOff')}
         onMove={(x,y) => onTweaks(moveTweak(live.current.tweaks, selected, x * NUDGE, y * NUDGE))}
         onSmaller={() => onTweaks(scaleTweak(tweaks, selected, 1 / 1.1))}
         onBigger={() => onTweaks(scaleTweak(tweaks, selected, 1.1))} onClose={() => onSelect(null)}>
@@ -296,7 +296,6 @@ export function LayerStage<K extends string>({
         <button className={`${btn} bg-petal`} disabled={!canShiftLayer(layers, selected, -1)} onClick={() => onTweaks(shiftLayer(tweaks, layers, selected, -1))}>{t('layerBack')}</button>
         <button className={`${btn} bg-petal`} disabled={!canUndo} onClick={() => onUndo?.()}>{t('undo')}</button>
         <button className={`${btn} bg-petal`} disabled={!selTweak} onClick={() => onTweaks(resetTweak(tweaks, selected))}>{t('tweakReset')}</button>
-        <button className={`${btn} bg-blush text-white`} onClick={() => onTakeOff(selected)}>{t('takeOff')}</button>
       </AdjustmentPanel>}
 
     </div>
