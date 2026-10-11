@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { backupName, makeBackup, parseBackup, restoreBackup } from '../lib/backup'
+import { RefreshButton } from './RefreshButton'
 import { Modal } from './Modal'
 
 interface Props {
@@ -65,6 +66,7 @@ export function SettingsSheet({ sound, onSound, onLang, onClose, onToast }: Prop
   return (
     <Modal title={t('settings')} onClose={onClose}>
       <div className="space-y-2 pb-2">
+        <RefreshButton />
         <button className={row} onClick={onSound} aria-pressed={sound}>
           <span>{sound ? '🔊' : '🔇'} {t('soundSetting')}</span>
           <span className="text-sm text-cocoa-soft">{sound ? t('on') : t('off')}</span>
