@@ -37,14 +37,17 @@ export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Pr
   if (starRain) return <StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} />
   if (farm) return <FarmScene onExit={() => setFarm(false)} />
 
+  const actionButton = 'h-11 shrink-0 rounded-full px-2 text-xs font-bold shadow-sm ring-1 ring-black/5'
   return <div className="relative h-full">
     {scene ? <TravelScene paused={speaking} key={scene} placeId={scene} assign={assign} outfit={outfit} tweaks={tweaks} onExit={() => setScene(null)} onWear={onWear} /> : <OverWorld
       paused={speaking} reach={game.reach} chunk={game.chunk} assign={assign} outfit={outfit} tweaks={tweaks}
+      actions={<>
+        <button className={`${actionButton} bg-blush text-white`} aria-label="한마디 영어" onClick={() => setSpeaking(true)}>{lang === 'ko' ? '영어' : 'Talk'}</button>
+        <button className={`${actionButton} bg-white/95`} aria-label="농장으로" onClick={() => setFarm(true)}>{lang === 'ko' ? '농장' : 'Farm'}</button>
+        <button className={`${actionButton} bg-[#fff1b7]`} aria-label="별비 산책" onClick={() => setStarRain(true)}>{lang === 'ko' ? '별비' : 'Stars'}</button>
+      </>}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
     />}
-    {!scene && <button className="absolute top-16 right-3 z-30 min-h-12 rounded-full bg-blush px-4 text-sm font-bold text-white shadow-lg" onClick={() => setSpeaking(true)}>🎤 {lang === 'ko' ? '한마디 영어' : 'Speaking practice'}</button>}
-    {!scene && <button className="absolute top-32 right-3 z-30 min-h-12 rounded-full bg-white/95 px-4 text-sm font-bold shadow-lg ring-1 ring-black/5" onClick={() => setFarm(true)}>🌱 {lang === 'ko' ? '농장으로' : 'Farm'}</button>}
-    {!scene && <button className="absolute top-48 right-3 z-30 min-h-12 rounded-full bg-[#fff1b7] px-4 text-sm font-bold shadow-lg ring-1 ring-black/5" onClick={() => setStarRain(true)}>🌠 별비 산책</button>}
     {speaking && <SpeakingGame onClose={() => setSpeaking(false)} />}
   </div>
 }

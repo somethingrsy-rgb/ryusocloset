@@ -39,14 +39,21 @@ function Flowers({ x, y, color }: { x: number; y: number; color: string }) {
 export function VillageScenery({ zone }: { zone: number }) {
   const id = useId()
   const winter = zone === 9
+  const previousWinter = ((zone + 9) % 10) === 9
+  const colors = [
+    ['sky', '#c6e4ee', '#deebf2'],
+    ['hill1', '#b7cfa1', '#c1d6d1'],
+    ['hill2', '#9fbd83', '#d6e5db'],
+    ['hill3', '#bed399', '#eaf0de'],
+  ]
   const flowers = ROOFS[zone % ROOFS.length]
   return (
     <svg aria-hidden className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1500 800" preserveAspectRatio="none">
       <defs>
-        <linearGradient id={id} x2="0" y2="1">
-          <stop stopColor={winter ? '#deebf2' : '#c6e4ee'} />
-          <stop offset="1" stopColor="#f9f2df" />
-        </linearGradient>
+        {colors.map(([key, normal, snow]) => <linearGradient key={key} id={`${id}-${key}`} x1="0" y1="0" x2="1" y2="0">
+          <stop stopColor={previousWinter ? snow : normal} /><stop offset="1" stopColor={winter ? snow : normal} />
+        </linearGradient>)}
+        <linearGradient id={`${id}-haze`} x2="0" y2="1"><stop stopColor="#f9f2df" stopOpacity="0"/><stop offset="1" stopColor="#f9f2df"/></linearGradient>
         <linearGradient id={`${id}-earth`} x2="0" y2="1">
           <stop stopColor="#e3cd9d" /><stop offset=".5" stopColor="#e9d8b0" /><stop offset="1" stopColor="#cbae80" />
         </linearGradient>
@@ -57,17 +64,18 @@ export function VillageScenery({ zone }: { zone: number }) {
           <feBlend in="SourceGraphic" mode="multiply" />
         </filter>
       </defs>
-      <path d="M0 0H1500V800H0Z" fill={`url(#${id})`} />
+      <path d="M0 0H1500V800H0Z" fill={`url(#${id}-sky)`} />
+      <path d="M0 0H1500V800H0Z" fill={`url(#${id}-haze)`} />
       <g fill="#fffdf3" opacity=".75">
         <path d="M165 159C124 157 128 125 155 119C154 86 207 78 224 111C256 97 281 122 272 145C309 148 307 170 271 170H174Z" />
         <path d="M1060 211C1020 209 1026 183 1052 178C1050 146 1099 140 1116 169C1150 153 1172 177 1162 197C1195 199 1195 220 1160 220H1070Z" />
       </g>
-      <path d="M0 458L160 374L283 425L432 327L610 439L779 360L947 436L1131 334L1326 419L1500 359V620H0Z" fill="#b4c7b0" />
-      <path d="M0 502L226 429L355 469L580 390L812 490L1030 418L1263 478L1500 414V638H0Z" fill="#c5d4b0" />
-      <g opacity=".65">{Array.from({ length: 16 }, (_, k) => <Pine key={k} x={k * 103 + 12} y={510 + (k * 17) % 32} size={.44 + (k % 4) * .12} />)}</g>
-      <path d="M0 430Q150 352 310 428T640 414T990 429T1310 410Q1415 374 1500 416V800H0Z" fill={winter ? '#c1d6d1' : '#b7cfa1'} />
-      <path d="M0 483Q190 418 400 467T800 459T1200 473Q1385 430 1500 474V800H0Z" fill={winter ? '#d6e5db' : '#9fbd83'} />
-      <path d="M0 526Q230 493 480 521T990 520T1500 524V800H0Z" fill={winter ? '#eaf0de' : '#bed399'} />
+      <path d="M0 458Q80 458 160 374L283 425L432 327L610 439L779 360L947 436L1131 334L1326 419Q1410 458 1500 458V620H0Z" fill="#b4c7b0" />
+      <path d="M0 502Q100 502 226 429L355 469L580 390L812 490L1030 418L1263 478Q1390 502 1500 502V638H0Z" fill="#c5d4b0" />
+      <g opacity=".65">{Array.from({ length: 15 }, (_, k) => <Pine key={k} x={k * 98 + 60} y={510 + (k * 17) % 32} size={.44 + (k % 4) * .12} />)}</g>
+      <path d="M0 430C100 430 170 365 310 410S560 465 750 430S1090 370 1300 410C1400 430 1450 430 1500 430V800H0Z" fill={`url(#${id}-hill1)`} />
+      <path d="M0 483C130 483 210 425 400 460S740 490 900 460S1200 425 1300 466C1380 483 1440 483 1500 483V800H0Z" fill={`url(#${id}-hill2)`} />
+      <path d="M0 526C150 526 260 495 480 515S790 535 990 515S1260 505 1360 520C1430 526 1460 526 1500 526V800H0Z" fill={`url(#${id}-hill3)`} />
       <g opacity=".35" fill={winter ? '#b8cbb0' : '#90b276'}>
         {Array.from({length:35}, (_, k) => <path key={k} d={`M${18+k*43} ${553+(k*37)%230}l4-6 4 6 4-4`} stroke="currentColor" strokeWidth="2" fill="none" style={{color:winter ? '#b8cbb0' : '#90b276'}} />)}
       </g>
@@ -95,7 +103,7 @@ export function VillageScenery({ zone }: { zone: number }) {
       <g fill="#f1dfbb" opacity=".8">
         {Array.from({length:20}, (_, k) => <ellipse key={k} cx={k*76+14} cy={700+Math.sin(k*.7)*15} rx="4" ry="2" />)}
       </g>
-      <Pine x={65} y={555} size={1.2} /><Pine x={1450} y={574} size={1.35} />
+      <Pine x={90} y={555} size={1.2} /><Pine x={1400} y={574} size={1.35} />
       <Tree x={190} y={590} size={1.65} winter={winter} />
       <Tree x={1305} y={594} size={1.7} winter={winter} />
       <Tree x={360} y={625} size={.85} winter={winter} />

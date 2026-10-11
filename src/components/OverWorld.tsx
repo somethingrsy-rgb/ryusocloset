@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { useI18n } from '../i18n'
 import { PHASE_ICON, PHASE_LABEL, tintOf } from '../lib/daynight'
 import { extendReach, isFound } from '../lib/game'
@@ -30,6 +30,7 @@ const TEXT = {
 }
 
 interface Props {
+  actions?: ReactNode
   paused?: boolean
   /** 저장된 맵 길이(구간 수) */
   reach: number
@@ -41,7 +42,7 @@ interface Props {
   onEnter: (placeId: string, chunk: number) => void
 }
 
-export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, paused = false }: Props) {
+export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, paused = false, actions }: Props) {
   const { lang } = useI18n()
   const tx = TEXT[lang]
   const { clock, skip } = useClock()
@@ -50,7 +51,6 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
   const [size, setSize] = useState({ w: 400, h: 500 })
   const [chunks, setChunks] = useState(Math.max(MIN_CHUNKS, reach, chunk + 2))
   const chunksRef = useRef(chunks)
-  const firstChunks = useRef(chunks)
   const [pos, setPos] = useState(() => startPos(chunk))
   const [dir, setDir] = useState<1 | -1>(1)
   const [walking, setWalking] = useState(false)
@@ -161,7 +161,7 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
           const got = ids.filter(isFound).length
           const done = ids.length > 0 && got === ids.length
           return (
-            <div key={c} className={`absolute top-0 ${c >= firstChunks.current && c >= chunks - 2 ? 'chunk-in' : ''}`} style={{ left: c * CHUNK_W, width: CHUNK_W + 2, height: WORLD_H }}>
+            <div key={c} className="absolute top-0" style={{ left: c * CHUNK_W, width: CHUNK_W, height: WORLD_H }}>
               <VillageScenery zone={zone} />
               {tint && <div className="pointer-events-none absolute inset-0" style={{ background: tint }} />}
               {clock.dark > 0.3 && (
@@ -204,9 +204,10 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
         </div>
       </div>
 
-      <span className="pointer-events-none absolute top-2 left-2 z-10 flex h-12 items-center rounded-full bg-white/90 px-4 text-sm font-bold shadow-md ring-1 ring-black/5">
-        🚶 {metersOf(pos.x).toLocaleString()}m
-      </span>
+      <div className="absolute top-2 left-2 right-16 z-10 flex min-w-0 items-center gap-1">
+        <span className="pointer-events-none flex h-11 shrink-0 items-center rounded-full bg-white/90 px-2 text-xs font-bold shadow-sm ring-1 ring-black/5">🚶 {metersOf(pos.x).toLocaleString()}m</span>
+        <div className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-full" onPointerUp={e => e.stopPropagation()}>{actions}</div>
+      </div>
       <button
         onClick={(e) => {
           e.stopPropagation()
@@ -214,7 +215,7 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
         }}
         onPointerUp={(e) => e.stopPropagation()}
         aria-label={PHASE_LABEL[clock.phase][lang]}
-        className="absolute top-2 right-2 z-10 flex h-12 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-bold shadow-md ring-1 ring-black/5"
+        className="absolute top-2 right-2 z-10 flex h-11 items-center gap-1 rounded-full bg-white/90 px-2 text-xs font-bold shadow-md ring-1 ring-black/5"
       >
         <span aria-hidden>{PHASE_ICON[clock.phase]}</span>
         {PHASE_LABEL[clock.phase][lang]}
