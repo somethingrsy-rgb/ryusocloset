@@ -112,3 +112,13 @@ describe('테마옷', () => {
   })
 })
 
+
+import { ITEMS } from './items'
+it('헤어핀과 마법봉은 따로 함께 입고, 예전에 액세서리 칸에 저장한 마법봉은 마법봉 칸으로 옮긴다', () => {
+  const pin = ITEMS.find((i) => i.category === 'accessory')!
+  const wand = ITEMS.find((i) => i.category === 'wand')!
+  const worn = toggleItem(toggleItem({}, pin), wand)
+  expect(worn).toEqual({ accessory: pin.id, wand: wand.id })
+  const byId = { [pin.id]: pin, [wand.id]: wand }
+  expect(sanitizeOutfit({ accessory: wand.id }, byId)).toEqual({ wand: wand.id })
+})

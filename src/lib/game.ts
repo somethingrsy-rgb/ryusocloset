@@ -49,7 +49,7 @@ export const PLACES: Place[] = [
 export const PLACE_BY_ID: Record<string, Place> = Object.fromEntries(PLACES.map((p) => [p.id, p]))
 
 /** 게임에서 찾아야 하는 카테고리 (기본 상의·하의·원피스·아우터·가방은 처음부터 쓸 수 있다) */
-export const POOL_CATEGORIES: readonly Category[] = ['costume', 'accessory', 'shoes']
+export const POOL_CATEGORIES: readonly Category[] = ['costume', 'accessory', 'wand', 'shoes']
 
 /** 한 장소 장면 안에서 아이템이 숨는 자리(%) */
 const SPOTS: ReadonlyArray<readonly [number, number]> = [
@@ -217,7 +217,7 @@ export const resetGame = () => set({ ...DEFAULT })
 /** 현재 아이템 목록 기준 장소별 숨은 아이템 */
 export const currentAssignment = () => {
   // Keep the old distribution so freeing dresses does not relocate other collectibles.
-  const legacyPool = ITEMS.filter((i) => !!i.native && !i.id.startsWith('custom_') && ['costume', 'accessory', 'shoes', 'bag', 'outer', 'dress'].includes(i.category))
+  const legacyPool = ITEMS.filter((i) => !!i.native && !i.id.startsWith('custom_') && ['costume', 'accessory', 'wand', 'shoes', 'bag', 'outer', 'dress'].includes(i.category))
   const eligible = new Set(ITEMS.filter(inPool).map((i) => i.id))
   const out = Object.fromEntries(Object.entries(assignPlaces(legacyPool.map((i) => i.id))).map(([place, ids]) => [place, ids.filter((id) => eligible.has(id))]))
   for (const item of ROOM_ITEMS.filter(inRoomPool)) {

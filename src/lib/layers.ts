@@ -1,5 +1,5 @@
 /** 카테고리 정의와 레이어 순서(숫자가 클수록 위). */
-export const CATEGORIES = ['top', 'bottom', 'dress', 'costume', 'outer', 'shoes', 'accessory', 'bag'] as const
+export const CATEGORIES = ['top', 'bottom', 'dress', 'costume', 'outer', 'shoes', 'accessory', 'wand', 'bag'] as const
 export type Category = (typeof CATEGORIES)[number]
 
 /** 몸(머리 포함) < 신발 < 하의 < 상의 < 원피스 < 아우터 < 앞머리 < 액세서리 < 가방 */
@@ -12,6 +12,8 @@ export const LAYER_Z: Record<Category, number> = {
   costume: 41,
   outer: 50,
   accessory: 70,
+  /** 마법봉: 헤어핀과 따로 고르고 함께 쓸 수 있다 (손에 쥐는 것이라 헤어핀 위) */
+  wand: 75,
   bag: 80,
 }
 

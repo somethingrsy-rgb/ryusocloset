@@ -1,6 +1,6 @@
 """지팡이(acc_wand_*) 를 아바타 손에 쥐게 놓는다.
 
-  python3 -I tools-py/place_wands.py <잘라낸 지팡이 폴더> [손 x=864] [손 y=985] [기울기(도, 시계 방향이 +)=21]
+  python3 -I tools-py/place_wands.py <잘라낸 지팡이 폴더> [손 x=864] [손 y=945] [기울기(도, 시계 방향이 +)=21]
 
 폴더에는 w01.png … w14.png (배경을 지운 지팡이, 위가 머리)가 있다. 길이를 480px 로 맞추고, 자루의 위에서 60% 지점(쥐는 곳)을
 손 위치에 두고 그 점을 중심으로 기울인다. 결과는 assets-src/clothes/acc_wand_<이름>.png (이름은 NAMES 순서).
@@ -16,7 +16,7 @@ NAMES = ['pink_crystal', 'pink_star', 'ice_snow', 'angel_wing', 'heart_blue', 'm
 ROOT = Path(__file__).resolve().parent.parent
 src = Path(sys.argv[1])
 hx = float(sys.argv[2]) if len(sys.argv) > 2 else 864
-hy = float(sys.argv[3]) if len(sys.argv) > 3 else 985
+hy = float(sys.argv[3]) if len(sys.argv) > 3 else 945  # 기본 위치: 손(985)에서 위로 5칸(40px)
 tilt = float(sys.argv[4]) if len(sys.argv) > 4 else 21
 H, GRIP = 480, 0.6
 

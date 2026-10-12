@@ -603,98 +603,98 @@
   "acc_wand_pink_crystal": {
     "ko": "핑크 크리스탈 하트 지팡이",
     "en": "Pink Crystal Heart Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "pink",
     "native": true
   },
   "acc_wand_pink_star": {
     "ko": "핑크 별꽃 지팡이",
     "en": "Pink Starflower Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "pink",
     "native": true
   },
   "acc_wand_ice_snow": {
     "ko": "눈꽃 얼음 지팡이",
     "en": "Snow Ice Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "white",
     "native": true
   },
   "acc_wand_angel_wing": {
     "ko": "천사 날개 별 지팡이",
     "en": "Angel Wing Star Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "white",
     "native": true
   },
   "acc_wand_heart_blue": {
     "ko": "블루 하트 지팡이",
     "en": "Blue Heart Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "white",
     "native": true
   },
   "acc_wand_moon_crystal": {
     "ko": "달 크리스탈 지팡이",
     "en": "Moon Crystal Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "white",
     "native": true
   },
   "acc_wand_gold_lotus": {
     "ko": "골드 연꽃 지팡이",
     "en": "Gold Lotus Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "white",
     "native": true
   },
   "acc_wand_silver_snow": {
     "ko": "실버 눈꽃 지팡이",
     "en": "Silver Snowflake Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "white",
     "native": true
   },
   "acc_wand_pink_burst": {
     "ko": "핑크 별빛 지팡이",
     "en": "Pink Starburst Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "pink",
     "native": true
   },
   "acc_wand_sky_gem": {
     "ko": "하늘 보석 지팡이",
     "en": "Sky Gem Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "white",
     "native": true
   },
   "acc_wand_gold_swirl": {
     "ko": "골드 소용돌이 지팡이",
     "en": "Gold Swirl Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "white",
     "native": true
   },
   "acc_wand_pink_hexa": {
     "ko": "핑크 육각별 지팡이",
     "en": "Pink Hexastar Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "pink",
     "native": true
   },
   "acc_wand_gold_flower": {
     "ko": "골드 꽃 지팡이",
     "en": "Gold Flower Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "white",
     "native": true
   },
   "acc_wand_white_clover": {
     "ko": "화이트 네잎 지팡이",
     "en": "White Clover Wand",
-    "category": "accessory",
+    "category": "wand",
     "color": "white",
     "native": true
   }
