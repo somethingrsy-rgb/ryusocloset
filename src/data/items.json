@@ -2365,10 +2365,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 72,
-      "y": 693,
-      "w": 175,
-      "h": 480
+      "x": 785,
+      "y": 715,
+      "w": 239,
+      "h": 449
     },
     "image": "assets/clothes/accessory/acc_wand_angel_wing.webp",
     "thumb": "assets/thumbs/acc_wand_angel_wing.webp",
@@ -2389,10 +2389,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 69,
-      "y": 694,
-      "w": 182,
-      "h": 479
+      "x": 791,
+      "y": 715,
+      "w": 233,
+      "h": 450
     },
     "image": "assets/clothes/accessory/acc_wand_gold_flower.webp",
     "thumb": "assets/thumbs/acc_wand_gold_flower.webp",
@@ -2413,10 +2413,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 68,
-      "y": 694,
-      "w": 184,
-      "h": 479
+      "x": 790,
+      "y": 716,
+      "w": 198,
+      "h": 449
     },
     "image": "assets/clothes/accessory/acc_wand_gold_lotus.webp",
     "thumb": "assets/thumbs/acc_wand_gold_lotus.webp",
@@ -2437,10 +2437,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 76,
-      "y": 692,
-      "w": 169,
-      "h": 481
+      "x": 778,
+      "y": 694,
+      "w": 246,
+      "h": 474
     },
     "image": "assets/clothes/accessory/acc_wand_gold_swirl.webp",
     "thumb": "assets/thumbs/acc_wand_gold_swirl.webp",
@@ -2461,10 +2461,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 86,
-      "y": 693,
-      "w": 149,
-      "h": 480
+      "x": 774,
+      "y": 716,
+      "w": 226,
+      "h": 451
     },
     "image": "assets/clothes/accessory/acc_wand_heart_blue.webp",
     "thumb": "assets/thumbs/acc_wand_heart_blue.webp",
@@ -2485,10 +2485,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 89,
-      "y": 693,
-      "w": 142,
-      "h": 480
+      "x": 793,
+      "y": 716,
+      "w": 220,
+      "h": 449
     },
     "image": "assets/clothes/accessory/acc_wand_ice_snow.webp",
     "thumb": "assets/thumbs/acc_wand_ice_snow.webp",
@@ -2509,10 +2509,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 83,
-      "y": 692,
-      "w": 154,
-      "h": 482
+      "x": 787,
+      "y": 711,
+      "w": 231,
+      "h": 454
     },
     "image": "assets/clothes/accessory/acc_wand_moon_crystal.webp",
     "thumb": "assets/thumbs/acc_wand_moon_crystal.webp",
@@ -2533,10 +2533,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 73,
-      "y": 692,
-      "w": 174,
-      "h": 481
+      "x": 791,
+      "y": 715,
+      "w": 225,
+      "h": 450
     },
     "image": "assets/clothes/accessory/acc_wand_pink_burst.webp",
     "thumb": "assets/thumbs/acc_wand_pink_burst.webp",
@@ -2557,10 +2557,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 86,
-      "y": 693,
-      "w": 147,
-      "h": 480
+      "x": 773,
+      "y": 716,
+      "w": 219,
+      "h": 449
     },
     "image": "assets/clothes/accessory/acc_wand_pink_crystal.webp",
     "thumb": "assets/thumbs/acc_wand_pink_crystal.webp",
@@ -2581,10 +2581,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 88,
-      "y": 694,
-      "w": 143,
-      "h": 479
+      "x": 791,
+      "y": 714,
+      "w": 199,
+      "h": 451
     },
     "image": "assets/clothes/accessory/acc_wand_pink_hexa.webp",
     "thumb": "assets/thumbs/acc_wand_pink_hexa.webp",
@@ -2605,10 +2605,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 65,
-      "y": 694,
-      "w": 190,
-      "h": 479
+      "x": 784,
+      "y": 716,
+      "w": 240,
+      "h": 449
     },
     "image": "assets/clothes/accessory/acc_wand_pink_star.webp",
     "thumb": "assets/thumbs/acc_wand_pink_star.webp",
@@ -2629,10 +2629,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 68,
-      "y": 694,
-      "w": 184,
-      "h": 479
+      "x": 789,
+      "y": 716,
+      "w": 228,
+      "h": 448
     },
     "image": "assets/clothes/accessory/acc_wand_silver_snow.webp",
     "thumb": "assets/thumbs/acc_wand_silver_snow.webp",
@@ -2653,10 +2653,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 76,
-      "y": 693,
-      "w": 169,
-      "h": 480
+      "x": 790,
+      "y": 716,
+      "w": 213,
+      "h": 449
     },
     "image": "assets/clothes/accessory/acc_wand_sky_gem.webp",
     "thumb": "assets/thumbs/acc_wand_sky_gem.webp",
@@ -2677,10 +2677,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 68,
-      "y": 693,
-      "w": 185,
-      "h": 480
+      "x": 790,
+      "y": 715,
+      "w": 230,
+      "h": 452
     },
     "image": "assets/clothes/accessory/acc_wand_white_clover.webp",
     "thumb": "assets/thumbs/acc_wand_white_clover.webp",
