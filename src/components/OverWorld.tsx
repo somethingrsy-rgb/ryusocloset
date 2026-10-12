@@ -193,7 +193,7 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
         {destination && <div aria-hidden className="walk-destination pointer-events-none absolute" style={{ left: destination.x, top: destination.y, zIndex: 3 }} />}
         <div
           className="pointer-events-none absolute"
-          style={{ left: pos.x, top: pos.y, width: figW, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -100%)', zIndex: Math.round(pos.y) }}
+          style={{ left: pos.x, top: pos.y, width: figW, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -100%)', zIndex: 1000 }}
         >
           <div className="avatar-ground-shadow" />
           <div className="relative h-full w-full" style={{ transform: `scaleX(${dir})` }}>

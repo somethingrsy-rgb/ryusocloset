@@ -48,8 +48,8 @@ export const PLACES: Place[] = [
 ]
 export const PLACE_BY_ID: Record<string, Place> = Object.fromEntries(PLACES.map((p) => [p.id, p]))
 
-/** 게임에서 찾아야 하는 카테고리 (기본 상의·하의·원피스는 처음부터 쓸 수 있다) */
-export const POOL_CATEGORIES: readonly Category[] = ['costume', 'accessory', 'bag', 'shoes', 'outer']
+/** 게임에서 찾아야 하는 카테고리 (기본 상의·하의·원피스·아우터·가방은 처음부터 쓸 수 있다) */
+export const POOL_CATEGORIES: readonly Category[] = ['costume', 'accessory', 'shoes']
 
 /** 한 장소 장면 안에서 아이템이 숨는 자리(%) */
 const SPOTS: ReadonlyArray<readonly [number, number]> = [

@@ -181,6 +181,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
 
   const got = ids.length - left.length
   const scale = depthScale(pos.y)
+  const avatarLayer = layout ? Math.max(10000, ...drawables(layout.room).map(d => d.z)) + 1 : 1000
   const collected = popup ? travelItem(popup) : undefined
 
   return (
@@ -254,7 +255,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
         {/* 류소: 발 위치(pos)에 서고, 아래쪽일수록 크게. 걸을 땐 통통 튀고 가는 방향을 바라본다 */}
         <div
           className="pointer-events-none absolute"
-          style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * scale}%`, aspectRatio: '1024 / 1536', transform: `translate(-50%, -${layout ? AVATAR_FEET_RATIO * 100 : 100}%)`, zIndex: layerZ(pos.y) + (layout?.room.avatar.zb ?? 0) + 0.5 }}
+          style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * scale}%`, aspectRatio: '1024 / 1536', transform: `translate(-50%, -${layout ? AVATAR_FEET_RATIO * 100 : 100}%)`, zIndex: avatarLayer }}
         >
           <div className="avatar-ground-shadow" />
           <div className="relative h-full w-full" style={{ transform: `scaleX(${dir})` }}>
