@@ -12,6 +12,7 @@ const TABS: { id: RoomTab; icon: string; ko: string; en: string }[] = [
   { id: 'wall', icon: '🖼️', ko: '벽 장식', en: 'Wall' },
   { id: 'light', icon: '✨', ko: '조명', en: 'Lights' },
   { id: 'theme', icon: '🎀', ko: '테마 소품', en: 'Theme props' },
+  { id: 'camp', icon: '⛺', ko: '캠핑 용품', en: 'Camp gear' },
   { id: 'background', icon: '🏠', ko: '벽·바닥', en: 'Wall & floor' },
 ]
 
@@ -29,6 +30,7 @@ interface Props {
   /** 내 방(기본) 또는 캠핑 */
   scene?: 'room' | 'camp'
   room: RoomState
+  onLoadCamp?: () => void
   onAdd: (def: RoomItemDef) => void
   /** '내 소품 추가' 버튼 (지금 보고 있는 탭을 알려준다) */
   onAddCustom: (tab: RoomTab) => void
@@ -39,7 +41,7 @@ interface Props {
   onBackground?: (part: 'wall' | 'floor', id: string | undefined) => void
 }
 
-export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCustom, onRestore, onBackground }: Props) {
+export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCustom, onRestore, onBackground, onLoadCamp }: Props) {
   useItemsVersion()
   useSyncExternalStore(subscribeGame, gameVersion)
   const { lang, t } = useI18n()
@@ -53,7 +55,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
   const count = (id: string) => room.items.filter((p) => p.itemId === id).length
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div role="tablist" className="flex shrink-0 gap-1 px-2 pt-2 pb-1">
+      <div role="tablist" className="flex shrink-0 gap-1 overflow-x-auto px-2 pt-2 pb-1">
         {tabs.map((tb) => {
           const active = tb.id === tab
           return (
@@ -62,7 +64,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
               role="tab"
               aria-selected={active}
               onClick={() => setTab(tb.id)}
-              className={`flex min-h-14 flex-1 flex-col items-center justify-center rounded-2xl px-1 text-2xl transition ${
+              className={`flex min-h-14 min-w-12 shrink-0 flex-1 flex-col items-center justify-center rounded-2xl px-1 text-2xl transition ${
                 active ? 'bg-blush text-white shadow' : 'bg-petal/70 hover:bg-petal'
               }`}
             >
@@ -118,7 +120,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
                             className={`block w-full overflow-hidden rounded-xl bg-petal ${part === 'wall' ? 'aspect-[3/4]' : 'aspect-[2/1]'}`}
                           >
                             <img
-                              src={assetUrl(`${dir}/${part}_thumb.webp`)}
+                              src={assetUrl(o.id === 'camp' ? (part === 'wall' ? 'assets/camp/wall_day.webp' : 'assets/camp/floor.webp') : `${dir}/${part}_thumb.webp`)}
                               alt=""
                               loading="lazy"
                               draggable={false}
@@ -137,6 +139,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
         </div>
       ) : (
       <div role="tabpanel" className="scroll-thin min-h-0 flex-1 overflow-y-auto p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        {tab === 'camp' && onLoadCamp && <button className="mb-2 min-h-11 w-full rounded-full bg-petal px-3 text-xs font-bold" onClick={onLoadCamp}>{lang === 'ko' ? '이전에 꾸민 캠핑 불러오기' : 'Load your previous campsite'}</button>}
         <ul className="grid grid-cols-4 gap-2">
           <li>
             <button

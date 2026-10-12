@@ -31,8 +31,8 @@ export function sceneAssets(scene: 'room' | 'camp', night = false, wallId?: stri
   const wall = wallId ? ROOM_THEME_BY_ID[wallId] : undefined
   const floor = floorId ? ROOM_THEME_BY_ID[floorId] : undefined
   return {
-    wall: wall ? assetUrl(`assets/themes/${wall.id}/wall.webp`) : ROOM_ASSETS.wall,
-    floor: floor ? assetUrl(`assets/themes/${floor.id}/floor.webp`) : ROOM_ASSETS.floor,
+    wall: wallId === 'camp' ? (night ? CAMP_ASSETS.night : CAMP_ASSETS.day) : wall ? assetUrl(`assets/themes/${wall.id}/wall.webp`) : ROOM_ASSETS.wall,
+    floor: floorId === 'camp' ? CAMP_ASSETS.floor : floor ? assetUrl(`assets/themes/${floor.id}/floor.webp`) : ROOM_ASSETS.floor,
     floorH: wall ? wall.floorH : ROOM_ASSETS.floorH,
   }
 }
