@@ -495,5 +495,26 @@
     "category": "accessory",
     "color": "red",
     "native": true
+  },
+  "costume_trump_blue": {
+    "ko": "트럼프 블루 원피스",
+    "en": "Trump Blue Dress",
+    "category": "costume",
+    "color": "skyblue",
+    "native": true
+  },
+  "costume_snow_fur": {
+    "ko": "눈꽃 모피 원피스",
+    "en": "Snow Fur Dress",
+    "category": "costume",
+    "color": "skyblue",
+    "native": true
+  },
+  "costume_starry_cross": {
+    "ko": "별빛 십자 원피스",
+    "en": "Starry Cross Dress",
+    "category": "costume",
+    "color": "navy",
+    "native": true
   }
 }

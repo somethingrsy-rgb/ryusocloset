@@ -3,9 +3,9 @@
     "scale": 1.0,
     "waist": 176
   },
-  "dress_midnight_navy": {
-    "scale": 1.012,
-    "waist": 168
+  "costume_trump_blue": {
+    "scale": 1.062,
+    "waist": 160
   },
   "dress_seashell_blue": {
     "scale": 1.097,
@@ -24,6 +24,7 @@
     "dress_lolita_black",
     "dress_lolita_purple",
     "dress_maid_blue",
+    "dress_midnight_navy",
     "dress_starry_navy"
   ]
 }
