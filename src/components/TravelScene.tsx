@@ -242,11 +242,11 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
           <button
             aria-label={npc.name[lang]}
             onClick={() => (distPx(posRef.current, NPC_POS) < TALK_R ? setTalk(true) : walkTo({ x: NPC_POS.x - 10, y: NPC_POS.y }))}
-            className="absolute flex h-28 w-28 -translate-x-1/2 -translate-y-full items-center justify-center transition active:scale-90"
+            className="absolute flex h-14 w-14 -translate-x-1/2 -translate-y-full items-center justify-center transition active:scale-90"
             style={{ left: `${NPC_POS.x}%`, top: `${NPC_POS.y}%`, zIndex: layerZ(NPC_POS.y) }}
           >
             {/* 버튼에는 전역 `button { font: inherit }` 때문에 글자 크기 클래스가 먹지 않아서 안쪽 span 에 건다 */}
-            <span aria-hidden className="text-[96px] leading-none">{npc.emoji}</span>
+            <span aria-hidden className="text-[48px] leading-none">{npc.emoji}</span>
             {!eventDone(placeId) && <span className="absolute -top-1 -right-1 rounded-full bg-blush px-1.5 text-xs font-bold text-white">!</span>}
           </button>
         )}
