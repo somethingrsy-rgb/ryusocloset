@@ -31,10 +31,6 @@
     "scale": 1.03,
     "waist": 165
   },
-  "dress_fairy_blue": {
-    "scale": 1.069,
-    "waist": 159
-  },
   "dress_lolita_black": {
     "scale": 1.149,
     "waist": 148
@@ -60,6 +56,7 @@
     "waist": 126
   },
   "manual": [
-    "costume_hanbok_starry"
+    "costume_hanbok_starry",
+    "dress_fairy_blue"
   ]
 }
