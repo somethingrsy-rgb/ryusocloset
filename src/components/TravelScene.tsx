@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from 'react'
 import { useI18n } from '../i18n'
-import { PLACE_BY_ID, eventDone, finishEnglish, finishEvent, findItem, getGame, isFound, pickReward, spotFor } from '../lib/game'
-import { ITEM_BY_ID, assetUrl } from '../lib/items'
+import { PLACE_BY_ID, eventDone, finishEnglish, finishEvent, findItem, getGame, isFound, pickReward, spotFor, travelItem } from '../lib/game'
+import { assetUrl } from '../lib/items'
 import { NPCS } from '../lib/npcs'
 import { playSnap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -181,6 +181,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
 
   const got = ids.length - left.length
   const scale = depthScale(pos.y)
+  const collected = popup ? travelItem(popup) : undefined
 
   return (
     <div className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5" style={{ containerType: 'size' }}>
@@ -200,7 +201,6 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
           <img src={assetUrl(night && p.wallNight ? p.wallNight : p.wall)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
           <img src={assetUrl(p.floor)} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${p.floorH / ROOM_H * 100}%` }} draggable={false} />
         </>}
-        {tint && (layout || !(night && p.wallNight)) && <div className="pointer-events-none absolute inset-0" style={{ background: tint, zIndex: 1 }} />}
         {layout ? drawables(layout.room).filter(d => d.group !== 'avatar').map(d => <img key={d.key} src={d.src ? assetUrl(d.src) : undefined} alt="" draggable={false} className="pointer-events-none absolute" style={{ left: `${d.left / ROOM_W * 100}%`, top: `${d.top / ROOM_H * 100}%`, width: `${d.w / ROOM_W * 100}%`, height: `${d.h / ROOM_H * 100}%`, zIndex: d.z, transform: d.flip ? 'scaleX(-1)' : undefined }} />) : <TravelDecor placeId={placeId} blocked={blocked} onInteract={stop} />}
 
         {ids.map((id, i) => {
@@ -265,20 +265,21 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
         </div>
       </div>
 
+      {tint && !(night && (layout ? layout.scene === 'camp' : !!p.wallNight)) && <div aria-hidden className="pointer-events-none absolute inset-0 z-10" style={{ background: tint }} />}
       <button
         onClick={skip}
         aria-label={PHASE_LABEL[clock.phase][lang]}
-        className="absolute top-2 right-2 z-10 flex h-12 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-bold shadow-md ring-1 ring-black/5"
+        className="absolute top-2 right-2 z-40 flex h-12 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-bold shadow-md ring-1 ring-black/5"
       >
         <span aria-hidden>{PHASE_ICON[clock.phase]}</span>
         {PHASE_LABEL[clock.phase][lang]}
       </button>
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-2">
+      <div className="absolute top-2 left-2 right-24 z-30 flex min-w-0 items-center gap-2">
         <button onClick={onExit} className="flex h-12 items-center gap-1 rounded-full bg-white/90 px-4 text-sm font-bold shadow-md ring-1 ring-black/5">
           <span aria-hidden>🗺️</span>
           {tx.map}
         </button>
-        <span className="rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
+        <span className="min-w-0 truncate rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
           {p.icon} {lang === 'ko' ? p.ko : p.en} · {tx.found} {got}/{ids.length}
         </span>
       </div>
@@ -307,12 +308,12 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
           onClose={() => setTalk(false)}
         />
       )}
-      {popup && ITEM_BY_ID[popup] && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 p-6" onClick={() => setPopup(null)}>
+      {popup && collected && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/30 p-6" onClick={() => setPopup(null)}>
           <div className="w-64 rounded-3xl bg-white p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <p className="text-lg font-extrabold text-blush-deep">🎉 {tx.got}</p>
-            <img src={assetUrl(ITEM_BY_ID[popup].thumb)} alt="" className="mx-auto my-3 h-32 w-32 object-contain" />
-            <p className="mb-3 font-bold">{ITEM_BY_ID[popup].name[lang]}</p>
+            <img src={assetUrl(collected.thumb)} alt="" className="mx-auto my-3 h-32 w-32 object-contain" />
+            <p className="mb-3 font-bold">{collected.name[lang]}</p>
             <div className="flex flex-col gap-2">
               <button
                 className="h-11 rounded-full bg-blush font-bold text-white"
@@ -322,7 +323,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
                   onWear(id)
                 }}
               >
-                {tx.wear}
+                {collected.kind === 'room' ? (lang === 'ko' ? '내 방에서 꾸미기' : 'Decorate my room') : tx.wear}
               </button>
               <button className="h-11 rounded-full bg-petal font-bold" onClick={() => setPopup(null)}>
                 {tx.keep}

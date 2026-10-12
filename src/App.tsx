@@ -23,7 +23,7 @@ import { CAMP_ASSETS, ROOM_ASSETS, renderRoomCanvas, sceneAssets } from './lib/e
 import { BASE_LAYERS, ITEMS, ITEM_BY_ID, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
 import { toggleItem } from './lib/outfit'
-import { ROOM_ITEMS, addItem, defaultCamp, defaultRoom, isCustomRoomItem } from './lib/room'
+import { ROOM_ITEMS, ROOM_ITEM_BY_ID, addItem, defaultCamp, defaultRoom, isCustomRoomItem } from './lib/room'
 import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
 import { playSnap } from './lib/sound'
 import {
@@ -373,6 +373,8 @@ export default function App() {
                 outfit={outfit}
                 tweaks={tweaks}
                 onWear={(id) => {
+                  const prop = ROOM_ITEM_BY_ID[id]
+                  if (prop) { setMode('room'); setSelection(null); showToast(lang === 'ko' ? '테마 소품 탭에서 찾은 소품을 사용할 수 있어요.' : 'Your found prop is available in Theme props.'); return }
                   const it = ITEM_BY_ID[id]
                   if (!it) return
                   setCategory(it.category)

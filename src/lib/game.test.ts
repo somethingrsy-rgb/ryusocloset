@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import { ROOM_ITEMS } from './room'
 import { ITEMS } from './items'
 import { NPCS, rpsResult } from './npcs'
 import { WALK_BOUNDS, clampToBounds, depthScale, stepToward } from './walk'
 import { DOOR_Y, GROUND, cameraX, chunksNeeded, clampWalk, decorFor, gateAt, gateX, metersOf, placeOfChunk, startPos, stepWorld, worldWidth } from './world'
-import { CYCLE_MS, clockAt, skipOffset, skipToNext, tintOf } from './daynight'
-import { PLACES, assignPlaces, currentAssignment, inPool, isLocked, pickReward, spotFor } from './game'
+import { CYCLE_MS, clockAt, skipOffset, skipToNext, tintOf, toggleDayNight } from './daynight'
+import { PLACES, assignPlaces, currentAssignment, inPool, isLocked, inRoomPool, isRoomLocked, travelPool, getGame, findItem, pickReward, spotFor } from './game'
 
 describe('여행 게임', () => {
   const ids = Array.from({ length: 53 }, (_, i) => `item_${i}`)
@@ -34,11 +35,11 @@ describe('여행 게임', () => {
     const dresses = ITEMS.filter(i => i.category === 'dress')
     expect(dresses.length).toBeGreaterThan(0)
     for (const dress of dresses) { expect(inPool(dress)).toBe(false); expect(isLocked(dress)).toBe(false) }
-    const oldPool = ITEMS.filter(i => inPool(i) || (i.category === 'dress' && !!i.native && !i.id.startsWith('custom_')))
+    const oldPool = ITEMS.filter(i => !!i.native && !i.id.startsWith('custom_') && ['costume', 'accessory', 'shoes', 'bag', 'outer', 'dress'].includes(i.category))
     const oldAssignment = assignPlaces(oldPool.map(i => i.id))
     const current = currentAssignment()
     const eligible = new Set(ITEMS.filter(inPool).map(i => i.id))
-    for (const place of PLACES) expect(current[place.id]).toEqual(oldAssignment[place.id].filter(id => eligible.has(id)))
+    for (const place of PLACES) expect(current[place.id].filter(id => eligible.has(id))).toEqual(oldAssignment[place.id].filter(id => eligible.has(id)))
     expect(Object.values(current).flat().some(id => dresses.some(d => d.id === id))).toBe(false)
   })
   it('기본 상의·하의, 내가 추가한 옷은 게임 대상이 아니다', () => {
@@ -161,5 +162,38 @@ describe('낮과 밤', () => {
   })
   it('낮에는 색을 덮지 않는다', () => {
     expect(tintOf({ f: 0.25, dark: 0, phase: 'day' })).toBeNull()
+  })
+})
+
+describe('테마 소품 수집과 낮밤 전환', () => {
+  it('요청한 옷과 테마 소품을 여행 도감에 포함한다', () => {
+    const pool = travelPool()
+    expect(pool.length).toBeGreaterThan(0)
+    expect(new Set(pool.map(i => i.id)).size).toBe(pool.length)
+    expect(pool.every(i => ['costume', 'accessory', 'bag', 'shoes', 'outer', 'room'].includes(i.category))).toBe(true)
+    const props = ROOM_ITEMS.filter(inRoomPool)
+    expect(props.length).toBeGreaterThan(0)
+    const assign = currentAssignment()
+    for (const prop of props) expect(assign[prop.theme!]).toContain(prop.id)
+    expect(Object.values(assign).flat().sort()).toEqual(pool.map(i => i.id).sort())
+    expect(inRoomPool({ id: 'customroom_1', theme: 'spring' })).toBe(false)
+  })
+  it('찾은 소품을 기존 수집 기록과 함께 해제한다', () => {
+    const prop = ROOM_ITEMS.find(inRoomPool)!
+    const previous = [...getGame().found]
+    findItem(prop.id)
+    expect(isRoomLocked(prop)).toBe(false)
+    for (const id of previous) expect(getGame().found).toContain(id)
+    expect(findItem(prop.id)).toBe(false)
+  })
+  it('어느 시간대에서도 버튼으로 낮과 밤을 직접 전환한다', () => {
+    for (let i = 0; i < 8; i++) {
+      const now = i * 67000
+      const wasDark = clockAt(now).dark > 0
+      toggleDayNight(now)
+      expect(clockAt(now).phase).toBe(wasDark ? 'day' : 'night')
+      toggleDayNight(now)
+      expect(clockAt(now).phase).toBe(wasDark ? 'night' : 'day')
+    }
   })
 })

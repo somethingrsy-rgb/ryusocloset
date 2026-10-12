@@ -1,4 +1,5 @@
-import type { RefObject } from 'react'
+import { useSyncExternalStore, type RefObject } from 'react'
+import { subscribeGame, gameVersion, isLocked } from '../lib/game'
 import { CATEGORIES, type Category } from '../lib/layers'
 import { CATEGORY_LABEL, useI18n } from '../i18n'
 import { ITEMS_BY_CATEGORY, assetUrl, isCustomItem } from '../lib/items'
@@ -39,10 +40,11 @@ interface Props {
 
 export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dropRef, onDragOver, onAdd, onRemove, onRestore }: Props) {
   useItemsVersion()
+  useSyncExternalStore(subscribeGame, gameVersion)
   const { lang, t } = useI18n()
   const labels = CATEGORY_LABEL[lang]
   const all = ITEMS_BY_CATEGORY[category]
-  const items = visible(all)
+  const items = visible(all).filter(item => !isLocked(item))
   const nHidden = hiddenCount(all.map((i) => i.id))
   const { press, ghost, ignoreClick } = useThumbDrag(dropRef, onDragOver)
   return (

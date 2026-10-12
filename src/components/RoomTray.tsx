@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
+import { subscribeGame, gameVersion, isRoomLocked } from '../lib/game'
 import { useI18n } from '../i18n'
 import { ROOM_ITEMS, ROOM_THEMES, isCustomRoomItem } from '../lib/room'
 import { assetUrl } from '../lib/items'
@@ -40,6 +41,7 @@ interface Props {
 
 export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCustom, onRestore, onBackground }: Props) {
   useItemsVersion()
+  useSyncExternalStore(subscribeGame, gameVersion)
   const { lang, t } = useI18n()
   const tabs = scene === 'camp' ? CAMP_TABS : TABS
   const [tab, setTab] = useState<RoomTab>(tabs[0].id)
@@ -149,15 +151,18 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
           </li>
           {items.map((d) => {
             const n = count(d.id)
+            const locked = isRoomLocked(d)
             return (
               <li key={d.id} className="relative">
                 <button
+                  disabled={locked}
                   onClick={() => onAdd(d)}
-                  aria-label={d.name[lang]}
+                  aria-label={locked ? (lang === 'ko' ? '여행에서 찾을 테마 소품' : 'Find this prop on your travels') : d.name[lang]}
                   title={d.name[lang]}
                   className="relative flex aspect-square w-full items-center justify-center rounded-2xl bg-white p-1 ring-2 ring-petal transition hover:ring-blush/50 active:scale-95"
                 >
-                  <img src={assetUrl(d.thumb)} alt="" loading="lazy" draggable={false} className="h-full w-full object-contain" />
+                  <img src={assetUrl(d.thumb)} alt="" loading="lazy" draggable={false} className="h-full w-full object-contain" style={locked ? { filter: 'brightness(0) opacity(.25)' } : undefined} />
+                  {locked && <span className="absolute top-1 right-1 text-sm">🔒</span>}
                   {n > 0 && (
                     <span className="absolute top-1 right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blush px-1 text-[11px] font-bold text-white">
                       {n}
@@ -174,7 +179,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
                     ✕
                   </button>
                 )}
-                <p className="mt-0.5 truncate text-center text-[10px] font-semibold text-cocoa-soft">{d.name[lang]}</p>
+                <p className="mt-0.5 truncate text-center text-[10px] font-semibold text-cocoa-soft">{locked ? (lang === 'ko' ? '여행에서 찾아요' : 'Find while traveling') : d.name[lang]}</p>
               </li>
             )
           })}

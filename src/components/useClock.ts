@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { clockAt, skipToNext, type Clock } from '../lib/daynight'
+import { clockAt, toggleDayNight, type Clock } from '../lib/daynight'
 
 /** 1초마다 게임 시계를 갱신한다. skip() 은 다음 시간대로 건너뛴다. */
 export function useClock(): { clock: Clock; skip: () => void } {
@@ -11,8 +11,9 @@ export function useClock(): { clock: Clock; skip: () => void } {
   return {
     clock,
     skip: () => {
-      skipToNext(Date.now())
+      toggleDayNight(Date.now())
       setClock(clockAt(Date.now()))
     },
   }
 }
+

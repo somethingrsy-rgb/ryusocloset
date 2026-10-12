@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { CATEGORY_LABEL, useI18n } from '../i18n'
-import { PLACES, currentAssignment, inPool, isFound, resetGame, setLock } from '../lib/game'
-import { ITEMS, assetUrl } from '../lib/items'
+import { PLACES, currentAssignment, travelPool, isFound, resetGame, setLock } from '../lib/game'
+import { assetUrl } from '../lib/items'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import { useGame } from './TravelGame'
 
@@ -38,7 +38,7 @@ export function TravelBook() {
     for (const p of PLACES) for (const id of assign[p.id] ?? []) m[id] = lang === 'ko' ? p.ko : p.en
     return m
   }, [assign, lang])
-  const pool = ITEMS.filter(inPool)
+  const pool = travelPool()
   const got = pool.filter((i) => isFound(i.id)).length
 
   return (
@@ -73,7 +73,7 @@ export function TravelBook() {
                   draggable={false}
                 />
                 <span className="w-full truncate text-[10px] leading-4 font-bold">{ok ? it.name[lang] : '???'}</span>
-                <span className="w-full truncate text-[9px] leading-3 text-cocoa-soft">{ok ? CATEGORY_LABEL[lang][it.category] : `${tx.where}: ${placeOf[it.id] ?? ''}`}</span>
+                <span className="w-full truncate text-[9px] leading-3 text-cocoa-soft">{ok ? (it.category === 'room' ? (lang === 'ko' ? '테마 소품' : 'Theme prop') : CATEGORY_LABEL[lang][it.category]) : `${tx.where}: ${placeOf[it.id] ?? ''}`}</span>
               </div>
             )
           })}
