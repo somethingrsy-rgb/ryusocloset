@@ -757,10 +757,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 111,
-      "y": 640,
-      "w": 802,
-      "h": 874
+      "x": 102,
+      "y": 641,
+      "w": 822,
+      "h": 895
     },
     "image": "assets/clothes/costume/costume_checker_queen.webp",
     "thumb": "assets/thumbs/costume_checker_queen.webp",
@@ -781,10 +781,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 162,
+      "x": 123,
       "y": 604,
-      "w": 700,
-      "h": 642
+      "w": 778,
+      "h": 713
     },
     "image": "assets/clothes/costume/costume_floral_black.webp",
     "thumb": "assets/thumbs/costume_floral_black.webp",
@@ -805,10 +805,10 @@
     },
     "colorHex": "#6f9a72",
     "box": {
-      "x": 162,
+      "x": 15,
       "y": 604,
-      "w": 700,
-      "h": 625
+      "w": 994,
+      "h": 887
     },
     "image": "assets/clothes/costume/costume_forest_green.webp",
     "thumb": "assets/thumbs/costume_forest_green.webp",
@@ -829,10 +829,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 162,
+      "x": 46,
       "y": 604,
-      "w": 700,
-      "h": 679
+      "w": 933,
+      "h": 905
     },
     "image": "assets/clothes/costume/costume_hanbok_starry.webp",
     "thumb": "assets/thumbs/costume_hanbok_starry.webp",
@@ -853,10 +853,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 109,
-      "y": 640,
-      "w": 806,
-      "h": 870
+      "x": 97,
+      "y": 639,
+      "w": 830,
+      "h": 897
     },
     "image": "assets/clothes/costume/costume_petal_blue.webp",
     "thumb": "assets/thumbs/costume_petal_blue.webp",
@@ -877,10 +877,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 65,
-      "y": 662,
-      "w": 894,
-      "h": 848
+      "x": 52,
+      "y": 661,
+      "w": 921,
+      "h": 875
     },
     "image": "assets/clothes/costume/costume_princess_pink.webp",
     "thumb": "assets/thumbs/costume_princess_pink.webp",
@@ -901,10 +901,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 670
+      "x": 25,
+      "y": 603,
+      "w": 973,
+      "h": 932
     },
     "image": "assets/clothes/costume/costume_sakura_blue.webp",
     "thumb": "assets/thumbs/costume_sakura_blue.webp",
@@ -925,10 +925,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 691
+      "x": 42,
+      "y": 603,
+      "w": 940,
+      "h": 928
     },
     "image": "assets/clothes/costume/costume_tassel_pink.webp",
     "thumb": "assets/thumbs/costume_tassel_pink.webp",
@@ -973,10 +973,10 @@
     },
     "colorHex": "#c8283c",
     "box": {
-      "x": 162,
+      "x": 100,
       "y": 604,
-      "w": 700,
-      "h": 792
+      "w": 824,
+      "h": 931
     },
     "image": "assets/clothes/costume/dress_card_red.webp",
     "thumb": "assets/thumbs/dress_card_red.webp",
@@ -997,10 +997,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 162,
+      "x": 71,
       "y": 604,
-      "w": 700,
-      "h": 724
+      "w": 881,
+      "h": 911
     },
     "image": "assets/clothes/costume/dress_fairy_blue.webp",
     "thumb": "assets/thumbs/dress_fairy_blue.webp",
@@ -1021,10 +1021,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 162,
+      "x": 38,
       "y": 604,
-      "w": 700,
-      "h": 550
+      "w": 947,
+      "h": 743
     },
     "image": "assets/clothes/costume/dress_lolita_black.webp",
     "thumb": "assets/thumbs/dress_lolita_black.webp",
@@ -1045,10 +1045,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 542
+      "x": 4,
+      "y": 605,
+      "w": 1016,
+      "h": 786
     },
     "image": "assets/clothes/costume/dress_lolita_purple.webp",
     "thumb": "assets/thumbs/dress_lolita_purple.webp",
@@ -1069,10 +1069,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 162,
+      "x": 66,
       "y": 604,
-      "w": 700,
-      "h": 568
+      "w": 893,
+      "h": 725
     },
     "image": "assets/clothes/costume/dress_maid_blue.webp",
     "thumb": "assets/thumbs/dress_maid_blue.webp",
@@ -1093,10 +1093,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 162,
+      "x": 95,
       "y": 604,
-      "w": 700,
-      "h": 744
+      "w": 835,
+      "h": 886
     },
     "image": "assets/clothes/costume/dress_midnight_navy.webp",
     "thumb": "assets/thumbs/dress_midnight_navy.webp",
@@ -1117,10 +1117,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 162,
+      "x": 86,
       "y": 604,
-      "w": 700,
-      "h": 765
+      "w": 853,
+      "h": 932
     },
     "image": "assets/clothes/costume/dress_seashell_blue.webp",
     "thumb": "assets/thumbs/dress_seashell_blue.webp",
@@ -1141,10 +1141,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 162,
+      "x": 111,
       "y": 604,
-      "w": 700,
-      "h": 813
+      "w": 802,
+      "h": 931
     },
     "image": "assets/clothes/costume/dress_starry_navy.webp",
     "thumb": "assets/thumbs/dress_starry_navy.webp",
