@@ -1,6 +1,6 @@
 import { useSyncExternalStore, type RefObject } from 'react'
 import { subscribeGame, gameVersion, isLocked } from '../lib/game'
-import { CATEGORIES, type Category } from '../lib/layers'
+import { type Category } from '../lib/layers'
 import { CATEGORY_LABEL, useI18n } from '../i18n'
 import { ITEMS_BY_CATEGORY, assetUrl, isCustomItem } from '../lib/items'
 import { hiddenCount, visible } from '../lib/hidden'
@@ -50,7 +50,7 @@ export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dro
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div role="tablist" aria-label="categories" className="scroll-thin flex shrink-0 gap-1 overflow-x-auto px-2 pt-2 pb-1">
-        {CATEGORIES.map((c) => {
+        {(['top', 'bottom', 'dress', 'outer', 'costume', 'shoes', 'accessory', 'bag'] as const).map((c) => {
           const active = c === category
           return (
             <button
