@@ -18,7 +18,7 @@ import { getTravelRoom, subscribeTravelRooms, travelRoomsVersion } from '../lib/
 import { useItemsVersion } from '../lib/useItemsVersion'
 import { sceneAssets } from '../lib/exportRoom'
 import { drawables } from '../lib/room'
-import { AVATAR_BASE_W, ROOM_W, ROOM_H } from '../lib/roomTypes'
+import { AVATAR_BASE_W, AVATAR_FEET_RATIO, ROOM_W, ROOM_H } from '../lib/roomTypes'
 
 const TEXT = {
   ko: { map: '지도', found: '찾음', hint: '바닥: 이동 · 방향키/WASD · 소품: 살펴보기',
@@ -61,7 +61,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
   const ids = assign[placeId] ?? []
   const left = ids.filter((id) => !isFound(id))
 
-  const [pos, setPos] = useState<Vec>(() => layout ? { x: clampToBounds({ x: layout.room.avatar.x / ROOM_W * 100, y: 86 }).x, y: Math.max(minY, Math.min(92, layout.room.avatar.y / ROOM_H * 100)) } : { x: 20, y: 86 })
+  const [pos, setPos] = useState<Vec>(() => layout ? { x: clampToBounds({ x: layout.room.avatar.x / ROOM_W * 100, y: 86 }).x, y: Math.max(minY, Math.min(100, layout.room.avatar.y / ROOM_H * 100)) } : { x: 20, y: 86 })
   const [dir, setDir] = useState<1 | -1>(layout?.room.avatar.flip ? -1 : 1)
   const [walking, setWalking] = useState(false)
   const [destination, setDestination] = useState<Vec | null>(null)
@@ -150,7 +150,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
 
   const walkTo = (v: Vec) => {
     if (blocked) return
-    target.current = { ...clampToBounds(v), y: Math.max(minY, clampToBounds(v).y) }
+    target.current = { ...clampToBounds(v), y: Math.min(layout ? 100 : WALK_BOUNDS.maxY, Math.max(minY, v.y)) }
     setDestination(target.current)
     setWalking(true)
     cancelAnimationFrame(frame.current)
@@ -183,8 +183,16 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
   const scale = depthScale(pos.y)
 
   return (
-    <div className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5">
-      <div ref={boxRef} tabIndex={0} aria-label={lang === 'ko' ? p.ko : p.en} {...keys} className="relative isolate h-full w-full touch-none select-none" onPointerUp={onTap}>
+    <div className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5" style={{ containerType: 'size' }}>
+      {assets && <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="relative" style={{ width: `min(100cqw, calc(100cqh * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` }}>
+          {[-2, -1, 1, 2].map(k => <div key={k} className="absolute top-0 h-full w-full" style={{ left: `${k * 100}%`, transform: Math.abs(k) % 2 ? 'scaleX(-1)' : undefined }}>
+            <img src={assets.floor} alt="" draggable={false} className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${assets.floorH / ROOM_H * 100}%` }} />
+            <img src={assets.wall} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
+          </div>)}
+        </div>
+      </div>}
+      <div ref={boxRef} tabIndex={0} aria-label={lang === 'ko' ? p.ko : p.en} {...keys} className={`relative isolate touch-none select-none ${layout ? '' : 'h-full w-full'}`} style={layout ? { width: `min(100cqw, calc(100cqh * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` } : undefined} onPointerUp={onTap}>
         {assets ? <>
           <img src={assets.floor} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${assets.floorH / ROOM_H * 100}%` }} draggable={false} />
           <img src={assets.wall} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
@@ -246,7 +254,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
         {/* 류소: 발 위치(pos)에 서고, 아래쪽일수록 크게. 걸을 땐 통통 튀고 가는 방향을 바라본다 */}
         <div
           className="pointer-events-none absolute"
-          style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${(layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30) * scale}%`, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -100%)', zIndex: layerZ(pos.y) + (layout?.room.avatar.zb ?? 0) + 0.5 }}
+          style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * scale}%`, aspectRatio: '1024 / 1536', transform: `translate(-50%, -${layout ? AVATAR_FEET_RATIO * 100 : 100}%)`, zIndex: layerZ(pos.y) + (layout?.room.avatar.zb ?? 0) + 0.5 }}
         >
           <div className="avatar-ground-shadow" />
           <div className="relative h-full w-full" style={{ transform: `scaleX(${dir})` }}>
