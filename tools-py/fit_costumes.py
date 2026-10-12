@@ -31,6 +31,13 @@ MANUAL: dict[str, dict] = {
     'costume_floral_black': dict(scale=1.0, dx=1 * 8, dy=0, pivot=(512, 924)),  # 오른쪽 1칸
     'costume_forest_green': dict(scale=1 / 1.1, dy=-5 * 8, pivot=(512, 980)),  # -1, 위로 5칸
     'costume_petal_blue': dict(scale=1.1 ** 2, dy=5 * 8, pivot=(511, 1075)),  # +2, 아래로 5칸
+    'costume_sakura_blue': dict(scale=1.1, dy=6 * 8, pivot=(512, 1022)),  # +1, 아래로 6칸
+    'costume_tassel_pink': dict(scale=1 / 1.1, dy=0, pivot=(512, 998)),  # -1
+    'dress_card_red': dict(scale=1.0, dy=-1 * 8, pivot=(512, 1012)),  # 위로 1칸
+    'dress_lolita_black': dict(scale=1.1, dy=4 * 8, pivot=(512, 920)),  # +1, 아래로 4칸
+    'dress_lolita_purple': dict(scale=1.1, dy=4 * 8, pivot=(512, 944)),  # +1, 아래로 4칸
+    'dress_maid_blue': dict(scale=1.1 ** 2, dy=10 * 8, pivot=(512, 913)),  # +2, 아래로 10칸
+    'dress_starry_navy': dict(scale=1.1, dy=6 * 8, pivot=(512, 1070)),  # +1, 아래로 6칸 (아래 자락은 캔버스 밖으로 잘림)
 }
 OVERRIDES: dict[str, tuple[int, int]] = {
     'dress_card_red': (760, 165),  # 목 장식이 따로 떨어져 있어서 자동 감지가 안 됨 (소매 사이 몸통 폭)

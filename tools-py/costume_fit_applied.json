@@ -3,30 +3,6 @@
     "scale": 1.0,
     "waist": 176
   },
-  "costume_sakura_blue": {
-    "scale": 1.25,
-    "waist": 125
-  },
-  "costume_tassel_pink": {
-    "scale": 1.141,
-    "waist": 149
-  },
-  "dress_card_red": {
-    "scale": 1.03,
-    "waist": 165
-  },
-  "dress_lolita_black": {
-    "scale": 1.149,
-    "waist": 148
-  },
-  "dress_lolita_purple": {
-    "scale": 1.25,
-    "waist": 128
-  },
-  "dress_maid_blue": {
-    "scale": 1.083,
-    "waist": 157
-  },
   "dress_midnight_navy": {
     "scale": 1.012,
     "waist": 168
@@ -35,16 +11,19 @@
     "scale": 1.097,
     "waist": 155
   },
-  "dress_starry_navy": {
-    "scale": 1.145,
-    "waist": 126
-  },
   "manual": [
     "costume_checker_queen",
     "costume_floral_black",
     "costume_forest_green",
     "costume_hanbok_starry",
     "costume_petal_blue",
-    "dress_fairy_blue"
+    "costume_sakura_blue",
+    "costume_tassel_pink",
+    "dress_card_red",
+    "dress_fairy_blue",
+    "dress_lolita_black",
+    "dress_lolita_purple",
+    "dress_maid_blue",
+    "dress_starry_navy"
   ]
 }
