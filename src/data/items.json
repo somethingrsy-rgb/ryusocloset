@@ -829,10 +829,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 116,
-      "y": 604,
-      "w": 793,
-      "h": 770
+      "x": 32,
+      "y": 603,
+      "w": 960,
+      "h": 932
     },
     "image": "assets/clothes/costume/costume_hanbok_starry.webp",
     "thumb": "assets/thumbs/costume_hanbok_starry.webp",
