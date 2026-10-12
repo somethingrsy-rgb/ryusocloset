@@ -11,10 +11,6 @@
     "scale": 1.206,
     "waist": 141
   },
-  "costume_hanbok_starry": {
-    "scale": 1.133,
-    "waist": 150
-  },
   "costume_petal_blue": {
     "scale": 1.0,
     "waist": 175
@@ -62,5 +58,8 @@
   "dress_starry_navy": {
     "scale": 1.145,
     "waist": 126
-  }
+  },
+  "manual": [
+    "costume_hanbok_starry"
+  ]
 }
