@@ -2353,7 +2353,7 @@
   },
   {
     "id": "acc_wand_angel_wing",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "천사 날개 별 지팡이",
       "en": "Angel Wing Star Wand"
@@ -2366,18 +2366,18 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 785,
-      "y": 715,
+      "y": 675,
       "w": 239,
       "h": 449
     },
-    "image": "assets/clothes/accessory/acc_wand_angel_wing.webp",
+    "image": "assets/clothes/wand/acc_wand_angel_wing.webp",
     "thumb": "assets/thumbs/acc_wand_angel_wing.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_gold_flower",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "골드 꽃 지팡이",
       "en": "Gold Flower Wand"
@@ -2390,18 +2390,18 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 791,
-      "y": 715,
+      "y": 675,
       "w": 233,
       "h": 450
     },
-    "image": "assets/clothes/accessory/acc_wand_gold_flower.webp",
+    "image": "assets/clothes/wand/acc_wand_gold_flower.webp",
     "thumb": "assets/thumbs/acc_wand_gold_flower.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_gold_lotus",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "골드 연꽃 지팡이",
       "en": "Gold Lotus Wand"
@@ -2414,18 +2414,18 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 790,
-      "y": 716,
+      "y": 676,
       "w": 198,
       "h": 449
     },
-    "image": "assets/clothes/accessory/acc_wand_gold_lotus.webp",
+    "image": "assets/clothes/wand/acc_wand_gold_lotus.webp",
     "thumb": "assets/thumbs/acc_wand_gold_lotus.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_gold_swirl",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "골드 소용돌이 지팡이",
       "en": "Gold Swirl Wand"
@@ -2438,18 +2438,18 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 778,
-      "y": 694,
+      "y": 654,
       "w": 246,
       "h": 474
     },
-    "image": "assets/clothes/accessory/acc_wand_gold_swirl.webp",
+    "image": "assets/clothes/wand/acc_wand_gold_swirl.webp",
     "thumb": "assets/thumbs/acc_wand_gold_swirl.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_heart_blue",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "블루 하트 지팡이",
       "en": "Blue Heart Wand"
@@ -2462,18 +2462,18 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 774,
-      "y": 716,
+      "y": 676,
       "w": 226,
       "h": 451
     },
-    "image": "assets/clothes/accessory/acc_wand_heart_blue.webp",
+    "image": "assets/clothes/wand/acc_wand_heart_blue.webp",
     "thumb": "assets/thumbs/acc_wand_heart_blue.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_ice_snow",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "눈꽃 얼음 지팡이",
       "en": "Snow Ice Wand"
@@ -2486,18 +2486,18 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 793,
-      "y": 716,
+      "y": 676,
       "w": 220,
       "h": 449
     },
-    "image": "assets/clothes/accessory/acc_wand_ice_snow.webp",
+    "image": "assets/clothes/wand/acc_wand_ice_snow.webp",
     "thumb": "assets/thumbs/acc_wand_ice_snow.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_moon_crystal",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "달 크리스탈 지팡이",
       "en": "Moon Crystal Wand"
@@ -2510,18 +2510,18 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 787,
-      "y": 711,
+      "y": 671,
       "w": 231,
       "h": 454
     },
-    "image": "assets/clothes/accessory/acc_wand_moon_crystal.webp",
+    "image": "assets/clothes/wand/acc_wand_moon_crystal.webp",
     "thumb": "assets/thumbs/acc_wand_moon_crystal.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_pink_burst",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "핑크 별빛 지팡이",
       "en": "Pink Starburst Wand"
@@ -2534,18 +2534,18 @@
     "colorHex": "#f4a9bd",
     "box": {
       "x": 791,
-      "y": 715,
+      "y": 675,
       "w": 225,
       "h": 450
     },
-    "image": "assets/clothes/accessory/acc_wand_pink_burst.webp",
+    "image": "assets/clothes/wand/acc_wand_pink_burst.webp",
     "thumb": "assets/thumbs/acc_wand_pink_burst.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_pink_crystal",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "핑크 크리스탈 하트 지팡이",
       "en": "Pink Crystal Heart Wand"
@@ -2558,18 +2558,18 @@
     "colorHex": "#f4a9bd",
     "box": {
       "x": 773,
-      "y": 716,
+      "y": 676,
       "w": 219,
       "h": 449
     },
-    "image": "assets/clothes/accessory/acc_wand_pink_crystal.webp",
+    "image": "assets/clothes/wand/acc_wand_pink_crystal.webp",
     "thumb": "assets/thumbs/acc_wand_pink_crystal.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_pink_hexa",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "핑크 육각별 지팡이",
       "en": "Pink Hexastar Wand"
@@ -2582,18 +2582,18 @@
     "colorHex": "#f4a9bd",
     "box": {
       "x": 791,
-      "y": 714,
+      "y": 674,
       "w": 199,
       "h": 451
     },
-    "image": "assets/clothes/accessory/acc_wand_pink_hexa.webp",
+    "image": "assets/clothes/wand/acc_wand_pink_hexa.webp",
     "thumb": "assets/thumbs/acc_wand_pink_hexa.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_pink_star",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "핑크 별꽃 지팡이",
       "en": "Pink Starflower Wand"
@@ -2606,18 +2606,18 @@
     "colorHex": "#f4a9bd",
     "box": {
       "x": 784,
-      "y": 716,
+      "y": 676,
       "w": 240,
       "h": 449
     },
-    "image": "assets/clothes/accessory/acc_wand_pink_star.webp",
+    "image": "assets/clothes/wand/acc_wand_pink_star.webp",
     "thumb": "assets/thumbs/acc_wand_pink_star.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_silver_snow",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "실버 눈꽃 지팡이",
       "en": "Silver Snowflake Wand"
@@ -2630,18 +2630,18 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 789,
-      "y": 716,
+      "y": 676,
       "w": 228,
       "h": 448
     },
-    "image": "assets/clothes/accessory/acc_wand_silver_snow.webp",
+    "image": "assets/clothes/wand/acc_wand_silver_snow.webp",
     "thumb": "assets/thumbs/acc_wand_silver_snow.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_sky_gem",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "하늘 보석 지팡이",
       "en": "Sky Gem Wand"
@@ -2654,18 +2654,18 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 790,
-      "y": 716,
+      "y": 676,
       "w": 213,
       "h": 449
     },
-    "image": "assets/clothes/accessory/acc_wand_sky_gem.webp",
+    "image": "assets/clothes/wand/acc_wand_sky_gem.webp",
     "thumb": "assets/thumbs/acc_wand_sky_gem.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {
     "id": "acc_wand_white_clover",
-    "category": "accessory",
+    "category": "wand",
     "name": {
       "ko": "화이트 네잎 지팡이",
       "en": "White Clover Wand"
@@ -2678,13 +2678,13 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 790,
-      "y": 715,
+      "y": 675,
       "w": 230,
       "h": 452
     },
-    "image": "assets/clothes/accessory/acc_wand_white_clover.webp",
+    "image": "assets/clothes/wand/acc_wand_white_clover.webp",
     "thumb": "assets/thumbs/acc_wand_white_clover.webp",
-    "zIndex": 70,
+    "zIndex": 75,
     "native": true
   },
   {

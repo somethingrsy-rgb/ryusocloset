@@ -35,7 +35,8 @@ export function sanitizeOutfit(
     const id: string | undefined = typeof rawId === 'string' ? (aliases[rawId] ?? rawId) : undefined
     // 예전에 원피스 칸에 저장한 옷이 지금은 테마옷이면 테마옷 칸으로 옮긴다
     const cat = id ? byId[id]?.category : undefined
-    if (id && (cat === c || (c === 'dress' && cat === 'costume'))) out[cat as Category] = id
+    // 예전에 액세서리 칸에 저장한 마법봉은 마법봉 칸으로 옮긴다
+    if (id && (cat === c || (c === 'dress' && cat === 'costume') || (c === 'accessory' && cat === 'wand'))) out[cat as Category] = id
   }
   if (out.dress && out.costume) delete out.dress
   if (out.dress || out.costume) {

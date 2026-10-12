@@ -16,6 +16,7 @@ export const CATEGORY_ICON: Record<Category, string> = {
   outer: '🧥',
   shoes: '👟',
   accessory: '🎀',
+  wand: '🪄',
   bag: '👜',
 }
 
@@ -50,7 +51,7 @@ export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dro
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div role="tablist" aria-label="categories" className="scroll-thin flex shrink-0 gap-1 overflow-x-auto px-2 pt-2 pb-1">
-        {(['top', 'bottom', 'dress', 'outer', 'costume', 'shoes', 'accessory', 'bag'] as const).map((c) => {
+        {(['top', 'bottom', 'dress', 'outer', 'costume', 'shoes', 'accessory', 'wand', 'bag'] as const).map((c) => {
           const active = c === category
           return (
             <button
