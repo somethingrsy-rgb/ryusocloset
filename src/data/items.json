@@ -901,10 +901,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 75,
-      "y": 603,
-      "w": 875,
-      "h": 838
+      "x": 31,
+      "y": 610,
+      "w": 962,
+      "h": 922
     },
     "image": "assets/clothes/costume/costume_sakura_blue.webp",
     "thumb": "assets/thumbs/costume_sakura_blue.webp",
@@ -925,10 +925,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 113,
-      "y": 603,
-      "w": 799,
-      "h": 789
+      "x": 150,
+      "y": 639,
+      "w": 727,
+      "h": 717
     },
     "image": "assets/clothes/costume/costume_tassel_pink.webp",
     "thumb": "assets/thumbs/costume_tassel_pink.webp",
@@ -974,7 +974,7 @@
     "colorHex": "#c8283c",
     "box": {
       "x": 152,
-      "y": 604,
+      "y": 596,
       "w": 721,
       "h": 816
     },
@@ -1021,10 +1021,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 109,
+      "x": 69,
       "y": 604,
-      "w": 806,
-      "h": 632
+      "w": 886,
+      "h": 696
     },
     "image": "assets/clothes/costume/dress_lolita_black.webp",
     "thumb": "assets/thumbs/dress_lolita_black.webp",
@@ -1045,10 +1045,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 74,
-      "y": 605,
-      "w": 876,
-      "h": 678
+      "x": 31,
+      "y": 604,
+      "w": 963,
+      "h": 745
     },
     "image": "assets/clothes/costume/dress_lolita_purple.webp",
     "thumb": "assets/thumbs/dress_lolita_purple.webp",
@@ -1069,10 +1069,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 133,
-      "y": 605,
-      "w": 758,
-      "h": 616
+      "x": 53,
+      "y": 620,
+      "w": 918,
+      "h": 745
     },
     "image": "assets/clothes/costume/dress_maid_blue.webp",
     "thumb": "assets/thumbs/dress_maid_blue.webp",
@@ -1141,9 +1141,9 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 111,
-      "y": 604,
-      "w": 802,
+      "x": 71,
+      "y": 605,
+      "w": 882,
       "h": 931
     },
     "image": "assets/clothes/costume/dress_starry_navy.webp",
