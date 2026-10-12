@@ -38,6 +38,7 @@ MANUAL: dict[str, dict] = {
     'dress_lolita_purple': dict(scale=1.1, dy=4 * 8, pivot=(512, 944)),  # +1, 아래로 4칸
     'dress_maid_blue': dict(scale=1.1 ** 2, dy=10 * 8, pivot=(512, 913)),  # +2, 아래로 10칸
     'dress_midnight_navy': dict(scale=1.0, dy=-1 * 8, pivot=(512, 980)),  # 위로 1칸
+    'shoes_pink_maryjane_socks': dict(scale=1.1 ** 2, dy=0, pivot=(510, 1431)),  # 신발 +2 (옷 영역 중심 기준)
     'dress_starry_navy': dict(scale=1.1, dy=6 * 8, pivot=(512, 1070)),  # +1, 아래로 6칸 (아래 자락은 캔버스 밖으로 잘림)
 }
 OVERRIDES: dict[str, tuple[int, int]] = {
@@ -119,6 +120,7 @@ def manual_adjust(im: Image.Image, scale: float, dy: int, pivot: tuple[int, int]
 def main():
     items = json.loads((ROOT / 'src/data/items.json').read_text())
     ids = [i['id'] for i in items if i['category'] == 'costume']
+    ids += [k for k in MANUAL if k not in ids]  # 테마옷이 아니어도 손으로 맞춘 옷은 포함
     applied = json.loads(APPLIED.read_text()) if APPLIED.exists() else {}
     manual_done = set(applied.pop('manual', []))
     out = {}
