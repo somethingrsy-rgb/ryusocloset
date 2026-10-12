@@ -8,19 +8,18 @@ import { useItemsVersion } from '../lib/useItemsVersion'
 import type { RoomItemDef, RoomState, RoomTab } from '../lib/roomTypes'
 
 const TABS: { id: RoomTab; icon: string; ko: string; en: string }[] = [
-  { id: 'furniture', icon: '🛋️', ko: '가구', en: 'Furniture' },
-  { id: 'wall', icon: '🖼️', ko: '벽 장식', en: 'Wall' },
-  { id: 'light', icon: '✨', ko: '조명', en: 'Lights' },
-  { id: 'theme', icon: '🎀', ko: '테마 소품', en: 'Theme props' },
+  { id: 'theme', icon: '🎀', ko: '아이템', en: 'Items' },
   { id: 'background', icon: '🏠', ko: '벽·바닥', en: 'Wall & floor' },
 ]
 
-/** 테마 소품 탭: 위쪽 칩으로 고른 테마의 소품(안 골랐으면 전부). 다른 탭에는 테마 소품이 나오지 않는다 */
-const inTab = (d: RoomItemDef, tab: RoomTab, themeId?: string) => {
+/** 위쪽 칩의 '기본': 테마가 없는 가구·벽 장식·조명 */
+const BASE_CHIP = 'base'
+
+/** 아이템 탭: 위쪽 칩으로 거른다. 기본 = 가구·벽 장식·조명, 전체 = 모두, 그 밖에는 각 테마(캠핑 포함)의 소품 */
+const inTab = (d: RoomItemDef, tab: RoomTab, chip?: string) => {
   if (tab === 'background') return false
-  if (tab === 'theme') return !!d.theme && (!themeId || d.theme === themeId)
-  if (d.theme) return false
-  return tab === 'furniture' ? d.group === 'furniture' || d.group === 'rug' : d.group === tab
+  if (chip === BASE_CHIP) return !d.theme
+  return !chip || d.theme === chip
 }
 
 interface Props {
@@ -44,8 +43,8 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
   const { lang, t } = useI18n()
   const tabs = TABS
   const [tab, setTab] = useState<RoomTab>(tabs[0].id)
-  /** 테마 소품 탭에서 보는 테마 (벽·바닥과는 상관없이 소품 목록만 거른다) */
-  const [themeFilter, setThemeFilter] = useState<string | undefined>(undefined)
+  /** 아이템 탭에서 보는 묶음: 처음엔 기본(가구·벽 장식·조명) (벽·바닥과는 상관없이 목록만 거른다) */
+  const [themeFilter, setThemeFilter] = useState<string | undefined>(BASE_CHIP)
   const inThisTab = ROOM_ITEMS.filter((d) => inTab(d, tab, themeFilter))
   const items = visible(inThisTab)
   const nHidden = hiddenCount(inThisTab.map((d) => d.id))
@@ -73,7 +72,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
       </div>
       {tab === 'theme' && scene === 'room' && (
         <div className="scroll-thin flex shrink-0 gap-1.5 overflow-x-auto px-2 pb-1">
-          {[{ id: undefined as string | undefined, icon: '✨', ko: '전체', en: 'All' }, ...ROOM_THEMES].map((th) => {
+          {[{ id: BASE_CHIP as string | undefined, icon: '🛋️', ko: '기본', en: 'Basic' }, { id: undefined as string | undefined, icon: '✨', ko: '전체', en: 'All' }, ...ROOM_THEMES].map((th) => {
             const on = themeFilter === th.id
             return (
               <button
@@ -157,7 +156,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
                 <button
                   disabled={locked}
                   onClick={() => onAdd(d)}
-                  aria-label={locked ? (lang === 'ko' ? '여행에서 찾을 테마 소품' : 'Find this prop on your travels') : d.name[lang]}
+                  aria-label={locked ? (lang === 'ko' ? '여행에서 찾을 아이템' : 'Find this item on your travels') : d.name[lang]}
                   title={d.name[lang]}
                   className="relative flex aspect-square w-full items-center justify-center rounded-2xl bg-white p-1 ring-2 ring-petal transition hover:ring-blush/50 active:scale-95"
                 >

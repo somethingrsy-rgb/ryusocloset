@@ -375,7 +375,7 @@ export default function App() {
                 tweaks={tweaks}
                 onWear={(id) => {
                   const prop = ROOM_ITEM_BY_ID[id]
-                  if (prop) { setMode('room'); setSelection(null); showToast(lang === 'ko' ? '테마 소품 탭에서 찾은 소품을 사용할 수 있어요.' : 'Your found prop is available in Theme props.'); return }
+                  if (prop) { setMode('room'); setSelection(null); showToast(lang === 'ko' ? '아이템 탭에서 찾은 소품을 사용할 수 있어요.' : 'Your found item is available in Items.'); return }
                   const it = ITEM_BY_ID[id]
                   if (!it) return
                   setCategory(it.category)
