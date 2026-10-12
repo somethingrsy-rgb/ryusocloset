@@ -34,10 +34,10 @@ export function skipToNext(ms: number): void {
   const order: Phase[] = ['day', 'dusk', 'night', 'dawn']
   const cur = clockAt(ms).phase
   const want = order[(order.indexOf(cur) + 1) % order.length]
-  // 목표 시간대가 나올 때까지 1분씩 앞으로 (최대 한 바퀴)
-  for (let k = 1; k <= CYCLE_MS / 60000 + 1; k++) {
-    if (clockAt(ms + k * 60000).phase === want) {
-      offset += k * 60000
+  // 목표 시간대가 나올 때까지 1초씩 앞으로 (최대 한 바퀴)
+  for (let k = 1; k <= CYCLE_MS / 1000 + 1; k++) {
+    if (clockAt(ms + k * 1000).phase === want) {
+      offset += k * 1000
       return
     }
   }
@@ -57,4 +57,10 @@ export const PHASE_LABEL: Record<Phase, { ko: string; en: string }> = {
   dusk: { ko: '저녁', en: 'Dusk' },
   night: { ko: '밤', en: 'Night' },
   dawn: { ko: '새벽', en: 'Dawn' },
+}
+
+/** A tap directly switches between daylight and night. */
+export function toggleDayNight(ms: number): void {
+  const target = clockAt(ms).dark > 0 ? .25 : .75
+  offset = target * CYCLE_MS - ms
 }

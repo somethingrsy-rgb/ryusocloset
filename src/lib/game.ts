@@ -1,3 +1,5 @@
+import { ROOM_ITEMS, isCustomRoomItem } from './room'
+import type { RoomItemDef } from './roomTypes'
 import { ITEMS } from './items'
 import { isRestoring } from './restoreGuard'
 import type { Category } from './layers'
@@ -63,6 +65,14 @@ const hash = (s: string) => {
 
 export const inPool = (i: Pick<Item, 'id' | 'category' | 'native'>) =>
   !!i.native && !i.id.startsWith('custom_') && POOL_CATEGORIES.includes(i.category)
+
+export const inRoomPool = (item: Pick<RoomItemDef, 'id' | 'theme'>) => !!item.theme && !isCustomRoomItem(item)
+export const isRoomLocked = (item: Pick<RoomItemDef, 'id' | 'theme'>) => state.lock && inRoomPool(item) && !state.found.includes(item.id)
+export const travelPool = () => [
+  ...ITEMS.filter(inPool).map(item => ({ id: item.id, name: item.name, thumb: item.thumb, category: item.category, kind: 'clothing' as const })),
+  ...ROOM_ITEMS.filter(inRoomPool).map(item => ({ id: item.id, name: item.name, thumb: item.thumb, category: 'room' as const, kind: 'room' as const })),
+]
+export const travelItem = (id: string) => travelPool().find(item => item.id === id)
 
 /** 아이템 목록을 장소에 고르게 나눈다. 같은 목록이면 늘 같은 결과(저장한 진행이 어긋나지 않게). */
 export function assignPlaces(ids: string[], places: readonly Place[] = PLACES): Record<string, string[]> {
@@ -206,8 +216,13 @@ export const resetGame = () => set({ ...DEFAULT })
 /** 현재 아이템 목록 기준 장소별 숨은 아이템 */
 export const currentAssignment = () => {
   // Keep the old distribution so freeing dresses does not relocate other collectibles.
-  const legacyPool = ITEMS.filter((i) => inPool(i) || (i.category === 'dress' && !!i.native && !i.id.startsWith('custom_')))
+  const legacyPool = ITEMS.filter((i) => !!i.native && !i.id.startsWith('custom_') && ['costume', 'accessory', 'shoes', 'bag', 'outer', 'dress'].includes(i.category))
   const eligible = new Set(ITEMS.filter(inPool).map((i) => i.id))
-  return Object.fromEntries(Object.entries(assignPlaces(legacyPool.map((i) => i.id))).map(([place, ids]) => [place, ids.filter((id) => eligible.has(id))]))
+  const out = Object.fromEntries(Object.entries(assignPlaces(legacyPool.map((i) => i.id))).map(([place, ids]) => [place, ids.filter((id) => eligible.has(id))]))
+  for (const item of ROOM_ITEMS.filter(inRoomPool)) {
+    const place = item.theme && Object.hasOwn(PLACE_BY_ID, item.theme) ? item.theme : PLACES[0].id
+    out[place].push(item.id)
+  }
+  return out
 }
 
