@@ -2,6 +2,7 @@
   {
     "id": "camp_tent",
     "group": "camp",
+    "theme": "camp",
     "name": {
       "ko": "텐트",
       "en": "Tent"
@@ -17,6 +18,7 @@
   {
     "id": "camp_campfire",
     "group": "camp",
+    "theme": "camp",
     "name": {
       "ko": "모닥불",
       "en": "Campfire"
@@ -32,6 +34,7 @@
   {
     "id": "camp_chair",
     "group": "camp",
+    "theme": "camp",
     "name": {
       "ko": "캠핑 의자",
       "en": "Camp Chair"
@@ -47,6 +50,7 @@
   {
     "id": "camp_table",
     "group": "camp",
+    "theme": "camp",
     "name": {
       "ko": "캠핑 테이블",
       "en": "Camp Table"
@@ -62,6 +66,7 @@
   {
     "id": "camp_lantern",
     "group": "camp",
+    "theme": "camp",
     "name": {
       "ko": "랜턴",
       "en": "Lantern"
@@ -77,6 +82,7 @@
   {
     "id": "camp_icebox",
     "group": "camp",
+    "theme": "camp",
     "name": {
       "ko": "아이스박스",
       "en": "Cooler"
@@ -92,6 +98,7 @@
   {
     "id": "camp_grill",
     "group": "camp",
+    "theme": "camp",
     "name": {
       "ko": "고기 그릴",
       "en": "BBQ Grill"

@@ -66,7 +66,8 @@ const hash = (s: string) => {
 export const inPool = (i: Pick<Item, 'id' | 'category' | 'native'>) =>
   !!i.native && !i.id.startsWith('custom_') && POOL_CATEGORIES.includes(i.category)
 
-export const inRoomPool = (item: Pick<RoomItemDef, 'id' | 'theme'>) => !!item.theme && !isCustomRoomItem(item)
+/** 캠핑 용품은 테마 소품 탭에 있지만 처음부터 쓸 수 있다 (여행에서 찾는 대상이 아님) */
+export const inRoomPool = (item: Pick<RoomItemDef, 'id' | 'theme'>) => !!item.theme && item.theme !== 'camp' && !isCustomRoomItem(item)
 export const isRoomLocked = (item: Pick<RoomItemDef, 'id' | 'theme'>) => state.lock && inRoomPool(item) && !state.found.includes(item.id)
 export const travelPool = () => [
   ...ITEMS.filter(inPool).map(item => ({ id: item.id, name: item.name, thumb: item.thumb, category: item.category, kind: 'clothing' as const })),
