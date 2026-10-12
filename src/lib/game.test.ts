@@ -42,6 +42,16 @@ describe('여행 게임', () => {
     for (const place of PLACES) expect(current[place.id].filter(id => eligible.has(id))).toEqual(oldAssignment[place.id].filter(id => eligible.has(id)))
     expect(Object.values(current).flat().some(id => dresses.some(d => d.id === id))).toBe(false)
   })
+  it('아우터와 가방은 기본 제공하고 여행 배정에서 제외한다', () => {
+    const basic = ITEMS.filter(item => item.category === 'outer' || item.category === 'bag')
+    expect(basic.length).toBeGreaterThan(0)
+    const assigned = new Set(Object.values(currentAssignment()).flat())
+    for (const item of basic) {
+      expect(inPool(item)).toBe(false)
+      expect(isLocked(item)).toBe(false)
+      expect(assigned.has(item.id)).toBe(false)
+    }
+  })
   it('기본 상의·하의, 내가 추가한 옷은 게임 대상이 아니다', () => {
     expect(inPool({ id: 'top_a', category: 'top', native: true })).toBe(false)
     expect(inPool({ id: 'custom_1', category: 'costume', native: true })).toBe(false)
@@ -170,7 +180,7 @@ describe('테마 소품 수집과 낮밤 전환', () => {
     const pool = travelPool()
     expect(pool.length).toBeGreaterThan(0)
     expect(new Set(pool.map(i => i.id)).size).toBe(pool.length)
-    expect(pool.every(i => ['costume', 'accessory', 'bag', 'shoes', 'outer', 'room'].includes(i.category))).toBe(true)
+    expect(pool.every(i => ['costume', 'accessory', 'shoes', 'room'].includes(i.category))).toBe(true)
     const props = ROOM_ITEMS.filter(inRoomPool)
     expect(props.length).toBeGreaterThan(0)
     const assign = currentAssignment()
