@@ -36,7 +36,7 @@ export interface RoomTheme {
   icon: string
   floorH: number
 }
-export const ROOM_THEMES = themeData as RoomTheme[]
+export const ROOM_THEMES: RoomTheme[] = [...themeData as RoomTheme[], { id: 'camp', ko: '캠핑', en: 'Camping', icon: '⛺', floorH: 500 }]
 export const ROOM_THEME_BY_ID: Record<string, RoomTheme> = Object.fromEntries(ROOM_THEMES.map((t) => [t.id, t]))
 export const ROOM_ITEM_BY_ID: Record<string, RoomItemDef> = Object.fromEntries(ROOM_ITEMS.map((d) => [d.id, d]))
 

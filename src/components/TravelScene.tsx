@@ -53,7 +53,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
   const roomVersion = useSyncExternalStore(subscribeTravelRooms, travelRoomsVersion)
   const itemVersion = useItemsVersion()
   const layout = useMemo(() => getTravelRoom(placeId), [placeId, roomVersion, itemVersion])
-  const assets = layout ? sceneAssets(layout.scene, layout.scene === 'camp' ? night : layout.room.night, layout.room.wallId, layout.room.floorId) : null
+  const assets = layout ? sceneAssets(layout.scene, (layout.scene === 'camp' || layout.room.wallId === 'camp') ? night : layout.room.night, layout.room.wallId, layout.room.floorId) : null
   const minY = assets ? Math.min(88, 100 - assets.floorH / ROOM_H * 100 + 2) : WALK_BOUNDS.minY
   const layerZ = (y: number) => layout ? 2000 + y / 100 * ROOM_H : Math.round(y)
   const p = PLACE_BY_ID[placeId]
@@ -266,7 +266,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
         </div>
       </div>
 
-      {tint && !(night && (layout ? layout.scene === 'camp' : !!p.wallNight)) && <div aria-hidden className="pointer-events-none absolute inset-0 z-10" style={{ background: tint }} />}
+      {tint && !(night && (layout ? (layout.scene === 'camp' || layout.room.wallId === 'camp') : !!p.wallNight)) && <div aria-hidden className="pointer-events-none absolute inset-0 z-10" style={{ background: tint }} />}
       <button
         onClick={skip}
         aria-label={PHASE_LABEL[clock.phase][lang]}
