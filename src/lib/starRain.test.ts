@@ -6,6 +6,10 @@ describe('star rain walk',()=>{
     const state={...newRain(),nextSpawn:99,drops:[{id:1,kind:'star' as const,x:50,y:CATCH_Y-1,speed:30},{id:2,kind:'gold' as const,x:50,y:CATCH_Y-1,speed:30}]}
     const caught=stepRain(state,.1)
     expect(caught.score).toBe(6);expect(caught.caught).toBe(2);expect(caught.drops).toHaveLength(0)
+    expect(caught.bursts.map(b => b.points)).toEqual([1,5])
+    let faded=caught
+    for(let i=0;i<8;i++)faded=stepRain(faded,.1)
+    expect(faded.bursts).toHaveLength(0)
     expect(stepRain(caught,.1).score).toBe(6)
     expect(state.score).toBe(0)
   })

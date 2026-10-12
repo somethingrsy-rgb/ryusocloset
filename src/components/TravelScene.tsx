@@ -257,7 +257,6 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
           className="pointer-events-none absolute"
           style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * scale}%`, aspectRatio: '1024 / 1536', transform: `translate(-50%, -${layout ? AVATAR_FEET_RATIO * 100 : 100}%)`, zIndex: avatarLayer }}
         >
-          <div className="avatar-ground-shadow" />
           <div className="relative h-full w-full" style={{ transform: `scaleX(${dir})` }}>
             <div className={`h-full w-full ${walking ? 'walk-bob' : ''}`}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />

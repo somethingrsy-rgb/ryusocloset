@@ -25,6 +25,7 @@ import { CANVAS_H, CANVAS_W } from '../lib/layers'
 import { ROOM_H, ROOM_W, type RoomState, type Selection } from '../lib/roomTypes'
 import type { Outfit, Tweaks } from '../lib/types'
 import { AdjustmentPanel } from './AdjustmentPanel'
+import type { RoomExportViewport } from '../lib/roomExportBounds'
 import { FigureLayers } from './FigureLayers'
 
 interface Props {
@@ -37,6 +38,7 @@ interface Props {
   /** 벽(배경)·바닥 이미지 (없으면 내 방) */
   assets?: SceneAssets
   /** 방 되돌리기 */
+  onViewportChange?: (viewport: RoomExportViewport) => void
   canUndo?: boolean
   onUndo?: () => void
   children?: ReactNode
@@ -48,10 +50,25 @@ const cq = (v: number) => `${(v / ROOM_W) * 100}cqw`
 /** ▲▼ 버튼을 한 번 누를 때 움직이는 거리 (방 논리 px, 폭 1086 기준) */
 const NUDGE = 6
 
-export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, canUndo, onUndo, assets = ROOM_ASSETS, children }: Props) {
+export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, canUndo, onUndo, onViewportChange, assets = ROOM_ASSETS, children }: Props) {
   const { lang, t } = useI18n()
   const roomRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
+  const viewportCallback = useRef(onViewportChange)
+  viewportCallback.current = onViewportChange
+  useEffect(() => {
+    const stage = stageRef.current, roomBox = roomRef.current
+    if (!stage || !roomBox) return
+    const measure = () => {
+      const outer = stage.getBoundingClientRect(), inner = roomBox.getBoundingClientRect()
+      if (!inner.width) return
+      const unit = ROOM_W / inner.width
+      viewportCallback.current?.({ left: (outer.left - inner.left) * unit, top: (outer.top - inner.top) * unit, width: outer.width * unit, height: outer.height * unit })
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(stage); observer.observe(roomBox); measure()
+    return () => observer.disconnect()
+  }, [])
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const drag = useRef<{ sel: NonNullable<Selection>; px: number; py: number; ox: number; oy: number } | null>(null)
   const pinch = useRef<{ dist: number; scale: number } | null>(null)
