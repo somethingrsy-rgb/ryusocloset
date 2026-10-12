@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from '../lib/items'
 import { HAIR_FRONT_Z } from '../lib/layers'
 import { wornItems } from '../lib/outfit'
@@ -10,7 +11,7 @@ import type { Outfit, Tweaks } from '../lib/types'
  * 모든 PNG 는 같은 1024x1536 캔버스라서 inset-0 으로 그대로 겹치면 정렬된다.
  * 옷마다 tweaks 로 위치·크기를 조절할 수 있다 (변환은 입장 애니메이션과 겹치지 않게 바깥 래퍼에 건다).
  */
-export function FigureLayers({
+export const FigureLayers = memo(function FigureLayers({
   outfit,
   tweaks = {},
   animate = true,
@@ -40,4 +41,4 @@ export function FigureLayers({
       <img src={BASE_LAYERS.hairFront} alt="" className="layer" style={{ zIndex: HAIR_FRONT_Z }} draggable={false} />
     </>
   )
-}
+})

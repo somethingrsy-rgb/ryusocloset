@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { memo, useId } from 'react'
 
 const ROOFS = ['#cf8590', '#70aab2', '#729c7b', '#c58fa5', '#a487b1', '#9c9ac7', '#ca879e', '#beaa70', '#799e95', '#91a8bf']
 
@@ -37,7 +37,7 @@ function Flowers({ x, y, color }: { x: number; y: number; color: string }) {
   </g>
 }
 
-export function VillageScenery({ zone }: { zone: number }) {
+export const VillageScenery = memo(function VillageScenery({ zone }: { zone: number }) {
   const id = useId()
   const winter = zone === 9
   const previousWinter = ((zone + 9) % 10) === 9
@@ -58,12 +58,6 @@ export function VillageScenery({ zone }: { zone: number }) {
         <linearGradient id={`${id}-earth`} x2="0" y2="1">
           <stop stopColor="#e3cd9d" /><stop offset=".5" stopColor="#e9d8b0" /><stop offset="1" stopColor="#cbae80" />
         </linearGradient>
-        <filter id={`${id}-paper`} x="0" y="0" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency=".48" numOctaves="3" seed="7" />
-          <feColorMatrix type="saturate" values="0" />
-          <feComponentTransfer><feFuncA type="linear" slope=".055" /></feComponentTransfer>
-          <feBlend in="SourceGraphic" mode="multiply" />
-        </filter>
       </defs>
       <path d="M0 0H1500V800H0Z" fill={`url(#${id}-sky)`} />
       <path d="M0 0H1500V800H0Z" fill={`url(#${id}-haze)`} />
@@ -134,12 +128,11 @@ export function VillageScenery({ zone }: { zone: number }) {
         <path d="M-44 8V34M44 8V34" stroke="#7c8171" strokeWidth="6" />
         <path d="M-53-19H53M-53-6H53M-57 9H57" stroke="#b89069" strokeWidth="10" strokeLinecap="round" />
       </g>
-      <rect width="1500" height="800" fill="transparent" filter={`url(#${id}-paper)`} />
     </svg>
   )
-}
+})
 
-export function VillageHouse({ zone, icon }: { zone: number; icon: string }) {
+export const VillageHouse = memo(function VillageHouse({ zone, icon }: { zone: number; icon: string }) {
   const roof = ROOFS[zone % ROOFS.length]
   return <svg aria-hidden viewBox="0 0 280 280" className="h-[280px] w-[280px]">
     <ellipse cx="140" cy="259" rx="119" ry="15" fill="#557e5630" />
@@ -159,4 +152,4 @@ export function VillageHouse({ zone, icon }: { zone: number; icon: string }) {
     <g fill="#92b77a"><ellipse cx="61" cy="242" rx="27" ry="16" /><ellipse cx="218" cy="242" rx="24" ry="16" /></g>
     <g fill="#eab5b0"><circle cx="54" cy="236" r="5" /><circle cx="69" cy="241" r="5" /><circle cx="216" cy="234" r="5" /></g>
   </svg>
-}
+})

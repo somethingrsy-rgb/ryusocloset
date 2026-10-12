@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { isRestoring } from '../lib/restoreGuard'
 import { newRain, readRainRecord, RAIN_DURATION, stepRain } from '../lib/starRain'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -68,6 +68,13 @@ export function StarRainWalk({ outfit, tweaks, onExit }: { outfit: Outfit; tweak
   const camera = 450 + rain.elapsed * 120
   const first = Math.floor(camera / 1500)
   const count = Math.ceil(size.w / Math.max(.1, scale) / 1500) + 2
+  // 배경(수천 개의 SVG 조각)은 구간이 바뀔 때만 다시 만든다. 매 프레임 바뀌는 건 움직이는 바깥 상자의 위치뿐.
+  const strip = useMemo(() => Array.from({ length: count }, (_, i) => {
+    const chunk = first + i
+    return <div key={chunk} className="absolute top-0 h-full" style={{ left: chunk * 1500, width: 1502 }}>
+      <VillageScenery zone={chunk % 10} /><div className="absolute" style={{ left: 560, top: 340 }}><VillageHouse zone={chunk % 10} icon="🌟" /></div>
+    </div>
+  }), [first, count])
   const slow = phase === 'playing' && rain.elapsed < rain.slowUntil
   const btn = 'min-h-11 rounded-full bg-white/95 px-3 text-sm font-bold shadow-sm'
   return <section ref={host} tabIndex={0} aria-label="별비 산책" className="relative h-full touch-none select-none overflow-hidden rounded-3xl bg-[#d9eddf] outline-none ring-1 ring-black/5"
@@ -75,8 +82,8 @@ export function StarRainWalk({ outfit, tweaks, onExit }: { outfit: Outfit; tweak
     onPointerMove={e => { if (e.currentTarget.hasPointerCapture(e.pointerId)) point(e) }}
     onKeyDown={e => { if ((e.target as HTMLElement).closest('button')) return; const key = e.key.length===1?e.key.toLowerCase():e.key; if (['ArrowLeft','ArrowRight','a','d'].includes(key)) { e.preventDefault(); keys.current.add(key) } }}
     onKeyUp={e => { keys.current.delete(e.key.length===1?e.key.toLowerCase():e.key) }} onBlur={() => keys.current.clear()}>
-    <div aria-hidden className="pointer-events-none absolute top-0 left-0 origin-top-left" style={{width:(first+count)*1500,height:800,transform:`scale(${scale}) translateX(${-camera}px)`}}>
-      {Array.from({length:count},(_,i)=>{const chunk=first+i;return <div key={chunk} className="absolute top-0 h-full" style={{left:chunk*1500,width:1502}}><VillageScenery zone={chunk%10}/><div className="absolute" style={{left:560,top:340}}><VillageHouse zone={chunk%10} icon="🌟"/></div></div>})}
+    <div aria-hidden className="pointer-events-none absolute top-0 left-0 origin-top-left" style={{width:(first+count)*1500,height:800,transform:`scale(${scale}) translateX(${-camera}px)`,willChange:'transform'}}>
+      {strip}
     </div>
     <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#7770aa]/20 via-transparent to-transparent"/>
     {rain.drops.map(drop=><span key={drop.id} aria-hidden className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 drop-shadow-md" style={{left:`${drop.x}%`,top:`${drop.y}%`,fontSize:drop.kind==='gold'?44:drop.kind==='cloud'?38:30}}>{drop.kind==='cloud'?'🌧️':drop.kind==='gold'?'🌟':'⭐'}</span>)}

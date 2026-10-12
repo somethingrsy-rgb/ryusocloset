@@ -63,6 +63,8 @@ export async function buildCamp() {
     defs.push({
       id,
       group: 'camp',
+      // '테마 소품' 탭의 캠핑 칸에 모은다 (group 은 그대로 camp 라서 바닥 그림자 같은 규칙은 같다)
+      theme: 'camp',
       name: { ko: m.ko ?? words, en: m.en ?? words },
       image: `assets/camp/${id}.webp`,
       thumb: `assets/camp/thumbs/${id}.webp`,

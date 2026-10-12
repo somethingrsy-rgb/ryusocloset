@@ -12,11 +12,8 @@ const TABS: { id: RoomTab; icon: string; ko: string; en: string }[] = [
   { id: 'wall', icon: '🖼️', ko: '벽 장식', en: 'Wall' },
   { id: 'light', icon: '✨', ko: '조명', en: 'Lights' },
   { id: 'theme', icon: '🎀', ko: '테마 소품', en: 'Theme props' },
-  { id: 'camp', icon: '⛺', ko: '캠핑 용품', en: 'Camp gear' },
   { id: 'background', icon: '🏠', ko: '벽·바닥', en: 'Wall & floor' },
 ]
-
-const CAMP_TABS: typeof TABS = [{ id: 'camp', icon: '⛺', ko: '캠핑 용품', en: 'Camp gear' }]
 
 /** 테마 소품 탭: 위쪽 칩으로 고른 테마의 소품(안 골랐으면 전부). 다른 탭에는 테마 소품이 나오지 않는다 */
 const inTab = (d: RoomItemDef, tab: RoomTab, themeId?: string) => {
@@ -45,7 +42,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
   useItemsVersion()
   useSyncExternalStore(subscribeGame, gameVersion)
   const { lang, t } = useI18n()
-  const tabs = scene === 'camp' ? CAMP_TABS : TABS
+  const tabs = TABS
   const [tab, setTab] = useState<RoomTab>(tabs[0].id)
   /** 테마 소품 탭에서 보는 테마 (벽·바닥과는 상관없이 소품 목록만 거른다) */
   const [themeFilter, setThemeFilter] = useState<string | undefined>(undefined)
@@ -139,7 +136,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
         </div>
       ) : (
       <div role="tabpanel" className="scroll-thin min-h-0 flex-1 overflow-y-auto p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        {tab === 'camp' && onLoadCamp && <button className="mb-2 min-h-11 w-full rounded-full bg-petal px-3 text-xs font-bold" onClick={onLoadCamp}>{lang === 'ko' ? '이전에 꾸민 캠핑 불러오기' : 'Load your previous campsite'}</button>}
+        {tab === 'theme' && themeFilter === 'camp' && onLoadCamp && <button className="mb-2 min-h-11 w-full rounded-full bg-petal px-3 text-xs font-bold" onClick={onLoadCamp}>{lang === 'ko' ? '이전에 꾸민 캠핑 불러오기' : 'Load your previous campsite'}</button>}
         <ul className="grid grid-cols-4 gap-2">
           <li>
             <button
