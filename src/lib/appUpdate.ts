@@ -51,11 +51,11 @@ async function isBehind(): Promise<boolean> {
 }
 /**
  * 서비스 워커가 새 버전을 못 받아 와서 새로고침해도 옛 화면이 다시 뜰 때의 마지막 수단:
- * 서비스 워커와 앱 코드 캐시(Cache Storage)를 지우고 다시 연다. 코디·방·농장·게임 기록(localStorage, IndexedDB)은 건드리지 않는다.
+ * 서비스 워커와 앱 코드 캐시(precache)를 지우고 다시 연다. 저장해 둔 그림 캐시(ryuso-images)는 남긴다. 코디·방·농장·게임 기록(localStorage, IndexedDB)은 건드리지 않는다.
  */
 async function hardRefresh(): Promise<void> {
   try { for (const registration of await navigator.serviceWorker.getRegistrations()) await registration.unregister() } catch { /* 이어서 진행 */ }
-  try { if (typeof caches !== 'undefined') for (const name of await caches.keys()) await caches.delete(name) } catch { /* 이어서 진행 */ }
+  try { if (typeof caches !== 'undefined') for (const name of await caches.keys()) if (/precache/i.test(name)) await caches.delete(name) } catch { /* 이어서 진행 */ }
   window.location.reload()
 }
 

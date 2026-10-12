@@ -1573,10 +1573,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 413,
-      "y": 1370,
-      "w": 210,
-      "h": 133
+      "x": 378,
+      "y": 1348,
+      "w": 281,
+      "h": 178
     },
     "image": "assets/clothes/shoes/shoes_platform_cream_heart.webp",
     "thumb": "assets/thumbs/shoes_platform_cream_heart.webp",
