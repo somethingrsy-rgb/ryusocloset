@@ -1,12 +1,14 @@
 """테마옷(costume 카테고리) 크기를 허리(가슴 아래 몸통) 폭 기준으로 맞춘다.
 
   python3 -I tools-py/fit_costumes.py          미리보기 (표만 출력)
-  python3 -I tools-py/fit_costumes.py --apply  assets-src/clothes/<id>.png 를 다시 저장 (한 번만; 적용한 옷은 costume_fit_applied.json 에 기록해 다시 건드리지 않는다)
+  python3 -I tools-py/fit_costumes.py --apply  assets-src/clothes/<id>.png 를 다시 저장
 
 1) 옷 위쪽 8~40% 구간에서, 가운데(x=512)에 이어진 불투명 덩어리의 폭이 가장 좁은 줄을 '허리'로 본다.
-2) 허리 폭이 TARGET_WAIST 가 되도록 옷깃(맨 위 가운데)을 고정점으로 키우거나 줄인다 (작은 옷만 키움, 줄이지 않음).
+2) 허리 폭이 TARGET_WAIST 가 되도록 옷깃(맨 위 가운데)을 고정점으로 키운다 (줄이지는 않고, MAX_SCALE 까지만).
 3) 커지는 양은 캔버스(1024x1536) 밖으로 잘리지 않게 제한한다.
-OVERRIDES 에 id: (허리 y, 허리 폭) 을 적으면 자동 감지 대신 그 값을 쓴다.
+OVERRIDES 에 id: (허리 y, 허리 폭) 을 적으면 자동 감지 대신 그 값을 쓴다 (원본 크기 기준).
+적용한 옷은 costume_fit_applied.json 에 {배율, 허리 폭} 으로 기록한다. 목표 값을 바꿔서 다시 돌리면
+기록된 배율에서 새 배율로 한 번에 맞춘다(같은 옷을 두 번 키우지 않는다).
 """
 import json
 import sys
@@ -18,8 +20,8 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 CLOTHES = ROOT / 'assets-src/clothes'
 APPLIED = Path(__file__).with_name('costume_fit_applied.json')
-TARGET_WAIST = 200  # 아바타 허리(약 175) + 옷 두께
-MIN_SCALE, MAX_SCALE = 1.0, 1.7  # 줄이지는 않는다 (작은 옷만 키움)
+TARGET_WAIST = 170  # 아바타 허리(약 175) 정도
+MIN_SCALE, MAX_SCALE = 1.0, 1.25  # 작은 옷만 키우되 치마·리본이 화면을 덮을 만큼 커지지는 않게
 OVERRIDES: dict[str, tuple[int, int]] = {
     'dress_card_red': (760, 165),  # 목 장식이 따로 떨어져 있어서 자동 감지가 안 됨 (소매 사이 몸통 폭)
     # 몸통이 거의 안 보이는 옷은 눈으로 보고 정한 값 (허리 y, 몸통 폭)
@@ -89,17 +91,38 @@ def main():
     items = json.loads((ROOT / 'src/data/items.json').read_text())
     ids = [i['id'] for i in items if i['category'] == 'costume']
     applied = json.loads(APPLIED.read_text()) if APPLIED.exists() else {}
+    out = {}
     for oid in ids:
         path = CLOTHES / f'{oid}.png'
         im = Image.open(path).convert('RGBA')
+        prev = applied.get(oid, {'scale': 1.0})
+        prev_s = prev['scale']
         r = analyse(im, oid)
-        done = oid in applied
-        print(f"{oid:26} waist y={r['wy']:4} w={r['ww']:4} → scale {r['scale']:.3f} {'(이미 적용)' if done else ''}")
-        if '--apply' in sys.argv and not done and abs(r['scale'] - 1) > 0.01:
-            refit(im, r['top'], r['scale']).save(path)
-            applied[oid] = r['scale']
+        # 지금 이미지는 원본의 prev_s 배: 허리 폭은 기록값(없으면 지금 이미지에서 잰 값 / prev_s)
+        base_w = prev.get('waist') or (OVERRIDES[oid][1] if oid in OVERRIDES else round(r['ww'] / prev_s))
+        want = min(MAX_SCALE, max(MIN_SCALE, TARGET_WAIST / max(1, base_w)))
+        # 지금 이미지 기준으로 더 키울 수 있는 한계(캔버스) → 원본 기준 총 배율 한계
+        l, t, rt, b = r['box']
+        caps = [MAX_SCALE]
+        if b > t:
+            caps.append(prev_s * (1534 - t) / (b - t))
+        if l < 512:
+            caps.append(prev_s * 508 / (512 - l))
+        if rt > 512:
+            caps.append(prev_s * 508 / (rt - 512))
+        total = round(max(1.0, min(want, *caps)), 3)
+        delta = total / prev_s
+        mark = '' if abs(delta - 1) < 0.01 else f'  ← 이미지에 x{delta:.3f}'
+        print(f"{oid:26} 허리 폭 {base_w:4} → 총 배율 {total:.3f} (지금 {prev_s:.3f}){mark}")
+        if '--apply' in sys.argv:
+            if abs(delta - 1) >= 0.01:
+                refit(im, t, delta).save(path)
+            else:
+                total = prev_s
+            if total > 1.0 or oid in applied:
+                out[oid] = {'scale': total, 'waist': base_w}
     if '--apply' in sys.argv:
-        APPLIED.write_text(json.dumps(applied, indent=2, ensure_ascii=False) + '\n')
+        APPLIED.write_text(json.dumps(out, indent=2, ensure_ascii=False) + '\n')
 
 
 main()
