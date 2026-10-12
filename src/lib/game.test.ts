@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { ITEMS } from './items'
 import { NPCS, rpsResult } from './npcs'
 import { WALK_BOUNDS, clampToBounds, depthScale, stepToward } from './walk'
 import { DOOR_Y, GROUND, cameraX, chunksNeeded, clampWalk, decorFor, gateAt, gateX, metersOf, placeOfChunk, startPos, stepWorld, worldWidth } from './world'
 import { CYCLE_MS, clockAt, skipOffset, skipToNext, tintOf } from './daynight'
-import { PLACES, assignPlaces, inPool, pickReward, spotFor } from './game'
+import { PLACES, assignPlaces, currentAssignment, inPool, isLocked, pickReward, spotFor } from './game'
 
 describe('여행 게임', () => {
   const ids = Array.from({ length: 53 }, (_, i) => `item_${i}`)
@@ -28,6 +29,17 @@ describe('여행 게임', () => {
       expect(s.y).toBeGreaterThan(0); expect(s.y).toBeLessThan(100)
     }
     expect(new Set(spots.map((s) => `${Math.round(s.x / 8)},${Math.round(s.y / 8)}`)).size).toBe(spots.length)
+  })
+  it('원피스는 기본으로 열리고 다른 아이템의 숨은 장소를 유지한다', () => {
+    const dresses = ITEMS.filter(i => i.category === 'dress')
+    expect(dresses.length).toBeGreaterThan(0)
+    for (const dress of dresses) { expect(inPool(dress)).toBe(false); expect(isLocked(dress)).toBe(false) }
+    const oldPool = ITEMS.filter(i => inPool(i) || (i.category === 'dress' && !!i.native && !i.id.startsWith('custom_')))
+    const oldAssignment = assignPlaces(oldPool.map(i => i.id))
+    const current = currentAssignment()
+    const eligible = new Set(ITEMS.filter(inPool).map(i => i.id))
+    for (const place of PLACES) expect(current[place.id]).toEqual(oldAssignment[place.id].filter(id => eligible.has(id)))
+    expect(Object.values(current).flat().some(id => dresses.some(d => d.id === id))).toBe(false)
   })
   it('기본 상의·하의, 내가 추가한 옷은 게임 대상이 아니다', () => {
     expect(inPool({ id: 'top_a', category: 'top', native: true })).toBe(false)
