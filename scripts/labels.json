@@ -516,5 +516,75 @@
     "category": "costume",
     "color": "navy",
     "native": true
+  },
+  "acc_pearl_bow_big": {
+    "ko": "진주 하트 레이스 큰 리본",
+    "en": "Pearl Heart Lace Big Bow",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_pearl_bow_heart": {
+    "ko": "진주 하트 레이스 리본",
+    "en": "Pearl Heart Lace Bow",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_pearl_bow_lace": {
+    "ko": "진주 레이스 리본핀",
+    "en": "Pearl Lace Ribbon Pin",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_pearl_flower_gold": {
+    "ko": "진주 동백 꽃핀",
+    "en": "Pearl Camellia Pin",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_pearl_bow_wide": {
+    "ko": "진주 하트 와이드 리본",
+    "en": "Pearl Heart Wide Bow",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_pearl_ribbon_loop": {
+    "ko": "진주 루프 리본",
+    "en": "Pearl Loop Ribbon",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_pearl_bow_flower": {
+    "ko": "진주 꽃 리본핀",
+    "en": "Pearl Flower Bow Pin",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_pearl_petal": {
+    "ko": "진주 꽃잎 레이스핀",
+    "en": "Pearl Petal Lace Pin",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_pearl_heart_clip": {
+    "ko": "진주 하트 클립",
+    "en": "Pearl Heart Clip",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_pearl_bow_barrette": {
+    "ko": "진주 리본 바레트",
+    "en": "Pearl Bow Barrette",
+    "category": "accessory",
+    "color": "white",
+    "native": true
   }
 }
