@@ -7,6 +7,8 @@ import { Modal } from './Modal'
 interface Props {
   onSaveOutfit: () => Promise<void>
   onOpenOutfits: () => void
+  onBackground: () => void
+  onCamera: () => void
   savedCount: number
   sound: boolean
   onSound: () => void
@@ -17,7 +19,7 @@ interface Props {
 
 const row = 'flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl bg-petal/50 px-4 text-left font-semibold'
 
-export function SettingsSheet({ sound, onSound, onLang, onClose, onToast, onSaveOutfit, onOpenOutfits, savedCount }: Props) {
+export function SettingsSheet({ sound, onSound, onLang, onClose, onToast, onSaveOutfit, onOpenOutfits, savedCount, onBackground, onCamera }: Props) {
   const { lang, t } = useI18n()
   const fileRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -70,6 +72,8 @@ export function SettingsSheet({ sound, onSound, onLang, onClose, onToast, onSave
     <Modal title={t('settings')} onClose={onClose}>
       <div className="space-y-2 pb-2">
         <RefreshButton />
+        <button className={row} onClick={onBackground}><span>🖼️ {t('background')}</span></button>
+        <button className={row} onClick={onCamera}><span>📷 {t('exportImage')}</span></button>
         <button className={row} onClick={onSound} aria-pressed={sound}>
           <span>{sound ? '🔊' : '🔇'} {t('soundSetting')}</span>
           <span className="text-sm text-cocoa-soft">{sound ? t('on') : t('off')}</span>

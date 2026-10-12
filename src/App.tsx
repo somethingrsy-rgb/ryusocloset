@@ -325,7 +325,7 @@ export default function App() {
         setSelection(null)
         setSelCat(null)
       }}
-      className={`flex min-h-11 items-center gap-0.5 rounded-full px-2 text-[12.5px] font-bold whitespace-nowrap transition ${
+      className={`flex shrink-0 min-h-11 items-center gap-0.5 rounded-full px-2 text-[12.5px] font-bold whitespace-nowrap transition ${
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
       }`}
     >
@@ -339,14 +339,14 @@ export default function App() {
       <div className="mx-auto flex h-dvh max-w-[1100px] flex-col gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))] md:flex-row md:gap-4 md:p-4">
         <section className="flex min-h-0 flex-1 flex-col gap-2">
           <header className="flex shrink-0 items-center justify-between gap-2 px-1">
-            <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep min-[430px]:block">{t('title')}</h1>
-            <div role="tablist" className="flex shrink-0 rounded-full bg-white/80 p-0.5 shadow-sm">
+            <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep xl:block">{t('title')}</h1>
+            <div role="tablist" className="flex min-w-0 flex-1 overflow-x-auto rounded-full bg-white/80 p-0.5 shadow-sm">
               {modeBtn('closet', '👗', t('modeCloset'))}
               {modeBtn('room', '🏠', t('modeRoom'))}
               {modeBtn('camp', '⛺', t('modeCamp'))}
               {modeBtn('travel', '🧭', t('modeTravel'))}
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex shrink-0 items-center gap-1">
               <button
                 onClick={() => setSound((s) => !s)}
                 aria-label={sound ? t('soundOff') : t('soundOn')}
@@ -355,6 +355,11 @@ export default function App() {
               >
                 <span aria-hidden>{sound ? '🔊' : '🔇'}</span>
               </button>
+              <button
+                onClick={() => mode === 'room' || mode === 'camp' ? setModal('roomExport') : hasClothes ? setModal('export') : showToast(t('nothingToSave'))}
+                aria-label={mode === 'room' || mode === 'camp' ? t('roomExport') : t('exportImage')}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/80 text-lg shadow-sm"
+              ><span aria-hidden>📷</span></button>
               <button
                 onClick={() => setModal('settings')}
                 aria-label={t('settings')}
@@ -398,8 +403,6 @@ export default function App() {
                 figureRef={figureRef}
               >
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
-                  {fab(t('background'), '🖼️', () => setModal('bg'))}
-                  {fab(t('exportImage'), '📷', () => (hasClothes ? setModal('export') : showToast(t('nothingToSave'))))}
                 </div>
               </Stage>
             ) : (
@@ -409,7 +412,6 @@ export default function App() {
                   {scene === 'camp' && fab(camp.night ? t('campDay') : t('campNight'), camp.night ? '☀️' : '🌙', () => editRoom({ ...camp, night: !camp.night }))}
                   {fab(t('roomUndo'), '↶', undoRoom, undefined, !canUndoRoom)}
                   {fab(t('roomReset'), '🧹', resetRoom)}
-                  {fab(t('roomExport'), '📷', () => setModal('roomExport'))}
                 </div>
               <button onClick={() => setModal('sendToGame')} className="absolute bottom-3 left-3 z-20 min-h-12 rounded-full bg-blush px-4 font-bold text-white shadow-md">🎮 {lang === 'ko' ? '게임에 보내기' : 'Send to game'}</button>
               </RoomView>
@@ -443,6 +445,8 @@ export default function App() {
       {modal === 'settings' && (
         <SettingsSheet
           sound={sound}
+          onBackground={() => setModal('bg')}
+          onCamera={() => mode === 'room' || mode === 'camp' ? setModal('roomExport') : hasClothes ? setModal('export') : showToast(t('nothingToSave'))}
           onSaveOutfit={saveCurrent}
           onOpenOutfits={() => setModal('saved')}
           savedCount={saved.length}

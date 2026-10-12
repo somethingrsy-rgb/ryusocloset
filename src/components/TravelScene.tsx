@@ -243,7 +243,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
           <button
             aria-label={npc.name[lang]}
             onClick={() => (distPx(posRef.current, NPC_POS) < TALK_R ? setTalk(true) : walkTo({ x: NPC_POS.x - 10, y: NPC_POS.y }))}
-            className="absolute flex h-16 w-16 -translate-x-1/2 -translate-y-full items-center justify-center text-5xl transition active:scale-90"
+            className="absolute flex h-24 w-24 -translate-x-1/2 -translate-y-full items-center justify-center text-[80px] transition active:scale-90"
             style={{ left: `${NPC_POS.x}%`, top: `${NPC_POS.y}%`, zIndex: layerZ(NPC_POS.y) }}
           >
             <span aria-hidden>{npc.emoji}</span>
