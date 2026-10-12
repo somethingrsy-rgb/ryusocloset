@@ -80,10 +80,17 @@ export function StarRainWalk({ outfit, tweaks, onExit }: { outfit: Outfit; tweak
     </div>
     <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#7770aa]/20 via-transparent to-transparent"/>
     {rain.drops.map(drop=><span key={drop.id} aria-hidden className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 drop-shadow-md" style={{left:`${drop.x}%`,top:`${drop.y}%`,fontSize:drop.kind==='gold'?44:drop.kind==='cloud'?38:30}}>{drop.kind==='cloud'?'🌧️':drop.kind==='gold'?'🌟':'⭐'}</span>)}
+    {rain.bursts.map(burst => {
+      const progress = Math.min(1, (rain.elapsed - burst.at) / .7)
+      return <div key={`burst-${burst.id}`} aria-hidden className="pointer-events-none absolute z-10" style={{ left: `${burst.x}%`, top: '80%', opacity: 1 - progress }}>
+        <span className="absolute -translate-x-1/2 whitespace-nowrap text-2xl font-extrabold text-amber-500 drop-shadow-md" style={{ transform: `translate(-50%, ${-30 - progress * 42}px)` }}>+{burst.points} ⭐</span>
+        {Array.from({ length: 6 }, (_, i) => { const angle = i * Math.PI / 3; const distance = 12 + progress * 42; return <span key={i} className="absolute text-xl text-yellow-300 drop-shadow" style={{ transform: `translate(${Math.cos(angle) * distance - 10}px, ${Math.sin(angle) * distance - 10}px) scale(${1 - progress * .5})` }}>✦</span> })}
+      </div>
+    })}
     <div aria-hidden className="pointer-events-none absolute -translate-x-1/2 -translate-y-full" style={{left:`${rain.playerX}%`,top:'90%',width:'clamp(76px, 24%, 130px)',aspectRatio:'1024 / 1536',opacity:slow?.7:1}}>
-      <div className="avatar-ground-shadow"/><div className={phase==='playing'&&!paused?'walk-bob h-full w-full':'h-full w-full'}><FigureLayers outfit={outfit} tweaks={tweaks} animate={false}/></div>
+      <div className={phase==='playing'&&!paused?'walk-bob h-full w-full':'h-full w-full'}><FigureLayers outfit={outfit} tweaks={tweaks} animate={false}/></div>
     </div>
-    <span aria-hidden className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 text-4xl" style={{left:`${rain.playerX}%`,top:'80%'}}>🧺</span>
+    <span aria-hidden className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 text-4xl" style={{left:`${rain.playerX}%`,top:'80%',transform:`translate(-50%, -50%) scale(${rain.bursts.some(b => rain.elapsed - b.at < .25) ? 1.2 : 1})`}}>🧺</span>
     <header className="absolute inset-x-2 top-2 z-10 flex items-center justify-between gap-1">
       <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-bold">⏱ {Math.ceil(RAIN_DURATION-rain.elapsed)}초 · ⭐ {rain.score}</span>
       <div className="flex gap-1">{phase==='playing'&&<button className={btn} aria-label={paused?'계속하기':'일시정지'} onClick={()=>{keys.current.clear();setPaused(!paused)}}>{paused?'▶':'Ⅱ'}</button>}<button className={btn} onClick={onExit}>지도</button></div>

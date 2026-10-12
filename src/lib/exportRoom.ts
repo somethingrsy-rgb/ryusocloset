@@ -1,3 +1,4 @@
+import { roomExportBounds, type RoomExportViewport } from './roomExportBounds'
 import { renderFigure, loadImage } from './exportPng'
 import { assetUrl } from './items'
 import { ROOM_THEME_BY_ID, drawables, hasContactShadow, shadowWidthRatio } from './room'
@@ -60,6 +61,7 @@ export async function renderRoomCanvas(
   outfit: Outfit,
   tweaks: Tweaks = {},
   scene: 'room' | 'camp' = 'room',
+  viewport?: RoomExportViewport,
 ): Promise<HTMLCanvasElement> {
   const list = drawables(room)
   const assets = sceneAssets(scene, room.night, room.wallId, room.floorId)
@@ -69,26 +71,26 @@ export async function renderRoomCanvas(
     renderFigure(outfit, tweaks),
     ...list.map((d) => (d.src ? loadImage(assetUrl(d.src)) : Promise.resolve(null))),
   ])
-  // 방 밖(양옆 배경)에 놓은 물건이 있으면 그만큼 사진을 넓힌다
-  const extra = Math.max(0, Math.ceil(Math.max(-Math.min(...list.map((d) => d.left)), Math.max(...list.map((d) => d.left + d.w)) - ROOM_W)))
+  const bounds = roomExportBounds(list, viewport)
   const canvas = document.createElement('canvas')
-  canvas.width = ROOM_W + 2 * extra
-  canvas.height = ROOM_H
+  canvas.width = Math.ceil(bounds.width * bounds.scale)
+  canvas.height = Math.ceil(bounds.height * bounds.scale)
   const ctx = canvas.getContext('2d')!
-  // 방 양옆은 벽지·바닥을 좌우로 뒤집어 이어 붙인다 (화면과 같은 모양)
-  const copies = extra > 0 ? [-2, -1, 0, 1, 2] : [0]
-  for (const k of copies) {
+  ctx.scale(bounds.scale, bounds.scale)
+  ctx.translate(-bounds.left, -bounds.top)
+  const first = Math.floor(bounds.left / ROOM_W)
+  const last = Math.ceil((bounds.left + bounds.width) / ROOM_W) - 1
+  for (let k = first; k <= last; k++) {
     ctx.save()
-    ctx.translate(extra + k * ROOM_W, 0)
-    if (Math.abs(k) % 2) {
-      ctx.translate(ROOM_W, 0)
-      ctx.scale(-1, 1)
-    }
+    ctx.translate(k * ROOM_W, 0)
+    if (Math.abs(k) % 2) { ctx.translate(ROOM_W, 0); ctx.scale(-1, 1) }
+    if (bounds.top < 0) ctx.drawImage(wall, 0, 0, wall.width, 1, 0, bounds.top, ROOM_W, -bounds.top)
+    const bottom = bounds.top + bounds.height
+    if (bottom > ROOM_H) ctx.drawImage(floor, 0, floor.height - 1, floor.width, 1, 0, ROOM_H, ROOM_W, bottom - ROOM_H)
     ctx.drawImage(floor, 0, ROOM_H - assets.floorH, ROOM_W, assets.floorH)
     ctx.drawImage(wall, 0, 0, ROOM_W, ROOM_H)
     ctx.restore()
   }
-  ctx.translate(extra, 0)
   list.forEach((d, i) => {
     if (hasContactShadow(d.group)) drawContactShadow(ctx, d.x, d.y, d.w * shadowWidthRatio(d.group))
     const img = d.group === 'avatar' ? figure : imgs[i]

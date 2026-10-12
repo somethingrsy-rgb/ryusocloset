@@ -1,11 +1,13 @@
 export const RAIN_DURATION = 60
 export const CATCH_Y = 80
 export interface RainDrop { id: number; kind: 'star' | 'gold' | 'cloud'; x: number; y: number; speed: number }
+export interface RainBurst { id: number; x: number; points: number; at: number }
 export interface RainState {
+  bursts: RainBurst[]
   elapsed: number; score: number; caught: number; clouds: number; playerX: number; targetX: number
   slowUntil: number; drops: RainDrop[]; nextSpawn: number; serial: number
 }
-export const newRain = (): RainState => ({ elapsed: 0, score: 0, caught: 0, clouds: 0, playerX: 50, targetX: 50, slowUntil: 0, drops: [], nextSpawn: .4, serial: 0 })
+export const newRain = (): RainState => ({ bursts: [], elapsed: 0, score: 0, caught: 0, clouds: 0, playerX: 50, targetX: 50, slowUntil: 0, drops: [], nextSpawn: .4, serial: 0 })
 export const clampRainX = (x: number) => Math.max(10, Math.min(90, x))
 /** Only active play time advances. A drop resolves once when crossing the basket. */
 export function stepRain(state: RainState, seconds: number, random = Math.random): RainState {
@@ -18,11 +20,12 @@ export function stepRain(state: RainState, seconds: number, random = Math.random
   const playerX = clampRainX(state.playerX + Math.sign(distance) * Math.min(Math.abs(distance), move))
   let score = state.score, caught = state.caught, clouds = state.clouds, slowUntil = state.slowUntil
   const drops: RainDrop[] = []
+  const bursts = state.bursts.filter(burst => elapsed - burst.at < .7)
   for (const drop of state.drops) {
     const y = drop.y + drop.speed * dt
     if (drop.y < CATCH_Y && y >= CATCH_Y && Math.abs(drop.x - playerX) <= (drop.kind === 'cloud' ? 7 : 9)) {
       if (drop.kind === 'cloud') { clouds++; slowUntil = elapsed + 1.8 }
-      else { caught++; score += drop.kind === 'gold' ? 5 : 1 }
+      else { const points = drop.kind === 'gold' ? 5 : 1; caught++; score += points; bursts.push({ id: drop.id, x: drop.x, points, at: elapsed }) }
       continue
     }
     if (y < 108) drops.push({ ...drop, y })
@@ -34,7 +37,7 @@ export function stepRain(state: RainState, seconds: number, random = Math.random
     drops.push({ id: serial, kind, x: 12 + Math.max(0, Math.min(1, random())) * 76, y: -6, speed: kind === 'cloud' ? 27 : 24 + Math.max(0, Math.min(1, random())) * 8 })
     nextSpawn = elapsed + .8
   }
-  return { elapsed, score, caught, clouds, playerX, targetX, slowUntil, drops, nextSpawn, serial }
+  return { elapsed, score, caught, clouds, playerX, targetX, slowUntil, drops, bursts, nextSpawn, serial }
 }
 export interface RainRecord { best: number; total: number; rounds: number }
 export function readRainRecord(): RainRecord {

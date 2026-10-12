@@ -195,7 +195,6 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
           className="pointer-events-none absolute"
           style={{ left: pos.x, top: pos.y, width: figW, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -100%)', zIndex: 1000 }}
         >
-          <div className="avatar-ground-shadow" />
           <div className="relative h-full w-full" style={{ transform: `scaleX(${dir})` }}>
             <div className={`h-full w-full ${walking ? 'walk-bob' : ''}`}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />

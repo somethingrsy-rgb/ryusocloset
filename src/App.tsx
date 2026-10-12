@@ -19,6 +19,7 @@ import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
 import { loadImage, renderOutfitCanvas, renderThumb } from './lib/exportPng'
+import type { RoomExportViewport } from './lib/roomExportBounds'
 import { CAMP_ASSETS, ROOM_ASSETS, renderRoomCanvas, sceneAssets } from './lib/exportRoom'
 import { BASE_LAYERS, ITEMS, ITEM_BY_ID, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
@@ -291,7 +292,8 @@ export default function App() {
   }
 
   const renderOutfit = useCallback((o: RenderOptions) => renderOutfitCanvas(outfit, o, tweaks), [outfit, tweaks])
-  const renderRoom = useCallback(() => renderRoomCanvas(sceneState, outfit, tweaks, scene), [sceneState, outfit, tweaks, scene])
+  const exportViewport = useRef<RoomExportViewport | undefined>(undefined)
+  const renderRoom = useCallback(() => renderRoomCanvas(sceneState, outfit, tweaks, scene, exportViewport.current), [sceneState, outfit, tweaks, scene])
 
   const fab = (label: string, icon: string, onClick: () => void, badge?: number, disabled?: boolean) => (
     <button
@@ -400,7 +402,7 @@ export default function App() {
                 </div>
               </Stage>
             ) : (
-              <RoomView key={scene} assets={sceneAssets(scene, sceneState.night, sceneState.wallId, sceneState.floorId)} outfit={outfit} tweaks={tweaks} room={sceneState} selection={selection} onSelect={setSelection} onChange={editRoom} canUndo={canUndoRoom} onUndo={undoRoom}>
+              <RoomView onViewportChange={value => { exportViewport.current = value }} key={scene} assets={sceneAssets(scene, sceneState.night, sceneState.wallId, sceneState.floorId)} outfit={outfit} tweaks={tweaks} room={sceneState} selection={selection} onSelect={setSelection} onChange={editRoom} canUndo={canUndoRoom} onUndo={undoRoom}>
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
                   {fab(t('goCloset'), '👗', () => setMode('closet'))}
                   {room.wallId === 'camp' && fab(room.night ? t('campDay') : t('campNight'), room.night ? '☀️' : '🌙', () => editRoom({ ...room, night: !room.night }))}
