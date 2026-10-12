@@ -1,20 +1,4 @@
 {
-  "costume_checker_queen": {
-    "scale": 1.024,
-    "waist": 121
-  },
-  "costume_floral_black": {
-    "scale": 1.0,
-    "waist": 180
-  },
-  "costume_forest_green": {
-    "scale": 1.206,
-    "waist": 141
-  },
-  "costume_petal_blue": {
-    "scale": 1.0,
-    "waist": 175
-  },
   "costume_princess_pink": {
     "scale": 1.0,
     "waist": 176
@@ -56,7 +40,11 @@
     "waist": 126
   },
   "manual": [
+    "costume_checker_queen",
+    "costume_floral_black",
+    "costume_forest_green",
     "costume_hanbok_starry",
+    "costume_petal_blue",
     "dress_fairy_blue"
   ]
 }

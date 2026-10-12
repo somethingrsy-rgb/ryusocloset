@@ -757,10 +757,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 102,
-      "y": 641,
-      "w": 822,
-      "h": 895
+      "x": 61,
+      "y": 596,
+      "w": 904,
+      "h": 940
     },
     "image": "assets/clothes/costume/costume_checker_queen.webp",
     "thumb": "assets/thumbs/costume_checker_queen.webp",
@@ -781,7 +781,7 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 162,
+      "x": 170,
       "y": 603,
       "w": 700,
       "h": 643
@@ -805,10 +805,10 @@
     },
     "colorHex": "#6f9a72",
     "box": {
-      "x": 90,
-      "y": 603,
-      "w": 845,
-      "h": 755
+      "x": 129,
+      "y": 597,
+      "w": 768,
+      "h": 686
     },
     "image": "assets/clothes/costume/costume_forest_green.webp",
     "thumb": "assets/thumbs/costume_forest_green.webp",
@@ -853,10 +853,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 108,
-      "y": 640,
-      "w": 807,
-      "h": 871
+      "x": 62,
+      "y": 588,
+      "w": 900,
+      "h": 948
     },
     "image": "assets/clothes/costume/costume_petal_blue.webp",
     "thumb": "assets/thumbs/costume_petal_blue.webp",
