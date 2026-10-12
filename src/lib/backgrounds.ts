@@ -22,8 +22,8 @@ export const BACKGROUNDS: Background[] = [
   { id: 'transparent', kind: 'transparent' },
 ]
 
-export const DEFAULT_BG_ID = 'pink'
-export const bgById = (id: string): Background => BACKGROUNDS.find((b) => b.id === id) ?? BACKGROUNDS[1]
+export const DEFAULT_BG_ID = 'dream'
+export const bgById = (id: string): Background => BACKGROUNDS.find((b) => b.id === id) ?? BACKGROUNDS.find((b) => b.id === DEFAULT_BG_ID)!
 
 const CHECKER =
   'conic-gradient(#e9e9ee 25%, #fff 0 50%, #e9e9ee 0 75%, #fff 0) 0 0 / 20px 20px'
