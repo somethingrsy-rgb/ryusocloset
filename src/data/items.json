@@ -912,6 +912,54 @@
     "native": true
   },
   {
+    "id": "costume_snow_fur",
+    "category": "costume",
+    "name": {
+      "ko": "눈꽃 모피 원피스",
+      "en": "Snow Fur Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 628
+    },
+    "image": "assets/clothes/costume/costume_snow_fur.webp",
+    "thumb": "assets/thumbs/costume_snow_fur.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_starry_cross",
+    "category": "costume",
+    "name": {
+      "ko": "별빛 십자 원피스",
+      "en": "Starry Cross Dress"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 588
+    },
+    "image": "assets/clothes/costume/costume_starry_cross.webp",
+    "thumb": "assets/thumbs/costume_starry_cross.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_tassel_pink",
     "category": "costume",
     "name": {
@@ -932,6 +980,30 @@
     },
     "image": "assets/clothes/costume/costume_tassel_pink.webp",
     "thumb": "assets/thumbs/costume_tassel_pink.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_trump_blue",
+    "category": "costume",
+    "name": {
+      "ko": "트럼프 블루 원피스",
+      "en": "Trump Blue Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 140,
+      "y": 604,
+      "w": 743,
+      "h": 595
+    },
+    "image": "assets/clothes/costume/costume_trump_blue.webp",
+    "thumb": "assets/thumbs/costume_trump_blue.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1094,7 +1166,7 @@
     "colorHex": "#27355b",
     "box": {
       "x": 158,
-      "y": 604,
+      "y": 596,
       "w": 710,
       "h": 753
     },
