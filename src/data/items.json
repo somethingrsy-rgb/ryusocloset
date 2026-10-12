@@ -997,10 +997,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 138,
-      "y": 604,
-      "w": 748,
-      "h": 774
+      "x": 108,
+      "y": 678,
+      "w": 824,
+      "h": 851
     },
     "image": "assets/clothes/costume/dress_fairy_blue.webp",
     "thumb": "assets/thumbs/dress_fairy_blue.webp",
