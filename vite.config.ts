@@ -31,8 +31,22 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true,
-        globPatterns: ['**/*.{js,css,html,webp,png,svg,json}'],
+        // 앱 코드만 설치 때 한꺼번에 받는다 (그림 18MB 는 쓸 때 받아서 저장: 업데이트·새로고침이 가볍다)
+        globPatterns: ['**/*.{js,css,html,json}', 'icons/*.png'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        runtimeCaching: [
+          {
+            // 그림은 인터넷이 되면 항상 최신으로 받고(3초 안에 못 받으면 저장해 둔 것), 오프라인에서는 저장해 둔 것을 쓴다
+            urlPattern: ({ url }) => /\.(?:webp|png|svg|jpg)$/i.test(url.pathname),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'ryuso-images',
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 800, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

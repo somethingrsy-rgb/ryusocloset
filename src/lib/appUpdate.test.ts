@@ -53,7 +53,7 @@ async function setupBehind({ latestOk = true, waiting = false, failUpdate = fals
   vi.stubGlobal('window', { location: { reload } })
   vi.stubGlobal('document', { scripts: [{ src: 'https://x.test/assets/index-OLD.js' }] })
   const deleted: string[] = []
-  vi.stubGlobal('caches', { keys: async () => ['workbox-precache', 'other'], delete: async (name: string) => { deleted.push(name); return true } })
+  vi.stubGlobal('caches', { keys: async () => ['workbox-precache-v2-x', 'ryuso-images'], delete: async (name: string) => { deleted.push(name); return true } })
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: latestOk, text: async () => '<script src="./assets/index-NEW.js"></script>' })))
   vi.resetModules()
   return { refresh: (await import('./appUpdate')).refreshApp, reload, unregister, deleted, registration }
@@ -62,7 +62,7 @@ it('falls back to clearing the app-code cache when the page is behind but no upd
   const { refresh, reload, unregister, deleted } = await setupBehind()
   await refresh()
   expect(unregister).toHaveBeenCalledOnce()
-  expect(deleted).toEqual(['workbox-precache', 'other'])
+  expect(deleted).toEqual(['workbox-precache-v2-x'])
   expect(reload).toHaveBeenCalledOnce()
 })
 it('does not clear anything when the page is already the latest version', async () => {
