@@ -586,5 +586,18 @@
     "category": "accessory",
     "color": "white",
     "native": true
+  },
+  "acc_pink_heart_bow": {
+    "ko": "핑크 하트 보석 리본",
+    "en": "Pink Heart Jewel Bow",
+    "category": "accessory",
+    "color": "pink",
+    "native": true
+  },
+  "shoes_pink_maryjane_socks": {
+    "ko": "핑크 리본 메리제인 양말",
+    "en": "Pink Bow Mary Janes with Socks",
+    "color": "pink",
+    "native": true
   }
 }

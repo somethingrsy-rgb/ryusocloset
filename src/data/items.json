@@ -1536,6 +1536,30 @@
     "native": true
   },
   {
+    "id": "shoes_pink_maryjane_socks",
+    "category": "shoes",
+    "name": {
+      "ko": "핑크 리본 메리제인 양말",
+      "en": "Pink Bow Mary Janes with Socks"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 408,
+      "y": 1359,
+      "w": 207,
+      "h": 145
+    },
+    "image": "assets/clothes/shoes/shoes_pink_maryjane_socks.webp",
+    "thumb": "assets/thumbs/shoes_pink_maryjane_socks.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_platform_cream_heart",
     "category": "shoes",
     "name": {
@@ -2300,6 +2324,30 @@
     },
     "image": "assets/clothes/accessory/acc_pearl_ribbon_loop.webp",
     "thumb": "assets/thumbs/acc_pearl_ribbon_loop.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_pink_heart_bow",
+    "category": "accessory",
+    "name": {
+      "ko": "핑크 하트 보석 리본",
+      "en": "Pink Heart Jewel Bow"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 190,
+      "y": 94,
+      "w": 260,
+      "h": 243
+    },
+    "image": "assets/clothes/accessory/acc_pink_heart_bow.webp",
+    "thumb": "assets/thumbs/acc_pink_heart_bow.webp",
     "zIndex": 70,
     "native": true
   },
