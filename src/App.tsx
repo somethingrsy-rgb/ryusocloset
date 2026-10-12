@@ -4,7 +4,7 @@ import { AddItemModal } from './components/AddItemModal'
 import { SettingsSheet } from './components/SettingsSheet'
 import { Closet } from './components/Closet'
 import { removeCustomItem, removeCustomRoomItem } from './lib/customItems'
-import { hideItem, restoreItems, visible } from './lib/hidden'
+import { hideItem, restoreItems } from './lib/hidden'
 import { useItemsVersion } from './lib/useItemsVersion'
 import { ExportSheet, type RenderOptions } from './components/ExportSheet'
 import { RoomTray } from './components/RoomTray'
@@ -20,9 +20,9 @@ import { I18nContext, detectLang, makeT, type Lang } from './i18n'
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
 import { loadImage, renderOutfitCanvas, renderThumb } from './lib/exportPng'
 import { CAMP_ASSETS, ROOM_ASSETS, renderRoomCanvas, sceneAssets } from './lib/exportRoom'
-import { BASE_LAYERS, ITEMS, ITEMS_BY_CATEGORY, ITEM_BY_ID, assetUrl, isCustomItem } from './lib/items'
+import { BASE_LAYERS, ITEMS, ITEM_BY_ID, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
-import { randomOutfit, toggleItem } from './lib/outfit'
+import { toggleItem } from './lib/outfit'
 import { ROOM_ITEMS, addItem, defaultCamp, defaultRoom, isCustomRoomItem } from './lib/room'
 import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
 import { playSnap } from './lib/sound'
@@ -246,19 +246,6 @@ export default function App() {
     applyOutfit(next)
   }
 
-  const clearAll = () => {
-    setOutfit({})
-    setTweaks({})
-    setSelCat(null)
-  }
-
-  const onRandom = () => {
-    setOutfit(randomOutfit(Object.fromEntries(CATEGORIES.map((c) => [c, visible(ITEMS_BY_CATEGORY[c])])) as typeof ITEMS_BY_CATEGORY))
-    setTweaks({})
-    setSelCat(null)
-    snap()
-  }
-
   const hasClothes = Object.keys(outfit).length > 0
 
   const saveCurrent = async () => {
@@ -409,11 +396,7 @@ export default function App() {
                 figureRef={figureRef}
               >
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
-                  {fab(t('random'), '🎲', onRandom)}
-                  {fab(t('reset'), '🧺', clearAll)}
                   {fab(t('background'), '🖼️', () => setModal('bg'))}
-                  {fab(t('saveOutfit'), '💾', saveCurrent)}
-                  {fab(t('myOutfits'), '📒', () => setModal('saved'), saved.length)}
                   {fab(t('exportImage'), '📷', () => (hasClothes ? setModal('export') : showToast(t('nothingToSave'))))}
                 </div>
               </Stage>
@@ -458,6 +441,9 @@ export default function App() {
       {modal === 'settings' && (
         <SettingsSheet
           sound={sound}
+          onSaveOutfit={saveCurrent}
+          onOpenOutfits={() => setModal('saved')}
+          savedCount={saved.length}
           onSound={() => setSound((v) => !v)}
           onLang={() => setLang((l) => (l === 'ko' ? 'en' : 'ko'))}
           onClose={() => setModal(null)}

@@ -45,13 +45,13 @@ export function AdjustmentPanel({ name, onMove, onSmaller, onBigger, onClose, on
       <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/60 text-xs ring-1 ring-black/5" aria-label={ko?'선택 해제':'Deselect'} onClick={onClose}>✕</button>
       <NudgeButton label={ko?'오른쪽으로 조금 이동':'Move slightly right'} onMove={() => onMove(1,0)}>→</NudgeButton>
       <span/><NudgeButton label={t('moveDown')} onMove={() => onMove(0,1)}>↓</NudgeButton><span/>
+      {onRemove ? <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-blush text-white shadow-sm" aria-label={removeLabel ?? t('remove')} title={removeLabel ?? t('remove')} onClick={onRemove}>🗑️</button> : <span/>}
+      <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-xl shadow-sm ring-1 ring-black/10" aria-label={t('smaller')} onClick={onSmaller}>−</button>
+      <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-xl shadow-sm ring-1 ring-black/10" aria-label={t('bigger')} onClick={onBigger}>+</button>
     </div>
     {host && createPortal(<>
     <div role="group" aria-label={`${ko ? '선택한 물건 조정' : 'Adjust selection'}: ${name}`} className="flex items-center gap-1 overflow-x-auto overscroll-contain border-b border-black/5 bg-white px-2 py-1">
       <span className="min-w-0 flex-1 truncate text-xs font-bold">{name}</span>
-      {onRemove && <button className="h-11 shrink-0 rounded-xl bg-blush px-3 text-sm font-bold text-white" onClick={onRemove}>{removeLabel ?? t('remove')}</button>}
-      <button className={button} aria-label={t('smaller')} onClick={onSmaller}>−</button>
-      <button className={button} aria-label={t('bigger')} onClick={onBigger}>+</button>
       <button className={button} aria-label={ko?'조정 더보기':'More adjustments'} onClick={() => setMore(true)}>⋯</button>
     </div>
     {more && <Modal title={name} onClose={() => setMore(false)}>

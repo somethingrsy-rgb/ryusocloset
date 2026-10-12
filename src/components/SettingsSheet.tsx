@@ -5,6 +5,9 @@ import { RefreshButton } from './RefreshButton'
 import { Modal } from './Modal'
 
 interface Props {
+  onSaveOutfit: () => Promise<void>
+  onOpenOutfits: () => void
+  savedCount: number
   sound: boolean
   onSound: () => void
   onLang: () => void
@@ -14,7 +17,7 @@ interface Props {
 
 const row = 'flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl bg-petal/50 px-4 text-left font-semibold'
 
-export function SettingsSheet({ sound, onSound, onLang, onClose, onToast }: Props) {
+export function SettingsSheet({ sound, onSound, onLang, onClose, onToast, onSaveOutfit, onOpenOutfits, savedCount }: Props) {
   const { lang, t } = useI18n()
   const fileRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -77,6 +80,11 @@ export function SettingsSheet({ sound, onSound, onLang, onClose, onToast }: Prop
         </button>
       </div>
 
+      <h3 className="mt-3 mb-2 text-sm font-bold">👗 {lang === 'ko' ? '코디 보관' : 'Saved outfits'}</h3>
+      <div className="space-y-2">
+        <button className={row} disabled={busy} onClick={async () => { setBusy(true); try { await onSaveOutfit() } finally { setBusy(false) } }}><span>💾 {t('saveOutfit')}</span></button>
+        <button className={row} disabled={busy} onClick={onOpenOutfits}><span>📒 {t('myOutfits')}</span><span className="text-sm text-cocoa-soft">{savedCount}</span></button>
+      </div>
       <h3 className="mt-3 mb-1 text-sm font-bold">☁️ {t('backupTitle')}</h3>
       <p className="mb-3 text-sm leading-relaxed text-cocoa-soft">{t('backupHint')}</p>
       <div className="space-y-2">
