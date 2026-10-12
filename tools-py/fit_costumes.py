@@ -27,6 +27,10 @@ MIN_SCALE, MAX_SCALE = 1.0, 1.25  # 작은 옷만 키우되 치마·리본이 �
 MANUAL: dict[str, dict] = {
     'costume_hanbok_starry': dict(scale=1.1 ** 2, dy=10 * 8, pivot=(512, 989)),  # +2, 아래로 10칸 (옷 영역 중심이 피벗)
     'dress_fairy_blue': dict(scale=1.1, dx=1 * 8, dy=14 * 8, pivot=(512, 991)),  # +1, 오른쪽 1칸, 아래로 14칸
+    'costume_checker_queen': dict(scale=1.1, dy=0, pivot=(513, 1088)),  # +1
+    'costume_floral_black': dict(scale=1.0, dx=1 * 8, dy=0, pivot=(512, 924)),  # 오른쪽 1칸
+    'costume_forest_green': dict(scale=1 / 1.1, dy=-5 * 8, pivot=(512, 980)),  # -1, 위로 5칸
+    'costume_petal_blue': dict(scale=1.1 ** 2, dy=5 * 8, pivot=(511, 1075)),  # +2, 아래로 5칸
 }
 OVERRIDES: dict[str, tuple[int, int]] = {
     'dress_card_red': (760, 165),  # 목 장식이 따로 떨어져 있어서 자동 감지가 안 됨 (소매 사이 몸통 폭)
@@ -96,12 +100,11 @@ def refit(im: Image.Image, top: int, scale: float) -> Image.Image:
 def manual_adjust(im: Image.Image, scale: float, dy: int, pivot: tuple[int, int], dx: int = 0) -> Image.Image:
     """피벗을 고정점으로 scale 배 한 뒤 오른쪽으로 dx, 아래로 dy 만큼 옮긴다 (캔버스 밖은 잘림)."""
     w, h = im.size
-    big = im.resize((round(w * scale), round(h * scale)), Image.LANCZOS)
-    out = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    big = im.resize((round(w * scale), round(h * scale)), Image.LANCZOS) if abs(scale - 1) > 1e-9 else im
     ox, oy = round(pivot[0] - pivot[0] * scale + dx), round(pivot[1] - pivot[1] * scale + dy)
-    out.alpha_composite(big, (ox, oy)) if ox >= 0 and oy >= 0 else out.alpha_composite(
-        big.crop((max(0, -ox), max(0, -oy), max(0, -ox) + w, max(0, -oy) + h)), (max(0, ox), max(0, oy))
-    )
+    out = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    x0, y0, sx, sy = max(0, ox), max(0, oy), max(0, -ox), max(0, -oy)
+    out.alpha_composite(big.crop((sx, sy, sx + (w - x0), sy + (h - y0))), (x0, y0))
     return out
 
 
