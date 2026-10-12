@@ -20,6 +20,7 @@ import {
   worldWidth,
 } from '../lib/world'
 import { FigureLayers } from './FigureLayers'
+import { PILL, PillText } from './pill'
 import { useClock } from './useClock'
 import { useWalkKeys } from './useWalkKeys'
 import { VillageHouse, VillageScenery } from './VillageScenery'
@@ -204,7 +205,7 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
       </div>
 
       <div className="absolute top-2 left-2 right-16 z-10 flex min-w-0 items-center gap-1">
-        <span className="pointer-events-none flex h-11 shrink-0 items-center rounded-full bg-white/90 px-2 text-xs font-bold shadow-sm ring-1 ring-black/5">🚶 {metersOf(pos.x).toLocaleString()}m</span>
+        <span className={`pointer-events-none ${PILL}`}><PillText>🚶 {metersOf(pos.x).toLocaleString()}m</PillText></span>
         <div className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-full" onPointerUp={e => e.stopPropagation()}>{actions}</div>
       </div>
       <button
@@ -214,10 +215,10 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
         }}
         onPointerUp={(e) => e.stopPropagation()}
         aria-label={PHASE_LABEL[clock.phase][lang]}
-        className="absolute top-2 right-2 z-10 flex h-11 items-center gap-1 rounded-full bg-white/90 px-2 text-xs font-bold shadow-md ring-1 ring-black/5"
+        className={`absolute top-2 right-2 z-10 ${PILL}`}
       >
         <span aria-hidden>{PHASE_ICON[clock.phase]}</span>
-        {PHASE_LABEL[clock.phase][lang]}
+        <PillText>{PHASE_LABEL[clock.phase][lang]}</PillText>
       </button>
     </div>
   )

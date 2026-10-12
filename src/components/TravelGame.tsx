@@ -7,6 +7,7 @@ import { FarmScene } from './FarmScene'
 import { SpeakingGame } from './SpeakingGame'
 import { useI18n } from '../i18n'
 import { OverWorld } from './OverWorld'
+import { PILL, PillText } from './pill'
 import { TravelScene } from './TravelScene'
 
 export const useGame = () => {
@@ -37,9 +38,8 @@ export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Pr
   if (starRain) return <StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} />
   if (farm) return <FarmScene onExit={() => setFarm(false)} />
 
-  // 거리(m) 표시와 같은 모양: 흰색 알약, 누르는 동안 민트색. (버튼에는 전역 font: inherit 때문에 글자 크기 클래스가 먹지 않아 안쪽 span 에 건다)
-  const actionButton = 'flex h-11 shrink-0 items-center rounded-full bg-white/90 px-2 shadow-sm ring-1 ring-black/5 transition-colors active:bg-[#a9dcc8]'
-  const label = (text: string) => <span className="text-xs font-bold">{text}</span>
+  const actionButton = PILL
+  const label = (text: string) => <PillText>{text}</PillText>
   return <div className="relative h-full">
     {scene ? <TravelScene paused={speaking} key={scene} placeId={scene} assign={assign} outfit={outfit} tweaks={tweaks} onExit={() => setScene(null)} onWear={onWear} /> : <OverWorld
       paused={speaking} reach={game.reach} chunk={game.chunk} assign={assign} outfit={outfit} tweaks={tweaks}

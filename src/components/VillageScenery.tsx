@@ -78,8 +78,6 @@ export const VillageScenery = memo(function VillageScenery({ zone }: { zone: num
       <path d="M0 710C250 710 250 672 500 690S1000 742 1250 710Q1375 710 1500 710" fill="none" stroke="#91ad7770" strokeWidth="110" />
       <path d="M0 710C250 710 250 672 500 690S1000 742 1250 710Q1375 710 1500 710" fill="none" stroke="#f4e5c1" strokeWidth="100" />
       <path d="M0 710C250 710 250 672 500 690S1000 742 1250 710Q1375 710 1500 710" fill="none" stroke={`url(#${id}-earth)`} strokeWidth="84" />
-      <path d="M700 634V726" fill="none" stroke="#f4e5c1" strokeWidth="72" />
-      <path d="M700 634V726" fill="none" stroke={`url(#${id}-earth)`} strokeWidth="56" />
       {/* Stepping stones guide the player from the main lane to the doorway. */}
       {[645, 665, 686, 706].map((y, k) => <g key={y}>
         <ellipse cx={699 + (k % 2 ? 5 : -4)} cy={y + 3} rx="23" ry="7" fill="#a48e69" opacity=".35" />
