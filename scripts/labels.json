@@ -697,5 +697,52 @@
     "category": "wand",
     "color": "white",
     "native": true
+  },
+  "costume_yellow_qipao": {
+    "ko": "노랑 꽃 치파오 원피스",
+    "en": "Yellow Flower Qipao Dress",
+    "category": "costume",
+    "color": "beige",
+    "native": true
+  },
+  "costume_winged_lolita_purple": {
+    "ko": "보라 날개 로리타 원피스",
+    "en": "Purple Winged Lolita Dress",
+    "category": "costume",
+    "color": "purple",
+    "native": true
+  },
+  "costume_plaid_gothic_red": {
+    "ko": "레드 체크 고딕 원피스",
+    "en": "Red Plaid Gothic Dress",
+    "category": "costume",
+    "color": "red",
+    "native": true
+  },
+  "acc_yellow_flower_tassel": {
+    "ko": "노랑 꽃 술 머리장식",
+    "en": "Yellow Flower Tassel Hairpin",
+    "category": "accessory",
+    "color": "beige",
+    "native": true
+  },
+  "shoes_yellow_maryjane_flower": {
+    "ko": "노랑 꽃 메리제인",
+    "en": "Yellow Flower Mary Janes",
+    "color": "ivory",
+    "native": true
+  },
+  "costume_clover_flower_lolita": {
+    "ko": "클로버 꽃 로리타 원피스",
+    "en": "Clover Flower Lolita Dress",
+    "category": "costume",
+    "color": "mint",
+    "native": true
+  },
+  "shoes_clover_maryjane_socks": {
+    "ko": "클로버 리본 양말 신발",
+    "en": "Clover Bow Socks Shoes",
+    "color": "mint",
+    "native": true
   }
 }
