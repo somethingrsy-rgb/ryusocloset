@@ -751,5 +751,47 @@
     "en": "Yellow Ribbon Mary Janes",
     "color": "beige",
     "native": true
+  },
+  "acc_stripe_heart_red": {
+    "ko": "레드 줄무늬 하트 보석핀",
+    "en": "Red Stripe Heart Jewel Pin",
+    "category": "accessory",
+    "color": "red",
+    "native": true
+  },
+  "acc_stripe_heart_blue": {
+    "ko": "블루 줄무늬 하트 보석핀",
+    "en": "Blue Stripe Heart Jewel Pin",
+    "category": "accessory",
+    "color": "navy",
+    "native": true
+  },
+  "acc_stripe_heart_green": {
+    "ko": "그린 줄무늬 하트 보석핀",
+    "en": "Green Stripe Heart Jewel Pin",
+    "category": "accessory",
+    "color": "green",
+    "native": true
+  },
+  "acc_stripe_heart_purple": {
+    "ko": "퍼플 줄무늬 하트 보석핀",
+    "en": "Purple Stripe Heart Jewel Pin",
+    "category": "accessory",
+    "color": "purple",
+    "native": true
+  },
+  "acc_stripe_heart_pink": {
+    "ko": "핑크 줄무늬 하트 보석핀",
+    "en": "Pink Stripe Heart Jewel Pin",
+    "category": "accessory",
+    "color": "pink",
+    "native": true
+  },
+  "acc_stripe_heart_gold": {
+    "ko": "골드 줄무늬 하트 보석핀",
+    "en": "Gold Stripe Heart Jewel Pin",
+    "category": "accessory",
+    "color": "beige",
+    "native": true
   }
 }
