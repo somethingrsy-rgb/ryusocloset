@@ -12,6 +12,7 @@ import { PHASE_ICON, PHASE_LABEL, tintOf } from '../lib/daynight'
 import { useClock } from './useClock'
 import { useGame } from './TravelGame'
 import { useWalkKeys } from './useWalkKeys'
+import { TravelDecor } from './TravelDecor'
 
 import { getTravelRoom, subscribeTravelRooms, travelRoomsVersion } from '../lib/travelRooms'
 import { useItemsVersion } from '../lib/useItemsVersion'
@@ -201,7 +202,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
           <img src={assetUrl(night && p.wallNight ? p.wallNight : p.wall)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
           <img src={assetUrl(p.floor)} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${p.floorH / ROOM_H * 100}%` }} draggable={false} />
         </>}
-        {layout ? drawables(layout.room).filter(d => d.group !== 'avatar').map(d => <img key={d.key} src={d.src ? assetUrl(d.src) : undefined} alt="" draggable={false} className="pointer-events-none absolute" style={{ left: `${d.left / ROOM_W * 100}%`, top: `${d.top / ROOM_H * 100}%`, width: `${d.w / ROOM_W * 100}%`, height: `${d.h / ROOM_H * 100}%`, zIndex: d.z, transform: d.flip ? 'scaleX(-1)' : undefined }} />) : null}
+        {layout ? drawables(layout.room).filter(d => d.group !== 'avatar').map(d => <img key={d.key} src={d.src ? assetUrl(d.src) : undefined} alt="" draggable={false} className="pointer-events-none absolute" style={{ left: `${d.left / ROOM_W * 100}%`, top: `${d.top / ROOM_H * 100}%`, width: `${d.w / ROOM_W * 100}%`, height: `${d.h / ROOM_H * 100}%`, zIndex: d.z, transform: d.flip ? 'scaleX(-1)' : undefined }} />) : <TravelDecor placeId={placeId} />}
 
         {ids.map((id, i) => {
           if (isFound(id)) return null
