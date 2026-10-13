@@ -731,5 +731,25 @@
     "category": "costume",
     "color": "mint",
     "native": true
+  },
+  "costume_winged_lolita_puff": {
+    "ko": "보라 날개 퍼프 로리타",
+    "en": "Purple Winged Puff Lolita",
+    "category": "costume",
+    "color": "purple",
+    "native": true
+  },
+  "costume_yellow_ribbon_lolita": {
+    "ko": "노랑 리본 로리타 원피스",
+    "en": "Yellow Ribbon Lolita Dress",
+    "category": "costume",
+    "color": "beige",
+    "native": true
+  },
+  "shoes_yellow_ribbon_maryjane": {
+    "ko": "노랑 리본 메리제인",
+    "en": "Yellow Ribbon Mary Janes",
+    "color": "beige",
+    "native": true
   }
 }
