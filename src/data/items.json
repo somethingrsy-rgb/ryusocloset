@@ -1046,7 +1046,7 @@
     "colorHex": "#b9a4e8",
     "box": {
       "x": 98,
-      "y": 604,
+      "y": 556,
       "w": 828,
       "h": 932
     },
@@ -1117,10 +1117,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 80,
-      "y": 604,
-      "w": 865,
-      "h": 932
+      "x": 155,
+      "y": 605,
+      "w": 715,
+      "h": 770
     },
     "image": "assets/clothes/costume/costume_yellow_ribbon_lolita.webp",
     "thumb": "assets/thumbs/costume_yellow_ribbon_lolita.webp",
@@ -2125,10 +2125,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 408,
-      "y": 1364,
-      "w": 206,
-      "h": 139
+      "x": 374,
+      "y": 1341,
+      "w": 274,
+      "h": 185
     },
     "image": "assets/clothes/shoes/shoes_yellow_ribbon_maryjane.webp",
     "thumb": "assets/thumbs/shoes_yellow_ribbon_maryjane.webp",
@@ -2516,6 +2516,150 @@
     },
     "image": "assets/clothes/accessory/acc_pink_heart_bow.webp",
     "thumb": "assets/thumbs/acc_pink_heart_bow.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_stripe_heart_blue",
+    "category": "accessory",
+    "name": {
+      "ko": "블루 줄무늬 하트 보석핀",
+      "en": "Blue Stripe Heart Jewel Pin"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 190,
+      "y": 73,
+      "w": 260,
+      "h": 284
+    },
+    "image": "assets/clothes/accessory/acc_stripe_heart_blue.webp",
+    "thumb": "assets/thumbs/acc_stripe_heart_blue.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_stripe_heart_gold",
+    "category": "accessory",
+    "name": {
+      "ko": "골드 줄무늬 하트 보석핀",
+      "en": "Gold Stripe Heart Jewel Pin"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 190,
+      "y": 74,
+      "w": 260,
+      "h": 281
+    },
+    "image": "assets/clothes/accessory/acc_stripe_heart_gold.webp",
+    "thumb": "assets/thumbs/acc_stripe_heart_gold.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_stripe_heart_green",
+    "category": "accessory",
+    "name": {
+      "ko": "그린 줄무늬 하트 보석핀",
+      "en": "Green Stripe Heart Jewel Pin"
+    },
+    "color": "green",
+    "colorName": {
+      "ko": "그린",
+      "en": "Green"
+    },
+    "colorHex": "#6f9a72",
+    "box": {
+      "x": 190,
+      "y": 76,
+      "w": 260,
+      "h": 279
+    },
+    "image": "assets/clothes/accessory/acc_stripe_heart_green.webp",
+    "thumb": "assets/thumbs/acc_stripe_heart_green.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_stripe_heart_pink",
+    "category": "accessory",
+    "name": {
+      "ko": "핑크 줄무늬 하트 보석핀",
+      "en": "Pink Stripe Heart Jewel Pin"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 190,
+      "y": 73,
+      "w": 260,
+      "h": 284
+    },
+    "image": "assets/clothes/accessory/acc_stripe_heart_pink.webp",
+    "thumb": "assets/thumbs/acc_stripe_heart_pink.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_stripe_heart_purple",
+    "category": "accessory",
+    "name": {
+      "ko": "퍼플 줄무늬 하트 보석핀",
+      "en": "Purple Stripe Heart Jewel Pin"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 190,
+      "y": 72,
+      "w": 260,
+      "h": 285
+    },
+    "image": "assets/clothes/accessory/acc_stripe_heart_purple.webp",
+    "thumb": "assets/thumbs/acc_stripe_heart_purple.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_stripe_heart_red",
+    "category": "accessory",
+    "name": {
+      "ko": "레드 줄무늬 하트 보석핀",
+      "en": "Red Stripe Heart Jewel Pin"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 190,
+      "y": 79,
+      "w": 260,
+      "h": 272
+    },
+    "image": "assets/clothes/accessory/acc_stripe_heart_red.webp",
+    "thumb": "assets/thumbs/acc_stripe_heart_red.webp",
     "zIndex": 70,
     "native": true
   },
