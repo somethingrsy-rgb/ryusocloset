@@ -781,10 +781,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 747
+      "x": 104,
+      "y": 590,
+      "w": 847,
+      "h": 905
     },
     "image": "assets/clothes/costume/costume_clover_flower_lolita.webp",
     "thumb": "assets/thumbs/costume_clover_flower_lolita.webp",
@@ -884,30 +884,6 @@
     },
     "image": "assets/clothes/costume/costume_petal_blue.webp",
     "thumb": "assets/thumbs/costume_petal_blue.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
-    "id": "costume_plaid_gothic_red",
-    "category": "costume",
-    "name": {
-      "ko": "레드 체크 고딕 원피스",
-      "en": "Red Plaid Gothic Dress"
-    },
-    "color": "red",
-    "colorName": {
-      "ko": "레드",
-      "en": "Red"
-    },
-    "colorHex": "#c8283c",
-    "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 690
-    },
-    "image": "assets/clothes/costume/costume_plaid_gothic_red.webp",
-    "thumb": "assets/thumbs/costume_plaid_gothic_red.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1069,10 +1045,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 788
+      "x": 88,
+      "y": 561,
+      "w": 847,
+      "h": 954
     },
     "image": "assets/clothes/costume/costume_winged_lolita_purple.webp",
     "thumb": "assets/thumbs/costume_winged_lolita_purple.webp",
@@ -1580,30 +1556,6 @@
     },
     "image": "assets/clothes/shoes/shoes_bow_flats_black.webp",
     "thumb": "assets/thumbs/shoes_bow_flats_black.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_clover_maryjane_socks",
-    "category": "shoes",
-    "name": {
-      "ko": "클로버 리본 양말 신발",
-      "en": "Clover Bow Socks Shoes"
-    },
-    "color": "mint",
-    "colorName": {
-      "ko": "민트",
-      "en": "Mint"
-    },
-    "colorHex": "#a9dcc8",
-    "box": {
-      "x": 407,
-      "y": 1311,
-      "w": 210,
-      "h": 193
-    },
-    "image": "assets/clothes/shoes/shoes_clover_maryjane_socks.webp",
-    "thumb": "assets/thumbs/shoes_clover_maryjane_socks.webp",
     "zIndex": 10,
     "native": true
   },
