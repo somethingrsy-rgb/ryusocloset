@@ -768,6 +768,30 @@
     "native": true
   },
   {
+    "id": "costume_clover_flower_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "클로버 꽃 로리타 원피스",
+      "en": "Clover Flower Lolita Dress"
+    },
+    "color": "mint",
+    "colorName": {
+      "ko": "민트",
+      "en": "Mint"
+    },
+    "colorHex": "#a9dcc8",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 747
+    },
+    "image": "assets/clothes/costume/costume_clover_flower_lolita.webp",
+    "thumb": "assets/thumbs/costume_clover_flower_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_floral_black",
     "category": "costume",
     "name": {
@@ -860,6 +884,30 @@
     },
     "image": "assets/clothes/costume/costume_petal_blue.webp",
     "thumb": "assets/thumbs/costume_petal_blue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_plaid_gothic_red",
+    "category": "costume",
+    "name": {
+      "ko": "레드 체크 고딕 원피스",
+      "en": "Red Plaid Gothic Dress"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 690
+    },
+    "image": "assets/clothes/costume/costume_plaid_gothic_red.webp",
+    "thumb": "assets/thumbs/costume_plaid_gothic_red.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1004,6 +1052,54 @@
     },
     "image": "assets/clothes/costume/costume_trump_blue.webp",
     "thumb": "assets/thumbs/costume_trump_blue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_winged_lolita_purple",
+    "category": "costume",
+    "name": {
+      "ko": "보라 날개 로리타 원피스",
+      "en": "Purple Winged Lolita Dress"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 788
+    },
+    "image": "assets/clothes/costume/costume_winged_lolita_purple.webp",
+    "thumb": "assets/thumbs/costume_winged_lolita_purple.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_yellow_qipao",
+    "category": "costume",
+    "name": {
+      "ko": "노랑 꽃 치파오 원피스",
+      "en": "Yellow Flower Qipao Dress"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 685
+    },
+    "image": "assets/clothes/costume/costume_yellow_qipao.webp",
+    "thumb": "assets/thumbs/costume_yellow_qipao.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1488,6 +1584,30 @@
     "native": true
   },
   {
+    "id": "shoes_clover_maryjane_socks",
+    "category": "shoes",
+    "name": {
+      "ko": "클로버 리본 양말 신발",
+      "en": "Clover Bow Socks Shoes"
+    },
+    "color": "mint",
+    "colorName": {
+      "ko": "민트",
+      "en": "Mint"
+    },
+    "colorHex": "#a9dcc8",
+    "box": {
+      "x": 407,
+      "y": 1311,
+      "w": 210,
+      "h": 193
+    },
+    "image": "assets/clothes/shoes/shoes_clover_maryjane_socks.webp",
+    "thumb": "assets/thumbs/shoes_clover_maryjane_socks.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_flats_beige",
     "category": "shoes",
     "name": {
@@ -1968,6 +2088,30 @@
     "native": true
   },
   {
+    "id": "shoes_yellow_maryjane_flower",
+    "category": "shoes",
+    "name": {
+      "ko": "노랑 꽃 메리제인",
+      "en": "Yellow Flower Mary Janes"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "box": {
+      "x": 385,
+      "y": 1339,
+      "w": 252,
+      "h": 165
+    },
+    "image": "assets/clothes/shoes/shoes_yellow_maryjane_flower.webp",
+    "thumb": "assets/thumbs/shoes_yellow_maryjane_flower.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "acc_hair_ribbon_green",
     "category": "accessory",
     "name": {
@@ -2348,6 +2492,30 @@
     },
     "image": "assets/clothes/accessory/acc_pink_heart_bow.webp",
     "thumb": "assets/thumbs/acc_pink_heart_bow.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_yellow_flower_tassel",
+    "category": "accessory",
+    "name": {
+      "ko": "노랑 꽃 술 머리장식",
+      "en": "Yellow Flower Tassel Hairpin"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 190,
+      "y": 0,
+      "w": 260,
+      "h": 455
+    },
+    "image": "assets/clothes/accessory/acc_yellow_flower_tassel.webp",
+    "thumb": "assets/thumbs/acc_yellow_flower_tassel.webp",
     "zIndex": 70,
     "native": true
   },

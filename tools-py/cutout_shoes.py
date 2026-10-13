@@ -43,6 +43,14 @@ leg = ndi.binary_dilation(leg, iterations=2)
 if not has_alpha:
     alpha[leg & ~bg] = 0
 
+# 두 짝이 밑창에서 맞닿아 있으면 가운데에서 가장 얇은 세로줄 한 줄을 끊어 둘로 나눈다
+if not has_alpha:
+    _l, _n = ndi.label(alpha > 128)
+    if _n and sum(1 for i in range(1, _n + 1) if (_l == i).sum() > 1500) < 2:
+        _band = range(w // 2 - w // 10, w // 2 + w // 10)
+        _cut = min(_band, key=lambda x: (alpha[:, x] > 0).sum())
+        alpha[:, _cut - 1:_cut + 2] = 0
+
 # 가장자리 한 겹을 부드럽게
 solid = alpha > 0
 if not has_alpha:
