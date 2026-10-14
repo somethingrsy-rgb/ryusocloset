@@ -793,5 +793,89 @@
     "category": "accessory",
     "color": "beige",
     "native": true
+  },
+  "acc_bow_navy_star": {
+    "ko": "남색 별빛 리본핀",
+    "en": "Navy Starlight Bow",
+    "category": "accessory",
+    "color": "navy",
+    "native": true
+  },
+  "acc_bow_pink_sakura": {
+    "ko": "벚꽃 핑크 리본핀",
+    "en": "Sakura Pink Bow",
+    "category": "accessory",
+    "color": "pink",
+    "native": true
+  },
+  "acc_bow_white_heart_gem": {
+    "ko": "화이트 하트 보석 리본핀",
+    "en": "White Heart Gem Bow",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_bow_peach_stripe": {
+    "ko": "피치 줄무늬 리본핀",
+    "en": "Peach Stripe Bow",
+    "category": "accessory",
+    "color": "pink",
+    "native": true
+  },
+  "acc_bow_blue_crystal": {
+    "ko": "블루 크리스탈 리본핀",
+    "en": "Blue Crystal Bow",
+    "category": "accessory",
+    "color": "skyblue",
+    "native": true
+  },
+  "acc_bow_lavender_flower": {
+    "ko": "라벤더 꽃 리본핀",
+    "en": "Lavender Flower Bow",
+    "category": "accessory",
+    "color": "purple",
+    "native": true
+  },
+  "acc_bow_jewel_red_blue": {
+    "ko": "레드 블루 보석 리본핀",
+    "en": "Red Blue Jewel Bow",
+    "category": "accessory",
+    "color": "red",
+    "native": true
+  },
+  "acc_bow_lavender_gem": {
+    "ko": "라벤더 보석 리본핀",
+    "en": "Lavender Gem Bow",
+    "category": "accessory",
+    "color": "purple",
+    "native": true
+  },
+  "acc_bow_navy_constellation": {
+    "ko": "남색 별자리 리본핀",
+    "en": "Navy Constellation Bow",
+    "category": "accessory",
+    "color": "navy",
+    "native": true
+  },
+  "acc_bow_pastel_long": {
+    "ko": "파스텔 롱 리본핀",
+    "en": "Pastel Long Ribbon",
+    "category": "accessory",
+    "color": "skyblue",
+    "native": true
+  },
+  "acc_bow_butterfly_lavender": {
+    "ko": "라벤더 나비 날개핀",
+    "en": "Lavender Butterfly Wings",
+    "category": "accessory",
+    "color": "purple",
+    "native": true
+  },
+  "acc_bow_navy_gold_lace": {
+    "ko": "남색 골드 레이스 리본핀",
+    "en": "Navy Gold Lace Bow",
+    "category": "accessory",
+    "color": "navy",
+    "native": true
   }
 }

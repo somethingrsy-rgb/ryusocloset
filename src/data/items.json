@@ -2136,6 +2136,294 @@
     "native": true
   },
   {
+    "id": "acc_bow_blue_crystal",
+    "category": "accessory",
+    "name": {
+      "ko": "블루 크리스탈 리본핀",
+      "en": "Blue Crystal Bow"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 200,
+      "y": 92,
+      "w": 240,
+      "h": 247
+    },
+    "image": "assets/clothes/accessory/acc_bow_blue_crystal.webp",
+    "thumb": "assets/thumbs/acc_bow_blue_crystal.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_bow_butterfly_lavender",
+    "category": "accessory",
+    "name": {
+      "ko": "라벤더 나비 날개핀",
+      "en": "Lavender Butterfly Wings"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 200,
+      "y": 110,
+      "w": 240,
+      "h": 210
+    },
+    "image": "assets/clothes/accessory/acc_bow_butterfly_lavender.webp",
+    "thumb": "assets/thumbs/acc_bow_butterfly_lavender.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_bow_jewel_red_blue",
+    "category": "accessory",
+    "name": {
+      "ko": "레드 블루 보석 리본핀",
+      "en": "Red Blue Jewel Bow"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 200,
+      "y": 126,
+      "w": 240,
+      "h": 177
+    },
+    "image": "assets/clothes/accessory/acc_bow_jewel_red_blue.webp",
+    "thumb": "assets/thumbs/acc_bow_jewel_red_blue.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_bow_lavender_flower",
+    "category": "accessory",
+    "name": {
+      "ko": "라벤더 꽃 리본핀",
+      "en": "Lavender Flower Bow"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 200,
+      "y": 94,
+      "w": 240,
+      "h": 243
+    },
+    "image": "assets/clothes/accessory/acc_bow_lavender_flower.webp",
+    "thumb": "assets/thumbs/acc_bow_lavender_flower.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_bow_lavender_gem",
+    "category": "accessory",
+    "name": {
+      "ko": "라벤더 보석 리본핀",
+      "en": "Lavender Gem Bow"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 200,
+      "y": 115,
+      "w": 240,
+      "h": 200
+    },
+    "image": "assets/clothes/accessory/acc_bow_lavender_gem.webp",
+    "thumb": "assets/thumbs/acc_bow_lavender_gem.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_bow_navy_constellation",
+    "category": "accessory",
+    "name": {
+      "ko": "남색 별자리 리본핀",
+      "en": "Navy Constellation Bow"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 200,
+      "y": 104,
+      "w": 240,
+      "h": 221
+    },
+    "image": "assets/clothes/accessory/acc_bow_navy_constellation.webp",
+    "thumb": "assets/thumbs/acc_bow_navy_constellation.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_bow_navy_gold_lace",
+    "category": "accessory",
+    "name": {
+      "ko": "남색 골드 레이스 리본핀",
+      "en": "Navy Gold Lace Bow"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 200,
+      "y": 109,
+      "w": 240,
+      "h": 212
+    },
+    "image": "assets/clothes/accessory/acc_bow_navy_gold_lace.webp",
+    "thumb": "assets/thumbs/acc_bow_navy_gold_lace.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_bow_navy_star",
+    "category": "accessory",
+    "name": {
+      "ko": "남색 별빛 리본핀",
+      "en": "Navy Starlight Bow"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 200,
+      "y": 70,
+      "w": 240,
+      "h": 289
+    },
+    "image": "assets/clothes/accessory/acc_bow_navy_star.webp",
+    "thumb": "assets/thumbs/acc_bow_navy_star.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_bow_pastel_long",
+    "category": "accessory",
+    "name": {
+      "ko": "파스텔 롱 리본핀",
+      "en": "Pastel Long Ribbon"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 200,
+      "y": 128,
+      "w": 240,
+      "h": 173
+    },
+    "image": "assets/clothes/accessory/acc_bow_pastel_long.webp",
+    "thumb": "assets/thumbs/acc_bow_pastel_long.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_bow_peach_stripe",
+    "category": "accessory",
+    "name": {
+      "ko": "피치 줄무늬 리본핀",
+      "en": "Peach Stripe Bow"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 200,
+      "y": 66,
+      "w": 240,
+      "h": 297
+    },
+    "image": "assets/clothes/accessory/acc_bow_peach_stripe.webp",
+    "thumb": "assets/thumbs/acc_bow_peach_stripe.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_bow_pink_sakura",
+    "category": "accessory",
+    "name": {
+      "ko": "벚꽃 핑크 리본핀",
+      "en": "Sakura Pink Bow"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 200,
+      "y": 107,
+      "w": 240,
+      "h": 216
+    },
+    "image": "assets/clothes/accessory/acc_bow_pink_sakura.webp",
+    "thumb": "assets/thumbs/acc_bow_pink_sakura.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_bow_white_heart_gem",
+    "category": "accessory",
+    "name": {
+      "ko": "화이트 하트 보석 리본핀",
+      "en": "White Heart Gem Bow"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 200,
+      "y": 81,
+      "w": 240,
+      "h": 268
+    },
+    "image": "assets/clothes/accessory/acc_bow_white_heart_gem.webp",
+    "thumb": "assets/thumbs/acc_bow_white_heart_gem.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
     "id": "acc_hair_ribbon_green",
     "category": "accessory",
     "name": {
