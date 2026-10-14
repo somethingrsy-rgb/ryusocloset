@@ -1056,30 +1056,6 @@
     "native": true
   },
   {
-    "id": "costume_winged_lolita_purple",
-    "category": "costume",
-    "name": {
-      "ko": "보라 날개 로리타 원피스",
-      "en": "Purple Winged Lolita Dress"
-    },
-    "color": "purple",
-    "colorName": {
-      "ko": "퍼플",
-      "en": "Purple"
-    },
-    "colorHex": "#b9a4e8",
-    "box": {
-      "x": 88,
-      "y": 561,
-      "w": 847,
-      "h": 954
-    },
-    "image": "assets/clothes/costume/costume_winged_lolita_purple.webp",
-    "thumb": "assets/thumbs/costume_winged_lolita_purple.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
     "id": "costume_yellow_qipao",
     "category": "costume",
     "name": {
@@ -1597,10 +1573,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 411,
-      "y": 1412,
-      "w": 201,
-      "h": 91
+      "x": 401,
+      "y": 1407,
+      "w": 221,
+      "h": 101
     },
     "image": "assets/clothes/shoes/shoes_bow_flats_black.webp",
     "thumb": "assets/thumbs/shoes_bow_flats_black.webp",
@@ -1621,37 +1597,13 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 411,
-      "y": 1410,
-      "w": 201,
-      "h": 94
+      "x": 401,
+      "y": 1406,
+      "w": 220,
+      "h": 103
     },
     "image": "assets/clothes/shoes/shoes_flats_beige.webp",
     "thumb": "assets/thumbs/shoes_flats_beige.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_maryjane_bow_black",
-    "category": "shoes",
-    "name": {
-      "ko": "메리제인 구두",
-      "en": "Mary Janes"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 410,
-      "y": 1352,
-      "w": 202,
-      "h": 152
-    },
-    "image": "assets/clothes/shoes/shoes_maryjane_bow_black.webp",
-    "thumb": "assets/thumbs/shoes_maryjane_bow_black.webp",
     "zIndex": 10,
     "native": true
   },
@@ -1704,54 +1656,6 @@
     "native": true
   },
   {
-    "id": "shoes_slingback_black",
-    "category": "shoes",
-    "name": {
-      "ko": "뮬 플랫",
-      "en": "Mule Flats"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 410,
-      "y": 1411,
-      "w": 202,
-      "h": 93
-    },
-    "image": "assets/clothes/shoes/shoes_slingback_black.webp",
-    "thumb": "assets/thumbs/shoes_slingback_black.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_slingback_cream",
-    "category": "shoes",
-    "name": {
-      "ko": "뮬 플랫",
-      "en": "Mule Flats"
-    },
-    "color": "ivory",
-    "colorName": {
-      "ko": "아이보리",
-      "en": "Ivory"
-    },
-    "colorHex": "#f6ecd6",
-    "box": {
-      "x": 410,
-      "y": 1412,
-      "w": 203,
-      "h": 92
-    },
-    "image": "assets/clothes/shoes/shoes_slingback_cream.webp",
-    "thumb": "assets/thumbs/shoes_slingback_cream.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
     "id": "shoes_sneakers_mule_navy",
     "category": "shoes",
     "name": {
@@ -1772,30 +1676,6 @@
     },
     "image": "assets/clothes/shoes/shoes_sneakers_mule_navy.webp",
     "thumb": "assets/thumbs/shoes_sneakers_mule_navy.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_sneakers_navy",
-    "category": "shoes",
-    "name": {
-      "ko": "스니커즈",
-      "en": "Sneakers"
-    },
-    "color": "navy",
-    "colorName": {
-      "ko": "네이비",
-      "en": "Navy"
-    },
-    "colorHex": "#27355b",
-    "box": {
-      "x": 400,
-      "y": 1406,
-      "w": 224,
-      "h": 98
-    },
-    "image": "assets/clothes/shoes/shoes_sneakers_navy.webp",
-    "thumb": "assets/thumbs/shoes_sneakers_navy.webp",
     "zIndex": 10,
     "native": true
   },
@@ -2064,30 +1944,6 @@
     "native": true
   },
   {
-    "id": "shoes_strap_skyblue",
-    "category": "shoes",
-    "name": {
-      "ko": "하늘 리본 구두",
-      "en": "Sky Bow Shoes"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 397,
-      "y": 1378,
-      "w": 227,
-      "h": 126
-    },
-    "image": "assets/clothes/shoes/shoes_strap_skyblue.webp",
-    "thumb": "assets/thumbs/shoes_strap_skyblue.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
     "id": "shoes_yellow_maryjane_flower",
     "category": "shoes",
     "name": {
@@ -2328,30 +2184,6 @@
     "native": true
   },
   {
-    "id": "acc_bow_pastel_long",
-    "category": "accessory",
-    "name": {
-      "ko": "파스텔 롱 리본핀",
-      "en": "Pastel Long Ribbon"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 200,
-      "y": 128,
-      "w": 240,
-      "h": 173
-    },
-    "image": "assets/clothes/accessory/acc_bow_pastel_long.webp",
-    "thumb": "assets/thumbs/acc_bow_pastel_long.webp",
-    "zIndex": 70,
-    "native": true
-  },
-  {
     "id": "acc_bow_peach_stripe",
     "category": "accessory",
     "name": {
@@ -2544,150 +2376,6 @@
     "native": true
   },
   {
-    "id": "acc_pearl_bow_barrette",
-    "category": "accessory",
-    "name": {
-      "ko": "진주 리본 바레트",
-      "en": "Pearl Bow Barrette"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 244,
-      "y": 176,
-      "w": 152,
-      "h": 77
-    },
-    "image": "assets/clothes/accessory/acc_pearl_bow_barrette.webp",
-    "thumb": "assets/thumbs/acc_pearl_bow_barrette.webp",
-    "zIndex": 70,
-    "native": true
-  },
-  {
-    "id": "acc_pearl_bow_big",
-    "category": "accessory",
-    "name": {
-      "ko": "진주 하트 레이스 큰 리본",
-      "en": "Pearl Heart Lace Big Bow"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 190,
-      "y": 126,
-      "w": 260,
-      "h": 179
-    },
-    "image": "assets/clothes/accessory/acc_pearl_bow_big.webp",
-    "thumb": "assets/thumbs/acc_pearl_bow_big.webp",
-    "zIndex": 70,
-    "native": true
-  },
-  {
-    "id": "acc_pearl_bow_flower",
-    "category": "accessory",
-    "name": {
-      "ko": "진주 꽃 리본핀",
-      "en": "Pearl Flower Bow Pin"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 234,
-      "y": 156,
-      "w": 172,
-      "h": 119
-    },
-    "image": "assets/clothes/accessory/acc_pearl_bow_flower.webp",
-    "thumb": "assets/thumbs/acc_pearl_bow_flower.webp",
-    "zIndex": 70,
-    "native": true
-  },
-  {
-    "id": "acc_pearl_bow_heart",
-    "category": "accessory",
-    "name": {
-      "ko": "진주 하트 레이스 리본",
-      "en": "Pearl Heart Lace Bow"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 205,
-      "y": 138,
-      "w": 230,
-      "h": 153
-    },
-    "image": "assets/clothes/accessory/acc_pearl_bow_heart.webp",
-    "thumb": "assets/thumbs/acc_pearl_bow_heart.webp",
-    "zIndex": 70,
-    "native": true
-  },
-  {
-    "id": "acc_pearl_bow_lace",
-    "category": "accessory",
-    "name": {
-      "ko": "진주 레이스 리본핀",
-      "en": "Pearl Lace Ribbon Pin"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 236,
-      "y": 148,
-      "w": 169,
-      "h": 135
-    },
-    "image": "assets/clothes/accessory/acc_pearl_bow_lace.webp",
-    "thumb": "assets/thumbs/acc_pearl_bow_lace.webp",
-    "zIndex": 70,
-    "native": true
-  },
-  {
-    "id": "acc_pearl_bow_wide",
-    "category": "accessory",
-    "name": {
-      "ko": "진주 하트 와이드 리본",
-      "en": "Pearl Heart Wide Bow"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 204,
-      "y": 151,
-      "w": 233,
-      "h": 128
-    },
-    "image": "assets/clothes/accessory/acc_pearl_bow_wide.webp",
-    "thumb": "assets/thumbs/acc_pearl_bow_wide.webp",
-    "zIndex": 70,
-    "native": true
-  },
-  {
     "id": "acc_pearl_flower_gold",
     "category": "accessory",
     "name": {
@@ -2712,30 +2400,6 @@
     "native": true
   },
   {
-    "id": "acc_pearl_heart_clip",
-    "category": "accessory",
-    "name": {
-      "ko": "진주 하트 클립",
-      "en": "Pearl Heart Clip"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 255,
-      "y": 182,
-      "w": 130,
-      "h": 66
-    },
-    "image": "assets/clothes/accessory/acc_pearl_heart_clip.webp",
-    "thumb": "assets/thumbs/acc_pearl_heart_clip.webp",
-    "zIndex": 70,
-    "native": true
-  },
-  {
     "id": "acc_pearl_petal",
     "category": "accessory",
     "name": {
@@ -2756,30 +2420,6 @@
     },
     "image": "assets/clothes/accessory/acc_pearl_petal.webp",
     "thumb": "assets/thumbs/acc_pearl_petal.webp",
-    "zIndex": 70,
-    "native": true
-  },
-  {
-    "id": "acc_pearl_ribbon_loop",
-    "category": "accessory",
-    "name": {
-      "ko": "진주 루프 리본",
-      "en": "Pearl Loop Ribbon"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 221,
-      "y": 172,
-      "w": 198,
-      "h": 87
-    },
-    "image": "assets/clothes/accessory/acc_pearl_ribbon_loop.webp",
-    "thumb": "assets/thumbs/acc_pearl_ribbon_loop.webp",
     "zIndex": 70,
     "native": true
   },
