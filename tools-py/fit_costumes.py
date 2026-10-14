@@ -47,6 +47,15 @@ MANUAL: dict[str, dict] = {
     'shoes_yellow_ribbon_maryjane': dict(scale=1.1 ** 3, dy=0, pivot=(511, 1433)),  # 신발 +3
     'shoes_bow_flats_black': dict(scale=1.1, dy=0, pivot=(511, 1457)),  # 신발 +1
     'shoes_flats_beige': dict(scale=1.1, dy=0, pivot=(511, 1457)),  # 신발 +1
+    'outer_cropped_denim': dict(scale=1.1, dy=0, pivot=(511, 808)),  # 아우터 +1
+    'outer_jacket_gray': dict(scale=1.1, dy=0, pivot=(512, 814)),  # 아우터 +1
+    'outer_nepa_black': dict(scale=1.1, dy=0, pivot=(512, 923)),  # 아우터 +1
+    'outer_roem_tweed_black': dict(scale=1.1, dy=0, pivot=(512, 829)),  # 아우터 +1
+    'outer_short_trench_black': dict(scale=1.1, dy=0, pivot=(510, 828)),  # 아우터 +1
+    'outer_trench_beige': dict(scale=1.1, dy=0, pivot=(512, 955)),  # 아우터 +1
+    'outer_trench_black': dict(scale=1.1, dy=0, pivot=(512, 952)),  # 아우터 +1
+    'outer_trench_khaki': dict(scale=1.1, dy=0, pivot=(512, 959)),  # 아우터 +1
+    'outer_tweed_navy': dict(scale=1.1, dy=0, pivot=(511, 803)),  # 아우터 +1
 }
 OVERRIDES: dict[str, tuple[int, int]] = {
     'dress_card_red': (760, 165),  # 목 장식이 따로 떨어져 있어서 자동 감지가 안 됨 (소매 사이 몸통 폭)
