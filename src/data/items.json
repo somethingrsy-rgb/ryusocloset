@@ -2246,9 +2246,9 @@
     "colorHex": "#dcc5a2",
     "box": {
       "x": 105,
-      "y": 0,
+      "y": 3,
       "w": 814,
-      "h": 543
+      "h": 546
     },
     "image": "assets/clothes/accessory/acc_ears_beige_star.webp",
     "thumb": "assets/thumbs/acc_ears_beige_star.webp",
@@ -2270,9 +2270,9 @@
     "colorHex": "#b9a4e8",
     "box": {
       "x": 105,
-      "y": 0,
+      "y": 2,
       "w": 814,
-      "h": 543
+      "h": 547
     },
     "image": "assets/clothes/accessory/acc_ears_lavender_star.webp",
     "thumb": "assets/thumbs/acc_ears_lavender_star.webp",
