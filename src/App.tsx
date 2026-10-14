@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { HairSalon } from './components/HairSalon'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
 import { SettingsSheet } from './components/SettingsSheet'
@@ -53,7 +54,7 @@ const UNDO_LIMIT = 50
 const ROOM_UNDO_GAP_MS = 500
 const ROOM_UNDO_LIMIT = 50
 
-type ModalKind = null | 'settings' | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport' | 'sendToGame'
+type ModalKind = null | 'settings' | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport' | 'sendToGame' | 'hair'
 type Mode = 'closet' | 'room' | 'travel'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -141,7 +142,7 @@ export default function App() {
   // 착용 순간 깜빡임이 없도록 모든 레이어를 한가할 때 미리 받아 둔다
   useEffect(() => {
     const urls = [
-      ...AVATARS.flatMap((a) => [baseFiles(a).body, baseFiles(a).hairFront].map(assetUrl)),
+      ...AVATARS.flatMap((a) => a.hairstyles.flatMap((h) => [baseFiles(a, h).body, baseFiles(a, h).hairFront]).map(assetUrl)),
       ...ITEMS.map((i) => assetUrl(i.image)),
       ...Object.values(ROOM_ASSETS),
       ...Object.values(CAMP_ASSETS),
@@ -368,7 +369,15 @@ export default function App() {
             </div>
           </header>
 
-          <div className="min-h-0 flex-1">
+          <div className="relative min-h-0 flex-1">
+            {mode === 'closet' && (
+              <button
+                onClick={() => setModal('hair')}
+                aria-label={lang === 'ko' ? '헤어숍' : 'Hair salon'}
+                title={lang === 'ko' ? '헤어숍' : 'Hair salon'}
+                className="absolute top-2 right-2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/85 text-lg shadow-md ring-1 ring-black/5"
+              ><span aria-hidden>💇</span></button>
+            )}
             {mode === 'travel' ? (
               <TravelGame
                 initialPlaceId={travelPreview}
@@ -481,6 +490,7 @@ export default function App() {
           }}
         />
       )}
+      {modal === 'hair' && <HairSalon onClose={() => setModal(null)} />}
       {modal === 'bg' && <BackgroundPicker value={bgId} onPick={setBgId} onClose={() => setModal(null)} />}
       {modal === 'saved' && (
         <SavedSheet
