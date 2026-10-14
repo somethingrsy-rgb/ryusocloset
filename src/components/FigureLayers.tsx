@@ -4,6 +4,7 @@ import { HAIR_FRONT_Z } from '../lib/layers'
 import { wornItems } from '../lib/outfit'
 import { cssTransform, effectiveZ } from '../lib/tweaks'
 import type { Outfit, Tweaks } from '../lib/types'
+import { useAvatar } from '../lib/useAvatar'
 
 /**
  * 아바타 + 옷 레이어 (부모는 position:relative 이고 1024:1536 비율이어야 한다).
@@ -20,6 +21,7 @@ export const FigureLayers = memo(function FigureLayers({
   tweaks?: Tweaks
   animate?: boolean
 }) {
+  useAvatar() // 아바타를 바꾸면 다시 그린다
   const items = wornItems(outfit, ITEM_BY_ID, tweaks)
   const body = outfit.shoes ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body
   return (
