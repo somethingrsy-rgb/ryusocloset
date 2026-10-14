@@ -2248,7 +2248,7 @@
       "x": 105,
       "y": 0,
       "w": 814,
-      "h": 533
+      "h": 543
     },
     "image": "assets/clothes/accessory/acc_ears_beige_star.webp",
     "thumb": "assets/thumbs/acc_ears_beige_star.webp",
@@ -2272,7 +2272,7 @@
       "x": 105,
       "y": 0,
       "w": 814,
-      "h": 533
+      "h": 543
     },
     "image": "assets/clothes/accessory/acc_ears_lavender_star.webp",
     "thumb": "assets/thumbs/acc_ears_lavender_star.webp",
@@ -2294,9 +2294,9 @@
     "colorHex": "#a9dcc8",
     "box": {
       "x": 105,
-      "y": 0,
+      "y": 8,
       "w": 814,
-      "h": 523
+      "h": 525
     },
     "image": "assets/clothes/accessory/acc_ears_mint_lotus.webp",
     "thumb": "assets/thumbs/acc_ears_mint_lotus.webp",
@@ -2318,9 +2318,9 @@
     "colorHex": "#fbfbfb",
     "box": {
       "x": 105,
-      "y": 0,
+      "y": 7,
       "w": 814,
-      "h": 523
+      "h": 526
     },
     "image": "assets/clothes/accessory/acc_ears_white_lotus.webp",
     "thumb": "assets/thumbs/acc_ears_white_lotus.webp",
