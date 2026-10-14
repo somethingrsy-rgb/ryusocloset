@@ -21,8 +21,30 @@ from scipy import ndimage as ndi
 
 out = sys.argv[1]
 styles = [a.split('=', 1) for a in sys.argv[2:]]
+# 이름 앞에 +를 붙이면 '머리 레이어만' 만든다 (몸 쪽은 +없는 그림들로만 만든다: 얼굴이 다른 그림의 머리를 더할 때)
+# ~ 는 + 와 같은데 머리카락을 '살색이 아닌 덩어리'로 찾는다 (밝은 갈색 머리처럼 진하지 않은 머리용)
+hair_only = {sid.lstrip('+~') for sid, _ in styles if sid[0] in '+~'}
+color_mask = {sid.lstrip('+~') for sid, _ in styles if sid[0] == '~'}
+styles = [(sid.lstrip('+~'), p) for sid, p in styles]
 H, W = 1536, 1024
 BODY_Y = 640  # 이 아래는 몸(모든 그림에서 같음)
+
+
+def load_color(path):
+    """살색·배경이 아닌 덩어리 중 머리 꼭대기(y<250)에서 이어진 것을 머리카락으로 본다."""
+    a = np.array(Image.open(path).convert('RGBA'))
+    r, g, b = [a[..., i].astype(int) for i in range(3)]
+    skin = (r > 190) & (g > 140) & (b > 110) & (r - b > 15)
+    non = (a[..., 3] > 128) & ~skin
+    non[1000:] = False
+    non = cv2.morphologyEx(non.astype(np.uint8), cv2.MORPH_OPEN, np.ones((7, 7), np.uint8)).astype(bool)
+    lab, n = ndi.label(non)
+    seeds = set(np.unique(lab[:250][non[:250]])) - {0}
+    m = np.isin(lab, list(seeds))
+    m = cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((11, 11), np.uint8)).astype(bool)
+    m = ndi.binary_fill_holes(m)
+    m = cv2.dilate(m.astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool) & (a[..., 3] > 8)
+    return a, m
 
 
 def load(path):
@@ -42,12 +64,13 @@ def load(path):
     return a, m
 
 
-imgs = [(sid, *load(p)) for sid, p in styles]
+all_imgs = [(sid, *(load_color(p) if sid in color_mask else load(p))) for sid, p in styles]
+imgs = [x for x in all_imgs if x[0] not in hair_only]  # 몸을 만드는 데 쓰는 그림
 a0, m0 = imgs[0][1], imgs[0][2]
 
 # 머리 없는 몸
 skin_pick = [(a, ~m & (a[..., 3] > 128)) for _, a, m in imgs]
-both_alpha = np.logical_and.reduce([a[..., 3] > 128 for _, a, _ in imgs])
+both_alpha = np.logical_and.reduce([a[..., 3] > 128 for _, a, _ in all_imgs])  # 모든 머리 모양 그림이 덮는 정수리 안쪽만 채운다
 all_hair = np.logical_and.reduce([m for _, _, m in imgs])
 fy = slice(300, 360)
 forehead = a0[fy, 400:620][skin_pick[0][1][fy, 400:620]]
@@ -83,7 +106,7 @@ Image.fromarray(base).save(f'{out}/body.png')
 Image.fromarray(base).save(f'{out}/body_barefoot.png')
 
 # 머리 레이어
-for sid, a, m in imgs:
+for sid, a, m in all_imgs:
     f = cv2.GaussianBlur(m.astype(np.float32), (0, 0), 0.8)
     layer = a.copy()
     layer[..., 3] = (a[..., 3].astype(np.float32) * f).astype(np.uint8)

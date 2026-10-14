@@ -18,7 +18,9 @@ from scipy import ndimage as ndi
 
 src, out = sys.argv[1:3]
 W, H = 1024, 1536
-raw = Image.open(src).convert('RGB')
+img = Image.open(src)
+has_alpha = img.mode == 'RGBA' and np.array(img.getchannel('A')).min() < 10  # 이미 투명한 PNG 는 배경 지우기를 건너뛴다
+raw = img.convert('RGB')
 a = np.array(raw).astype(int)
 white = a.min(axis=2) >= 240
 lab, n = ndi.label(white)
@@ -36,11 +38,14 @@ for i in range(1, n + 1):
     if piece.sum() > 150 and ys_.max() < h_ * 0.45 and not face[piece].any():
         bg |= piece
 alpha = np.where(bg, 0, 255).astype(np.uint8)
+if has_alpha:
+    alpha = np.array(img.getchannel('A'))
 lab2, m = ndi.label(alpha > 0)
 sizes = ndi.sum(alpha > 0, lab2, range(1, m + 1))
 alpha[lab2 != 1 + int(np.argmax(sizes))] = 0
 solid = alpha > 0
-alpha[solid & ~ndi.binary_erosion(solid)] = 170
+if not has_alpha:
+    alpha[solid & ~ndi.binary_erosion(solid)] = 170
 rgba = Image.fromarray(np.dstack([a.astype(np.uint8), alpha]), 'RGBA')
 
 # 두 발(맨 아래 쪽)의 가운데·폭으로 크기와 위치를 정한다
@@ -61,6 +66,9 @@ canvas.alpha_composite(big, (dx, dy)) if dx >= 0 and dy >= 0 else canvas.paste(b
 print(f'scale={s:.3f} offset=({dx},{dy})')
 import os
 os.makedirs(f'{out}/source', exist_ok=True)
+if '--canvas-only' in sys.argv:  # 머리 모양만 더 만들 때: 캔버스에 맞춘 투명 PNG 한 장만 저장
+    canvas.save(f'{out}/source/{os.path.basename(src).rsplit(".", 1)[0]}_fit.png')
+    sys.exit(0)
 canvas.save(f'{out}/source/standing_avatar_transparent.png')
 white_bg = Image.new('RGBA', (W, H), (255, 255, 255, 255))
 white_bg.alpha_composite(canvas)
