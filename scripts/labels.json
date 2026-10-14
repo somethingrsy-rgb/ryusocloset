@@ -818,34 +818,6 @@
     "color": "ivory",
     "native": true
   },
-  "acc_ears_set_pink": {
-    "ko": "핑크 별빛 리본 동물귀",
-    "en": "Pink Starry Bow Ears",
-    "category": "accessory",
-    "color": "pink",
-    "native": true
-  },
-  "acc_ears_set_purple": {
-    "ko": "퍼플 별빛 리본 동물귀",
-    "en": "Purple Starry Bow Ears",
-    "category": "accessory",
-    "color": "purple",
-    "native": true
-  },
-  "acc_ears_set_blue": {
-    "ko": "블루 별빛 리본 동물귀",
-    "en": "Blue Starry Bow Ears",
-    "category": "accessory",
-    "color": "skyblue",
-    "native": true
-  },
-  "acc_ears_set_green": {
-    "ko": "그린 별빛 리본 동물귀",
-    "en": "Green Starry Bow Ears",
-    "category": "accessory",
-    "color": "green",
-    "native": true
-  },
   "costume_maid_pink_heart": {
     "ko": "핑크 하트 메이드 원피스",
     "en": "Pink Heart Maid Dress",
@@ -858,6 +830,62 @@
     "en": "Pink Card Alice Dress",
     "category": "costume",
     "color": "pink",
+    "native": true
+  },
+  "acc_ears_navy_star": {
+    "ko": "네이비 동물귀 · 별빛 리본",
+    "en": "Navy Ears with Starry Bow",
+    "category": "accessory",
+    "color": "navy",
+    "native": true
+  },
+  "acc_ears_pink_star": {
+    "ko": "핑크 동물귀 · 별빛 리본",
+    "en": "Pink Ears with Starry Bow",
+    "category": "accessory",
+    "color": "pink",
+    "native": true
+  },
+  "acc_ears_skyblue_star": {
+    "ko": "하늘 동물귀 · 별빛 리본",
+    "en": "Sky Blue Ears with Starry Bow",
+    "category": "accessory",
+    "color": "skyblue",
+    "native": true
+  },
+  "acc_ears_violet_star": {
+    "ko": "보라 동물귀 · 별빛 리본",
+    "en": "Violet Ears with Starry Bow",
+    "category": "accessory",
+    "color": "purple",
+    "native": true
+  },
+  "acc_ears_gray_star": {
+    "ko": "회색 동물귀 · 별빛 리본",
+    "en": "Gray Ears with Starry Bow",
+    "category": "accessory",
+    "color": "gray",
+    "native": true
+  },
+  "acc_ears_yellow_star": {
+    "ko": "노랑 동물귀 · 별빛 리본",
+    "en": "Yellow Ears with Starry Bow",
+    "category": "accessory",
+    "color": "beige",
+    "native": true
+  },
+  "acc_ears_ivory_star": {
+    "ko": "아이보리 동물귀 · 별빛 리본",
+    "en": "Ivory Ears with Starry Bow",
+    "category": "accessory",
+    "color": "ivory",
+    "native": true
+  },
+  "acc_ears_tan_star": {
+    "ko": "탄 동물귀 · 별빛 리본",
+    "en": "Tan Ears with Starry Bow",
+    "category": "accessory",
+    "color": "brown",
     "native": true
   }
 }
