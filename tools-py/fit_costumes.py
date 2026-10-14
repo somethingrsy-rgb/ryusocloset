@@ -30,7 +30,7 @@ MANUAL: dict[str, dict] = {
     'costume_checker_queen': dict(scale=1.1, dy=0, pivot=(513, 1088)),  # +1
     'costume_floral_black': dict(scale=1.0, dx=1 * 8, dy=0, pivot=(512, 924)),  # 오른쪽 1칸
     'costume_forest_green': dict(scale=1 / 1.1, dy=-5 * 8, pivot=(512, 980)),  # -1, 위로 5칸
-    'costume_petal_blue': dict(scale=1.1 ** 2, dy=5 * 8, pivot=(511, 1075)),  # +2, 아래로 5칸
+    'costume_petal_blue': dict(scale=1.0, dy=1 * 8, pivot=(512, 1062)),  # (+2, 아래로 5칸 적용한 뒤) 아래로 1칸 더
     'costume_sakura_blue': dict(scale=1.1, dy=6 * 8, pivot=(512, 1022)),  # +1, 아래로 6칸
     'costume_tassel_pink': dict(scale=1 / 1.1, dy=0, pivot=(512, 998)),  # -1
     'dress_card_red': dict(scale=1.0, dy=-1 * 8, pivot=(512, 1012)),  # 위로 1칸
@@ -67,6 +67,8 @@ MANUAL: dict[str, dict] = {
     'bottom_button_skirt_brown': dict(scale=1.0, dy=-16, pivot=(513, 1145)),  # 위로 2칸
     'bottom_denim': dict(scale=1.0, dy=24, pivot=(513, 1104)),  # 아래로 3칸
     'bottom_flare_skirt_gray': dict(scale=1.0, dy=-16, pivot=(511, 1123)),  # 위로 2칸
+    'costume_alice_card_pink': dict(scale=1 / 1.1 ** 2, dy=-9 * 8, pivot=(512, 967)),  # -2, 위로 9칸
+    'costume_maid_pink_heart': dict(scale=1 / 1.1 ** 4, dy=-20 * 8, pivot=(511, 1070)),  # -4, 위로 20칸
 }
 OVERRIDES: dict[str, tuple[int, int]] = {
     'dress_card_red': (760, 165),  # 목 장식이 따로 떨어져 있어서 자동 감지가 안 됨 (소매 사이 몸통 폭)

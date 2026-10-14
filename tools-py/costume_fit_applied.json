@@ -1,15 +1,7 @@
 {
-  "costume_alice_card_pink": {
-    "scale": 1.25,
-    "waist": 4
-  },
   "costume_hanbok_pink_flower": {
     "scale": 1.15,
     "waist": 126
-  },
-  "costume_maid_pink_heart": {
-    "scale": 1.171,
-    "waist": 2
   },
   "costume_princess_pink": {
     "scale": 1.0,
@@ -27,11 +19,13 @@
     "bottom_button_skirt_brown",
     "bottom_denim",
     "bottom_flare_skirt_gray",
+    "costume_alice_card_pink",
     "costume_checker_queen",
     "costume_clover_flower_lolita",
     "costume_floral_black",
     "costume_forest_green",
     "costume_hanbok_starry",
+    "costume_maid_pink_heart",
     "costume_petal_blue",
     "costume_sakura_blue",
     "costume_tassel_pink",

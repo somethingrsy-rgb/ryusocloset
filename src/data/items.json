@@ -709,10 +709,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 74,
-      "y": 604,
-      "w": 876,
-      "h": 727
+      "x": 150,
+      "y": 595,
+      "w": 724,
+      "h": 600
     },
     "image": "assets/clothes/costume/costume_alice_card_pink.webp",
     "thumb": "assets/thumbs/costume_alice_card_pink.webp",
@@ -877,10 +877,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 101,
-      "y": 605,
-      "w": 820,
-      "h": 931
+      "x": 231,
+      "y": 592,
+      "w": 560,
+      "h": 636
     },
     "image": "assets/clothes/costume/costume_maid_pink_heart.webp",
     "thumb": "assets/thumbs/costume_maid_pink_heart.webp",
@@ -902,9 +902,9 @@
     "colorHex": "#27355b",
     "box": {
       "x": 62,
-      "y": 588,
-      "w": 900,
-      "h": 948
+      "y": 596,
+      "w": 875,
+      "h": 940
     },
     "image": "assets/clothes/costume/costume_petal_blue.webp",
     "thumb": "assets/thumbs/costume_petal_blue.webp",
