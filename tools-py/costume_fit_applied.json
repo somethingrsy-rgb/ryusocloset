@@ -1,4 +1,8 @@
 {
+  "costume_hanbok_pink_flower": {
+    "scale": 1.15,
+    "waist": 126
+  },
   "costume_princess_pink": {
     "scale": 1.0,
     "waist": 176

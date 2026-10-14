@@ -792,6 +792,30 @@
     "native": true
   },
   {
+    "id": "costume_hanbok_pink_flower",
+    "category": "costume",
+    "name": {
+      "ko": "분홍 꽃 한복 원피스",
+      "en": "Pink Flower Hanbok Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 109,
+      "y": 603,
+      "w": 806,
+      "h": 932
+    },
+    "image": "assets/clothes/costume/costume_hanbok_pink_flower.webp",
+    "thumb": "assets/thumbs/costume_hanbok_pink_flower.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_hanbok_starry",
     "category": "costume",
     "name": {
