@@ -803,5 +803,61 @@
     "category": "accessory",
     "color": "purple",
     "native": true
+  },
+  "acc_ears_black_star": {
+    "ko": "블랙 별빛 리본 동물귀",
+    "en": "Black Starry Bow Ears",
+    "category": "accessory",
+    "color": "black",
+    "native": true
+  },
+  "acc_ears_set_cream": {
+    "ko": "크림 별빛 리본 동물귀",
+    "en": "Cream Starry Bow Ears",
+    "category": "accessory",
+    "color": "ivory",
+    "native": true
+  },
+  "acc_ears_set_pink": {
+    "ko": "핑크 별빛 리본 동물귀",
+    "en": "Pink Starry Bow Ears",
+    "category": "accessory",
+    "color": "pink",
+    "native": true
+  },
+  "acc_ears_set_purple": {
+    "ko": "퍼플 별빛 리본 동물귀",
+    "en": "Purple Starry Bow Ears",
+    "category": "accessory",
+    "color": "purple",
+    "native": true
+  },
+  "acc_ears_set_blue": {
+    "ko": "블루 별빛 리본 동물귀",
+    "en": "Blue Starry Bow Ears",
+    "category": "accessory",
+    "color": "skyblue",
+    "native": true
+  },
+  "acc_ears_set_green": {
+    "ko": "그린 별빛 리본 동물귀",
+    "en": "Green Starry Bow Ears",
+    "category": "accessory",
+    "color": "green",
+    "native": true
+  },
+  "costume_maid_pink_heart": {
+    "ko": "핑크 하트 메이드 원피스",
+    "en": "Pink Heart Maid Dress",
+    "category": "costume",
+    "color": "pink",
+    "native": true
+  },
+  "costume_alice_card_pink": {
+    "ko": "핑크 카드 앨리스 원피스",
+    "en": "Pink Card Alice Dress",
+    "category": "costume",
+    "color": "pink",
+    "native": true
   }
 }
