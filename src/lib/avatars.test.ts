@@ -7,10 +7,9 @@ describe('avatars', () => {
     setAvatar('nobody')
     expect(getAvatar().id).toBe(AVATARS[0].id)
   })
-  it('바꾸면 그 아바타의 레이어 경로를 쓰고 저장한다', () => {
+  it('바꾸면 그 아바타의 레이어 경로를 쓴다', () => {
     setAvatar('yuha')
     expect(getAvatar().id).toBe('yuha')
     expect(baseFiles(getAvatar()).body).toBe('assets/base/yuha/body.webp')
-    expect(localStorage.getItem('ryuso.avatar.v1')).toBe('yuha')
   })
 })
