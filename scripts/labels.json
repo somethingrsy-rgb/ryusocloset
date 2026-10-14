@@ -775,5 +775,33 @@
     "category": "costume",
     "color": "pink",
     "native": true
+  },
+  "acc_ears_mint_lotus": {
+    "ko": "민트 연꽃 동물귀",
+    "en": "Mint Lotus Animal Ears",
+    "category": "accessory",
+    "color": "mint",
+    "native": true
+  },
+  "acc_ears_beige_star": {
+    "ko": "베이지 별빛 리본 동물귀",
+    "en": "Beige Starry Bow Ears",
+    "category": "accessory",
+    "color": "beige",
+    "native": true
+  },
+  "acc_ears_white_lotus": {
+    "ko": "화이트 연꽃 동물귀",
+    "en": "White Lotus Animal Ears",
+    "category": "accessory",
+    "color": "white",
+    "native": true
+  },
+  "acc_ears_lavender_star": {
+    "ko": "라벤더 별빛 리본 동물귀",
+    "en": "Lavender Starry Bow Ears",
+    "category": "accessory",
+    "color": "purple",
+    "native": true
   }
 }

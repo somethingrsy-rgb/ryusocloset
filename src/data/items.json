@@ -2232,6 +2232,102 @@
     "native": true
   },
   {
+    "id": "acc_ears_beige_star",
+    "category": "accessory",
+    "name": {
+      "ko": "베이지 별빛 리본 동물귀",
+      "en": "Beige Starry Bow Ears"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 142,
+      "y": 2,
+      "w": 740,
+      "h": 496
+    },
+    "image": "assets/clothes/accessory/acc_ears_beige_star.webp",
+    "thumb": "assets/thumbs/acc_ears_beige_star.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_lavender_star",
+    "category": "accessory",
+    "name": {
+      "ko": "라벤더 별빛 리본 동물귀",
+      "en": "Lavender Starry Bow Ears"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 142,
+      "y": 2,
+      "w": 740,
+      "h": 497
+    },
+    "image": "assets/clothes/accessory/acc_ears_lavender_star.webp",
+    "thumb": "assets/thumbs/acc_ears_lavender_star.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_mint_lotus",
+    "category": "accessory",
+    "name": {
+      "ko": "민트 연꽃 동물귀",
+      "en": "Mint Lotus Animal Ears"
+    },
+    "color": "mint",
+    "colorName": {
+      "ko": "민트",
+      "en": "Mint"
+    },
+    "colorHex": "#a9dcc8",
+    "box": {
+      "x": 142,
+      "y": 12,
+      "w": 740,
+      "h": 477
+    },
+    "image": "assets/clothes/accessory/acc_ears_mint_lotus.webp",
+    "thumb": "assets/thumbs/acc_ears_mint_lotus.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_white_lotus",
+    "category": "accessory",
+    "name": {
+      "ko": "화이트 연꽃 동물귀",
+      "en": "White Lotus Animal Ears"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 142,
+      "y": 11,
+      "w": 740,
+      "h": 478
+    },
+    "image": "assets/clothes/accessory/acc_ears_white_lotus.webp",
+    "thumb": "assets/thumbs/acc_ears_white_lotus.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
     "id": "acc_hair_ribbon_green",
     "category": "accessory",
     "name": {
