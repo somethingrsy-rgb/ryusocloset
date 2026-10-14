@@ -39,13 +39,15 @@ export function AdjustmentPanel({ name, onMove, onSmaller, onBigger, onClose, on
   const host = document.getElementById('adjustment-controls')
   const button = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-petal text-xl'
   return <>
-    <div role="group" aria-label={ko?'미세 이동 방향키':'Fine movement controls'} className="pointer-events-none absolute bottom-16 left-2 z-30 grid grid-cols-3 gap-0.5">
+    <div role="group" aria-label={ko?'미세 이동 방향키':'Fine movement controls'} className="pointer-events-none absolute right-2 bottom-16 z-30 grid grid-cols-3 gap-0.5">
       <span/><NudgeButton label={t('moveUp')} onMove={() => onMove(0,-1)}>↑</NudgeButton><span/>
       <NudgeButton label={ko?'왼쪽으로 조금 이동':'Move slightly left'} onMove={() => onMove(-1,0)}>←</NudgeButton>
       <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/60 text-xs ring-1 ring-black/5" aria-label={ko?'선택 해제':'Deselect'} onClick={onClose}>✕</button>
       <NudgeButton label={ko?'오른쪽으로 조금 이동':'Move slightly right'} onMove={() => onMove(1,0)}>→</NudgeButton>
       <span/><NudgeButton label={t('moveDown')} onMove={() => onMove(0,1)}>↓</NudgeButton><span/>
-      {onRemove ? <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-blush text-white shadow-sm" aria-label={removeLabel ?? t('remove')} title={removeLabel ?? t('remove')} onClick={onRemove}>🗑️</button> : <span/>}
+    </div>
+    <div role="group" aria-label={ko?'크기·삭제':'Size and remove'} className="pointer-events-none absolute bottom-16 left-2 z-30 flex gap-0.5">
+      {onRemove ? <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-blush text-white shadow-sm" aria-label={removeLabel ?? t('remove')} title={removeLabel ?? t('remove')} onClick={onRemove}>🗑️</button> : null}
       <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-xl shadow-sm ring-1 ring-black/10" aria-label={t('smaller')} onClick={onSmaller}>−</button>
       <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-xl shadow-sm ring-1 ring-black/10" aria-label={t('bigger')} onClick={onBigger}>+</button>
     </div>
