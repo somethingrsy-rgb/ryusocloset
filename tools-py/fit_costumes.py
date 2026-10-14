@@ -41,11 +41,12 @@ MANUAL: dict[str, dict] = {
     'shoes_pink_maryjane_socks': dict(scale=1.1 ** 2, dy=0, pivot=(510, 1431)),  # 신발 +2 (옷 영역 중심 기준)
     'shoes_platform_cream_heart': dict(scale=1.1 ** 3, dy=0, pivot=(517, 1436)),  # 신발 +3 (신발 영역 중심 기준)
     'dress_starry_navy': dict(scale=1.1, dy=6 * 8, pivot=(512, 1070)),  # +1, 아래로 6칸 (아래 자락은 캔버스 밖으로 잘림)
-    'costume_winged_lolita_purple': dict(scale=1.1 ** 2, dy=5 * 8, pivot=(512, 998)),  # +2, 아래로 5칸
     'costume_clover_flower_lolita': dict(scale=1.1 ** 2, dx=2 * 8, dy=8 * 8, pivot=(512, 977)),  # +2, 오른쪽 2칸, 아래로 8칸
     'costume_yellow_ribbon_lolita': dict(scale=1 / 1.1 ** 2, dy=-10 * 8, pivot=(512, 1069)),  # -2, 위로 10칸
     'costume_winged_lolita_puff': dict(scale=1.0, dy=-6 * 8, pivot=(512, 1070)),  # 위로 6칸
     'shoes_yellow_ribbon_maryjane': dict(scale=1.1 ** 3, dy=0, pivot=(511, 1433)),  # 신발 +3
+    'shoes_bow_flats_black': dict(scale=1.1, dy=0, pivot=(511, 1457)),  # 신발 +1
+    'shoes_flats_beige': dict(scale=1.1, dy=0, pivot=(511, 1457)),  # 신발 +1
 }
 OVERRIDES: dict[str, tuple[int, int]] = {
     'dress_card_red': (760, 165),  # 목 장식이 따로 떨어져 있어서 자동 감지가 안 됨 (소매 사이 몸통 폭)
