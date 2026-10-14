@@ -696,6 +696,30 @@
     "native": true
   },
   {
+    "id": "costume_alice_card_pink",
+    "category": "costume",
+    "name": {
+      "ko": "핑크 카드 앨리스 원피스",
+      "en": "Pink Card Alice Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 74,
+      "y": 604,
+      "w": 876,
+      "h": 727
+    },
+    "image": "assets/clothes/costume/costume_alice_card_pink.webp",
+    "thumb": "assets/thumbs/costume_alice_card_pink.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_checker_queen",
     "category": "costume",
     "name": {
@@ -836,6 +860,30 @@
     },
     "image": "assets/clothes/costume/costume_hanbok_starry.webp",
     "thumb": "assets/thumbs/costume_hanbok_starry.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_maid_pink_heart",
+    "category": "costume",
+    "name": {
+      "ko": "핑크 하트 메이드 원피스",
+      "en": "Pink Heart Maid Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 101,
+      "y": 605,
+      "w": 820,
+      "h": 931
+    },
+    "image": "assets/clothes/costume/costume_maid_pink_heart.webp",
+    "thumb": "assets/thumbs/costume_maid_pink_heart.webp",
     "zIndex": 41,
     "native": true
   },
@@ -2256,6 +2304,30 @@
     "native": true
   },
   {
+    "id": "acc_ears_black_star",
+    "category": "accessory",
+    "name": {
+      "ko": "블랙 별빛 리본 동물귀",
+      "en": "Black Starry Bow Ears"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 105,
+      "y": 2,
+      "w": 814,
+      "h": 549
+    },
+    "image": "assets/clothes/accessory/acc_ears_black_star.webp",
+    "thumb": "assets/thumbs/acc_ears_black_star.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
     "id": "acc_ears_lavender_star",
     "category": "accessory",
     "name": {
@@ -2300,6 +2372,126 @@
     },
     "image": "assets/clothes/accessory/acc_ears_mint_lotus.webp",
     "thumb": "assets/thumbs/acc_ears_mint_lotus.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_set_blue",
+    "category": "accessory",
+    "name": {
+      "ko": "블루 별빛 리본 동물귀",
+      "en": "Blue Starry Bow Ears"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 102,
+      "y": 0,
+      "w": 822,
+      "h": 543
+    },
+    "image": "assets/clothes/accessory/acc_ears_set_blue.webp",
+    "thumb": "assets/thumbs/acc_ears_set_blue.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_set_cream",
+    "category": "accessory",
+    "name": {
+      "ko": "크림 별빛 리본 동물귀",
+      "en": "Cream Starry Bow Ears"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "box": {
+      "x": 102,
+      "y": 0,
+      "w": 822,
+      "h": 543
+    },
+    "image": "assets/clothes/accessory/acc_ears_set_cream.webp",
+    "thumb": "assets/thumbs/acc_ears_set_cream.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_set_green",
+    "category": "accessory",
+    "name": {
+      "ko": "그린 별빛 리본 동물귀",
+      "en": "Green Starry Bow Ears"
+    },
+    "color": "green",
+    "colorName": {
+      "ko": "그린",
+      "en": "Green"
+    },
+    "colorHex": "#6f9a72",
+    "box": {
+      "x": 102,
+      "y": 0,
+      "w": 822,
+      "h": 543
+    },
+    "image": "assets/clothes/accessory/acc_ears_set_green.webp",
+    "thumb": "assets/thumbs/acc_ears_set_green.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_set_pink",
+    "category": "accessory",
+    "name": {
+      "ko": "핑크 별빛 리본 동물귀",
+      "en": "Pink Starry Bow Ears"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 102,
+      "y": 0,
+      "w": 822,
+      "h": 543
+    },
+    "image": "assets/clothes/accessory/acc_ears_set_pink.webp",
+    "thumb": "assets/thumbs/acc_ears_set_pink.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_set_purple",
+    "category": "accessory",
+    "name": {
+      "ko": "퍼플 별빛 리본 동물귀",
+      "en": "Purple Starry Bow Ears"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 102,
+      "y": 0,
+      "w": 822,
+      "h": 543
+    },
+    "image": "assets/clothes/accessory/acc_ears_set_purple.webp",
+    "thumb": "assets/thumbs/acc_ears_set_purple.webp",
     "zIndex": 70,
     "native": true
   },

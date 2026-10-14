@@ -1,7 +1,15 @@
 {
+  "costume_alice_card_pink": {
+    "scale": 1.25,
+    "waist": 4
+  },
   "costume_hanbok_pink_flower": {
     "scale": 1.15,
     "waist": 126
+  },
+  "costume_maid_pink_heart": {
+    "scale": 1.171,
+    "waist": 2
   },
   "costume_princess_pink": {
     "scale": 1.0,
