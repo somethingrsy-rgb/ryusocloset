@@ -23,6 +23,10 @@ export const AVATARS: Avatar[] = [
     hairstyles: [{ id: 'bob', name: { ko: '단발', en: 'Bob' }, file: 'hair_front.webp' }],
   },
   {
+    id: 'soyoung', name: { ko: '소영', en: 'Soyoung' }, dir: 'assets/base/soyoung',
+    hairstyles: [{ id: 'bob', name: { ko: '단발', en: 'Bob' }, file: 'hair_front.webp' }],
+  },
+  {
     id: 'yuha', name: { ko: '유하', en: 'Yuha' }, dir: 'assets/base/yuha',
     hairstyles: [
       { id: 'braid', name: { ko: '땋은 올림머리', en: 'Braided updo' }, file: 'hair_braid.webp' },

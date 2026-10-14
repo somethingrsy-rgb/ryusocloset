@@ -768,5 +768,12 @@
     "category": "accessory",
     "color": "navy",
     "native": true
+  },
+  "costume_hanbok_pink_flower": {
+    "ko": "분홍 꽃 한복 원피스",
+    "en": "Pink Flower Hanbok Dress",
+    "category": "costume",
+    "color": "pink",
+    "native": true
   }
 }

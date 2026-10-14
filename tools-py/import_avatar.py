@@ -24,6 +24,17 @@ white = a.min(axis=2) >= 240
 lab, n = ndi.label(white)
 edge = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
 bg = np.isin(lab, list(edge))
+# 머리카락과 머리 사이에 갇힌 흰 배경 조각(얼굴 가운데 눈·치아 하이라이트는 제외)도 지운다
+h_, w_ = white.shape
+face = np.zeros_like(white)
+face[int(h_ * 0.18):int(h_ * 0.42), int(w_ * 0.30):int(w_ * 0.72)] = True
+for i in range(1, n + 1):
+    if i in edge:
+        continue
+    piece = lab == i
+    ys_, xs_ = np.where(piece)
+    if piece.sum() > 150 and ys_.max() < h_ * 0.45 and not face[piece].any():
+        bg |= piece
 alpha = np.where(bg, 0, 255).astype(np.uint8)
 lab2, m = ndi.label(alpha > 0)
 sizes = ndi.sum(alpha > 0, lab2, range(1, m + 1))
