@@ -2,6 +2,7 @@ import type { ReactNode, RefObject } from 'react'
 import { useI18n } from '../i18n'
 import type { Background } from '../lib/backgrounds'
 import { useAvatar } from '../lib/useAvatar'
+import { withAvatarFit, withoutAvatarFit } from '../lib/avatarFit'
 import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from '../lib/items'
 import { HAIR_FRONT_Z, type Category } from '../lib/layers'
 import { wornItems } from '../lib/outfit'
@@ -31,14 +32,17 @@ interface Props {
  * 코디 화면의 무대. 레이어(아래→위): 몸(신발 착용 시 맨발 몸) < 신발 < 하의 < 상의 < 원피스 < 아우터 < 앞머리 < 액세서리 < 가방.
  * 입은 옷은 눌러서 선택하고 옮기거나 크기를 바꿀 수 있다.
  */
-export function Stage({ outfit, ...rest }: Props) {
-  useAvatar() // 아바타를 바꾸면 다시 그린다
+export function Stage({ outfit, tweaks: userTweaks, onTweaks: setUserTweaks, ...rest }: Props) {
+  const avatar = useAvatar() // 아바타를 바꾸면 다시 그린다
+  // 이 아바타에서만 필요한 기본 위치를 더해서 그리고, 조절한 값을 저장할 때는 다시 뺀다
+  const tweaks = withAvatarFit(outfit, userTweaks, avatar.id)
+  const onTweaks = (next: Tweaks) => setUserTweaks(withoutAvatarFit(outfit, next, avatar.id))
   const { lang, t } = useI18n()
-  const layers: StageLayer<Category>[] = wornItems(outfit, ITEM_BY_ID, rest.tweaks).map((it) => ({
+  const layers: StageLayer<Category>[] = wornItems(outfit, ITEM_BY_ID, tweaks).map((it) => ({
     key: it.category,
     id: it.id,
     src: assetUrl(it.image),
-    z: effectiveZ(it.zIndex, rest.tweaks[it.category]),
+    z: effectiveZ(it.zIndex, tweaks[it.category]),
     box: it.box,
     label: it.name[lang],
   }))
@@ -46,5 +50,5 @@ export function Stage({ outfit, ...rest }: Props) {
     { src: outfit.shoes ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body, z: 0 },
     { src: BASE_LAYERS.hairFront, z: HAIR_FRONT_Z },
   ]
-  return <LayerStage base={base} layers={layers} ariaLabel={t('tweakAria')} {...rest} />
+  return <LayerStage base={base} layers={layers} ariaLabel={t('tweakAria')} {...rest} tweaks={tweaks} onTweaks={onTweaks} />
 }
