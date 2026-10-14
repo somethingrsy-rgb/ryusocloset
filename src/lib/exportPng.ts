@@ -1,6 +1,7 @@
 import { drawBackground, type Background } from './backgrounds'
 import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from './items'
 import { CANVAS_H, CANVAS_W, HAIR_FRONT_Z } from './layers'
+import { withAvatarFit } from './avatarFit'
 import { wornItems } from './outfit'
 import { effectiveZ, getTweak, pivotOf } from './tweaks'
 import type { Outfit, Tweaks } from './types'
@@ -31,7 +32,8 @@ function makeCanvas(w: number, h: number) {
 }
 
 /** 아바타 + 옷을 화면과 같은 레이어 순서로 1024x1536 캔버스에 합성 */
-export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}): Promise<HTMLCanvasElement> {
+export async function renderFigure(outfit: Outfit, userTweaks: Tweaks = {}): Promise<HTMLCanvasElement> {
+  const tweaks = withAvatarFit(outfit, userTweaks)
   const items = wornItems(outfit, ITEM_BY_ID, tweaks)
   const barefoot = !!outfit.shoes
   const [body, hair, ...imgs] = await Promise.all([
