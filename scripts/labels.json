@@ -47,11 +47,6 @@
     "color": "gray",
     "native": true
   },
-  "dress_oxford_slim_beige": {
-    "ko": "옥스포드 원피스 (슬림)",
-    "en": "Oxford Dress (Slim)",
-    "native": true
-  },
   "top_paisley_ivory": {
     "ko": "페이즐리 가디건",
     "en": "Paisley Cardigan",
@@ -60,11 +55,6 @@
   "bottom_pants_black": {
     "ko": "와이드 팬츠",
     "en": "Wide Pants",
-    "native": true
-  },
-  "dress_isaac_shirt_navy": {
-    "ko": "셔츠 원피스",
-    "en": "Shirt Dress",
     "native": true
   },
   "top_check_cardigan_gray": {
