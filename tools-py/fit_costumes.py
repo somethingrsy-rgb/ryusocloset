@@ -56,6 +56,12 @@ MANUAL: dict[str, dict] = {
     'outer_trench_black': dict(scale=1.1, dy=0, pivot=(512, 952)),  # 아우터 +1
     'outer_trench_khaki': dict(scale=1.1, dy=0, pivot=(512, 959)),  # 아우터 +1
     'outer_tweed_navy': dict(scale=1.1, dy=0, pivot=(511, 803)),  # 아우터 +1
+    'dress_deco_tweed_black': dict(scale=1.0, dy=-8, pivot=(512, 950)),  # 위로 1칸
+    'dress_isaac_black': dict(scale=1.0, dy=24, pivot=(512, 919)),  # 아래로 3칸
+    'dress_isaac_brown': dict(scale=1.1, dy=24, pivot=(512, 907)),  # +1, 아래로 3칸
+    'dress_isaac_navy': dict(scale=1.0, dy=-8, pivot=(512, 966)),  # 위로 1칸
+    'dress_oxford_beige': dict(scale=1.0, dy=16, pivot=(512, 943)),  # 아래로 2칸
+    'dress_shesmiss_gray': dict(scale=1.0, dy=-8, pivot=(512, 923)),  # 위로 1칸
 }
 OVERRIDES: dict[str, tuple[int, int]] = {
     'dress_card_red': (760, 165),  # 목 장식이 따로 떨어져 있어서 자동 감지가 안 됨 (소매 사이 몸통 폭)

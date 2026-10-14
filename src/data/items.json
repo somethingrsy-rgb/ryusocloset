@@ -542,7 +542,7 @@
     "colorHex": "#2b2b2f",
     "box": {
       "x": 184,
-      "y": 622,
+      "y": 614,
       "w": 656,
       "h": 656
     },
@@ -566,7 +566,7 @@
     "colorHex": "#2b2b2f",
     "box": {
       "x": 240,
-      "y": 622,
+      "y": 646,
       "w": 545,
       "h": 595
     },
@@ -589,10 +589,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 213,
-      "y": 622,
-      "w": 598,
-      "h": 571
+      "x": 183,
+      "y": 617,
+      "w": 658,
+      "h": 629
     },
     "image": "assets/clothes/dress/dress_isaac_brown.webp",
     "thumb": "assets/thumbs/dress_isaac_brown.webp",
@@ -614,7 +614,7 @@
     "colorHex": "#27355b",
     "box": {
       "x": 178,
-      "y": 622,
+      "y": 614,
       "w": 668,
       "h": 688
     },
@@ -648,30 +648,6 @@
     "native": true
   },
   {
-    "id": "dress_isaac_shirt_navy",
-    "category": "dress",
-    "name": {
-      "ko": "셔츠 원피스",
-      "en": "Shirt Dress"
-    },
-    "color": "navy",
-    "colorName": {
-      "ko": "네이비",
-      "en": "Navy"
-    },
-    "colorHex": "#27355b",
-    "box": {
-      "x": 190,
-      "y": 615,
-      "w": 644,
-      "h": 766
-    },
-    "image": "assets/clothes/dress/dress_isaac_shirt_navy.webp",
-    "thumb": "assets/thumbs/dress_isaac_shirt_navy.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
     "id": "dress_oxford_beige",
     "category": "dress",
     "name": {
@@ -686,36 +662,12 @@
     "colorHex": "#dcc5a2",
     "box": {
       "x": 232,
-      "y": 622,
+      "y": 638,
       "w": 561,
       "h": 642
     },
     "image": "assets/clothes/dress/dress_oxford_beige.webp",
     "thumb": "assets/thumbs/dress_oxford_beige.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "dress_oxford_slim_beige",
-    "category": "dress",
-    "name": {
-      "ko": "옥스포드 원피스 (슬림)",
-      "en": "Oxford Dress (Slim)"
-    },
-    "color": "beige",
-    "colorName": {
-      "ko": "베이지",
-      "en": "Beige"
-    },
-    "colorHex": "#dcc5a2",
-    "box": {
-      "x": 308,
-      "y": 635,
-      "w": 409,
-      "h": 754
-    },
-    "image": "assets/clothes/dress/dress_oxford_slim_beige.webp",
-    "thumb": "assets/thumbs/dress_oxford_slim_beige.webp",
     "zIndex": 40,
     "native": true
   },
@@ -734,7 +686,7 @@
     "colorHex": "#a3a5ab",
     "box": {
       "x": 207,
-      "y": 622,
+      "y": 614,
       "w": 610,
       "h": 602
     },
