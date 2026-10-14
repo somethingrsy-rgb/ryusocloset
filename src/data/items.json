@@ -2328,6 +2328,54 @@
     "native": true
   },
   {
+    "id": "acc_ears_gray_star",
+    "category": "accessory",
+    "name": {
+      "ko": "회색 동물귀 · 별빛 리본",
+      "en": "Gray Ears with Starry Bow"
+    },
+    "color": "gray",
+    "colorName": {
+      "ko": "그레이",
+      "en": "Gray"
+    },
+    "colorHex": "#a3a5ab",
+    "box": {
+      "x": 105,
+      "y": 2,
+      "w": 814,
+      "h": 549
+    },
+    "image": "assets/clothes/accessory/acc_ears_gray_star.webp",
+    "thumb": "assets/thumbs/acc_ears_gray_star.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_ivory_star",
+    "category": "accessory",
+    "name": {
+      "ko": "아이보리 동물귀 · 별빛 리본",
+      "en": "Ivory Ears with Starry Bow"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "box": {
+      "x": 105,
+      "y": 1,
+      "w": 814,
+      "h": 550
+    },
+    "image": "assets/clothes/accessory/acc_ears_ivory_star.webp",
+    "thumb": "assets/thumbs/acc_ears_ivory_star.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
     "id": "acc_ears_lavender_star",
     "category": "accessory",
     "name": {
@@ -2376,26 +2424,50 @@
     "native": true
   },
   {
-    "id": "acc_ears_set_blue",
+    "id": "acc_ears_navy_star",
     "category": "accessory",
     "name": {
-      "ko": "블루 별빛 리본 동물귀",
-      "en": "Blue Starry Bow Ears"
+      "ko": "네이비 동물귀 · 별빛 리본",
+      "en": "Navy Ears with Starry Bow"
     },
-    "color": "skyblue",
+    "color": "navy",
     "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
+      "ko": "네이비",
+      "en": "Navy"
     },
-    "colorHex": "#8fb8e0",
+    "colorHex": "#27355b",
     "box": {
-      "x": 102,
-      "y": 0,
-      "w": 822,
-      "h": 543
+      "x": 105,
+      "y": 2,
+      "w": 814,
+      "h": 548
     },
-    "image": "assets/clothes/accessory/acc_ears_set_blue.webp",
-    "thumb": "assets/thumbs/acc_ears_set_blue.webp",
+    "image": "assets/clothes/accessory/acc_ears_navy_star.webp",
+    "thumb": "assets/thumbs/acc_ears_navy_star.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_pink_star",
+    "category": "accessory",
+    "name": {
+      "ko": "핑크 동물귀 · 별빛 리본",
+      "en": "Pink Ears with Starry Bow"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 105,
+      "y": 2,
+      "w": 814,
+      "h": 549
+    },
+    "image": "assets/clothes/accessory/acc_ears_pink_star.webp",
+    "thumb": "assets/thumbs/acc_ears_pink_star.webp",
     "zIndex": 70,
     "native": true
   },
@@ -2424,59 +2496,59 @@
     "native": true
   },
   {
-    "id": "acc_ears_set_green",
+    "id": "acc_ears_skyblue_star",
     "category": "accessory",
     "name": {
-      "ko": "그린 별빛 리본 동물귀",
-      "en": "Green Starry Bow Ears"
+      "ko": "하늘 동물귀 · 별빛 리본",
+      "en": "Sky Blue Ears with Starry Bow"
     },
-    "color": "green",
+    "color": "skyblue",
     "colorName": {
-      "ko": "그린",
-      "en": "Green"
+      "ko": "스카이블루",
+      "en": "Sky Blue"
     },
-    "colorHex": "#6f9a72",
+    "colorHex": "#8fb8e0",
     "box": {
-      "x": 102,
-      "y": 0,
-      "w": 822,
-      "h": 543
+      "x": 105,
+      "y": 1,
+      "w": 814,
+      "h": 550
     },
-    "image": "assets/clothes/accessory/acc_ears_set_green.webp",
-    "thumb": "assets/thumbs/acc_ears_set_green.webp",
+    "image": "assets/clothes/accessory/acc_ears_skyblue_star.webp",
+    "thumb": "assets/thumbs/acc_ears_skyblue_star.webp",
     "zIndex": 70,
     "native": true
   },
   {
-    "id": "acc_ears_set_pink",
+    "id": "acc_ears_tan_star",
     "category": "accessory",
     "name": {
-      "ko": "핑크 별빛 리본 동물귀",
-      "en": "Pink Starry Bow Ears"
+      "ko": "탄 동물귀 · 별빛 리본",
+      "en": "Tan Ears with Starry Bow"
     },
-    "color": "pink",
+    "color": "brown",
     "colorName": {
-      "ko": "핑크",
-      "en": "Pink"
+      "ko": "브라운",
+      "en": "Brown"
     },
-    "colorHex": "#f4a9bd",
+    "colorHex": "#8a5a3b",
     "box": {
-      "x": 102,
-      "y": 0,
-      "w": 822,
-      "h": 543
+      "x": 105,
+      "y": 2,
+      "w": 814,
+      "h": 548
     },
-    "image": "assets/clothes/accessory/acc_ears_set_pink.webp",
-    "thumb": "assets/thumbs/acc_ears_set_pink.webp",
+    "image": "assets/clothes/accessory/acc_ears_tan_star.webp",
+    "thumb": "assets/thumbs/acc_ears_tan_star.webp",
     "zIndex": 70,
     "native": true
   },
   {
-    "id": "acc_ears_set_purple",
+    "id": "acc_ears_violet_star",
     "category": "accessory",
     "name": {
-      "ko": "퍼플 별빛 리본 동물귀",
-      "en": "Purple Starry Bow Ears"
+      "ko": "보라 동물귀 · 별빛 리본",
+      "en": "Violet Ears with Starry Bow"
     },
     "color": "purple",
     "colorName": {
@@ -2485,13 +2557,13 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 102,
-      "y": 0,
-      "w": 822,
-      "h": 543
+      "x": 105,
+      "y": 2,
+      "w": 814,
+      "h": 548
     },
-    "image": "assets/clothes/accessory/acc_ears_set_purple.webp",
-    "thumb": "assets/thumbs/acc_ears_set_purple.webp",
+    "image": "assets/clothes/accessory/acc_ears_violet_star.webp",
+    "thumb": "assets/thumbs/acc_ears_violet_star.webp",
     "zIndex": 70,
     "native": true
   },
@@ -2516,6 +2588,30 @@
     },
     "image": "assets/clothes/accessory/acc_ears_white_lotus.webp",
     "thumb": "assets/thumbs/acc_ears_white_lotus.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_yellow_star",
+    "category": "accessory",
+    "name": {
+      "ko": "노랑 동물귀 · 별빛 리본",
+      "en": "Yellow Ears with Starry Bow"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 105,
+      "y": 2,
+      "w": 814,
+      "h": 548
+    },
+    "image": "assets/clothes/accessory/acc_ears_yellow_star.webp",
+    "thumb": "assets/thumbs/acc_ears_yellow_star.webp",
     "zIndex": 70,
     "native": true
   },
