@@ -43,7 +43,7 @@ MANUAL: dict[str, dict] = {
     'dress_starry_navy': dict(scale=1.1, dy=6 * 8, pivot=(512, 1070)),  # +1, 아래로 6칸 (아래 자락은 캔버스 밖으로 잘림)
     'costume_clover_flower_lolita': dict(scale=1.1 ** 2, dx=2 * 8, dy=8 * 8, pivot=(512, 977)),  # +2, 오른쪽 2칸, 아래로 8칸
     'costume_yellow_ribbon_lolita': dict(scale=1 / 1.1 ** 2, dy=-10 * 8, pivot=(512, 1069)),  # -2, 위로 10칸
-    'costume_winged_lolita_puff': dict(scale=1.0, dy=-6 * 8, pivot=(512, 1070)),  # 위로 6칸
+    'costume_winged_lolita_puff': dict(scale=1.1, dy=5 * 8, pivot=(512, 1022)),  # +1, 아래로 5칸 (위로 6칸 적용한 뒤 한 번 더)
     'shoes_yellow_ribbon_maryjane': dict(scale=1.1 ** 3, dy=0, pivot=(511, 1433)),  # 신발 +3
     'shoes_bow_flats_black': dict(scale=1.1, dy=0, pivot=(511, 1457)),  # 신발 +1
     'shoes_flats_beige': dict(scale=1.1, dy=0, pivot=(511, 1457)),  # 신발 +1
@@ -62,6 +62,11 @@ MANUAL: dict[str, dict] = {
     'dress_isaac_navy': dict(scale=1.0, dy=-8, pivot=(512, 966)),  # 위로 1칸
     'dress_oxford_beige': dict(scale=1.0, dy=16, pivot=(512, 943)),  # 아래로 2칸
     'dress_shesmiss_gray': dict(scale=1.0, dy=-8, pivot=(512, 923)),  # 위로 1칸
+    'top_ivory': dict(scale=1 / 1.1, dy=0, pivot=(512, 768)),  # -1
+    'top_tweed_cardigan_mint': dict(scale=1.0, dy=16, pivot=(512, 809)),  # 아래로 2칸
+    'bottom_button_skirt_brown': dict(scale=1.0, dy=-16, pivot=(513, 1145)),  # 위로 2칸
+    'bottom_denim': dict(scale=1.0, dy=24, pivot=(513, 1104)),  # 아래로 3칸
+    'bottom_flare_skirt_gray': dict(scale=1.0, dy=-16, pivot=(511, 1123)),  # 위로 2칸
 }
 OVERRIDES: dict[str, tuple[int, int]] = {
     'dress_card_red': (760, 165),  # 목 장식이 따로 떨어져 있어서 자동 감지가 안 됨 (소매 사이 몸통 폭)

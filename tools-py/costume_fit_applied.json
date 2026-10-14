@@ -12,6 +12,9 @@
     "waist": 155
   },
   "manual": [
+    "bottom_button_skirt_brown",
+    "bottom_denim",
+    "bottom_flare_skirt_gray",
     "costume_checker_queen",
     "costume_clover_flower_lolita",
     "costume_floral_black",
@@ -48,6 +51,8 @@
     "shoes_flats_beige",
     "shoes_pink_maryjane_socks",
     "shoes_platform_cream_heart",
-    "shoes_yellow_ribbon_maryjane"
+    "shoes_yellow_ribbon_maryjane",
+    "top_ivory",
+    "top_tweed_cardigan_mint"
   ]
 }

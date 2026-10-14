@@ -157,10 +157,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 269,
-      "y": 618,
-      "w": 487,
-      "h": 278
+      "x": 292,
+      "y": 632,
+      "w": 442,
+      "h": 252
     },
     "image": "assets/clothes/top/top_ivory.webp",
     "thumb": "assets/thumbs/top_ivory.webp",
@@ -254,7 +254,7 @@
     "colorHex": "#a9dcc8",
     "box": {
       "x": 205,
-      "y": 613,
+      "y": 630,
       "w": 614,
       "h": 363
     },
@@ -326,7 +326,7 @@
     "colorHex": "#8a5a3b",
     "box": {
       "x": 319,
-      "y": 891,
+      "y": 875,
       "w": 388,
       "h": 508
     },
@@ -350,7 +350,7 @@
     "colorHex": "#3c5a8c",
     "box": {
       "x": 310,
-      "y": 854,
+      "y": 878,
       "w": 407,
       "h": 499
     },
@@ -398,7 +398,7 @@
     "colorHex": "#a3a5ab",
     "box": {
       "x": 315,
-      "y": 886,
+      "y": 870,
       "w": 392,
       "h": 475
     },
@@ -997,10 +997,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 98,
-      "y": 556,
-      "w": 828,
-      "h": 932
+      "x": 57,
+      "y": 549,
+      "w": 910,
+      "h": 987
     },
     "image": "assets/clothes/costume/costume_winged_lolita_puff.webp",
     "thumb": "assets/thumbs/costume_winged_lolita_puff.webp",
