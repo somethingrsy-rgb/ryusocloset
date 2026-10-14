@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { backupName, makeBackup, parseBackup, restoreBackup } from '../lib/backup'
-import { AVATARS, baseFiles, setAvatar } from '../lib/avatars'
-import { assetUrl } from '../lib/items'
+import { AVATARS, setAvatar } from '../lib/avatars'
+import { AvatarHead } from './AvatarHead'
 import { useAvatar } from '../lib/useAvatar'
 import { RefreshButton } from './RefreshButton'
 import { Modal } from './Modal'
@@ -84,7 +84,7 @@ export function SettingsSheet({ sound, onSound, onLang, onClose, onToast, onSave
             onClick={() => setAvatar(a.id)}
             className={`flex flex-col items-center gap-1 rounded-2xl bg-petal/50 p-2 font-bold ${a.id === avatar.id ? 'ring-2 ring-blush' : ''}`}
           >
-            <img src={assetUrl(baseFiles(a).thumb)} alt="" className="h-24 w-24 rounded-xl object-cover" draggable={false} />
+            <AvatarHead avatar={a} />
             <span className="text-sm">{a.name[lang]}{a.id === avatar.id ? ' ✓' : ''}</span>
           </button>
         ))}

@@ -136,7 +136,11 @@ async function main() {
     .map((d) => d.name).sort()]
   for (const sub of baseDirs) {
     fs.mkdirSync(path.join(OUT, 'base', sub), { recursive: true })
-    for (const name of ['body', 'body_barefoot', 'hair_front']) {
+    // body·body_barefoot 와 머리 레이어(hair_front 또는 hair_<이름>)
+    const names = ['body', 'body_barefoot', ...fs.readdirSync(path.join(SRC, 'base', sub))
+      .filter((f) => /^hair_.+\.png$/.test(f)).map((f) => f.replace(/\.png$/, '')).sort()]
+    if (sub === '' && !names.includes('hair_front')) throw new Error('없음: assets-src/base/hair_front.png')
+    for (const name of names) {
       const src = path.join(SRC, 'base', sub, `${name}.png`)
       if (!fs.existsSync(src)) throw new Error(`없음: ${src}`)
       const bm = await sharp(src).metadata()
@@ -145,12 +149,6 @@ async function main() {
       }
       await sharp(src).webp({ quality: 95, alphaQuality: 100 }).toFile(path.join(OUT, 'base', sub, `${name}.webp`))
     }
-    // 설정의 아바타 고르기 그림: 얼굴 쪽 정사각형
-    await sharp(path.join(SRC, 'base', sub, 'body.png'))
-      .extract({ left: 132, top: 20, width: 760, height: 760 })
-      .resize(192, 192)
-      .webp({ quality: 90 })
-      .toFile(path.join(OUT, 'base', sub, 'thumb.webp'))
   }
 
   // 2) 옷
