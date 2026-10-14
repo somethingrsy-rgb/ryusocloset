@@ -66,6 +66,21 @@ dx = round(0.5 * (450 + 573) - 0.5 * (c1 + c2) * s)
 dy = round(1503 - bottom * s)
 canvas = Image.new('RGBA', (W, H), (0, 0, 0, 0))
 canvas.alpha_composite(big, (dx, dy)) if dx >= 0 and dy >= 0 else canvas.paste(big, (dx, dy))
+# --warp 660:660,1015:1022,...  (이 그림의 가로줄 y : 기준 몸의 y) 몸 길이가 기준 몸과 다를 때 세로로만 구간별로 늘이고 줄인다
+if '--warp' in sys.argv:
+    import cv2
+    pairs = [tuple(int(v) for v in t.split(':')) for t in sys.argv[sys.argv.index('--warp') + 1].split(',')]
+    src_y = [0] + [a for a, _ in pairs] + [H - 1]
+    dst_y = [0] + [b for _, b in pairs] + [H - 1]
+    # 새 그림의 y(dst)마다 원래 그림에서 가져올 y(src)
+    map_y = np.interp(np.arange(H), dst_y, src_y).astype(np.float32)[:, None].repeat(W, axis=1)
+    map_x = np.arange(W, dtype=np.float32)[None, :].repeat(H, axis=0)
+    arr = np.array(canvas).astype(np.float32)
+    arr[..., :3] *= arr[..., 3:4] / 255.0  # 알파 가장자리 색이 번지지 않게 곱해서 섞은 뒤
+    arr = cv2.remap(arr, map_x, map_y, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+    a_ = arr[..., 3:4]
+    arr[..., :3] = np.where(a_ > 0, arr[..., :3] / np.maximum(a_, 1) * 255.0, 0)
+    canvas = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), 'RGBA')
 print(f'scale={s:.3f} offset=({dx},{dy})')
 import os
 os.makedirs(f'{out}/source', exist_ok=True)
