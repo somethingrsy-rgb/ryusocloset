@@ -1,6 +1,7 @@
 import type { ReactNode, RefObject } from 'react'
 import { useI18n } from '../i18n'
 import type { Background } from '../lib/backgrounds'
+import { useAvatar } from '../lib/useAvatar'
 import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from '../lib/items'
 import { HAIR_FRONT_Z, type Category } from '../lib/layers'
 import { wornItems } from '../lib/outfit'
@@ -31,6 +32,7 @@ interface Props {
  * 입은 옷은 눌러서 선택하고 옮기거나 크기를 바꿀 수 있다.
  */
 export function Stage({ outfit, ...rest }: Props) {
+  useAvatar() // 아바타를 바꾸면 다시 그린다
   const { lang, t } = useI18n()
   const layers: StageLayer<Category>[] = wornItems(outfit, ITEM_BY_ID, rest.tweaks).map((it) => ({
     key: it.category,

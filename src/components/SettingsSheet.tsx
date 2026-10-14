@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { backupName, makeBackup, parseBackup, restoreBackup } from '../lib/backup'
+import { AVATARS, baseFiles, setAvatar } from '../lib/avatars'
+import { assetUrl } from '../lib/items'
+import { useAvatar } from '../lib/useAvatar'
 import { RefreshButton } from './RefreshButton'
 import { Modal } from './Modal'
 
@@ -23,6 +26,7 @@ export function SettingsSheet({ sound, onSound, onLang, onClose, onToast, onSave
   const { lang, t } = useI18n()
   const fileRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
+  const avatar = useAvatar()
 
   const save = async () => {
     setBusy(true)
@@ -70,6 +74,21 @@ export function SettingsSheet({ sound, onSound, onLang, onClose, onToast, onSave
 
   return (
     <Modal title={t('settings')} onClose={onClose}>
+      <h3 className="mb-2 text-sm font-bold">🧑 {lang === 'ko' ? '아바타' : 'Avatar'}</h3>
+      <div className="mb-3 grid grid-cols-2 gap-2" role="radiogroup" aria-label={lang === 'ko' ? '아바타 선택' : 'Choose avatar'}>
+        {AVATARS.map((a) => (
+          <button
+            key={a.id}
+            role="radio"
+            aria-checked={a.id === avatar.id}
+            onClick={() => setAvatar(a.id)}
+            className={`flex flex-col items-center gap-1 rounded-2xl bg-petal/50 p-2 font-bold ${a.id === avatar.id ? 'ring-2 ring-blush' : ''}`}
+          >
+            <img src={assetUrl(baseFiles(a).thumb)} alt="" className="h-24 w-24 rounded-xl object-cover" draggable={false} />
+            <span className="text-sm">{a.name[lang]}{a.id === avatar.id ? ' ✓' : ''}</span>
+          </button>
+        ))}
+      </div>
       <div className="space-y-2 pb-2">
         <RefreshButton />
         <button className={row} onClick={onBackground}><span>🖼️ {t('background')}</span></button>

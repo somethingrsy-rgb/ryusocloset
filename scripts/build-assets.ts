@@ -130,15 +130,27 @@ async function main() {
   fs.mkdirSync(path.join(OUT, 'thumbs'), { recursive: true })
   for (const c of CATEGORIES) fs.rmSync(path.join(OUT, 'clothes', c), { recursive: true, force: true })
 
-  // 1) 아바타 베이스 레이어
-  for (const name of ['body', 'body_barefoot', 'hair_front']) {
-    const src = path.join(SRC, 'base', `${name}.png`)
-    if (!fs.existsSync(src)) throw new Error(`없음: ${src}`)
-    const bm = await sharp(src).metadata()
-    if (bm.width !== CANVAS_W || bm.height !== CANVAS_H) {
-      console.warn(`⚠ base/${name}: ${bm.width}x${bm.height} (기대: ${CANVAS_W}x${CANVAS_H})`)
+  // 1) 아바타 베이스 레이어: assets-src/base (기본 아바타) 와, body.png 가 들어 있는 하위 폴더(예: base/yuha)마다
+  const baseDirs = ['', ...fs.readdirSync(path.join(SRC, 'base'), { withFileTypes: true })
+    .filter((d) => d.isDirectory() && d.name !== 'source' && fs.existsSync(path.join(SRC, 'base', d.name, 'body.png')))
+    .map((d) => d.name).sort()]
+  for (const sub of baseDirs) {
+    fs.mkdirSync(path.join(OUT, 'base', sub), { recursive: true })
+    for (const name of ['body', 'body_barefoot', 'hair_front']) {
+      const src = path.join(SRC, 'base', sub, `${name}.png`)
+      if (!fs.existsSync(src)) throw new Error(`없음: ${src}`)
+      const bm = await sharp(src).metadata()
+      if (bm.width !== CANVAS_W || bm.height !== CANVAS_H) {
+        console.warn(`⚠ base/${sub}/${name}: ${bm.width}x${bm.height} (기대: ${CANVAS_W}x${CANVAS_H})`)
+      }
+      await sharp(src).webp({ quality: 95, alphaQuality: 100 }).toFile(path.join(OUT, 'base', sub, `${name}.webp`))
     }
-    await sharp(src).webp({ quality: 95, alphaQuality: 100 }).toFile(path.join(OUT, 'base', `${name}.webp`))
+    // 설정의 아바타 고르기 그림: 얼굴 쪽 정사각형
+    await sharp(path.join(SRC, 'base', sub, 'body.png'))
+      .extract({ left: 132, top: 20, width: 760, height: 760 })
+      .resize(192, 192)
+      .webp({ quality: 90 })
+      .toFile(path.join(OUT, 'base', sub, 'thumb.webp'))
   }
 
   // 2) 옷

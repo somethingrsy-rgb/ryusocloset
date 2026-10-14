@@ -21,7 +21,8 @@ import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
 import { loadImage, renderOutfitCanvas, renderThumb } from './lib/exportPng'
 import type { RoomExportViewport } from './lib/roomExportBounds'
 import { CAMP_ASSETS, ROOM_ASSETS, renderRoomCanvas, sceneAssets } from './lib/exportRoom'
-import { BASE_LAYERS, ITEMS, ITEM_BY_ID, assetUrl, isCustomItem } from './lib/items'
+import { AVATARS, baseFiles } from './lib/avatars'
+import { ITEMS, ITEM_BY_ID, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
 import { toggleItem } from './lib/outfit'
 import { ROOM_ITEMS, ROOM_ITEM_BY_ID, addItem, defaultRoom, isCustomRoomItem } from './lib/room'
@@ -140,7 +141,7 @@ export default function App() {
   // 착용 순간 깜빡임이 없도록 모든 레이어를 한가할 때 미리 받아 둔다
   useEffect(() => {
     const urls = [
-      ...Object.values(BASE_LAYERS),
+      ...AVATARS.flatMap((a) => [baseFiles(a).body, baseFiles(a).hairFront].map(assetUrl)),
       ...ITEMS.map((i) => assetUrl(i.image)),
       ...Object.values(ROOM_ASSETS),
       ...Object.values(CAMP_ASSETS),

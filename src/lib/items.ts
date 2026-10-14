@@ -1,5 +1,6 @@
 import raw from '../data/items.json'
 import { CATEGORIES, type Category } from './layers'
+import { baseFiles, getAvatar } from './avatars'
 import type { Item } from './types'
 
 export const ITEMS: Item[] = [...(raw as Item[])]
@@ -11,10 +12,11 @@ export const ITEMS_BY_CATEGORY: Record<Category, Item[]> = Object.fromEntries(
 /** 정적 에셋 URL (vite base 를 따라감) */
 export const assetUrl = (p: string) => (/^(data|blob):/.test(p) ? p : `${import.meta.env.BASE_URL}${p}`)
 
+/** 지금 고른 아바타의 베이스 레이어 (읽을 때마다 현재 아바타를 따른다) */
 export const BASE_LAYERS = {
-  body: assetUrl('assets/base/body.webp'),
-  bodyBarefoot: assetUrl('assets/base/body_barefoot.webp'),
-  hairFront: assetUrl('assets/base/hair_front.webp'),
+  get body() { return assetUrl(baseFiles(getAvatar()).body) },
+  get bodyBarefoot() { return assetUrl(baseFiles(getAvatar()).bodyBarefoot) },
+  get hairFront() { return assetUrl(baseFiles(getAvatar()).hairFront) },
 }
 
 /** 옷 파일명이 바뀌기 전의 id → 현재 id (예전에 저장한 코디가 깨지지 않게) */
