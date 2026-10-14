@@ -99,6 +99,22 @@ head = base[:BODY_Y]
 al = head[..., 3] > 0
 hole = ndi.binary_fill_holes(al) & ~al
 head[hole] = [*skin_color, 255]
+# 관자놀이 쪽에 남은 얇은 틈(채운 살색과 원래 얼굴 사이)을 메운다: 알파를 닫고 새로 채워진 곳은 가까운 살색으로 칠한다
+_head = np.zeros((H, W), bool)
+_head[30:620, 140:890] = True
+_al = (base[..., 3] > 0).astype(np.uint8)
+_closed = cv2.morphologyEx(_al, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (17, 17))).astype(bool)
+_new = _closed & ~(_al > 0) & _head
+if _new.any():
+    _src = ((_al > 0) & _head).astype(np.uint8)
+    _d, _lab = cv2.distanceTransformWithLabels(1 - _src, cv2.DIST_L2, 5, labelType=cv2.DIST_LABEL_PIXEL)
+    _ys, _xs = np.where(_src > 0)
+    _idx = np.zeros(_lab.max() + 1, np.int64)
+    _idx[_lab[_ys, _xs]] = np.arange(len(_ys))
+    _fy, _fx = _ys[_idx[_lab]], _xs[_idx[_lab]]
+    base[_new, :3] = base[_fy[_new], _fx[_new], :3]
+    base[_new, 3] = 255
+    print('틈 메움 px', int(_new.sum()))
 # 얼굴 가운데와 이어진 덩어리만 남긴다 (머리끝 가장자리에서 떨어져 나온 부스러기 제거)
 lab, _ = ndi.label(base[..., 3] > 0)
 base[lab != lab[500, 512]] = 0

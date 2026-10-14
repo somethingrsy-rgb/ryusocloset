@@ -31,6 +31,8 @@ export const AVATARS: Avatar[] = [
     hairstyles: [
       { id: 'braid', name: { ko: '땋은 올림머리', en: 'Braided updo' }, file: 'hair_braid.webp' },
       { id: 'twin', name: { ko: '양갈래', en: 'Pigtails' }, file: 'hair_twin.webp' },
+      { id: 'crownbraid', name: { ko: '왕관 땋은머리', en: 'Crown braid' }, file: 'hair_crownbraid.webp' },
+      { id: 'crownbuns', name: { ko: '왕관 땋은머리 + 양쪽 번', en: 'Crown braid with buns' }, file: 'hair_crownbuns.webp' },
     ],
   },
 ]
