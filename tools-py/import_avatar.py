@@ -58,6 +58,9 @@ assert len(runs) == 2, f'두 발이 따로 보여야 해요: {[(r[0], r[-1]) for
 (l1, r1), (l2, r2) = [(r[0], r[-1]) for r in runs]
 c1, c2 = (l1 + r1) / 2, (l2 + r2) / 2
 s = 0.5 * ((573 - 450) / (c2 - c1) + 78 / (((r1 - l1) + (r2 - l2)) / 2))
+# 머리가 캔버스 위로 잘리지 않게: 키가 큰 그림은 발 기준 배율을 조금 줄인다 (발 위치는 몇 px 안에서 같음)
+top = ys.min()
+s = min(s, (1503 - 4) / (bottom - top))
 big = rgba.resize((round(rgba.width * s), round(rgba.height * s)), Image.LANCZOS)
 dx = round(0.5 * (450 + 573) - 0.5 * (c1 + c2) * s)
 dy = round(1503 - bottom * s)
