@@ -198,6 +198,19 @@ async function main() {
   await buildRoom()
   await buildCamp()
   await buildThemes()
+  await buildFarm()
+}
+
+/** 농장 그림: assets-src/farm 의 PNG 를 webp 로 (배경·밭 칸·작물 단계·아이콘) */
+async function buildFarm() {
+  const dir = path.join(SRC, 'farm')
+  if (!fs.existsSync(dir)) return
+  const out = path.join(OUT, 'farm')
+  fs.rmSync(out, { recursive: true, force: true })
+  fs.mkdirSync(out, { recursive: true })
+  const files = fs.readdirSync(dir).filter((f) => f.toLowerCase().endsWith('.png'))
+  for (const f of files) await sharp(path.join(dir, f)).webp({ quality: 92, alphaQuality: 100 }).toFile(path.join(out, f.replace(/\.png$/i, '.webp')))
+  console.log(`✔ 농장 그림 ${files.length}개`)
 }
 
 main().catch((e) => {
