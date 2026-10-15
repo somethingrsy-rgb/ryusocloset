@@ -28,6 +28,10 @@ export function FarmFx() {
           <img key={c.img} src={assetUrl(`assets/farm/${c.img}.webp`)} alt="" draggable={false} className="fx-cloud absolute left-0" style={{ top: `${c.top}%`, width: `${c.w}%`, opacity: c.op, animationDuration: `${c.dur}s`, animationDelay: `${c.delay}s` }} />
         ))}
       </div>
+      {/* 풍차 날개: 배경에서 날개만 지우고 같은 그림을 풍차 축 위에서 천천히 돌린다 */}
+      <img src={assetUrl('assets/farm/fx_mill_blades.webp')} alt="" draggable={false} className="fx-spin absolute" style={{ left: '93.85%', top: '9.2%', width: '5.47%', aspectRatio: '1 / 1', zIndex: 1 }} />
+      {/* 오리: 제자리에서 물 위를 살랑살랑 */}
+      <img src={assetUrl('assets/farm/fx_duck.webp')} alt="" draggable={false} className="fx-bob absolute" style={{ left: '15.6%', top: '77.5%', width: '6.64%', aspectRatio: '1 / 1', zIndex: 1 }} />
       {BUTTERFLIES.map((b) => (
         <div key={b.img} className={`fx-fly-${b.path} absolute`} style={{ left: `${b.left}%`, top: `${b.top}%`, width: `${b.w}%`, animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s`, zIndex: 4 }}>
           <img src={assetUrl(`assets/farm/${b.img}.webp`)} alt="" draggable={false} className="fx-flap w-full" />
