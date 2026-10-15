@@ -90,7 +90,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
     setHold(need === 'harvest' ? 'basket' : need === 'seed' ? 'seed' : 'can')
     setWalking(true)
-    setPos({ x: px - TILE_W * 0.45 - AVATAR_W / 2, y: py - AVATAR_W + 2, z: 2 + r })
+    setPos({ x: px - AVATAR_W / 2, y: py + TILE_H * 0.5 - AVATAR_W, z: 10 })
     later(() => {
       setWalking(false)
       if (need === 'water') setWatering(true)
@@ -157,7 +157,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
         }))}
 
         {/* 내 아바타: 밭 옆까지 걸어가서 직접 물 주고 수확한다 */}
-        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${AVATAR_W}%`, aspectRatio: '1024 / 1536', zIndex: pos.z, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${AVATAR_W}%`, aspectRatio: '1024 / 1536', zIndex: 10, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
           <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             {hold === 'can' ? (
@@ -170,11 +170,11 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
         </div>
 
         {/* 위쪽: 코인, 지도 */}
-        <div className="absolute flex items-center gap-1" style={{ right: '2.5%', top: '1.8%', zIndex: 5 }}>
+        <div className="absolute flex items-center gap-1" style={{ right: '2.5%', top: '1.8%', zIndex: 12 }}>
           <span className={PILL}><PillText>🪙 {farm.coins}</PillText></span>
           <button className={PILL} onClick={onExit}><PillText>🗺️ {ko ? '지도' : 'Map'}</PillText></button>
         </div>
-        {notice && <p role="status" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-xs font-bold shadow-md" style={{ top: '14%', maxWidth: '90%', zIndex: 6 }}>{notice}</p>}
+        {notice && <p role="status" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-xs font-bold shadow-md" style={{ top: '14%', maxWidth: '90%', zIndex: 13 }}>{notice}</p>}
       </div>
 
       {/* 아래 도구 4개: 그림 아래 초록 바탕에 둔다 */}
