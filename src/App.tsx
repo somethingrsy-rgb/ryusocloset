@@ -337,7 +337,7 @@ export default function App() {
 
   return (
     <I18nContext.Provider value={i18n}>
-      <div className="mx-auto flex h-dvh max-w-[1100px] flex-col gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))] md:flex-row md:gap-4 md:p-4">
+      <div className="mx-auto flex h-dvh max-w-[560px] flex-col gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
         <section className="flex min-h-0 flex-1 flex-col gap-2">
           <header className="flex shrink-0 items-center justify-between gap-2 px-1">
             <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep xl:block">{t('title')}</h1>
@@ -427,7 +427,7 @@ export default function App() {
           </div>
         </section>
 
-        <aside hidden={mode === 'travel' && travelFull} className={`flex ${mode === 'travel' ? 'h-[28dvh]' : 'h-[40dvh]'} shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]`}>
+        <aside hidden={mode === 'travel' && travelFull} className={`flex ${mode === 'travel' ? 'h-[28dvh]' : 'h-[40dvh]'} shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
           <div id="adjustment-controls" className="shrink-0" />
           {mode === 'travel' ? (
             <TravelBook outfit={outfit} onToggle={(id) => { const it = ITEM_BY_ID[id]; if (it) onToggle(it) }} />
