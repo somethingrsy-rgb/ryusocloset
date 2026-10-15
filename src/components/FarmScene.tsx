@@ -162,8 +162,8 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
       </div>
 
       {/* 아래 도구 4개: 그림 아래 초록 바탕에 둔다 */}
-      <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 px-3 pb-3" style={{ zIndex: 5 }}>
-        <div className="flex w-full max-w-[480px] flex-col gap-2">
+      <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center px-3 py-3" style={{ zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
+        <div className="flex w-full max-w-[560px] flex-col gap-3">
           {/* 씨앗 고르기 */}
           {picker && (
             <div className="flex justify-center gap-2 rounded-3xl bg-white/95 p-2 shadow-lg" role="radiogroup" aria-label={ko ? '씨앗 고르기' : 'Choose seeds'}>
@@ -182,9 +182,9 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
             {tools.map((t) => {
               const active = tool === t.id
               return (
-                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 flex-col items-center rounded-3xl border-2 px-1 pt-1 pb-1.5 shadow-md ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? setShop(true) : pick(t.id))}>
-                  <FarmImg name={t.icon} emoji={t.emoji} className="aspect-square w-3/4 object-contain" />
-                  <span className="text-xs font-extrabold text-[#6b4a2b]">{t[lang]}</span>
+                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 flex-col items-center rounded-3xl border-2 px-1 pt-2 pb-2.5 shadow-md ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? setShop(true) : pick(t.id))}>
+                  <FarmImg name={t.icon} emoji={t.emoji} className="aspect-square w-[85%] object-contain" />
+                  <span className="text-sm font-extrabold text-[#6b4a2b]">{t[lang]}</span>
                 </button>
               )
             })}
