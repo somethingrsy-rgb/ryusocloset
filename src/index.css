@@ -231,3 +231,18 @@ button:focus-visible {
 }
 .farm-walk { animation: farm-walk 0.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .farm-walk { animation: none; } }
+
+/* 농장 장식 움직임 */
+@keyframes fx-cloud { from { transform: translateX(-130%); } to { transform: translateX(380%); } }
+@keyframes fx-fly-a { 0%, 100% { transform: translate(0, 0) rotate(8deg); } 25% { transform: translate(260%, -140%) rotate(-10deg); } 50% { transform: translate(560%, 60%) rotate(12deg); } 75% { transform: translate(260%, 220%) rotate(-8deg); } }
+@keyframes fx-fly-b { 0%, 100% { transform: translate(0, 0) rotate(-6deg); } 30% { transform: translate(-300%, 120%) rotate(10deg); } 60% { transform: translate(-520%, -80%) rotate(-12deg); } 80% { transform: translate(-200%, -200%) rotate(6deg); } }
+@keyframes fx-flap { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.4); } }
+@keyframes fx-fall { from { top: -6%; opacity: 0; } 8% { opacity: 0.95; } 92% { opacity: 0.95; } to { top: 104%; opacity: 0; } }
+@keyframes fx-sway { 0%, 100% { transform: translateX(-60%) rotate(-25deg); } 50% { transform: translateX(60%) rotate(35deg); } }
+.fx-cloud { animation: fx-cloud linear infinite; }
+.fx-fly-a { animation: fx-fly-a ease-in-out infinite; }
+.fx-fly-b { animation: fx-fly-b ease-in-out infinite; }
+.fx-flap { animation: fx-flap 0.45s ease-in-out infinite; }
+.fx-fall { animation: fx-fall linear infinite; }
+.fx-sway { animation: fx-sway ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .farm-fx { display: none; } }
