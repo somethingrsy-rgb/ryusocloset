@@ -117,14 +117,14 @@ describe('끝없는 맵', () => {
     expect(placeOfChunk(PLACES.length + 2).id).toBe(PLACES[2].id)
   })
   it('끝에 가까워지면 구간이 늘어나고 줄어들지는 않는다', () => {
-    expect(chunksNeeded(100, 3)).toBe(3)
-    expect(chunksNeeded(worldWidth(3) - 200, 3)).toBeGreaterThan(3)
-    expect(chunksNeeded(100, 8)).toBe(8)
+    expect(chunksNeeded(100, 12)).toBe(12)
+    expect(chunksNeeded(worldWidth(12) - 200, 12)).toBeGreaterThan(12)
+    expect(chunksNeeded(100, 20)).toBe(20)
   })
   it('카메라는 맵 밖을 보여주지 않는다', () => {
     expect(cameraX(0, 800, 3)).toBe(0)
     expect(cameraX(worldWidth(3), 800, 3)).toBe(worldWidth(3) - 800)
-    expect(cameraX(2000, 800, 5)).toBe(1600)
+    expect(cameraX(2000, 800, 5)).toBe(1200)
   })
   it('문 앞에 서면 그 구간, 시작 위치는 문 앞이지만 닿지는 않는다', () => {
     expect(gateAt({ x: gateX(14), y: DOOR_Y + 40 })).toBe(14)
