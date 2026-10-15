@@ -108,7 +108,9 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
 
   return (
     <section aria-label={ko ? '나의 작은 농장' : 'My little farm'} className="relative h-full overflow-hidden rounded-3xl bg-[#b9d77a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 select-none" style={{ width: 'min(100cqw, calc(100cqh * 1024 / 1536))', aspectRatio: '1024 / 1536' }}>
+      {/* 그림 아래 남는 자리: 같은 그림을 흐리게 깔아 자연스럽게 이어 보이게 한다 */}
+      <div aria-hidden className="absolute inset-0" style={{ backgroundImage: `url(${assetUrl('assets/farm/bg.webp')})`, backgroundSize: 'cover', backgroundPosition: 'center bottom', filter: 'blur(22px) saturate(0.95)', transform: 'scale(1.15)' }} />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 select-none" style={{ width: 'min(100cqw, calc(100cqh * 1024 / 1536))', aspectRatio: '1024 / 1536', WebkitMaskImage: 'linear-gradient(to bottom, #000 90%, transparent 100%)', maskImage: 'linear-gradient(to bottom, #000 90%, transparent 100%)' }}>
         <img src={assetUrl('assets/farm/bg.webp')} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
 
         {/* 노점: 눌러서 주민의 부탁·바구니 팔기 */}
@@ -145,11 +147,11 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
           <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             {hold === 'can' ? (
-              <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '66%', top: '50%', width: '34%', transformOrigin: '90% 60%', transform: watering ? 'rotate(-35deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />
+              <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '66%', top: '50%', width: '34%', transformOrigin: '10% 60%', transform: watering ? 'scaleX(-1) rotate(-35deg)' : 'scaleX(-1)', transition: 'transform 0.25s' }} />
             ) : (
               <img src={assetUrl('assets/farm/icon_basket.webp')} alt="" draggable={false} className="absolute" style={{ left: '62%', top: '44%', width: '42%' }} />
             )}
-            {watering && <span className="absolute text-sm" style={{ left: '56%', top: '58%' }}>💧</span>}
+            {watering && <span className="absolute text-sm" style={{ left: '98%', top: '58%' }}>💧</span>}
           </div>
         </div>
 
