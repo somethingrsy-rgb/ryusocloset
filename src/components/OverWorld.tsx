@@ -15,7 +15,6 @@ import {
   clampWalk,
   gateAt,
   gateX,
-  metersOf,
   placeOfChunk,
   startPos,
   stepWorld,
@@ -224,7 +223,6 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
         </div>
       )}
       <div className="absolute top-2 left-2 right-28 z-10 flex min-w-0 flex-wrap items-center gap-1">
-        <span className={`pointer-events-none ${PILL}`}><PillText>🚶 {metersOf(pos.x).toLocaleString()}m</PillText></span>
         <div className="flex min-w-0 flex-wrap items-center gap-1" onPointerUp={e => e.stopPropagation()}>{actions}</div>
       </div>
       <button

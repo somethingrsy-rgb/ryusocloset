@@ -20,12 +20,10 @@ interface Props {
   tweaks: Tweaks
   /** 찾은 아이템을 옷장에서 입어보러 간다 */
   onWear: (id: string) => void
-  /** 상점 화면으로 이동 */
-  onShop: () => void
 }
 
 /** 여행 탭: 넓은 맵(OverWorld)을 걸어다니다가 문에 들어가면 그 장소 장면(TravelScene)으로 */
-export function TravelGame({ outfit, tweaks, onWear, onShop, initialPlaceId = null }: Props) {
+export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Props) {
   const { lang } = useI18n()
   const [starRain, setStarRain] = useState(false)
   const [speaking, setSpeaking] = useState(false)
@@ -44,7 +42,6 @@ export function TravelGame({ outfit, tweaks, onWear, onShop, initialPlaceId = nu
       paused={speaking} reach={game.reach} chunk={game.chunk} assign={assign} outfit={outfit} tweaks={tweaks}
       actions={<>
         <button className={actionButton} aria-label="한마디 영어" onClick={() => setSpeaking(true)}>{label(lang === 'ko' ? '영어' : 'Talk')}</button>
-        <button className={actionButton} aria-label="상점" onClick={() => onShop()}>{label(lang === 'ko' ? '상점' : 'Shop')}</button>
         <button className={actionButton} aria-label="별비 산책" onClick={() => setStarRain(true)}>{label(lang === 'ko' ? '별비' : 'Stars')}</button>
       </>}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
