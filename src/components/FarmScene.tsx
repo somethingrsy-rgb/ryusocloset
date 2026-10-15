@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
 import { actFarm, CROPS, getFarm, growth, orderCrop, subscribeFarm, type CropId, type FarmAction } from '../lib/farm'
 import { assetUrl } from '../lib/items'
-import type { Outfit, Tweaks } from '../lib/types'
+import type { Item, Outfit, Tweaks } from '../lib/types'
+import { FarmWardrobe } from './FarmWardrobe'
 import { FigureLayers } from './FigureLayers'
 import { Modal } from './Modal'
 import { PILL, PillText } from './pill'
@@ -34,7 +35,7 @@ function FarmImg({ name, emoji, className, style, alt = '' }: { name: string; em
 
 const stageOf = (wateredAt: number | null, progress: number) => (wateredAt === null ? 1 : progress >= 1 ? 4 : progress < 0.4 ? 2 : 3)
 
-export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; tweaks: Tweaks; onExit: () => void; onWear: (id: string) => void }) {
+export function FarmScene({ outfit, tweaks, onExit, onWear, onToggleItem }: { outfit: Outfit; tweaks: Tweaks; onExit: () => void; onWear: (id: string) => void; onToggleItem: (item: Item) => void }) {
   const { lang } = useI18n()
   const ko = lang === 'ko'
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
@@ -55,7 +56,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
   useEffect(() => {
     const el = secRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => setWide(el.clientWidth > el.clientHeight * 1.0))
+    const ro = new ResizeObserver(() => setWide(el.clientWidth > el.clientHeight * 1.2))
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -119,9 +120,14 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
   ]
 
   return (
-    <section ref={secRef} aria-label={ko ? '나의 작은 농장' : 'My little farm'} className="relative h-full overflow-hidden rounded-3xl bg-[#b9d77a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
+    <section ref={secRef} aria-label={ko ? '나의 작은 농장' : 'My little farm'} className={`relative h-full overflow-hidden rounded-3xl ring-1 ring-black/5 ${wide ? 'bg-[#f6ecd8]' : 'bg-[#b9d77a]'}`} style={{ containerType: 'size' }}>
       {/* 그림 아래 남는 자리: 그림 맨 아래 풀밭 색에서 연두색으로 부드럽게 이어지는 그라데이션 */}
       {!wide && <div aria-hidden className="absolute inset-x-0 bottom-0" style={{ top: 'calc(min(150cqw, 100cqh) - 3rem)', background: 'linear-gradient(to bottom, #9bad3f 0%, #aac24f 30%, #b9d77a 100%)' }} />}
+      {wide && (
+        <div className="absolute top-0 bottom-0 left-0 p-3" style={{ zIndex: 5, width: 'calc((100cqw - 100cqh * 2 / 3) / 2)' }}>
+          <FarmWardrobe outfit={outfit} tweaks={tweaks} onToggle={onToggleItem} />
+        </div>
+      )}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 select-none" style={{ width: 'min(100cqw, calc(100cqh * 1024 / 1536))', aspectRatio: '1024 / 1536', WebkitMaskImage: wide ? 'linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, #000 95%, transparent 100%)' : 'linear-gradient(to bottom, #000 95%, transparent 100%)', WebkitMaskComposite: 'source-in', maskImage: wide ? 'linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, #000 95%, transparent 100%)' : 'linear-gradient(to bottom, #000 95%, transparent 100%)', maskComposite: 'intersect' }}>
         <img src={assetUrl('assets/farm/bg.webp')} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
 

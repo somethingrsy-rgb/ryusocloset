@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { setTravelFull } from '../lib/travelUi'
 import { currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from '../lib/game'
-import type { Outfit, Tweaks } from '../lib/types'
+import type { Item, Outfit, Tweaks } from '../lib/types'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import { StarRainWalk } from './StarRainWalk'
 import { FarmScene } from './FarmScene'
@@ -23,10 +23,12 @@ interface Props {
   tweaks: Tweaks
   /** 찾은 아이템을 옷장에서 입어보러 간다 */
   onWear: (id: string) => void
+  /** 농장에서 옷을 바로 입고 벗는다 */
+  onToggleItem: (item: Item) => void
 }
 
 /** 여행 탭: 넓은 맵(OverWorld)을 걸어다니다가 문에 들어가면 그 장소 장면(TravelScene)으로 */
-export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Props) {
+export function TravelGame({ outfit, tweaks, onWear, onToggleItem, initialPlaceId = null }: Props) {
   const { lang } = useI18n()
   const [starRain, setStarRain] = useState(false)
   const [farm, setFarm] = useState(false)
@@ -40,7 +42,7 @@ export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Pr
 
   useEffect(() => { setTravelFull(farm); return () => setTravelFull(false) }, [farm])
   if (starRain) return <StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} />
-  if (farm) return <FarmScene outfit={outfit} tweaks={tweaks} onExit={() => setFarm(false)} onWear={onWear} />
+  if (farm) return <FarmScene outfit={outfit} tweaks={tweaks} onExit={() => setFarm(false)} onWear={onWear} onToggleItem={onToggleItem} />
 
   const actionButton = PILL
   const label = (text: string) => <PillText>{text}</PillText>

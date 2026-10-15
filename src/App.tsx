@@ -383,6 +383,7 @@ export default function App() {
             {mode === 'travel' ? (
               <TravelGame
                 initialPlaceId={travelPreview}
+                onToggleItem={onToggle}
                 outfit={outfit}
                 tweaks={tweaks}
                 onWear={(id) => {
