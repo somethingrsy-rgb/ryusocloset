@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
 import { actFarm, CROPS, getFarm, growth, orderCrop, subscribeFarm, type CropId, type FarmAction } from '../lib/farm'
 import { assetUrl } from '../lib/items'
@@ -13,14 +13,13 @@ type Tool = 'seed' | 'water' | 'harvest'
 /** 밭 9칸: 오른쪽으로 기운 평행사변형. 위 줄일수록 오른쪽으로 밀려 전체가 비스듬한 밭이 된다 (배경 그림 기준 %) */
 const TILE_W = 22
 const TILE_H = TILE_W * (646 / 1386) * (1024 / 1536)
-const PITCH = 21
+const PITCH = 18.6
 const SHEAR = TILE_W * 0.203
-const ROW_Y = [49.5, 57.5, 65.5]
-const FIRST_X = 30
+const ROW_Y = [51, 58.3, 65.6]
+const FIRST_X = 32.5
+const AVATAR_W = 19
+const HOME = { x: 0.5, y: 37, z: 3 }
 /** 작물 그림 한 장의 크기(px). 가로 500 = 칸 폭의 48% */
-/** 흙까지 한 장으로 그려진 작물 (carrot_full_1~4). 그림 높이 769 중 밭 틀이 647 */
-const FULL_ART = new Set(['carrot'])
-const FULL_H = (769 / 647) * 100
 const CROP_BOX: Record<string, [number, number]> = { carrot: [568, 499], strawberry: [578, 453], corn: [505, 619] }
 
 /** 그림 파일이 없으면 이모지로 대신 보여 준다 (그림을 나중에 채워도 코드는 그대로) */
@@ -43,6 +42,12 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
   const [notice, setNotice] = useState('')
   const [stall, setStall] = useState(false)
   const [shop, setShop] = useState(false)
+  const [pos, setPos] = useState(HOME)
+  const [walking, setWalking] = useState(false)
+  const [watering, setWatering] = useState(false)
+  const busy = useRef(false)
+  const timers = useRef<number[]>([])
+  useEffect(() => () => { timers.current.forEach(clearTimeout) }, [])
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer) }, [])
   useEffect(() => { if (!notice) return; const t = setTimeout(() => setNotice(''), 2600); return () => clearTimeout(t) }, [notice])
 
@@ -62,10 +67,26 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
       setNotice(tool === 'seed' ? (ko ? '빈 밭에 심어요' : 'Plant in an empty plot') : tool === 'water' ? (ko ? '심고 물 안 준 밭에 물을 줘요' : 'Water a planted plot') : (ko ? '다 자란 밭을 수확해요' : 'Harvest a grown plot'))
       return
     }
-    if (need === 'seed') apply({ type: 'plant', plot: i, crop: selected })
-    else if (need === 'water') apply({ type: 'water', plot: i })
-    else if (need === 'harvest') apply({ type: 'harvest', plot: i })
-    else setNotice(ko ? '자라는 중이에요' : 'Still growing')
+    if (!need) { setNotice(ko ? '자라는 중이에요' : 'Still growing'); return }
+    if (busy.current) return
+    busy.current = true
+    const r = Math.floor(i / 3)
+    const px = FIRST_X + SHEAR * (2 - r) + (i % 3) * PITCH
+    const py = ROW_Y[r]
+    const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
+    setWalking(true)
+    setPos({ x: px - TILE_W * 0.45 - AVATAR_W / 2, y: py - AVATAR_W + 2, z: 2 + r })
+    later(() => {
+      setWalking(false)
+      if (need === 'water') setWatering(true)
+      later(() => {
+        setWatering(false)
+        if (need === 'seed') apply({ type: 'plant', plot: i, crop: selected })
+        else if (need === 'water') apply({ type: 'water', plot: i })
+        else apply({ type: 'harvest', plot: i })
+        busy.current = false
+      }, need === 'water' ? 700 : 350)
+    }, 850)
   }
 
   const pick = (t: Tool) => {
@@ -93,11 +114,6 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
           <span className="absolute -top-1 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-bold shadow">{ko ? '주문' : 'Orders'} · {farm.inventory[order.id]}/2</span>
         </button>
 
-        {/* 내 아바타 */}
-        <div aria-hidden className="pointer-events-none absolute" style={{ left: '0.5%', top: '37%', width: '19%', aspectRatio: '1024 / 1536', zIndex: 3 }}>
-          <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
-        </div>
-
         {/* 밭 9칸 */}
         {ROW_Y.map((y, r) => [0, 1, 2].map((c) => {
           const x = FIRST_X + SHEAR * (2 - r) + c * PITCH
@@ -110,25 +126,26 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
           const label = !plot ? (ko ? `${i + 1}번 밭 심기` : `Plant in plot ${i + 1}`) : plot.wateredAt === null ? (ko ? `${i + 1}번 밭 물 주기` : `Water plot ${i + 1}`) : ready ? (ko ? `${i + 1}번 밭 수확하기` : `Harvest plot ${i + 1}`) : (ko ? `${i + 1}번 밭 자라는 중` : `Plot ${i + 1} growing`)
           return (
             <div key={i} className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${y}%`, width: `${TILE_W}%`, height: `${TILE_H}%`, zIndex: 2 + r }}>
-              {plot && crop && FULL_ART.has(crop.id) ? (
-                <FarmImg name={`${crop.id}_full_${stageOf(plot.wateredAt, progress)}`} emoji="🟫" className="absolute left-0 w-full" style={{ bottom: 0, height: `${FULL_H}%`, objectFit: 'fill' }} />
-              ) : (
-                <>
-                  <FarmImg name={wet ? 'plot_wet' : 'plot_dry'} emoji="🟫" className="absolute inset-0 h-full w-full" style={{ objectFit: 'fill' }} />
-                  {plot && crop && (
-                    <FarmImg name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute left-1/2 -translate-x-1/2" style={{ bottom: '34%', width: `${CROP_BOX[crop.id][0] / 500 * 48}%`, aspectRatio: `${CROP_BOX[crop.id][0]} / ${CROP_BOX[crop.id][1]}`, objectFit: 'contain', objectPosition: 'bottom' }} />
-                  )}
-                </>
-              )}
-              {plot && (
-                <span aria-hidden className={`absolute left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-1.5 text-[10px] leading-4 font-bold shadow ${ready ? 'animate-bounce' : ''}`} style={{ bottom: '-3%' }}>
-                  {ready ? (ko ? '수확!' : 'Ready!') : plot.wateredAt === null ? '💧' : `${Math.ceil((1 - progress) * crop!.seconds)}${ko ? '초' : 's'}`}
-                </span>
+              <FarmImg name={wet ? 'plot_wet' : 'plot_dry'} emoji="🟫" className="absolute inset-0 h-full w-full" style={{ objectFit: 'fill' }} />
+              {plot && crop && [{ x: 71, b: 40 }, { x: 29, b: 27 }].map((pos) => (
+                <FarmImg key={pos.x} name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute -translate-x-1/2" style={{ left: `${pos.x}%`, bottom: `${pos.b}%`, width: `${CROP_BOX[crop.id][0] / 500 * 36}%`, aspectRatio: `${CROP_BOX[crop.id][0]} / ${CROP_BOX[crop.id][1]}`, objectFit: 'contain', objectPosition: 'bottom' }} />
+              ))}
+              {plot && (plot.wateredAt === null || ready) && (
+                <span aria-hidden className={`absolute left-1/2 -translate-x-1/2 text-lg leading-none drop-shadow ${ready ? 'animate-bounce' : ''}`} style={{ bottom: '8%' }}>{ready ? '✨' : '💧'}</span>
               )}
               <button aria-label={label} className="pointer-events-auto absolute inset-0" style={{ clipPath: 'polygon(20.3% 0, 100% 0, 83.1% 100%, 0 100%)' }} onClick={() => tapPlot(i)} />
             </div>
           )
         }))}
+
+        {/* 내 아바타: 밭 옆까지 걸어가서 직접 물 주고 수확한다 */}
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${AVATAR_W}%`, aspectRatio: '1024 / 1536', zIndex: pos.z, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
+          <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
+            <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '66%', top: '50%', width: '34%', transformOrigin: '90% 60%', transform: watering ? 'rotate(-35deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />
+            {watering && <span className="absolute text-sm" style={{ left: '56%', top: '58%' }}>💧</span>}
+          </div>
+        </div>
 
         {/* 위쪽: 코인, 지도 */}
         <div className="absolute flex items-center gap-1" style={{ right: '2.5%', top: '1.8%', zIndex: 5 }}>
