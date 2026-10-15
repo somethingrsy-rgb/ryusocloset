@@ -19,7 +19,7 @@ const PITCH = BODY_W + 0.5 // 옆 밭과의 틈 0.5%
 const ROW_PITCH = TILE_H + 0.35 // 위아래 밭과의 틈
 const SHEAR = 281 * U * (ROW_PITCH / TILE_H) // 한 줄 올라갈 때 오른쪽으로 밀리는 양 (옆 변의 기울기와 같음)
 const ROW_Y = [0, 1, 2].map((r) => 65.8 - (2 - r) * ROW_PITCH)
-const FIRST_X = 31.2
+const FIRST_X = 24.5
 const AVATAR_W = 19
 const HOME = { x: 0.5, y: 37, z: 3 }
 /** 작물 그림 한 장의 크기(px). 가로 500 = 칸 폭의 48% */
