@@ -61,10 +61,10 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center md:p-6" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={ko ? '상점' : 'Shop'} onClick={(e) => e.stopPropagation()} className="sheet-in relative flex max-h-[94dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl shadow-2xl md:rounded-3xl" style={{ background: 'linear-gradient(#fbf3e4, #f6ead3)', color: '#4b3a2a' }}>
+      <div role="dialog" aria-modal="true" aria-label={ko ? '상점' : 'Shop'} onClick={(e) => e.stopPropagation()} className="sheet-in relative flex max-h-[94dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl shadow-2xl md:rounded-3xl" style={{ background: '#fbf4ea', color: '#4b3a2a' }}>
         <div className="flex items-center justify-between gap-2 px-4 pt-3">
           <div className="flex items-center gap-2">
-            <span aria-hidden className="text-4xl leading-none">🌙</span>
+            <img src={assetUrl('assets/farm/shop_moon.webp')} alt="" draggable={false} className="h-16 w-[70px] object-contain" />
             <div>
               <h2 className="m-0 text-2xl leading-tight font-bold" style={{ fontFamily: SERIF }}>{ko ? '달빛 옷장' : 'Moonlight Closet'}</h2>
               <p className="m-0 text-[11px]" style={{ color: '#8b7355' }}>{ko ? '숲속의 작은 편집숍' : 'A little shop in the woods'}</p>
@@ -77,15 +77,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
         </div>
 
         <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div className="relative mt-3 flex h-28 items-center justify-between overflow-hidden rounded-2xl border border-[#e3d3b3] px-4" style={{ background: 'linear-gradient(120deg, #e9f2d4, #fdf1d6 55%, #f9dfe4)' }}>
-            <div>
-              <p className="m-0 text-2xl font-bold" style={{ fontFamily: SERIF }}>{ko ? '숲속 티타임' : 'Forest tea time'}</p>
-              <p className="m-0 mt-1 text-[11px] leading-snug" style={{ color: '#7a6548' }}>{ko ? '꽃향기가 머무는 시간,' : 'A time that smells of flowers,'}<br />{ko ? '특별한 하루를 입어요.' : 'dress for a special day.'}</p>
-            </div>
-            <span aria-hidden className="text-6xl">👗</span>
-            <span aria-hidden className="absolute right-20 bottom-1 text-2xl opacity-80">🌸</span>
-            <span aria-hidden className="absolute top-1 right-24 text-xl opacity-80">🍃</span>
-          </div>
+          <img src={assetUrl('assets/farm/shop_banner.webp')} alt={ko ? '숲속 티타임' : 'Forest tea time'} draggable={false} className="mt-2 block w-full rounded-xl border border-[#e3d3b3] object-cover" style={{ aspectRatio: '980 / 314' }} />
 
           <div role="radiogroup" aria-label={ko ? '내는 방법' : 'Pay with'} className="mt-3 flex items-center gap-1.5">
             {(['star', 'coin'] as const).map((c) => (
@@ -121,8 +113,8 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
               return (
                 <div key={it.id} className="flex flex-col items-center">
                   <div className="relative flex aspect-square w-full items-end justify-center">
-                    <img src={assetUrl(it.thumb)} alt="" className="relative z-10 mb-3 max-h-full w-[88%] object-contain drop-shadow" draggable={false} />
-                    <span aria-hidden className="absolute inset-x-0 bottom-0 h-5 rounded-md border border-[#c9ad7c]" style={{ background: 'linear-gradient(#e4c995, #cfae78)' }} />
+                    <img src={assetUrl(it.thumb)} alt="" className="relative z-10 mb-2 max-h-full w-[88%] object-contain" draggable={false} />
+                    <span aria-hidden className="absolute inset-x-0 bottom-0 h-3 rounded-sm border border-[#d9c196]" style={{ background: 'linear-gradient(#f0dcb5, #e3c895)' }} />
                   </div>
                   <p className="mt-1 mb-0 w-full truncate text-center text-sm font-bold" style={{ fontFamily: SERIF }}>{it.name[lang]}</p>
                   <div className="mt-1 flex w-full items-center justify-between gap-1">
