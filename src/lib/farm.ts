@@ -9,7 +9,7 @@ export interface Plot { crop: CropId; wateredAt: number | null }
 export interface FarmState {
   plots: (Plot | null)[]; inventory: Record<CropId, number>; coins: number; deliveries: number; decorations: string[]
 }
-export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' }
+export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number }
 export const defaultFarm = (): FarmState => ({ plots: Array(6).fill(null), inventory: { carrot: 0, tomato: 0, strawberry: 0 }, coins: 0, deliveries: 0, decorations: [] })
 const cropById = (id: unknown) => CROPS.find(c => c.id === id)
 const count = (v: unknown) => typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(1_000_000, Math.floor(v))) : 0
@@ -56,6 +56,9 @@ export function reduceFarm(state: FarmState, action: FarmAction, now: number): F
     const crop = cropById(action.crop)
     if (!crop || !state.inventory[crop.id]) return state
     next.inventory[crop.id]--; next.coins += crop.price
+  } else if (action.type === 'spend') {
+    if (!Number.isInteger(action.amount) || action.amount <= 0 || state.coins < action.amount) return state
+    next.coins -= action.amount
   } else {
     const price = action.id === 'fence' ? 20 : action.id === 'flowers' ? 30 : Infinity
     if (state.decorations.includes(action.id) || state.coins < price) return state

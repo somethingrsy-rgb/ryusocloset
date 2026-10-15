@@ -39,11 +39,12 @@ export function stepRain(state: RainState, seconds: number, random = Math.random
   }
   return { elapsed, score, caught, clouds, playerX, targetX, slowUntil, drops, bursts, nextSpawn, serial }
 }
-export interface RainRecord { best: number; total: number; rounds: number }
+/** spent: 상점에서 쓴 별 (쓸 수 있는 별 = total − spent) */
+export interface RainRecord { best: number; total: number; rounds: number; spent: number }
 export function readRainRecord(): RainRecord {
   try {
     const raw = JSON.parse(localStorage.getItem('ryuso.starRain.v1') ?? '{}')
     const count = (v: unknown) => typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.floor(v)) : 0
-    return { best: count(raw?.best), total: count(raw?.total), rounds: count(raw?.rounds) }
-  } catch { return { best: 0, total: 0, rounds: 0 } }
+    return { best: count(raw?.best), total: count(raw?.total), rounds: count(raw?.rounds), spent: Math.min(count(raw?.spent), count(raw?.total)) }
+  } catch { return { best: 0, total: 0, rounds: 0, spent: 0 } }
 }

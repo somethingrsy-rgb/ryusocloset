@@ -204,9 +204,9 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
         </div>
       </div>
 
-      <div className="absolute top-2 left-2 right-16 z-10 flex min-w-0 items-center gap-1">
+      <div className="absolute top-2 left-2 right-28 z-10 flex min-w-0 flex-wrap items-center gap-1">
         <span className={`pointer-events-none ${PILL}`}><PillText>🚶 {metersOf(pos.x).toLocaleString()}m</PillText></span>
-        <div className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-full" onPointerUp={e => e.stopPropagation()}>{actions}</div>
+        <div className="flex min-w-0 flex-wrap items-center gap-1" onPointerUp={e => e.stopPropagation()}>{actions}</div>
       </div>
       <button
         onClick={(e) => {

@@ -5,6 +5,7 @@ import { useItemsVersion } from '../lib/useItemsVersion'
 import { StarRainWalk } from './StarRainWalk'
 import { FarmScene } from './FarmScene'
 import { SpeakingGame } from './SpeakingGame'
+import { ShopModal } from './ShopModal'
 import { useI18n } from '../i18n'
 import { OverWorld } from './OverWorld'
 import { PILL, PillText } from './pill'
@@ -29,6 +30,7 @@ export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Pr
   const [starRain, setStarRain] = useState(false)
   const [farm, setFarm] = useState(false)
   const [speaking, setSpeaking] = useState(false)
+  const [shop, setShop] = useState(false)
   const game = useGame()
   const ver = useItemsVersion()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -46,11 +48,13 @@ export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Pr
       actions={<>
         <button className={actionButton} aria-label="한마디 영어" onClick={() => setSpeaking(true)}>{label(lang === 'ko' ? '영어' : 'Talk')}</button>
         <button className={actionButton} aria-label="농장으로" onClick={() => setFarm(true)}>{label(lang === 'ko' ? '농장' : 'Farm')}</button>
+        <button className={actionButton} aria-label="상점" onClick={() => setShop(true)}>{label(lang === 'ko' ? '상점' : 'Shop')}</button>
         <button className={actionButton} aria-label="별비 산책" onClick={() => setStarRain(true)}>{label(lang === 'ko' ? '별비' : 'Stars')}</button>
       </>}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
     />}
     {speaking && <SpeakingGame onClose={() => setSpeaking(false)} />}
+    {shop && <ShopModal onClose={() => setShop(false)} onWear={onWear} />}
   </div>
 }
 
