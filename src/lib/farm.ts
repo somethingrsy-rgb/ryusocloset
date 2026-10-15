@@ -1,28 +1,34 @@
 import { isRestoring } from './restoreGuard'
 export const CROPS = [
   { id: 'carrot', ko: '당근', en: 'carrot', plural: 'carrots', emoji: '🥕', seconds: 60, price: 3 },
-  { id: 'tomato', ko: '토마토', en: 'tomato', plural: 'tomatoes', emoji: '🍅', seconds: 90, price: 4 },
   { id: 'strawberry', ko: '딸기', en: 'strawberry', plural: 'strawberries', emoji: '🍓', seconds: 120, price: 5 },
+  { id: 'corn', ko: '옥수수', en: 'corn', plural: 'corn', emoji: '🌽', seconds: 90, price: 6 },
 ] as const
 export type CropId = (typeof CROPS)[number]['id']
+/** 밭 칸 수 (3×3) */
+export const PLOT_COUNT = 9
 export interface Plot { crop: CropId; wateredAt: number | null }
 export interface FarmState {
   plots: (Plot | null)[]; inventory: Record<CropId, number>; coins: number; deliveries: number; decorations: string[]
 }
 export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number }
-export const defaultFarm = (): FarmState => ({ plots: Array(6).fill(null), inventory: { carrot: 0, tomato: 0, strawberry: 0 }, coins: 0, deliveries: 0, decorations: [] })
+export const defaultFarm = (): FarmState => ({ plots: Array(PLOT_COUNT).fill(null), inventory: { carrot: 0, strawberry: 0, corn: 0 }, coins: 0, deliveries: 0, decorations: [] })
 const cropById = (id: unknown) => CROPS.find(c => c.id === id)
+/** 예전 저장의 토마토는 옥수수로 이어간다 */
+const migrateCrop = (id: unknown) => (id === 'tomato' ? 'corn' : id)
 const count = (v: unknown) => typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(1_000_000, Math.floor(v))) : 0
 export function sanitizeFarm(value: unknown): FarmState {
   const base = defaultFarm()
   if (!value || typeof value !== 'object') return base
   const raw = value as Partial<FarmState>
-  base.plots = Array.from({ length: 6 }, (_, i) => {
+  base.plots = Array.from({ length: PLOT_COUNT }, (_, i) => {
     const p = Array.isArray(raw.plots) ? raw.plots[i] : null
-    if (!p || !cropById(p.crop)) return null
-    return { crop: p.crop, wateredAt: typeof p.wateredAt === 'number' && Number.isFinite(p.wateredAt) && p.wateredAt >= 0 ? p.wateredAt : null }
+    const crop = migrateCrop(p?.crop)
+    if (!p || !cropById(crop)) return null
+    return { crop: crop as CropId, wateredAt: typeof p.wateredAt === 'number' && Number.isFinite(p.wateredAt) && p.wateredAt >= 0 ? p.wateredAt : null }
   })
   for (const crop of CROPS) base.inventory[crop.id] = count(raw.inventory?.[crop.id])
+  base.inventory.corn = Math.min(1_000_000, base.inventory.corn + count((raw.inventory as Record<string, unknown> | undefined)?.tomato))
   base.coins = count(raw.coins); base.deliveries = count(raw.deliveries)
   base.decorations = Array.isArray(raw.decorations) ? [...new Set(raw.decorations.filter(id => id === 'fence' || id === 'flowers'))] : []
   return base
@@ -36,7 +42,7 @@ export const orderCrop = (state: FarmState) => CROPS[state.deliveries % CROPS.le
 export function reduceFarm(state: FarmState, action: FarmAction, now: number): FarmState {
   const next: FarmState = { ...state, plots: [...state.plots], inventory: { ...state.inventory }, decorations: [...state.decorations] }
   if ('plot' in action) {
-    if (!Number.isInteger(action.plot) || action.plot < 0 || action.plot >= 6) return state
+    if (!Number.isInteger(action.plot) || action.plot < 0 || action.plot >= PLOT_COUNT) return state
     const plot = state.plots[action.plot]
     if (action.type === 'plant') {
       if (plot || !cropById(action.crop)) return state

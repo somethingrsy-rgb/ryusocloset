@@ -38,7 +38,7 @@ export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Pr
   const [scene, setScene] = useState<string | null>(initialPlaceId)
 
   if (starRain) return <StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} />
-  if (farm) return <FarmScene onExit={() => setFarm(false)} />
+  if (farm) return <FarmScene outfit={outfit} tweaks={tweaks} onExit={() => setFarm(false)} onWear={onWear} />
 
   const actionButton = PILL
   const label = (text: string) => <PillText>{text}</PillText>
