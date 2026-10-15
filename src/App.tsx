@@ -15,6 +15,7 @@ import { Stage } from './components/Stage'
 import { TravelBook } from './components/TravelBook'
 import { SendToGameSheet } from './components/SendToGameSheet'
 import { travelTo } from './lib/game'
+import { FarmScene } from './components/FarmScene'
 import { TravelGame } from './components/TravelGame'
 import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
@@ -45,7 +46,6 @@ import {
 } from './lib/storage'
 import { pruneTweaks, sanitizeTweaks, stripZ } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
-import { useTravelFull } from './lib/travelUi'
 
 /** 되돌리기: 이 시간(ms) 안에 이어지는 조절은 한 번으로 묶고, 최대 이만큼 기억한다 */
 const UNDO_GAP_MS = 500
@@ -56,13 +56,12 @@ const ROOM_UNDO_GAP_MS = 500
 const ROOM_UNDO_LIMIT = 50
 
 type ModalKind = null | 'settings' | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport' | 'sendToGame' | 'hair'
-type Mode = 'closet' | 'room' | 'travel'
+type Mode = 'closet' | 'farm' | 'room' | 'travel'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
 
 export default function App() {
-  const travelFull = useTravelFull()
   const initial = useMemo(loadSettings, [])
   const [lang, setLang] = useState<Lang>(initial.lang ?? detectLang())
   const [sound, setSound] = useState(initial.sound ?? true)
@@ -316,6 +315,17 @@ export default function App() {
     </button>
   )
 
+  /** 찾은 아이템을 입어보러 간다 (여행·농장 공통) */
+  const wearFound = (id: string) => {
+    const prop = ROOM_ITEM_BY_ID[id]
+    if (prop) { setMode('room'); setSelection(null); showToast(lang === 'ko' ? '아이템 탭에서 찾은 소품을 사용할 수 있어요.' : 'Your found item is available in Items.'); return }
+    const it = ITEM_BY_ID[id]
+    if (!it) return
+    setCategory(it.category)
+    setMode('closet')
+    wearItem(it)
+  }
+
   const modeBtn = (m: Mode, icon: string, label: string) => (
     <button
       role="tab"
@@ -343,23 +353,11 @@ export default function App() {
             <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep xl:block">{t('title')}</h1>
             <div role="tablist" className="flex min-w-0 flex-1 overflow-x-auto rounded-full bg-white/80 p-0.5 shadow-sm">
               {modeBtn('closet', '👗', t('modeCloset'))}
+              {modeBtn('farm', '🌱', lang === 'ko' ? '농장' : 'Farm')}
               {modeBtn('room', '🏠', t('modeRoom'))}
               {modeBtn('travel', '🧭', t('modeTravel'))}
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              <button
-                onClick={() => setSound((s) => !s)}
-                aria-label={sound ? t('soundOff') : t('soundOn')}
-                aria-pressed={sound}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-lg shadow-sm"
-              >
-                <span aria-hidden>{sound ? '🔊' : '🔇'}</span>
-              </button>
-              <button
-                onClick={() => mode === 'room' ? setModal('roomExport') : hasClothes ? setModal('export') : showToast(t('nothingToSave'))}
-                aria-label={mode === 'room' ? t('roomExport') : t('exportImage')}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/80 text-lg shadow-sm"
-              ><span aria-hidden>📷</span></button>
               <button
                 onClick={() => setModal('settings')}
                 aria-label={t('settings')}
@@ -380,20 +378,14 @@ export default function App() {
                 className="absolute top-2 right-2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/85 text-lg shadow-md ring-1 ring-black/5"
               ><span aria-hidden>💇</span></button>
             )}
-            {mode === 'travel' ? (
+            {mode === 'farm' ? (
+              <FarmScene outfit={outfit} tweaks={tweaks} onExit={() => setMode('travel')} onWear={wearFound} />
+            ) : mode === 'travel' ? (
               <TravelGame
                 initialPlaceId={travelPreview}
                 outfit={outfit}
                 tweaks={tweaks}
-                onWear={(id) => {
-                  const prop = ROOM_ITEM_BY_ID[id]
-                  if (prop) { setMode('room'); setSelection(null); showToast(lang === 'ko' ? '아이템 탭에서 찾은 소품을 사용할 수 있어요.' : 'Your found item is available in Items.'); return }
-                  const it = ITEM_BY_ID[id]
-                  if (!it) return
-                  setCategory(it.category)
-                  setMode('closet')
-                  wearItem(it)
-                }}
+                onWear={wearFound}
               />
             ) : mode === 'closet' ? (
               <Stage
@@ -427,7 +419,7 @@ export default function App() {
           </div>
         </section>
 
-        <aside hidden={mode === 'travel' && travelFull} className={`flex ${mode === 'travel' ? 'h-[28dvh]' : 'h-[40dvh]'} shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]`}>
+        <aside hidden={mode === 'farm'} className={`flex ${mode === 'travel' ? 'h-[28dvh]' : 'h-[40dvh]'} shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]`}>
           <div id="adjustment-controls" className="shrink-0" />
           {mode === 'travel' ? (
             <TravelBook outfit={outfit} onToggle={(id) => { const it = ITEM_BY_ID[id]; if (it) onToggle(it) }} />
