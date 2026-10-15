@@ -18,6 +18,9 @@ const SHEAR = TILE_W * 0.203
 const ROW_Y = [49.5, 57.5, 65.5]
 const FIRST_X = 30
 /** 작물 그림 한 장의 크기(px). 가로 500 = 칸 폭의 48% */
+/** 흙까지 한 장으로 그려진 작물 (carrot_full_1~4). 그림 높이 769 중 밭 틀이 647 */
+const FULL_ART = new Set(['carrot'])
+const FULL_H = (769 / 647) * 100
 const CROP_BOX: Record<string, [number, number]> = { carrot: [568, 499], strawberry: [578, 453], corn: [505, 619] }
 
 /** 그림 파일이 없으면 이모지로 대신 보여 준다 (그림을 나중에 채워도 코드는 그대로) */
@@ -107,9 +110,15 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
           const label = !plot ? (ko ? `${i + 1}번 밭 심기` : `Plant in plot ${i + 1}`) : plot.wateredAt === null ? (ko ? `${i + 1}번 밭 물 주기` : `Water plot ${i + 1}`) : ready ? (ko ? `${i + 1}번 밭 수확하기` : `Harvest plot ${i + 1}`) : (ko ? `${i + 1}번 밭 자라는 중` : `Plot ${i + 1} growing`)
           return (
             <div key={i} className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${y}%`, width: `${TILE_W}%`, height: `${TILE_H}%`, zIndex: 2 + r }}>
-              <FarmImg name={wet ? 'plot_wet' : 'plot_dry'} emoji="🟫" className="absolute inset-0 h-full w-full" style={{ objectFit: 'fill' }} />
-              {plot && crop && (
-                <FarmImg name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute left-1/2 -translate-x-1/2" style={{ bottom: '34%', width: `${CROP_BOX[crop.id][0] / 500 * 48}%`, aspectRatio: `${CROP_BOX[crop.id][0]} / ${CROP_BOX[crop.id][1]}`, objectFit: 'contain', objectPosition: 'bottom' }} />
+              {plot && crop && FULL_ART.has(crop.id) ? (
+                <FarmImg name={`${crop.id}_full_${stageOf(plot.wateredAt, progress)}`} emoji="🟫" className="absolute left-0 w-full" style={{ bottom: 0, height: `${FULL_H}%`, objectFit: 'fill' }} />
+              ) : (
+                <>
+                  <FarmImg name={wet ? 'plot_wet' : 'plot_dry'} emoji="🟫" className="absolute inset-0 h-full w-full" style={{ objectFit: 'fill' }} />
+                  {plot && crop && (
+                    <FarmImg name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute left-1/2 -translate-x-1/2" style={{ bottom: '34%', width: `${CROP_BOX[crop.id][0] / 500 * 48}%`, aspectRatio: `${CROP_BOX[crop.id][0]} / ${CROP_BOX[crop.id][1]}`, objectFit: 'contain', objectPosition: 'bottom' }} />
+                  )}
+                </>
               )}
               {plot && (
                 <span aria-hidden className={`absolute left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-1.5 text-[10px] leading-4 font-bold shadow ${ready ? 'animate-bounce' : ''}`} style={{ bottom: '-3%' }}>
