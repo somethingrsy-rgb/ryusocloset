@@ -7,7 +7,6 @@ import { FarmFx } from './FarmFx'
 import { FigureLayers } from './FigureLayers'
 import { Modal } from './Modal'
 import { PILL, PillText } from './pill'
-import { ShopModal } from './ShopModal'
 
 type Tool = 'seed' | 'water' | 'harvest'
 
@@ -35,7 +34,7 @@ function FarmImg({ name, emoji, className, style, alt = '' }: { name: string; em
 
 const stageOf = (wateredAt: number | null, progress: number) => (wateredAt === null ? 1 : progress >= 1 ? 4 : progress < 0.4 ? 2 : 3)
 
-export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; tweaks: Tweaks; onExit: () => void; onWear: (id: string) => void }) {
+export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; tweaks: Tweaks; onExit: () => void; onShop: () => void }) {
   const { lang } = useI18n()
   const ko = lang === 'ko'
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
@@ -45,7 +44,6 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
   const [now, setNow] = useState(Date.now)
   const [notice, setNotice] = useState('')
   const [stall, setStall] = useState(false)
-  const [shop, setShop] = useState(false)
   const [pos, setPos] = useState(HOME)
   const [walking, setWalking] = useState(false)
   const [watering, setWatering] = useState(false)
@@ -198,7 +196,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
             {tools.map((t) => {
               const active = tool === t.id
               return (
-                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 flex-col items-center rounded-3xl border-2 px-1 pt-2 pb-2.5 shadow-md ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? setShop(true) : pick(t.id))}>
+                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 flex-col items-center rounded-3xl border-2 px-1 pt-2 pb-2.5 shadow-md ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? onShop() : pick(t.id))}>
                   <FarmImg name={t.icon} emoji={t.emoji} className="aspect-square w-[85%] object-contain" />
                   <span className="text-sm font-extrabold text-[#6b4a2b]">{t[lang]}</span>
                 </button>
@@ -240,7 +238,6 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
           <p role="status" className="mt-2 min-h-5 text-xs font-bold">{notice}</p>
         </Modal>
       )}
-      {shop && <ShopModal onClose={() => setShop(false)} onWear={onWear} outfit={outfit} tweaks={tweaks} />}
     </section>
   )
 }

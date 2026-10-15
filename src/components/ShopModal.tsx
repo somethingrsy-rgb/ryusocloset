@@ -17,7 +17,7 @@ const MSG: Record<string, Record<BuyResult, string>> = {
   en: { bought: 'Bought! 🎉', owned: 'You already have it', poor: 'Not enough yet. Earn more at Stars or the Farm', unknown: 'Unknown item', failed: 'Could not save. Check storage' },
 }
 
-const SERIF = '"Noto Serif KR", "Nanum Myeongjo", "Apple SD Gothic Neo", serif'
+const SERIF = '"Nanum Myeongjo", "Noto Serif KR", AppleMyungjo, "Apple SD Gothic Neo", serif'
 const TAB_LABEL: Record<string, { ko: string; en: string }> = {
   costume: { ko: '의상', en: 'Outfits' },
   accessory: { ko: '헤어 장식', en: 'Hair' },
@@ -60,24 +60,31 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
   const canPreview = !!outfit && tab !== 'room'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center md:p-6" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={ko ? '상점' : 'Shop'} onClick={(e) => e.stopPropagation()} className="sheet-in relative flex max-h-[94dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl shadow-2xl md:rounded-3xl" style={{ background: '#fbf4ea', color: '#4b3a2a' }}>
+    <div className="absolute inset-0">
+      <div role="dialog" aria-modal="true" aria-label={ko ? '상점' : 'Shop'} className="relative mx-auto flex h-full w-full max-w-lg flex-col overflow-hidden rounded-3xl shadow-lg ring-1 ring-black/5" style={{ background: `#fbf4ea url(${assetUrl('assets/farm/shop_paper.webp')}) center / cover`, color: '#4b3a2a' }}>
         <div className="flex items-center justify-between gap-2 px-4 pt-3">
           <div className="flex items-center gap-2">
-            <img src={assetUrl('assets/farm/shop_moon.webp')} alt="" draggable={false} className="h-16 w-[70px] object-contain" />
+            <img src={assetUrl('assets/farm/shop_moon.webp')} alt="" draggable={false} className="h-16 w-16 object-contain" />
             <div>
-              <h2 className="m-0 text-2xl leading-tight font-bold" style={{ fontFamily: SERIF }}>{ko ? '달빛 옷장' : 'Moonlight Closet'}</h2>
+              <h2 className="m-0 text-2xl leading-tight font-bold whitespace-nowrap" style={{ fontFamily: SERIF }}>{ko ? '달빛 옷장' : 'Moonlight Closet'}</h2>
               <p className="m-0 text-[11px]" style={{ color: '#8b7355' }}>{ko ? '숲속의 작은 편집숍' : 'A little shop in the woods'}</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-2 rounded-full border border-[#e3d3b3] bg-white/60 px-3 py-1.5 text-sm font-bold"><span>⭐ {wallet.stars}</span><span>🪙 {wallet.coins}</span></div>
+            <div className="flex items-center gap-2 rounded-full border border-[#e3d3b3] bg-white/60 px-3 py-1.5 text-sm font-bold whitespace-nowrap"><span>⭐ {wallet.stars}</span><span>🪙 {wallet.coins}</span></div>
             <button onClick={onClose} aria-label={ko ? '닫기' : 'Close'} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d9c7a3] bg-white/60 text-lg">✕</button>
           </div>
         </div>
 
         <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <img src={assetUrl('assets/farm/shop_banner.webp')} alt={ko ? '숲속 티타임' : 'Forest tea time'} draggable={false} className="mt-2 block w-full rounded-xl border border-[#e3d3b3] object-cover" style={{ aspectRatio: '980 / 314' }} />
+          <div className="relative mt-2 overflow-hidden rounded-xl border border-[#e3d3b3]" style={{ aspectRatio: '1983 / 793' }}>
+            <img src={assetUrl('assets/farm/shop_banner.webp')} alt="" draggable={false} className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute top-1/2 left-[5%] -translate-y-1/2" style={{ fontFamily: SERIF, color: '#4a4220' }}>
+              <p className="m-0 text-[clamp(1.1rem,5.6vw,1.8rem)] whitespace-nowrap leading-tight font-bold">{ko ? '숲속 티타임' : 'Forest Tea Time'}</p>
+              <p aria-hidden className="m-0 text-xs" style={{ color: '#a58f56' }}>— ❦ —</p>
+              <p className="m-0 mt-1 text-[11px] leading-snug" style={{ color: '#6b5a3a' }}>{ko ? '꽃향기가 머무는 시간,' : 'A time that smells of flowers,'}<br />{ko ? '특별한 하루를 입어요.' : 'dress for a special day.'}</p>
+            </div>
+          </div>
 
           <div role="radiogroup" aria-label={ko ? '내는 방법' : 'Pay with'} className="mt-3 flex items-center gap-1.5">
             {(['star', 'coin'] as const).map((c) => (
@@ -106,15 +113,15 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
           )}
 
           <div className="grid grid-cols-2 gap-x-3 gap-y-4 pt-2 pb-4">
-            {items.map((it) => {
+            {items.map((it, idx) => {
               const own = isFound(it.id)
               const price = priceOf(it.category)
               const poor = (currency === 'star' ? wallet.stars : wallet.coins) < price
               return (
                 <div key={it.id} className="flex flex-col items-center">
                   <div className="relative flex aspect-square w-full items-end justify-center">
-                    <img src={assetUrl(it.thumb)} alt="" className="relative z-10 mb-2 max-h-full w-[88%] object-contain" draggable={false} />
-                    <span aria-hidden className="absolute inset-x-0 bottom-0 h-3 rounded-sm border border-[#d9c196]" style={{ background: 'linear-gradient(#f0dcb5, #e3c895)' }} />
+                    <img src={assetUrl(`assets/farm/shop_shelf_${(idx % 3) + 1}.webp`)} alt="" draggable={false} className="absolute inset-x-0 bottom-0 w-full" />
+                    <img src={assetUrl(it.thumb)} alt="" className="relative z-10 mb-[7%] max-h-[92%] w-[78%] object-contain" draggable={false} />
                   </div>
                   <p className="mt-1 mb-0 w-full truncate text-center text-sm font-bold" style={{ fontFamily: SERIF }}>{it.name[lang]}</p>
                   <div className="mt-1 flex w-full items-center justify-between gap-1">

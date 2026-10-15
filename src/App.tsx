@@ -16,6 +16,7 @@ import { TravelBook } from './components/TravelBook'
 import { SendToGameSheet } from './components/SendToGameSheet'
 import { travelTo } from './lib/game'
 import { FarmScene } from './components/FarmScene'
+import { ShopModal } from './components/ShopModal'
 import { TravelGame } from './components/TravelGame'
 import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
@@ -56,7 +57,7 @@ const ROOM_UNDO_GAP_MS = 500
 const ROOM_UNDO_LIMIT = 50
 
 type ModalKind = null | 'settings' | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport' | 'sendToGame' | 'hair'
-type Mode = 'closet' | 'farm' | 'room' | 'travel'
+type Mode = 'closet' | 'farm' | 'room' | 'travel' | 'shop'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
@@ -315,6 +316,10 @@ export default function App() {
     </button>
   )
 
+  /** 상점 화면 (농장·여행에서 이동하고, 닫으면 왔던 곳으로 돌아간다) */
+  const shopFrom = useRef<Mode>('travel')
+  const openShop = (from: Mode) => { shopFrom.current = from; setMode('shop') }
+
   /** 찾은 아이템을 입어보러 간다 (여행·농장 공통) */
   const wearFound = (id: string) => {
     const prop = ROOM_ITEM_BY_ID[id]
@@ -378,14 +383,17 @@ export default function App() {
                 className="absolute top-2 right-2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/85 text-lg shadow-md ring-1 ring-black/5"
               ><span aria-hidden>💇</span></button>
             )}
-            {mode === 'farm' ? (
-              <FarmScene outfit={outfit} tweaks={tweaks} onExit={() => setMode('travel')} onWear={wearFound} />
+            {mode === 'shop' ? (
+              <ShopModal onClose={() => setMode(shopFrom.current)} onWear={wearFound} outfit={outfit} tweaks={tweaks} />
+            ) : mode === 'farm' ? (
+              <FarmScene outfit={outfit} tweaks={tweaks} onExit={() => setMode('travel')} onShop={() => openShop('farm')} />
             ) : mode === 'travel' ? (
               <TravelGame
                 initialPlaceId={travelPreview}
                 outfit={outfit}
                 tweaks={tweaks}
                 onWear={wearFound}
+                onShop={() => openShop('travel')}
               />
             ) : mode === 'closet' ? (
               <Stage
@@ -419,7 +427,7 @@ export default function App() {
           </div>
         </section>
 
-        <aside hidden={mode === 'farm'} className={`flex ${mode === 'travel' ? 'h-[28dvh]' : 'h-[40dvh]'} shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]`}>
+        <aside hidden={mode === 'farm' || mode === 'shop'} className={`flex ${mode === 'travel' ? 'h-[28dvh]' : 'h-[40dvh]'} shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]`}>
           <div id="adjustment-controls" className="shrink-0" />
           {mode === 'travel' ? (
             <TravelBook outfit={outfit} onToggle={(id) => { const it = ITEM_BY_ID[id]; if (it) onToggle(it) }} />
