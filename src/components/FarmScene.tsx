@@ -45,6 +45,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
   const [pos, setPos] = useState(HOME)
   const [walking, setWalking] = useState(false)
   const [watering, setWatering] = useState(false)
+  const [hold, setHold] = useState<'can' | 'basket'>('can')
   const busy = useRef(false)
   const timers = useRef<number[]>([])
   useEffect(() => () => { timers.current.forEach(clearTimeout) }, [])
@@ -74,6 +75,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
     const px = FIRST_X + SHEAR * (2 - r) + (i % 3) * PITCH
     const py = ROW_Y[r]
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
+    setHold(need === 'harvest' ? 'basket' : 'can')
     setWalking(true)
     setPos({ x: px - TILE_W * 0.45 - AVATAR_W / 2, y: py - AVATAR_W + 2, z: 2 + r })
     later(() => {
@@ -142,7 +144,11 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
         <div aria-hidden className="pointer-events-none absolute" style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${AVATAR_W}%`, aspectRatio: '1024 / 1536', zIndex: pos.z, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
           <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
-            <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '66%', top: '50%', width: '34%', transformOrigin: '90% 60%', transform: watering ? 'rotate(-35deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />
+            {hold === 'can' ? (
+              <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '66%', top: '50%', width: '34%', transformOrigin: '90% 60%', transform: watering ? 'rotate(-35deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />
+            ) : (
+              <img src={assetUrl('assets/farm/icon_basket.webp')} alt="" draggable={false} className="absolute" style={{ left: '62%', top: '44%', width: '42%' }} />
+            )}
             {watering && <span className="absolute text-sm" style={{ left: '56%', top: '58%' }}>💧</span>}
           </div>
         </div>
@@ -153,31 +159,36 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
           <button className={PILL} onClick={onExit}><PillText>🗺️ {ko ? '지도' : 'Map'}</PillText></button>
         </div>
         {notice && <p role="status" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-xs font-bold shadow-md" style={{ top: '14%', maxWidth: '90%', zIndex: 6 }}>{notice}</p>}
+      </div>
 
-        {/* 씨앗 고르기 */}
-        {picker && (
-          <div className="absolute flex justify-center gap-2 rounded-3xl bg-white/95 p-2 shadow-lg" style={{ left: '4%', right: '4%', bottom: '19.5%', zIndex: 6 }} role="radiogroup" aria-label={ko ? '씨앗 고르기' : 'Choose seeds'}>
-            {CROPS.map((c) => (
-              <button key={c.id} role="radio" aria-checked={selected === c.id} className={`flex flex-1 flex-col items-center rounded-2xl p-1 ${selected === c.id ? 'bg-petal ring-2 ring-blush' : ''}`} onClick={() => { setSelected(c.id); setPicker(false) }}>
-                <FarmImg name={`harvest_${c.id}`} emoji={c.emoji} className="h-12 w-12 object-contain" />
-                <span className="text-xs font-bold">{c[lang]}</span>
-                <span className="text-[10px]">{c.seconds}{ko ? '초' : 's'}</span>
-              </button>
-            ))}
+      {/* 아래 도구 4개: 그림 아래 초록 바탕에 둔다 */}
+      <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 px-3 pb-3" style={{ zIndex: 5 }}>
+        <div className="flex w-full max-w-[480px] flex-col gap-2">
+          {/* 씨앗 고르기 */}
+          {picker && (
+            <div className="flex justify-center gap-2 rounded-3xl bg-white/95 p-2 shadow-lg" role="radiogroup" aria-label={ko ? '씨앗 고르기' : 'Choose seeds'}>
+              {CROPS.map((c) => (
+                <button key={c.id} role="radio" aria-checked={selected === c.id} className={`flex flex-1 flex-col items-center rounded-2xl p-1 ${selected === c.id ? 'bg-petal ring-2 ring-blush' : ''}`} onClick={() => { setSelected(c.id); setPicker(false) }}>
+                  <FarmImg name={`harvest_${c.id}`} emoji={c.emoji} className="h-12 w-12 object-contain" />
+                  <span className="text-xs font-bold">{c[lang]}</span>
+                  <span className="text-[10px]">{c.seconds}{ko ? '초' : 's'}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* 아래 도구 4개 */}
+          <div className="flex gap-2">
+            {tools.map((t) => {
+              const active = tool === t.id
+              return (
+                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 flex-col items-center rounded-3xl border-2 px-1 pt-1 pb-1.5 shadow-md ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? setShop(true) : pick(t.id))}>
+                  <FarmImg name={t.icon} emoji={t.emoji} className="aspect-square w-3/4 object-contain" />
+                  <span className="text-xs font-extrabold text-[#6b4a2b]">{t[lang]}</span>
+                </button>
+              )
+            })}
           </div>
-        )}
-
-        {/* 아래 도구 4개 */}
-        <div className="absolute flex gap-[2%]" style={{ left: '3%', right: '3%', bottom: '2.2%', zIndex: 5 }}>
-          {tools.map((t) => {
-            const active = tool === t.id
-            return (
-              <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 flex-col items-center rounded-3xl border-2 px-1 pt-1 pb-1.5 shadow-md ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? setShop(true) : pick(t.id))}>
-                <FarmImg name={t.icon} emoji={t.emoji} className="aspect-square w-3/4 object-contain" />
-                <span className="text-xs font-extrabold text-[#6b4a2b]">{t[lang]}</span>
-              </button>
-            )
-          })}
         </div>
       </div>
 
