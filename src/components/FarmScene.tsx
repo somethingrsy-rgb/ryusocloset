@@ -11,12 +11,15 @@ import { ShopModal } from './ShopModal'
 type Tool = 'seed' | 'water' | 'harvest'
 
 /** 밭 9칸: 오른쪽으로 기운 평행사변형. 위 줄일수록 오른쪽으로 밀려 전체가 비스듬한 밭이 된다 (배경 그림 기준 %) */
-const TILE_W = 22
-const TILE_H = TILE_W * (646 / 1386) * (1024 / 1536)
-const PITCH = 18.6
-const SHEAR = TILE_W * 0.203
-const ROW_Y = [51, 58.3, 65.6]
-const FIRST_X = 32.5
+const TILE_W = 23.5
+const U = TILE_W / 1433 // 그림 가로 1px 이 장면 가로의 몇 %인지
+const TILE_H = 646 * U * (1024 / 1536)
+const BODY_W = 1152 * U // 아래쪽 변 길이 (위쪽 변도 같음: 진짜 평행사변형)
+const PITCH = BODY_W + 0.5 // 옆 밭과의 틈 0.5%
+const ROW_PITCH = TILE_H + 0.35 // 위아래 밭과의 틈
+const SHEAR = 281 * U * (ROW_PITCH / TILE_H) // 한 줄 올라갈 때 오른쪽으로 밀리는 양 (옆 변의 기울기와 같음)
+const ROW_Y = [0, 1, 2].map((r) => 65.8 - (2 - r) * ROW_PITCH)
+const FIRST_X = 31.2
 const AVATAR_W = 19
 const HOME = { x: 0.5, y: 37, z: 3 }
 /** 작물 그림 한 장의 크기(px). 가로 500 = 칸 폭의 48% */
@@ -131,13 +134,13 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
           return (
             <div key={i} className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${y}%`, width: `${TILE_W}%`, height: `${TILE_H}%`, zIndex: 2 + r }}>
               <FarmImg name={wet ? 'plot_wet' : 'plot_dry'} emoji="🟫" className="absolute inset-0 h-full w-full" style={{ objectFit: 'fill' }} />
-              {plot && crop && [{ x: 71, b: 40 }, { x: 29, b: 27 }].map((pos) => (
+              {plot && crop && [{ x: 67, b: 40 }, { x: 34, b: 27 }].map((pos) => (
                 <FarmImg key={pos.x} name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute -translate-x-1/2" style={{ left: `${pos.x}%`, bottom: `${pos.b}%`, width: `${CROP_BOX[crop.id][0] / 500 * 36}%`, aspectRatio: `${CROP_BOX[crop.id][0]} / ${CROP_BOX[crop.id][1]}`, objectFit: 'contain', objectPosition: 'bottom' }} />
               ))}
               {plot && (plot.wateredAt === null || ready) && (
                 <span aria-hidden className={`absolute left-1/2 -translate-x-1/2 text-lg leading-none drop-shadow ${ready ? 'animate-bounce' : ''}`} style={{ bottom: '8%' }}>{ready ? '✨' : '💧'}</span>
               )}
-              <button aria-label={label} className="pointer-events-auto absolute inset-0" style={{ clipPath: 'polygon(20.3% 0, 100% 0, 83.1% 100%, 0 100%)' }} onClick={() => tapPlot(i)} />
+              <button aria-label={label} className="pointer-events-auto absolute inset-0" style={{ clipPath: 'polygon(19.6% 0, 100% 0, 80.4% 100%, 0 100%)' }} onClick={() => tapPlot(i)} />
             </div>
           )
         }))}
