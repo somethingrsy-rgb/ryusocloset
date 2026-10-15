@@ -61,7 +61,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
 
   return (
     <div className="absolute inset-0">
-      <div role="dialog" aria-modal="true" aria-label={ko ? '상점' : 'Shop'} className="relative mx-auto flex h-full w-full max-w-lg flex-col overflow-hidden rounded-3xl shadow-lg ring-1 ring-black/5" style={{ background: `#fbf4ea url(${assetUrl('assets/farm/shop_paper.webp')}) center / cover`, color: '#4b3a2a' }}>
+      <div role="dialog" aria-modal="true" aria-label={ko ? '상점' : 'Shop'} className="relative flex h-full w-full flex-col overflow-hidden rounded-3xl shadow-lg ring-1 ring-black/5" style={{ background: `#fbf4ea url(${assetUrl('assets/farm/shop_paper.webp')}) center / cover`, color: '#4b3a2a' }}>
         <div className="flex items-center justify-between gap-2 px-4 pt-3">
           <div className="flex items-center gap-2">
             <img src={assetUrl('assets/farm/shop_moon.webp')} alt="" draggable={false} className="h-14 w-14 shrink-0 object-contain" />
@@ -112,7 +112,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-x-3 gap-y-4 pt-2 pb-4">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4 pt-2 pb-4 sm:grid-cols-3 lg:grid-cols-4">
             {items.map((it, idx) => {
               const own = isFound(it.id)
               const price = priceOf(it.category)
