@@ -48,7 +48,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
   const [pos, setPos] = useState(HOME)
   const [walking, setWalking] = useState(false)
   const [watering, setWatering] = useState(false)
-  const [hold, setHold] = useState<'can' | 'basket'>('can')
+  const [hold, setHold] = useState<'can' | 'basket' | 'seed'>('can')
   const busy = useRef(false)
   const timers = useRef<number[]>([])
   useEffect(() => () => { timers.current.forEach(clearTimeout) }, [])
@@ -78,7 +78,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
     const px = FIRST_X + SHEAR * (2 - r) + (i % 3) * PITCH
     const py = ROW_Y[r]
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
-    setHold(need === 'harvest' ? 'basket' : 'can')
+    setHold(need === 'harvest' ? 'basket' : need === 'seed' ? 'seed' : 'can')
     setWalking(true)
     setPos({ x: px - TILE_W * 0.45 - AVATAR_W / 2, y: py - AVATAR_W + 2, z: 2 + r })
     later(() => {
@@ -152,7 +152,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
             {hold === 'can' ? (
               <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '66%', top: '50%', width: '34%', transformOrigin: '15% 60%', transform: watering ? 'rotate(32deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />
             ) : (
-              <img src={assetUrl('assets/farm/icon_basket.webp')} alt="" draggable={false} className="absolute" style={{ left: '62%', top: '44%', width: '42%' }} />
+              <img src={assetUrl(`assets/farm/${hold === 'seed' ? 'icon_seed' : 'icon_basket'}.webp`)} alt="" draggable={false} className="absolute" style={hold === 'seed' ? { left: '64%', top: '42%', width: '44%' } : { left: '62%', top: '44%', width: '42%' }} />
             )}
             {watering && <span className="absolute text-sm" style={{ left: '98%', top: '58%' }}>💧</span>}
           </div>
