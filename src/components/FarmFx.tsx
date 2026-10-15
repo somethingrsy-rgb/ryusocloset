@@ -45,26 +45,3 @@ export function FarmFx() {
     </div>
   )
 }
-
-/** 여행길 화면 위에 얹는 장식: 구름은 위쪽에서 흐르고, 나비와 잎·꽃잎은 화면 위에서 움직인다 (낮에만 보이고 밤에는 흐리게) */
-export function TravelFx({ dim }: { dim: number }) {
-  return (
-    <div aria-hidden className="farm-fx pointer-events-none absolute inset-0 overflow-hidden" style={{ zIndex: 2, opacity: 1 - 0.7 * dim }}>
-      <div className="absolute inset-x-0 top-0 overflow-hidden" style={{ height: '22%', WebkitMaskImage: 'linear-gradient(to bottom, #000 55%, transparent)', maskImage: 'linear-gradient(to bottom, #000 55%, transparent)' }}>
-        {CLOUDS.map((c) => (
-          <img key={c.img} src={assetUrl(`assets/farm/${c.img}.webp`)} alt="" draggable={false} className="fx-cloud absolute left-0" style={{ top: `${c.top % 20}%`, width: `${c.w}%`, opacity: c.op * 0.9, animationDuration: `${c.dur * 0.6}s`, animationDelay: `${c.delay}s` }} />
-        ))}
-      </div>
-      {BUTTERFLIES.map((b) => (
-        <div key={b.img} className={`fx-fly-${b.path} absolute`} style={{ left: `${b.left}%`, top: `${b.top + 18}%`, width: `${b.w}%`, animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s` }}>
-          <img src={assetUrl(`assets/farm/${b.img}.webp`)} alt="" draggable={false} className="fx-flap w-full" />
-        </div>
-      ))}
-      {FALLERS.map((f, i) => (
-        <div key={i} className="fx-fall absolute" style={{ left: `${f.left}%`, width: `${f.w}%`, animationDuration: `${f.dur}s`, animationDelay: `${f.delay}s` }}>
-          <img src={assetUrl(`assets/farm/${f.img}.webp`)} alt="" draggable={false} className="fx-sway w-full" style={{ animationDuration: `${f.dur / 4}s`, animationDelay: `${f.delay}s` }} />
-        </div>
-      ))}
-    </div>
-  )
-}

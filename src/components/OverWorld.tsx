@@ -25,7 +25,6 @@ import { PILL, PillText } from './pill'
 import { useClock } from './useClock'
 import { useWalkKeys } from './useWalkKeys'
 import { assetUrl } from '../lib/items'
-import { TravelFx } from './FarmFx'
 
 /** 길 배경 그림(집 5채, 가로 3930×667)을 1.3배로 키워 길(모래색 띠)이 걷는 높이(585 근처)에 오게 깔고(위쪽 하늘은 잘림) 같은 그림을 이어 붙인다. 그림 속 집이 장소의 문이다. */
 const BG_W = TILE_W
@@ -150,7 +149,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
     !paused,
   )
 
-  const figW = 145 * (0.8 + 0.2 * ((pos.y - 585) / 150))
+  const figW = 145 * 1.5 * (0.8 + 0.2 * ((pos.y - 585) / 150))
   const bgTiles = Array.from({ length: Math.floor((cam + visibleW) / BG_W) - Math.floor(cam / BG_W) + 1 }, (_, k) => Math.floor(cam / BG_W) + k)
   const range = Array.from({ length: lastChunk - first + 1 }, (_, k) => first + k)
 
@@ -199,7 +198,6 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
         </div>
       </div>
 
-      <TravelFx dim={clock.dark} />
       <div className="absolute top-2 left-2 right-28 z-10 flex min-w-0 flex-wrap items-center gap-1">
         <span className={`pointer-events-none ${PILL}`}><PillText>🚶 {metersOf(pos.x).toLocaleString()}m</PillText></span>
         <div className="flex min-w-0 flex-wrap items-center gap-1" onPointerUp={e => e.stopPropagation()}>{actions}</div>
