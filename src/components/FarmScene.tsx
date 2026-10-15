@@ -3,6 +3,7 @@ import { useI18n } from '../i18n'
 import { actFarm, CROPS, getFarm, growth, orderCrop, subscribeFarm, type CropId, type FarmAction } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
+import { FarmFx } from './FarmFx'
 import { FigureLayers } from './FigureLayers'
 import { Modal } from './Modal'
 import { PILL, PillText } from './pill'
@@ -124,6 +125,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
       {!wide && <div aria-hidden className="absolute inset-x-0 bottom-0" style={{ top: 'calc(min(150cqw, 100cqh) - 3rem)', background: 'linear-gradient(to bottom, #9bad3f 0%, #aac24f 30%, #b9d77a 100%)' }} />}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 select-none" style={{ width: 'min(100cqw, calc(100cqh * 1024 / 1536))', aspectRatio: '1024 / 1536', WebkitMaskImage: wide ? 'linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, #000 95%, transparent 100%)' : 'linear-gradient(to bottom, #000 95%, transparent 100%)', WebkitMaskComposite: 'source-in', maskImage: wide ? 'linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, #000 95%, transparent 100%)' : 'linear-gradient(to bottom, #000 95%, transparent 100%)', maskComposite: 'intersect' }}>
         <img src={assetUrl('assets/farm/bg.webp')} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
+        <FarmFx />
 
         {/* 노점: 눌러서 주민의 부탁·바구니 팔기 */}
         <button aria-label={ko ? '노점' : 'Market stall'} className="absolute rounded-2xl" style={{ left: '76%', top: '27%', width: '24%', height: '22%' }} onClick={() => setStall(true)}>
