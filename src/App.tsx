@@ -394,7 +394,6 @@ export default function App() {
                 outfit={outfit}
                 tweaks={tweaks}
                 onWear={wearFound}
-                onShop={() => openShop('travel')}
               />
             ) : mode === 'closet' ? (
               <Stage
