@@ -23,7 +23,12 @@ import { FigureLayers } from './FigureLayers'
 import { PILL, PillText } from './pill'
 import { useClock } from './useClock'
 import { useWalkKeys } from './useWalkKeys'
-import { VillageHouse, VillageScenery } from './VillageScenery'
+import { assetUrl } from '../lib/items'
+import { VillageHouse } from './VillageScenery'
+
+/** 길 배경 그림(2000×667)을 가로 2600 으로 늘려 길(모래색 띠)이 걷는 높이(585~705)에 오게 깔고, 이웃한 그림은 좌우를 뒤집어 이어 붙인다 */
+const BG_W = 2600
+const BG_H = 867
 
 const TEXT = {
   ko: { hint: '바닥을 눌러 이동 · 방향키 / WASD · 집을 눌러 입장', found: '찾음' },
@@ -149,12 +154,16 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
     !paused,
   )
 
-  const figW = 145 * (0.75 + 0.25 * ((pos.y - 540) / 220))
+  const figW = 145 * (0.8 + 0.2 * ((pos.y - 585) / 120))
+  const bgTiles = Array.from({ length: Math.floor((cam + visibleW) / BG_W) - Math.floor(cam / BG_W) + 1 }, (_, k) => Math.floor(cam / BG_W) + k)
   const range = Array.from({ length: lastChunk - first + 1 }, (_, k) => first + k)
 
   return (
     <div ref={hostRef} tabIndex={0} aria-label={lang === 'ko' ? '여행 마을, 방향키로 이동' : 'Village, move with arrow keys'} {...keys} className="travel-world relative h-full touch-none overflow-hidden rounded-3xl shadow-inner ring-1 ring-black/5 select-none" onPointerUp={onTap}>
       <div className="absolute top-0 left-0 origin-top-left" style={{ width: worldWidth(chunks), height: WORLD_H, transform: `scale(${scale}) translateX(${-cam}px)` }}>
+        {bgTiles.map((t) => (
+          <img key={t} src={assetUrl('assets/farm/travel_bg.webp')} alt="" draggable={false} className="pointer-events-none absolute top-0 select-none" style={{ left: t * BG_W, width: BG_W, height: BG_H, maxWidth: 'none', transform: t % 2 ? 'scaleX(-1)' : undefined }} />
+        ))}
         {range.map((c) => {
           const zone = c % 10
           const p = placeOfChunk(c)
@@ -163,7 +172,6 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
           const done = ids.length > 0 && got === ids.length
           return (
             <div key={c} className="absolute top-0" style={{ left: c * CHUNK_W, width: CHUNK_W, height: WORLD_H }}>
-              <VillageScenery zone={zone} />
               {tint && <div className="pointer-events-none absolute inset-0" style={{ background: tint }} />}
               {clock.dark > 0.3 && (
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0" style={{ height: 500, opacity: Math.min(1, (clock.dark - 0.3) / 0.5) }}>
