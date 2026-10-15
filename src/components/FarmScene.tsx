@@ -10,13 +10,15 @@ import { ShopModal } from './ShopModal'
 
 type Tool = 'seed' | 'water' | 'harvest'
 
-/** 밭 9칸의 위치(배경 그림 기준 %). 아래 줄로 갈수록 크게 보이게 해서 배경의 원근과 맞춘다. */
-const ROWS = [
-  { y: 46.5, w: 24, xs: [30.5, 54, 77.5] },
-  { y: 57.5, w: 26, xs: [29.5, 54, 78.5] },
-  { y: 69, w: 28, xs: [28.5, 54, 79.5] },
-]
-const PLOT_ASPECT = 1431 / 667
+/** 밭 9칸: 오른쪽으로 기운 평행사변형. 위 줄일수록 오른쪽으로 밀려 전체가 비스듬한 밭이 된다 (배경 그림 기준 %) */
+const TILE_W = 22
+const TILE_H = TILE_W * (646 / 1386) * (1024 / 1536)
+const PITCH = 21
+const SHEAR = TILE_W * 0.203
+const ROW_Y = [49.5, 57.5, 65.5]
+const FIRST_X = 30
+/** 작물 그림 한 장의 크기(px). 가로 500 = 칸 폭의 48% */
+const CROP_BOX: Record<string, [number, number]> = { carrot: [568, 499], strawberry: [578, 453], corn: [505, 619] }
 
 /** 그림 파일이 없으면 이모지로 대신 보여 준다 (그림을 나중에 채워도 코드는 그대로) */
 function FarmImg({ name, emoji, className, style, alt = '' }: { name: string; emoji: string; className?: string; style?: React.CSSProperties; alt?: string }) {
@@ -89,32 +91,33 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
         </button>
 
         {/* 내 아바타 */}
-        <div aria-hidden className="pointer-events-none absolute" style={{ left: '0%', top: '53%', width: '22%', aspectRatio: '1024 / 1536', zIndex: 3 }}>
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: '0.5%', top: '37%', width: '19%', aspectRatio: '1024 / 1536', zIndex: 3 }}>
           <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
         </div>
 
         {/* 밭 9칸 */}
-        {ROWS.map((row, r) => row.xs.map((x, c) => {
+        {ROW_Y.map((y, r) => [0, 1, 2].map((c) => {
+          const x = FIRST_X + SHEAR * (2 - r) + c * PITCH
           const i = r * 3 + c
           const plot = farm.plots[i]
           const progress = growth(plot, now)
           const ready = progress === 1
           const crop = plot ? CROPS.find((cr) => cr.id === plot.crop)! : null
           const wet = !!plot && plot.wateredAt !== null && !ready
-          const h = row.w / PLOT_ASPECT * (1024 / 1536)
           const label = !plot ? (ko ? `${i + 1}번 밭 심기` : `Plant in plot ${i + 1}`) : plot.wateredAt === null ? (ko ? `${i + 1}번 밭 물 주기` : `Water plot ${i + 1}`) : ready ? (ko ? `${i + 1}번 밭 수확하기` : `Harvest plot ${i + 1}`) : (ko ? `${i + 1}번 밭 자라는 중` : `Plot ${i + 1} growing`)
           return (
-            <button key={i} aria-label={label} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${row.y}%`, width: `${row.w}%`, height: `${h}%`, zIndex: 2 }} onClick={() => tapPlot(i)}>
-              <FarmImg name={wet ? 'plot_wet' : 'plot_dry'} emoji="🟫" className="absolute inset-0 h-full w-full" />
+            <div key={i} className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${y}%`, width: `${TILE_W}%`, height: `${TILE_H}%`, zIndex: 2 + r }}>
+              <FarmImg name={wet ? 'plot_wet' : 'plot_dry'} emoji="🟫" className="absolute inset-0 h-full w-full" style={{ objectFit: 'fill' }} />
               {plot && crop && (
-                <FarmImg name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute left-1/2 -translate-x-1/2" style={{ bottom: '28%', width: '50%', aspectRatio: '1', objectFit: 'contain', objectPosition: 'bottom' }} />
+                <FarmImg name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute left-1/2 -translate-x-1/2" style={{ bottom: '34%', width: `${CROP_BOX[crop.id][0] / 500 * 48}%`, aspectRatio: `${CROP_BOX[crop.id][0]} / ${CROP_BOX[crop.id][1]}`, objectFit: 'contain', objectPosition: 'bottom' }} />
               )}
               {plot && (
                 <span aria-hidden className={`absolute left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-1.5 text-[10px] leading-4 font-bold shadow ${ready ? 'animate-bounce' : ''}`} style={{ bottom: '-3%' }}>
                   {ready ? (ko ? '수확!' : 'Ready!') : plot.wateredAt === null ? '💧' : `${Math.ceil((1 - progress) * crop!.seconds)}${ko ? '초' : 's'}`}
                 </span>
               )}
-            </button>
+              <button aria-label={label} className="pointer-events-auto absolute inset-0" style={{ clipPath: 'polygon(20.3% 0, 100% 0, 83.1% 100%, 0 100%)' }} onClick={() => tapPlot(i)} />
+            </div>
           )
         }))}
 

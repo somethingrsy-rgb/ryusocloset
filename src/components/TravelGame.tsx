@@ -1,4 +1,5 @@
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { setTravelFull } from '../lib/travelUi'
 import { currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from '../lib/game'
 import type { Outfit, Tweaks } from '../lib/types'
 import { useItemsVersion } from '../lib/useItemsVersion'
@@ -37,6 +38,7 @@ export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Pr
   const assign = useMemo(currentAssignment, [ver])
   const [scene, setScene] = useState<string | null>(initialPlaceId)
 
+  useEffect(() => { setTravelFull(farm); return () => setTravelFull(false) }, [farm])
   if (starRain) return <StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} />
   if (farm) return <FarmScene outfit={outfit} tweaks={tweaks} onExit={() => setFarm(false)} onWear={onWear} />
 
