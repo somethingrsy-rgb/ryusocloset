@@ -45,6 +45,7 @@ import {
 } from './lib/storage'
 import { pruneTweaks, sanitizeTweaks, stripZ } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
+import { useTravelFull } from './lib/travelUi'
 
 /** 되돌리기: 이 시간(ms) 안에 이어지는 조절은 한 번으로 묶고, 최대 이만큼 기억한다 */
 const UNDO_GAP_MS = 500
@@ -61,6 +62,7 @@ const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion:
 const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
 
 export default function App() {
+  const travelFull = useTravelFull()
   const initial = useMemo(loadSettings, [])
   const [lang, setLang] = useState<Lang>(initial.lang ?? detectLang())
   const [sound, setSound] = useState(initial.sound ?? true)
@@ -425,7 +427,7 @@ export default function App() {
           </div>
         </section>
 
-        <aside className={`flex ${mode === 'travel' ? 'h-[28dvh]' : 'h-[40dvh]'} shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]`}>
+        <aside hidden={mode === 'travel' && travelFull} className={`flex ${mode === 'travel' ? 'h-[28dvh]' : 'h-[40dvh]'} shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5 md:h-auto md:w-[400px]`}>
           <div id="adjustment-controls" className="shrink-0" />
           {mode === 'travel' ? (
             <TravelBook outfit={outfit} onToggle={(id) => { const it = ITEM_BY_ID[id]; if (it) onToggle(it) }} />
