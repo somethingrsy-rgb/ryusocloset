@@ -7,6 +7,7 @@ import {
   CHUNK_W,
   DOOR_Y,
   MIN_CHUNKS,
+  TILE_W,
   WORLD_H,
   cameraX,
   chunksNeeded,
@@ -24,11 +25,11 @@ import { PILL, PillText } from './pill'
 import { useClock } from './useClock'
 import { useWalkKeys } from './useWalkKeys'
 import { assetUrl } from '../lib/items'
-import { VillageHouse } from './VillageScenery'
 
-/** 길 배경 그림(2000×667)을 가로 2600 으로 늘려 길(모래색 띠)이 걷는 높이(585~705)에 오게 깔고, 이웃한 그림은 좌우를 뒤집어 이어 붙인다 */
-const BG_W = 2600
-const BG_H = 867
+/** 길 배경 그림(2000×667)을 2배(4000×1334)로 키워 길(모래색 띠)이 걷는 높이(585 근처)에 오게 깔고(위쪽 하늘은 잘림), 이웃한 그림은 좌우를 뒤집어 이어 붙인다. 그림 속 집 10채가 장소 10곳의 문이다. */
+const BG_W = TILE_W
+const BG_H = 1334
+const BG_TOP = -300
 
 const TEXT = {
   ko: { hint: '바닥을 눌러 이동 · 방향키 / WASD · 집을 눌러 입장', found: '찾음' },
@@ -154,7 +155,7 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
     !paused,
   )
 
-  const figW = 145 * (0.8 + 0.2 * ((pos.y - 585) / 120))
+  const figW = 145 * (0.8 + 0.2 * ((pos.y - 585) / 150))
   const bgTiles = Array.from({ length: Math.floor((cam + visibleW) / BG_W) - Math.floor(cam / BG_W) + 1 }, (_, k) => Math.floor(cam / BG_W) + k)
   const range = Array.from({ length: lastChunk - first + 1 }, (_, k) => first + k)
 
@@ -162,10 +163,9 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
     <div ref={hostRef} tabIndex={0} aria-label={lang === 'ko' ? '여행 마을, 방향키로 이동' : 'Village, move with arrow keys'} {...keys} className="travel-world relative h-full touch-none overflow-hidden rounded-3xl shadow-inner ring-1 ring-black/5 select-none" onPointerUp={onTap}>
       <div className="absolute top-0 left-0 origin-top-left" style={{ width: worldWidth(chunks), height: WORLD_H, transform: `scale(${scale}) translateX(${-cam}px)` }}>
         {bgTiles.map((t) => (
-          <img key={t} src={assetUrl('assets/farm/travel_bg.webp')} alt="" draggable={false} className="pointer-events-none absolute top-0 select-none" style={{ left: t * BG_W, width: BG_W, height: BG_H, maxWidth: 'none', transform: t % 2 ? 'scaleX(-1)' : undefined }} />
+          <img key={t} src={assetUrl('assets/farm/travel_bg.webp')} alt="" draggable={false} className="pointer-events-none absolute select-none" style={{ left: t * BG_W, top: BG_TOP, width: BG_W, height: BG_H, maxWidth: 'none', transform: t % 2 ? 'scaleX(-1)' : undefined }} />
         ))}
         {range.map((c) => {
-          const zone = c % 10
           const p = placeOfChunk(c)
           const ids = assign[p.id] ?? []
           const got = ids.filter(isFound).length
@@ -187,10 +187,10 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
                 aria-label={`${lang === 'ko' ? p.ko : p.en} ${c}`}
                 onClick={() => walkTo(gateX(c), DOOR_Y + 40, c)}
                 className="village-house absolute flex -translate-x-1/2 flex-col items-center"
-                style={{ left: gateX(c) - c * CHUNK_W, top: DOOR_Y - 260, zIndex: 2 }}
+                style={{ left: gateX(c) - c * CHUNK_W, top: 255, zIndex: 2 }}
               >
                 <span className="village-nameplate">{lang === 'ko' ? p.ko : p.en}</span>
-                <VillageHouse zone={zone} icon={p.icon} />
+                <span aria-hidden className="block" style={{ width: 190, height: 225 }} />
                 <span className={`village-progress \${done ? 'village-progress-done' : ''}`}>
                   {done ? '✓ ' : ''}{tx.found} {got}/{ids.length}
                 </span>
