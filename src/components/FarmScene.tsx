@@ -240,7 +240,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear }: { outfit: Outfit; 
           <p role="status" className="mt-2 min-h-5 text-xs font-bold">{notice}</p>
         </Modal>
       )}
-      {shop && <ShopModal onClose={() => setShop(false)} onWear={onWear} />}
+      {shop && <ShopModal onClose={() => setShop(false)} onWear={onWear} outfit={outfit} tweaks={tweaks} />}
     </section>
   )
 }

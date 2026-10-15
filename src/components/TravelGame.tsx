@@ -50,7 +50,7 @@ export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Pr
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
     />}
     {speaking && <SpeakingGame onClose={() => setSpeaking(false)} />}
-    {shop && <ShopModal onClose={() => setShop(false)} onWear={onWear} />}
+    {shop && <ShopModal onClose={() => setShop(false)} onWear={onWear} outfit={outfit} tweaks={tweaks} />}
   </div>
 }
 

@@ -1,12 +1,13 @@
-import { useMemo, useState, useSyncExternalStore } from 'react'
-import { CATEGORY_LABEL, useI18n } from '../i18n'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useI18n } from '../i18n'
 import { subscribeFarm, getFarm } from '../lib/farm'
 import { gameVersion, getGame, isFound, subscribeGame, travelPool } from '../lib/game'
 import { assetUrl } from '../lib/items'
 import { buyItem, priceOf, readWallet, type BuyResult, type Currency } from '../lib/shop'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import { playSnap } from '../lib/sound'
-import { Modal } from './Modal'
+import { FigureLayers } from './FigureLayers'
+import type { Outfit, Tweaks } from '../lib/types'
 
 const TABS = ['costume', 'accessory', 'wand', 'shoes', 'room'] as const
 type Tab = (typeof TABS)[number]
@@ -16,8 +17,17 @@ const MSG: Record<string, Record<BuyResult, string>> = {
   en: { bought: 'Bought! 🎉', owned: 'You already have it', poor: 'Not enough yet. Earn more at Stars or the Farm', unknown: 'Unknown item', failed: 'Could not save. Check storage' },
 }
 
-/** 상점: 별비에서 모은 ⭐ 이나 농장에서 번 🪙 으로 아직 못 찾은 아이템을 산다 */
-export function ShopModal({ onClose, onWear }: { onClose: () => void; onWear: (id: string) => void }) {
+const SERIF = '"Noto Serif KR", "Nanum Myeongjo", "Apple SD Gothic Neo", serif'
+const TAB_LABEL: Record<string, { ko: string; en: string }> = {
+  costume: { ko: '의상', en: 'Outfits' },
+  accessory: { ko: '헤어 장식', en: 'Hair' },
+  wand: { ko: '마법봉', en: 'Wands' },
+  shoes: { ko: '신발', en: 'Shoes' },
+  room: { ko: '소품', en: 'Props' },
+}
+
+/** 상점(달빛 옷장): 별비에서 모은 ⭐ 이나 농장에서 번 🪙 으로 아직 못 찾은 아이템을 산다. 입어보기로 내 아바타에 미리 입혀 본다 */
+export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => void; onWear: (id: string) => void; outfit?: Outfit; tweaks?: Tweaks }) {
   const { lang } = useI18n()
   const ko = lang === 'ko'
   useItemsVersion()
@@ -28,11 +38,16 @@ export function ShopModal({ onClose, onWear }: { onClose: () => void; onWear: (i
   const [tab, setTab] = useState<Tab>('costume')
   const [msg, setMsg] = useState('')
   const [bought, setBought] = useState<string | null>(null)
+  const [preview, setPreview] = useState<string | null>(null)
   const wallet = useMemo(readWallet, [spentTick, getFarm().coins, getGame().found.length]) // eslint-disable-line react-hooks/exhaustive-deps
   const pool = travelPool()
   const items = pool.filter((i) => i.category === tab)
   const sym = currency === 'star' ? '⭐' : '🪙'
-  const btn = 'min-h-11 rounded-2xl px-3 py-2 text-sm font-bold'
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && (preview ? setPreview(null) : onClose())
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose, preview])
 
   const buy = (id: string) => {
     const r = buyItem(id, currency)
@@ -40,52 +55,105 @@ export function ShopModal({ onClose, onWear }: { onClose: () => void; onWear: (i
     if (r === 'bought') { playSnap(); setSpentTick((n) => n + 1); setBought(id) }
   }
   const boughtItem = bought ? pool.find((i) => i.id === bought) : undefined
+  const previewItem = preview ? pool.find((i) => i.id === preview) : undefined
+  const previewOutfit: Outfit | null = previewItem && outfit ? { ...outfit, [previewItem.category]: previewItem.id } : null
+  const canPreview = !!outfit && tab !== 'room'
 
   return (
-    <Modal title={`🛍 ${ko ? '상점' : 'Shop'}`} onClose={onClose}>
-      <div className="flex items-center justify-between gap-2 rounded-2xl bg-petal/60 p-2">
-        <p className="m-0 text-sm font-bold">{ko ? '내 지갑' : 'My wallet'} · ⭐ {wallet.stars} · 🪙 {wallet.coins}</p>
-        <div role="radiogroup" aria-label={ko ? '내는 방법' : 'Pay with'} className="flex gap-1">
-          {(['star', 'coin'] as const).map((c) => (
-            <button key={c} role="radio" aria-checked={currency === c} onClick={() => setCurrency(c)} className={`${btn} ${currency === c ? 'bg-blush text-white' : 'bg-white'}`}>
-              {c === 'star' ? '⭐' : '🪙'} {ko ? (c === 'star' ? '별로' : '코인으로') : c === 'star' ? 'Stars' : 'Coins'}
-            </button>
-          ))}
-        </div>
-      </div>
-      <p className="mt-2 mb-1 text-xs text-cocoa-soft">{ko ? '별은 별비 산책에서, 코인은 농장에서 모아요. 산 아이템은 옷장에서 바로 쓸 수 있어요.' : 'Earn stars on the Star walk and coins on the Farm. Bought items are ready in your closet.'}</p>
-      <div role="tablist" className="my-2 flex gap-1 overflow-x-auto">
-        {TABS.map((t) => (
-          <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`${btn} shrink-0 ${tab === t ? 'bg-blush text-white' : 'bg-petal'}`}>
-            {t === 'room' ? (ko ? '테마 소품' : 'Props') : CATEGORY_LABEL[lang][t]}
-          </button>
-        ))}
-      </div>
-      <p role="status" className="my-1 min-h-5 text-sm font-bold">{msg}</p>
-      {boughtItem && (
-        <div className="mb-2 flex items-center gap-2 rounded-2xl bg-mint/30 p-2">
-          <img src={assetUrl(boughtItem.thumb)} alt="" className="h-12 w-12 object-contain" />
-          <span className="flex-1 text-sm font-bold">{boughtItem.name[lang]}</span>
-          <button className={`${btn} bg-blush text-white`} onClick={() => { onClose(); onWear(boughtItem.id) }}>{boughtItem.kind === 'room' ? (ko ? '내 방에서 꾸미기' : 'Decorate') : ko ? '입어보기' : 'Try on'}</button>
-        </div>
-      )}
-      <div className="grid grid-cols-3 gap-2 overflow-y-auto pb-2" style={{ maxHeight: '46dvh' }}>
-        {items.map((it) => {
-          const own = isFound(it.id)
-          const price = priceOf(it.category)
-          const poor = (currency === 'star' ? wallet.stars : wallet.coins) < price
-          return (
-            <div key={it.id} className="flex flex-col items-center rounded-2xl bg-petal/50 p-1 text-center">
-              <img src={assetUrl(it.thumb)} alt="" className="aspect-square w-full object-contain" draggable={false} style={own ? { opacity: 0.55 } : undefined} />
-              <span className="w-full truncate text-[11px] font-bold">{it.name[lang]}</span>
-              <button disabled={own || poor} onClick={() => buy(it.id)} className="mt-1 min-h-9 w-full rounded-xl bg-white text-xs font-bold disabled:opacity-50">
-                {own ? (ko ? '보유 ✓' : 'Owned ✓') : `${price}${sym}`}
-              </button>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center md:p-6" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label={ko ? '상점' : 'Shop'} onClick={(e) => e.stopPropagation()} className="sheet-in relative flex max-h-[94dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl shadow-2xl md:rounded-3xl" style={{ background: 'linear-gradient(#fbf3e4, #f6ead3)', color: '#4b3a2a' }}>
+        <div className="flex items-center justify-between gap-2 px-4 pt-3">
+          <div className="flex items-center gap-2">
+            <span aria-hidden className="text-4xl leading-none">🌙</span>
+            <div>
+              <h2 className="m-0 text-2xl leading-tight font-bold" style={{ fontFamily: SERIF }}>{ko ? '달빛 옷장' : 'Moonlight Closet'}</h2>
+              <p className="m-0 text-[11px]" style={{ color: '#8b7355' }}>{ko ? '숲속의 작은 편집숍' : 'A little shop in the woods'}</p>
             </div>
-          )
-        })}
-        {!items.length && <p className="col-span-3 text-sm">{ko ? '이 칸에는 아직 물건이 없어요.' : 'Nothing here yet.'}</p>}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2 rounded-full border border-[#e3d3b3] bg-white/60 px-3 py-1.5 text-sm font-bold"><span>⭐ {wallet.stars}</span><span>🪙 {wallet.coins}</span></div>
+            <button onClick={onClose} aria-label={ko ? '닫기' : 'Close'} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d9c7a3] bg-white/60 text-lg">✕</button>
+          </div>
+        </div>
+
+        <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="relative mt-3 flex h-28 items-center justify-between overflow-hidden rounded-2xl border border-[#e3d3b3] px-4" style={{ background: 'linear-gradient(120deg, #e9f2d4, #fdf1d6 55%, #f9dfe4)' }}>
+            <div>
+              <p className="m-0 text-2xl font-bold" style={{ fontFamily: SERIF }}>{ko ? '숲속 티타임' : 'Forest tea time'}</p>
+              <p className="m-0 mt-1 text-[11px] leading-snug" style={{ color: '#7a6548' }}>{ko ? '꽃향기가 머무는 시간,' : 'A time that smells of flowers,'}<br />{ko ? '특별한 하루를 입어요.' : 'dress for a special day.'}</p>
+            </div>
+            <span aria-hidden className="text-6xl">👗</span>
+            <span aria-hidden className="absolute right-20 bottom-1 text-2xl opacity-80">🌸</span>
+            <span aria-hidden className="absolute top-1 right-24 text-xl opacity-80">🍃</span>
+          </div>
+
+          <div role="radiogroup" aria-label={ko ? '내는 방법' : 'Pay with'} className="mt-3 flex items-center gap-1.5">
+            {(['star', 'coin'] as const).map((c) => (
+              <button key={c} role="radio" aria-checked={currency === c} onClick={() => setCurrency(c)} className={`min-h-9 rounded-full border px-3 text-sm font-bold ${currency === c ? 'border-[#d36f8b] bg-[#f4a9bb] text-white' : 'border-[#e3d3b3] bg-white/60'}`}>
+                {c === 'star' ? '⭐' : '🪙'} {ko ? (c === 'star' ? '별로 사기' : '코인으로 사기') : c === 'star' ? 'Pay stars' : 'Pay coins'}
+              </button>
+            ))}
+          </div>
+
+          <div role="tablist" className="mt-2 flex border-b border-[#dccbaa]">
+            {TABS.map((t) => (
+              <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`relative min-h-11 flex-1 text-sm font-bold ${tab === t ? 'text-[#c0517a]' : 'text-[#5d4a35]'}`} style={{ fontFamily: SERIF }}>
+                {TAB_LABEL[t][lang]}
+                {tab === t && <span aria-hidden className="absolute inset-x-1 -bottom-px h-0.5 rounded bg-[#d36f8b]" />}
+              </button>
+            ))}
+          </div>
+
+          <p role="status" className="my-1 min-h-5 text-sm font-bold">{msg}</p>
+          {boughtItem && (
+            <div className="mb-2 flex items-center gap-2 rounded-2xl border border-[#cfe3b8] bg-[#eef6df] p-2">
+              <img src={assetUrl(boughtItem.thumb)} alt="" className="h-12 w-12 object-contain" />
+              <span className="flex-1 text-sm font-bold">{boughtItem.name[lang]}</span>
+              <button className="min-h-10 rounded-full bg-[#e98aa3] px-4 text-sm font-bold text-white" onClick={() => { onClose(); onWear(boughtItem.id) }}>{boughtItem.kind === 'room' ? (ko ? '내 방에서 꾸미기' : 'Decorate') : ko ? '입어보기' : 'Try on'}</button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4 pt-2 pb-4">
+            {items.map((it) => {
+              const own = isFound(it.id)
+              const price = priceOf(it.category)
+              const poor = (currency === 'star' ? wallet.stars : wallet.coins) < price
+              return (
+                <div key={it.id} className="flex flex-col items-center">
+                  <div className="relative flex aspect-square w-full items-end justify-center">
+                    <img src={assetUrl(it.thumb)} alt="" className="relative z-10 mb-3 max-h-full w-[88%] object-contain drop-shadow" draggable={false} />
+                    <span aria-hidden className="absolute inset-x-0 bottom-0 h-5 rounded-md border border-[#c9ad7c]" style={{ background: 'linear-gradient(#e4c995, #cfae78)' }} />
+                  </div>
+                  <p className="mt-1 mb-0 w-full truncate text-center text-sm font-bold" style={{ fontFamily: SERIF }}>{it.name[lang]}</p>
+                  <div className="mt-1 flex w-full items-center justify-between gap-1">
+                    <button disabled={own || poor} onClick={() => buy(it.id)} className="min-h-9 rounded-full bg-transparent px-1 text-base font-bold disabled:opacity-60" aria-label={own ? (ko ? '보유' : 'Owned') : `${price}${sym}`}>
+                      {own ? (ko ? '보유 ✓' : 'Owned ✓') : `${price} ${sym}`}
+                    </button>
+                    {canPreview && <button onClick={() => setPreview(it.id)} className="min-h-9 rounded-full bg-[#e98aa3] px-3 text-xs font-bold text-white shadow">👗 {ko ? '입어보기' : 'Try on'}</button>}
+                  </div>
+                </div>
+              )
+            })}
+            {!items.length && <p className="col-span-2 text-sm">{ko ? '이 칸에는 아직 물건이 없어요.' : 'Nothing here yet.'}</p>}
+          </div>
+          <p className="mt-0 mb-1 text-center text-xs" style={{ color: '#8b7355' }}>🌿 {ko ? '별은 별비 산책에서, 코인은 농장에서 모아요' : 'Earn stars on the Star walk, coins on the Farm'} 🌿</p>
+        </div>
+
+        {previewItem && previewOutfit && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-between bg-[#fbf3e4] p-4" onClick={() => setPreview(null)}>
+            <p className="m-0 text-lg font-bold" style={{ fontFamily: SERIF }}>{previewItem.name[lang]}</p>
+            <div className="relative" style={{ height: 'min(62dvh, 560px)', aspectRatio: '1024 / 1536' }}>
+              <FigureLayers outfit={previewOutfit} tweaks={tweaks} animate={false} />
+            </div>
+            <div className="flex w-full max-w-xs gap-2" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => setPreview(null)} className="min-h-11 flex-1 rounded-full border border-[#d9c7a3] bg-white/70 text-sm font-bold">{ko ? '닫기' : 'Close'}</button>
+              {!isFound(previewItem.id) && (
+                <button disabled={(currency === 'star' ? wallet.stars : wallet.coins) < priceOf(previewItem.category)} onClick={() => { buy(previewItem.id); setPreview(null) }} className="min-h-11 flex-1 rounded-full bg-[#e98aa3] text-sm font-bold text-white disabled:opacity-50">{priceOf(previewItem.category)} {sym} {ko ? '사기' : 'Buy'}</button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-    </Modal>
+    </div>
   )
 }
