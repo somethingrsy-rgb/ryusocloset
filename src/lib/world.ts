@@ -7,8 +7,8 @@ import { PLACES } from './game'
 export const CHUNK_W = 1500
 export const WORLD_H = 800
 export const MIN_CHUNKS = 3
-export const GROUND = { minY: 540, maxY: 760 }
-export const DOOR_Y = 600
+export const GROUND = { minY: 585, maxY: 705 }
+export const DOOR_Y = 560
 /** 구간 안에서 문의 x 위치 */
 export const GATE_OFFSET = 700
 
