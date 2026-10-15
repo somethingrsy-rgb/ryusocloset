@@ -45,8 +45,8 @@ describe('star rain walk',()=>{
   })
   it('loads records defensively without changing other game saves',()=>{
     vi.stubGlobal('localStorage',{getItem:()=>JSON.stringify({best:7.8,total:-1,rounds:'bad'})})
-    expect(readRainRecord()).toEqual({best:7,total:0,rounds:0})
+    expect(readRainRecord()).toEqual({best:7,total:0,rounds:0,spent:0})
     vi.stubGlobal('localStorage',{getItem:()=>'{invalid'})
-    expect(readRainRecord()).toEqual({best:0,total:0,rounds:0})
+    expect(readRainRecord()).toEqual({best:0,total:0,rounds:0,spent:0})
   })
 })
