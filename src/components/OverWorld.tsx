@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { useI18n } from '../i18n'
 import { PHASE_ICON, PHASE_LABEL, tintOf } from '../lib/daynight'
-import { extendReach } from '../lib/game'
+import { extendReach, findItem, travelItem } from '../lib/game'
+import { roadSpot } from '../lib/roadItems'
 import type { Outfit, Tweaks } from '../lib/types'
 import {
   CHUNK_W,
@@ -61,6 +62,16 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   const frame = useRef(0)
   const last = useRef(0)
   const entered = useRef(false)
+  const [gotId, setGotId] = useState<string | null>(null)
+  useEffect(() => { if (!gotId) return; const t = setTimeout(() => setGotId(null), 3000); return () => clearTimeout(t) }, [gotId])
+  /** 반짝이는 자리에 닿으면 줍는다 */
+  const pickNear = (pos: { x: number; y: number }) => {
+    const c0 = Math.floor(pos.x / CHUNK_W)
+    for (let c = Math.max(0, c0 - 1); c <= c0 + 1; c++) {
+      const sp = roadSpot(c)
+      if (sp && Math.hypot(pos.x - sp.x, pos.y - sp.y) < 110 && findItem(sp.id)) setGotId(sp.id)
+    }
+  }
   /** 집을 눌러서 걸어가는 중이면 그 구간 번호 (지나가다 우연히 들어가지 않게) */
   const intent = useRef<number | null>(null)
 
@@ -90,6 +101,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
       if (r.pos.x !== posRef.current.x) setDir(r.pos.x < posRef.current.x ? -1 : 1)
       posRef.current = r.pos
       setPos(r.pos)
+      pickNear(r.pos)
       // 끝이 가까워지면 맵을 오른쪽으로 잇는다
       const need = chunksNeeded(r.pos.x, chunksRef.current)
       if (need > chunksRef.current) {
@@ -185,6 +197,13 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
           )
         })}
 
+        {range.map((c) => {
+          const sp = roadSpot(c)
+          return sp ? (
+            <button key={`s${c}`} aria-label={lang === 'ko' ? '반짝이는 것' : 'Something sparkly'} onPointerUp={(e) => e.stopPropagation()} onClick={() => walkTo(sp.x, sp.y)} className="absolute -translate-x-1/2 -translate-y-1/2 animate-pulse text-5xl drop-shadow-lg" style={{ left: sp.x, top: sp.y, zIndex: 3 }}>✨</button>
+          ) : null
+        })}
+
         {destination && <div aria-hidden className="walk-destination pointer-events-none absolute" style={{ left: destination.x, top: destination.y, zIndex: 3 }} />}
         <div
           className="pointer-events-none absolute"
@@ -198,6 +217,12 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
         </div>
       </div>
 
+      {gotId && travelItem(gotId) && (
+        <div role="status" className="absolute top-28 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-white/95 px-3 py-2 shadow-lg">
+          <img src={assetUrl(travelItem(gotId)!.thumb)} alt="" className="h-12 w-12 object-contain" />
+          <span className="text-sm font-bold">{lang === 'ko' ? '찾았어요!' : 'Found it!'} {travelItem(gotId)!.name[lang]}</span>
+        </div>
+      )}
       <div className="absolute top-2 left-2 right-28 z-10 flex min-w-0 flex-wrap items-center gap-1">
         <span className={`pointer-events-none ${PILL}`}><PillText>🚶 {metersOf(pos.x).toLocaleString()}m</PillText></span>
         <div className="flex min-w-0 flex-wrap items-center gap-1" onPointerUp={e => e.stopPropagation()}>{actions}</div>
