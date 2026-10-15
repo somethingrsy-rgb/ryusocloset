@@ -120,15 +120,15 @@ export function FarmScene({ outfit, tweaks, onExit, onWear, onToggleItem }: { ou
   ]
 
   return (
-    <section ref={secRef} aria-label={ko ? '나의 작은 농장' : 'My little farm'} className={`relative h-full overflow-hidden rounded-3xl ring-1 ring-black/5 ${wide ? 'bg-[#f6ecd8]' : 'bg-[#b9d77a]'}`} style={{ containerType: 'size' }}>
+    <section ref={secRef} aria-label={ko ? '나의 작은 농장' : 'My little farm'} className={`relative h-full overflow-hidden rounded-3xl ring-1 ring-black/5 ${wide ? 'bg-[#f6ecd8]' : 'bg-[#b9d77a]'}`} style={{ containerType: 'size', ['--free' as string]: 'calc(100cqw - 100cqh * 2 / 3)' }}>
       {/* 그림 아래 남는 자리: 그림 맨 아래 풀밭 색에서 연두색으로 부드럽게 이어지는 그라데이션 */}
       {!wide && <div aria-hidden className="absolute inset-x-0 bottom-0" style={{ top: 'calc(min(150cqw, 100cqh) - 3rem)', background: 'linear-gradient(to bottom, #9bad3f 0%, #aac24f 30%, #b9d77a 100%)' }} />}
       {wide && (
-        <div className="absolute top-0 bottom-0 left-0 p-3" style={{ zIndex: 5, width: 'calc((100cqw - 100cqh * 2 / 3) / 2)' }}>
+        <div className="absolute top-0 bottom-0 left-0 p-3" style={{ zIndex: 5, width: 'calc(var(--free) * 0.4)' }}>
           <FarmWardrobe outfit={outfit} tweaks={tweaks} onToggle={onToggleItem} />
         </div>
       )}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 select-none" style={{ width: 'min(100cqw, calc(100cqh * 1024 / 1536))', aspectRatio: '1024 / 1536', WebkitMaskImage: wide ? 'linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, #000 95%, transparent 100%)' : 'linear-gradient(to bottom, #000 95%, transparent 100%)', WebkitMaskComposite: 'source-in', maskImage: wide ? 'linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, #000 95%, transparent 100%)' : 'linear-gradient(to bottom, #000 95%, transparent 100%)', maskComposite: 'intersect' }}>
+      <div className={`absolute top-0 select-none ${wide ? '' : 'left-1/2 -translate-x-1/2'}`} style={{ ...(wide ? { left: 'calc(var(--free) * 0.4)' } : null), width: 'min(100cqw, calc(100cqh * 1024 / 1536))', aspectRatio: '1024 / 1536', WebkitMaskImage: wide ? 'linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, #000 95%, transparent 100%)' : 'linear-gradient(to bottom, #000 95%, transparent 100%)', WebkitMaskComposite: 'source-in', maskImage: wide ? 'linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, #000 95%, transparent 100%)' : 'linear-gradient(to bottom, #000 95%, transparent 100%)', maskComposite: 'intersect' }}>
         <img src={assetUrl('assets/farm/bg.webp')} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
 
         {/* 노점: 눌러서 주민의 부탁·바구니 팔기 */}
@@ -182,8 +182,8 @@ export function FarmScene({ outfit, tweaks, onExit, onWear, onToggleItem }: { ou
       </div>
 
       {/* 아래 도구 4개: 그림 아래 초록 바탕에 둔다 */}
-      <div className={`absolute flex flex-col items-center justify-center px-3 py-3 ${wide ? 'top-0 right-0 bottom-0' : 'inset-x-0 bottom-0'}`} style={wide ? { zIndex: 5, width: 'calc((100cqw - 100cqh * 2 / 3) / 2)' } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
-        <div className={`flex w-full flex-col gap-3 ${wide ? 'max-w-[300px]' : 'max-w-[560px]'}`}>
+      <div className={`absolute flex flex-col items-center justify-center px-3 py-3 ${wide ? 'top-0 right-0 bottom-0' : 'inset-x-0 bottom-0'}`} style={wide ? { zIndex: 5, width: 'calc(var(--free) * 0.6)' } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
+        <div className={`flex w-full flex-col gap-3 ${wide ? 'max-w-[460px]' : 'max-w-[560px]'}`}>
           {/* 씨앗 고르기 */}
           {picker && (
             <div className="flex justify-center gap-2 rounded-3xl bg-white/95 p-2 shadow-lg" role="radiogroup" aria-label={ko ? '씨앗 고르기' : 'Choose seeds'}>
@@ -198,7 +198,7 @@ export function FarmScene({ outfit, tweaks, onExit, onWear, onToggleItem }: { ou
           )}
 
           {/* 아래 도구 4개 */}
-          <div className={wide ? 'grid grid-cols-2 gap-2' : 'flex gap-2'}>
+          <div className="flex gap-2">
             {tools.map((t) => {
               const active = tool === t.id
               return (
