@@ -4,25 +4,24 @@ import { PLACES } from './game'
  * 끝없이 이어지는 맵. 맵은 구간(chunk)으로 나뉘고, 오른쪽으로 걸어가 끝이 가까워지면 새 구간이 이어 붙는다.
  * 구간 i 의 테마는 PLACES[i % 10] (한 바퀴 돌면 처음 테마가 다시 나온다). 화면 높이에 맞춰 논리 px 로 통째로 확대·축소해서 보여준다.
  */
-export const CHUNK_W = 400
+export const CHUNK_W = 1022
 export const WORLD_H = 800
-export const MIN_CHUNKS = 12
+export const MIN_CHUNKS = 10
 export const GROUND = { minY: 585, maxY: 735 }
 export const DOOR_Y = 560
 /**
- * 길 배경 그림 한 장(가로 TILE_W)에 집이 10채 있고, 집 하나가 장소 하나다 (구간 10개 = 그림 한 장).
- * 그림 속 집 문의 x 위치(그림 가로 2000 기준)를 2배로 늘려 쓰고, 이웃한 그림은 좌우를 뒤집어 이으므로 홀수 번째 그림은 순서가 거꾸로다.
+ * 길 배경 그림 한 장(원본 가로 3930, 1.3배로 키워 TILE_W)에 집이 5채 있고, 집 하나가 장소 하나다 (구간 5개 = 그림 한 장).
+ * 그림은 오른쪽 끝과 왼쪽 끝이 자연스럽게 이어지게 만들어서 그대로 반복해 붙인다. HOUSE_X 는 그림 속 집 문의 x (원본 기준).
  */
-export const TILE_W = 4000
-const HOUSE_X = [97, 295, 478, 695, 885, 1098, 1310, 1517, 1722, 1920]
+export const TILE_W = 5110
+const HOUSE_X = [185, 1060, 1795, 2220, 3615]
 
 export const worldWidth = (chunks: number) => chunks * CHUNK_W
 
 /** 구간 c 의 문 x 좌표 */
 export const gateX = (c: number) => {
-  const t = Math.floor(c / 10)
-  const k = ((c % 10) + 10) % 10
-  return t * TILE_W + (t % 2 ? TILE_W - 2 * HOUSE_X[9 - k] : 2 * HOUSE_X[k])
+  const t = Math.floor(c / HOUSE_X.length)
+  return t * TILE_W + Math.round(1.3 * HOUSE_X[((c % HOUSE_X.length) + HOUSE_X.length) % HOUSE_X.length])
 }
 /** 구간 c 의 장소 */
 export const placeOfChunk = (c: number) => PLACES[((c % PLACES.length) + PLACES.length) % PLACES.length]
@@ -33,7 +32,7 @@ export const clampWalk = (x: number, y: number, chunks: number) => ({
 })
 
 /** 류소가 맵 끝에서 이 거리 안으로 오면 구간을 하나 더 잇는다. 필요한 구간 수를 돌려준다. */
-export const EXTEND_AHEAD = 6
+export const EXTEND_AHEAD = 3
 export const chunksNeeded = (playerX: number, chunks: number) => Math.max(chunks, Math.floor(playerX / CHUNK_W + EXTEND_AHEAD) + 1)
 
 /** 화면에 보이는 너비(논리 px)에서 카메라 왼쪽 끝: 류소를 가운데에 두되 맵 밖은 보이지 않게 */

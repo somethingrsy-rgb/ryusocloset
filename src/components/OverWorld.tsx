@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { useI18n } from '../i18n'
 import { PHASE_ICON, PHASE_LABEL, tintOf } from '../lib/daynight'
-import { extendReach, isFound } from '../lib/game'
+import { extendReach } from '../lib/game'
 import type { Outfit, Tweaks } from '../lib/types'
 import {
   CHUNK_W,
@@ -25,16 +25,12 @@ import { PILL, PillText } from './pill'
 import { useClock } from './useClock'
 import { useWalkKeys } from './useWalkKeys'
 import { assetUrl } from '../lib/items'
+import { TravelFx } from './FarmFx'
 
-/** 길 배경 그림(2000×667)을 2배(4000×1334)로 키워 길(모래색 띠)이 걷는 높이(585 근처)에 오게 깔고(위쪽 하늘은 잘림), 이웃한 그림은 좌우를 뒤집어 이어 붙인다. 그림 속 집 10채가 장소 10곳의 문이다. */
+/** 길 배경 그림(집 5채, 가로 3930×667)을 1.3배로 키워 길(모래색 띠)이 걷는 높이(585 근처)에 오게 깔고(위쪽 하늘은 잘림) 같은 그림을 이어 붙인다. 그림 속 집이 장소의 문이다. */
 const BG_W = TILE_W
-const BG_H = 1334
-const BG_TOP = -300
-
-const TEXT = {
-  ko: { hint: '바닥을 눌러 이동 · 방향키 / WASD · 집을 눌러 입장', found: '찾음' },
-  en: { hint: 'Tap to walk · Arrow keys / WASD · Tap a house to enter', found: 'Found' },
-}
+const BG_H = 867
+const BG_TOP = -26
 
 interface Props {
   actions?: ReactNode
@@ -49,9 +45,8 @@ interface Props {
   onEnter: (placeId: string, chunk: number) => void
 }
 
-export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, paused = false, actions }: Props) {
+export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = false, actions }: Props) {
   const { lang } = useI18n()
-  const tx = TEXT[lang]
   const { clock, skip } = useClock()
   const tint = tintOf(clock)
   const hostRef = useRef<HTMLDivElement>(null)
@@ -163,13 +158,9 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
     <div ref={hostRef} tabIndex={0} aria-label={lang === 'ko' ? '여행 마을, 방향키로 이동' : 'Village, move with arrow keys'} {...keys} className="travel-world relative h-full touch-none overflow-hidden rounded-3xl shadow-inner ring-1 ring-black/5 select-none" onPointerUp={onTap}>
       <div className="absolute top-0 left-0 origin-top-left" style={{ width: worldWidth(chunks), height: WORLD_H, transform: `scale(${scale}) translateX(${-cam}px)` }}>
         {bgTiles.map((t) => (
-          <img key={t} src={assetUrl('assets/farm/travel_road.webp')} alt="" draggable={false} className="pointer-events-none absolute select-none" style={{ left: t * BG_W, top: BG_TOP, width: BG_W, height: BG_H, maxWidth: 'none', transform: t % 2 ? 'scaleX(-1)' : undefined }} />
+          <img key={t} src={assetUrl('assets/farm/travel_road2.webp')} alt="" draggable={false} className="pointer-events-none absolute select-none" style={{ left: t * BG_W, top: BG_TOP, width: BG_W, height: BG_H, maxWidth: 'none', }} />
         ))}
         {range.map((c) => {
-          const p = placeOfChunk(c)
-          const ids = assign[p.id] ?? []
-          const got = ids.filter(isFound).length
-          const done = ids.length > 0 && got === ids.length
           return (
             <div key={c} className="absolute top-0" style={{ left: c * CHUNK_W, width: CHUNK_W, height: WORLD_H }}>
               {tint && <div className="pointer-events-none absolute inset-0" style={{ background: tint }} />}
@@ -184,16 +175,12 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
               )}
               <button
                 onPointerUp={(e) => e.stopPropagation()}
-                aria-label={`${lang === 'ko' ? p.ko : p.en} ${c}`}
+                aria-label={`${lang === 'ko' ? '집' : 'House'} ${c + 1}`}
                 onClick={() => walkTo(gateX(c), DOOR_Y + 40, c)}
-                className="village-house absolute flex -translate-x-1/2 flex-col items-center"
-                style={{ left: gateX(c) - c * CHUNK_W, top: 255, zIndex: 2 }}
+                className="absolute -translate-x-1/2 rounded-3xl"
+                style={{ left: gateX(c) - c * CHUNK_W, top: 190, zIndex: 2 }}
               >
-                <span className="village-nameplate">{lang === 'ko' ? p.ko : p.en}</span>
-                <span aria-hidden className="block" style={{ width: 190, height: 225 }} />
-                <span className={`village-progress \${done ? 'village-progress-done' : ''}`}>
-                  {done ? '✓ ' : ''}{tx.found} {got}/{ids.length}
-                </span>
+                <span aria-hidden className="block" style={{ width: 300, height: 300 }} />
               </button>
             </div>
           )
@@ -212,6 +199,7 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
         </div>
       </div>
 
+      <TravelFx dim={clock.dark} />
       <div className="absolute top-2 left-2 right-28 z-10 flex min-w-0 flex-wrap items-center gap-1">
         <span className={`pointer-events-none ${PILL}`}><PillText>🚶 {metersOf(pos.x).toLocaleString()}m</PillText></span>
         <div className="flex min-w-0 flex-wrap items-center gap-1" onPointerUp={e => e.stopPropagation()}>{actions}</div>
