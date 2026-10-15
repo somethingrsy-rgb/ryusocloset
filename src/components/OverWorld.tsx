@@ -163,7 +163,7 @@ export function OverWorld({ reach, chunk, assign, outfit, tweaks, onEnter, pause
     <div ref={hostRef} tabIndex={0} aria-label={lang === 'ko' ? '여행 마을, 방향키로 이동' : 'Village, move with arrow keys'} {...keys} className="travel-world relative h-full touch-none overflow-hidden rounded-3xl shadow-inner ring-1 ring-black/5 select-none" onPointerUp={onTap}>
       <div className="absolute top-0 left-0 origin-top-left" style={{ width: worldWidth(chunks), height: WORLD_H, transform: `scale(${scale}) translateX(${-cam}px)` }}>
         {bgTiles.map((t) => (
-          <img key={t} src={assetUrl('assets/farm/travel_bg.webp')} alt="" draggable={false} className="pointer-events-none absolute select-none" style={{ left: t * BG_W, top: BG_TOP, width: BG_W, height: BG_H, maxWidth: 'none', transform: t % 2 ? 'scaleX(-1)' : undefined }} />
+          <img key={t} src={assetUrl('assets/farm/travel_road.webp')} alt="" draggable={false} className="pointer-events-none absolute select-none" style={{ left: t * BG_W, top: BG_TOP, width: BG_W, height: BG_H, maxWidth: 'none', transform: t % 2 ? 'scaleX(-1)' : undefined }} />
         ))}
         {range.map((c) => {
           const p = placeOfChunk(c)
