@@ -81,7 +81,7 @@ export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dro
       </div>
 
       <div role="tabpanel" className="scroll-thin min-h-0 flex-1 overflow-y-auto p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        <ul className="grid grid-cols-4 gap-2 md:grid-cols-4">
+        <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6">
           <li>
             <button
               onClick={onAdd}
