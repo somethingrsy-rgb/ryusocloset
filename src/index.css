@@ -246,3 +246,7 @@ button:focus-visible {
 .fx-fall { animation: fx-fall linear infinite; }
 .fx-sway { animation: fx-sway ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .farm-fx { display: none; } }
+@keyframes fx-spin { to { transform: rotate(360deg); } }
+@keyframes fx-bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-2.5%) rotate(2.5deg); } }
+.fx-spin { animation: fx-spin 16s linear infinite; }
+.fx-bob { animation: fx-bob 3.4s ease-in-out infinite; transform-origin: 50% 85%; }
