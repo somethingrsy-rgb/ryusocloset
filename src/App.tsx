@@ -317,7 +317,7 @@ export default function App() {
   )
 
   /** 상점 화면 (농장·여행에서 이동하고, 닫으면 왔던 곳으로 돌아간다) */
-  const shopFrom = useRef<Mode>('travel')
+  const shopFrom = useRef<Mode>('closet')
   const openShop = (from: Mode) => { shopFrom.current = from; setMode('shop') }
 
   /** 찾은 아이템을 입어보러 간다 (여행·농장 공통) */
@@ -341,7 +341,7 @@ export default function App() {
         setSelection(null)
         setSelCat(null)
       }}
-      className={`flex shrink-0 min-h-11 items-center gap-0.5 rounded-full px-2 text-[12.5px] font-bold whitespace-nowrap transition ${
+      className={`flex shrink-0 min-h-11 flex-1 items-center justify-center gap-0 rounded-full px-0.5 text-[11px] font-bold whitespace-nowrap transition ${
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
       }`}
     >
@@ -361,6 +361,7 @@ export default function App() {
               {modeBtn('farm', '🌱', lang === 'ko' ? '농장' : 'Farm')}
               {modeBtn('room', '🏠', t('modeRoom'))}
               {modeBtn('travel', '🧭', t('modeTravel'))}
+              {modeBtn('shop', '🛍', lang === 'ko' ? '상점' : 'Shop')}
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <button

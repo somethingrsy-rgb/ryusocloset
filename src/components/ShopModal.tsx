@@ -64,9 +64,9 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
       <div role="dialog" aria-modal="true" aria-label={ko ? '상점' : 'Shop'} className="relative mx-auto flex h-full w-full max-w-lg flex-col overflow-hidden rounded-3xl shadow-lg ring-1 ring-black/5" style={{ background: `#fbf4ea url(${assetUrl('assets/farm/shop_paper.webp')}) center / cover`, color: '#4b3a2a' }}>
         <div className="flex items-center justify-between gap-2 px-4 pt-3">
           <div className="flex items-center gap-2">
-            <img src={assetUrl('assets/farm/shop_moon.webp')} alt="" draggable={false} className="h-16 w-16 object-contain" />
+            <img src={assetUrl('assets/farm/shop_moon.webp')} alt="" draggable={false} className="h-14 w-14 shrink-0 object-contain" />
             <div>
-              <h2 className="m-0 text-2xl leading-tight font-bold whitespace-nowrap" style={{ fontFamily: SERIF }}>{ko ? '달빛 옷장' : 'Moonlight Closet'}</h2>
+              <h2 className="m-0 text-xl leading-tight font-bold whitespace-nowrap" style={{ fontFamily: SERIF }}>{ko ? '달빛 옷장' : 'Moonlight Closet'}</h2>
               <p className="m-0 text-[11px]" style={{ color: '#8b7355' }}>{ko ? '숲속의 작은 편집숍' : 'A little shop in the woods'}</p>
             </div>
           </div>
