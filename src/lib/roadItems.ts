@@ -1,5 +1,5 @@
 import { CHUNK_W, GROUND, gateX } from './world'
-import { isFound, travelPool } from './game'
+import { isFound, travelFindable } from './game'
 
 const hash = (s: string) => {
   let h = 2166136261
@@ -11,7 +11,7 @@ const hash = (s: string) => {
 export function roadSpot(c: number): { id: string; x: number; y: number } | null {
   const h = hash(`road${c}`)
   if (h % 3 !== 0) return null
-  const pool = travelPool().sort((a, b) => (a.id < b.id ? -1 : 1))
+  const pool = travelFindable().sort((a, b) => (a.id < b.id ? -1 : 1))
   if (!pool.length) return null
   const item = pool[hash(`item${c}`) % pool.length]
   if (isFound(item.id)) return null

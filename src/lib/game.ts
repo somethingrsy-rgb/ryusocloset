@@ -69,6 +69,10 @@ export const inPool = (i: Pick<Item, 'id' | 'category' | 'native'>) =>
 /** 캠핑 용품은 테마 소품 탭에 있지만 처음부터 쓸 수 있다 (여행에서 찾는 대상이 아님) */
 export const inRoomPool = (item: Pick<RoomItemDef, 'id' | 'theme'>) => !!item.theme && item.theme !== 'camp' && !isCustomRoomItem(item)
 export const isRoomLocked = (item: Pick<RoomItemDef, 'id' | 'theme'>) => state.lock && inRoomPool(item) && !state.found.includes(item.id)
+/** 테마옷(의상)은 상점에서만 살 수 있고, 여행·길에서는 찾지 못한다 */
+export const SHOP_ONLY: readonly Category[] = ['costume']
+/** 여행에서 찾을 수 있는 아이템 (상점 전용 제외) */
+export const travelFindable = () => travelPool().filter((i) => !SHOP_ONLY.includes(i.category as Category))
 export const travelPool = () => [
   ...ITEMS.filter(inPool).map(item => ({ id: item.id, name: item.name, thumb: item.thumb, category: item.category, kind: 'clothing' as const })),
   ...ROOM_ITEMS.filter(inRoomPool).map(item => ({ id: item.id, name: item.name, thumb: item.thumb, category: 'room' as const, kind: 'room' as const })),
@@ -218,7 +222,7 @@ export const resetGame = () => set({ ...DEFAULT })
 export const currentAssignment = () => {
   // Keep the old distribution so freeing dresses does not relocate other collectibles.
   const legacyPool = ITEMS.filter((i) => !!i.native && !i.id.startsWith('custom_') && ['costume', 'accessory', 'wand', 'shoes', 'bag', 'outer', 'dress'].includes(i.category))
-  const eligible = new Set(ITEMS.filter(inPool).map((i) => i.id))
+  const eligible = new Set(ITEMS.filter((i) => inPool(i) && !SHOP_ONLY.includes(i.category)).map((i) => i.id))
   const out = Object.fromEntries(Object.entries(assignPlaces(legacyPool.map((i) => i.id))).map(([place, ids]) => [place, ids.filter((id) => eligible.has(id))]))
   for (const item of ROOM_ITEMS.filter(inRoomPool)) {
     const place = item.theme && Object.hasOwn(PLACE_BY_ID, item.theme) ? item.theme : PLACES[0].id
