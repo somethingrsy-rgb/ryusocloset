@@ -27,6 +27,9 @@ const TEXT = {
     nightHint: 'Sparkles glow at night ✨ Try tapping the props, too', done: 'All found ⭐ Time to explore the furnishings!', got: 'Found it!', wear: 'Try it on', keep: 'Keep walking', talkTo: 'Talk' },
 }
 
+/** 내 방 탭은 아래 패널이 40dvh, 여행 탭은 28dvh 라서 무대가 12dvh 더 높다. 보낸 방이 내 방 탭보다 커 보이지 않게 그만큼 뺀 높이에 맞춘다 */
+const ROOM_STAGE_DIFF = 12
+
 const NPC_POS: Vec = { x: 84, y: 84 }
 const CHEST_POS: Vec = { x: 52, y: 74 }
 const PICK_R = 70 // 이 거리(px) 안을 지나가면 줍는다
@@ -187,14 +190,14 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
   return (
     <div className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5" style={{ containerType: 'size' }}>
       {assets && <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="relative" style={{ width: `min(100cqw, calc(100cqh * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` }}>
-          {[-2, -1, 1, 2].map(k => <div key={k} className="absolute top-0 h-full w-full" style={{ left: `${k * 100}%`, transform: Math.abs(k) % 2 ? 'scaleX(-1)' : undefined }}>
+        <div className="relative" style={{ width: `min(100cqw, calc((100cqh - ${ROOM_STAGE_DIFF}dvh) * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` }}>
+          {[-1, 0, 1].flatMap(ky => [-2, -1, 0, 1, 2].map(k => ({ k, ky }))).filter(({ k, ky }) => k || ky).map(({ k, ky }) => <div key={`${k}_${ky}`} className="absolute h-full w-full" style={{ left: `${k * 100}%`, top: `${ky * 100}%`, transform: `scale(${Math.abs(k) % 2 ? -1 : 1}, ${ky ? -1 : 1})` }}>
             <img src={assets.floor} alt="" draggable={false} className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${assets.floorH / ROOM_H * 100}%` }} />
             <img src={assets.wall} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
           </div>)}
         </div>
       </div>}
-      <div ref={boxRef} tabIndex={0} aria-label={lang === 'ko' ? p.ko : p.en} {...keys} className={`relative isolate touch-none select-none ${layout ? '' : 'h-full w-full'}`} style={layout ? { width: `min(100cqw, calc(100cqh * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` } : undefined} onPointerUp={onTap}>
+      <div ref={boxRef} tabIndex={0} aria-label={lang === 'ko' ? p.ko : p.en} {...keys} className={`relative isolate touch-none select-none ${layout ? '' : 'h-full w-full'}`} style={layout ? { width: `min(100cqw, calc((100cqh - ${ROOM_STAGE_DIFF}dvh) * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` } : undefined} onPointerUp={onTap}>
         {assets ? <>
           <img src={assets.floor} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${assets.floorH / ROOM_H * 100}%` }} draggable={false} />
           <img src={assets.wall} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
