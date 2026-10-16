@@ -16,6 +16,11 @@ export function roadSpot(c: number): { id: string; x: number; y: number } | null
   const item = pool[hash(`item${c}`) % pool.length]
   if (isFound(item.id)) return null
   let x = c * CHUNK_W + 220 + ((h >>> 3) % (CHUNK_W - 440))
-  if (Math.abs(x - gateX(c)) < 220) x += 330
+  // 집 문(이웃 구간 것 포함) 앞은 피해서 옆으로 민다
+  for (let tries = 0; tries < 8; tries++) {
+    const near = [c - 2, c - 1, c, c + 1, c + 2].some((k) => k >= 0 && Math.abs(x - gateX(k)) < 220)
+    if (!near) break
+    x += 260
+  }
   return { id: item.id, x, y: GROUND.minY + 20 + ((h >>> 9) % (GROUND.maxY - GROUND.minY - 40)) }
 }
