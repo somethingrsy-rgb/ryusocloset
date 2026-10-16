@@ -9,6 +9,7 @@ import {
   DOOR_Y,
   MIN_CHUNKS,
   ROAD_PART,
+  ROAD_PARTS,
   TILE_W,
   WORLD_H,
   cameraX,
@@ -27,7 +28,7 @@ import { useClock } from './useClock'
 import { useWalkKeys } from './useWalkKeys'
 import { assetUrl } from '../lib/items'
 
-/** 길 배경 그림(집 30채, 가로 34560×667)을 1.3배로 키워 길(모래색 띠)이 걷는 높이(585 근처)에 오게 깔고(위쪽 하늘은 잘림) 같은 그림을 이어 붙인다. 그림 속 집이 장소의 문이다. */
+/** 길 배경 그림(집 14채, 가로 13510×667)을 1.3배로 키워 길(모래색 띠)이 걷는 높이(585 근처)에 오게 깔고(위쪽 하늘은 잘림) 같은 그림을 이어 붙인다. 그림 속 집이 장소의 문이다. */
 const BG_W = TILE_W
 const BG_H = 867
 const BG_TOP = -26
@@ -64,7 +65,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   const entered = useRef(false)
   /** 큰 배경 그림이 다 받아진 뒤에 부드럽게 나타낸다 (그 전에는 하늘·풀밭 색이 보여서 회색 화면이 없다) */
   const [bgReady, setBgReady] = useState(false)
-  useEffect(() => { const im = new Image(); im.onload = im.onerror = () => setBgReady(true); im.src = assetUrl('assets/farm/travel_road7_0.webp') }, [])
+  useEffect(() => { const im = new Image(); im.onload = im.onerror = () => setBgReady(true); im.src = assetUrl('assets/farm/travel_road8_0.webp') }, [])
   const [gotId, setGotId] = useState<string | null>(null)
   useEffect(() => { if (!gotId) return; const t = setTimeout(() => setGotId(null), 3000); return () => clearTimeout(t) }, [gotId])
   /** 반짝이는 자리에 닿으면 줍는다 */
@@ -171,10 +172,10 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   return (
     <div ref={hostRef} tabIndex={0} aria-label={lang === 'ko' ? '여행 마을, 방향키로 이동' : 'Village, move with arrow keys'} {...keys} className="travel-world relative h-full touch-none overflow-hidden rounded-3xl shadow-inner ring-1 ring-black/5 select-none" style={{ background: 'linear-gradient(#8fc3ee 0%, #bcd9a2 40%, #8fba5c 62%, #e5c98e 80%, #8fba5c 100%)' }} onPointerUp={onTap}>
       <div className="absolute top-0 left-0 origin-top-left" style={{ width: worldWidth(chunks), height: WORLD_H, transform: `scale(${scale}) translateX(${-cam}px)` }}>
-        {bgTiles.map((t) => [0, 1, 2].map((k) => {
+        {bgTiles.map((t) => Array.from({ length: ROAD_PARTS }, (_, k) => {
           const x0 = Math.round(k * ROAD_PART * 1.3)
-          const x1 = k === 2 ? BG_W : Math.round((k + 1) * ROAD_PART * 1.3)
-          return <img key={`${t}-${k}`} src={assetUrl(`assets/farm/travel_road7_${k}.webp`)} alt="" draggable={false} className="warm-tone pointer-events-none absolute select-none" style={{ left: t * BG_W + x0, top: BG_TOP, width: x1 - x0 + 1, height: BG_H, maxWidth: 'none', opacity: bgReady ? 1 : 0, transition: 'opacity 0.4s' }} />
+          const x1 = k === ROAD_PARTS - 1 ? BG_W : Math.round((k + 1) * ROAD_PART * 1.3)
+          return <img key={`${t}-${k}`} src={assetUrl(`assets/farm/travel_road8_${k}.webp`)} alt="" draggable={false} className="warm-tone pointer-events-none absolute select-none" style={{ left: t * BG_W + x0, top: BG_TOP, width: x1 - x0 + 1, height: BG_H, maxWidth: 'none', opacity: bgReady ? 1 : 0, transition: 'opacity 0.4s' }} />
         }))}
         {/* 밤 색은 길 전체에 한 장으로 덮는다 (구간마다 따로 덮으면 이음매에 세로줄이 보인다) */}
         {tint && <div className="pointer-events-none absolute top-0 left-0" style={{ width: worldWidth(chunks), height: WORLD_H, background: tint, zIndex: 1 }} />}
