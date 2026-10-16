@@ -4,17 +4,17 @@ import { PLACES } from './game'
  * 끝없이 이어지는 맵. 맵은 구간(chunk)으로 나뉘고, 오른쪽으로 걸어가 끝이 가까워지면 새 구간이 이어 붙는다.
  * 구간 i 의 테마는 PLACES[i % 10] (한 바퀴 돌면 처음 테마가 다시 나온다). 화면 높이에 맞춰 논리 px 로 통째로 확대·축소해서 보여준다.
  */
-export const CHUNK_W = 1022
+export const CHUNK_W = 1097
 export const WORLD_H = 800
 export const MIN_CHUNKS = 10
 export const GROUND = { minY: 585, maxY: 735 }
 export const DOOR_Y = 560
 /**
- * 길 배경 그림 한 장(원본 가로 3930, 1.3배로 키워 TILE_W)에 집이 5채 있고, 집 하나가 장소 하나다 (구간 5개 = 그림 한 장).
- * 그림은 오른쪽 끝과 왼쪽 끝이 자연스럽게 이어지게 만들어서 그대로 반복해 붙인다. HOUSE_X 는 그림 속 집 문의 x (원본 기준).
+ * 길 배경 그림 한 장(원본 가로 16880, 1.3배로 키워 TILE_W)에 집이 20채 있고, 집 하나가 장소 하나다 (구간 20개 = 그림 한 장, 장소 10곳이 두 번 돈다).
+ * 그림은 봄·여름·가을·겨울 순서로 이어지고, 오른쪽 끝과 왼쪽 끝도 이어지게 만들어서 그대로 반복해 붙인다. HOUSE_X 는 그림 속 집 문의 x (원본 기준).
  */
-export const TILE_W = 5110
-const HOUSE_X = [185, 1060, 1795, 2220, 3615]
+export const TILE_W = 21944
+const HOUSE_X = [185, 1060, 1795, 2322, 3720, 4435, 5303, 6060, 6393, 7902, 8629, 9495, 10234, 10762, 12160, 12858, 13680, 14430, 14982, 16380]
 
 export const worldWidth = (chunks: number) => chunks * CHUNK_W
 

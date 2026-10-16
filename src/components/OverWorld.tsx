@@ -26,7 +26,7 @@ import { useClock } from './useClock'
 import { useWalkKeys } from './useWalkKeys'
 import { assetUrl } from '../lib/items'
 
-/** 길 배경 그림(집 5채, 가로 3930×667)을 1.3배로 키워 길(모래색 띠)이 걷는 높이(585 근처)에 오게 깔고(위쪽 하늘은 잘림) 같은 그림을 이어 붙인다. 그림 속 집이 장소의 문이다. */
+/** 길 배경 그림(집 20채, 가로 16880×667)을 1.3배로 키워 길(모래색 띠)이 걷는 높이(585 근처)에 오게 깔고(위쪽 하늘은 잘림) 같은 그림을 이어 붙인다. 그림 속 집이 장소의 문이다. */
 const BG_W = TILE_W
 const BG_H = 867
 const BG_TOP = -26
@@ -63,7 +63,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   const entered = useRef(false)
   /** 큰 배경 그림이 다 받아진 뒤에 부드럽게 나타낸다 (그 전에는 하늘·풀밭 색이 보여서 회색 화면이 없다) */
   const [bgReady, setBgReady] = useState(false)
-  useEffect(() => { const im = new Image(); im.onload = im.onerror = () => setBgReady(true); im.src = assetUrl('assets/farm/travel_road2.webp') }, [])
+  useEffect(() => { const im = new Image(); im.onload = im.onerror = () => setBgReady(true); im.src = assetUrl('assets/farm/travel_road3.webp') }, [])
   const [gotId, setGotId] = useState<string | null>(null)
   useEffect(() => { if (!gotId) return; const t = setTimeout(() => setGotId(null), 3000); return () => clearTimeout(t) }, [gotId])
   /** 반짝이는 자리에 닿으면 줍는다 */
@@ -171,11 +171,11 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
     <div ref={hostRef} tabIndex={0} aria-label={lang === 'ko' ? '여행 마을, 방향키로 이동' : 'Village, move with arrow keys'} {...keys} className="travel-world relative h-full touch-none overflow-hidden rounded-3xl shadow-inner ring-1 ring-black/5 select-none" style={{ background: 'linear-gradient(#8fc3ee 0%, #bcd9a2 40%, #8fba5c 62%, #e5c98e 80%, #8fba5c 100%)' }} onPointerUp={onTap}>
       <div className="absolute top-0 left-0 origin-top-left" style={{ width: worldWidth(chunks), height: WORLD_H, transform: `scale(${scale}) translateX(${-cam}px)` }}>
         {bgTiles.map((t) => (
-          <img key={t} src={assetUrl('assets/farm/travel_road2.webp')} alt="" draggable={false} className="pointer-events-none absolute select-none" style={{ left: t * BG_W, top: BG_TOP, width: BG_W, height: BG_H, maxWidth: 'none', opacity: bgReady ? 1 : 0, transition: 'opacity 0.4s' }} />
+          <img key={t} src={assetUrl('assets/farm/travel_road3.webp')} alt="" draggable={false} className="pointer-events-none absolute select-none" style={{ left: t * BG_W, top: BG_TOP, width: BG_W, height: BG_H, maxWidth: 'none', opacity: bgReady ? 1 : 0, transition: 'opacity 0.4s' }} />
         ))}
         {range.map((c) => {
           return (
-            <div key={c} className="absolute top-0" style={{ left: c * CHUNK_W, width: CHUNK_W, height: WORLD_H }}>
+            <div key={c} className="absolute top-0" style={{ left: c * CHUNK_W, width: CHUNK_W + 2, height: WORLD_H }}>
               {tint && <div className="pointer-events-none absolute inset-0" style={{ background: tint }} />}
               {clock.dark > 0.3 && (
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0" style={{ height: 500, opacity: Math.min(1, (clock.dark - 0.3) / 0.5) }}>
