@@ -175,7 +175,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
         {bgTiles.map((t) => Array.from({ length: ROAD_PARTS }, (_, k) => {
           const x0 = Math.round(k * ROAD_PART * 1.3)
           const x1 = k === ROAD_PARTS - 1 ? BG_W : Math.round((k + 1) * ROAD_PART * 1.3)
-          return <img key={`${t}-${k}`} src={assetUrl(`assets/farm/travel_road9_${k}.webp`)} alt="" draggable={false} className="road-bright pointer-events-none absolute select-none" style={{ left: t * BG_W + x0, top: BG_TOP, width: x1 - x0 + 1, height: BG_H, maxWidth: 'none', opacity: bgReady ? 1 : 0, transition: 'opacity 0.4s' }} />
+          return <img key={`${t}-${k}`} src={assetUrl(`assets/farm/travel_road9_${k}.webp`)} alt="" draggable={false} className="pointer-events-none absolute select-none" style={{ left: t * BG_W + x0, top: BG_TOP, width: x1 - x0 + 1, height: BG_H, maxWidth: 'none', opacity: bgReady ? 1 : 0, transition: 'opacity 0.4s' }} />
         }))}
         {/* 밤 색은 길 전체에 한 장으로 덮는다 (구간마다 따로 덮으면 이음매에 세로줄이 보인다) */}
         {tint && <div className="pointer-events-none absolute top-0 left-0" style={{ width: worldWidth(chunks), height: WORLD_H, background: tint, zIndex: 1 }} />}

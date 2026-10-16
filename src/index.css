@@ -232,8 +232,6 @@ button:focus-visible {
 .farm-walk { animation: farm-walk 0.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .farm-walk { animation: none; } }
 
-/* 여행길 그림은 색을 바꾸지 않고 밝기만 올린다 (세기는 이 한 줄만 고치면 된다) */
-.road-bright { filter: brightness(1.08); }
 
 /* 농장 장식 움직임 */
 @keyframes fx-cloud { from { transform: translateX(-130%); } to { transform: translateX(380%); } }
