@@ -20,7 +20,7 @@ describe('길에서 줍는 아이템', () => {
       if (!a) continue
       expect(a.y).toBeGreaterThanOrEqual(GROUND.minY)
       expect(a.y).toBeLessThanOrEqual(GROUND.maxY)
-      expect(Math.abs(a.x - gateX(c))).toBeGreaterThanOrEqual(150)
+      for (const k of [c - 1, c, c + 1]) if (k >= 0) expect(Math.abs(a.x - gateX(k))).toBeGreaterThanOrEqual(150)
       expect(Math.floor(a.x / CHUNK_W)).toBeGreaterThanOrEqual(c)
     }
   })
