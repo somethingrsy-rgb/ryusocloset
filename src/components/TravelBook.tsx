@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { CATEGORY_LABEL, useI18n } from '../i18n'
-import { PLACES, currentAssignment, travelPool, isFound, resetGame, setLock } from '../lib/game'
+import { PLACES, currentAssignment, travelFindable, isFound, resetGame, setLock } from '../lib/game'
 import { assetUrl } from '../lib/items'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import type { Outfit } from '../lib/types'
@@ -42,7 +42,7 @@ export function TravelBook({ outfit, onToggle }: { outfit: Outfit; onToggle: (id
     for (const p of PLACES) for (const id of assign[p.id] ?? []) m[id] = lang === 'ko' ? p.ko : p.en
     return m
   }, [assign, lang])
-  const pool = travelPool()
+  const pool = travelFindable()
   const got = pool.filter((i) => isFound(i.id)).length
 
   return (

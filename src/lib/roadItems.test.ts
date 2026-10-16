@@ -31,3 +31,19 @@ describe('길에서 줍는 아이템', () => {
     expect(roadSpot(c)).toBeNull()
   })
 })
+
+import { currentAssignment, travelFindable, travelPool } from './game'
+import { ITEM_BY_ID } from './items'
+
+describe('테마옷은 상점 전용', () => {
+  it('상점에는 있고, 여행에서 찾는 목록·장소·길에는 없다', () => {
+    expect(travelPool().some((i) => i.category === 'costume')).toBe(true)
+    expect(travelFindable().some((i) => i.category === 'costume')).toBe(false)
+    const placed = Object.values(currentAssignment()).flat()
+    expect(placed.some((id) => ITEM_BY_ID[id]?.category === 'costume')).toBe(false)
+    for (let c = 0; c < 80; c++) {
+      const a = roadSpot(c)
+      if (a) expect(ITEM_BY_ID[a.id]?.category).not.toBe('costume')
+    }
+  })
+})

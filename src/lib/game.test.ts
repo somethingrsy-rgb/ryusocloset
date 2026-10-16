@@ -38,7 +38,7 @@ describe('여행 게임', () => {
     const oldPool = ITEMS.filter(i => !!i.native && !i.id.startsWith('custom_') && ['costume', 'accessory', 'wand', 'shoes', 'bag', 'outer', 'dress'].includes(i.category))
     const oldAssignment = assignPlaces(oldPool.map(i => i.id))
     const current = currentAssignment()
-    const eligible = new Set(ITEMS.filter(inPool).map(i => i.id))
+    const eligible = new Set(ITEMS.filter(i => inPool(i) && i.category !== 'costume').map(i => i.id))
     for (const place of PLACES) expect(current[place.id].filter(id => eligible.has(id))).toEqual(oldAssignment[place.id].filter(id => eligible.has(id)))
     expect(Object.values(current).flat().some(id => dresses.some(d => d.id === id))).toBe(false)
   })
@@ -185,7 +185,7 @@ describe('테마 소품 수집과 낮밤 전환', () => {
     expect(props.length).toBeGreaterThan(0)
     const assign = currentAssignment()
     for (const prop of props) expect(assign[prop.theme!]).toContain(prop.id)
-    expect(Object.values(assign).flat().sort()).toEqual(pool.map(i => i.id).sort())
+    expect(Object.values(assign).flat().sort()).toEqual(pool.filter(i => i.category !== 'costume').map(i => i.id).sort())
     expect(inRoomPool({ id: 'customroom_1', theme: 'spring' })).toBe(false)
   })
   it('찾은 소품을 기존 수집 기록과 함께 해제한다', () => {
