@@ -233,7 +233,7 @@ button:focus-visible {
 @media (prefers-reduced-motion: reduce) { .farm-walk { animation: none; } }
 
 /* 따뜻한 베이지톤: 농장·여행길 그림에 입힌다 (세기는 이 한 줄만 고치면 된다) */
-.warm-tone { filter: sepia(0.2) saturate(0.9) brightness(1.07) contrast(0.95); }
+.warm-tone { filter: sepia(0.3) saturate(0.84) brightness(1.1) contrast(0.92); }
 
 /* 농장 장식 움직임 */
 @keyframes fx-cloud { from { transform: translateX(-130%); } to { transform: translateX(380%); } }
