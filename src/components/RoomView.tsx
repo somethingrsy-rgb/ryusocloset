@@ -119,7 +119,12 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     roomRef.current?.focus({ preventScroll: true })
-    ;(e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId)
+    const box = e.currentTarget as HTMLDivElement
+    // 손가락을 뗐다는 신호(pointerup)를 못 받은 낡은 터치가 남아 있으면 지운다.
+    // 안 지우면 손가락 하나로 눌러도 두 손가락(확대·축소)으로 잘못 읽혀서 크기만 바뀌고 이동이 안 된다.
+    for (const id of [...pointers.current.keys()]) if (!box.hasPointerCapture(id)) pointers.current.delete(id)
+    if (pointers.current.size === 0) { pinch.current = null; drag.current = null }
+    box.setPointerCapture(e.pointerId)
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (pointers.current.size === 2 && selection) {
       const [a, b] = [...pointers.current.values()]
@@ -237,6 +242,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
           onPointerMove={onPointerMove}
           onPointerUp={onPointerEnd}
           onPointerCancel={onPointerEnd}
+          onLostPointerCapture={onPointerEnd}
           onKeyDown={onKeyDown}
           onWheel={(e) => selection && onChange(scaleBy(room, selection, Math.exp(-e.deltaY * 0.0015)))}
           className="relative isolate touch-none outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blush-deep/70"
