@@ -122,7 +122,7 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
       {/* 그림 아래 남는 자리: 그림 맨 아래 풀밭 색에서 연두색으로 부드럽게 이어지는 그라데이션 */}
       {!wide && <div aria-hidden className="absolute inset-x-0 bottom-0" style={{ top: 'calc(min(150cqw, 100cqh) - 3rem)', background: 'linear-gradient(to bottom, #9bad3f 0%, #aac24f 30%, #b9d77a 100%)' }} />}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 select-none" style={{ width: wide ? 'min(100cqw, calc(100cqh * 1024 / 1536))' : 'min(100cqw, calc((100cqh - 11rem) / 1.08))', aspectRatio: '1024 / 1536', WebkitMaskImage: wide ? 'linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, #000 95%, transparent 100%)' : 'linear-gradient(to bottom, #000 95%, transparent 100%)', WebkitMaskComposite: 'source-in', maskImage: wide ? 'linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, #000 95%, transparent 100%)' : 'linear-gradient(to bottom, #000 95%, transparent 100%)', maskComposite: 'intersect' }}>
-        <img src={assetUrl('assets/farm/bg.webp')} alt="" className="warm-tone absolute inset-0 h-full w-full" draggable={false} />
+        <img src={assetUrl('assets/farm/bg.webp')} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
         <FarmFx />
 
         {/* 노점: 눌러서 주민의 부탁·바구니 팔기 */}
@@ -141,7 +141,7 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
           const wet = !!plot && plot.wateredAt !== null && !ready
           const label = !plot ? (ko ? `${i + 1}번 밭 심기` : `Plant in plot ${i + 1}`) : plot.wateredAt === null ? (ko ? `${i + 1}번 밭 물 주기` : `Water plot ${i + 1}`) : ready ? (ko ? `${i + 1}번 밭 수확하기` : `Harvest plot ${i + 1}`) : (ko ? `${i + 1}번 밭 자라는 중` : `Plot ${i + 1} growing`)
           return (
-            <div key={i} className="warm-tone pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${y}%`, width: `${TILE_W}%`, height: `${TILE_H}%`, zIndex: 2 + r }}>
+            <div key={i} className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${y}%`, width: `${TILE_W}%`, height: `${TILE_H}%`, zIndex: 2 + r }}>
               <FarmImg name={wet ? 'plot_wet' : 'plot_dry'} emoji="🟫" className="absolute inset-0 h-full w-full" style={{ objectFit: 'fill' }} />
               {plot && crop && [{ x: 67, b: 40 }, { x: 34, b: 27 }].map((pos) => (
                 <FarmImg key={pos.x} name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute -translate-x-1/2" style={{ left: `${pos.x}%`, bottom: `${pos.b}%`, width: `${CROP_BOX[crop.id][0] / 500 * 36}%`, aspectRatio: `${CROP_BOX[crop.id][0]} / ${CROP_BOX[crop.id][1]}`, objectFit: 'contain', objectPosition: 'bottom' }} />
