@@ -232,6 +232,9 @@ button:focus-visible {
 .farm-walk { animation: farm-walk 0.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .farm-walk { animation: none; } }
 
+/* 따뜻한 베이지톤: 농장·여행길 그림에 입힌다 (세기는 이 한 줄만 고치면 된다) */
+.warm-tone { filter: sepia(0.2) saturate(0.9) brightness(1.07) contrast(0.95); }
+
 /* 농장 장식 움직임 */
 @keyframes fx-cloud { from { transform: translateX(-130%); } to { transform: translateX(380%); } }
 @keyframes fx-fly-a { 0%, 100% { transform: translate(0, 0) rotate(8deg); } 25% { transform: translate(260%, -140%) rotate(-10deg); } 50% { transform: translate(560%, 60%) rotate(12deg); } 75% { transform: translate(260%, 220%) rotate(-8deg); } }
