@@ -4,20 +4,20 @@ import { PLACES } from './game'
  * 끝없이 이어지는 맵. 맵은 구간(chunk)으로 나뉘고, 오른쪽으로 걸어가 끝이 가까워지면 새 구간이 이어 붙는다.
  * 구간 i 의 테마는 PLACES[i % 10] (한 바퀴 돌면 처음 테마가 다시 나온다). 화면 높이에 맞춰 논리 px 로 통째로 확대·축소해서 보여준다.
  */
-export const CHUNK_W = 1254
+export const CHUNK_W = 1248
 export const WORLD_H = 800
 export const MIN_CHUNKS = 10
 export const GROUND = { minY: 585, maxY: 735 }
 export const DOOR_Y = 560
 /**
- * 길 배경 그림 한 장(원본 가로 13510, 1.3배로 키워 TILE_W)에 집이 14채 있고, 집 하나가 장소 하나다 (구간 14개 = 그림 한 장, 장소 10곳이 계속 돈다).
- * 그림은 봄 → 숲속 요정 → 앨리스 → 가을 마을 순서로 이어지고, 오른쪽 끝과 왼쪽 끝도 이어져서 그대로 반복해 붙인다.
+ * 길 배경 그림 한 장(원본 가로 19200, 1.3배로 키워 TILE_W)에 집이 20채 있고, 집 하나가 장소 하나다 (구간 20개 = 그림 한 장, 장소 10곳이 두 번 돈다).
+ * 그림은 봄 → 숲속 요정 → 앨리스 → 궁전 → 가을 → 할로윈 → 크리스마스 쿠키집 순서로 이어지고, 오른쪽 끝과 왼쪽 끝도 이어져서 그대로 반복해 붙인다.
  * HOUSE_X 는 그림 속 집 문의 x (원본 기준). 웹 그림 한 장은 가로 16383px 까지라 그림을 조각(ROAD_PARTS 개)으로 나눠 쓴다.
  */
-export const TILE_W = 17563
-export const ROAD_PART = 6755 // 그림 한 조각의 원본 가로
+export const TILE_W = 24960
+export const ROAD_PART = 9600 // 그림 한 조각의 원본 가로
 export const ROAD_PARTS = 2
-const HOUSE_X = [720, 1280, 2540, 3300, 4535, 5195, 6425, 7185, 8310, 9115, 10260, 11025, 12280, 12960]
+const HOUSE_X = [720, 1280, 2530, 3290, 4515, 5175, 6395, 7155, 8270, 9075, 10065, 11100, 12130, 12895, 14140, 14820, 15920, 16895, 17865, 18765]
 
 export const worldWidth = (chunks: number) => chunks * CHUNK_W
 
