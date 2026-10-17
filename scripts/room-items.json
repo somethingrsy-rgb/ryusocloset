@@ -369,5 +369,257 @@
     "baseWidth": 150,
     "x": 760,
     "y": 1340
+  },
+  "furniture_dream_moon_cloud": {
+    "ko": "잠자는 달",
+    "en": "Sleepy Moon",
+    "baseWidth": 200,
+    "x": 250,
+    "y": 1320
+  },
+  "furniture_dream_purple_cloud": {
+    "ko": "보라 별구름",
+    "en": "Purple Star Cloud",
+    "baseWidth": 220,
+    "x": 370,
+    "y": 1320
+  },
+  "furniture_dream_puppy_cloud": {
+    "ko": "구름 위 강아지",
+    "en": "Puppy on Cloud",
+    "baseWidth": 220,
+    "x": 490,
+    "y": 1320
+  },
+  "furniture_dream_dream_jar": {
+    "ko": "드림 병",
+    "en": "Dream Jar",
+    "baseWidth": 170,
+    "x": 610,
+    "y": 1320
+  },
+  "wall_dream_sweet_dreams_sign": {
+    "ko": "스위트 드림 푯말",
+    "en": "Sweet Dreams Sign",
+    "baseWidth": 230,
+    "x": 860,
+    "y": 520
+  },
+  "furniture_dream_notes": {
+    "ko": "노트",
+    "en": "Notes",
+    "baseWidth": 150,
+    "x": 850,
+    "y": 1320
+  },
+  "furniture_dream_sleepy_bunny": {
+    "ko": "잠옷 토끼",
+    "en": "Sleepy Bunny",
+    "baseWidth": 200,
+    "x": 250,
+    "y": 1320
+  },
+  "furniture_dream_book_stack": {
+    "ko": "책 더미",
+    "en": "Book Stack",
+    "baseWidth": 220,
+    "x": 370,
+    "y": 1320
+  },
+  "furniture_dream_star_lollipop": {
+    "ko": "별 막대사탕",
+    "en": "Star Lollipop",
+    "baseWidth": 130,
+    "x": 490,
+    "y": 1320
+  },
+  "furniture_dream_sleepy_bear": {
+    "ko": "잠자는 곰",
+    "en": "Sleepy Bear",
+    "baseWidth": 240,
+    "x": 610,
+    "y": 1320
+  },
+  "furniture_dream_cocoa_mug": {
+    "ko": "별 코코아 머그",
+    "en": "Star Cocoa Mug",
+    "baseWidth": 150,
+    "x": 730,
+    "y": 1320
+  },
+  "wall_dream_star_mobile": {
+    "ko": "별 모빌",
+    "en": "Star Mobile",
+    "baseWidth": 220,
+    "x": 440,
+    "y": 520
+  },
+  "furniture_dream_envelope": {
+    "ko": "별 편지",
+    "en": "Star Letter",
+    "baseWidth": 190,
+    "x": 250,
+    "y": 1320
+  },
+  "furniture_dream_snow_globe": {
+    "ko": "달 스노우볼",
+    "en": "Moon Snow Globe",
+    "baseWidth": 190,
+    "x": 370,
+    "y": 1320
+  },
+  "furniture_dream_alarm_clock": {
+    "ko": "알람시계",
+    "en": "Alarm Clock",
+    "baseWidth": 170,
+    "x": 490,
+    "y": 1320
+  },
+  "furniture_dream_rainbow_cloud": {
+    "ko": "무지개 구름",
+    "en": "Rainbow Cloud",
+    "baseWidth": 220,
+    "x": 610,
+    "y": 1320
+  },
+  "furniture_dream_moon_bear": {
+    "ko": "달 위의 곰",
+    "en": "Bear on Moon",
+    "baseWidth": 230,
+    "x": 730,
+    "y": 1320
+  },
+  "wall_dream_todo_list": {
+    "ko": "할 일 목록",
+    "en": "To-do List",
+    "baseWidth": 180,
+    "x": 580,
+    "y": 520
+  },
+  "furniture_dream_smile_cloud": {
+    "ko": "웃는 구름",
+    "en": "Smiling Cloud",
+    "baseWidth": 200,
+    "x": 250,
+    "y": 1320
+  },
+  "wall_dream_goodnight_stamp": {
+    "ko": "굿나잇 우표",
+    "en": "Good Night Stamp",
+    "baseWidth": 170,
+    "x": 860,
+    "y": 520
+  },
+  "furniture_dream_sleep_mask": {
+    "ko": "수면 안대",
+    "en": "Sleep Mask",
+    "baseWidth": 170,
+    "x": 490,
+    "y": 1320
+  },
+  "furniture_dream_lavender": {
+    "ko": "라벤더 꽃다발",
+    "en": "Lavender Bouquet",
+    "baseWidth": 170,
+    "x": 610,
+    "y": 1320
+  },
+  "furniture_dream_dream_bed": {
+    "ko": "구름 침대",
+    "en": "Cloud Bed",
+    "baseWidth": 560,
+    "x": 730,
+    "y": 1320
+  },
+  "wall_dream_night_window": {
+    "ko": "밤 창문",
+    "en": "Night Window",
+    "baseWidth": 360,
+    "x": 720,
+    "y": 520
+  },
+  "furniture_dream_stardust_jar": {
+    "ko": "별가루 병",
+    "en": "Stardust Jar",
+    "baseWidth": 170,
+    "x": 250,
+    "y": 1320
+  },
+  "furniture_dream_night_light": {
+    "ko": "수면 캔들",
+    "en": "Night Light",
+    "baseWidth": 170,
+    "x": 370,
+    "y": 1320
+  },
+  "furniture_dream_dream_bag": {
+    "ko": "드림 가방",
+    "en": "Dream Bag",
+    "baseWidth": 200,
+    "x": 490,
+    "y": 1320
+  },
+  "furniture_dream_daydream_diary": {
+    "ko": "데이드림 일기장",
+    "en": "Daydream Diary",
+    "baseWidth": 210,
+    "x": 610,
+    "y": 1320
+  },
+  "furniture_dream_sheep": {
+    "ko": "양 인형",
+    "en": "Sheep Plush",
+    "baseWidth": 210,
+    "x": 730,
+    "y": 1320
+  },
+  "furniture_dream_sleep_puff": {
+    "ko": "잠자는 솜뭉치",
+    "en": "Sleepy Puff",
+    "baseWidth": 210,
+    "x": 850,
+    "y": 1320
+  },
+  "furniture_dream_camera": {
+    "ko": "카메라",
+    "en": "Camera",
+    "baseWidth": 180,
+    "x": 250,
+    "y": 1320
+  },
+  "furniture_dream_headphones": {
+    "ko": "헤드폰",
+    "en": "Headphones",
+    "baseWidth": 170,
+    "x": 370,
+    "y": 1320
+  },
+  "furniture_dream_pen_cup": {
+    "ko": "연필꽂이",
+    "en": "Pen Cup",
+    "baseWidth": 150,
+    "x": 490,
+    "y": 1320
+  },
+  "furniture_dream_moon_cloud_nap": {
+    "ko": "달과 구름",
+    "en": "Moon and Clouds",
+    "baseWidth": 230,
+    "x": 610,
+    "y": 1320
+  },
+  "furniture_dream_nightstand": {
+    "ko": "협탁 조명",
+    "en": "Nightstand Lamp",
+    "baseWidth": 270,
+    "x": 730,
+    "y": 1320
+  },
+  "furniture_dream_dream_milk": {
+    "ko": "드림 우유",
+    "en": "Dream Milk",
+    "baseWidth": 130,
+    "x": 850,
+    "y": 1320
   }
 }
