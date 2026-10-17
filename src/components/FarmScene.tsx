@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
-import { actFarm, CROPS, getFarm, growth, orderCrop, plotPrice, subscribeFarm, ZONE_PLOTS, ZONES, type CropId, type FarmAction } from '../lib/farm'
+import { actFarm, CROPS, getFarm, growth, orderCrop, PLOT_COUNT, plotPrice, subscribeFarm, type CropId, type FarmAction } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { FarmFx } from './FarmFx'
@@ -10,25 +10,30 @@ import { PILL, PillText } from './pill'
 
 type Tool = 'seed' | 'water' | 'harvest'
 
-/** 밭 9칸: 오른쪽으로 기운 평행사변형. 위 줄일수록 오른쪽으로 밀려 전체가 비스듬한 밭이 된다 (배경 그림 기준 %) */
-const TILE_W = 23.5
-const U = TILE_W / 1433 // 그림 가로 1px 이 장면 가로의 몇 %인지
-const TILE_H = 646 * U * (1024 / 1536)
-const BODY_W = 1152 * U // 아래쪽 변 길이 (위쪽 변도 같음: 진짜 평행사변형)
-const PITCH = BODY_W + 0.5 // 옆 밭과의 틈 0.5%
-const ROW_PITCH = TILE_H + 0.35 // 위아래 밭과의 틈
-const SHEAR = 281 * U * (ROW_PITCH / TILE_H) // 한 줄 올라갈 때 오른쪽으로 밀리는 양 (옆 변의 기울기와 같음)
-const ROW_Y = [0, 1, 2].map((r) => 65.8 - (2 - r) * ROW_PITCH)
-const FIRST_X = 24.5
-const AVATAR_W = 19
-const HOME = { x: 0.5, y: 37, z: 3 }
-/** 땅 세 구역(왼쪽·가운데·오른쪽)을 옆으로 이어 붙인 모양. 구역 번호 0·1·2 = 그림 순서, 밭 번호의 시작 */
-const ZONE_IMG = ['farm_left', 'bg', 'farm_right'] as const
-const ZONE_BASE = [ZONE_PLOTS, 0, ZONE_PLOTS * 2] as const
-const CENTER = 1
-/** 밭 번호가 속한 구역(그림 순서): 0~8 가운데, 9~17 왼쪽, 18~26 오른쪽 */
-const zoneOfPlot = (i: number) => (i < ZONE_PLOTS ? CENTER : i < ZONE_PLOTS * 2 ? 0 : 2)
-const ZONE_NAME = [{ ko: '왼쪽 땅', en: 'Left field' }, { ko: '처음 땅', en: 'Home field' }, { ko: '오른쪽 땅', en: 'Right field' }] as const
+/**
+ * 농장 그림은 두 장: 가로 화면용(1586×992)과 폰 세로용(1024×1536). 둘 다 가운데부터 아래까지 하나로 이어진 넓은 풀밭이 있고
+ * 거기에 밭 45칸(앞 9칸은 무료, 나머지는 코인으로 구매)을 놓는다. 좌표는 모두 그림 안의 px.
+ * 밭 칸은 오른쪽으로 기운 평행사변형 그림(1433×646)이고, 풀밭 크기에 맞춰 칸 폭(tw)과 밭 덩어리 가운데(cx, cy)를 정한다.
+ */
+const LAYOUT = {
+  portrait: { img: 'farm_portrait', w: 1024, h: 1536, cols: 5, rows: 9, cx: 512, cy: 850, tw: 150, avatarH: 19, home: { x: 44, y: 12 }, stall: { left: '67%', top: '14%', width: '18%', height: '14%' } },
+  wide: { img: 'farm_wide', w: 1586, h: 992, cols: 9, rows: 5, cx: 720, cy: 560, tw: 135, avatarH: 22, home: { x: 41, y: 12 }, stall: { left: '63%', top: '17%', width: '12%', height: '20%' } },
+} as const
+type Layout = (typeof LAYOUT)[keyof typeof LAYOUT]
+/** 밭 한 칸의 가운데 위치(그림 가로·세로 %)와 칸 크기(%) */
+function plotBox(i: number, L: Layout) {
+  const r = Math.floor(i / L.cols)
+  const c = i % L.cols
+  const th = (L.tw * 646) / 1433
+  const rowPitch = th + 3
+  const shear = (281 / 1433) * L.tw * (rowPitch / th)
+  const pitch = (1152 / 1433) * L.tw + 4
+  const x = L.cx + (c - (L.cols - 1) / 2) * pitch + ((L.rows - 1) / 2 - r) * shear
+  const y = L.cy + (r - (L.rows - 1) / 2) * rowPitch
+  return { x: (x / L.w) * 100, y: (y / L.h) * 100, w: (L.tw / L.w) * 100, h: (th / L.h) * 100, row: r }
+}
+/** 아바타 크기: 높이가 그림 높이의 avatarH% 가 되도록 가로 %를 구한다 */
+const avatarWidth = (L: Layout) => (L.avatarH * (1024 / 1536)) / (L.w / L.h)
 /** 작물 그림 한 장의 크기(px). 가로 500 = 칸 폭의 48% */
 const CROP_BOX: Record<string, [number, number]> = { carrot: [568, 499], strawberry: [578, 453], corn: [505, 619] }
 
@@ -51,17 +56,15 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
   const [now, setNow] = useState(Date.now)
   const [notice, setNotice] = useState('')
   const [stall, setStall] = useState(false)
-  const [zone, setZone] = useState<number>(CENTER)
   const [buying, setBuying] = useState<number | null>(null)
-  const swipe = useRef<{ x: number; at: number } | null>(null)
-  const swiped = useRef(0)
-  const [pos, setPos] = useState({ ...HOME, zone: CENTER })
+  const [homeKey, setHomeKey] = useState<'portrait' | 'wide'>('portrait')
+  const [pos, setPos] = useState<{ x: number; y: number; z: number } | null>(null)
   const [walking, setWalking] = useState(false)
   const [watering, setWatering] = useState(false)
   const [hold, setHold] = useState<'can' | 'basket' | 'seed'>('can')
   const busy = useRef(false)
   const secRef = useRef<HTMLElement>(null)
-  const [wide, setWide] = useState(false) // 가로로 넓은 화면(패드 가로 등): 세 구역을 한 번에 넓게 보여 주고 버튼은 오른쪽 옆에 둔다
+  const [wide, setWide] = useState(false) // 가로로 넓은 화면(패드 가로 등): 가로 그림을 쓰고 도구 버튼을 오른쪽에 세로로 얹는다
   useEffect(() => {
     const el = secRef.current
     if (!el) return
@@ -82,15 +85,13 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
     return result === 'saved'
   }
 
-  const goZone = (z: number) => {
-    if (wide || busy.current || z < 0 || z >= ZONES || z === zone) return
-    setBuying(null)
-    setZone(z)
-    setPos({ ...HOME, zone: z })
-  }
+  const L = wide ? LAYOUT.wide : LAYOUT.portrait
+  const aw = avatarWidth(L)
+  /** 아바타는 처음에는 건물 사이 빈 자리에 서 있고, 화면 방향(가로/세로)이 바뀌면 그 그림의 처음 자리로 돌아간다 */
+  const here = pos && homeKey === (wide ? 'wide' : 'portrait') ? pos : { x: L.home.x, y: L.home.y, z: 3 }
+  useEffect(() => { const k = wide ? 'wide' : 'portrait'; if (k !== homeKey) { setHomeKey(k); setPos(null) } }, [wide, homeKey])
 
   const tapPlot = (i: number) => {
-    if (Date.now() - swiped.current < 350) return // 밀어서 넘기는 중에는 밭을 누른 것으로 치지 않는다
     if (!farm.owned[i]) { setBuying(i); setTool(null); setPicker(false); return }
     setBuying(null)
     const plot = farm.plots[i]
@@ -103,14 +104,11 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
     if (!need) { setNotice(ko ? '자라는 중이에요' : 'Still growing'); return }
     if (busy.current) return
     busy.current = true
-    const local = i % ZONE_PLOTS
-    const r = Math.floor(local / 3)
-    const px = FIRST_X + SHEAR * (2 - r) + (local % 3) * PITCH
-    const py = ROW_Y[r]
+    const box = plotBox(i, L)
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
     setHold(need === 'harvest' ? 'basket' : need === 'seed' ? 'seed' : 'can')
     setWalking(true)
-    setPos({ x: px - AVATAR_W / 2, y: py + TILE_H * 0.5 - AVATAR_W, z: 10, zone: wide ? zoneOfPlot(i) : zone })
+    setPos({ x: box.x - aw / 2, y: box.y + box.h / 2 - L.avatarH, z: 10 })
     later(() => {
       setWalking(false)
       if (need === 'water') setWatering(true)
@@ -141,59 +139,42 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
 
   return (
     <section ref={secRef} aria-label={ko ? '나의 작은 농장' : 'My little farm'} className="relative h-full overflow-hidden rounded-3xl bg-[#b9d77a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
-      {/* 그림 아래 남는 자리: 그림 맨 아래 풀밭 색에서 연두색으로 부드럽게 이어지는 그라데이션 */}
+      {/* 그림 아래 남는 자리(폰 세로): 그림 맨 아래 풀밭 색에서 연두색으로 부드럽게 이어지는 그라데이션 */}
       {!wide && <div aria-hidden className="absolute inset-x-0 bottom-0" style={{ top: 'calc(min(150cqw, 100cqh) - 3rem)', background: 'linear-gradient(to bottom, #9bad3f 0%, #aac24f 30%, #b9d77a 100%)' }} />}
-      <div className={`absolute overflow-hidden select-none ${wide ? 'top-1/2 left-0 -translate-y-1/2' : 'top-0 left-1/2 -translate-x-1/2'}`} style={wide ? { width: 'min(calc(100cqw - 15rem), 200cqh)', aspectRatio: '2 / 1' } : { width: 'min(100cqw, calc((100cqh - 11rem) / 1.08))', aspectRatio: '1024 / 1536', WebkitMaskImage: 'linear-gradient(to bottom, #000 95%, transparent 100%)', maskImage: 'linear-gradient(to bottom, #000 95%, transparent 100%)' }}>
-        <div
-          className="absolute top-0 left-0 h-full"
-          style={{ width: wide ? '100%' : `${ZONES * 100}%`, transform: wide ? undefined : `translateX(-${(zone * 100) / ZONES}%)`, transition: 'transform 0.6s ease-in-out', touchAction: 'pan-y' }}
-          onPointerDown={(e) => { swipe.current = { x: e.clientX, at: Date.now() } }}
-          onPointerUp={(e) => {
-            const s0 = swipe.current; swipe.current = null
-            if (!s0) return
-            const dx = e.clientX - s0.x
-            if (Math.abs(dx) > 70 && Date.now() - s0.at < 900) { swiped.current = Date.now(); goZone(zone + (dx < 0 ? 1 : -1)) }
-          }}
-        >
-          {ZONE_IMG.map((img, z) => (
-            <div key={img} className="absolute top-0 h-full" style={{ left: `${(z * 100) / ZONES}%`, width: `${100 / ZONES}%` }}>
-              <img src={assetUrl(`assets/farm/${img}.webp`)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
-              {z === CENTER && <FarmFx />}
-              {/* 노점: 눌러서 주민의 부탁·바구니 팔기 */}
-              {z === CENTER && (
-                <button aria-label={ko ? '노점' : 'Market stall'} className="absolute rounded-2xl" style={{ left: '76%', top: '27%', width: '24%', height: '22%' }} onClick={() => setStall(true)}>
-                  <span className="absolute -top-1 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-bold shadow">{ko ? '주문' : 'Orders'} · {farm.inventory[order.id]}/2</span>
-                </button>
+      <div className={`absolute overflow-hidden select-none ${wide ? 'top-1/2 left-0 -translate-y-1/2' : 'top-0 left-1/2 -translate-x-1/2'}`} style={wide ? { width: 'min(100cqw, calc(100cqh * 1586 / 992))', aspectRatio: '1586 / 992' } : { width: 'min(100cqw, calc((100cqh - 11rem) / 1.08))', aspectRatio: '1024 / 1536', WebkitMaskImage: 'linear-gradient(to bottom, #000 95%, transparent 100%)', maskImage: 'linear-gradient(to bottom, #000 95%, transparent 100%)' }}>
+        <img src={assetUrl(`assets/farm/${L.img}.webp`)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
+        <FarmFx />
+        {/* 노점: 눌러서 주민의 부탁·바구니 팔기 */}
+        <button aria-label={ko ? '노점' : 'Market stall'} className="absolute rounded-2xl" style={L.stall} onClick={() => setStall(true)}>
+          <span className="absolute -top-1 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-bold shadow">{ko ? '주문' : 'Orders'} · {farm.inventory[order.id]}/2</span>
+        </button>
+        {/* 밭 45칸 */}
+        {Array.from({ length: PLOT_COUNT }, (_, i) => {
+          const box = plotBox(i, L)
+          const plot = farm.plots[i]
+          const mine = farm.owned[i]
+          const progress = growth(plot, now)
+          const ready = progress === 1
+          const crop = plot ? CROPS.find((cr) => cr.id === plot.crop)! : null
+          const wet = !!plot && plot.wateredAt !== null && !ready
+          const label = !mine ? (ko ? `새 밭 사기 (${plotPrice(farm)}코인)` : `Buy plot (${plotPrice(farm)} coins)`) : !plot ? (ko ? `${i + 1}번 밭 심기` : `Plant in plot ${i + 1}`) : plot.wateredAt === null ? (ko ? `${i + 1}번 밭 물 주기` : `Water plot ${i + 1}`) : ready ? (ko ? `${i + 1}번 밭 수확하기` : `Harvest plot ${i + 1}`) : (ko ? `${i + 1}번 밭 자라는 중` : `Plot ${i + 1} growing`)
+          return (
+            <div key={i} className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${box.x}%`, top: `${box.y}%`, width: `${box.w}%`, height: `${box.h}%`, zIndex: 2 + box.row, opacity: mine ? 1 : 0.55 }}>
+              <FarmImg name={wet ? 'plot_wet' : 'plot_dry'} emoji="🟫" className="absolute inset-0 h-full w-full" style={{ objectFit: 'fill' }} />
+              {plot && crop && [{ x: 67, b: 40 }, { x: 34, b: 27 }].map((pp) => (
+                <FarmImg key={pp.x} name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute -translate-x-1/2" style={{ left: `${pp.x}%`, bottom: `${pp.b}%`, width: `${CROP_BOX[crop.id][0] / 500 * 36}%`, aspectRatio: `${CROP_BOX[crop.id][0]} / ${CROP_BOX[crop.id][1]}`, objectFit: 'contain', objectPosition: 'bottom' }} />
+              ))}
+              {plot && (plot.wateredAt === null || ready) && (
+                <span aria-hidden className={`absolute left-1/2 -translate-x-1/2 text-lg leading-none drop-shadow ${ready ? 'animate-bounce' : ''}`} style={{ bottom: '8%' }}>{ready ? '✨' : '💧'}</span>
               )}
-              {/* 밭 9칸 (구역마다) */}
-              {ROW_Y.map((y, r) => [0, 1, 2].map((c) => {
-                const i = ZONE_BASE[z] + r * 3 + c
-                const mine = farm.owned[i]
-                const x = FIRST_X + SHEAR * (2 - r) + c * PITCH
-                const plot = farm.plots[i]
-                const progress = growth(plot, now)
-                const ready = progress === 1
-                const crop = plot ? CROPS.find((cr) => cr.id === plot.crop)! : null
-                const wet = !!plot && plot.wateredAt !== null && !ready
-                const label = !mine ? (ko ? `새 밭 사기 (${plotPrice(farm)}코인)` : `Buy plot (${plotPrice(farm)} coins)`) : !plot ? (ko ? `${i + 1}번 밭 심기` : `Plant in plot ${i + 1}`) : plot.wateredAt === null ? (ko ? `${i + 1}번 밭 물 주기` : `Water plot ${i + 1}`) : ready ? (ko ? `${i + 1}번 밭 수확하기` : `Harvest plot ${i + 1}`) : (ko ? `${i + 1}번 밭 자라는 중` : `Plot ${i + 1} growing`)
-                return (
-                  <div key={i} className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${y}%`, width: `${TILE_W}%`, height: `${TILE_H}%`, zIndex: 2 + r, opacity: mine ? 1 : 0.5 }}>
-                    <FarmImg name={wet ? 'plot_wet' : 'plot_dry'} emoji="🟫" className="absolute inset-0 h-full w-full" style={{ objectFit: 'fill' }} />
-                    {plot && crop && [{ x: 67, b: 40 }, { x: 34, b: 27 }].map((pos) => (
-                      <FarmImg key={pos.x} name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute -translate-x-1/2" style={{ left: `${pos.x}%`, bottom: `${pos.b}%`, width: `${CROP_BOX[crop.id][0] / 500 * 36}%`, aspectRatio: `${CROP_BOX[crop.id][0]} / ${CROP_BOX[crop.id][1]}`, objectFit: 'contain', objectPosition: 'bottom' }} />
-                    ))}
-                    {plot && (plot.wateredAt === null || ready) && (
-                      <span aria-hidden className={`absolute left-1/2 -translate-x-1/2 text-lg leading-none drop-shadow ${ready ? 'animate-bounce' : ''}`} style={{ bottom: '8%' }}>{ready ? '✨' : '💧'}</span>
-                    )}
-                    {!mine && <span aria-hidden className="absolute inset-0 flex items-center justify-center text-xl drop-shadow">🔒</span>}
-                    <button aria-label={label} className="pointer-events-auto absolute inset-0" style={{ clipPath: 'polygon(19.6% 0, 100% 0, 80.4% 100%, 0 100%)' }} onClick={() => tapPlot(i)} />
-                  </div>
-                )
-              }))}
+              {!mine && <span aria-hidden className="absolute inset-0 flex items-center justify-center text-base drop-shadow">🔒</span>}
+              <button aria-label={label} className="pointer-events-auto absolute inset-0" style={{ clipPath: 'polygon(19.6% 0, 100% 0, 80.4% 100%, 0 100%)' }} onClick={() => tapPlot(i)} />
             </div>
-          ))}
-          {/* 내 아바타: 밭 옆까지 걸어가서 직접 물 주고 수확한다 */}
-        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${(pos.zone * 100 + pos.x) / ZONES}%`, top: `${pos.y}%`, width: `${AVATAR_W / ZONES}%`, aspectRatio: '1024 / 1536', zIndex: 10, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
+          )
+        })}
+
+        {/* 내 아바타: 밭 옆까지 걸어가서 직접 물 주고 수확한다 */}
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 10, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
           <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             {hold === 'can' ? (
@@ -204,12 +185,7 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
             {watering && <span className="absolute text-sm" style={{ left: '98%', top: '58%' }}>💧</span>}
           </div>
         </div>
-        </div>
 
-        {/* 옆 땅으로 가는 화살표 */}
-        {!wide && zone > 0 && <button aria-label={ko ? ZONE_NAME[zone - 1].ko : ZONE_NAME[zone - 1].en} onClick={() => goZone(zone - 1)} className="absolute top-1/2 left-1 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl shadow-md ring-1 ring-black/5" style={{ zIndex: 12 }}>◀</button>}
-        {!wide && zone < ZONES - 1 && <button aria-label={ko ? ZONE_NAME[zone + 1].ko : ZONE_NAME[zone + 1].en} onClick={() => goZone(zone + 1)} className="absolute top-1/2 right-1 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl shadow-md ring-1 ring-black/5" style={{ zIndex: 12 }}>▶</button>}
-        <p aria-hidden hidden={wide} className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-white/80 px-3 py-0.5 text-xs font-bold shadow" style={{ zIndex: 12 }}>{ko ? ZONE_NAME[zone].ko : ZONE_NAME[zone].en}</p>
         {buying !== null && (
           <div role="dialog" aria-label={ko ? '밭 사기' : 'Buy a plot'} className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-3xl bg-white/95 p-3 shadow-lg" style={{ top: '45%', zIndex: 14 }}>
             <span className="text-sm font-extrabold">{ko ? '새 밭' : 'New plot'} · {plotPrice(farm)}🪙</span>
@@ -227,9 +203,9 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
         {notice && <p role="status" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-xs font-bold shadow-md" style={{ top: '14%', maxWidth: '90%', zIndex: 13 }}>{notice}</p>}
       </div>
 
-      {/* 아래 도구 4개: 그림 아래 초록 바탕에 둔다 */}
-      <div className={`absolute flex flex-col items-center justify-center px-3 py-3 ${wide ? 'top-0 right-0 bottom-0' : 'inset-x-0 bottom-0'}`} style={wide ? { zIndex: 5, width: '15rem' } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
-        <div className={`flex w-full flex-col gap-3 ${wide ? 'max-w-[300px]' : 'max-w-[560px]'}`}>
+      {/* 도구 버튼: 폰은 그림 아래, 가로 화면은 그림 오른쪽 위에 세로 한 줄로 얹는다 */}
+      <div className={`absolute flex flex-col items-center justify-center px-3 py-3 ${wide ? 'top-0 right-0 bottom-0' : 'inset-x-0 bottom-0'}`} style={wide ? { zIndex: 15, width: '11rem' } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
+        <div className={`flex w-full flex-col gap-3 ${wide ? 'max-w-[170px]' : 'max-w-[560px]'}`}>
           {/* 씨앗 고르기 */}
           {picker && (
             <div className="flex justify-center gap-2 rounded-3xl bg-white/95 p-2 shadow-lg" role="radiogroup" aria-label={ko ? '씨앗 고르기' : 'Choose seeds'}>
@@ -243,24 +219,24 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
             </div>
           )}
 
-          {/* 아래 도구 4개 */}
-          <div className={wide ? 'grid grid-cols-2 gap-2' : 'flex gap-2'}>
+          {/* 도구 4개 */}
+          <div className={wide ? 'flex flex-col gap-2' : 'flex gap-2'}>
             {tools.map((t) => {
               const active = tool === t.id
               return (
-                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 flex-col items-center rounded-3xl border-2 px-1 pt-2 pb-2.5 shadow-md ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? onShop() : pick(t.id))}>
-                  <FarmImg name={t.icon} emoji={t.emoji} className="aspect-square w-[85%] object-contain" />
+                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 items-center rounded-3xl border-2 shadow-md ${wide ? 'flex-row gap-2 px-2 py-1.5' : 'flex-col px-1 pt-2 pb-2.5'} ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? onShop() : pick(t.id))}>
+                  <FarmImg name={t.icon} emoji={t.emoji} className={wide ? 'h-12 w-12 shrink-0 object-contain' : 'aspect-square w-[85%] object-contain'} />
                   <span className="text-sm font-extrabold text-[#6b4a2b]">{t[lang]}</span>
                 </button>
               )
             })}
           </div>
           {/* 수확량: 바구니에 든 작물 */}
-          <div className={`flex justify-center rounded-2xl bg-white/60 px-3 py-1.5 ${wide ? 'gap-2' : 'gap-4'}`} aria-label={ko ? '수확량' : 'Harvest count'}>
+          <div className={`flex justify-center rounded-2xl bg-white/80 px-2 py-1.5 ${wide ? 'gap-1.5' : 'gap-4'}`} aria-label={ko ? '수확량' : 'Harvest count'}>
             {CROPS.map((c) => (
-              <span key={c.id} className="flex items-center gap-1 text-sm font-extrabold text-[#6b4a2b]">
-                <FarmImg name={`harvest_${c.id}`} emoji={c.emoji} className="h-8 w-8 object-contain" />
-                × {farm.inventory[c.id]}
+              <span key={c.id} className="flex items-center gap-0.5 text-sm font-extrabold whitespace-nowrap text-[#6b4a2b]">
+                <FarmImg name={`harvest_${c.id}`} emoji={c.emoji} className={wide ? 'h-6 w-6 object-contain' : 'h-8 w-8 object-contain'} />
+                ×{farm.inventory[c.id]}
               </span>
             ))}
           </div>
