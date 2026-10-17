@@ -877,10 +877,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 171,
-      "y": 582,
-      "w": 682,
-      "h": 640
+      "x": 88,
+      "y": 595,
+      "w": 825,
+      "h": 774
     },
     "image": "assets/clothes/costume/costume_boy_purple_cape.webp",
     "thumb": "assets/thumbs/costume_boy_purple_cape.webp",
@@ -925,10 +925,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 171,
-      "y": 583,
-      "w": 682,
-      "h": 647
+      "x": 92,
+      "y": 595,
+      "w": 825,
+      "h": 783
     },
     "image": "assets/clothes/costume/costume_boy_white_gold.webp",
     "thumb": "assets/thumbs/costume_boy_white_gold.webp",
@@ -2773,10 +2773,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 141,
-      "y": 0,
-      "w": 732,
-      "h": 265
+      "x": 204,
+      "y": 31,
+      "w": 607,
+      "h": 219
     },
     "image": "assets/clothes/accessory/acc_ears_fox_blue.webp",
     "thumb": "assets/thumbs/acc_ears_fox_blue.webp",
@@ -2797,10 +2797,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 140,
-      "y": 0,
-      "w": 734,
-      "h": 265
+      "x": 204,
+      "y": 31,
+      "w": 607,
+      "h": 219
     },
     "image": "assets/clothes/accessory/acc_ears_fox_cream.webp",
     "thumb": "assets/thumbs/acc_ears_fox_cream.webp",
@@ -2821,10 +2821,10 @@
     },
     "colorHex": "#55565c",
     "box": {
-      "x": 140,
-      "y": 0,
-      "w": 734,
-      "h": 265
+      "x": 204,
+      "y": 31,
+      "w": 607,
+      "h": 219
     },
     "image": "assets/clothes/accessory/acc_ears_fox_dark.webp",
     "thumb": "assets/thumbs/acc_ears_fox_dark.webp",
@@ -2845,10 +2845,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 141,
-      "y": 0,
-      "w": 733,
-      "h": 266
+      "x": 204,
+      "y": 31,
+      "w": 607,
+      "h": 220
     },
     "image": "assets/clothes/accessory/acc_ears_fox_lavender.webp",
     "thumb": "assets/thumbs/acc_ears_fox_lavender.webp",
@@ -2869,10 +2869,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 140,
-      "y": 0,
-      "w": 734,
-      "h": 266
+      "x": 204,
+      "y": 31,
+      "w": 607,
+      "h": 220
     },
     "image": "assets/clothes/accessory/acc_ears_fox_pink.webp",
     "thumb": "assets/thumbs/acc_ears_fox_pink.webp",
@@ -2893,10 +2893,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 140,
-      "y": 0,
-      "w": 734,
-      "h": 266
+      "x": 204,
+      "y": 31,
+      "w": 607,
+      "h": 220
     },
     "image": "assets/clothes/accessory/acc_ears_fox_tan.webp",
     "thumb": "assets/thumbs/acc_ears_fox_tan.webp",
