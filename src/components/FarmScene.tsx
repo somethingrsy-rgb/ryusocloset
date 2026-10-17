@@ -204,8 +204,8 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
       </div>
 
       {/* 도구 버튼: 폰은 그림 아래, 가로 화면은 그림 오른쪽 위에 세로 한 줄로 얹는다 */}
-      <div className={`absolute flex flex-col items-center justify-center px-3 py-3 ${wide ? 'top-0 right-0 bottom-0' : 'inset-x-0 bottom-0'}`} style={wide ? { zIndex: 15, width: '11rem' } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
-        <div className={`flex w-full flex-col gap-3 ${wide ? 'max-w-[170px]' : 'max-w-[560px]'}`}>
+      <div className={`absolute flex flex-col items-center justify-center ${wide ? '' : 'inset-x-0 bottom-0 px-3 py-3'}`} style={wide ? { zIndex: 15, left: 'calc(min(100cqw, 160cqh) * 0.715)', width: 'calc(min(100cqw, 160cqh) * 0.235)', top: 'calc((100cqh - min(100cqw, 160cqh) / 1.5988) / 2 + min(100cqw, 160cqh) / 1.5988 * 0.37)' } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
+        <div className={`flex w-full flex-col gap-3 ${wide ? '' : 'max-w-[560px]'}`}>
           {/* 씨앗 고르기 */}
           {picker && (
             <div className="flex justify-center gap-2 rounded-3xl bg-white/95 p-2 shadow-lg" role="radiogroup" aria-label={ko ? '씨앗 고르기' : 'Choose seeds'}>
@@ -220,11 +220,11 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
           )}
 
           {/* 도구 4개 */}
-          <div className={wide ? 'flex flex-col gap-2' : 'flex gap-2'}>
+          <div className={wide ? 'grid grid-cols-2 gap-2' : 'flex gap-2'}>
             {tools.map((t) => {
               const active = tool === t.id
               return (
-                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 items-center rounded-3xl border-2 shadow-md ${wide ? 'flex-row gap-2 px-2 py-1.5' : 'flex-col px-1 pt-2 pb-2.5'} ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? onShop() : pick(t.id))}>
+                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 items-center rounded-3xl border-2 shadow-md ${wide ? 'flex-col px-1 py-1.5' : 'flex-col px-1 pt-2 pb-2.5'} ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? onShop() : pick(t.id))}>
                   <FarmImg name={t.icon} emoji={t.emoji} className={wide ? 'h-12 w-12 shrink-0 object-contain' : 'aspect-square w-[85%] object-contain'} />
                   <span className="text-sm font-extrabold text-[#6b4a2b]">{t[lang]}</span>
                 </button>
