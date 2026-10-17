@@ -33,13 +33,14 @@ interface Props {
   onDragOver: (over: boolean) => void
   /** '내 옷 추가' 버튼 */
   onAdd: () => void
+  split?: boolean
   /** 옷 삭제 (내가 추가한 옷은 진짜 삭제, 기본 옷은 목록에서 숨김) */
   onRemove: (item: Item) => void
   /** 이 카테고리에서 숨긴 옷 되돌리기 */
   onRestore: (items: Item[]) => void
 }
 
-export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dropRef, onDragOver, onAdd, onRemove, onRestore }: Props) {
+export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dropRef, onDragOver, onAdd, split, onRemove, onRestore }: Props) {
   useItemsVersion()
   useSyncExternalStore(subscribeGame, gameVersion)
   const { lang, t } = useI18n()
@@ -81,7 +82,7 @@ export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dro
       </div>
 
       <div role="tabpanel" className="scroll-thin min-h-0 flex-1 overflow-y-auto p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+        <ul className={`grid gap-2 ${split ? 'grid-cols-3 min-[1400px]:grid-cols-4' : 'grid-cols-4 sm:grid-cols-6'}`}>
           <li>
             <button
               onClick={onAdd}
