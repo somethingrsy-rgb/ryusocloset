@@ -390,7 +390,7 @@ export default function App() {
         </header>
 
         <div className={`flex min-h-0 flex-1 gap-2 ${split ? 'flex-row' : 'flex-col'}`}>
-          <div className={split ? 'relative h-full w-[58%] flex-none' : 'relative min-h-0 flex-1'}>
+          <div className={split ? `relative h-full flex-none ${mode === 'room' ? 'w-[65%]' : 'w-[58%]'}` : 'relative min-h-0 flex-1'}>
             {mode === 'closet' && (
               <button
                 onClick={() => setModal('hair')}
