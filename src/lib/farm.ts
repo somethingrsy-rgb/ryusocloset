@@ -7,8 +7,8 @@ export const CROPS = [
 export type CropId = (typeof CROPS)[number]['id']
 /** 처음부터 내 것인 밭 칸 수 (앞의 9칸). 나머지는 코인으로 한 칸씩 산다 */
 export const FREE_PLOTS = 9
-/** 밭 칸 전체 수: 넓은 풀밭 하나에 45칸 */
-export const PLOT_COUNT = 45
+/** 밭 칸 전체 수: 넓은 풀밭 하나에 36칸 */
+export const PLOT_COUNT = 36
 export interface Plot { crop: CropId; wateredAt: number | null }
 export interface FarmState {
   plots: (Plot | null)[]; /** 산 밭 칸 (앞의 9칸은 처음부터 true) */ owned: boolean[]; inventory: Record<CropId, number>; coins: number; deliveries: number; decorations: string[]
