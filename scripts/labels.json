@@ -1292,5 +1292,122 @@
     "category": "accessory",
     "color": "black",
     "native": true
+  },
+  "costume_mint_cape": {
+    "ko": "민트 망토 의상",
+    "en": "Mint Cape Outfit",
+    "category": "costume",
+    "color": "mint",
+    "native": true
+  },
+  "shoes_mint_cape": {
+    "ko": "블랙 리본 로퍼",
+    "en": "Black Ribbon Loafers",
+    "color": "black",
+    "native": true
+  },
+  "costume_boy_white_blue_coat": {
+    "ko": "화이트 블루 코트 의상",
+    "en": "White Blue Coat Outfit",
+    "category": "costume",
+    "color": "white",
+    "native": true
+  },
+  "shoes_boy_white_blue_coat": {
+    "ko": "네이비 보석 부츠",
+    "en": "Navy Gem Boots",
+    "color": "navy",
+    "native": true
+  },
+  "costume_boy_navy_white_rose": {
+    "ko": "네이비 흰장미 의상",
+    "en": "Navy White Rose Outfit",
+    "category": "costume",
+    "color": "navy",
+    "native": true
+  },
+  "shoes_boy_navy_white_rose": {
+    "ko": "네이비 문양 로퍼",
+    "en": "Navy Pattern Loafers",
+    "color": "navy",
+    "native": true
+  },
+  "costume_boy_white_lily": {
+    "ko": "화이트 백합 의상",
+    "en": "White Lily Outfit",
+    "category": "costume",
+    "color": "white",
+    "native": true
+  },
+  "shoes_boy_white_lily": {
+    "ko": "화이트 버클 부츠",
+    "en": "White Buckle Boots",
+    "color": "white",
+    "native": true
+  },
+  "costume_boy_black_vest2": {
+    "ko": "블랙 조끼 의상",
+    "en": "Black Vest Outfit",
+    "category": "costume",
+    "color": "black",
+    "native": true
+  },
+  "shoes_boy_black_vest2": {
+    "ko": "블랙 버클 부츠",
+    "en": "Black Buckle Boots",
+    "color": "black",
+    "native": true
+  },
+  "costume_boy_rainbow_hoodie2": {
+    "ko": "무지개 후드 의상",
+    "en": "Rainbow Hoodie Outfit",
+    "category": "costume",
+    "color": "white",
+    "native": true
+  },
+  "shoes_boy_rainbow_hoodie2": {
+    "ko": "무지개 운동화",
+    "en": "Rainbow Sneakers",
+    "color": "white",
+    "native": true
+  },
+  "costume_boy_blue_cardigan2": {
+    "ko": "블루 가디건 의상",
+    "en": "Blue Cardigan Outfit",
+    "category": "costume",
+    "color": "skyblue",
+    "native": true
+  },
+  "shoes_boy_blue_cardigan2": {
+    "ko": "네이비 스니커즈",
+    "en": "Navy Sneakers",
+    "color": "navy",
+    "native": true
+  },
+  "costume_boy_light_prince": {
+    "ko": "라이트 블루 왕자 의상",
+    "en": "Light Blue Prince Outfit",
+    "category": "costume",
+    "color": "skyblue",
+    "native": true
+  },
+  "shoes_boy_light_prince": {
+    "ko": "화이트 골드 부츠",
+    "en": "White Gold Boots",
+    "color": "white",
+    "native": true
+  },
+  "costume_boy_green_ranger": {
+    "ko": "그린 레인저 의상",
+    "en": "Green Ranger Outfit",
+    "category": "costume",
+    "color": "green",
+    "native": true
+  },
+  "shoes_boy_green_ranger": {
+    "ko": "브라운 레이스업 부츠",
+    "en": "Brown Lace-up Boots",
+    "color": "brown",
+    "native": true
   }
 }
