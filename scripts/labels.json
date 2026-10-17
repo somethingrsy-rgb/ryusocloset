@@ -888,12 +888,6 @@
     "color": "brown",
     "native": true
   },
-  "shoes_boy_steampunk": {
-    "ko": "부츠",
-    "en": "Steampunk Boots",
-    "color": "brown",
-    "native": true
-  },
   "costume_boy_prince_white": {
     "ko": "화이트 왕자 의상",
     "en": "White Prince Outfit",
@@ -1349,12 +1343,6 @@
     "ko": "블랙 조끼 의상",
     "en": "Black Vest Outfit",
     "category": "costume",
-    "color": "black",
-    "native": true
-  },
-  "shoes_boy_black_vest2": {
-    "ko": "블랙 버클 부츠",
-    "en": "Black Buckle Boots",
     "color": "black",
     "native": true
   },

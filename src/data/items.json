@@ -781,10 +781,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 171,
-      "y": 575,
-      "w": 682,
-      "h": 575
+      "x": 202,
+      "y": 609,
+      "w": 620,
+      "h": 523
     },
     "image": "assets/clothes/costume/costume_boy_black_vest2.webp",
     "thumb": "assets/thumbs/costume_boy_black_vest2.webp",
@@ -805,10 +805,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 173,
-      "y": 615,
-      "w": 679,
-      "h": 921
+      "x": 204,
+      "y": 601,
+      "w": 617,
+      "h": 837
     },
     "image": "assets/clothes/costume/costume_boy_blue_cardigan2.webp",
     "thumb": "assets/thumbs/costume_boy_blue_cardigan2.webp",
@@ -853,10 +853,10 @@
     },
     "colorHex": "#6f9a72",
     "box": {
-      "x": 171,
-      "y": 588,
-      "w": 682,
-      "h": 700
+      "x": 137,
+      "y": 601,
+      "w": 750,
+      "h": 770
     },
     "image": "assets/clothes/costume/costume_boy_green_ranger.webp",
     "thumb": "assets/thumbs/costume_boy_green_ranger.webp",
@@ -949,10 +949,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 171,
-      "y": 590,
-      "w": 682,
-      "h": 718
+      "x": 137,
+      "y": 602,
+      "w": 750,
+      "h": 790
     },
     "image": "assets/clothes/costume/costume_boy_light_prince.webp",
     "thumb": "assets/thumbs/costume_boy_light_prince.webp",
@@ -1093,10 +1093,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 171,
-      "y": 611,
-      "w": 682,
-      "h": 915
+      "x": 202,
+      "y": 572,
+      "w": 620,
+      "h": 832
     },
     "image": "assets/clothes/costume/costume_boy_rainbow_hoodie2.webp",
     "thumb": "assets/thumbs/costume_boy_rainbow_hoodie2.webp",
@@ -1213,10 +1213,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 171,
-      "y": 569,
-      "w": 682,
-      "h": 511
+      "x": 129,
+      "y": 608,
+      "w": 750,
+      "h": 562
     },
     "image": "assets/clothes/costume/costume_boy_white_lily.webp",
     "thumb": "assets/thumbs/costume_boy_white_lily.webp",
@@ -2496,30 +2496,6 @@
     "native": true
   },
   {
-    "id": "shoes_boy_black_vest2",
-    "category": "shoes",
-    "name": {
-      "ko": "블랙 버클 부츠",
-      "en": "Black Buckle Boots"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 401,
-      "y": 1285,
-      "w": 224,
-      "h": 219
-    },
-    "image": "assets/clothes/shoes/shoes_boy_black_vest2.webp",
-    "thumb": "assets/thumbs/shoes_boy_black_vest2.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
     "id": "shoes_boy_blue_cardigan",
     "category": "shoes",
     "name": {
@@ -2605,10 +2581,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 397,
-      "y": 1241,
-      "w": 231,
-      "h": 264
+      "x": 372,
+      "y": 1213,
+      "w": 280,
+      "h": 319
     },
     "image": "assets/clothes/shoes/shoes_boy_green_ranger.webp",
     "thumb": "assets/thumbs/shoes_boy_green_ranger.webp",
@@ -2701,10 +2677,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 399,
-      "y": 1238,
-      "w": 227,
-      "h": 267
+      "x": 376,
+      "y": 1210,
+      "w": 274,
+      "h": 323
     },
     "image": "assets/clothes/shoes/shoes_boy_light_prince.webp",
     "thumb": "assets/thumbs/shoes_boy_light_prince.webp",
@@ -2845,10 +2821,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 398,
-      "y": 1365,
-      "w": 227,
-      "h": 139
+      "x": 386,
+      "y": 1358,
+      "w": 250,
+      "h": 153
     },
     "image": "assets/clothes/shoes/shoes_boy_rainbow_hoodie.webp",
     "thumb": "assets/thumbs/shoes_boy_rainbow_hoodie.webp",
@@ -2869,37 +2845,13 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 397,
-      "y": 1366,
-      "w": 230,
-      "h": 140
+      "x": 373,
+      "y": 1352,
+      "w": 278,
+      "h": 168
     },
     "image": "assets/clothes/shoes/shoes_boy_rainbow_hoodie2.webp",
     "thumb": "assets/thumbs/shoes_boy_rainbow_hoodie2.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_boy_steampunk",
-    "category": "shoes",
-    "name": {
-      "ko": "부츠",
-      "en": "Steampunk Boots"
-    },
-    "color": "brown",
-    "colorName": {
-      "ko": "브라운",
-      "en": "Brown"
-    },
-    "colorHex": "#8a5a3b",
-    "box": {
-      "x": 398,
-      "y": 1387,
-      "w": 228,
-      "h": 118
-    },
-    "image": "assets/clothes/shoes/shoes_boy_steampunk.webp",
-    "thumb": "assets/thumbs/shoes_boy_steampunk.webp",
     "zIndex": 10,
     "native": true
   },
@@ -2941,10 +2893,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 400,
-      "y": 1244,
-      "w": 227,
-      "h": 261
+      "x": 376,
+      "y": 1209,
+      "w": 275,
+      "h": 315
     },
     "image": "assets/clothes/shoes/shoes_boy_white_blue_coat.webp",
     "thumb": "assets/thumbs/shoes_boy_white_blue_coat.webp",
@@ -3013,10 +2965,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 395,
-      "y": 1256,
-      "w": 235,
-      "h": 248
+      "x": 356,
+      "y": 1183,
+      "w": 313,
+      "h": 330
     },
     "image": "assets/clothes/shoes/shoes_boy_white_lily.webp",
     "thumb": "assets/thumbs/shoes_boy_white_lily.webp",
