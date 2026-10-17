@@ -768,54 +768,6 @@
     "native": true
   },
   {
-    "id": "costume_boy_black_vest",
-    "category": "costume",
-    "name": {
-      "ko": "블랙 조끼 의상",
-      "en": "Black Vest Outfit"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 171,
-      "y": 582,
-      "w": 681,
-      "h": 638
-    },
-    "image": "assets/clothes/costume/costume_boy_black_vest.webp",
-    "thumb": "assets/thumbs/costume_boy_black_vest.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
-    "id": "costume_boy_blue_cardigan",
-    "category": "costume",
-    "name": {
-      "ko": "블루 가디건 의상",
-      "en": "Blue Cardigan Outfit"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 171,
-      "y": 596,
-      "w": 682,
-      "h": 768
-    },
-    "image": "assets/clothes/costume/costume_boy_blue_cardigan.webp",
-    "thumb": "assets/thumbs/costume_boy_blue_cardigan.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
     "id": "costume_boy_feather_blue",
     "category": "costume",
     "name": {
@@ -1004,54 +956,6 @@
     },
     "image": "assets/clothes/costume/costume_boy_purple_cape.webp",
     "thumb": "assets/thumbs/costume_boy_purple_cape.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
-    "id": "costume_boy_rainbow_hoodie",
-    "category": "costume",
-    "name": {
-      "ko": "무지개 후드 의상",
-      "en": "Rainbow Hoodie Outfit"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 171,
-      "y": 600,
-      "w": 682,
-      "h": 808
-    },
-    "image": "assets/clothes/costume/costume_boy_rainbow_hoodie.webp",
-    "thumb": "assets/thumbs/costume_boy_rainbow_hoodie.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
-    "id": "costume_boy_steampunk",
-    "category": "costume",
-    "name": {
-      "ko": "스팀펑크 의상",
-      "en": "Steampunk Outfit"
-    },
-    "color": "brown",
-    "colorName": {
-      "ko": "브라운",
-      "en": "Brown"
-    },
-    "colorHex": "#8a5a3b",
-    "box": {
-      "x": 172,
-      "y": 613,
-      "w": 682,
-      "h": 707
-    },
-    "image": "assets/clothes/costume/costume_boy_steampunk.webp",
-    "thumb": "assets/thumbs/costume_boy_steampunk.webp",
     "zIndex": 41,
     "native": true
   },
