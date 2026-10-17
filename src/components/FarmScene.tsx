@@ -26,6 +26,8 @@ const HOME = { x: 0.5, y: 37, z: 3 }
 const ZONE_IMG = ['farm_left', 'bg', 'farm_right'] as const
 const ZONE_BASE = [ZONE_PLOTS, 0, ZONE_PLOTS * 2] as const
 const CENTER = 1
+/** 밭 번호가 속한 구역(그림 순서): 0~8 가운데, 9~17 왼쪽, 18~26 오른쪽 */
+const zoneOfPlot = (i: number) => (i < ZONE_PLOTS ? CENTER : i < ZONE_PLOTS * 2 ? 0 : 2)
 const ZONE_NAME = [{ ko: '왼쪽 땅', en: 'Left field' }, { ko: '처음 땅', en: 'Home field' }, { ko: '오른쪽 땅', en: 'Right field' }] as const
 /** 작물 그림 한 장의 크기(px). 가로 500 = 칸 폭의 48% */
 const CROP_BOX: Record<string, [number, number]> = { carrot: [568, 499], strawberry: [578, 453], corn: [505, 619] }
@@ -108,7 +110,7 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
     setHold(need === 'harvest' ? 'basket' : need === 'seed' ? 'seed' : 'can')
     setWalking(true)
-    setPos({ x: px - AVATAR_W / 2, y: py + TILE_H * 0.5 - AVATAR_W, z: 10, zone: wide ? ZONE_BASE.indexOf(ZONE_BASE.reduce((m, b) => (i >= b && b >= m ? b : m), 0) as 0 | 9 | 18) : zone })
+    setPos({ x: px - AVATAR_W / 2, y: py + TILE_H * 0.5 - AVATAR_W, z: 10, zone: wide ? zoneOfPlot(i) : zone })
     later(() => {
       setWalking(false)
       if (need === 'water') setWatering(true)
