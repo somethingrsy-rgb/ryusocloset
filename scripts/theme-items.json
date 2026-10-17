@@ -421,5 +421,167 @@
     "baseWidth": 420,
     "x": 840,
     "y": 1340
+  },
+  "theme_summer_blue_pearl_clam": {
+    "ko": "파랑 진주조개",
+    "en": "Blue Pearl Clam",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 220,
+    "x": 250,
+    "y": 1330
+  },
+  "theme_summer_message_bottle": {
+    "ko": "편지 병",
+    "en": "Message Bottle",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 150,
+    "x": 370,
+    "y": 1330
+  },
+  "theme_summer_pink_scallop": {
+    "ko": "분홍 조개",
+    "en": "Pink Scallop",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 180,
+    "x": 490,
+    "y": 1330
+  },
+  "theme_summer_spotted_conch": {
+    "ko": "무늬 소라",
+    "en": "Spotted Conch",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 200,
+    "x": 610,
+    "y": 1330
+  },
+  "theme_summer_pink_conch": {
+    "ko": "분홍 소라",
+    "en": "Pink Conch",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 150,
+    "x": 730,
+    "y": 1330
+  },
+  "theme_summer_sand_dollar": {
+    "ko": "쿠키 성게",
+    "en": "Sand Dollar",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 140,
+    "x": 850,
+    "y": 1330
+  },
+  "theme_summer_sea_turtle": {
+    "ko": "아기 바다거북",
+    "en": "Baby Sea Turtle",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 240,
+    "x": 250,
+    "y": 1330
+  },
+  "theme_summer_blue_starfish": {
+    "ko": "파랑 불가사리",
+    "en": "Blue Starfish",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 190,
+    "x": 370,
+    "y": 1330
+  },
+  "theme_summer_big_wave": {
+    "ko": "파도",
+    "en": "Big Wave",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 260,
+    "x": 490,
+    "y": 1330
+  },
+  "theme_summer_jellyfish": {
+    "ko": "해파리",
+    "en": "Jellyfish",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 160,
+    "x": 610,
+    "y": 1330
+  },
+  "theme_summer_pink_coral": {
+    "ko": "분홍 산호",
+    "en": "Pink Coral",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 180,
+    "x": 730,
+    "y": 1330
+  },
+  "theme_summer_purple_pearl_clam": {
+    "ko": "보라 진주조개",
+    "en": "Purple Pearl Clam",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 230,
+    "x": 850,
+    "y": 1330
+  },
+  "theme_summer_heart_beach": {
+    "ko": "하트 해변",
+    "en": "Heart Beach",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 200,
+    "x": 250,
+    "y": 1330
+  },
+  "theme_summer_spiral_shell": {
+    "ko": "줄무늬 달팽이 조개",
+    "en": "Spiral Shell",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 160,
+    "x": 370,
+    "y": 1330
+  },
+  "theme_summer_cream_conch": {
+    "ko": "크림 소라",
+    "en": "Cream Conch",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 230,
+    "x": 490,
+    "y": 1330
+  },
+  "theme_summer_water_splash": {
+    "ko": "물방울",
+    "en": "Water Splash",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 220,
+    "x": 610,
+    "y": 1330
+  },
+  "theme_summer_teal_scallop": {
+    "ko": "하늘 조개",
+    "en": "Teal Scallop",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 170,
+    "x": 730,
+    "y": 1330
+  },
+  "theme_summer_whale": {
+    "ko": "아기 고래",
+    "en": "Baby Whale",
+    "theme": "summer",
+    "group": "furniture",
+    "baseWidth": 240,
+    "x": 850,
+    "y": 1330
   }
 }
