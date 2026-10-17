@@ -8,8 +8,6 @@ import type { Outfit, Tweaks } from '../lib/types'
 import { WALK_BOUNDS, clampToBounds, depthScale, distPx, stepToward, type Vec } from '../lib/walk'
 import { FigureLayers } from './FigureLayers'
 import { NpcDialog } from './NpcDialog'
-import { PHASE_ICON, PHASE_LABEL, tintOf } from '../lib/daynight'
-import { useClock } from './useClock'
 import { useGame } from './TravelGame'
 import { useWalkKeys } from './useWalkKeys'
 import { TravelDecor } from './TravelDecor'
@@ -50,9 +48,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
   const { lang } = useI18n()
   const tx = TEXT[lang]
   useGame()
-  const { clock, skip } = useClock()
-  const tint = tintOf(clock)
-  const night = clock.dark > 0.5
+  const night = false // 낮만 쓴다 (저녁·밤 기능은 뺐다)
   const roomVersion = useSyncExternalStore(subscribeTravelRooms, travelRoomsVersion)
   const itemVersion = useItemsVersion()
   const layout = useMemo(() => getTravelRoom(placeId), [placeId, roomVersion, itemVersion])
@@ -269,15 +265,6 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
         </div>
       </div>
 
-      {tint && !(night && (layout ? (layout.scene === 'camp' || layout.room.wallId === 'camp') : !!p.wallNight)) && <div aria-hidden className="pointer-events-none absolute inset-0 z-10" style={{ background: tint }} />}
-      <button
-        onClick={skip}
-        aria-label={PHASE_LABEL[clock.phase][lang]}
-        className="absolute top-2 right-2 z-40 flex h-12 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-bold shadow-md ring-1 ring-black/5"
-      >
-        <span aria-hidden>{PHASE_ICON[clock.phase]}</span>
-        {PHASE_LABEL[clock.phase][lang]}
-      </button>
       <div className="absolute top-2 left-2 right-24 z-30 flex min-w-0 items-center gap-2">
         <button onClick={onExit} className="flex h-12 items-center gap-1 rounded-full bg-white/90 px-4 text-sm font-bold shadow-md ring-1 ring-black/5">
           <span aria-hidden>🗺️</span>

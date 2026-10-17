@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { useI18n } from '../i18n'
-import { PHASE_ICON, PHASE_LABEL, tintOf } from '../lib/daynight'
 import { extendReach, findItem, travelItem } from '../lib/game'
 import { roadSpot } from '../lib/roadItems'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -23,8 +22,6 @@ import {
   worldWidth,
 } from '../lib/world'
 import { FigureLayers } from './FigureLayers'
-import { PILL, PillText } from './pill'
-import { useClock } from './useClock'
 import { useWalkKeys } from './useWalkKeys'
 import { assetUrl } from '../lib/items'
 
@@ -48,8 +45,6 @@ interface Props {
 
 export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = false, actions }: Props) {
   const { lang } = useI18n()
-  const { clock, skip } = useClock()
-  const tint = tintOf(clock)
   const hostRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 400, h: 500 })
   const [chunks, setChunks] = useState(Math.max(MIN_CHUNKS, reach, chunk + 2))
@@ -178,19 +173,9 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
           return <img key={`${t}-${k}`} src={assetUrl(`assets/farm/travel_road10_${k}.webp`)} alt="" draggable={false} className="pointer-events-none absolute select-none" style={{ left: t * BG_W + x0, top: BG_TOP, width: x1 - x0 + 1, height: BG_H, maxWidth: 'none', opacity: bgReady ? 1 : 0, transition: 'opacity 0.4s' }} />
         }))}
         {/* 밤 색은 길 전체에 한 장으로 덮는다 (구간마다 따로 덮으면 이음매에 세로줄이 보인다) */}
-        {tint && <div className="pointer-events-none absolute top-0 left-0" style={{ width: worldWidth(chunks), height: WORLD_H, background: tint, zIndex: 1 }} />}
         {range.map((c) => {
           return (
             <div key={c} className="absolute top-0" style={{ left: c * CHUNK_W, width: CHUNK_W, height: WORLD_H }}>
-              {clock.dark > 0.3 && (
-                <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0" style={{ height: 500, opacity: Math.min(1, (clock.dark - 0.3) / 0.5) }}>
-                  {Array.from({ length: 16 }, (_, k) => (
-                    <span key={k} className="absolute text-2xl text-white" style={{ left: (k * 97 + c * 31) % CHUNK_W, top: (k * 83 + c * 17) % 420, opacity: 0.5 + ((k * 7) % 5) / 10 }}>
-                      {k % 9 === 0 ? '⭐' : '✦'}
-                    </span>
-                  ))}
-                </div>
-              )}
               <button
                 onPointerUp={(e) => e.stopPropagation()}
                 aria-label={`${lang === 'ko' ? '집' : 'House'} ${c + 1}`}
@@ -233,18 +218,6 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
       <div className="absolute top-2 left-2 right-28 z-10 flex min-w-0 flex-wrap items-center gap-1">
         <div className="flex min-w-0 flex-wrap items-center gap-1" onPointerUp={e => e.stopPropagation()}>{actions}</div>
       </div>
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          skip()
-        }}
-        onPointerUp={(e) => e.stopPropagation()}
-        aria-label={PHASE_LABEL[clock.phase][lang]}
-        className={`absolute top-2 right-2 z-10 ${PILL}`}
-      >
-        <span aria-hidden>{PHASE_ICON[clock.phase]}</span>
-        <PillText>{PHASE_LABEL[clock.phase][lang]}</PillText>
-      </button>
     </div>
   )
 }
