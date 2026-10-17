@@ -16,7 +16,7 @@ type Tool = 'seed' | 'water' | 'harvest'
  * 밭 칸은 오른쪽으로 기운 평행사변형 그림(1433×646)이고, 풀밭 크기에 맞춰 칸 폭(tw)과 밭 덩어리 가운데(cx, cy)를 정한다.
  */
 const LAYOUT = {
-  portrait: { img: 'farm_portrait', w: 1024, h: 1536, cols: 4, rows: 5, cx: 512, cy: 790, tw: 215, rowGap: 21, avatarH: 19, home: { x: 44, y: 12 }, stall: { left: '68%', top: '17%', width: '20%', height: '17%' } },
+  portrait: { img: 'farm_portrait2', w: 1024, h: 1536, cols: 4, rows: 5, cx: 512, cy: 790, tw: 215, rowGap: 21, avatarH: 19, home: { x: 44, y: 12 }, stall: { left: '68%', top: '17%', width: '20%', height: '17%' } },
   wide: { img: 'farm_wide', w: 1586, h: 992, cols: 5, rows: 4, cx: 655, cy: 560, tw: 185, rowGap: 3, avatarH: 22, home: { x: 41, y: 12 }, stall: { left: '63%', top: '17%', width: '12%', height: '20%' } },
 } as const
 type Layout = (typeof LAYOUT)[keyof typeof LAYOUT]
