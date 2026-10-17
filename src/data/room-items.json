@@ -30,6 +30,471 @@
     "y": 1230
   },
   {
+    "id": "furniture_dream_alarm_clock",
+    "group": "furniture",
+    "name": {
+      "ko": "알람시계",
+      "en": "Alarm Clock"
+    },
+    "image": "assets/room/furniture_dream_alarm_clock.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_alarm_clock.webp",
+    "w": 151,
+    "h": 190,
+    "baseWidth": 170,
+    "x": 490,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_book_stack",
+    "group": "furniture",
+    "name": {
+      "ko": "책 더미",
+      "en": "Book Stack"
+    },
+    "image": "assets/room/furniture_dream_book_stack.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_book_stack.webp",
+    "w": 186,
+    "h": 183,
+    "baseWidth": 220,
+    "x": 370,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_camera",
+    "group": "furniture",
+    "name": {
+      "ko": "카메라",
+      "en": "Camera"
+    },
+    "image": "assets/room/furniture_dream_camera.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_camera.webp",
+    "w": 173,
+    "h": 162,
+    "baseWidth": 180,
+    "x": 250,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_cocoa_mug",
+    "group": "furniture",
+    "name": {
+      "ko": "별 코코아 머그",
+      "en": "Star Cocoa Mug"
+    },
+    "image": "assets/room/furniture_dream_cocoa_mug.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_cocoa_mug.webp",
+    "w": 169,
+    "h": 190,
+    "baseWidth": 150,
+    "x": 730,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_daydream_diary",
+    "group": "furniture",
+    "name": {
+      "ko": "데이드림 일기장",
+      "en": "Daydream Diary"
+    },
+    "image": "assets/room/furniture_dream_daydream_diary.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_daydream_diary.webp",
+    "w": 187,
+    "h": 144,
+    "baseWidth": 210,
+    "x": 610,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_dream_bag",
+    "group": "furniture",
+    "name": {
+      "ko": "드림 가방",
+      "en": "Dream Bag"
+    },
+    "image": "assets/room/furniture_dream_dream_bag.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_dream_bag.webp",
+    "w": 184,
+    "h": 185,
+    "baseWidth": 200,
+    "x": 490,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_dream_bed",
+    "group": "furniture",
+    "name": {
+      "ko": "구름 침대",
+      "en": "Cloud Bed"
+    },
+    "image": "assets/room/furniture_dream_dream_bed.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_dream_bed.webp",
+    "w": 178,
+    "h": 165,
+    "baseWidth": 560,
+    "x": 730,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_dream_jar",
+    "group": "furniture",
+    "name": {
+      "ko": "드림 병",
+      "en": "Dream Jar"
+    },
+    "image": "assets/room/furniture_dream_dream_jar.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_dream_jar.webp",
+    "w": 148,
+    "h": 186,
+    "baseWidth": 170,
+    "x": 610,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_dream_milk",
+    "group": "furniture",
+    "name": {
+      "ko": "드림 우유",
+      "en": "Dream Milk"
+    },
+    "image": "assets/room/furniture_dream_dream_milk.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_dream_milk.webp",
+    "w": 130,
+    "h": 159,
+    "baseWidth": 130,
+    "x": 850,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_envelope",
+    "group": "furniture",
+    "name": {
+      "ko": "별 편지",
+      "en": "Star Letter"
+    },
+    "image": "assets/room/furniture_dream_envelope.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_envelope.webp",
+    "w": 177,
+    "h": 142,
+    "baseWidth": 190,
+    "x": 250,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_headphones",
+    "group": "furniture",
+    "name": {
+      "ko": "헤드폰",
+      "en": "Headphones"
+    },
+    "image": "assets/room/furniture_dream_headphones.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_headphones.webp",
+    "w": 161,
+    "h": 166,
+    "baseWidth": 170,
+    "x": 370,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_lavender",
+    "group": "furniture",
+    "name": {
+      "ko": "라벤더 꽃다발",
+      "en": "Lavender Bouquet"
+    },
+    "image": "assets/room/furniture_dream_lavender.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_lavender.webp",
+    "w": 156,
+    "h": 186,
+    "baseWidth": 170,
+    "x": 610,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_moon_bear",
+    "group": "furniture",
+    "name": {
+      "ko": "달 위의 곰",
+      "en": "Bear on Moon"
+    },
+    "image": "assets/room/furniture_dream_moon_bear.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_moon_bear.webp",
+    "w": 175,
+    "h": 188,
+    "baseWidth": 230,
+    "x": 730,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_moon_cloud",
+    "group": "furniture",
+    "name": {
+      "ko": "잠자는 달",
+      "en": "Sleepy Moon"
+    },
+    "image": "assets/room/furniture_dream_moon_cloud.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_moon_cloud.webp",
+    "w": 179,
+    "h": 161,
+    "baseWidth": 200,
+    "x": 250,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_moon_cloud_nap",
+    "group": "furniture",
+    "name": {
+      "ko": "달과 구름",
+      "en": "Moon and Clouds"
+    },
+    "image": "assets/room/furniture_dream_moon_cloud_nap.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_moon_cloud_nap.webp",
+    "w": 187,
+    "h": 160,
+    "baseWidth": 230,
+    "x": 610,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_night_light",
+    "group": "furniture",
+    "name": {
+      "ko": "수면 캔들",
+      "en": "Night Light"
+    },
+    "image": "assets/room/furniture_dream_night_light.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_night_light.webp",
+    "w": 150,
+    "h": 167,
+    "baseWidth": 170,
+    "x": 370,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_nightstand",
+    "group": "furniture",
+    "name": {
+      "ko": "협탁 조명",
+      "en": "Nightstand Lamp"
+    },
+    "image": "assets/room/furniture_dream_nightstand.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_nightstand.webp",
+    "w": 160,
+    "h": 176,
+    "baseWidth": 270,
+    "x": 730,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_notes",
+    "group": "furniture",
+    "name": {
+      "ko": "노트",
+      "en": "Notes"
+    },
+    "image": "assets/room/furniture_dream_notes.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_notes.webp",
+    "w": 149,
+    "h": 175,
+    "baseWidth": 150,
+    "x": 850,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_pen_cup",
+    "group": "furniture",
+    "name": {
+      "ko": "연필꽂이",
+      "en": "Pen Cup"
+    },
+    "image": "assets/room/furniture_dream_pen_cup.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_pen_cup.webp",
+    "w": 137,
+    "h": 176,
+    "baseWidth": 150,
+    "x": 490,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_puppy_cloud",
+    "group": "furniture",
+    "name": {
+      "ko": "구름 위 강아지",
+      "en": "Puppy on Cloud"
+    },
+    "image": "assets/room/furniture_dream_puppy_cloud.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_puppy_cloud.webp",
+    "w": 186,
+    "h": 171,
+    "baseWidth": 220,
+    "x": 490,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_purple_cloud",
+    "group": "furniture",
+    "name": {
+      "ko": "보라 별구름",
+      "en": "Purple Star Cloud"
+    },
+    "image": "assets/room/furniture_dream_purple_cloud.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_purple_cloud.webp",
+    "w": 186,
+    "h": 111,
+    "baseWidth": 220,
+    "x": 370,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_rainbow_cloud",
+    "group": "furniture",
+    "name": {
+      "ko": "무지개 구름",
+      "en": "Rainbow Cloud"
+    },
+    "image": "assets/room/furniture_dream_rainbow_cloud.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_rainbow_cloud.webp",
+    "w": 186,
+    "h": 129,
+    "baseWidth": 220,
+    "x": 610,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_sheep",
+    "group": "furniture",
+    "name": {
+      "ko": "양 인형",
+      "en": "Sheep Plush"
+    },
+    "image": "assets/room/furniture_dream_sheep.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_sheep.webp",
+    "w": 168,
+    "h": 174,
+    "baseWidth": 210,
+    "x": 730,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_sleep_mask",
+    "group": "furniture",
+    "name": {
+      "ko": "수면 안대",
+      "en": "Sleep Mask"
+    },
+    "image": "assets/room/furniture_dream_sleep_mask.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_sleep_mask.webp",
+    "w": 186,
+    "h": 109,
+    "baseWidth": 170,
+    "x": 490,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_sleep_puff",
+    "group": "furniture",
+    "name": {
+      "ko": "잠자는 솜뭉치",
+      "en": "Sleepy Puff"
+    },
+    "image": "assets/room/furniture_dream_sleep_puff.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_sleep_puff.webp",
+    "w": 162,
+    "h": 165,
+    "baseWidth": 210,
+    "x": 850,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_sleepy_bear",
+    "group": "furniture",
+    "name": {
+      "ko": "잠자는 곰",
+      "en": "Sleepy Bear"
+    },
+    "image": "assets/room/furniture_dream_sleepy_bear.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_sleepy_bear.webp",
+    "w": 187,
+    "h": 179,
+    "baseWidth": 240,
+    "x": 610,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_sleepy_bunny",
+    "group": "furniture",
+    "name": {
+      "ko": "잠옷 토끼",
+      "en": "Sleepy Bunny"
+    },
+    "image": "assets/room/furniture_dream_sleepy_bunny.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_sleepy_bunny.webp",
+    "w": 171,
+    "h": 185,
+    "baseWidth": 200,
+    "x": 250,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_smile_cloud",
+    "group": "furniture",
+    "name": {
+      "ko": "웃는 구름",
+      "en": "Smiling Cloud"
+    },
+    "image": "assets/room/furniture_dream_smile_cloud.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_smile_cloud.webp",
+    "w": 181,
+    "h": 125,
+    "baseWidth": 200,
+    "x": 250,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_snow_globe",
+    "group": "furniture",
+    "name": {
+      "ko": "달 스노우볼",
+      "en": "Moon Snow Globe"
+    },
+    "image": "assets/room/furniture_dream_snow_globe.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_snow_globe.webp",
+    "w": 160,
+    "h": 182,
+    "baseWidth": 190,
+    "x": 370,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_star_lollipop",
+    "group": "furniture",
+    "name": {
+      "ko": "별 막대사탕",
+      "en": "Star Lollipop"
+    },
+    "image": "assets/room/furniture_dream_star_lollipop.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_star_lollipop.webp",
+    "w": 106,
+    "h": 187,
+    "baseWidth": 130,
+    "x": 490,
+    "y": 1320
+  },
+  {
+    "id": "furniture_dream_stardust_jar",
+    "group": "furniture",
+    "name": {
+      "ko": "별가루 병",
+      "en": "Stardust Jar"
+    },
+    "image": "assets/room/furniture_dream_stardust_jar.webp",
+    "thumb": "assets/room/thumbs/furniture_dream_stardust_jar.webp",
+    "w": 130,
+    "h": 185,
+    "baseWidth": 170,
+    "x": 250,
+    "y": 1320
+  },
+  {
     "id": "furniture_dresser",
     "group": "furniture",
     "name": {
@@ -613,6 +1078,81 @@
     "baseWidth": 200,
     "x": 543,
     "y": 420
+  },
+  {
+    "id": "wall_dream_goodnight_stamp",
+    "group": "wall",
+    "name": {
+      "ko": "굿나잇 우표",
+      "en": "Good Night Stamp"
+    },
+    "image": "assets/room/wall_dream_goodnight_stamp.webp",
+    "thumb": "assets/room/thumbs/wall_dream_goodnight_stamp.webp",
+    "w": 143,
+    "h": 162,
+    "baseWidth": 170,
+    "x": 860,
+    "y": 520
+  },
+  {
+    "id": "wall_dream_night_window",
+    "group": "wall",
+    "name": {
+      "ko": "밤 창문",
+      "en": "Night Window"
+    },
+    "image": "assets/room/wall_dream_night_window.webp",
+    "thumb": "assets/room/thumbs/wall_dream_night_window.webp",
+    "w": 181,
+    "h": 173,
+    "baseWidth": 360,
+    "x": 720,
+    "y": 520
+  },
+  {
+    "id": "wall_dream_star_mobile",
+    "group": "wall",
+    "name": {
+      "ko": "별 모빌",
+      "en": "Star Mobile"
+    },
+    "image": "assets/room/wall_dream_star_mobile.webp",
+    "thumb": "assets/room/thumbs/wall_dream_star_mobile.webp",
+    "w": 173,
+    "h": 181,
+    "baseWidth": 220,
+    "x": 440,
+    "y": 520
+  },
+  {
+    "id": "wall_dream_sweet_dreams_sign",
+    "group": "wall",
+    "name": {
+      "ko": "스위트 드림 푯말",
+      "en": "Sweet Dreams Sign"
+    },
+    "image": "assets/room/wall_dream_sweet_dreams_sign.webp",
+    "thumb": "assets/room/thumbs/wall_dream_sweet_dreams_sign.webp",
+    "w": 187,
+    "h": 143,
+    "baseWidth": 230,
+    "x": 860,
+    "y": 520
+  },
+  {
+    "id": "wall_dream_todo_list",
+    "group": "wall",
+    "name": {
+      "ko": "할 일 목록",
+      "en": "To-do List"
+    },
+    "image": "assets/room/wall_dream_todo_list.webp",
+    "thumb": "assets/room/thumbs/wall_dream_todo_list.webp",
+    "w": 144,
+    "h": 193,
+    "baseWidth": 180,
+    "x": 580,
+    "y": 520
   },
   {
     "id": "wall_frame",
