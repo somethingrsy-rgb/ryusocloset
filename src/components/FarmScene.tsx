@@ -187,7 +187,7 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
         </div>
 
         {buying !== null && (
-          <div role="dialog" aria-label={ko ? '밭 사기' : 'Buy a plot'} className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-3xl bg-white/95 p-3 shadow-lg" style={{ top: '45%', zIndex: 14 }}>
+          <div role="dialog" aria-label={ko ? '밭 사기' : 'Buy a plot'} className="absolute left-1/2 flex w-max max-w-[96%] -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-3xl bg-white/95 p-3 shadow-lg" style={{ top: '45%', zIndex: 14 }}>
             <span className="text-sm font-extrabold">{ko ? '새 밭' : 'New plot'} · {plotPrice(farm)}🪙</span>
             <button className={`${btn} bg-blush text-white disabled:opacity-40`} disabled={farm.coins < plotPrice(farm)} onClick={() => { if (apply({ type: 'buy', plot: buying })) setNotice(ko ? '새 밭이 생겼어요! 🌱' : 'New plot! 🌱'); setBuying(null) }}>{ko ? '사기' : 'Buy'}</button>
             <button className={`${btn} bg-petal`} onClick={() => setBuying(null)}>{ko ? '아니요' : 'No'}</button>
