@@ -75,6 +75,291 @@
     "y": 1320
   },
   {
+    "id": "furniture_magic_angel_bear",
+    "group": "furniture",
+    "name": {
+      "ko": "천사 곰인형",
+      "en": "Angel Bear"
+    },
+    "image": "assets/room/furniture_magic_angel_bear.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_angel_bear.webp",
+    "w": 348,
+    "h": 300,
+    "baseWidth": 260,
+    "x": 600,
+    "y": 1300
+  },
+  {
+    "id": "furniture_magic_cake",
+    "group": "furniture",
+    "name": {
+      "ko": "딸기 케이크",
+      "en": "Strawberry Cake"
+    },
+    "image": "assets/room/furniture_magic_cake.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_cake.webp",
+    "w": 221,
+    "h": 241,
+    "baseWidth": 250,
+    "x": 600,
+    "y": 1340
+  },
+  {
+    "id": "furniture_magic_cloud",
+    "group": "furniture",
+    "name": {
+      "ko": "구름 친구",
+      "en": "Cloud Friend"
+    },
+    "image": "assets/room/furniture_magic_cloud.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_cloud.webp",
+    "w": 117,
+    "h": 98,
+    "baseWidth": 150,
+    "x": 420,
+    "y": 1330
+  },
+  {
+    "id": "furniture_magic_crystals",
+    "group": "furniture",
+    "name": {
+      "ko": "수정",
+      "en": "Crystals"
+    },
+    "image": "assets/room/furniture_magic_crystals.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_crystals.webp",
+    "w": 141,
+    "h": 137,
+    "baseWidth": 150,
+    "x": 760,
+    "y": 1340
+  },
+  {
+    "id": "furniture_magic_drink",
+    "group": "furniture",
+    "name": {
+      "ko": "딸기 음료",
+      "en": "Berry Drink"
+    },
+    "image": "assets/room/furniture_magic_drink.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_drink.webp",
+    "w": 208,
+    "h": 336,
+    "baseWidth": 190,
+    "x": 350,
+    "y": 1330
+  },
+  {
+    "id": "furniture_magic_gem",
+    "group": "furniture",
+    "name": {
+      "ko": "보석",
+      "en": "Gem"
+    },
+    "image": "assets/room/furniture_magic_gem.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_gem.webp",
+    "w": 71,
+    "h": 80,
+    "baseWidth": 100,
+    "x": 880,
+    "y": 1340
+  },
+  {
+    "id": "furniture_magic_heart",
+    "group": "furniture",
+    "name": {
+      "ko": "핑크 하트",
+      "en": "Pink Heart"
+    },
+    "image": "assets/room/furniture_magic_heart.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_heart.webp",
+    "w": 65,
+    "h": 57,
+    "baseWidth": 90,
+    "x": 700,
+    "y": 1320
+  },
+  {
+    "id": "furniture_magic_heart_mirror",
+    "group": "furniture",
+    "name": {
+      "ko": "하트 거울",
+      "en": "Heart Mirror"
+    },
+    "image": "assets/room/furniture_magic_heart_mirror.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_heart_mirror.webp",
+    "w": 260,
+    "h": 327,
+    "baseWidth": 240,
+    "x": 800,
+    "y": 1290
+  },
+  {
+    "id": "furniture_magic_heart_potion",
+    "group": "furniture",
+    "name": {
+      "ko": "하트 보석 물약",
+      "en": "Heart Gem Potion"
+    },
+    "image": "assets/room/furniture_magic_heart_potion.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_heart_potion.webp",
+    "w": 272,
+    "h": 323,
+    "baseWidth": 220,
+    "x": 350,
+    "y": 1310
+  },
+  {
+    "id": "furniture_magic_heart_wand",
+    "group": "furniture",
+    "name": {
+      "ko": "하트 요술봉",
+      "en": "Heart Wand"
+    },
+    "image": "assets/room/furniture_magic_heart_wand.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_heart_wand.webp",
+    "w": 285,
+    "h": 595,
+    "baseWidth": 260,
+    "x": 860,
+    "y": 1260
+  },
+  {
+    "id": "furniture_magic_key",
+    "group": "furniture",
+    "name": {
+      "ko": "마법 열쇠",
+      "en": "Magic Key"
+    },
+    "image": "assets/room/furniture_magic_key.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_key.webp",
+    "w": 222,
+    "h": 288,
+    "baseWidth": 200,
+    "x": 820,
+    "y": 1290
+  },
+  {
+    "id": "furniture_magic_letter",
+    "group": "furniture",
+    "name": {
+      "ko": "하트 편지",
+      "en": "Heart Letter"
+    },
+    "image": "assets/room/furniture_magic_letter.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_letter.webp",
+    "w": 215,
+    "h": 193,
+    "baseWidth": 200,
+    "x": 300,
+    "y": 1340
+  },
+  {
+    "id": "furniture_magic_moon_cloud",
+    "group": "furniture",
+    "name": {
+      "ko": "달 구름",
+      "en": "Moon Cloud"
+    },
+    "image": "assets/room/furniture_magic_moon_cloud.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_moon_cloud.webp",
+    "w": 134,
+    "h": 149,
+    "baseWidth": 170,
+    "x": 780,
+    "y": 1330
+  },
+  {
+    "id": "furniture_magic_potion",
+    "group": "furniture",
+    "name": {
+      "ko": "마법 물약",
+      "en": "Magic Potion"
+    },
+    "image": "assets/room/furniture_magic_potion.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_potion.webp",
+    "w": 219,
+    "h": 309,
+    "baseWidth": 200,
+    "x": 330,
+    "y": 1320
+  },
+  {
+    "id": "furniture_magic_ring_wand",
+    "group": "furniture",
+    "name": {
+      "ko": "별 요술봉",
+      "en": "Star Ring Wand"
+    },
+    "image": "assets/room/furniture_magic_ring_wand.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_ring_wand.webp",
+    "w": 388,
+    "h": 520,
+    "baseWidth": 260,
+    "x": 300,
+    "y": 1250
+  },
+  {
+    "id": "furniture_magic_spellbook",
+    "group": "furniture",
+    "name": {
+      "ko": "마법 책",
+      "en": "Spellbook"
+    },
+    "image": "assets/room/furniture_magic_spellbook.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_spellbook.webp",
+    "w": 405,
+    "h": 338,
+    "baseWidth": 300,
+    "x": 600,
+    "y": 1330
+  },
+  {
+    "id": "furniture_magic_star_friend",
+    "group": "furniture",
+    "name": {
+      "ko": "별 친구",
+      "en": "Star Friend"
+    },
+    "image": "assets/room/furniture_magic_star_friend.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_star_friend.webp",
+    "w": 132,
+    "h": 128,
+    "baseWidth": 130,
+    "x": 450,
+    "y": 1340
+  },
+  {
+    "id": "furniture_magic_winged_heart",
+    "group": "furniture",
+    "name": {
+      "ko": "날개 하트",
+      "en": "Winged Heart"
+    },
+    "image": "assets/room/furniture_magic_winged_heart.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_winged_heart.webp",
+    "w": 150,
+    "h": 115,
+    "baseWidth": 140,
+    "x": 450,
+    "y": 1340
+  },
+  {
+    "id": "furniture_magic_witch_hat",
+    "group": "furniture",
+    "name": {
+      "ko": "마녀모자 달",
+      "en": "Witch Hat Moon"
+    },
+    "image": "assets/room/furniture_magic_witch_hat.webp",
+    "thumb": "assets/room/thumbs/furniture_magic_witch_hat.webp",
+    "w": 332,
+    "h": 410,
+    "baseWidth": 330,
+    "x": 700,
+    "y": 1310
+  },
+  {
     "id": "furniture_mirror_full",
     "group": "furniture",
     "name": {
@@ -343,6 +628,66 @@
     "baseWidth": 300,
     "x": 543,
     "y": 600
+  },
+  {
+    "id": "wall_magic_bow_pink",
+    "group": "wall",
+    "name": {
+      "ko": "분홍 큰 리본",
+      "en": "Big Pink Bow"
+    },
+    "image": "assets/room/wall_magic_bow_pink.webp",
+    "thumb": "assets/room/thumbs/wall_magic_bow_pink.webp",
+    "w": 331,
+    "h": 317,
+    "baseWidth": 260,
+    "x": 330,
+    "y": 480
+  },
+  {
+    "id": "wall_magic_bow_purple",
+    "group": "wall",
+    "name": {
+      "ko": "보라 리본",
+      "en": "Purple Bow"
+    },
+    "image": "assets/room/wall_magic_bow_purple.webp",
+    "thumb": "assets/room/thumbs/wall_magic_bow_purple.webp",
+    "w": 131,
+    "h": 123,
+    "baseWidth": 120,
+    "x": 520,
+    "y": 420
+  },
+  {
+    "id": "wall_magic_bow_small",
+    "group": "wall",
+    "name": {
+      "ko": "작은 리본",
+      "en": "Small Bow"
+    },
+    "image": "assets/room/wall_magic_bow_small.webp",
+    "thumb": "assets/room/thumbs/wall_magic_bow_small.webp",
+    "w": 93,
+    "h": 82,
+    "baseWidth": 90,
+    "x": 860,
+    "y": 430
+  },
+  {
+    "id": "wall_magic_moon_mobile",
+    "group": "wall",
+    "name": {
+      "ko": "달 모빌",
+      "en": "Moon Mobile"
+    },
+    "image": "assets/room/wall_magic_moon_mobile.webp",
+    "thumb": "assets/room/thumbs/wall_magic_moon_mobile.webp",
+    "w": 229,
+    "h": 347,
+    "baseWidth": 220,
+    "x": 700,
+    "y": 520
   },
   {
     "id": "wall_shelf",
