@@ -13,6 +13,12 @@ type Tool = 'seed' | 'water' | 'harvest'
 /** 농장 그림은 가로로 긴 한 장(1774×887). 세 구역(왼쪽 · 가운데 · 오른쪽)이 한 장 안에 있고, 폰에서는 한 번에 3분의 1씩 보인다. 아래 좌표는 모두 그림 안의 px */
 const IMG_W = 1774
 const IMG_H = 887
+/** 가로 화면에서 그림 위아래 빈 자리를 채우는 색: 그림 맨 윗줄·맨 아랫줄 색을 가로 9칸으로 뽑은 것. 그림 가장자리는 이 색으로 서서히 녹는다 */
+const EDGE_TOP = ['#3fa3d8', '#60b1fc', '#39a1fc', '#43a3f5', '#44a3f2', '#3ba3fc', '#3ca3fc', '#3ba2fc', '#3fa3e8'] as const
+const EDGE_BOTTOM = ['#3a5a1c', '#677e16', '#8d9d11', '#b4c127', '#b0c119', '#b3c318', '#b2c113', '#98aa1a', '#3f5a1c'] as const
+const PANEL_W = '11rem'
+const SCENE_W = `min(calc(100cqw - ${PANEL_W}), 200cqh)`
+const edgeGradient = (colors: readonly string[]) => `linear-gradient(to right, ${colors.map((c, k) => `${c} calc(${SCENE_W} * ${k / (colors.length - 1)})`).join(', ')}, ${colors[colors.length - 1]} 100%)`
 /** 밭 칸은 오른쪽으로 기운 평행사변형 그림(1433×646). 구역마다 빈 풀밭 크기에 맞춰 칸 폭(tw, px)과 밭 덩어리 가운데(cx, cy)를 정한다 */
 const FIELD = {
   0: { cx: 310, cy: 565, tw: 140 }, // 왼쪽 땅
@@ -153,10 +159,16 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
   ]
 
   return (
-    <section ref={secRef} aria-label={ko ? '나의 작은 농장' : 'My little farm'} className="relative h-full overflow-hidden rounded-3xl bg-[#b9d77a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
+    <section ref={secRef} aria-label={ko ? '나의 작은 농장' : 'My little farm'} className="relative h-full overflow-hidden rounded-3xl bg-[#b9d77a] ring-1 ring-black/5" style={{ containerType: 'size', ...(wide ? { background: 'linear-gradient(to bottom, #3ba3fc 0%, #5db0f2 42%, #a9bd24 58%, #98aa1a 100%)' } : null) }}>
       {/* 그림 아래 남는 자리: 그림 맨 아래 풀밭 색에서 연두색으로 부드럽게 이어지는 그라데이션 */}
       {!wide && <div aria-hidden className="absolute inset-x-0 bottom-0" style={{ top: 'calc(min(150cqw, 100cqh) - 3rem)', background: 'linear-gradient(to bottom, #9bad3f 0%, #aac24f 30%, #b9d77a 100%)' }} />}
-      <div className={`absolute overflow-hidden select-none ${wide ? 'top-1/2 left-0 -translate-y-1/2' : 'top-0 left-1/2 -translate-x-1/2'}`} style={wide ? { width: 'min(calc(100cqw - 15rem), 200cqh)', aspectRatio: '2 / 1' } : { width: 'min(100cqw, calc((100cqh - 11rem) / 1.08))', aspectRatio: '1024 / 1536', WebkitMaskImage: 'linear-gradient(to bottom, #000 95%, transparent 100%)', maskImage: 'linear-gradient(to bottom, #000 95%, transparent 100%)' }}>
+      {wide && (
+        <>
+          <div aria-hidden className="absolute inset-x-0 top-0" style={{ height: '50%', background: edgeGradient(EDGE_TOP) }} />
+          <div aria-hidden className="absolute inset-x-0 bottom-0" style={{ height: '50%', background: edgeGradient(EDGE_BOTTOM) }} />
+        </>
+      )}
+      <div className={`absolute overflow-hidden select-none ${wide ? 'top-1/2 left-0 -translate-y-1/2' : 'top-0 left-1/2 -translate-x-1/2'}`} style={wide ? { width: SCENE_W, aspectRatio: '2 / 1', WebkitMaskImage: 'linear-gradient(to bottom, transparent, #000 7%, #000 93%, transparent)', maskImage: 'linear-gradient(to bottom, transparent, #000 7%, #000 93%, transparent)' } : { width: 'min(100cqw, calc((100cqh - 11rem) / 1.08))', aspectRatio: '1024 / 1536', WebkitMaskImage: 'linear-gradient(to bottom, #000 95%, transparent 100%)', maskImage: 'linear-gradient(to bottom, #000 95%, transparent 100%)' }}>
         <div
           className="absolute top-0 left-0 h-full"
           style={{ width: wide ? '100%' : `${ZONES * 100}%`, transform: wide ? undefined : `translateX(-${(VIEW_X[zone] / IMG_W) * 100}%)`, transition: 'transform 0.6s ease-in-out', touchAction: 'pan-y' }}
@@ -235,7 +247,7 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
       </div>
 
       {/* 아래 도구 4개: 그림 아래 초록 바탕에 둔다 */}
-      <div className={`absolute flex flex-col items-center justify-center px-3 py-3 ${wide ? 'top-0 right-0 bottom-0' : 'inset-x-0 bottom-0'}`} style={wide ? { zIndex: 5, width: '15rem' } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
+      <div className={`absolute flex flex-col items-center justify-center px-3 py-3 ${wide ? 'top-0 right-0 bottom-0' : 'inset-x-0 bottom-0'}`} style={wide ? { zIndex: 5, width: PANEL_W } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
         <div className={`flex w-full flex-col gap-3 ${wide ? 'max-w-[300px]' : 'max-w-[560px]'}`}>
           {/* 씨앗 고르기 */}
           {picker && (
@@ -251,19 +263,19 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
           )}
 
           {/* 아래 도구 4개 */}
-          <div className={wide ? 'grid grid-cols-2 gap-2' : 'flex gap-2'}>
+          <div className={wide ? 'flex flex-col gap-2' : 'flex gap-2'}>
             {tools.map((t) => {
               const active = tool === t.id
               return (
-                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 flex-col items-center rounded-3xl border-2 px-1 pt-2 pb-2.5 shadow-md ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? onShop() : pick(t.id))}>
-                  <FarmImg name={t.icon} emoji={t.emoji} className="aspect-square w-[85%] object-contain" />
+                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 items-center rounded-3xl border-2 shadow-md ${wide ? 'flex-row gap-2 px-2 py-1.5' : 'flex-col px-1 pt-2 pb-2.5'} ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? onShop() : pick(t.id))}>
+                  <FarmImg name={t.icon} emoji={t.emoji} className={wide ? 'h-12 w-12 shrink-0 object-contain' : 'aspect-square w-[85%] object-contain'} />
                   <span className="text-sm font-extrabold text-[#6b4a2b]">{t[lang]}</span>
                 </button>
               )
             })}
           </div>
           {/* 수확량: 바구니에 든 작물 */}
-          <div className={`flex justify-center rounded-2xl bg-white/60 px-3 py-1.5 ${wide ? 'gap-2' : 'gap-4'}`} aria-label={ko ? '수확량' : 'Harvest count'}>
+          <div className={`flex justify-center rounded-2xl bg-white/60 px-3 py-1.5 ${wide ? 'gap-1.5' : 'gap-4'}`} aria-label={ko ? '수확량' : 'Harvest count'}>
             {CROPS.map((c) => (
               <span key={c.id} className="flex items-center gap-1 text-sm font-extrabold text-[#6b4a2b]">
                 <FarmImg name={`harvest_${c.id}`} emoji={c.emoji} className="h-8 w-8 object-contain" />
