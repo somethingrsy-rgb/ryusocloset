@@ -768,6 +768,30 @@
     "native": true
   },
   {
+    "id": "costume_boy_green_vest",
+    "category": "costume",
+    "name": {
+      "ko": "그린 조끼 의상",
+      "en": "Green Vest Outfit"
+    },
+    "color": "green",
+    "colorName": {
+      "ko": "그린",
+      "en": "Green"
+    },
+    "colorHex": "#6f9a72",
+    "box": {
+      "x": 171,
+      "y": 602,
+      "w": 682,
+      "h": 828
+    },
+    "image": "assets/clothes/costume/costume_boy_green_vest.webp",
+    "thumb": "assets/thumbs/costume_boy_green_vest.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_boy_lavender_tails",
     "category": "costume",
     "name": {
@@ -840,6 +864,30 @@
     "native": true
   },
   {
+    "id": "costume_boy_purple_cape",
+    "category": "costume",
+    "name": {
+      "ko": "보라 망토 의상",
+      "en": "Purple Cape Outfit"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 171,
+      "y": 582,
+      "w": 682,
+      "h": 640
+    },
+    "image": "assets/clothes/costume/costume_boy_purple_cape.webp",
+    "thumb": "assets/thumbs/costume_boy_purple_cape.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_boy_steampunk",
     "category": "costume",
     "name": {
@@ -860,6 +908,30 @@
     },
     "image": "assets/clothes/costume/costume_boy_steampunk.webp",
     "thumb": "assets/thumbs/costume_boy_steampunk.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_boy_white_gold",
+    "category": "costume",
+    "name": {
+      "ko": "화이트 골드 왕자 의상",
+      "en": "White Gold Prince Outfit"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 171,
+      "y": 583,
+      "w": 682,
+      "h": 647
+    },
+    "image": "assets/clothes/costume/costume_boy_white_gold.webp",
+    "thumb": "assets/thumbs/costume_boy_white_gold.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1800,6 +1872,30 @@
     "native": true
   },
   {
+    "id": "shoes_boy_green_vest",
+    "category": "shoes",
+    "name": {
+      "ko": "브라운 구두",
+      "en": "Brown Shoes"
+    },
+    "color": "brown",
+    "colorName": {
+      "ko": "브라운",
+      "en": "Brown"
+    },
+    "colorHex": "#8a5a3b",
+    "box": {
+      "x": 412,
+      "y": 1392,
+      "w": 200,
+      "h": 112
+    },
+    "image": "assets/clothes/shoes/shoes_boy_green_vest.webp",
+    "thumb": "assets/thumbs/shoes_boy_green_vest.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_boy_lavender_tails",
     "category": "shoes",
     "name": {
@@ -1872,6 +1968,30 @@
     "native": true
   },
   {
+    "id": "shoes_boy_purple_cape",
+    "category": "shoes",
+    "name": {
+      "ko": "검정 구두",
+      "en": "Black Shoes"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 412,
+      "y": 1402,
+      "w": 199,
+      "h": 101
+    },
+    "image": "assets/clothes/shoes/shoes_boy_purple_cape.webp",
+    "thumb": "assets/thumbs/shoes_boy_purple_cape.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_boy_steampunk",
     "category": "shoes",
     "name": {
@@ -1892,6 +2012,30 @@
     },
     "image": "assets/clothes/shoes/shoes_boy_steampunk.webp",
     "thumb": "assets/thumbs/shoes_boy_steampunk.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_boy_white_gold",
+    "category": "shoes",
+    "name": {
+      "ko": "골드 슬리퍼",
+      "en": "Gold Slippers"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 412,
+      "y": 1407,
+      "w": 200,
+      "h": 98
+    },
+    "image": "assets/clothes/shoes/shoes_boy_white_gold.webp",
+    "thumb": "assets/thumbs/shoes_boy_white_gold.webp",
     "zIndex": 10,
     "native": true
   },
@@ -2612,6 +2756,150 @@
     },
     "image": "assets/clothes/accessory/acc_ears_black_star.webp",
     "thumb": "assets/thumbs/acc_ears_black_star.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_fox_blue",
+    "category": "accessory",
+    "name": {
+      "ko": "블루 여우귀",
+      "en": "Blue Fox Ears"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 141,
+      "y": 0,
+      "w": 732,
+      "h": 265
+    },
+    "image": "assets/clothes/accessory/acc_ears_fox_blue.webp",
+    "thumb": "assets/thumbs/acc_ears_fox_blue.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_fox_cream",
+    "category": "accessory",
+    "name": {
+      "ko": "크림 여우귀",
+      "en": "Cream Fox Ears"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "box": {
+      "x": 140,
+      "y": 0,
+      "w": 734,
+      "h": 265
+    },
+    "image": "assets/clothes/accessory/acc_ears_fox_cream.webp",
+    "thumb": "assets/thumbs/acc_ears_fox_cream.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_fox_dark",
+    "category": "accessory",
+    "name": {
+      "ko": "다크 여우귀",
+      "en": "Dark Fox Ears"
+    },
+    "color": "charcoal",
+    "colorName": {
+      "ko": "차콜",
+      "en": "Charcoal"
+    },
+    "colorHex": "#55565c",
+    "box": {
+      "x": 140,
+      "y": 0,
+      "w": 734,
+      "h": 265
+    },
+    "image": "assets/clothes/accessory/acc_ears_fox_dark.webp",
+    "thumb": "assets/thumbs/acc_ears_fox_dark.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_fox_lavender",
+    "category": "accessory",
+    "name": {
+      "ko": "라벤더 여우귀",
+      "en": "Lavender Fox Ears"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 141,
+      "y": 0,
+      "w": 733,
+      "h": 266
+    },
+    "image": "assets/clothes/accessory/acc_ears_fox_lavender.webp",
+    "thumb": "assets/thumbs/acc_ears_fox_lavender.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_fox_pink",
+    "category": "accessory",
+    "name": {
+      "ko": "핑크 여우귀",
+      "en": "Pink Fox Ears"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 140,
+      "y": 0,
+      "w": 734,
+      "h": 266
+    },
+    "image": "assets/clothes/accessory/acc_ears_fox_pink.webp",
+    "thumb": "assets/thumbs/acc_ears_fox_pink.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_ears_fox_tan",
+    "category": "accessory",
+    "name": {
+      "ko": "탄 여우귀",
+      "en": "Tan Fox Ears"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 140,
+      "y": 0,
+      "w": 734,
+      "h": 266
+    },
+    "image": "assets/clothes/accessory/acc_ears_fox_tan.webp",
+    "thumb": "assets/thumbs/acc_ears_fox_tan.webp",
     "zIndex": 70,
     "native": true
   },

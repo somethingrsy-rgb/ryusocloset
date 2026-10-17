@@ -965,5 +965,86 @@
     "en": "Swordsman Boots",
     "color": "black",
     "native": true
+  },
+  "costume_boy_purple_cape": {
+    "ko": "보라 망토 의상",
+    "en": "Purple Cape Outfit",
+    "category": "costume",
+    "color": "purple",
+    "native": true
+  },
+  "shoes_boy_purple_cape": {
+    "ko": "검정 구두",
+    "en": "Black Shoes",
+    "color": "black",
+    "native": true
+  },
+  "costume_boy_white_gold": {
+    "ko": "화이트 골드 왕자 의상",
+    "en": "White Gold Prince Outfit",
+    "category": "costume",
+    "color": "white",
+    "native": true
+  },
+  "shoes_boy_white_gold": {
+    "ko": "골드 슬리퍼",
+    "en": "Gold Slippers",
+    "color": "white",
+    "native": true
+  },
+  "costume_boy_green_vest": {
+    "ko": "그린 조끼 의상",
+    "en": "Green Vest Outfit",
+    "category": "costume",
+    "color": "green",
+    "native": true
+  },
+  "shoes_boy_green_vest": {
+    "ko": "브라운 구두",
+    "en": "Brown Shoes",
+    "color": "brown",
+    "native": true
+  },
+  "acc_ears_fox_cream": {
+    "ko": "크림 여우귀",
+    "en": "Cream Fox Ears",
+    "category": "accessory",
+    "color": "ivory",
+    "native": true
+  },
+  "acc_ears_fox_tan": {
+    "ko": "탄 여우귀",
+    "en": "Tan Fox Ears",
+    "category": "accessory",
+    "color": "beige",
+    "native": true
+  },
+  "acc_ears_fox_dark": {
+    "ko": "다크 여우귀",
+    "en": "Dark Fox Ears",
+    "category": "accessory",
+    "color": "charcoal",
+    "native": true
+  },
+  "acc_ears_fox_lavender": {
+    "ko": "라벤더 여우귀",
+    "en": "Lavender Fox Ears",
+    "category": "accessory",
+    "color": "purple",
+    "native": true
+  },
+  "acc_ears_fox_pink": {
+    "ko": "핑크 여우귀",
+    "en": "Pink Fox Ears",
+    "category": "accessory",
+    "color": "pink",
+    "native": true
+  },
+  "acc_ears_fox_blue": {
+    "ko": "블루 여우귀",
+    "en": "Blue Fox Ears",
+    "category": "accessory",
+    "color": "skyblue",
+    "native": true
   }
 }
