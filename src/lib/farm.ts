@@ -5,14 +5,23 @@ export const CROPS = [
   { id: 'corn', ko: '옥수수', en: 'corn', plural: 'corn', emoji: '🌽', seconds: 90, price: 6 },
 ] as const
 export type CropId = (typeof CROPS)[number]['id']
-/** 밭 칸 수 (3×3) */
-export const PLOT_COUNT = 9
+/** 한 구역의 밭 칸 수 (3×3). 구역은 왼쪽 땅 · 가운데(처음 땅) · 오른쪽 땅 세 개 */
+export const ZONE_PLOTS = 9
+export const ZONES = 3
+/** 밭 칸 전체 수. 0~8 가운데(처음부터 내 것), 9~17 왼쪽 땅, 18~26 오른쪽 땅 (둘 다 한 칸씩 코인으로 산다) */
+export const PLOT_COUNT = ZONE_PLOTS * ZONES
 export interface Plot { crop: CropId; wateredAt: number | null }
 export interface FarmState {
-  plots: (Plot | null)[]; inventory: Record<CropId, number>; coins: number; deliveries: number; decorations: string[]
+  plots: (Plot | null)[]; /** 산 밭 칸 (가운데 9칸은 처음부터 true) */ owned: boolean[]; inventory: Record<CropId, number>; coins: number; deliveries: number; decorations: string[]
 }
-export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number }
-export const defaultFarm = (): FarmState => ({ plots: Array(PLOT_COUNT).fill(null), inventory: { carrot: 0, strawberry: 0, corn: 0 }, coins: 0, deliveries: 0, decorations: [] })
+export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number } | { type: 'buy'; plot: number }
+/** 새 땅 밭 한 칸 값: 처음 20코인, 하나 살 때마다 5코인씩 올라간다 */
+export const PLOT_BASE_PRICE = 20
+export const PLOT_PRICE_STEP = 5
+const startOwned = () => Array.from({ length: PLOT_COUNT }, (_, i) => i < ZONE_PLOTS)
+export const boughtCount = (state: Pick<FarmState, 'owned'>) => state.owned.filter((v, i) => v && i >= ZONE_PLOTS).length
+export const plotPrice = (state: Pick<FarmState, 'owned'>) => PLOT_BASE_PRICE + PLOT_PRICE_STEP * boughtCount(state)
+export const defaultFarm = (): FarmState => ({ plots: Array(PLOT_COUNT).fill(null), owned: startOwned(), inventory: { carrot: 0, strawberry: 0, corn: 0 }, coins: 0, deliveries: 0, decorations: [] })
 const cropById = (id: unknown) => CROPS.find(c => c.id === id)
 /** 예전 저장의 토마토는 옥수수로 이어간다 */
 const migrateCrop = (id: unknown) => (id === 'tomato' ? 'corn' : id)
@@ -27,6 +36,7 @@ export function sanitizeFarm(value: unknown): FarmState {
     if (!p || !cropById(crop)) return null
     return { crop: crop as CropId, wateredAt: typeof p.wateredAt === 'number' && Number.isFinite(p.wateredAt) && p.wateredAt >= 0 ? p.wateredAt : null }
   })
+  base.owned = Array.from({ length: PLOT_COUNT }, (_, i) => i < ZONE_PLOTS || (Array.isArray(raw.owned) && raw.owned[i] === true))
   for (const crop of CROPS) base.inventory[crop.id] = count(raw.inventory?.[crop.id])
   base.inventory.corn = Math.min(1_000_000, base.inventory.corn + count((raw.inventory as Record<string, unknown> | undefined)?.tomato))
   base.coins = count(raw.coins); base.deliveries = count(raw.deliveries)
@@ -40,11 +50,16 @@ export function growth(plot: Plot | null, now: number): number {
 }
 export const orderCrop = (state: FarmState) => CROPS[state.deliveries % CROPS.length]
 export function reduceFarm(state: FarmState, action: FarmAction, now: number): FarmState {
-  const next: FarmState = { ...state, plots: [...state.plots], inventory: { ...state.inventory }, decorations: [...state.decorations] }
+  const next: FarmState = { ...state, plots: [...state.plots], owned: [...state.owned], inventory: { ...state.inventory }, decorations: [...state.decorations] }
   if ('plot' in action) {
     if (!Number.isInteger(action.plot) || action.plot < 0 || action.plot >= PLOT_COUNT) return state
     const plot = state.plots[action.plot]
-    if (action.type === 'plant') {
+    if (action.type === 'buy') {
+      if (state.owned[action.plot] || state.coins < plotPrice(state)) return state
+      next.coins -= plotPrice(state); next.owned[action.plot] = true
+    } else if (!state.owned[action.plot]) {
+      return state
+    } else if (action.type === 'plant') {
       if (plot || !cropById(action.crop)) return state
       next.plots[action.plot] = { crop: action.crop, wateredAt: null }
     } else if (action.type === 'water') {
