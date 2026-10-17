@@ -62,6 +62,18 @@ type Mode = 'closet' | 'farm' | 'room' | 'travel' | 'shop'
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
 
+function useWideScreen() {
+  const query = '(min-aspect-ratio: 6/5)'
+  const [wide, setWide] = useState(() => window.matchMedia(query).matches)
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const on = () => setWide(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return wide
+}
+
 export default function App() {
   const initial = useMemo(loadSettings, [])
   const [lang, setLang] = useState<Lang>(initial.lang ?? detectLang())
@@ -331,6 +343,9 @@ export default function App() {
     wearItem(it)
   }
 
+  const wide = useWideScreen()
+  const split = wide && mode !== 'farm' && mode !== 'shop'
+
   const modeBtn = (m: Mode, icon: string, label: string) => (
     <button
       role="tab"
@@ -353,8 +368,7 @@ export default function App() {
   return (
     <I18nContext.Provider value={i18n}>
       <div className="mx-auto flex h-dvh flex-col gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <section className="flex min-h-0 flex-1 flex-col gap-2">
-          <header className="flex shrink-0 items-center justify-between gap-2 px-1">
+        <header className="flex shrink-0 items-center justify-between gap-2 px-1">
             <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep xl:block">{t('title')}</h1>
             <div role="tablist" className="flex min-w-0 flex-1 overflow-x-auto rounded-full bg-white/80 p-0.5 shadow-sm">
               {modeBtn('closet', '👗', t('modeCloset'))}
@@ -373,9 +387,10 @@ export default function App() {
                 <span aria-hidden>⚙️</span>
               </button>
             </div>
-          </header>
+        </header>
 
-          <div className="relative min-h-0 flex-1">
+        <div className={`flex min-h-0 flex-1 gap-2 ${split ? 'flex-row' : 'flex-col'}`}>
+          <div className={split ? 'relative h-full max-w-[60%] flex-none' : 'relative min-h-0 flex-1'} style={split ? { aspectRatio: '2 / 3' } : undefined}>
             {mode === 'closet' && (
               <button
                 onClick={() => setModal('hair')}
@@ -425,9 +440,8 @@ export default function App() {
               </RoomView>
             )}
           </div>
-        </section>
 
-        <aside hidden={mode === 'farm' || mode === 'shop'} className={`flex ${mode === 'travel' ? 'h-[28dvh]' : 'h-[40dvh]'} shrink-0 flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
+        <aside hidden={mode === 'farm' || mode === 'shop'} className={`flex ${split ? 'min-w-0 flex-1' : mode === 'travel' ? 'h-[28dvh] shrink-0' : 'h-[40dvh] shrink-0'} flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
           <div id="adjustment-controls" className="shrink-0" />
           {mode === 'travel' ? (
             <TravelBook outfit={outfit} onToggle={(id) => { const it = ITEM_BY_ID[id]; if (it) onToggle(it) }} />
@@ -448,6 +462,7 @@ export default function App() {
             <RoomTray key={scene} scene={scene} room={sceneState} onAdd={addToRoom} onLoadCamp={() => { const old = loadCamp(); editRoom({ ...old, wallId: 'camp', floorId: 'camp' }); setSelection(null); showToast(lang === 'ko' ? '이전 캠핑을 내 방으로 불러왔어요.' : 'Your previous campsite is now in My room.') }} onAddCustom={(tab) => { setPropGroup(tab === 'theme' || tab === 'background' ? 'furniture' : tab); setModal('addProp') }} onBackground={(part, id) => { const next = { ...room }; const key = part === 'wall' ? 'wallId' : 'floorId'; if (id) next[key] = id; else delete next[key]; editRoom(next) }} onRemoveCustom={removeMyProp} onRestore={(list) => { restoreItems(list.map((d) => d.id)); showToast(t('restored')) }} />
           )}
         </aside>
+        </div>
       </div>
 
       {modal === 'settings' && (
