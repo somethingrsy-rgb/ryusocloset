@@ -208,5 +208,166 @@
     "baseWidth": 220,
     "x": 650,
     "y": 1290
+  },
+  "wall_magic_bow_pink": {
+    "ko": "분홍 큰 리본",
+    "en": "Big Pink Bow",
+    "baseWidth": 260,
+    "x": 330,
+    "y": 480
+  },
+  "furniture_magic_heart": {
+    "ko": "핑크 하트",
+    "en": "Pink Heart",
+    "baseWidth": 90,
+    "x": 700,
+    "y": 1320
+  },
+  "wall_magic_moon_mobile": {
+    "ko": "달 모빌",
+    "en": "Moon Mobile",
+    "baseWidth": 220,
+    "x": 700,
+    "y": 520
+  },
+  "wall_magic_bow_purple": {
+    "ko": "보라 리본",
+    "en": "Purple Bow",
+    "baseWidth": 120,
+    "x": 520,
+    "y": 420
+  },
+  "furniture_magic_heart_wand": {
+    "ko": "하트 요술봉",
+    "en": "Heart Wand",
+    "baseWidth": 260,
+    "x": 860,
+    "y": 1260
+  },
+  "furniture_magic_cloud": {
+    "ko": "구름 친구",
+    "en": "Cloud Friend",
+    "baseWidth": 150,
+    "x": 420,
+    "y": 1330
+  },
+  "furniture_magic_potion": {
+    "ko": "마법 물약",
+    "en": "Magic Potion",
+    "baseWidth": 200,
+    "x": 330,
+    "y": 1320
+  },
+  "wall_magic_bow_small": {
+    "ko": "작은 리본",
+    "en": "Small Bow",
+    "baseWidth": 90,
+    "x": 860,
+    "y": 430
+  },
+  "furniture_magic_spellbook": {
+    "ko": "마법 책",
+    "en": "Spellbook",
+    "baseWidth": 300,
+    "x": 600,
+    "y": 1330
+  },
+  "furniture_magic_moon_cloud": {
+    "ko": "달 구름",
+    "en": "Moon Cloud",
+    "baseWidth": 170,
+    "x": 780,
+    "y": 1330
+  },
+  "furniture_magic_heart_potion": {
+    "ko": "하트 보석 물약",
+    "en": "Heart Gem Potion",
+    "baseWidth": 220,
+    "x": 350,
+    "y": 1310
+  },
+  "furniture_magic_heart_mirror": {
+    "ko": "하트 거울",
+    "en": "Heart Mirror",
+    "baseWidth": 240,
+    "x": 800,
+    "y": 1290
+  },
+  "furniture_magic_ring_wand": {
+    "ko": "별 요술봉",
+    "en": "Star Ring Wand",
+    "baseWidth": 260,
+    "x": 300,
+    "y": 1250
+  },
+  "furniture_magic_angel_bear": {
+    "ko": "천사 곰인형",
+    "en": "Angel Bear",
+    "baseWidth": 260,
+    "x": 600,
+    "y": 1300
+  },
+  "furniture_magic_witch_hat": {
+    "ko": "마녀모자 달",
+    "en": "Witch Hat Moon",
+    "baseWidth": 330,
+    "x": 700,
+    "y": 1310
+  },
+  "furniture_magic_winged_heart": {
+    "ko": "날개 하트",
+    "en": "Winged Heart",
+    "baseWidth": 140,
+    "x": 450,
+    "y": 1340
+  },
+  "furniture_magic_gem": {
+    "ko": "보석",
+    "en": "Gem",
+    "baseWidth": 100,
+    "x": 880,
+    "y": 1340
+  },
+  "furniture_magic_letter": {
+    "ko": "하트 편지",
+    "en": "Heart Letter",
+    "baseWidth": 200,
+    "x": 300,
+    "y": 1340
+  },
+  "furniture_magic_key": {
+    "ko": "마법 열쇠",
+    "en": "Magic Key",
+    "baseWidth": 200,
+    "x": 820,
+    "y": 1290
+  },
+  "furniture_magic_drink": {
+    "ko": "딸기 음료",
+    "en": "Berry Drink",
+    "baseWidth": 190,
+    "x": 350,
+    "y": 1330
+  },
+  "furniture_magic_cake": {
+    "ko": "딸기 케이크",
+    "en": "Strawberry Cake",
+    "baseWidth": 250,
+    "x": 600,
+    "y": 1340
+  },
+  "furniture_magic_star_friend": {
+    "ko": "별 친구",
+    "en": "Star Friend",
+    "baseWidth": 130,
+    "x": 450,
+    "y": 1340
+  },
+  "furniture_magic_crystals": {
+    "ko": "수정",
+    "en": "Crystals",
+    "baseWidth": 150,
+    "x": 760,
+    "y": 1340
   }
 }
