@@ -887,5 +887,70 @@
     "category": "accessory",
     "color": "brown",
     "native": true
+  },
+  "costume_boy_steampunk": {
+    "ko": "스팀펑크 의상",
+    "en": "Steampunk Outfit",
+    "category": "costume",
+    "color": "brown",
+    "native": true
+  },
+  "shoes_boy_steampunk": {
+    "ko": "부츠",
+    "en": "Steampunk Boots",
+    "color": "brown",
+    "native": true
+  },
+  "costume_boy_prince_white": {
+    "ko": "화이트 왕자 의상",
+    "en": "White Prince Outfit",
+    "category": "costume",
+    "color": "white",
+    "native": true
+  },
+  "shoes_boy_prince_white": {
+    "ko": "왕자 구두",
+    "en": "Prince Shoes",
+    "color": "white",
+    "native": true
+  },
+  "costume_boy_feather_blue": {
+    "ko": "블루 깃털 의상",
+    "en": "Blue Feather Outfit",
+    "category": "costume",
+    "color": "skyblue",
+    "native": true
+  },
+  "shoes_boy_feather_blue": {
+    "ko": "블루 샌들",
+    "en": "Blue Sandals",
+    "color": "skyblue",
+    "native": true
+  },
+  "costume_boy_lavender_tails": {
+    "ko": "라벤더 연미복",
+    "en": "Lavender Tailcoat",
+    "category": "costume",
+    "color": "purple",
+    "native": true
+  },
+  "shoes_boy_lavender_tails": {
+    "ko": "화이트 구두",
+    "en": "White Shoes",
+    "color": "purple",
+    "native": true
+  },
+  "costume_boy_navy_rose": {
+    "ko": "네이비 장미 의상",
+    "en": "Navy Rose Outfit",
+    "category": "costume",
+    "color": "navy",
+    "native": true
+  },
+  "shoes_boy_navy_rose": {
+    "ko": "블랙 구두",
+    "en": "Black Shoes",
+    "color": "navy",
+    "native": true
   }
 }
