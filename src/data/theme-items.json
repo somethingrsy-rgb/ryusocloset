@@ -208,6 +208,70 @@
     "y": 1320
   },
   {
+    "id": "theme_summer_big_wave",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "파도",
+      "en": "Big Wave"
+    },
+    "image": "assets/themes/summer/theme_summer_big_wave.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_big_wave.webp",
+    "w": 267,
+    "h": 217,
+    "baseWidth": 260,
+    "x": 490,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_blue_pearl_clam",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "파랑 진주조개",
+      "en": "Blue Pearl Clam"
+    },
+    "image": "assets/themes/summer/theme_summer_blue_pearl_clam.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_blue_pearl_clam.webp",
+    "w": 232,
+    "h": 248,
+    "baseWidth": 220,
+    "x": 250,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_blue_starfish",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "파랑 불가사리",
+      "en": "Blue Starfish"
+    },
+    "image": "assets/themes/summer/theme_summer_blue_starfish.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_blue_starfish.webp",
+    "w": 240,
+    "h": 226,
+    "baseWidth": 190,
+    "x": 370,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_cream_conch",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "크림 소라",
+      "en": "Cream Conch"
+    },
+    "image": "assets/themes/summer/theme_summer_cream_conch.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_cream_conch.webp",
+    "w": 253,
+    "h": 224,
+    "baseWidth": 230,
+    "x": 490,
+    "y": 1330
+  },
+  {
     "id": "theme_summer_float",
     "group": "furniture",
     "theme": "summer",
@@ -222,6 +286,54 @@
     "baseWidth": 250,
     "x": 300,
     "y": 1320
+  },
+  {
+    "id": "theme_summer_heart_beach",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "하트 해변",
+      "en": "Heart Beach"
+    },
+    "image": "assets/themes/summer/theme_summer_heart_beach.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_heart_beach.webp",
+    "w": 245,
+    "h": 220,
+    "baseWidth": 200,
+    "x": 250,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_jellyfish",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "해파리",
+      "en": "Jellyfish"
+    },
+    "image": "assets/themes/summer/theme_summer_jellyfish.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_jellyfish.webp",
+    "w": 176,
+    "h": 244,
+    "baseWidth": 160,
+    "x": 610,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_message_bottle",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "편지 병",
+      "en": "Message Bottle"
+    },
+    "image": "assets/themes/summer/theme_summer_message_bottle.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_message_bottle.webp",
+    "w": 146,
+    "h": 254,
+    "baseWidth": 150,
+    "x": 370,
+    "y": 1330
   },
   {
     "id": "theme_summer_parasol",
@@ -240,6 +352,54 @@
     "y": 1280
   },
   {
+    "id": "theme_summer_pink_conch",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "분홍 소라",
+      "en": "Pink Conch"
+    },
+    "image": "assets/themes/summer/theme_summer_pink_conch.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_pink_conch.webp",
+    "w": 147,
+    "h": 245,
+    "baseWidth": 150,
+    "x": 730,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_pink_coral",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "분홍 산호",
+      "en": "Pink Coral"
+    },
+    "image": "assets/themes/summer/theme_summer_pink_coral.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_pink_coral.webp",
+    "w": 210,
+    "h": 244,
+    "baseWidth": 180,
+    "x": 730,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_pink_scallop",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "분홍 조개",
+      "en": "Pink Scallop"
+    },
+    "image": "assets/themes/summer/theme_summer_pink_scallop.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_pink_scallop.webp",
+    "w": 233,
+    "h": 206,
+    "baseWidth": 180,
+    "x": 490,
+    "y": 1330
+  },
+  {
     "id": "theme_summer_pool",
     "group": "rug",
     "theme": "summer",
@@ -254,6 +414,134 @@
     "baseWidth": 520,
     "x": 543,
     "y": 1360
+  },
+  {
+    "id": "theme_summer_purple_pearl_clam",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "보라 진주조개",
+      "en": "Purple Pearl Clam"
+    },
+    "image": "assets/themes/summer/theme_summer_purple_pearl_clam.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_purple_pearl_clam.webp",
+    "w": 267,
+    "h": 236,
+    "baseWidth": 230,
+    "x": 850,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_sand_dollar",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "쿠키 성게",
+      "en": "Sand Dollar"
+    },
+    "image": "assets/themes/summer/theme_summer_sand_dollar.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_sand_dollar.webp",
+    "w": 202,
+    "h": 199,
+    "baseWidth": 140,
+    "x": 850,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_sea_turtle",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "아기 바다거북",
+      "en": "Baby Sea Turtle"
+    },
+    "image": "assets/themes/summer/theme_summer_sea_turtle.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_sea_turtle.webp",
+    "w": 265,
+    "h": 177,
+    "baseWidth": 240,
+    "x": 250,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_spiral_shell",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "줄무늬 달팽이 조개",
+      "en": "Spiral Shell"
+    },
+    "image": "assets/themes/summer/theme_summer_spiral_shell.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_spiral_shell.webp",
+    "w": 206,
+    "h": 184,
+    "baseWidth": 160,
+    "x": 370,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_spotted_conch",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "무늬 소라",
+      "en": "Spotted Conch"
+    },
+    "image": "assets/themes/summer/theme_summer_spotted_conch.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_spotted_conch.webp",
+    "w": 225,
+    "h": 246,
+    "baseWidth": 200,
+    "x": 610,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_teal_scallop",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "하늘 조개",
+      "en": "Teal Scallop"
+    },
+    "image": "assets/themes/summer/theme_summer_teal_scallop.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_teal_scallop.webp",
+    "w": 201,
+    "h": 167,
+    "baseWidth": 170,
+    "x": 730,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_water_splash",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "물방울",
+      "en": "Water Splash"
+    },
+    "image": "assets/themes/summer/theme_summer_water_splash.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_water_splash.webp",
+    "w": 260,
+    "h": 180,
+    "baseWidth": 220,
+    "x": 610,
+    "y": 1330
+  },
+  {
+    "id": "theme_summer_whale",
+    "group": "furniture",
+    "theme": "summer",
+    "name": {
+      "ko": "아기 고래",
+      "en": "Baby Whale"
+    },
+    "image": "assets/themes/summer/theme_summer_whale.webp",
+    "thumb": "assets/themes/summer/thumbs/theme_summer_whale.webp",
+    "w": 256,
+    "h": 202,
+    "baseWidth": 240,
+    "x": 850,
+    "y": 1330
   },
   {
     "id": "theme_christmas_fireplace",
