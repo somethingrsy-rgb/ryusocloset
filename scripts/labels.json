@@ -1046,5 +1046,174 @@
     "category": "accessory",
     "color": "skyblue",
     "native": true
+  },
+  "costume_qipao_mint": {
+    "ko": "민트 치파오 로리타 원피스",
+    "en": "Mint Qipao Lolita Dress",
+    "category": "costume",
+    "color": "mint",
+    "native": true
+  },
+  "shoes_qipao_mint": {
+    "ko": "민트 리본 구두",
+    "en": "Mint Ribbon Shoes",
+    "color": "mint",
+    "native": true
+  },
+  "costume_lemon_sailor": {
+    "ko": "레몬 세일러 세트",
+    "en": "Lemon Sailor Set",
+    "category": "costume",
+    "color": "beige",
+    "native": true
+  },
+  "shoes_lemon_sailor": {
+    "ko": "레몬 양말 구두",
+    "en": "Lemon Sock Shoes",
+    "color": "beige",
+    "native": true
+  },
+  "costume_blue_rose_lolita": {
+    "ko": "블루 장미 로리타 원피스",
+    "en": "Blue Rose Lolita Dress",
+    "category": "costume",
+    "color": "skyblue",
+    "native": true
+  },
+  "shoes_blue_rose_lolita": {
+    "ko": "블루 하트 양말 구두",
+    "en": "Blue Heart Sock Shoes",
+    "color": "navy",
+    "native": true
+  },
+  "costume_navy_hanbok_dress": {
+    "ko": "네이비 한복 원피스",
+    "en": "Navy Hanbok Dress",
+    "category": "costume",
+    "color": "navy",
+    "native": true
+  },
+  "shoes_navy_hanbok_dress": {
+    "ko": "네이비 꽃신",
+    "en": "Navy Flat Shoes",
+    "color": "navy",
+    "native": true
+  },
+  "costume_boy_navy_crane": {
+    "ko": "네이비 학 한복",
+    "en": "Navy Crane Hanbok",
+    "category": "costume",
+    "color": "navy",
+    "native": true
+  },
+  "shoes_boy_navy_crane": {
+    "ko": "검정 꽃신",
+    "en": "Black Flat Shoes",
+    "color": "black",
+    "native": true
+  },
+  "costume_magnolia_hanfu": {
+    "ko": "목련 한푸 원피스",
+    "en": "Magnolia Hanfu Dress",
+    "category": "costume",
+    "color": "skyblue",
+    "native": true
+  },
+  "shoes_magnolia_hanfu": {
+    "ko": "블루 꽃신",
+    "en": "Blue Flat Shoes",
+    "color": "skyblue",
+    "native": true
+  },
+  "costume_gothic_chain": {
+    "ko": "고딕 체인 원피스",
+    "en": "Gothic Chain Dress",
+    "category": "costume",
+    "color": "black",
+    "native": true
+  },
+  "shoes_gothic_chain": {
+    "ko": "블랙 버클 구두",
+    "en": "Black Buckle Shoes",
+    "color": "black",
+    "native": true
+  },
+  "costume_lotus_jade": {
+    "ko": "연꽃 옥빛 원피스",
+    "en": "Lotus Jade Dress",
+    "category": "costume",
+    "color": "mint",
+    "native": true
+  },
+  "shoes_lotus_jade": {
+    "ko": "옥빛 꽃신",
+    "en": "Jade Flat Shoes",
+    "color": "mint",
+    "native": true
+  },
+  "costume_pastel_star": {
+    "ko": "파스텔 별 원피스",
+    "en": "Pastel Star Dress",
+    "category": "costume",
+    "color": "pink",
+    "native": true
+  },
+  "shoes_pastel_star": {
+    "ko": "파스텔 리본 구두",
+    "en": "Pastel Ribbon Shoes",
+    "color": "pink",
+    "native": true
+  },
+  "costume_boy_white_feather": {
+    "ko": "화이트 깃털 코트 의상",
+    "en": "White Feather Coat Outfit",
+    "category": "costume",
+    "color": "white",
+    "native": true
+  },
+  "shoes_boy_white_feather": {
+    "ko": "블랙 로퍼",
+    "en": "Black Loafers",
+    "color": "black",
+    "native": true
+  },
+  "costume_brown_gold_qipao": {
+    "ko": "브라운 골드 치파오 원피스",
+    "en": "Brown Gold Qipao Dress",
+    "category": "costume",
+    "color": "brown",
+    "native": true
+  },
+  "shoes_brown_gold_qipao": {
+    "ko": "브라운 리본 구두",
+    "en": "Brown Ribbon Shoes",
+    "color": "brown",
+    "native": true
+  },
+  "costume_pink_hanfu": {
+    "ko": "핑크 한푸 원피스",
+    "en": "Pink Hanfu Dress",
+    "category": "costume",
+    "color": "pink",
+    "native": true
+  },
+  "shoes_pink_hanfu": {
+    "ko": "블랙 꽃신",
+    "en": "Black Flat Shoes",
+    "color": "black",
+    "native": true
+  },
+  "costume_boy_teal_admiral": {
+    "ko": "틸 제독 의상",
+    "en": "Teal Admiral Outfit",
+    "category": "costume",
+    "color": "mint",
+    "native": true
+  },
+  "shoes_boy_teal_admiral": {
+    "ko": "틸 로퍼",
+    "en": "Teal Loafers",
+    "color": "mint",
+    "native": true
   }
 }
