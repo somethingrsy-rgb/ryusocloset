@@ -460,7 +460,7 @@ export default function App() {
               onRestore={(list) => { restoreItems(list.map((i) => i.id)); showToast(t('restored')) }}
             />
           ) : (
-            <RoomTray key={scene} scene={scene} room={sceneState} onAdd={addToRoom} onLoadCamp={() => { const old = loadCamp(); editRoom({ ...old, wallId: 'camp', floorId: 'camp' }); setSelection(null); showToast(lang === 'ko' ? '이전 캠핑을 내 방으로 불러왔어요.' : 'Your previous campsite is now in My room.') }} onAddCustom={(tab) => { setPropGroup(tab === 'theme' || tab === 'background' ? 'furniture' : tab); setModal('addProp') }} onBackground={(part, id) => { const next = { ...room }; const key = part === 'wall' ? 'wallId' : 'floorId'; if (id) next[key] = id; else delete next[key]; editRoom(next) }} onRemoveCustom={removeMyProp} onRestore={(list) => { restoreItems(list.map((d) => d.id)); showToast(t('restored')) }} />
+            <RoomTray key={scene} scene={scene} room={sceneState} onAdd={addToRoom} onLoadCamp={() => { const old = loadCamp(); editRoom({ ...old, wallId: 'camp', floorId: 'camp' }); setSelection(null); showToast(lang === 'ko' ? '이전 캠핑을 내 방으로 불러왔어요.' : 'Your previous campsite is now in My room.') }} onAddCustom={(tab) => { setPropGroup(tab === 'theme' || tab === 'background' ? 'furniture' : tab); setModal('addProp') }} onBackground={(part, id) => { const next = { ...room, items: [] }; setSelection(null); const key = part === 'wall' ? 'wallId' : 'floorId'; if (id) next[key] = id; else delete next[key]; editRoom(next) }} onRemoveCustom={removeMyProp} onRestore={(list) => { restoreItems(list.map((d) => d.id)); showToast(t('restored')) }} />
           )}
         </aside>
         </div>
