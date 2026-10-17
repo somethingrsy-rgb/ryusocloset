@@ -744,6 +744,30 @@
     "native": true
   },
   {
+    "id": "costume_boy_green_swordsman",
+    "category": "costume",
+    "name": {
+      "ko": "에메랄드 검사 의상",
+      "en": "Emerald Swordsman Outfit"
+    },
+    "color": "green",
+    "colorName": {
+      "ko": "그린",
+      "en": "Green"
+    },
+    "colorHex": "#6f9a72",
+    "box": {
+      "x": 171,
+      "y": 585,
+      "w": 682,
+      "h": 666
+    },
+    "image": "assets/clothes/costume/costume_boy_green_swordsman.webp",
+    "thumb": "assets/thumbs/costume_boy_green_swordsman.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_boy_lavender_tails",
     "category": "costume",
     "name": {
@@ -1748,6 +1772,30 @@
     },
     "image": "assets/clothes/shoes/shoes_boy_feather_blue.webp",
     "thumb": "assets/thumbs/shoes_boy_feather_blue.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_boy_green_swordsman",
+    "category": "shoes",
+    "name": {
+      "ko": "검사 부츠",
+      "en": "Swordsman Boots"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 399,
+      "y": 1246,
+      "w": 228,
+      "h": 259
+    },
+    "image": "assets/clothes/shoes/shoes_boy_green_swordsman.webp",
+    "thumb": "assets/thumbs/shoes_boy_green_swordsman.webp",
     "zIndex": 10,
     "native": true
   },
