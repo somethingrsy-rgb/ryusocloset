@@ -757,10 +757,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 710
+      "x": 127,
+      "y": 608,
+      "w": 770,
+      "h": 781
     },
     "image": "assets/clothes/costume/costume_blue_rose_lolita.webp",
     "thumb": "assets/thumbs/costume_blue_rose_lolita.webp",
@@ -926,7 +926,7 @@
     "colorHex": "#27355b",
     "box": {
       "x": 171,
-      "y": 602,
+      "y": 586,
       "w": 681,
       "h": 828
     },
@@ -1093,10 +1093,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 171,
-      "y": 588,
-      "w": 682,
-      "h": 700
+      "x": 125,
+      "y": 586,
+      "w": 824,
+      "h": 847
     },
     "image": "assets/clothes/costume/costume_boy_white_feather.webp",
     "thumb": "assets/thumbs/costume_boy_white_feather.webp",
@@ -1261,7 +1261,7 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 162,
+      "x": 154,
       "y": 604,
       "w": 700,
       "h": 704
@@ -1357,7 +1357,7 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 162,
+      "x": 154,
       "y": 604,
       "w": 700,
       "h": 505
@@ -1381,10 +1381,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 670
+      "x": 111,
+      "y": 618,
+      "w": 770,
+      "h": 737
     },
     "image": "assets/clothes/costume/costume_lotus_jade.webp",
     "thumb": "assets/thumbs/costume_lotus_jade.webp",
@@ -1405,10 +1405,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 709
+      "x": 127,
+      "y": 616,
+      "w": 770,
+      "h": 780
     },
     "image": "assets/clothes/costume/costume_magnolia_hanfu.webp",
     "thumb": "assets/thumbs/costume_magnolia_hanfu.webp",
@@ -1453,8 +1453,8 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 162,
-      "y": 604,
+      "x": 146,
+      "y": 612,
       "w": 700,
       "h": 635
     },
@@ -1478,7 +1478,7 @@
     "colorHex": "#f4a9bd",
     "box": {
       "x": 162,
-      "y": 604,
+      "y": 628,
       "w": 700,
       "h": 627
     },
@@ -1525,10 +1525,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 674
+      "x": 88,
+      "y": 597,
+      "w": 847,
+      "h": 816
     },
     "image": "assets/clothes/costume/costume_pink_hanfu.webp",
     "thumb": "assets/thumbs/costume_pink_hanfu.webp",
@@ -1597,10 +1597,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 162,
+      "x": 127,
       "y": 604,
-      "w": 700,
-      "h": 641
+      "w": 770,
+      "h": 705
     },
     "image": "assets/clothes/costume/costume_qipao_mint.webp",
     "thumb": "assets/thumbs/costume_qipao_mint.webp",
@@ -1621,10 +1621,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 31,
-      "y": 610,
-      "w": 962,
-      "h": 922
+      "x": 0,
+      "y": 612,
+      "w": 1024,
+      "h": 924
     },
     "image": "assets/clothes/costume/costume_sakura_blue.webp",
     "thumb": "assets/thumbs/costume_sakura_blue.webp",
@@ -1645,10 +1645,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 163,
-      "y": 604,
-      "w": 699,
-      "h": 531
+      "x": 128,
+      "y": 618,
+      "w": 769,
+      "h": 584
     },
     "image": "assets/clothes/costume/costume_sakura_kimono.webp",
     "thumb": "assets/thumbs/costume_sakura_kimono.webp",
@@ -2293,10 +2293,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 403,
-      "y": 1354,
-      "w": 218,
-      "h": 150
+      "x": 367,
+      "y": 1330,
+      "w": 290,
+      "h": 199
     },
     "image": "assets/clothes/shoes/shoes_bat_gothic.webp",
     "thumb": "assets/thumbs/shoes_bat_gothic.webp",
@@ -2317,10 +2317,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 411,
-      "y": 1279,
-      "w": 202,
-      "h": 225
+      "x": 379,
+      "y": 1218,
+      "w": 268,
+      "h": 299
     },
     "image": "assets/clothes/shoes/shoes_blue_rose_lolita.webp",
     "thumb": "assets/thumbs/shoes_blue_rose_lolita.webp",
@@ -2365,10 +2365,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 401,
-      "y": 1295,
-      "w": 225,
-      "h": 209
+      "x": 389,
+      "y": 1284,
+      "w": 248,
+      "h": 230
     },
     "image": "assets/clothes/shoes/shoes_boy_black_vest.webp",
     "thumb": "assets/thumbs/shoes_boy_black_vest.webp",
