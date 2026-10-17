@@ -733,10 +733,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 142,
-      "y": 650,
-      "w": 740,
-      "h": 756
+      "x": 100,
+      "y": 559,
+      "w": 825,
+      "h": 843
     },
     "image": "assets/clothes/costume/costume_boy_feather_blue.webp",
     "thumb": "assets/thumbs/costume_boy_feather_blue.webp",
@@ -757,10 +757,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 142,
-      "y": 650,
-      "w": 740,
-      "h": 883
+      "x": 100,
+      "y": 559,
+      "w": 825,
+      "h": 977
     },
     "image": "assets/clothes/costume/costume_boy_lavender_tails.webp",
     "thumb": "assets/thumbs/costume_boy_lavender_tails.webp",
@@ -781,10 +781,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 142,
-      "y": 650,
-      "w": 740,
-      "h": 869
+      "x": 100,
+      "y": 559,
+      "w": 825,
+      "h": 969
     },
     "image": "assets/clothes/costume/costume_boy_navy_rose.webp",
     "thumb": "assets/thumbs/costume_boy_navy_rose.webp",
@@ -805,10 +805,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 142,
-      "y": 650,
-      "w": 740,
-      "h": 882
+      "x": 100,
+      "y": 559,
+      "w": 825,
+      "h": 977
     },
     "image": "assets/clothes/costume/costume_boy_prince_white.webp",
     "thumb": "assets/thumbs/costume_boy_prince_white.webp",
@@ -829,10 +829,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 142,
-      "y": 650,
-      "w": 740,
-      "h": 767
+      "x": 100,
+      "y": 559,
+      "w": 825,
+      "h": 855
     },
     "image": "assets/clothes/costume/costume_boy_steampunk.webp",
     "thumb": "assets/thumbs/costume_boy_steampunk.webp",
@@ -1741,10 +1741,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 412,
-      "y": 1377,
-      "w": 201,
-      "h": 127
+      "x": 401,
+      "y": 1362,
+      "w": 224,
+      "h": 142
     },
     "image": "assets/clothes/shoes/shoes_boy_feather_blue.webp",
     "thumb": "assets/thumbs/shoes_boy_feather_blue.webp",
@@ -1765,10 +1765,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 412,
-      "y": 1403,
-      "w": 200,
-      "h": 102
+      "x": 400,
+      "y": 1391,
+      "w": 225,
+      "h": 115
     },
     "image": "assets/clothes/shoes/shoes_boy_lavender_tails.webp",
     "thumb": "assets/thumbs/shoes_boy_lavender_tails.webp",
@@ -1789,10 +1789,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 411,
-      "y": 1395,
-      "w": 201,
-      "h": 109
+      "x": 400,
+      "y": 1383,
+      "w": 225,
+      "h": 121
     },
     "image": "assets/clothes/shoes/shoes_boy_navy_rose.webp",
     "thumb": "assets/thumbs/shoes_boy_navy_rose.webp",
@@ -1813,10 +1813,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 412,
-      "y": 1400,
-      "w": 199,
-      "h": 105
+      "x": 400,
+      "y": 1387,
+      "w": 224,
+      "h": 119
     },
     "image": "assets/clothes/shoes/shoes_boy_prince_white.webp",
     "thumb": "assets/thumbs/shoes_boy_prince_white.webp",
@@ -1837,10 +1837,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 410,
-      "y": 1399,
-      "w": 204,
-      "h": 105
+      "x": 398,
+      "y": 1387,
+      "w": 228,
+      "h": 118
     },
     "image": "assets/clothes/shoes/shoes_boy_steampunk.webp",
     "thumb": "assets/thumbs/shoes_boy_steampunk.webp",
