@@ -496,6 +496,134 @@
     "y": 1350
   },
   {
+    "id": "theme_palace_birdcage",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "새장",
+      "en": "Birdcage"
+    },
+    "image": "assets/themes/palace/theme_palace_birdcage.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_birdcage.webp",
+    "w": 378,
+    "h": 480,
+    "baseWidth": 260,
+    "x": 560,
+    "y": 1320
+  },
+  {
+    "id": "theme_palace_bookshelf",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "궁전 책장",
+      "en": "Palace Bookshelf"
+    },
+    "image": "assets/themes/palace/theme_palace_bookshelf.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_bookshelf.webp",
+    "w": 385,
+    "h": 493,
+    "baseWidth": 360,
+    "x": 600,
+    "y": 1310
+  },
+  {
+    "id": "theme_palace_candelabra",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "촛대",
+      "en": "Candelabra"
+    },
+    "image": "assets/themes/palace/theme_palace_candelabra.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_candelabra.webp",
+    "w": 369,
+    "h": 482,
+    "baseWidth": 240,
+    "x": 820,
+    "y": 1330
+  },
+  {
+    "id": "theme_palace_carousel_box",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "회전목마 오르골",
+      "en": "Carousel Music Box"
+    },
+    "image": "assets/themes/palace/theme_palace_carousel_box.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_carousel_box.webp",
+    "w": 393,
+    "h": 465,
+    "baseWidth": 300,
+    "x": 300,
+    "y": 1330
+  },
+  {
+    "id": "theme_palace_crown_cushion",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "왕관 쿠션",
+      "en": "Crown Cushion"
+    },
+    "image": "assets/themes/palace/theme_palace_crown_cushion.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_crown_cushion.webp",
+    "w": 487,
+    "h": 425,
+    "baseWidth": 300,
+    "x": 300,
+    "y": 1340
+  },
+  {
+    "id": "theme_palace_fireplace",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "궁전 벽난로",
+      "en": "Palace Fireplace"
+    },
+    "image": "assets/themes/palace/theme_palace_fireplace.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_fireplace.webp",
+    "w": 444,
+    "h": 419,
+    "baseWidth": 520,
+    "x": 620,
+    "y": 1300
+  },
+  {
+    "id": "theme_palace_harp",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "황금 하프",
+      "en": "Golden Harp"
+    },
+    "image": "assets/themes/palace/theme_palace_harp.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_harp.webp",
+    "w": 386,
+    "h": 515,
+    "baseWidth": 300,
+    "x": 330,
+    "y": 1330
+  },
+  {
+    "id": "theme_palace_jewel_box",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "보석함",
+      "en": "Jewelry Box"
+    },
+    "image": "assets/themes/palace/theme_palace_jewel_box.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_jewel_box.webp",
+    "w": 427,
+    "h": 453,
+    "baseWidth": 280,
+    "x": 300,
+    "y": 1340
+  },
+  {
     "id": "theme_palace_mirror",
     "group": "furniture",
     "theme": "palace",
@@ -510,6 +638,38 @@
     "baseWidth": 230,
     "x": 880,
     "y": 1340
+  },
+  {
+    "id": "theme_palace_parasol",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "레이스 양산",
+      "en": "Lace Parasol"
+    },
+    "image": "assets/themes/palace/theme_palace_parasol.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_parasol.webp",
+    "w": 494,
+    "h": 488,
+    "baseWidth": 330,
+    "x": 820,
+    "y": 1330
+  },
+  {
+    "id": "theme_palace_perfume",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "향수병",
+      "en": "Perfume Bottle"
+    },
+    "image": "assets/themes/palace/theme_palace_perfume.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_perfume.webp",
+    "w": 437,
+    "h": 430,
+    "baseWidth": 240,
+    "x": 560,
+    "y": 1330
   },
   {
     "id": "theme_palace_ribbon_chair",
@@ -542,6 +702,38 @@
     "baseWidth": 230,
     "x": 560,
     "y": 1320
+  },
+  {
+    "id": "theme_palace_suitcase",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "여행 트렁크",
+      "en": "Travel Trunk"
+    },
+    "image": "assets/themes/palace/theme_palace_suitcase.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_suitcase.webp",
+    "w": 457,
+    "h": 406,
+    "baseWidth": 330,
+    "x": 850,
+    "y": 1340
+  },
+  {
+    "id": "theme_palace_tea_cart",
+    "group": "furniture",
+    "theme": "palace",
+    "name": {
+      "ko": "티 카트",
+      "en": "Tea Cart"
+    },
+    "image": "assets/themes/palace/theme_palace_tea_cart.webp",
+    "thumb": "assets/themes/palace/thumbs/theme_palace_tea_cart.webp",
+    "w": 466,
+    "h": 475,
+    "baseWidth": 420,
+    "x": 840,
+    "y": 1340
   },
   {
     "id": "theme_palace_tea_table",

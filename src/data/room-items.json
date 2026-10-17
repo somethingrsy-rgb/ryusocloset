@@ -105,6 +105,96 @@
     "y": 1290
   },
   {
+    "id": "furniture_plush_bear_bow",
+    "group": "furniture",
+    "name": {
+      "ko": "리본 곰인형",
+      "en": "Bow Teddy Bear"
+    },
+    "image": "assets/room/furniture_plush_bear_bow.webp",
+    "thumb": "assets/room/thumbs/furniture_plush_bear_bow.webp",
+    "w": 361,
+    "h": 411,
+    "baseWidth": 220,
+    "x": 490,
+    "y": 1290
+  },
+  {
+    "id": "furniture_plush_bunny",
+    "group": "furniture",
+    "name": {
+      "ko": "토끼 인형",
+      "en": "Bunny Plush"
+    },
+    "image": "assets/room/furniture_plush_bunny.webp",
+    "thumb": "assets/room/thumbs/furniture_plush_bunny.webp",
+    "w": 347,
+    "h": 519,
+    "baseWidth": 220,
+    "x": 250,
+    "y": 1290
+  },
+  {
+    "id": "furniture_plush_cat",
+    "group": "furniture",
+    "name": {
+      "ko": "고양이 인형",
+      "en": "Kitty Plush"
+    },
+    "image": "assets/room/furniture_plush_cat.webp",
+    "thumb": "assets/room/thumbs/furniture_plush_cat.webp",
+    "w": 408,
+    "h": 410,
+    "baseWidth": 220,
+    "x": 570,
+    "y": 1290
+  },
+  {
+    "id": "furniture_plush_panda",
+    "group": "furniture",
+    "name": {
+      "ko": "판다 인형",
+      "en": "Panda Plush"
+    },
+    "image": "assets/room/furniture_plush_panda.webp",
+    "thumb": "assets/room/thumbs/furniture_plush_panda.webp",
+    "w": 373,
+    "h": 406,
+    "baseWidth": 220,
+    "x": 650,
+    "y": 1290
+  },
+  {
+    "id": "furniture_plush_puppy",
+    "group": "furniture",
+    "name": {
+      "ko": "강아지 인형",
+      "en": "Puppy Plush"
+    },
+    "image": "assets/room/furniture_plush_puppy.webp",
+    "thumb": "assets/room/thumbs/furniture_plush_puppy.webp",
+    "w": 443,
+    "h": 376,
+    "baseWidth": 220,
+    "x": 330,
+    "y": 1290
+  },
+  {
+    "id": "furniture_plush_tiger",
+    "group": "furniture",
+    "name": {
+      "ko": "호랑이 인형",
+      "en": "Tiger Plush"
+    },
+    "image": "assets/room/furniture_plush_tiger.webp",
+    "thumb": "assets/room/thumbs/furniture_plush_tiger.webp",
+    "w": 391,
+    "h": 403,
+    "baseWidth": 220,
+    "x": 410,
+    "y": 1290
+  },
+  {
     "id": "furniture_shoebox",
     "group": "furniture",
     "name": {

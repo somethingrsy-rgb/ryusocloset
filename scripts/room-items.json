@@ -166,5 +166,47 @@
     "baseWidth": 300,
     "x": 800,
     "y": 1290
+  },
+  "furniture_plush_bunny": {
+    "ko": "토끼 인형",
+    "en": "Bunny Plush",
+    "baseWidth": 220,
+    "x": 250,
+    "y": 1290
+  },
+  "furniture_plush_puppy": {
+    "ko": "강아지 인형",
+    "en": "Puppy Plush",
+    "baseWidth": 220,
+    "x": 330,
+    "y": 1290
+  },
+  "furniture_plush_tiger": {
+    "ko": "호랑이 인형",
+    "en": "Tiger Plush",
+    "baseWidth": 220,
+    "x": 410,
+    "y": 1290
+  },
+  "furniture_plush_bear_bow": {
+    "ko": "리본 곰인형",
+    "en": "Bow Teddy Bear",
+    "baseWidth": 220,
+    "x": 490,
+    "y": 1290
+  },
+  "furniture_plush_cat": {
+    "ko": "고양이 인형",
+    "en": "Kitty Plush",
+    "baseWidth": 220,
+    "x": 570,
+    "y": 1290
+  },
+  "furniture_plush_panda": {
+    "ko": "판다 인형",
+    "en": "Panda Plush",
+    "baseWidth": 220,
+    "x": 650,
+    "y": 1290
   }
 }
