@@ -19,7 +19,7 @@ import { FarmScene } from './components/FarmScene'
 import { ShopModal } from './components/ShopModal'
 import { TravelGame } from './components/TravelGame'
 import { Toast } from './components/Toast'
-import { I18nContext, detectLang, makeT, type Lang } from './i18n'
+import { I18nContext, makeT, type Lang } from './i18n'
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
 import { loadImage, renderOutfitCanvas, renderThumb } from './lib/exportPng'
 import type { RoomExportViewport } from './lib/roomExportBounds'
@@ -76,7 +76,7 @@ function useWideScreen() {
 
 export default function App() {
   const initial = useMemo(loadSettings, [])
-  const [lang, setLang] = useState<Lang>(initial.lang ?? detectLang())
+  const [lang, setLang] = useState<Lang>(initial.lang ?? 'ko')
   const [sound, setSound] = useState(initial.sound ?? true)
   const [bgId, setBgId] = useState(
     initial.bgId && BACKGROUNDS.some((b) => b.id === initial.bgId) ? initial.bgId : DEFAULT_BG_ID,
