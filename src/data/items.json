@@ -733,10 +733,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 172,
-      "y": 588,
-      "w": 682,
-      "h": 697
+      "x": 138,
+      "y": 593,
+      "w": 750,
+      "h": 767
     },
     "image": "assets/clothes/costume/costume_boy_feather_blue.webp",
     "thumb": "assets/thumbs/costume_boy_feather_blue.webp",
@@ -830,7 +830,7 @@
     "colorHex": "#8a5a3b",
     "box": {
       "x": 172,
-      "y": 589,
+      "y": 613,
       "w": 682,
       "h": 707
     },
