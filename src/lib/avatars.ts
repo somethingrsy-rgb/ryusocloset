@@ -35,6 +35,10 @@ export const AVATARS: Avatar[] = [
       { id: 'crownbuns', name: { ko: '왕관 땋은머리 + 양쪽 번', en: 'Crown braid with buns' }, file: 'hair_crownbuns.webp' },
     ],
   },
+  {
+    id: 'yuel', name: { ko: '유엘', en: 'Yuel' }, dir: 'assets/base/yuel',
+    hairstyles: [{ id: 'short', name: { ko: '짧은 머리', en: 'Short hair' }, file: 'hair_front.webp' }],
+  },
 ]
 
 const KEY = 'ryuso.avatar.v1'

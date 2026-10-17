@@ -720,6 +720,126 @@
     "native": true
   },
   {
+    "id": "costume_boy_feather_blue",
+    "category": "costume",
+    "name": {
+      "ko": "블루 깃털 의상",
+      "en": "Blue Feather Outfit"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 142,
+      "y": 650,
+      "w": 740,
+      "h": 756
+    },
+    "image": "assets/clothes/costume/costume_boy_feather_blue.webp",
+    "thumb": "assets/thumbs/costume_boy_feather_blue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_boy_lavender_tails",
+    "category": "costume",
+    "name": {
+      "ko": "라벤더 연미복",
+      "en": "Lavender Tailcoat"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 142,
+      "y": 650,
+      "w": 740,
+      "h": 883
+    },
+    "image": "assets/clothes/costume/costume_boy_lavender_tails.webp",
+    "thumb": "assets/thumbs/costume_boy_lavender_tails.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_boy_navy_rose",
+    "category": "costume",
+    "name": {
+      "ko": "네이비 장미 의상",
+      "en": "Navy Rose Outfit"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 142,
+      "y": 650,
+      "w": 740,
+      "h": 869
+    },
+    "image": "assets/clothes/costume/costume_boy_navy_rose.webp",
+    "thumb": "assets/thumbs/costume_boy_navy_rose.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_boy_prince_white",
+    "category": "costume",
+    "name": {
+      "ko": "화이트 왕자 의상",
+      "en": "White Prince Outfit"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 142,
+      "y": 650,
+      "w": 740,
+      "h": 882
+    },
+    "image": "assets/clothes/costume/costume_boy_prince_white.webp",
+    "thumb": "assets/thumbs/costume_boy_prince_white.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_boy_steampunk",
+    "category": "costume",
+    "name": {
+      "ko": "스팀펑크 의상",
+      "en": "Steampunk Outfit"
+    },
+    "color": "brown",
+    "colorName": {
+      "ko": "브라운",
+      "en": "Brown"
+    },
+    "colorHex": "#8a5a3b",
+    "box": {
+      "x": 142,
+      "y": 650,
+      "w": 740,
+      "h": 767
+    },
+    "image": "assets/clothes/costume/costume_boy_steampunk.webp",
+    "thumb": "assets/thumbs/costume_boy_steampunk.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_checker_queen",
     "category": "costume",
     "name": {
@@ -1604,6 +1724,126 @@
     },
     "image": "assets/clothes/shoes/shoes_bow_flats_black.webp",
     "thumb": "assets/thumbs/shoes_bow_flats_black.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_boy_feather_blue",
+    "category": "shoes",
+    "name": {
+      "ko": "블루 샌들",
+      "en": "Blue Sandals"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 412,
+      "y": 1377,
+      "w": 201,
+      "h": 127
+    },
+    "image": "assets/clothes/shoes/shoes_boy_feather_blue.webp",
+    "thumb": "assets/thumbs/shoes_boy_feather_blue.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_boy_lavender_tails",
+    "category": "shoes",
+    "name": {
+      "ko": "화이트 구두",
+      "en": "White Shoes"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 412,
+      "y": 1403,
+      "w": 200,
+      "h": 102
+    },
+    "image": "assets/clothes/shoes/shoes_boy_lavender_tails.webp",
+    "thumb": "assets/thumbs/shoes_boy_lavender_tails.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_boy_navy_rose",
+    "category": "shoes",
+    "name": {
+      "ko": "블랙 구두",
+      "en": "Black Shoes"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 411,
+      "y": 1395,
+      "w": 201,
+      "h": 109
+    },
+    "image": "assets/clothes/shoes/shoes_boy_navy_rose.webp",
+    "thumb": "assets/thumbs/shoes_boy_navy_rose.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_boy_prince_white",
+    "category": "shoes",
+    "name": {
+      "ko": "왕자 구두",
+      "en": "Prince Shoes"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 412,
+      "y": 1400,
+      "w": 199,
+      "h": 105
+    },
+    "image": "assets/clothes/shoes/shoes_boy_prince_white.webp",
+    "thumb": "assets/thumbs/shoes_boy_prince_white.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_boy_steampunk",
+    "category": "shoes",
+    "name": {
+      "ko": "부츠",
+      "en": "Steampunk Boots"
+    },
+    "color": "brown",
+    "colorName": {
+      "ko": "브라운",
+      "en": "Brown"
+    },
+    "colorHex": "#8a5a3b",
+    "box": {
+      "x": 410,
+      "y": 1399,
+      "w": 204,
+      "h": 105
+    },
+    "image": "assets/clothes/shoes/shoes_boy_steampunk.webp",
+    "thumb": "assets/thumbs/shoes_boy_steampunk.webp",
     "zIndex": 10,
     "native": true
   },
