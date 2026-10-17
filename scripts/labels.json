@@ -888,13 +888,6 @@
     "color": "brown",
     "native": true
   },
-  "costume_boy_steampunk": {
-    "ko": "스팀펑크 의상",
-    "en": "Steampunk Outfit",
-    "category": "costume",
-    "color": "brown",
-    "native": true
-  },
   "shoes_boy_steampunk": {
     "ko": "부츠",
     "en": "Steampunk Boots",
@@ -1268,37 +1261,16 @@
     "color": "pink",
     "native": true
   },
-  "costume_boy_black_vest": {
-    "ko": "블랙 조끼 의상",
-    "en": "Black Vest Outfit",
-    "category": "costume",
-    "color": "black",
-    "native": true
-  },
   "shoes_boy_black_vest": {
     "ko": "블랙 버클 부츠",
     "en": "Black Buckle Boots",
     "color": "black",
     "native": true
   },
-  "costume_boy_rainbow_hoodie": {
-    "ko": "무지개 후드 의상",
-    "en": "Rainbow Hoodie Outfit",
-    "category": "costume",
-    "color": "white",
-    "native": true
-  },
   "shoes_boy_rainbow_hoodie": {
     "ko": "무지개 운동화",
     "en": "Rainbow Sneakers",
     "color": "white",
-    "native": true
-  },
-  "costume_boy_blue_cardigan": {
-    "ko": "블루 가디건 의상",
-    "en": "Blue Cardigan Outfit",
-    "category": "costume",
-    "color": "skyblue",
     "native": true
   },
   "shoes_boy_blue_cardigan": {
