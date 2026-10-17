@@ -720,6 +720,30 @@
     "native": true
   },
   {
+    "id": "costume_bat_gothic",
+    "category": "costume",
+    "name": {
+      "ko": "박쥐 고딕 원피스",
+      "en": "Bat Gothic Dress"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 572
+    },
+    "image": "assets/clothes/costume/costume_bat_gothic.webp",
+    "thumb": "assets/thumbs/costume_bat_gothic.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_blue_rose_lolita",
     "category": "costume",
     "name": {
@@ -740,6 +764,54 @@
     },
     "image": "assets/clothes/costume/costume_blue_rose_lolita.webp",
     "thumb": "assets/thumbs/costume_blue_rose_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_boy_black_vest",
+    "category": "costume",
+    "name": {
+      "ko": "블랙 조끼 의상",
+      "en": "Black Vest Outfit"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 171,
+      "y": 582,
+      "w": 681,
+      "h": 638
+    },
+    "image": "assets/clothes/costume/costume_boy_black_vest.webp",
+    "thumb": "assets/thumbs/costume_boy_black_vest.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_boy_blue_cardigan",
+    "category": "costume",
+    "name": {
+      "ko": "블루 가디건 의상",
+      "en": "Blue Cardigan Outfit"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 171,
+      "y": 596,
+      "w": 682,
+      "h": 768
+    },
+    "image": "assets/clothes/costume/costume_boy_blue_cardigan.webp",
+    "thumb": "assets/thumbs/costume_boy_blue_cardigan.webp",
     "zIndex": 41,
     "native": true
   },
@@ -932,6 +1004,30 @@
     },
     "image": "assets/clothes/costume/costume_boy_purple_cape.webp",
     "thumb": "assets/thumbs/costume_boy_purple_cape.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_boy_rainbow_hoodie",
+    "category": "costume",
+    "name": {
+      "ko": "무지개 후드 의상",
+      "en": "Rainbow Hoodie Outfit"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 171,
+      "y": 600,
+      "w": 682,
+      "h": 808
+    },
+    "image": "assets/clothes/costume/costume_boy_rainbow_hoodie.webp",
+    "thumb": "assets/thumbs/costume_boy_rainbow_hoodie.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1224,6 +1320,30 @@
     "native": true
   },
   {
+    "id": "costume_lavender_jacket",
+    "category": "costume",
+    "name": {
+      "ko": "보라 자켓 원피스",
+      "en": "Lavender Jacket Dress"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 523
+    },
+    "image": "assets/clothes/costume/costume_lavender_jacket.webp",
+    "thumb": "assets/thumbs/costume_lavender_jacket.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_lemon_sailor",
     "category": "costume",
     "name": {
@@ -1416,6 +1536,30 @@
     "native": true
   },
   {
+    "id": "costume_pink_maid",
+    "category": "costume",
+    "name": {
+      "ko": "핑크 리본 메이드 원피스",
+      "en": "Pink Ribbon Maid Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 162,
+      "y": 604,
+      "w": 700,
+      "h": 590
+    },
+    "image": "assets/clothes/costume/costume_pink_maid.webp",
+    "thumb": "assets/thumbs/costume_pink_maid.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_princess_pink",
     "category": "costume",
     "name": {
@@ -1484,6 +1628,30 @@
     },
     "image": "assets/clothes/costume/costume_sakura_blue.webp",
     "thumb": "assets/thumbs/costume_sakura_blue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_sakura_kimono",
+    "category": "costume",
+    "name": {
+      "ko": "벚꽃 기모노 원피스",
+      "en": "Sakura Kimono Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 163,
+      "y": 604,
+      "w": 699,
+      "h": 531
+    },
+    "image": "assets/clothes/costume/costume_sakura_kimono.webp",
+    "thumb": "assets/thumbs/costume_sakura_kimono.webp",
     "zIndex": 41,
     "native": true
   },
@@ -2112,6 +2280,30 @@
     "native": true
   },
   {
+    "id": "shoes_bat_gothic",
+    "category": "shoes",
+    "name": {
+      "ko": "박쥐 리본 구두",
+      "en": "Bat Ribbon Shoes"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 403,
+      "y": 1354,
+      "w": 218,
+      "h": 150
+    },
+    "image": "assets/clothes/shoes/shoes_bat_gothic.webp",
+    "thumb": "assets/thumbs/shoes_bat_gothic.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_blue_rose_lolita",
     "category": "shoes",
     "name": {
@@ -2156,6 +2348,54 @@
     },
     "image": "assets/clothes/shoes/shoes_bow_flats_black.webp",
     "thumb": "assets/thumbs/shoes_bow_flats_black.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_boy_black_vest",
+    "category": "shoes",
+    "name": {
+      "ko": "블랙 버클 부츠",
+      "en": "Black Buckle Boots"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 401,
+      "y": 1295,
+      "w": 225,
+      "h": 209
+    },
+    "image": "assets/clothes/shoes/shoes_boy_black_vest.webp",
+    "thumb": "assets/thumbs/shoes_boy_black_vest.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_boy_blue_cardigan",
+    "category": "shoes",
+    "name": {
+      "ko": "네이비 스니커즈",
+      "en": "Navy Sneakers"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 399,
+      "y": 1379,
+      "w": 225,
+      "h": 126
+    },
+    "image": "assets/clothes/shoes/shoes_boy_blue_cardigan.webp",
+    "thumb": "assets/thumbs/shoes_boy_blue_cardigan.webp",
     "zIndex": 10,
     "native": true
   },
@@ -2352,6 +2592,30 @@
     "native": true
   },
   {
+    "id": "shoes_boy_rainbow_hoodie",
+    "category": "shoes",
+    "name": {
+      "ko": "무지개 운동화",
+      "en": "Rainbow Sneakers"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 398,
+      "y": 1365,
+      "w": 227,
+      "h": 139
+    },
+    "image": "assets/clothes/shoes/shoes_boy_rainbow_hoodie.webp",
+    "thumb": "assets/thumbs/shoes_boy_rainbow_hoodie.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_boy_steampunk",
     "category": "shoes",
     "name": {
@@ -2520,6 +2784,30 @@
     "native": true
   },
   {
+    "id": "shoes_lavender_jacket",
+    "category": "shoes",
+    "name": {
+      "ko": "보라 부츠",
+      "en": "Lavender Boots"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 414,
+      "y": 1316,
+      "w": 197,
+      "h": 188
+    },
+    "image": "assets/clothes/shoes/shoes_lavender_jacket.webp",
+    "thumb": "assets/thumbs/shoes_lavender_jacket.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_lemon_sailor",
     "category": "shoes",
     "name": {
@@ -2664,6 +2952,30 @@
     "native": true
   },
   {
+    "id": "shoes_pink_maid",
+    "category": "shoes",
+    "name": {
+      "ko": "핑크 메리제인",
+      "en": "Pink Mary Janes"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 407,
+      "y": 1359,
+      "w": 209,
+      "h": 145
+    },
+    "image": "assets/clothes/shoes/shoes_pink_maid.webp",
+    "thumb": "assets/thumbs/shoes_pink_maid.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_pink_maryjane_socks",
     "category": "shoes",
     "name": {
@@ -2732,6 +3044,30 @@
     },
     "image": "assets/clothes/shoes/shoes_qipao_mint.webp",
     "thumb": "assets/thumbs/shoes_qipao_mint.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_sakura_kimono",
+    "category": "shoes",
+    "name": {
+      "ko": "벚꽃 게타",
+      "en": "Sakura Geta"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 410,
+      "y": 1371,
+      "w": 204,
+      "h": 133
+    },
+    "image": "assets/clothes/shoes/shoes_sakura_kimono.webp",
+    "thumb": "assets/thumbs/shoes_sakura_kimono.webp",
     "zIndex": 10,
     "native": true
   },
@@ -3069,6 +3405,30 @@
     "image": "assets/clothes/shoes/shoes_yellow_ribbon_maryjane.webp",
     "thumb": "assets/thumbs/shoes_yellow_ribbon_maryjane.webp",
     "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "acc_bat_choker",
+    "category": "accessory",
+    "name": {
+      "ko": "박쥐 초커",
+      "en": "Bat Choker"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 397,
+      "y": 654,
+      "w": 230,
+      "h": 135
+    },
+    "image": "assets/clothes/accessory/acc_bat_choker.webp",
+    "thumb": "assets/thumbs/acc_bat_choker.webp",
+    "zIndex": 70,
     "native": true
   },
   {
@@ -4004,6 +4364,30 @@
     },
     "image": "assets/clothes/accessory/acc_pink_heart_bow.webp",
     "thumb": "assets/thumbs/acc_pink_heart_bow.webp",
+    "zIndex": 70,
+    "native": true
+  },
+  {
+    "id": "acc_sakura_hairpin",
+    "category": "accessory",
+    "name": {
+      "ko": "벚꽃 비녀",
+      "en": "Sakura Hairpin"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 715,
+      "y": 179,
+      "w": 150,
+      "h": 242
+    },
+    "image": "assets/clothes/accessory/acc_sakura_hairpin.webp",
+    "thumb": "assets/thumbs/acc_sakura_hairpin.webp",
     "zIndex": 70,
     "native": true
   },
