@@ -757,10 +757,10 @@
     },
     "colorHex": "#6f9a72",
     "box": {
-      "x": 171,
-      "y": 585,
-      "w": 682,
-      "h": 666
+      "x": 100,
+      "y": 595,
+      "w": 825,
+      "h": 806
     },
     "image": "assets/clothes/costume/costume_boy_green_swordsman.webp",
     "thumb": "assets/thumbs/costume_boy_green_swordsman.webp",
