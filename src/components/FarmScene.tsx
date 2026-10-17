@@ -12,12 +12,12 @@ type Tool = 'seed' | 'water' | 'harvest'
 
 /**
  * 농장 그림은 두 장: 가로 화면용(1586×992)과 폰 세로용(1024×1536). 둘 다 가운데부터 아래까지 하나로 이어진 넓은 풀밭이 있고
- * 거기에 밭 45칸(앞 9칸은 무료, 나머지는 코인으로 구매)을 놓는다. 좌표는 모두 그림 안의 px.
+ * 거기에 밭 20칸(앞 9칸은 무료, 나머지는 코인으로 구매)을 놓는다. 좌표는 모두 그림 안의 px.
  * 밭 칸은 오른쪽으로 기운 평행사변형 그림(1433×646)이고, 풀밭 크기에 맞춰 칸 폭(tw)과 밭 덩어리 가운데(cx, cy)를 정한다.
  */
 const LAYOUT = {
-  portrait: { img: 'farm_portrait', w: 1024, h: 1536, cols: 4, rows: 9, cx: 512, cy: 800, tw: 168, avatarH: 19, home: { x: 44, y: 12 }, stall: { left: '67%', top: '14%', width: '18%', height: '14%' } },
-  wide: { img: 'farm_wide', w: 1586, h: 992, cols: 9, rows: 4, cx: 665, cy: 560, tw: 145, avatarH: 22, home: { x: 41, y: 12 }, stall: { left: '63%', top: '17%', width: '12%', height: '20%' } },
+  portrait: { img: 'farm_portrait', w: 1024, h: 1536, cols: 4, rows: 5, cx: 512, cy: 790, tw: 215, rowGap: 21, avatarH: 19, home: { x: 44, y: 12 }, stall: { left: '67%', top: '14%', width: '18%', height: '14%' } },
+  wide: { img: 'farm_wide', w: 1586, h: 992, cols: 5, rows: 4, cx: 655, cy: 560, tw: 185, rowGap: 3, avatarH: 22, home: { x: 41, y: 12 }, stall: { left: '63%', top: '17%', width: '12%', height: '20%' } },
 } as const
 type Layout = (typeof LAYOUT)[keyof typeof LAYOUT]
 /** 밭 한 칸의 가운데 위치(그림 가로·세로 %)와 칸 크기(%) */
@@ -25,7 +25,7 @@ function plotBox(i: number, L: Layout) {
   const r = Math.floor(i / L.cols)
   const c = i % L.cols
   const th = (L.tw * 646) / 1433
-  const rowPitch = th + 3
+  const rowPitch = th + L.rowGap
   const shear = (281 / 1433) * L.tw * (rowPitch / th)
   const pitch = (1152 / 1433) * L.tw + 4
   const x = L.cx + (c - (L.cols - 1) / 2) * pitch + ((L.rows - 1) / 2 - r) * shear
