@@ -187,7 +187,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
     <div className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5" style={{ containerType: 'size' }}>
       {assets && <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <div className="relative" style={{ width: `min(100cqw, calc((100cqh - ${ROOM_STAGE_DIFF}dvh) * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` }}>
-          {[-1, 0, 1].flatMap(ky => [-2, -1, 0, 1, 2].map(k => ({ k, ky }))).filter(({ k, ky }) => k || ky).map(({ k, ky }) => <div key={`${k}_${ky}`} className="absolute h-full w-full" style={{ left: `${k * 100}%`, top: `${ky * 100}%`, transform: `scale(${Math.abs(k) % 2 ? -1 : 1}, ${ky ? -1 : 1})` }}>
+          {[-1, 0, 1].flatMap(ky => [-2, -1, 0, 1, 2].map(k => ({ k, ky }))).filter(({ k, ky }) => k || ky).map(({ k, ky }) => <div key={`${k}_${ky}`} className="absolute" style={{ left: `calc(${k * 100}% - 1px)`, top: `calc(${ky * 100}% - 1px)`, width: 'calc(100% + 2px)', height: 'calc(100% + 2px)', transform: `scale(${Math.abs(k) % 2 ? -1 : 1}, ${ky ? -1 : 1})` }}>
             <img src={assets.floor} alt="" draggable={false} className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${assets.floorH / ROOM_H * 100}%` }} />
             <img src={assets.wall} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
           </div>)}

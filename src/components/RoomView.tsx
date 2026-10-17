@@ -217,8 +217,8 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
           {[-2, -1, 1, 2].map((k) => (
             <div
               key={k}
-              className="absolute top-0 h-full w-full"
-              style={{ left: `${k * 100}%`, transform: Math.abs(k) % 2 ? 'scaleX(-1)' : undefined }}
+              className="absolute top-0 h-full"
+              style={{ left: `calc(${k * 100}% - 1px)`, width: 'calc(100% + 2px)', transform: Math.abs(k) % 2 ? 'scaleX(-1)' : undefined }}
             >
               <img
                 src={assets.floor}
