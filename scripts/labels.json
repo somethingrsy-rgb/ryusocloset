@@ -952,5 +952,18 @@
     "en": "Black Shoes",
     "color": "navy",
     "native": true
+  },
+  "costume_boy_green_swordsman": {
+    "ko": "에메랄드 검사 의상",
+    "en": "Emerald Swordsman Outfit",
+    "category": "costume",
+    "color": "green",
+    "native": true
+  },
+  "shoes_boy_green_swordsman": {
+    "ko": "검사 부츠",
+    "en": "Swordsman Boots",
+    "color": "black",
+    "native": true
   }
 }
