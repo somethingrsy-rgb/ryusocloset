@@ -4,7 +4,7 @@ import { actFarm, getFarm, subscribeFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 
 type Menu = { id: string; ko: string; en: string; price: number }
-/** 메뉴 그림은 public/cafe/menu/<id>.webp */
+/** 메뉴 그림은 public/cafe/menu2/<id>.webp */
 const MENU: Menu[] = [
   { id: 'latte', ko: '카페라테', en: 'Cafe latte', price: 3 },
   { id: 'coffee', ko: '아이스 커피', en: 'Iced coffee', price: 3 },
@@ -18,7 +18,7 @@ const MENU: Menu[] = [
   { id: 'jelly', ko: '딸기 젤리 케이크', en: 'Jelly cake', price: 8 },
 ]
 function Ico({ id, className }: { id: string; className: string }) {
-  return <img src={assetUrl(`cafe/menu/${id}.webp`)} alt="" draggable={false} className={`select-none object-contain ${className}`} />
+  return <img src={assetUrl(`cafe/menu2/${id}.webp`)} alt="" draggable={false} className={`select-none object-contain ${className}`} />
 }
 /** 배경 그림 속 손님 세 마리의 자리(그림 크기에 대한 %). 눌러서 주문을 받는다 */
 const SEATS = [
