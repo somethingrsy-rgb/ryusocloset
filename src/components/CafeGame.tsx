@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
+import { assetUrl } from '../lib/items'
 
 type Menu = { id: string; icon: string; ko: string; en: string; price: number }
 const MENU: Menu[] = [
@@ -9,13 +10,18 @@ const MENU: Menu[] = [
   { id: 'cake', icon: '🍰', ko: '딸기 케이크', en: 'Strawberry cake', price: 35 },
   { id: 'tart', icon: '🥧', ko: '딸기 타르트', en: 'Strawberry tart', price: 40 },
 ]
-const ANIMALS = [['🐰', '몽실'], ['🐻', '곰이'], ['🐥', '삐약'], ['🐱', '냥냥'], ['🐹', '햄찌'], ['🐶', '보리']] as const
+/** 배경 그림 속 손님 세 마리의 자리(그림 크기에 대한 %). 눌러서 주문을 받는다 */
+const SEATS = [
+  { animal: '🐻', name: '곰이', box: { left: 0, top: 57, width: 17, height: 17 } },
+  { animal: '🐥', name: '삐약', box: { left: 27, top: 79, width: 16, height: 13 } },
+  { animal: '🐰', name: '몽실', box: { left: 75, top: 63, width: 19, height: 18 } },
+] as const
 const ITEMS = [
   { id: 'vines', icon: '🍓', ko: '딸기 덩굴', en: 'Strawberry vines', price: 70 },
   { id: 'flowers', icon: '🌸', ko: '꽃 화분', en: 'Flower pots', price: 100 },
-  { id: 'cloth', icon: '🧺', ko: '체크 식탁보', en: 'Gingham cloth', price: 120 },
-  { id: 'garland', icon: '🎀', ko: '리본 가랜드', en: 'Ribbon garland', price: 150 },
-  { id: 'lamp', icon: '🏮', ko: '분홍 조명', en: 'Pink lamp', price: 200 },
+  { id: 'garland', icon: '🎀', ko: '리본 가랜드', en: 'Ribbon garland', price: 120 },
+  { id: 'sparkle', icon: '✨', ko: '반짝이 별빛', en: 'Sparkles', price: 150 },
+  { id: 'cat', icon: '🐱', ko: '고양이 친구', en: 'Cat friend', price: 200 },
 ]
 const COOK_MS = 2400
 const GOAL = 5
@@ -32,10 +38,7 @@ const loadSaved = (): Saved => {
 }
 
 const pick = (n: number) => Math.floor(Math.random() * n)
-const newGuest = () => {
-  const a = ANIMALS[pick(ANIMALS.length)]
-  return { animal: a[0], name: a[1], order: pick(MENU.length) }
-}
+const newGuest = (i: number) => ({ animal: SEATS[i].animal, name: SEATS[i].name, order: pick(MENU.length) })
 
 const T = {
   ko: {
@@ -93,7 +96,7 @@ export function CafeGame() {
   const { lang } = useI18n()
   const tx = T[lang]
   const [st, setSt] = useState<Saved>(loadSaved)
-  const [guests, setGuests] = useState(() => [newGuest(), newGuest(), newGuest()])
+  const [guests, setGuests] = useState(() => [newGuest(0), newGuest(1), newGuest(2)])
   const [active, setActive] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
   const [phase, setPhase] = useState<'idle' | 'cooking' | 'ready'>('idle')
@@ -134,7 +137,7 @@ export function CafeGame() {
       save({ ...st, coins: st.coins + m.price + (bonus ? 50 : 0), served: st.served + 1, reward: st.reward || bonus })
       beep()
       setDiary(tx.diary(g.animal, g.name, name(m)))
-      setGuests((gs) => gs.map((x, i) => (i === active ? newGuest() : x)))
+      setGuests((gs) => gs.map((x, i) => (i === active ? newGuest(i) : x)))
       setPhase('idle')
       setSelected(null)
       setStatus(tx.paid(m.price))
@@ -183,42 +186,29 @@ export function CafeGame() {
       </div>
 
       <div className="overflow-hidden rounded-[27px] border-[6px] border-[#fff8f4] shadow-md">
-        <div className="relative h-[510px] overflow-hidden bg-gradient-to-b from-[#cfe6f5] to-[#eaf3dc]">
-          <span aria-hidden className="absolute top-2 left-3 text-4xl opacity-90">☁️</span>
-          <span aria-hidden className="absolute top-16 left-2 text-xl opacity-80">✨</span>
-          <div aria-hidden className="absolute inset-x-6 top-[120px] bottom-0 rounded-t-xl bg-[#f6d3d3] bg-[linear-gradient(#0000_0_0),repeating-linear-gradient(0deg,#ecbcbf44_0_1px,#0000_1px_22px),repeating-linear-gradient(90deg,#ecbcbf44_0_1px,#0000_1px_44px)]" />
-          <div aria-hidden className="absolute inset-x-6 top-[290px] bottom-0" style={{ background: 'repeating-conic-gradient(#f4e2c6 0 25%,#fbefd9 0 50%) 0 0/60px 48px' }} />
-          <div aria-hidden className="absolute top-2 left-1/2 z-[4] -translate-x-1/2 rounded-t-[60px] rounded-b-lg border-4 border-[#c9a073] bg-[#fff7e8] px-6 pt-3 pb-1.5 text-center text-lg leading-tight text-[#d4616d]" style={{ fontFamily: FONT }}>🍓<br />Strawberry<br />Café</div>
-          <div aria-hidden className="absolute inset-x-3 top-[112px] z-[3] h-12 rounded-b-3xl bg-[repeating-linear-gradient(90deg,#f8b4c0_0_36px,#fff7ee_36px_72px)] shadow-[0_5px_0_#e9a0ae55]" />
-          <div aria-hidden className="absolute inset-x-3 top-[150px] z-[3] flex justify-between px-1 text-sm leading-none">{Array.from({ length: 9 }, (_, i) => <span key={i} className="-mt-1 text-[#f4a4b3]">●</span>)}</div>
-          <p className="absolute top-[180px] left-8 z-10 m-0 rounded-xl bg-[#fffaf1]/90 px-2.5 py-1 text-[10px]"><i className="mr-1.5 inline-block h-[7px] w-[7px] rounded-full bg-[#e8707f]" />{tx.open}</p>
-          <div aria-hidden className="absolute top-[205px] left-9 z-[2] -rotate-2 rounded-lg border-4 border-[#a2754d] bg-[#4a4745] px-2 py-1.5 text-center text-[10px] leading-snug text-white">Menu<br />🍓 Latte<br />🍓 Cake<br />🍓 Milk</div>
-          <span aria-hidden className="absolute top-[170px] right-9 z-[2] text-3xl">{has('lamp') ? '🏮' : '💡'}</span>
-          <div aria-hidden className="absolute top-[222px] right-8 z-[2] flex items-center gap-1 text-3xl">{has('flowers') ? '🌸🌼' : '🪴'}</div>
-          {has('vines') && <div aria-hidden className="absolute top-[100px] left-0 z-[5] text-3xl leading-none">🍓🌸🍃<br />🍃🍓</div>}
-          {has('vines') && <div aria-hidden className="absolute top-[100px] right-0 z-[5] text-right text-3xl leading-none">🌸🍓🍃<br />🍓🍃</div>}
-          {has('garland') && <div aria-hidden className="absolute inset-x-8 top-[300px] z-[2] flex justify-around text-xl">{'🎀🍓🎀🍓🎀🍓🎀'.match(/./gu)?.map((c, i) => <span key={i}>{c}</span>)}</div>}
-          <div aria-hidden className="absolute top-[258px] left-1/2 z-[2] -translate-x-1/2 text-6xl drop-shadow-[0_4px_0_rgba(0,0,0,.08)]">🐰<span className="absolute -top-0 left-3 text-2xl">🎀</span></div>
-          <div className="absolute inset-x-3 top-[318px] z-[4] h-[58px] rounded-t-md border-4 border-b-0 border-[#c89a6a] border-t-[12px] border-t-[#d9b283] bg-[repeating-linear-gradient(90deg,#f9d9de_0_16px,#fff3f3_16px_32px)]" />
-          <div aria-hidden className="absolute top-[290px] right-9 z-[4] flex h-[34px] items-center gap-1 rounded-md border-2 border-[#d9e6e0] bg-[#eef7f4]/90 px-2 text-xl">🧁🍰</div>
-          <div aria-hidden className={`absolute top-[286px] left-[22%] z-[5] text-3xl ${phase === 'cooking' ? 'animate-bounce' : ''}`}>🍓</div>
-
-          <div className="absolute inset-x-3 top-[375px] z-[3] flex justify-around">
-            {guests.map((x, i) => (
-              <button
-                key={i}
-                aria-label={`${x.name} ${tx.order}: ${name(MENU[x.order])}`}
-                aria-pressed={active === i}
-                onClick={() => seat(i)}
-                className="relative w-[31%] border-0 bg-transparent p-0 pt-6"
-              >
-                <span className="absolute top-0 left-1/2 z-[2] -translate-x-1/2 rounded-2xl bg-[#fffdf8] px-2.5 py-0.5 text-xl whitespace-nowrap shadow-[0_3px_0_#f0c6cd]">{MENU[x.order].icon}</span>
-                <span className="relative z-[1] -mb-3 block text-[2.6rem] leading-none">{x.animal}</span>
-                <span className={`relative mx-auto block h-[26px] w-[74px] rounded-[50%] border-[3px] border-[#d98a99] shadow-[0_5px_0_#c97585] ${active === i ? 'outline-3 outline-offset-3 outline-[#fff]' : ''}`} style={{ background: has('cloth') ? 'repeating-conic-gradient(#f8b4c0 0 25%,#fff6f6 0 50%) 0 0/12px 12px' : '#fbe3c5' }} />
-                <span className="mt-1.5 inline-block rounded-xl bg-[#fff8f4]/95 px-2 py-0.5 text-[10px]">{x.name}{active === i ? tx.selected : ''}</span>
-              </button>
-            ))}
-          </div>
+        <div className="relative w-full" style={{ aspectRatio: '853 / 1280' }}>
+          <img src={assetUrl('cafe/strawberry_cafe.webp')} alt="" draggable={false} className="absolute inset-0 h-full w-full select-none" />
+          {has('vines') && <div aria-hidden className="absolute top-[1%] left-0 text-3xl leading-none drop-shadow">🍓🌸🍓🌸</div>}
+          {has('vines') && <div aria-hidden className="absolute top-[1%] right-0 text-3xl leading-none drop-shadow">🌸🍓🌸🍓</div>}
+          {has('flowers') && <div aria-hidden className="absolute bottom-[1%] left-[1%] text-4xl">🌸🌷</div>}
+          {has('garland') && <div aria-hidden className="absolute inset-x-[12%] top-[66%] flex justify-around text-xl">🎀🍓🎀🍓🎀🍓🎀</div>}
+          {has('sparkle') && <div aria-hidden className="absolute inset-0 animate-pulse text-2xl"><span className="absolute top-[8%] left-[8%]">✨</span><span className="absolute top-[30%] right-[6%]">✨</span><span className="absolute top-[52%] left-[48%]">✨</span><span className="absolute bottom-[10%] right-[12%]">✨</span></div>}
+          {has('cat') && <div aria-hidden className="absolute bottom-[3%] left-[52%] text-5xl">🐱</div>}
+          <span aria-hidden className={`absolute top-[55%] left-[29%] text-3xl ${phase === 'cooking' ? 'animate-bounce' : 'hidden'}`}>🍓</span>
+          <p className="absolute top-2 left-2 m-0 rounded-xl bg-[#fffaf1]/90 px-2.5 py-1 text-[10px]"><i className="mr-1.5 inline-block h-[7px] w-[7px] rounded-full bg-[#e8707f]" />{tx.open}</p>
+          {guests.map((x, i) => (
+            <button
+              key={i}
+              aria-label={`${x.name} ${tx.order}: ${name(MENU[x.order])}`}
+              aria-pressed={active === i}
+              onClick={() => seat(i)}
+              className={`absolute rounded-3xl border-0 bg-transparent p-0 ${active === i ? 'ring-4 ring-white/90 ring-offset-2 ring-offset-[#e8707f]/60' : ''}`}
+              style={{ left: `${SEATS[i].box.left}%`, top: `${SEATS[i].box.top}%`, width: `${SEATS[i].box.width}%`, height: `${SEATS[i].box.height}%` }}
+            >
+              <span className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-2xl bg-[#fffdf8] px-2.5 py-0.5 text-xl whitespace-nowrap shadow-[0_3px_0_#f0c6cd]">{MENU[x.order].icon}</span>
+              <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 rounded-xl bg-[#fff8f4]/95 px-2 py-0.5 text-[10px] whitespace-nowrap">{x.name}{active === i ? tx.selected : ''}</span>
+            </button>
+          ))}
         </div>
         <div className="flex justify-between gap-2 bg-[#fff8f4] px-4 py-3 text-xs"><span>{tx.note}</span><span>{tx.happy(st.served)}</span></div>
       </div>
