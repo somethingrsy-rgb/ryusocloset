@@ -524,13 +524,6 @@
     "x": 610,
     "y": 1320
   },
-  "furniture_dream_dream_bed": {
-    "ko": "구름 침대",
-    "en": "Cloud Bed",
-    "baseWidth": 560,
-    "x": 730,
-    "y": 1320
-  },
   "wall_dream_night_window": {
     "ko": "밤 창문",
     "en": "Night Window",
