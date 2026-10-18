@@ -178,11 +178,11 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
           <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             {hold === 'can' ? (
-              <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '66%', top: '50%', width: '34%', transformOrigin: '15% 60%', transform: watering ? 'rotate(32deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />
+              <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '66%', top: '50%', width: '34%', zIndex: 1000, transformOrigin: '15% 60%', transform: watering ? 'rotate(32deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />
             ) : (
-              <img src={assetUrl(`assets/farm/${hold === 'seed' ? 'icon_seed' : 'icon_basket'}.webp`)} alt="" draggable={false} className="absolute" style={hold === 'seed' ? { left: '64%', top: '42%', width: '44%' } : { left: '62%', top: '44%', width: '42%' }} />
+              <img src={assetUrl(`assets/farm/${hold === 'seed' ? 'icon_seed' : 'icon_basket'}.webp`)} alt="" draggable={false} className="absolute" style={hold === 'seed' ? { left: '64%', top: '42%', width: '44%', zIndex: 1000 } : { left: '62%', top: '44%', width: '42%', zIndex: 1000 }} />
             )}
-            {watering && <span className="absolute text-sm" style={{ left: '98%', top: '58%' }}>💧</span>}
+            {watering && <span className="absolute text-sm" style={{ left: '98%', top: '58%', zIndex: 1000 }}>💧</span>}
           </div>
         </div>
 
