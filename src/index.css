@@ -255,3 +255,11 @@ button:focus-visible {
 /* 수학 놀이터: 아이 눈에 잘 띄게 큰 글씨 (button { font: inherit } 보다 우선하려면 일반 CSS 로 둔다) */
 .math-btn { font-size: 1.125rem; }
 .math-choice { font-size: 2.25rem; font-weight: 800; }
+
+/* 카페: 서빙하면 코인 글자가 떠올랐다 사라진다 */
+@keyframes cafe-float {
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -48px); }
+}
+.cafe-float { animation: cafe-float 1.2s ease-out forwards; }
+@media (prefers-reduced-motion: reduce) { .cafe-float { animation: none; } }
