@@ -98,8 +98,8 @@ function VisualView({ v }: { v: Visual }) {
     return (
       <div className="flex flex-wrap items-center justify-center gap-2">
         {v.items.map((it, i) => it === '?'
-          ? <span key={i} className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-dashed border-[#9bbd87] bg-white text-4xl">?</span>
-          : <span key={i} className="flex h-20 min-w-20 items-center justify-center rounded-2xl bg-white px-2 text-6xl">{it}</span>)}
+          ? <span key={i} className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-dashed border-[#9bbd87] bg-white text-3xl">?</span>
+          : <span key={i} className="flex h-14 min-w-14 items-center justify-center rounded-2xl bg-white px-2 text-4xl">{it}</span>)}
       </div>
     )
   }
@@ -109,7 +109,7 @@ function VisualView({ v }: { v: Visual }) {
         {Array.from({ length: v.tens }, (_, i) => (
           <span key={i} className="grid grid-cols-5 gap-0.5 rounded-xl border-2 border-[#9bbd87] bg-white p-1.5 text-xl leading-none">{Array.from({ length: 10 }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>
         ))}
-        {v.ones > 0 && <span className="flex max-w-[14rem] flex-wrap justify-center gap-1 text-3xl leading-none">{Array.from({ length: v.ones }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>}
+        {v.ones > 0 && <span className="flex max-w-[14rem] flex-wrap justify-center gap-1 text-2xl leading-none">{Array.from({ length: v.ones }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>}
       </div>
     )
   }
@@ -118,7 +118,7 @@ function VisualView({ v }: { v: Visual }) {
       {v.groups.map((g, gi) => (
         <span key={gi} className="contents">
           {gi > 0 && v.op && <span className="text-3xl font-black">{v.op}</span>}
-          <span className="inline-flex max-w-full flex-wrap justify-center gap-1.5 rounded-2xl bg-white/70 px-3 py-2 text-4xl leading-none">
+          <span className="inline-flex max-w-full flex-wrap justify-center gap-1.5 rounded-2xl bg-white/70 px-3 py-1.5 text-4xl leading-none">
             {Array.from({ length: g.n }, (_, i) => <Faded key={i} emoji={g.emoji} gone={i >= g.n - (g.cross ?? 0)} />)}
           </span>
         </span>
@@ -219,7 +219,10 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
 
   const big = 'math-btn min-h-14 rounded-3xl border border-[#e5e8df] px-4 py-3 text-lg font-bold text-[#213f35] active:scale-95'
   const total = lv ? lv.questions.length : 0
-  const calc = q && (q.kind === 'choice' || q.kind === 'input') ? q.text.match(/^(\d+) ([+−]) (\d+) = □$/) : null
+  const calcAll = q && (q.kind === 'choice' || q.kind === 'input') ? q.text.match(/^(\d+) ([+−]) (\d+) = □$/) : null
+  const calc = calcAll && (calcAll[1].length > 1 || calcAll[3].length > 1) ? calcAll : null
+  const flat = calcAll && !calc ? calcAll : null
+  const answerText = q && q.kind === 'input' ? typed : q && right && q.kind === 'choice' ? q.choices[q.answer].label : ''
   const levels = profile ? levelsFor(profile.age) : []
   const hasNext = lv ? levels.findIndex((l) => l.id === lv.id) < levels.length - 1 : false
   const goBack = () => { if (gift || level !== null) { setLevel(null); setGift(null); setGifted(false); reset() } else if (pid) setPid(null); else onClose() }
@@ -231,7 +234,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
         <h2 className="m-0 flex items-center gap-2 text-xl font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]"><span className="rounded-2xl bg-[#e2eddb] px-2 py-1 text-2xl">🌱</span>{tx.title}</h2>
         <button onClick={onClose} aria-label={tx.close} className="flex h-12 w-12 items-center justify-center rounded-full border border-[#dce4d7] bg-white text-xl text-[#246f55]">✕</button>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-3 pb-5">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-3">
         {!profile ? (
           <>
             <div className="relative mb-4 flex min-h-36 items-center overflow-hidden rounded-3xl bg-[#e8efdc] px-5 py-4">
@@ -299,35 +302,41 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
             <div className="h-3 overflow-hidden rounded-full bg-[#edf0e7]">
               <div className="h-full rounded-full bg-[#8db674] transition-all" style={{ width: `${((right ? idx + 1 : idx) / total) * 100}%` }} />
             </div>
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <p className="m-0 text-center text-2xl leading-snug font-extrabold">{calc ? tx.calc : q.text}</p>
-              <button aria-label={tx.read} onClick={() => speak(calc ? `${calc[1]} ${calc[2] === '+' ? '더하기' : '빼기'} ${calc[3]}` : q.text, lang)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-xl shadow">🔊</button>
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <p className="m-0 text-center text-xl leading-snug font-extrabold">{calcAll ? tx.calc : q.text}</p>
+              <button aria-label={tx.read} onClick={() => speak(calcAll ? `${calcAll[1]} ${calcAll[2] === '+' ? '더하기' : '빼기'} ${calcAll[3]}` : q.text, lang)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-lg shadow">🔊</button>
             </div>
             {calc && (
-              <div className="my-3 rounded-[30px] bg-[#e8efdc] px-4 py-5">
-                <div className="mx-auto w-fit text-[5rem] leading-[1.1] font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]">
+              <div className="my-2 rounded-[24px] bg-[#e8efdc] px-4 py-3">
+                <div className="mx-auto w-fit text-[3.5rem] leading-[1.05] font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]">
                   <div className="text-right">{calc[1]}</div>
-                  <div className="flex items-center justify-between gap-8"><span className="text-[3.5rem]">{calc[2]}</span><span>{calc[3]}</span></div>
-                  <div className="mt-1 min-w-[6.5rem] border-t-[6px] border-[#213f35] pt-1 text-right text-[#246f55]">
+                  <div className="flex items-center justify-between gap-8"><span className="text-[2.5rem]">{calc[2]}</span><span>{calc[3]}</span></div>
+                  <div className="mt-1 min-w-[5rem] border-t-[5px] border-[#213f35] pt-0.5 text-right text-[#246f55]">
                     {q.kind === 'input' ? <>{typed || <span className="opacity-30">?</span>}<span className="animate-pulse">|</span></> : right && q.kind === 'choice' ? q.choices[q.answer].label : <span className="opacity-30">?</span>}
                   </div>
                 </div>
               </div>
             )}
-            {!calc && (q.visual || q.kind === 'input') && (
-              <div className="my-3 rounded-[30px] bg-[#e8efdc] p-4 text-center">
+            {flat && (
+              <div className="my-2 flex items-center justify-center gap-3 rounded-[24px] bg-[#e8efdc] px-4 py-5 text-[3.5rem] leading-none [font-family:Jua,'Noto_Sans_KR',sans-serif]">
+                <span>{flat[1]}</span><span>{flat[2]}</span><span>{flat[3]}</span><span>=</span>
+                <span className="inline-block min-w-[3.5rem] rounded-2xl bg-white/70 px-2 text-center text-[#246f55]">{answerText || <span className="opacity-30">?</span>}{q.kind === 'input' && !right && <span className="animate-pulse">|</span>}</span>
+              </div>
+            )}
+            {!calc && !flat && (q.visual || q.kind === 'input') && (
+              <div className="my-2 rounded-[24px] bg-[#e8efdc] p-3 text-center">
                 {q.visual && <VisualView v={q.visual} />}
-                {q.kind === 'input' && <p className={`m-0 text-7xl font-extrabold text-[#246f55] ${q.visual ? 'mt-3' : ''}`}>{typed || '　'}<span className="animate-pulse">|</span></p>}
+                {q.kind === 'input' && <p className={`m-0 text-5xl font-extrabold text-[#246f55] ${q.visual ? 'mt-2' : ''}`}>{typed || '　'}<span className="animate-pulse">|</span></p>}
               </div>
             )}
             {q.kind === 'choice' && (
-              <div className={`mt-3 grid gap-3 ${q.choices.length === 3 && !q.choices.some((c) => c.pic) ? 'grid-cols-3' : q.choices.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+              <div className={`mt-2 grid gap-2 ${q.choices.length === 3 && !q.choices.some((c) => c.pic) ? 'grid-cols-3' : q.choices.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 {q.choices.map((c: Choice, i) => (
                   <button
                     key={i}
                     disabled={picked.includes(i) || (!!right && i !== q.answer)}
                     onClick={() => pickChoice(i)}
-                    className={`math-choice flex min-h-24 flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-[6px] px-1 py-2 text-[#246f55] ${c.pic ? '' : `${(c.label?.length ?? 0) > 3 ? 'text-3xl' : 'text-6xl'} [font-family:Jua,'Noto_Sans_KR',sans-serif]`} ${right && i === q.answer ? 'animate-bounce border-[#7caf69] bg-[#d0edbd]' : picked.includes(i) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
+                    className={`math-choice flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-[6px] px-1 py-2 text-[#246f55] ${c.pic ? '' : `${(c.label?.length ?? 0) > 3 ? 'text-3xl' : 'text-5xl'} [font-family:Jua,'Noto_Sans_KR',sans-serif]`} ${right && i === q.answer ? 'animate-bounce border-[#7caf69] bg-[#d0edbd]' : picked.includes(i) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
                   >
                     {c.pic && <span className="flex w-full items-end justify-center">{'bar' in c.pic ? <span className="block w-full px-2"><PicView pic={c.pic} /></span> : <PicView pic={c.pic} />}</span>}
                     {c.label && <span className={c.pic ? 'text-sm font-bold' : ''}>{c.label}</span>}
@@ -336,30 +345,30 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
               </div>
             )}
             {q.kind === 'input' && !right && (
-              <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="mt-2 grid grid-cols-3 gap-1.5">
                 {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
-                  <button key={d} onClick={() => { setWrong(false); setTyped((t) => (t.length < 3 ? t + d : t)) }} className="math-choice min-h-16 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-5xl text-[#246f55] active:scale-95">{d}</button>
+                  <button key={d} onClick={() => { setWrong(false); setTyped((t) => (t.length < 3 ? t + d : t)) }} className="math-choice min-h-12 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-3xl text-[#246f55] active:scale-95">{d}</button>
                 ))}
-                <button onClick={() => setTyped((t) => t.slice(0, -1))} aria-label={tx.erase} className="min-h-14 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-2xl text-[#246f55] active:scale-95">⌫</button>
-                <button onClick={() => { setWrong(false); setTyped((t) => (t.length < 3 ? t + '0' : t)) }} className="math-choice min-h-16 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-5xl text-[#246f55] active:scale-95">0</button>
-                <button disabled={!typed} onClick={submitInput} className="min-h-14 rounded-2xl bg-[#246f55] text-xl font-bold text-white disabled:opacity-40 active:scale-95">{tx.ok}</button>
+                <button onClick={() => setTyped((t) => t.slice(0, -1))} aria-label={tx.erase} className="min-h-12 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-2xl text-[#246f55] active:scale-95">⌫</button>
+                <button onClick={() => { setWrong(false); setTyped((t) => (t.length < 3 ? t + '0' : t)) }} className="math-choice min-h-12 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-3xl text-[#246f55] active:scale-95">0</button>
+                <button disabled={!typed} onClick={submitInput} className="min-h-12 rounded-2xl bg-[#246f55] text-lg font-bold text-white disabled:opacity-40 active:scale-95">{tx.ok}</button>
               </div>
             )}
             {q.kind === 'order' && (
               <div className="mt-3">
                 <div className="mb-3 flex justify-center gap-2" aria-label="slots">
-                  {q.cards.map((_, i) => <span key={i} className={`flex h-16 min-w-16 items-center justify-center rounded-2xl border-2 px-2 text-4xl font-extrabold ${placed[i] !== undefined ? 'border-[#7caf69] bg-[#d0edbd] text-[#246f55]' : 'border-dashed border-[#9bbd87] bg-white/60'}`}>{placed[i] ?? ''}</span>)}
+                  {q.cards.map((_, i) => <span key={i} className={`flex h-12 min-w-12 items-center justify-center rounded-2xl border-2 px-2 text-3xl font-extrabold ${placed[i] !== undefined ? 'border-[#7caf69] bg-[#d0edbd] text-[#246f55]' : 'border-dashed border-[#9bbd87] bg-white/60'}`}>{placed[i] ?? ''}</span>)}
                 </div>
                 <div className="grid grid-cols-4 gap-2">
                   {q.cards.map((c) => (
-                    <button key={c} disabled={placed.includes(c) || !!right} onClick={() => tapCard(c)} className="math-choice min-h-20 rounded-2xl border-2 border-b-[6px] border-[#e0e7d7] border-b-[#dce5d0] bg-white text-5xl text-[#246f55] active:scale-95 disabled:opacity-30">{c}</button>
+                    <button key={c} disabled={placed.includes(c) || !!right} onClick={() => tapCard(c)} className="math-choice min-h-14 rounded-2xl border-2 border-b-[5px] border-[#e0e7d7] border-b-[#dce5d0] bg-white text-4xl text-[#246f55] active:scale-95 disabled:opacity-30">{c}</button>
                   ))}
                 </div>
               </div>
             )}
-            <p className="mt-3 min-h-8 text-center text-lg font-extrabold" aria-live="polite">{right ?? (wrong ? tx.again : '')}</p>
-            {right && <p className="mt-0 mb-2 rounded-2xl bg-white px-3 py-2 text-center text-sm text-[#678071]">💡 {q.why}</p>}
-            {right && <button className={`${big} mt-1 w-full bg-[#246f55] text-white`} onClick={nextQuestion}>{idx + 1 < total ? tx.next : gift ? tx.gift : tx.done}</button>}
+            <p className="mt-1 min-h-6 text-center text-base font-extrabold" aria-live="polite">{right ?? (wrong ? tx.again : '')}</p>
+            {right && <p className="mt-0 mb-1 rounded-2xl bg-white px-3 py-1.5 text-center text-xs text-[#678071]">💡 {q.why}</p>}
+            {right && <button className={`${big} mt-1 w-full !py-2 bg-[#246f55] text-white`} onClick={nextQuestion}>{idx + 1 < total ? tx.next : gift ? tx.gift : tx.done}</button>}
           </div>
         ) : (
           <>
