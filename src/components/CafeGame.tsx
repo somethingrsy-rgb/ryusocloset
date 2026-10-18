@@ -125,6 +125,8 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
   const [hold, setHold] = useState<string | null>(() => kept?.hold ?? null) // 들고 있는 메뉴 그림
   const busy = useRef(false)
   useEffect(() => { kept = { guests, pos, hold } }, [guests, pos, hold])
+  // 메뉴 그림을 미리 받아 둔다: 서빙하려고 처음 들 때 그림이 늦게 떠서 안 보이던 것을 막는다
+  useEffect(() => { MENU.forEach((m) => { new Image().src = assetUrl(`cafe/menu2/${m.id}.webp`) }) }, [])
   const timers = useRef<number[]>([])
   const [wide, setWide] = useState(false) // 가로로 넓은 화면(패드 가로 등): 가로 그림을 쓴다
   useEffect(() => {
