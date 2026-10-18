@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { useI18n } from '../i18n'
 import { travelItem } from '../lib/game'
 import { assetUrl } from '../lib/items'
@@ -57,7 +57,7 @@ function ClockSvg({ h, m }: { h: number; m: number }) {
   const minAngle = m * 6
   const hand = (deg: number, len: number, w: number) => <line x1="100" y1="100" x2={100 + len * Math.sin((deg * Math.PI) / 180)} y2={100 - len * Math.cos((deg * Math.PI) / 180)} stroke="#213f35" strokeWidth={w} strokeLinecap="round" />
   return (
-    <svg viewBox="0 0 200 200" className="mx-auto h-44 w-44" role="img" aria-label="clock">
+    <svg viewBox="0 0 200 200" className="mx-auto h-[min(11rem,24dvh)] w-[min(11rem,24dvh)]" role="img" aria-label="clock">
       <circle cx="100" cy="100" r="94" fill="#fff" stroke="#246f55" strokeWidth="6" />
       {Array.from({ length: 12 }, (_, i) => {
         const n = i + 1
@@ -79,7 +79,7 @@ function BalanceSvg({ left, right, heavier }: { left: string; right: string; hea
   const ly = 50 + (heavier === 'left' ? dy : -dy)
   const ry = 50 + (heavier === 'right' ? dy : -dy)
   return (
-    <svg viewBox="0 0 240 150" className="mx-auto h-36 w-60" role="img" aria-label="balance">
+    <svg viewBox="0 0 240 150" className="mx-auto h-[min(9rem,20dvh)] w-[min(15rem,33dvh)]" role="img" aria-label="balance">
       <rect x="116" y="40" width="8" height="90" rx="3" fill="#8a6a4a" />
       <rect x="90" y="128" width="60" height="10" rx="4" fill="#8a6a4a" />
       <line x1="50" y1={ly} x2="190" y2={ry} stroke="#8a6a4a" strokeWidth="7" strokeLinecap="round" />
@@ -144,6 +144,25 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
   const [state, setState] = useState<MathState>(readMath)
   const [pid, setPid] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
+  // 문제 화면이 화면보다 길면 스크롤 대신 통째로 줄여서 한 화면에 맞춘다(기기·글꼴이 달라도). 너무 작아지면(60% 아래) 스크롤로 둔다
+  const [boxEl, setBoxEl] = useState<HTMLDivElement | null>(null)
+  const [innerEl, setInnerEl] = useState<HTMLDivElement | null>(null)
+  const [fit, setFit] = useState(1)
+  useLayoutEffect(() => {
+    if (!boxEl || !innerEl) { setFit(1); return }
+    const calc = () => {
+      const cs = getComputedStyle(boxEl)
+      const avail = boxEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
+      const next = innerEl.offsetHeight > 0 ? Math.min(1, Math.max(0.6, avail / innerEl.offsetHeight)) : 1
+      if (next < 1 && next > 0.6) boxEl.scrollTop = 0
+      setFit(next)
+    }
+    calc()
+    const ro = new ResizeObserver(calc)
+    ro.observe(boxEl)
+    ro.observe(innerEl)
+    return () => ro.disconnect()
+  }, [boxEl, innerEl])
   const [name, setName] = useState('')
   const [age, setAge] = useState<Age>(6)
   const [level, setLevel] = useState<number | null>(null)
@@ -235,7 +254,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
         <h2 className="m-0 flex items-center gap-2 text-xl font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]"><span className="rounded-2xl bg-[#e2eddb] px-2 py-1 text-2xl">🌱</span>{tx.title}</h2>
         <button onClick={onClose} aria-label={tx.close} className="flex h-12 w-12 items-center justify-center rounded-full border border-[#dce4d7] bg-white text-xl text-[#246f55]">✕</button>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-4">
+      <div ref={setBoxEl} className={`min-h-0 flex-1 px-4 pt-4 pb-4 ${fit < 1 && fit > 0.6 ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
         {!profile ? (
           <>
             <div className="relative mb-4 flex min-h-36 items-center overflow-hidden rounded-3xl bg-[#e8efdc] px-5 py-4">
@@ -295,7 +314,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
             </div>
           </div>
         ) : lv && q ? (
-          <div className="flex min-h-full flex-col">
+          <div ref={setInnerEl} className="flex min-h-full flex-col" style={fit < 1 ? { transform: `scale(${fit})`, transformOrigin: 'top center' } : undefined}>
             <div className="mb-3 flex items-center justify-between gap-2">
               <p className="m-0 text-base font-bold">{lv.icon} {lv.title[lang]}</p>
               <span className="text-sm font-extrabold">{idx + 1}/{total}{isCleared(profile, lv.id) ? ' ⭐' : ''}</span>
@@ -338,7 +357,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
                     key={i}
                     disabled={picked.includes(i) || (!!right && i !== q.answer)}
                     onClick={() => pickChoice(i)}
-                    className={`math-choice flex ${row4 ? "min-h-[6rem]" : "min-h-[4.5rem]"} flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-[6px] px-1 py-2 text-[#246f55] ${c.pic ? '' : `${/^[\d.,\s]{1,3}$/.test(c.label ?? '') ? (row4 ? 'text-4xl' : 'text-5xl') : 'text-xl whitespace-nowrap'} [font-family:Jua,'Noto_Sans_KR',sans-serif]`} ${right && i === q.answer ? 'animate-pulse border-[#7caf69] bg-[#d0edbd]' : picked.includes(i) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
+                    className={`math-choice flex ${row4 ? "min-h-[6rem]" : "min-h-[4.5rem]"} flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-[6px] px-1 py-2 text-[#246f55] ${c.pic ? '' : `${/^[\d.,\s]{1,3}$/.test(c.label ?? '') ? (row4 ? 'text-4xl' : 'text-5xl') : 'text-xl leading-tight break-keep'} [font-family:Jua,'Noto_Sans_KR',sans-serif]`} ${right && i === q.answer ? 'animate-pulse border-[#7caf69] bg-[#d0edbd]' : picked.includes(i) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
                   >
                     {c.pic && <span className="flex w-full items-end justify-center">{'bar' in c.pic ? <span className="block w-full px-2"><PicView pic={c.pic} /></span> : <PicView pic={c.pic} />}</span>}
                     {c.label && <span className={c.pic ? 'text-sm font-bold' : ''}>{c.label}</span>}
