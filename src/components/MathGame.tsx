@@ -114,7 +114,7 @@ function VisualView({ v }: { v: Visual }) {
     )
   }
   return (
-    <div className={v.op ? 'flex flex-wrap items-center justify-center gap-3' : 'grid grid-cols-2 items-center gap-3'}>
+    <div className={v.op || v.groups.length < 2 ? 'flex flex-wrap items-center justify-center gap-3' : 'grid grid-cols-2 items-center gap-3'}>
       {v.groups.map((g, gi) => (
         <span key={gi} className="contents">
           {gi > 0 && v.op && <span className="text-3xl font-black">{v.op}</span>}
