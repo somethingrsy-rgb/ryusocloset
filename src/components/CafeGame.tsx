@@ -242,7 +242,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
         <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 4, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
           <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
-            {hold && <img src={assetUrl(`cafe/menu2/${hold}.webp`)} alt="" draggable={false} className="absolute object-contain" style={{ left: '60%', top: '46%', width: '27.5%' }} />}
+            {hold && <img src={assetUrl(`cafe/menu2/${hold}.webp`)} alt="" draggable={false} className="absolute object-contain" style={{ left: '56%', top: '42%', width: '41%', zIndex: 1000 }} />}
           </div>
         </div>
         {floats.map((f) => {
