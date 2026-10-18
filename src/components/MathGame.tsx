@@ -43,11 +43,11 @@ function CupSvg({ level }: { level: number }) {
   )
 }
 function PicView({ pic }: { pic: Pic }) {
-  if ('shape' in pic) return <ShapeSvg shape={pic.shape} size={46} />
+  if ('shape' in pic) return <ShapeSvg shape={pic.shape} size={58} />
   if ('bar' in pic) return <span className="block h-4 rounded-full bg-[#8db674]" style={{ width: `${pic.bar * 100}%` }} />
   if ('cup' in pic) return <CupSvg level={pic.cup} />
   return (
-    <span className="inline-flex flex-wrap items-end justify-center leading-none" style={{ fontSize: `${1.7 * (pic.scale ?? 1)}rem`, gap: '0.1em' }}>
+    <span className="inline-flex flex-wrap items-end justify-center leading-none" style={{ fontSize: `${2.1 * (pic.scale ?? 1)}rem`, gap: '0.1em' }}>
       {Array.from({ length: pic.n ?? 1 }, (_, i) => <span key={i}>{pic.emoji}</span>)}
     </span>
   )
@@ -93,13 +93,13 @@ function BalanceSvg({ left, right, heavier }: { left: string; right: string; hea
 function VisualView({ v }: { v: Visual }) {
   if (v.kind === 'clock') return <ClockSvg h={v.h} m={v.m} />
   if (v.kind === 'balance') return <BalanceSvg left={v.left} right={v.right} heavier={v.heavier} />
-  if (v.kind === 'shapes') return <div className="flex flex-wrap items-center justify-center gap-3">{v.list.map((sh, i) => <ShapeSvg key={i} shape={sh} />)}</div>
+  if (v.kind === 'shapes') return <div className="flex flex-wrap items-center justify-center gap-3">{v.list.map((sh, i) => <ShapeSvg key={i} shape={sh} size={64} />)}</div>
   if (v.kind === 'seq') {
     return (
       <div className="flex flex-wrap items-center justify-center gap-2">
         {v.items.map((it, i) => it === '?'
-          ? <span key={i} className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-dashed border-[#9bbd87] bg-white text-2xl">?</span>
-          : <span key={i} className="flex h-16 min-w-16 items-center justify-center rounded-2xl bg-white px-2 text-5xl">{it}</span>)}
+          ? <span key={i} className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-dashed border-[#9bbd87] bg-white text-4xl">?</span>
+          : <span key={i} className="flex h-20 min-w-20 items-center justify-center rounded-2xl bg-white px-2 text-6xl">{it}</span>)}
       </div>
     )
   }
@@ -107,9 +107,9 @@ function VisualView({ v }: { v: Visual }) {
     return (
       <div className="flex flex-wrap items-center justify-center gap-3">
         {Array.from({ length: v.tens }, (_, i) => (
-          <span key={i} className="grid grid-cols-5 gap-0.5 rounded-xl border-2 border-[#9bbd87] bg-white p-1.5 text-base leading-none">{Array.from({ length: 10 }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>
+          <span key={i} className="grid grid-cols-5 gap-0.5 rounded-xl border-2 border-[#9bbd87] bg-white p-1.5 text-xl leading-none">{Array.from({ length: 10 }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>
         ))}
-        {v.ones > 0 && <span className="flex max-w-[11rem] flex-wrap justify-center gap-1 text-2xl leading-none">{Array.from({ length: v.ones }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>}
+        {v.ones > 0 && <span className="flex max-w-[14rem] flex-wrap justify-center gap-1 text-3xl leading-none">{Array.from({ length: v.ones }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>}
       </div>
     )
   }
@@ -118,7 +118,7 @@ function VisualView({ v }: { v: Visual }) {
       {v.groups.map((g, gi) => (
         <span key={gi} className="contents">
           {gi > 0 && v.op && <span className="text-3xl font-black">{v.op}</span>}
-          <span className="inline-flex max-w-full flex-wrap justify-center gap-1 rounded-2xl bg-white/70 px-3 py-2 text-3xl leading-none">
+          <span className="inline-flex max-w-full flex-wrap justify-center gap-1.5 rounded-2xl bg-white/70 px-3 py-2 text-4xl leading-none">
             {Array.from({ length: g.n }, (_, i) => <Faded key={i} emoji={g.emoji} gone={i >= g.n - (g.cross ?? 0)} />)}
           </span>
         </span>
@@ -300,7 +300,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
               <div className="h-full rounded-full bg-[#8db674] transition-all" style={{ width: `${((right ? idx + 1 : idx) / total) * 100}%` }} />
             </div>
             <div className="mt-4 flex items-center justify-center gap-2">
-              <p className="m-0 text-center text-xl font-extrabold">{calc ? tx.calc : q.text}</p>
+              <p className="m-0 text-center text-2xl leading-snug font-extrabold">{calc ? tx.calc : q.text}</p>
               <button aria-label={tx.read} onClick={() => speak(calc ? `${calc[1]} ${calc[2] === '+' ? '더하기' : '빼기'} ${calc[3]}` : q.text, lang)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-xl shadow">🔊</button>
             </div>
             {calc && (
