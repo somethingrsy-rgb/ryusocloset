@@ -52,7 +52,7 @@ export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dro
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div role="tablist" aria-label="categories" className="scroll-thin flex shrink-0 gap-1 overflow-x-auto px-2 pt-2 pb-1">
-        {(['top', 'bottom', 'dress', 'outer', 'costume', 'shoes', 'accessory', 'wand', 'bag'] as const).map((c) => {
+        {(['costume', 'accessory', 'shoes', 'wand', 'dress', 'top', 'bottom', 'outer', 'bag'] as const).map((c) => {
           const active = c === category
           return (
             <button
@@ -62,14 +62,11 @@ export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dro
               aria-label={labels[c]}
               title={labels[c]}
               onClick={() => onCategory(c)}
-              className={`relative flex min-h-14 min-w-11 flex-1 flex-col items-center justify-center rounded-2xl px-1 text-2xl transition ${
+              className={`relative flex min-h-[3.75rem] min-w-14 flex-1 flex-col items-center justify-center rounded-2xl px-1 transition ${
                 active ? 'bg-blush text-white shadow' : 'bg-petal/70 hover:bg-petal'
               }`}
             >
-              <span aria-hidden>{CATEGORY_ICON[c]}</span>
-              <span className={`text-[9.5px] leading-tight font-semibold whitespace-nowrap ${active ? 'text-white' : 'text-cocoa-soft'}`}>
-                {labels[c]}
-              </span>
+              <img src={assetUrl(`assets/closet-tabs/${c}.webp`)} alt="" draggable={false} className="h-12 w-12 object-contain" />
               {outfit[c] && (
                 <span
                   aria-hidden
