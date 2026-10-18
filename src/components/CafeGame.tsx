@@ -23,14 +23,14 @@ function Ico({ id, className }: { id: string; className: string }) {
 }
 /** 정원 그림 속 손님 8마리. 머리 가운데 위치(그림 크기에 대한 %)이고, 세로 그림(폰)과 가로 그림(패드)이 다르다. 눌러서 주문을 받는다 */
 const SEATS = [
-  { animal: '🐻', name: '곰이', portrait: [16.6, 47.9], wide: [24.2, 50.2] },
-  { animal: '🐰', name: '몽실', portrait: [38.1, 46.6], wide: [36.5, 50.6] },
-  { animal: '🐱', name: '냥이', portrait: [63.5, 45.9], wide: [64.2, 50.6] },
-  { animal: '🐶', name: '멍멍', portrait: [83.5, 47.9], wide: [76.3, 51.6] },
-  { animal: '🐥', name: '삐약', portrait: [18.6, 71], wide: [24.2, 75.5] },
-  { animal: '🦆', name: '꽥꽥', portrait: [37.6, 71.3], wide: [36, 76.4] },
-  { animal: '🐿️', name: '다람', portrait: [64, 71], wide: [64.6, 76.4] },
-  { animal: '🐼', name: '판다', portrait: [85, 70.6], wide: [76.3, 75] },
+  { animal: '🐻', name: '곰이', portrait: [15.4, 51.7], wide: [28.1, 53.7] },
+  { animal: '🐰', name: '몽실', portrait: [34.6, 50.8], wide: [37.4, 54.2] },
+  { animal: '🐱', name: '냥이', portrait: [64.4, 52], wide: [63.4, 54.2] },
+  { animal: '🐶', name: '멍멍', portrait: [84, 52], wide: [72.7, 54.7] },
+  { animal: '🐥', name: '삐약', portrait: [17, 71.5], wide: [28.1, 76.5] },
+  { animal: '🦆', name: '꽥꽥', portrait: [35.1, 71.5], wide: [37.7, 77] },
+  { animal: '🐿️', name: '다람', portrait: [68, 71.2], wide: [63.7, 76] },
+  { animal: '🐼', name: '판다', portrait: [85, 71.2], wide: [73.9, 76] },
 ] as const
 const BONUS = 15
 const GOAL = 5
@@ -166,15 +166,15 @@ export function CafeGame() {
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-hidden rounded-3xl bg-[#b9c97a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
       {/* 그림 아래 남는 자리(폰 세로): 그림 맨 아래 덤불·풀밭 부분을 위아래로 뒤집고 늘려 이어 붙여서 정원이 끝까지 이어져 보이게 한다 */}
       {!wide && (
-        <div aria-hidden className="absolute left-1/2 -translate-x-1/2 overflow-hidden" style={{ width: 'min(100cqw, calc(100cqh / 1.5))', top: 'calc(min(100cqw, 100cqh / 1.5) * 1.5 - 1px)', bottom: 0 }}>
-          <div className="h-full w-full" style={{ backgroundImage: `url(${assetUrl('cafe/garden_portrait.webp')})`, backgroundSize: '100% calc((100cqh - min(100cqw, 100cqh / 1.5) * 1.5) / 0.16)', backgroundPosition: 'bottom', backgroundRepeat: 'no-repeat', transform: 'scaleY(-1)' }} />
+        <div aria-hidden className="absolute left-1/2 -translate-x-1/2 overflow-hidden" style={{ width: 'min(100cqw, calc(100cqh / 1.7787))', top: 'calc(min(100cqw, 100cqh / 1.7787) * 1.7787 - 1px)', bottom: 0 }}>
+          <div className="h-full w-full" style={{ backgroundImage: `url(${assetUrl('cafe/garden2_portrait.webp')})`, backgroundSize: '100% calc((100cqh - min(100cqw, 100cqh / 1.7787) * 1.7787) / 0.16)', backgroundPosition: 'bottom', backgroundRepeat: 'no-repeat', transform: 'scaleY(-1)' }} />
         </div>
       )}
       <div
         className={`absolute overflow-hidden select-none ${wide ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : 'top-0 left-1/2 -translate-x-1/2'}`}
-        style={wide ? { width: 'max(100cqw, calc(100cqh * 1448 / 1086))', aspectRatio: '1448 / 1086' } : { width: 'min(100cqw, calc(100cqh / 1.5))', aspectRatio: '1024 / 1536' }}
+        style={wide ? { width: 'max(100cqw, calc(100cqh * 1672 / 941))', aspectRatio: '1672 / 941' } : { width: 'min(100cqw, calc(100cqh / 1.7787))', aspectRatio: '940 / 1672' }}
       >
-        <img src={assetUrl(wide ? 'cafe/garden_wide.webp' : 'cafe/garden_portrait.webp')} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
+        <img src={assetUrl(wide ? 'cafe/garden2_wide.webp' : 'cafe/garden2_portrait.webp')} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
         <FarmFx />
         {guests.map((x, i) => {
           const [cx, cy] = SEATS[i][wide ? 'wide' : 'portrait']
