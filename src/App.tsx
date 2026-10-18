@@ -344,6 +344,9 @@ export default function App() {
   }
 
   const wide = useWideScreen()
+  const [travelFull, setTravelFull] = useState(false)
+  const full = mode === 'travel' && travelFull
+  const handleFull = useCallback((v: boolean) => setTravelFull(v), [])
   const split = wide && mode !== 'farm' && mode !== 'shop'
 
   const modeBtn = (m: Mode, icon: string, label: string) => (
@@ -390,7 +393,7 @@ export default function App() {
         </header>
 
         <div className={`flex min-h-0 flex-1 gap-2 ${split ? 'flex-row' : 'flex-col'}`}>
-          <div className={split ? `relative h-full flex-none ${mode === 'room' || mode === 'travel' ? 'w-[65%]' : 'w-[58%]'}` : 'relative min-h-0 flex-1'}>
+          <div className={split ? `relative h-full flex-none ${full ? 'w-full' : mode === 'room' || mode === 'travel' ? 'w-[65%]' : 'w-[58%]'}` : 'relative min-h-0 flex-1'}>
             {mode === 'closet' && (
               <button
                 onClick={() => setModal('hair')}
@@ -409,6 +412,7 @@ export default function App() {
                 outfit={outfit}
                 tweaks={tweaks}
                 onWear={wearFound}
+                onFull={handleFull}
               />
             ) : mode === 'closet' ? (
               <Stage
@@ -441,7 +445,7 @@ export default function App() {
             )}
           </div>
 
-        <aside hidden={mode === 'farm' || mode === 'shop'} className={`flex ${split ? 'min-w-0 flex-1' : mode === 'travel' ? 'h-[28dvh] shrink-0' : 'h-[40dvh] shrink-0'} flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
+        <aside hidden={mode === 'farm' || mode === 'shop' || full} className={`flex ${split ? 'min-w-0 flex-1' : mode === 'travel' ? 'h-[28dvh] shrink-0' : 'h-[40dvh] shrink-0'} flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
           <div id="adjustment-controls" className="shrink-0" />
           {mode === 'travel' ? (
             <TravelBook outfit={outfit} onToggle={(id) => { const it = ITEM_BY_ID[id]; if (it) onToggle(it) }} />

@@ -1,4 +1,4 @@
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from '../lib/game'
 import type { Outfit, Tweaks } from '../lib/types'
 import { useItemsVersion } from '../lib/useItemsVersion'
@@ -21,14 +21,17 @@ interface Props {
   tweaks: Tweaks
   /** 찾은 아이템을 옷장에서 입어보러 간다 */
   onWear: (id: string) => void
+  /** 수학·영어 같은 전체 화면 놀이가 열려 있으면 true (아래 여행 도감을 숨긴다) */
+  onFull?: (full: boolean) => void
 }
 
 /** 여행 탭: 넓은 맵(OverWorld)을 걸어다니다가 문에 들어가면 그 장소 장면(TravelScene)으로 */
-export function TravelGame({ outfit, tweaks, onWear, initialPlaceId = null }: Props) {
+export function TravelGame({ outfit, tweaks, onWear, onFull, initialPlaceId = null }: Props) {
   const { lang } = useI18n()
   const [starRain, setStarRain] = useState(false)
   const [speaking, setSpeaking] = useState(false)
   const [math, setMath] = useState(false)
+  useEffect(() => { onFull?.(math || speaking); return () => onFull?.(false) }, [math, speaking, onFull])
   const game = useGame()
   const ver = useItemsVersion()
   // eslint-disable-next-line react-hooks/exhaustive-deps
