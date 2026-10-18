@@ -221,6 +221,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
   const total = lv ? lv.questions.length : 0
   const calcAll = q && (q.kind === 'choice' || q.kind === 'input') ? q.text.match(/^(\d+) ([+−]) (\d+) = □$/) : null
   const calc = calcAll && (calcAll[1].length > 1 || calcAll[3].length > 1) ? calcAll : null
+  const row4 = !!q && q.kind === 'choice' && q.choices.length === 4 && q.choices.every((c) => !c.pic && /^[\d.,\s]{1,3}$/.test(c.label ?? ''))
   const flat = calcAll && !calc ? calcAll : null
   const answerText = q && q.kind === 'input' ? typed : q && right && q.kind === 'choice' ? q.choices[q.answer].label : ''
   const levels = profile ? levelsFor(profile.age) : []
@@ -307,8 +308,8 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
               <button aria-label={tx.read} onClick={() => speak(calcAll ? `${calcAll[1]} ${calcAll[2] === '+' ? '더하기' : '빼기'} ${calcAll[3]}` : q.text, lang)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-lg shadow">🔊</button>
             </div>
             {calc && (
-              <div className="my-4 rounded-[24px] bg-[#e8efdc] px-4 py-5">
-                <div className="mx-auto w-fit text-[3.5rem] leading-[1.05] font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]">
+              <div className="my-3 rounded-[24px] bg-[#e8efdc] px-2 py-3">
+                <div className="mx-auto w-fit text-[3.25rem] leading-[1.05] font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]">
                   <div className="text-right">{calc[1]}</div>
                   <div className="flex items-center justify-between gap-8"><span className="text-[2.5rem]">{calc[2]}</span><span>{calc[3]}</span></div>
                   <div className="mt-1 min-w-[5rem] border-t-[5px] border-[#213f35] pt-0.5 text-right text-[#246f55]">
@@ -330,13 +331,13 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
               </div>
             )}
             {q.kind === 'choice' && (
-              <div className={`mt-5 grid gap-4 ${q.choices.length === 3 && !q.choices.some((c) => c.pic) ? 'grid-cols-3' : q.choices.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+              <div className={`mt-4 grid ${row4 ? 'grid-cols-4 gap-2' : `gap-4 ${q.choices.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}`}>
                 {q.choices.map((c: Choice, i) => (
                   <button
                     key={i}
                     disabled={picked.includes(i) || (!!right && i !== q.answer)}
                     onClick={() => pickChoice(i)}
-                    className={`math-choice flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-[6px] px-1 py-2 text-[#246f55] ${c.pic ? '' : `${/^[\d.,\s]{1,3}$/.test(c.label ?? '') ? 'text-5xl' : 'text-xl whitespace-nowrap'} [font-family:Jua,'Noto_Sans_KR',sans-serif]`} ${right && i === q.answer ? 'animate-pulse border-[#7caf69] bg-[#d0edbd]' : picked.includes(i) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
+                    className={`math-choice flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-[6px] px-1 py-2 text-[#246f55] ${c.pic ? '' : `${/^[\d.,\s]{1,3}$/.test(c.label ?? '') ? (row4 ? 'text-4xl' : 'text-5xl') : 'text-xl whitespace-nowrap'} [font-family:Jua,'Noto_Sans_KR',sans-serif]`} ${right && i === q.answer ? 'animate-pulse border-[#7caf69] bg-[#d0edbd]' : picked.includes(i) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
                   >
                     {c.pic && <span className="flex w-full items-end justify-center">{'bar' in c.pic ? <span className="block w-full px-2"><PicView pic={c.pic} /></span> : <PicView pic={c.pic} />}</span>}
                     {c.label && <span className={c.pic ? 'text-sm font-bold' : ''}>{c.label}</span>}
