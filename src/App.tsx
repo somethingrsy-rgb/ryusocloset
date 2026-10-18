@@ -407,7 +407,7 @@ export default function App() {
             {mode === 'shop' ? (
               <ShopModal onClose={() => setMode(shopFrom.current)} onWear={wearFound} outfit={outfit} tweaks={tweaks} />
             ) : mode === 'cafe' ? (
-              <CafeGame />
+              <CafeGame outfit={outfit} tweaks={tweaks} />
             ) : mode === 'farm' ? (
               <FarmScene outfit={outfit} tweaks={tweaks} onExit={() => setMode('travel')} onShop={() => openShop('farm')} />
             ) : mode === 'travel' ? (

@@ -3,6 +3,8 @@ import { FarmFx } from './FarmFx'
 import { useI18n } from '../i18n'
 import { actFarm, getFarm, subscribeFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
+import type { Outfit, Tweaks } from '../lib/types'
+import { FigureLayers } from './FigureLayers'
 
 type Menu = { id: string; ko: string; en: string; price: number }
 /** 메뉴 그림은 public/cafe/menu2/<id>.webp */
@@ -94,7 +96,16 @@ function tone() {
   } catch { /* 소리 실패는 무시 */ }
 }
 
-export function CafeGame() {
+/**
+ * 아바타는 가운데 잔디 길(x=50%)로만 다닌다: 카운터 앞 → 윗줄 테이블 사이 → 아랫줄 테이블 사이.
+ * h = 아바타 키(그림 높이에 대한 %), feet = 발 위치(그림 높이에 대한 %): 카운터 앞, 윗줄, 아랫줄. 테이블·동물과 겹치지 않는 자리다.
+ */
+const AVATAR = {
+  portrait: { h: 20, w: 1024 / 1536 / (940 / 1672), feet: [40, 61, 79] },
+  wide: { h: 30, w: 1024 / 1536 / (1672 / 941), feet: [43, 62, 86] },
+} as const
+
+export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }) {
   const { lang } = useI18n()
   const tx = T[lang]
   const [st, setSt] = useState<Saved>(loadSaved)
@@ -106,6 +117,11 @@ export function CafeGame() {
   const [floats, setFloats] = useState<{ id: number; seat: number; amount: number }[]>([])
   const toastTimer = useRef<number>(0)
   const secRef = useRef<HTMLElement>(null)
+  const [pos, setPos] = useState<{ x: number; y: number; wide: boolean } | null>(null)
+  const [walking, setWalking] = useState(false)
+  const [hold, setHold] = useState<string | null>(null) // 들고 있는 메뉴 그림
+  const busy = useRef(false)
+  const timers = useRef<number[]>([])
   const [wide, setWide] = useState(false) // 가로로 넓은 화면(패드 가로 등): 가로 그림을 쓴다
   useEffect(() => {
     const el = secRef.current
@@ -116,7 +132,7 @@ export function CafeGame() {
   }, [])
   const floatId = useRef(0)
 
-  useEffect(() => () => clearTimeout(toastTimer.current), [])
+  useEffect(() => () => { clearTimeout(toastTimer.current); timers.current.forEach(clearTimeout) }, [])
   const cooking = guests.some((g) => g.stage === 'cooking' && g.doneAt > now)
   useEffect(() => {
     if (!cooking) return
@@ -136,30 +152,48 @@ export function CafeGame() {
   const beep = () => { if (sound) tone() }
   const isReady = (g: Guest) => g.stage === 'cooking' && g.doneAt <= now
 
-  /** 말풍선(또는 손님)을 누르면 다음 단계로: 주문 받기 → 만들기 시작 → (완성되면) 서빙 */
+  const A = wide ? AVATAR.wide : AVATAR.portrait
+  const aw = A.h * A.w
+  const lane = (row: 0 | 1 | 2) => ({ x: 50 - aw / 2, y: A.feet[row] - A.h, wide })
+  const here = pos && pos.wide === wide ? pos : lane(0)
+
+  /** 말풍선(또는 손님)을 누르면 아바타가 걸어가서 다음 단계를 한다: 주문 받기(손님 자리) → 만들기 시작(카운터) → (완성되면) 서빙(손님 자리) */
   const tap = (i: number) => {
     const g = guests[i]
     const m = MENU[g.wish]
-    if (g.stage === 'new') {
-      setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'ordered' } : x)))
-      beep()
-    } else if (g.stage === 'ordered') {
-      const at = Date.now()
-      setNow(at)
-      setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'cooking', doneAt: at + cookMs(m.price) } : x)))
-    } else if (!isReady(g)) {
-      say(tx.notReady)
-    } else {
-      const bonus = st.served + 1 >= GOAL && !st.reward
-      save({ served: st.served + 1, reward: st.reward || bonus })
-      actFarm({ type: 'earn', amount: m.price + (bonus ? BONUS : 0) })
-      beep()
-      setGuests((gs) => gs.map((x, k) => (k === i ? newGuest(i) : x)))
-      const id = ++floatId.current
-      setFloats((f) => [...f, { id, seat: i, amount: m.price + (bonus ? BONUS : 0) }])
-      window.setTimeout(() => setFloats((f) => f.filter((x) => x.id !== id)), 1300)
-      if (bonus) say(tx.bonus)
-    }
+    if (busy.current) return
+    if (g.stage === 'cooking' && !isReady(g)) { say(tx.notReady); return }
+    busy.current = true
+    const toSeat = lane(i < 4 ? 1 : 2)
+    const toCounter = lane(0)
+    const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
+    const stage = g.stage
+    setWalking(true)
+    setPos(stage === 'ordered' ? toCounter : toSeat)
+    if (stage === 'cooking') setHold(m.id)
+    later(() => {
+      setWalking(false)
+      if (stage === 'new') {
+        setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'ordered' } : x)))
+        beep()
+      } else if (stage === 'ordered') {
+        const at = Date.now()
+        setNow(at)
+        setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'cooking', doneAt: at + cookMs(m.price) } : x)))
+      } else {
+        const bonus = st.served + 1 >= GOAL && !st.reward
+        save({ served: st.served + 1, reward: st.reward || bonus })
+        actFarm({ type: 'earn', amount: m.price + (bonus ? BONUS : 0) })
+        beep()
+        setHold(null)
+        setGuests((gs) => gs.map((x, k) => (k === i ? newGuest(i) : x)))
+        const id = ++floatId.current
+        setFloats((f) => [...f, { id, seat: i, amount: m.price + (bonus ? BONUS : 0) }])
+        later(() => setFloats((f) => f.filter((x) => x.id !== id)), 1300)
+        if (bonus) say(tx.bonus)
+      }
+      later(() => { busy.current = false }, 250)
+    }, 850)
   }
 
   return (
@@ -204,6 +238,13 @@ export function CafeGame() {
             </div>
           )
         })}
+        {/* 내 아바타: 손님 자리까지 걸어가서 주문을 받고, 카운터에서 만들고, 음식을 들고 가서 서빙한다 */}
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 4, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
+          <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
+            {hold && <img src={assetUrl(`cafe/menu2/${hold}.webp`)} alt="" draggable={false} className="absolute object-contain" style={{ left: '56%', top: '40%', width: '55%' }} />}
+          </div>
+        </div>
         {floats.map((f) => {
           const [cx, cy] = SEATS[f.seat][wide ? 'wide' : 'portrait']
           return <span key={f.id} aria-hidden className="cafe-float pointer-events-none absolute z-[6] -translate-x-1/2 text-lg font-extrabold text-[#c9751f] drop-shadow-[0_1px_0_#fff]" style={{ left: `${cx}%`, top: `${cy - 6}%` }}>+{f.amount} 🪙</span>
