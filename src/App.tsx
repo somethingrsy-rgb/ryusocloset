@@ -364,7 +364,7 @@ export default function App() {
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
       }`}
     >
-      <img src={assetUrl(`assets/tabs/${icon}.webp`)} alt="" draggable={false} className="h-9 w-9 object-contain" />
+      <img src={assetUrl(`assets/tabs2/${icon}.webp`)} alt="" draggable={false} className="h-10 w-10 object-contain" />
       <span className="sr-only">{label}</span>
     </button>
   )
