@@ -295,7 +295,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
             </div>
           </div>
         ) : lv && q ? (
-          <div>
+          <div className="flex min-h-full flex-col">
             <div className="mb-3 flex items-center justify-between gap-2">
               <p className="m-0 text-base font-bold">{lv.icon} {lv.title[lang]}</p>
               <span className="text-sm font-extrabold">{idx + 1}/{total}{isCleared(profile, lv.id) ? ' ⭐' : ''}</span>
@@ -303,7 +303,8 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
             <div className="h-3 overflow-hidden rounded-full bg-[#edf0e7]">
               <div className="h-full rounded-full bg-[#8db674] transition-all" style={{ width: `${((right ? idx + 1 : idx) / total) * 100}%` }} />
             </div>
-            <div className="mt-5 mb-1 flex items-center justify-center gap-2">
+            <div className="flex flex-1 flex-col justify-evenly gap-3 pb-2">
+            <div className="flex items-center justify-center gap-2">
               <p className="m-0 text-center text-xl leading-snug font-extrabold">{calcAll ? tx.calc : q.text}</p>
               <button aria-label={tx.read} onClick={() => speak(calcAll ? `${calcAll[1]} ${calcAll[2] === '+' ? '더하기' : '빼기'} ${calcAll[3]}` : q.text, lang)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-lg shadow">🔊</button>
             </div>
@@ -337,7 +338,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
                     key={i}
                     disabled={picked.includes(i) || (!!right && i !== q.answer)}
                     onClick={() => pickChoice(i)}
-                    className={`math-choice flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-[6px] px-1 py-2 text-[#246f55] ${c.pic ? '' : `${/^[\d.,\s]{1,3}$/.test(c.label ?? '') ? (row4 ? 'text-4xl' : 'text-5xl') : 'text-xl whitespace-nowrap'} [font-family:Jua,'Noto_Sans_KR',sans-serif]`} ${right && i === q.answer ? 'animate-pulse border-[#7caf69] bg-[#d0edbd]' : picked.includes(i) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
+                    className={`math-choice flex ${row4 ? "min-h-[6rem]" : "min-h-[4.5rem]"} flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-[6px] px-1 py-2 text-[#246f55] ${c.pic ? '' : `${/^[\d.,\s]{1,3}$/.test(c.label ?? '') ? (row4 ? 'text-4xl' : 'text-5xl') : 'text-xl whitespace-nowrap'} [font-family:Jua,'Noto_Sans_KR',sans-serif]`} ${right && i === q.answer ? 'animate-pulse border-[#7caf69] bg-[#d0edbd]' : picked.includes(i) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
                   >
                     {c.pic && <span className="flex w-full items-end justify-center">{'bar' in c.pic ? <span className="block w-full px-2"><PicView pic={c.pic} /></span> : <PicView pic={c.pic} />}</span>}
                     {c.label && <span className={c.pic ? 'text-sm font-bold' : ''}>{c.label}</span>}
@@ -370,6 +371,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
             <p className="mt-3 min-h-7 text-center text-lg font-extrabold" aria-live="polite">{right ?? (wrong ? tx.again : '')}</p>
             {right && <p className="mt-0 mb-3 rounded-2xl bg-white px-3 py-2 text-center text-sm text-[#678071]">💡 {q.why}</p>}
             {right && <button className={`${big} mt-1 w-full !py-2 bg-[#246f55] text-white`} onClick={nextQuestion}>{idx + 1 < total ? tx.next : gift ? tx.gift : tx.done}</button>}
+            </div>
           </div>
         ) : (
           <>
