@@ -164,15 +164,9 @@ export function CafeGame() {
 
   return (
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-hidden rounded-3xl bg-[#b9c97a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
-      {/* 그림 아래 남는 자리(폰 세로): 그림 맨 아래 덤불·풀밭 부분을 위아래로 뒤집고 늘려 이어 붙여서 정원이 끝까지 이어져 보이게 한다 */}
-      {!wide && (
-        <div aria-hidden className="absolute left-1/2 -translate-x-1/2 overflow-hidden" style={{ width: 'min(100cqw, calc(100cqh / 1.7787))', top: 'calc(min(100cqw, 100cqh / 1.7787) * 1.7787 - 1px)', bottom: 0 }}>
-          <div className="h-full w-full" style={{ backgroundImage: `url(${assetUrl('cafe/garden2_portrait.webp')})`, backgroundSize: '100% calc((100cqh - min(100cqw, 100cqh / 1.7787) * 1.7787) / 0.16)', backgroundPosition: 'bottom', backgroundRepeat: 'no-repeat', transform: 'scaleY(-1)' }} />
-        </div>
-      )}
       <div
         className={`absolute overflow-hidden select-none ${wide ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : 'top-0 left-1/2 -translate-x-1/2'}`}
-        style={wide ? { width: 'max(100cqw, calc(100cqh * 1672 / 941))', aspectRatio: '1672 / 941' } : { width: 'min(100cqw, calc(100cqh / 1.7787))', aspectRatio: '940 / 1672' }}
+        style={wide ? { width: 'max(100cqw, calc(100cqh * 1672 / 941))', aspectRatio: '1672 / 941' } : { width: 'max(100cqw, calc(100cqh / 1.7787))', aspectRatio: '940 / 1672' }}
       >
         <img src={assetUrl(wide ? 'cafe/garden2_wide.webp' : 'cafe/garden2_portrait.webp')} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
         <FarmFx />
