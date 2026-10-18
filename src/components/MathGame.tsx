@@ -13,13 +13,13 @@ const T = {
     title: '수학 놀이터', who: '누가 할까요?', add: '새 친구', name: '이름', age: '나이', age6: '6살', age8: '8살', make: '만들기', cancel: '취소', del: '지우기',
     delAsk: '이 친구의 기록을 지울까요?', intro: '문제를 모두 풀면 선물을 받아요. 틀려도 괜찮아요, 다시 해보면 돼요!', locked: '앞 단계를 먼저 깨요', cleared: '클리어', levels: '단계 고르기',
     right: ['잘했어요! 🎉', '맞아요! ⭐', '대단해요! 👏', '정답이에요! 🌟'], again: '괜찮아요, 다시 해볼까요? 💪', next: '다음 문제', gift: '선물이 도착했어요!', wear: '옷장에서 입어보기',
-    allFound: '모든 선물을 이미 받았어요 ⭐', nextLevel: '다음 단계로', close: '닫기', back: '뒤로', read: '읽어 주기', ok: '확인', erase: '지우기', done: '다 풀었어요!', full: '친구는 4명까지 만들 수 있어요',
+    allFound: '모든 선물을 이미 받았어요 ⭐', nextLevel: '다음 단계로', close: '닫기', back: '뒤로', read: '읽어 주기', calc: '계산해서 알맞은 수를 찾아요', ok: '확인', erase: '지우기', done: '다 풀었어요!', full: '친구는 4명까지 만들 수 있어요',
   },
   en: {
     title: 'Math Playground', who: 'Who is playing?', add: 'New friend', name: 'Name', age: 'Age', age6: '6 years', age8: '8 years', make: 'Create', cancel: 'Cancel', del: 'Delete',
     delAsk: "Delete this friend's progress?", intro: 'Finish every question to get a gift. Mistakes are fine, just try again!', locked: 'Clear the level before first', cleared: 'Cleared', levels: 'Levels',
     right: ['Great job! 🎉', 'Correct! ⭐', 'Awesome! 👏', "You got it! 🌟"], again: "That's okay, try again! 💪", next: 'Next', gift: 'A gift for you!', wear: 'Try it on',
-    allFound: 'You already have every gift ⭐', nextLevel: 'Next level', close: 'Close', back: 'Back', read: 'Read it', ok: 'OK', erase: 'Erase', done: 'All done!', full: 'Up to 4 friends',
+    allFound: 'You already have every gift ⭐', nextLevel: 'Next level', close: 'Close', back: 'Back', read: 'Read it', calc: 'Work it out and find the number', ok: 'OK', erase: 'Erase', done: 'All done!', full: 'Up to 4 friends',
   },
 }
 
@@ -43,11 +43,11 @@ function CupSvg({ level }: { level: number }) {
   )
 }
 function PicView({ pic }: { pic: Pic }) {
-  if ('shape' in pic) return <ShapeSvg shape={pic.shape} size={46} />
+  if ('shape' in pic) return <ShapeSvg shape={pic.shape} size={58} />
   if ('bar' in pic) return <span className="block h-4 rounded-full bg-[#8db674]" style={{ width: `${pic.bar * 100}%` }} />
   if ('cup' in pic) return <CupSvg level={pic.cup} />
   return (
-    <span className="inline-flex flex-wrap items-end justify-center leading-none" style={{ fontSize: `${1.7 * (pic.scale ?? 1)}rem`, gap: '0.1em' }}>
+    <span className="inline-flex flex-wrap items-end justify-center leading-none" style={{ fontSize: `${2.1 * (pic.scale ?? 1)}rem`, gap: '0.1em' }}>
       {Array.from({ length: pic.n ?? 1 }, (_, i) => <span key={i}>{pic.emoji}</span>)}
     </span>
   )
@@ -93,13 +93,13 @@ function BalanceSvg({ left, right, heavier }: { left: string; right: string; hea
 function VisualView({ v }: { v: Visual }) {
   if (v.kind === 'clock') return <ClockSvg h={v.h} m={v.m} />
   if (v.kind === 'balance') return <BalanceSvg left={v.left} right={v.right} heavier={v.heavier} />
-  if (v.kind === 'shapes') return <div className="flex flex-wrap items-center justify-center gap-3">{v.list.map((sh, i) => <ShapeSvg key={i} shape={sh} />)}</div>
+  if (v.kind === 'shapes') return <div className="flex flex-wrap items-center justify-center gap-3">{v.list.map((sh, i) => <ShapeSvg key={i} shape={sh} size={64} />)}</div>
   if (v.kind === 'seq') {
     return (
       <div className="flex flex-wrap items-center justify-center gap-2">
         {v.items.map((it, i) => it === '?'
-          ? <span key={i} className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-dashed border-[#9bbd87] bg-white text-2xl">?</span>
-          : <span key={i} className="flex h-14 min-w-14 items-center justify-center rounded-2xl bg-white px-2 text-3xl">{it}</span>)}
+          ? <span key={i} className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-dashed border-[#9bbd87] bg-white text-4xl">?</span>
+          : <span key={i} className="flex h-20 min-w-20 items-center justify-center rounded-2xl bg-white px-2 text-6xl">{it}</span>)}
       </div>
     )
   }
@@ -107,9 +107,9 @@ function VisualView({ v }: { v: Visual }) {
     return (
       <div className="flex flex-wrap items-center justify-center gap-3">
         {Array.from({ length: v.tens }, (_, i) => (
-          <span key={i} className="grid grid-cols-5 gap-0.5 rounded-xl border-2 border-[#9bbd87] bg-white p-1.5 text-base leading-none">{Array.from({ length: 10 }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>
+          <span key={i} className="grid grid-cols-5 gap-0.5 rounded-xl border-2 border-[#9bbd87] bg-white p-1.5 text-xl leading-none">{Array.from({ length: 10 }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>
         ))}
-        {v.ones > 0 && <span className="flex max-w-[11rem] flex-wrap justify-center gap-1 text-2xl leading-none">{Array.from({ length: v.ones }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>}
+        {v.ones > 0 && <span className="flex max-w-[14rem] flex-wrap justify-center gap-1 text-3xl leading-none">{Array.from({ length: v.ones }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>}
       </div>
     )
   }
@@ -118,7 +118,7 @@ function VisualView({ v }: { v: Visual }) {
       {v.groups.map((g, gi) => (
         <span key={gi} className="contents">
           {gi > 0 && v.op && <span className="text-3xl font-black">{v.op}</span>}
-          <span className="inline-flex max-w-full flex-wrap justify-center gap-1 rounded-2xl bg-white/70 px-3 py-2 text-3xl leading-none">
+          <span className="inline-flex max-w-full flex-wrap justify-center gap-1.5 rounded-2xl bg-white/70 px-3 py-2 text-4xl leading-none">
             {Array.from({ length: g.n }, (_, i) => <Faded key={i} emoji={g.emoji} gone={i >= g.n - (g.cross ?? 0)} />)}
           </span>
         </span>
@@ -219,6 +219,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
 
   const big = 'math-btn min-h-14 rounded-3xl border border-[#e5e8df] px-4 py-3 text-lg font-bold text-[#213f35] active:scale-95'
   const total = lv ? lv.questions.length : 0
+  const calc = q && (q.kind === 'choice' || q.kind === 'input') ? q.text.match(/^(\d+) ([+−]) (\d+) = □$/) : null
   const levels = profile ? levelsFor(profile.age) : []
   const hasNext = lv ? levels.findIndex((l) => l.id === lv.id) < levels.length - 1 : false
   const goBack = () => { if (gift || level !== null) { setLevel(null); setGift(null); setGifted(false); reset() } else if (pid) setPid(null); else onClose() }
@@ -299,13 +300,24 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
               <div className="h-full rounded-full bg-[#8db674] transition-all" style={{ width: `${((right ? idx + 1 : idx) / total) * 100}%` }} />
             </div>
             <div className="mt-4 flex items-center justify-center gap-2">
-              <p className="m-0 text-center text-xl font-extrabold">{q.text}</p>
-              <button aria-label={tx.read} onClick={() => speak(q.text, lang)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-xl shadow">🔊</button>
+              <p className="m-0 text-center text-2xl leading-snug font-extrabold">{calc ? tx.calc : q.text}</p>
+              <button aria-label={tx.read} onClick={() => speak(calc ? `${calc[1]} ${calc[2] === '+' ? '더하기' : '빼기'} ${calc[3]}` : q.text, lang)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-xl shadow">🔊</button>
             </div>
-            {(q.visual || q.kind === 'input') && (
+            {calc && (
+              <div className="my-3 rounded-[30px] bg-[#e8efdc] px-4 py-5">
+                <div className="mx-auto w-fit text-[5rem] leading-[1.1] font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]">
+                  <div className="text-right">{calc[1]}</div>
+                  <div className="flex items-center justify-between gap-8"><span className="text-[3.5rem]">{calc[2]}</span><span>{calc[3]}</span></div>
+                  <div className="mt-1 min-w-[6.5rem] border-t-[6px] border-[#213f35] pt-1 text-right text-[#246f55]">
+                    {q.kind === 'input' ? <>{typed || <span className="opacity-30">?</span>}<span className="animate-pulse">|</span></> : right && q.kind === 'choice' ? q.choices[q.answer].label : <span className="opacity-30">?</span>}
+                  </div>
+                </div>
+              </div>
+            )}
+            {!calc && (q.visual || q.kind === 'input') && (
               <div className="my-3 rounded-[30px] bg-[#e8efdc] p-4 text-center">
                 {q.visual && <VisualView v={q.visual} />}
-                {q.kind === 'input' && <p className={`m-0 text-5xl font-extrabold text-[#246f55] ${q.visual ? 'mt-3' : ''}`}>{typed || '　'}<span className="animate-pulse">|</span></p>}
+                {q.kind === 'input' && <p className={`m-0 text-7xl font-extrabold text-[#246f55] ${q.visual ? 'mt-3' : ''}`}>{typed || '　'}<span className="animate-pulse">|</span></p>}
               </div>
             )}
             {q.kind === 'choice' && (
@@ -315,7 +327,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
                     key={i}
                     disabled={picked.includes(i) || (!!right && i !== q.answer)}
                     onClick={() => pickChoice(i)}
-                    className={`math-choice flex min-h-20 flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-[6px] px-1 py-2 text-[#246f55] ${c.pic ? '' : `${(c.label?.length ?? 0) > 3 ? 'text-2xl' : 'text-4xl'} [font-family:Jua,'Noto_Sans_KR',sans-serif]`} ${right && i === q.answer ? 'animate-bounce border-[#7caf69] bg-[#d0edbd]' : picked.includes(i) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
+                    className={`math-choice flex min-h-24 flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-[6px] px-1 py-2 text-[#246f55] ${c.pic ? '' : `${(c.label?.length ?? 0) > 3 ? 'text-3xl' : 'text-6xl'} [font-family:Jua,'Noto_Sans_KR',sans-serif]`} ${right && i === q.answer ? 'animate-bounce border-[#7caf69] bg-[#d0edbd]' : picked.includes(i) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
                   >
                     {c.pic && <span className="flex w-full items-end justify-center">{'bar' in c.pic ? <span className="block w-full px-2"><PicView pic={c.pic} /></span> : <PicView pic={c.pic} />}</span>}
                     {c.label && <span className={c.pic ? 'text-sm font-bold' : ''}>{c.label}</span>}
@@ -326,21 +338,21 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
             {q.kind === 'input' && !right && (
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
-                  <button key={d} onClick={() => { setWrong(false); setTyped((t) => (t.length < 3 ? t + d : t)) }} className="math-choice min-h-14 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-3xl text-[#246f55] active:scale-95">{d}</button>
+                  <button key={d} onClick={() => { setWrong(false); setTyped((t) => (t.length < 3 ? t + d : t)) }} className="math-choice min-h-16 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-5xl text-[#246f55] active:scale-95">{d}</button>
                 ))}
                 <button onClick={() => setTyped((t) => t.slice(0, -1))} aria-label={tx.erase} className="min-h-14 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-2xl text-[#246f55] active:scale-95">⌫</button>
-                <button onClick={() => { setWrong(false); setTyped((t) => (t.length < 3 ? t + '0' : t)) }} className="math-choice min-h-14 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-3xl text-[#246f55] active:scale-95">0</button>
+                <button onClick={() => { setWrong(false); setTyped((t) => (t.length < 3 ? t + '0' : t)) }} className="math-choice min-h-16 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-5xl text-[#246f55] active:scale-95">0</button>
                 <button disabled={!typed} onClick={submitInput} className="min-h-14 rounded-2xl bg-[#246f55] text-xl font-bold text-white disabled:opacity-40 active:scale-95">{tx.ok}</button>
               </div>
             )}
             {q.kind === 'order' && (
               <div className="mt-3">
                 <div className="mb-3 flex justify-center gap-2" aria-label="slots">
-                  {q.cards.map((_, i) => <span key={i} className={`flex h-14 min-w-14 items-center justify-center rounded-2xl border-2 px-2 text-2xl font-extrabold ${placed[i] !== undefined ? 'border-[#7caf69] bg-[#d0edbd] text-[#246f55]' : 'border-dashed border-[#9bbd87] bg-white/60'}`}>{placed[i] ?? ''}</span>)}
+                  {q.cards.map((_, i) => <span key={i} className={`flex h-16 min-w-16 items-center justify-center rounded-2xl border-2 px-2 text-4xl font-extrabold ${placed[i] !== undefined ? 'border-[#7caf69] bg-[#d0edbd] text-[#246f55]' : 'border-dashed border-[#9bbd87] bg-white/60'}`}>{placed[i] ?? ''}</span>)}
                 </div>
                 <div className="grid grid-cols-4 gap-2">
                   {q.cards.map((c) => (
-                    <button key={c} disabled={placed.includes(c) || !!right} onClick={() => tapCard(c)} className="math-choice min-h-16 rounded-2xl border-2 border-b-[6px] border-[#e0e7d7] border-b-[#dce5d0] bg-white text-3xl text-[#246f55] active:scale-95 disabled:opacity-30">{c}</button>
+                    <button key={c} disabled={placed.includes(c) || !!right} onClick={() => tapCard(c)} className="math-choice min-h-20 rounded-2xl border-2 border-b-[6px] border-[#e0e7d7] border-b-[#dce5d0] bg-white text-5xl text-[#246f55] active:scale-95 disabled:opacity-30">{c}</button>
                   ))}
                 </div>
               </div>
