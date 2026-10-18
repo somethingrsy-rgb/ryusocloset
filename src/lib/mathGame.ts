@@ -124,12 +124,9 @@ export const removeProfile = (s: MathState, id: string): MathState => ({ profile
 
 export const countOf = (p: Profile, level: number) => p.correct[level] ?? 0
 export const isCleared = (p: Profile, level: number) => countOf(p, level) >= totalOf(level)
-/** 같은 나이 단계에서 앞 단계를 깨야 다음 단계가 열린다 */
+/** 모든 단계를 처음부터 고를 수 있다 (잠금 없음). 나이에 맞는 단계만 열린다 */
 export function isUnlocked(p: Profile, level: number): boolean {
-  const list = levelsFor(p.age)
-  const i = list.findIndex((l) => l.id === level)
-  if (i < 0) return false
-  return i === 0 || isCleared(p, list[i - 1].id)
+  return levelsFor(p.age).some((l) => l.id === level)
 }
 
 /** 한 단계에서 `done` 문제까지 끝냈다고 기록한다(줄어들지 않는다). 이번에 전부 끝냈으면 justCleared */

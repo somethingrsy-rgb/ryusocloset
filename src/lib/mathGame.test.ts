@@ -75,7 +75,7 @@ describe('아이 수학 게임', () => {
       let p = kid(age)
       const list = levelsFor(age)
       expect(isUnlocked(p, list[0].id)).toBe(true)
-      expect(isUnlocked(p, list[1].id)).toBe(false)
+      expect(isUnlocked(p, list[1].id)).toBe(true) // 잠금 없음
       let cleared = 0
       for (let i = 1; i <= totalOf(list[0].id) + 3; i++) {
         const r = addCorrect(p, list[0].id, i)
