@@ -401,8 +401,8 @@ export default function App() {
                 onClick={() => setModal('hair')}
                 aria-label={lang === 'ko' ? '헤어숍' : 'Hair salon'}
                 title={lang === 'ko' ? '헤어숍' : 'Hair salon'}
-                className="absolute top-2 right-2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/85 text-lg shadow-md ring-1 ring-black/5"
-              ><span aria-hidden>💇</span></button>
+                className="absolute top-1 right-1 z-20 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-transparent active:scale-95"
+              ><img src={assetUrl('assets/tabs/hairshop.webp')} alt="" draggable={false} className="h-full w-full object-contain drop-shadow-md" /></button>
             )}
             {mode === 'shop' ? (
               <ShopModal onClose={() => setMode(shopFrom.current)} onWear={wearFound} outfit={outfit} tweaks={tweaks} />
