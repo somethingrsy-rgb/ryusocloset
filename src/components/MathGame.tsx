@@ -3,38 +3,128 @@ import { useI18n } from '../i18n'
 import { travelItem } from '../lib/game'
 import { assetUrl } from '../lib/items'
 import {
-  AGES, GOAL, MAX_PROFILES, addCorrect, addProfile, claimGift, countOf, isCleared, isUnlocked, levelsFor, readMath, removeProfile, updateProfile, writeMath,
-  type Age, type MathState, type Profile, type Question, type Visual,
+  AGES, MAX_PROFILES, addCorrect, addProfile, claimGift, countOf, isCleared, isUnlocked, levelsFor, readMath, removeProfile, totalOf, updateProfile, writeMath,
+  type Age, type Choice, type MathState, type Pic, type Profile, type Question, type Shape, type Visual,
 } from '../lib/mathGame'
 import { playSnap } from '../lib/sound'
 
 const T = {
   ko: {
     title: '수학 놀이터', who: '누가 할까요?', add: '새 친구', name: '이름', age: '나이', age6: '6살', age8: '8살', make: '만들기', cancel: '취소', del: '지우기',
-    delAsk: '이 친구의 기록을 지울까요?', intro: `문제를 ${GOAL}개 맞히면 선물을 받아요. 틀려도 괜찮아요, 다시 해보면 돼요!`, locked: '앞 단계를 먼저 깨요', cleared: '클리어', levels: '단계 고르기',
+    delAsk: '이 친구의 기록을 지울까요?', intro: '문제를 모두 풀면 선물을 받아요. 틀려도 괜찮아요, 다시 해보면 돼요!', locked: '앞 단계를 먼저 깨요', cleared: '클리어', levels: '단계 고르기',
     right: ['잘했어요! 🎉', '맞아요! ⭐', '대단해요! 👏', '정답이에요! 🌟'], again: '괜찮아요, 다시 해볼까요? 💪', next: '다음 문제', gift: '선물이 도착했어요!', wear: '옷장에서 입어보기',
-    allFound: '모든 선물을 이미 받았어요 ⭐', nextLevel: '다음 단계로', close: '닫기', back: '뒤로', read: '읽어 주기', full: '친구는 4명까지 만들 수 있어요',
+    allFound: '모든 선물을 이미 받았어요 ⭐', nextLevel: '다음 단계로', close: '닫기', back: '뒤로', read: '읽어 주기', ok: '확인', erase: '지우기', done: '다 풀었어요!', full: '친구는 4명까지 만들 수 있어요',
   },
   en: {
     title: 'Math Playground', who: 'Who is playing?', add: 'New friend', name: 'Name', age: 'Age', age6: '6 years', age8: '8 years', make: 'Create', cancel: 'Cancel', del: 'Delete',
-    delAsk: "Delete this friend's progress?", intro: `Answer ${GOAL} questions right to get a gift. Mistakes are fine, just try again!`, locked: 'Clear the level before first', cleared: 'Cleared', levels: 'Levels',
+    delAsk: "Delete this friend's progress?", intro: 'Finish every question to get a gift. Mistakes are fine, just try again!', locked: 'Clear the level before first', cleared: 'Cleared', levels: 'Levels',
     right: ['Great job! 🎉', 'Correct! ⭐', 'Awesome! 👏', "You got it! 🌟"], again: "That's okay, try again! 💪", next: 'Next', gift: 'A gift for you!', wear: 'Try it on',
-    allFound: 'You already have every gift ⭐', nextLevel: 'Next level', close: 'Close', back: 'Back', read: 'Read it', full: 'Up to 4 friends',
+    allFound: 'You already have every gift ⭐', nextLevel: 'Next level', close: 'Close', back: 'Back', read: 'Read it', ok: 'OK', erase: 'Erase', done: 'All done!', full: 'Up to 4 friends',
   },
 }
 
-function Pictures({ v }: { v: Visual }) {
-  const row = (n: number, faded = 0) => (
-    <span className="inline-flex max-w-full flex-wrap justify-center gap-1 text-4xl leading-none">
-      {Array.from({ length: n }, (_, i) => {
-        const gone = i >= n - faded
-        return <span key={i} className={`relative ${gone ? 'opacity-30' : ''}`}>{v.emoji}{gone && <span className="absolute inset-0 flex items-center justify-center text-3xl font-black text-red-500">✕</span>}</span>
-      })}
+const SHAPE_COLOR = '#f4a259'
+function ShapeSvg({ shape, size = 56 }: { shape: Shape; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 56 56" aria-hidden>
+      {shape === 'circle' && <circle cx="28" cy="28" r="24" fill={SHAPE_COLOR} />}
+      {shape === 'tri' && <polygon points="28,5 52,50 4,50" fill={SHAPE_COLOR} />}
+      {shape === 'square' && <rect x="6" y="6" width="44" height="44" rx="3" fill={SHAPE_COLOR} />}
+    </svg>
+  )
+}
+function CupSvg({ level }: { level: number }) {
+  const h = 54 * level
+  return (
+    <svg width="52" height="70" viewBox="0 0 52 70" aria-hidden>
+      <rect x="8" y={62 - h} width="36" height={h} fill="#8cc8f0" />
+      <path d="M6 6 L10 64 H42 L46 6" fill="none" stroke="#5b7f8c" strokeWidth="3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function PicView({ pic }: { pic: Pic }) {
+  if ('shape' in pic) return <ShapeSvg shape={pic.shape} size={46} />
+  if ('bar' in pic) return <span className="block h-4 rounded-full bg-[#8db674]" style={{ width: `${pic.bar * 100}%` }} />
+  if ('cup' in pic) return <CupSvg level={pic.cup} />
+  return (
+    <span className="inline-flex flex-wrap items-end justify-center leading-none" style={{ fontSize: `${1.7 * (pic.scale ?? 1)}rem`, gap: '0.1em' }}>
+      {Array.from({ length: pic.n ?? 1 }, (_, i) => <span key={i}>{pic.emoji}</span>)}
     </span>
   )
-  if (v.op === '+') return <div className="flex flex-wrap items-center justify-center gap-3">{row(v.a)}<span className="text-3xl font-black">+</span>{row(v.b ?? 0)}</div>
-  if (v.op === '−') return <div className="flex justify-center">{row(v.a, v.b ?? 0)}</div>
-  return <div className="flex justify-center">{row(v.a)}</div>
+}
+function ClockSvg({ h, m }: { h: number; m: number }) {
+  const hourAngle = ((h % 12) + m / 60) * 30
+  const minAngle = m * 6
+  const hand = (deg: number, len: number, w: number) => <line x1="100" y1="100" x2={100 + len * Math.sin((deg * Math.PI) / 180)} y2={100 - len * Math.cos((deg * Math.PI) / 180)} stroke="#213f35" strokeWidth={w} strokeLinecap="round" />
+  return (
+    <svg viewBox="0 0 200 200" className="mx-auto h-44 w-44" role="img" aria-label="clock">
+      <circle cx="100" cy="100" r="94" fill="#fff" stroke="#246f55" strokeWidth="6" />
+      {Array.from({ length: 12 }, (_, i) => {
+        const n = i + 1
+        const a = (n * 30 * Math.PI) / 180
+        return <text key={n} x={100 + 76 * Math.sin(a)} y={100 - 76 * Math.cos(a) + 7} textAnchor="middle" fontSize="20" fontWeight="700" fill="#213f35">{n}</text>
+      })}
+      {hand(hourAngle, 44, 8)}
+      {hand(minAngle, 68, 5)}
+      <circle cx="100" cy="100" r="6" fill="#246f55" />
+    </svg>
+  )
+}
+function Faded({ emoji, gone }: { emoji: string; gone: boolean }) {
+  return <span className={`relative ${gone ? 'opacity-30' : ''}`}>{emoji}{gone && <span className="absolute inset-0 flex items-center justify-center text-2xl font-black text-red-500">✕</span>}</span>
+}
+function BalanceSvg({ left, right, heavier }: { left: string; right: string; heavier: 'left' | 'right' }) {
+  const tilt = heavier === 'left' ? -10 : 10 // 무거운 쪽이 아래로
+  const dy = Math.sin((Math.abs(tilt) * Math.PI) / 180) * 70
+  const ly = 50 + (heavier === 'left' ? dy : -dy)
+  const ry = 50 + (heavier === 'right' ? dy : -dy)
+  return (
+    <svg viewBox="0 0 240 150" className="mx-auto h-36 w-60" role="img" aria-label="balance">
+      <rect x="116" y="40" width="8" height="90" rx="3" fill="#8a6a4a" />
+      <rect x="90" y="128" width="60" height="10" rx="4" fill="#8a6a4a" />
+      <line x1="50" y1={ly} x2="190" y2={ry} stroke="#8a6a4a" strokeWidth="7" strokeLinecap="round" />
+      <path d={`M30 ${ly + 28} Q50 ${ly + 44} 70 ${ly + 28} Z`} fill="#c9a24a" />
+      <path d={`M170 ${ry + 28} Q190 ${ry + 44} 210 ${ry + 28} Z`} fill="#c9a24a" />
+      <text x="50" y={ly + 22} textAnchor="middle" fontSize="30">{left}</text>
+      <text x="190" y={ry + 22} textAnchor="middle" fontSize="30">{right}</text>
+    </svg>
+  )
+}
+function VisualView({ v }: { v: Visual }) {
+  if (v.kind === 'clock') return <ClockSvg h={v.h} m={v.m} />
+  if (v.kind === 'balance') return <BalanceSvg left={v.left} right={v.right} heavier={v.heavier} />
+  if (v.kind === 'shapes') return <div className="flex flex-wrap items-center justify-center gap-3">{v.list.map((sh, i) => <ShapeSvg key={i} shape={sh} />)}</div>
+  if (v.kind === 'seq') {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {v.items.map((it, i) => it === '?'
+          ? <span key={i} className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-dashed border-[#9bbd87] bg-white text-2xl">?</span>
+          : <span key={i} className="flex h-14 min-w-14 items-center justify-center rounded-2xl bg-white px-2 text-3xl">{it}</span>)}
+      </div>
+    )
+  }
+  if (v.kind === 'tens') {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {Array.from({ length: v.tens }, (_, i) => (
+          <span key={i} className="grid grid-cols-5 gap-0.5 rounded-xl border-2 border-[#9bbd87] bg-white p-1.5 text-base leading-none">{Array.from({ length: 10 }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>
+        ))}
+        {v.ones > 0 && <span className="flex max-w-[11rem] flex-wrap justify-center gap-1 text-2xl leading-none">{Array.from({ length: v.ones }, (_, k) => <span key={k}>{v.emoji}</span>)}</span>}
+      </div>
+    )
+  }
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-3">
+      {v.groups.map((g, gi) => (
+        <span key={gi} className="contents">
+          {gi > 0 && v.op && <span className="text-3xl font-black">{v.op}</span>}
+          <span className="inline-flex max-w-full flex-wrap justify-center gap-1 rounded-2xl bg-white/70 px-3 py-2 text-3xl leading-none">
+            {Array.from({ length: g.n }, (_, i) => <Faded key={i} emoji={g.emoji} gone={i >= g.n - (g.cross ?? 0)} />)}
+          </span>
+        </span>
+      ))}
+    </div>
+  )
 }
 
 function speak(text: string, lang: string) {
@@ -47,7 +137,7 @@ function speak(text: string, lang: string) {
   } catch { /* 소리를 못 내는 기기는 그냥 넘어간다 */ }
 }
 
-/** 아이용 수학 놀이터: 친구(이름·나이)를 고르면 나이에 맞는 단계가 나오고, 한 번에 맞힌 문제를 GOAL 개 채우면 선물을 준다 */
+/** 아이용 수학 놀이터: 친구(이름·나이)를 고르면 나이에 맞는 단계가 나오고, 단계의 문제를 모두 풀면 선물을 준다 */
 export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id: string) => void }) {
   const { lang } = useI18n()
   const tx = T[lang]
@@ -57,9 +147,13 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
   const [name, setName] = useState('')
   const [age, setAge] = useState<Age>(6)
   const [level, setLevel] = useState<number | null>(null)
-  const [q, setQ] = useState<Question | null>(null)
+  const [idx, setIdx] = useState(0)
   const [picked, setPicked] = useState<number[]>([])
+  const [typed, setTyped] = useState('')
+  const [placed, setPlaced] = useState<number[]>([])
+  const [wrong, setWrong] = useState(false)
   const [right, setRight] = useState<string | null>(null)
+  const [gifted, setGifted] = useState(false)
   const [gift, setGift] = useState<{ id: string | null } | null>(null)
 
   const profile: Profile | undefined = state.profiles.find((p) => p.id === pid)
@@ -67,29 +161,52 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
   const giftItem = gift?.id ? travelItem(gift.id) : undefined
   const save = (s: MathState) => { setState(s); writeMath(s) }
 
-  const ask = (id: number) => {
+  const q: Question | null = lv ? lv.questions[idx] ?? null : null
+  const reset = () => { setPicked([]); setTyped(''); setPlaced([]); setWrong(false); setRight(null) }
+  const open = (id: number) => {
     const l = levelsFor(profile?.age ?? 6).find((x) => x.id === id)!
-    const next = l.make(Math.random)
-    setQ(next)
-    setPicked([])
-    setRight(null)
-    return next
+    const done = profile ? countOf(profile, id) : 0
+    setLevel(id); setGift(null); setGifted(false); reset()
+    setIdx(done >= l.questions.length ? 0 : done)
   }
-  const open = (id: number) => { setLevel(id); setGift(null); ask(id) }
-  const answer = (n: number) => {
-    if (!q || !lv || !profile || right) return
-    if (n !== q.answer) return setPicked((p) => [...p, n])
+  /** 문제를 맞혔을 때: 소리·칭찬·기록 */
+  const solved = () => {
+    if (!q || !lv || !profile) return
     playSnap()
+    setWrong(false)
     setRight(tx.right[Math.floor(Math.random() * tx.right.length)])
-    if (picked.length) return // 틀렸다가 맞힌 문제는 세지 않는다
-    const { next, justCleared } = addCorrect(profile, lv.id)
+    const { next, justCleared } = addCorrect(profile, lv.id, idx + 1)
     let saved = next
     if (justCleared) {
       const c = claimGift(next, lv.id)
       saved = c.next
       setGift({ id: c.gift })
     }
-    save(updateProfile(state, saved))
+    if (saved !== profile) save(updateProfile(state, saved))
+  }
+  const pickChoice = (i: number) => {
+    if (!q || q.kind !== 'choice' || right || picked.includes(i)) return
+    if (i !== q.answer) { setPicked((p) => [...p, i]); return setWrong(true) }
+    solved()
+  }
+  const submitInput = () => {
+    if (!q || q.kind !== 'input' || right || !typed) return
+    if (Number(typed) === q.answer) solved(); else { setWrong(true); setTyped('') }
+  }
+  const tapCard = (c: number) => {
+    if (!q || q.kind !== 'order' || right || placed.includes(c)) return
+    const sorted = [...q.cards].sort((x, y) => x - y)
+    if (c !== sorted[placed.length]) return setWrong(true)
+    setWrong(false)
+    const now = [...placed, c]
+    setPlaced(now)
+    if (now.length === q.cards.length) solved()
+  }
+  const nextQuestion = () => {
+    if (!lv) return
+    if (idx + 1 < lv.questions.length) { setIdx(idx + 1); reset(); return }
+    if (gift && !gifted) { setGifted(true); return } // 선물 화면으로
+    setLevel(null); setGift(null); setGifted(false); reset()
   }
   const create = () => {
     const r = addProfile(state, name, age)
@@ -101,10 +218,10 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
   }
 
   const big = 'math-btn min-h-14 rounded-3xl border border-[#e5e8df] px-4 py-3 text-lg font-bold text-[#213f35] active:scale-95'
-  const count = profile && lv ? countOf(profile, lv.id) : 0
+  const total = lv ? lv.questions.length : 0
   const levels = profile ? levelsFor(profile.age) : []
   const hasNext = lv ? levels.findIndex((l) => l.id === lv.id) < levels.length - 1 : false
-  const goBack = () => { if (gift || level !== null) { setLevel(null); setGift(null) } else if (pid) setPid(null); else onClose() }
+  const goBack = () => { if (gift || level !== null) { setLevel(null); setGift(null); setGifted(false); reset() } else if (pid) setPid(null); else onClose() }
 
   return (
     <div className="absolute inset-0 z-30 flex flex-col overflow-hidden rounded-3xl bg-[#faf9f2] text-[#213f35] ring-1 ring-black/5">
@@ -157,7 +274,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
               </div>
             )}
           </>
-        ) : gift ? (
+        ) : gift && gifted ? (
           <div className="py-2 text-center">
             <p className="text-2xl font-extrabold text-[#246f55]">🎁 {tx.gift}</p>
             {giftItem ? (
@@ -168,7 +285,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
               </>
             ) : <p className="my-6 text-lg font-bold">{tx.allFound}</p>}
             <div className="flex gap-2">
-              <button className={`${big} flex-1 bg-white`} onClick={() => { setLevel(null); setGift(null) }}>{tx.levels}</button>
+              <button className={`${big} flex-1 bg-white`} onClick={() => { setLevel(null); setGift(null); setGifted(false); reset() }}>{tx.levels}</button>
               {hasNext && lv && <button className={`${big} flex-1 bg-white`} onClick={() => open(levels[levels.findIndex((l) => l.id === lv.id) + 1].id)}>{tx.nextLevel}</button>}
             </div>
           </div>
@@ -176,33 +293,61 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="m-0 text-base font-bold">{lv.icon} {lv.title[lang]}</p>
-              <span className="text-sm font-extrabold">{count}/{GOAL}{isCleared(profile, lv.id) ? ' ⭐' : ''}</span>
+              <span className="text-sm font-extrabold">{idx + 1}/{total}{isCleared(profile, lv.id) ? ' ⭐' : ''}</span>
             </div>
             <div className="h-3 overflow-hidden rounded-full bg-[#edf0e7]">
-              <div className="h-full rounded-full bg-[#8db674] transition-all" style={{ width: `${(count / GOAL) * 100}%` }} />
+              <div className="h-full rounded-full bg-[#8db674] transition-all" style={{ width: `${((right ? idx + 1 : idx) / total) * 100}%` }} />
             </div>
             <div className="mt-4 flex items-center justify-center gap-2">
-              <p className="m-0 text-center text-xl font-extrabold">{q.prompt[lang]}</p>
-              <button aria-label={tx.read} onClick={() => speak(`${q.prompt[lang]} ${q.visual ? '' : q.text.replace(/[=?]/g, '')}`, lang)} className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow">🔊</button>
+              <p className="m-0 text-center text-xl font-extrabold">{q.text}</p>
+              <button aria-label={tx.read} onClick={() => speak(q.text, lang)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-xl shadow">🔊</button>
             </div>
-            <div className="my-4 rounded-[30px] bg-[#e8efdc] p-5 text-center [font-family:Jua,'Noto_Sans_KR',sans-serif]">
-              {q.visual && <Pictures v={q.visual} />}
-              {(!q.visual || q.visual.op) && <p className={`m-0 font-extrabold ${q.visual ? 'mt-3 text-2xl text-[#6b8a78]' : 'text-5xl'}`}>{q.text}{q.visual ? ' = ?' : ''}</p>}
-            </div>
-            <div className={`grid gap-3 ${q.choices.length === 2 ? 'grid-cols-2' : 'grid-cols-2'}`}>
-              {q.choices.map((n) => (
-                <button
-                  key={n}
-                  disabled={picked.includes(n) || (!!right && n !== q.answer)}
-                  onClick={() => answer(n)}
-                  className={`math-choice min-h-20 rounded-[20px] border-2 border-b-[6px] text-[#246f55] [font-family:Jua,'Noto_Sans_KR',sans-serif] ${right && n === q.answer ? 'animate-bounce border-[#7caf69] bg-[#d0edbd]' : picked.includes(n) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-            <p className="mt-4 min-h-8 text-center text-lg font-extrabold" aria-live="polite">{right ?? (picked.length ? tx.again : '')}</p>
-            {right && <button className={`${big} mt-1 w-full bg-[#246f55] text-white`} onClick={() => ask(lv.id)}>{tx.next}</button>}
+            {(q.visual || q.kind === 'input') && (
+              <div className="my-3 rounded-[30px] bg-[#e8efdc] p-4 text-center">
+                {q.visual && <VisualView v={q.visual} />}
+                {q.kind === 'input' && <p className={`m-0 text-5xl font-extrabold text-[#246f55] ${q.visual ? 'mt-3' : ''}`}>{typed || '　'}<span className="animate-pulse">|</span></p>}
+              </div>
+            )}
+            {q.kind === 'choice' && (
+              <div className={`mt-3 grid gap-3 ${q.choices.length === 3 && !q.choices.some((c) => c.pic) ? 'grid-cols-3' : q.choices.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                {q.choices.map((c: Choice, i) => (
+                  <button
+                    key={i}
+                    disabled={picked.includes(i) || (!!right && i !== q.answer)}
+                    onClick={() => pickChoice(i)}
+                    className={`math-choice flex min-h-20 flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-[6px] px-1 py-2 text-[#246f55] ${c.pic ? '' : `${(c.label?.length ?? 0) > 3 ? 'text-2xl' : 'text-4xl'} [font-family:Jua,'Noto_Sans_KR',sans-serif]`} ${right && i === q.answer ? 'animate-bounce border-[#7caf69] bg-[#d0edbd]' : picked.includes(i) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
+                  >
+                    {c.pic && <span className="flex w-full items-end justify-center">{'bar' in c.pic ? <span className="block w-full px-2"><PicView pic={c.pic} /></span> : <PicView pic={c.pic} />}</span>}
+                    {c.label && <span className={c.pic ? 'text-sm font-bold' : ''}>{c.label}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+            {q.kind === 'input' && !right && (
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
+                  <button key={d} onClick={() => { setWrong(false); setTyped((t) => (t.length < 3 ? t + d : t)) }} className="math-choice min-h-14 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-3xl text-[#246f55] active:scale-95">{d}</button>
+                ))}
+                <button onClick={() => setTyped((t) => t.slice(0, -1))} aria-label={tx.erase} className="min-h-14 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-2xl text-[#246f55] active:scale-95">⌫</button>
+                <button onClick={() => { setWrong(false); setTyped((t) => (t.length < 3 ? t + '0' : t)) }} className="math-choice min-h-14 rounded-2xl border-2 border-b-4 border-[#e0e7d7] bg-white text-3xl text-[#246f55] active:scale-95">0</button>
+                <button disabled={!typed} onClick={submitInput} className="min-h-14 rounded-2xl bg-[#246f55] text-xl font-bold text-white disabled:opacity-40 active:scale-95">{tx.ok}</button>
+              </div>
+            )}
+            {q.kind === 'order' && (
+              <div className="mt-3">
+                <div className="mb-3 flex justify-center gap-2" aria-label="slots">
+                  {q.cards.map((_, i) => <span key={i} className={`flex h-14 min-w-14 items-center justify-center rounded-2xl border-2 px-2 text-2xl font-extrabold ${placed[i] !== undefined ? 'border-[#7caf69] bg-[#d0edbd] text-[#246f55]' : 'border-dashed border-[#9bbd87] bg-white/60'}`}>{placed[i] ?? ''}</span>)}
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {q.cards.map((c) => (
+                    <button key={c} disabled={placed.includes(c) || !!right} onClick={() => tapCard(c)} className="math-choice min-h-16 rounded-2xl border-2 border-b-[6px] border-[#e0e7d7] border-b-[#dce5d0] bg-white text-3xl text-[#246f55] active:scale-95 disabled:opacity-30">{c}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="mt-3 min-h-8 text-center text-lg font-extrabold" aria-live="polite">{right ?? (wrong ? tx.again : '')}</p>
+            {right && <p className="mt-0 mb-2 rounded-2xl bg-white px-3 py-2 text-center text-sm text-[#678071]">💡 {q.why}</p>}
+            {right && <button className={`${big} mt-1 w-full bg-[#246f55] text-white`} onClick={nextQuestion}>{idx + 1 < total ? tx.next : gift ? tx.gift : tx.done}</button>}
           </div>
         ) : (
           <>
@@ -219,7 +364,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
                         <span className="mt-1 block text-sm font-bold text-[#6b8a78]">{ok ? l.hint[lang] : tx.locked}</span>
                       </span>
                     </span>
-                    <span className="shrink-0 text-sm">{isCleared(profile, l.id) ? `⭐ ${tx.cleared}` : ok ? `${countOf(profile, l.id)}/${GOAL}` : ''}</span>
+                    <span className="shrink-0 text-sm">{isCleared(profile, l.id) ? `⭐ ${tx.cleared}` : ok ? `${countOf(profile, l.id)}/${totalOf(l.id)}` : ''}</span>
                   </button>
                 )
               })}
