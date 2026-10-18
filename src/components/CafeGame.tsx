@@ -36,7 +36,7 @@ const SEATS = [
 ] as const
 const BONUS = 15
 const GOAL = 5
-const cookMs = (price: number) => 2000 + price * 300
+const cookMs = (price: number) => 4000 + price * 600
 const KEY = 'ryuso.cafe.v1'
 
 type Saved = { served: number; reward: boolean }
