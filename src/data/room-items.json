@@ -120,21 +120,6 @@
     "y": 1320
   },
   {
-    "id": "furniture_dream_dream_bed",
-    "group": "furniture",
-    "name": {
-      "ko": "구름 침대",
-      "en": "Cloud Bed"
-    },
-    "image": "assets/room/furniture_dream_dream_bed.webp",
-    "thumb": "assets/room/thumbs/furniture_dream_dream_bed.webp",
-    "w": 178,
-    "h": 165,
-    "baseWidth": 560,
-    "x": 730,
-    "y": 1320
-  },
-  {
     "id": "furniture_dream_dream_jar",
     "group": "furniture",
     "name": {

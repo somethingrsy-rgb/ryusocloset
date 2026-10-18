@@ -364,8 +364,8 @@ export default function App() {
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
       }`}
     >
-      <span aria-hidden>{icon}</span>
-      {label}
+      <span aria-hidden className="text-2xl">{icon}</span>
+      <span className="sr-only">{label}</span>
     </button>
   )
 
