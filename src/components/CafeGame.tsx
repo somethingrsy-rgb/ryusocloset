@@ -192,10 +192,20 @@ export function CafeGame() {
               className={`absolute rounded-3xl border-0 bg-transparent p-0 ${active === i ? 'ring-4 ring-white/90 ring-offset-2 ring-offset-[#e8707f]/60' : ''}`}
               style={{ left: `${SEATS[i].box.left}%`, top: `${SEATS[i].box.top}%`, width: `${SEATS[i].box.width}%`, height: `${SEATS[i].box.height}%` }}
             >
-              <span className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-2xl bg-[#fffdf8] px-2 py-0.5 whitespace-nowrap shadow-[0_3px_0_#f0c6cd]"><Ico id={MENU[x.order].id} className="h-9 w-9" /></span>
               <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 rounded-xl bg-[#fff8f4]/95 px-2 py-0.5 text-[10px] whitespace-nowrap">{x.name}{active === i ? tx.selected : ''}</span>
             </button>
           ))}
+          {guests.map((x, i) => {
+            const bx = SEATS[i].box
+            return (
+              <span
+                key={`bubble${i}`}
+                aria-hidden
+                className="pointer-events-none absolute z-[2] -translate-x-1/2 -translate-y-[85%] rounded-3xl bg-[#fffdf8] p-1.5 shadow-[0_4px_0_#f0c6cd]"
+                style={{ left: `${Math.min(Math.max(bx.left + bx.width / 2, 14), 86)}%`, top: `${bx.top}%` }}
+              ><Ico id={MENU[x.order].id} className="h-16 w-16" /></span>
+            )
+          })}
         </div>
         <div className="flex justify-between gap-2 bg-[#fff8f4] px-4 py-3 text-xs"><span>{tx.note}</span><span>{tx.happy(st.served)}</span></div>
       </div>
