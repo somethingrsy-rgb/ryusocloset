@@ -217,9 +217,10 @@ export function CafeGame() {
                   key={x.id}
                   disabled={phase !== 'idle'}
                   aria-pressed={selected === i}
+                  aria-label={name(x)}
                   onClick={() => { setSelected(i); setStatus(tx.picked(name(x))) }}
-                  className={`rounded-2xl border border-b-[3px] px-0.5 py-2 text-[10px] leading-tight break-keep disabled:opacity-50 ${selected === i ? 'border-[#ea8c98] bg-[#fde3e6]' : 'border-[#e5d5bd] border-b-[#dfcaab] bg-[#f7efdf]'}`}
-                ><Ico id={x.id} className="mx-auto mb-1 h-11 w-11" />{name(x)}</button>
+                  className={`flex aspect-square items-center justify-center rounded-2xl border border-b-[3px] p-1.5 disabled:opacity-50 ${selected === i ? 'border-[#ea8c98] bg-[#fde3e6]' : 'border-[#e5d5bd] border-b-[#dfcaab] bg-[#f7efdf]'}`}
+                ><Ico id={x.id} className="h-full w-full" /></button>
               ))}
             </div>
             <button
