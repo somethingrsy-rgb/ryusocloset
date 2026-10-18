@@ -2,14 +2,25 @@ import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { assetUrl } from '../lib/items'
 
-type Menu = { id: string; icon: string; ko: string; en: string; price: number }
+type Menu = { id: string; ko: string; en: string; price: number }
+/** 메뉴 그림은 public/cafe/menu/<id>.webp */
 const MENU: Menu[] = [
-  { id: 'milk', icon: '🥛', ko: '딸기 우유', en: 'Strawberry milk', price: 20 },
-  { id: 'latte', icon: '☕', ko: '딸기 라테', en: 'Strawberry latte', price: 25 },
-  { id: 'cupcake', icon: '🧁', ko: '딸기 컵케이크', en: 'Strawberry cupcake', price: 30 },
-  { id: 'cake', icon: '🍰', ko: '딸기 케이크', en: 'Strawberry cake', price: 35 },
-  { id: 'tart', icon: '🥧', ko: '딸기 타르트', en: 'Strawberry tart', price: 40 },
+  { id: 'milk', ko: '딸기 우유', en: 'Strawberry milk', price: 20 },
+  { id: 'tea', ko: '딸기 홍차', en: 'Strawberry tea', price: 25 },
+  { id: 'jam', ko: '딸기 잼', en: 'Strawberry jam', price: 30 },
+  { id: 'cup2', ko: '핑크 컵케이크', en: 'Pink cupcake', price: 30 },
+  { id: 'cup3', ko: '곰젤리 컵케이크', en: 'Gummy cupcake', price: 30 },
+  { id: 'slice', ko: '딸기 케이크', en: 'Strawberry cake', price: 35 },
+  { id: 'cup1', ko: '하트 컵케이크', en: 'Heart cupcake', price: 35 },
+  { id: 'cup4', ko: '스위트하트 컵케이크', en: 'Sweet heart cupcake', price: 35 },
+  { id: 'cup6', ko: '러브 컵케이크', en: 'Love cupcake', price: 40 },
+  { id: 'tart', ko: '딸기 타르트', en: 'Strawberry tart', price: 40 },
+  { id: 'basket', ko: '딸기 바구니', en: 'Strawberry basket', price: 45 },
+  { id: 'cup5', ko: '고양이 컵케이크', en: 'Kitty cupcake', price: 50 },
 ]
+function Ico({ id, className }: { id: string; className: string }) {
+  return <img src={assetUrl(`cafe/menu/${id}.webp`)} alt="" draggable={false} className={`select-none object-contain ${className}`} />
+}
 /** 배경 그림 속 손님 세 마리의 자리(그림 크기에 대한 %). 눌러서 주문을 받는다 */
 const SEATS = [
   { animal: '🐻', name: '곰이', box: { left: 0, top: 57, width: 17, height: 17 } },
@@ -205,7 +216,7 @@ export function CafeGame() {
               className={`absolute rounded-3xl border-0 bg-transparent p-0 ${active === i ? 'ring-4 ring-white/90 ring-offset-2 ring-offset-[#e8707f]/60' : ''}`}
               style={{ left: `${SEATS[i].box.left}%`, top: `${SEATS[i].box.top}%`, width: `${SEATS[i].box.width}%`, height: `${SEATS[i].box.height}%` }}
             >
-              <span className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-2xl bg-[#fffdf8] px-2.5 py-0.5 text-xl whitespace-nowrap shadow-[0_3px_0_#f0c6cd]">{MENU[x.order].icon}</span>
+              <span className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-2xl bg-[#fffdf8] px-2 py-0.5 whitespace-nowrap shadow-[0_3px_0_#f0c6cd]"><Ico id={MENU[x.order].id} className="h-9 w-9" /></span>
               <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 rounded-xl bg-[#fff8f4]/95 px-2 py-0.5 text-[10px] whitespace-nowrap">{x.name}{active === i ? tx.selected : ''}</span>
             </button>
           ))}
@@ -224,21 +235,21 @@ export function CafeGame() {
             <h2 className={h2} style={{ fontFamily: FONT }}>{tx.welcome}</h2>
             <p className="m-0 text-xs leading-relaxed text-[#a58d76]">{tx.hint}</p>
             <div className="my-3 flex items-center gap-3 rounded-2xl border border-dashed border-[#d8bfa2] bg-[#fffdf8] p-3">
-              <span aria-hidden className="text-4xl">{m.icon}</span>
+              <Ico id={m.id} className="h-14 w-14" />
               <div>
                 <strong className="text-sm">{g.name} · {name(m)}</strong>
                 <p className="m-0 mt-0.5 text-[11px] text-[#a48a70]">{tx.free(m.price)}</p>
               </div>
             </div>
-            <div className="mb-3 grid grid-cols-3 gap-2">
+            <div className="mb-3 grid grid-cols-4 gap-1.5">
               {MENU.map((x, i) => (
                 <button
                   key={x.id}
                   disabled={phase !== 'idle'}
                   aria-pressed={selected === i}
                   onClick={() => { setSelected(i); setStatus(tx.picked(name(x))) }}
-                  className={`rounded-2xl border border-b-[3px] px-1 py-2.5 text-[11px] disabled:opacity-50 ${selected === i ? 'border-[#ea8c98] bg-[#fde3e6]' : 'border-[#e5d5bd] border-b-[#dfcaab] bg-[#f7efdf]'}`}
-                ><span className="block text-3xl">{x.icon}</span>{name(x)}</button>
+                  className={`rounded-2xl border border-b-[3px] px-0.5 py-2 text-[10px] leading-tight break-keep disabled:opacity-50 ${selected === i ? 'border-[#ea8c98] bg-[#fde3e6]' : 'border-[#e5d5bd] border-b-[#dfcaab] bg-[#f7efdf]'}`}
+                ><Ico id={x.id} className="mx-auto mb-1 h-12 w-12" />{name(x)}</button>
               ))}
             </div>
             <button
