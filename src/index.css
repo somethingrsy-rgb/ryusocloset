@@ -253,5 +253,5 @@ button:focus-visible {
 .fx-bob { animation: fx-bob 3.4s ease-in-out infinite; transform-origin: 50% 85%; }
 
 /* 수학 놀이터: 아이 눈에 잘 띄게 큰 글씨 (button { font: inherit } 보다 우선하려면 일반 CSS 로 둔다) */
-.math-btn { font-size: 1.125rem; font-weight: 800; }
+.math-btn { font-size: 1.125rem; }
 .math-choice { font-size: 2.25rem; font-weight: 800; }

@@ -100,36 +100,41 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
     setName('')
   }
 
-  const big = 'math-btn min-h-14 rounded-3xl px-4 py-3 text-lg font-extrabold shadow-sm active:scale-95'
+  const big = 'math-btn min-h-14 rounded-3xl border border-[#e5e8df] px-4 py-3 text-lg font-bold text-[#213f35] active:scale-95'
   const count = profile && lv ? countOf(profile, lv.id) : 0
   const levels = profile ? levelsFor(profile.age) : []
   const hasNext = lv ? levels.findIndex((l) => l.id === lv.id) < levels.length - 1 : false
   const goBack = () => { if (gift || level !== null) { setLevel(null); setGift(null) } else if (pid) setPid(null); else onClose() }
 
   return (
-    <div className="absolute inset-0 z-30 flex flex-col overflow-hidden rounded-3xl bg-gradient-to-b from-[#fff7e0] to-[#ffe9ef] ring-1 ring-black/5">
-      <div className="flex items-center justify-between gap-2 px-4 pt-3">
-        <button onClick={goBack} aria-label={tx.back} className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-xl shadow">←</button>
-        <h2 className="m-0 text-xl font-extrabold">🧮 {tx.title}</h2>
-        <button onClick={onClose} aria-label={tx.close} className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-xl shadow">✕</button>
+    <div className="absolute inset-0 z-30 flex flex-col overflow-hidden rounded-3xl bg-[#faf9f2] text-[#213f35] ring-1 ring-black/5">
+      <div className="flex items-center justify-between gap-2 border-b border-[#e2e7dc] px-4 py-3">
+        <button onClick={goBack} aria-label={tx.back} className="flex h-12 w-12 items-center justify-center rounded-full border border-[#dce4d7] bg-white text-xl text-[#246f55]">←</button>
+        <h2 className="m-0 flex items-center gap-2 text-xl font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]"><span className="rounded-2xl bg-[#e2eddb] px-2 py-1 text-2xl">🌱</span>{tx.title}</h2>
+        <button onClick={onClose} aria-label={tx.close} className="flex h-12 w-12 items-center justify-center rounded-full border border-[#dce4d7] bg-white text-xl text-[#246f55]">✕</button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-3 pb-5">
         {!profile ? (
           <>
-            <p className="mt-0 text-center text-lg font-extrabold">{tx.who}</p>
+            <div className="relative mb-4 flex min-h-36 items-center overflow-hidden rounded-3xl bg-[#e8efdc] px-5 py-4">
+              <div className="z-10"><p className="m-0 text-xs font-extrabold tracking-widest text-[#6b9278]">LITTLE FOREST</p><p className="mt-1 mb-0 text-2xl leading-tight [font-family:Jua,'Noto_Sans_KR',sans-serif]">{tx.who}</p></div>
+              <span aria-hidden className="absolute -right-24 -bottom-24 h-48 w-80 rotate-[-12deg] rounded-full bg-[#c5dba9]" />
+              <span aria-hidden className="absolute right-3 bottom-1 animate-bounce text-6xl">🦊</span>
+              <span aria-hidden className="absolute top-2 right-4 text-3xl">☀️</span>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               {state.profiles.map((p) => (
                 <div key={p.id} className="relative">
                   <button onClick={() => setPid(p.id)} className={`${big} flex h-full min-h-28 w-full flex-col items-center justify-center bg-white`}>
                     <span className="text-4xl">{p.age === 6 ? '🐣' : '🦊'}</span>
                     <span>{p.name}</span>
-                    <span className="text-sm font-bold text-cocoa-soft">{p.age === 6 ? tx.age6 : tx.age8}</span>
+                    <span className="text-sm font-bold text-[#6b8a78]">{p.age === 6 ? tx.age6 : tx.age8}</span>
                   </button>
-                  <button aria-label={`${tx.del}: ${p.name}`} onClick={() => window.confirm(tx.delAsk) && save(removeProfile(state, p.id))} className="absolute top-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-petal text-xs">✕</button>
+                  <button aria-label={`${tx.del}: ${p.name}`} onClick={() => window.confirm(tx.delAsk) && save(removeProfile(state, p.id))} className="absolute top-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-[#eaf0e3] text-xs">✕</button>
                 </div>
               ))}
               {state.profiles.length < MAX_PROFILES ? (
-                <button onClick={() => setAdding(true)} className={`${big} flex min-h-28 flex-col items-center justify-center border-2 border-dashed border-blush bg-white/60 text-blush-deep`}>
+                <button onClick={() => setAdding(true)} className={`${big} flex min-h-28 flex-col items-center justify-center border-2 border-dashed border-[#9bbd87] bg-white/60 text-[#246f55]`}>
                   <span className="text-4xl">＋</span>{tx.add}
                 </button>
               ) : <p className="col-span-2 text-center text-xs">{tx.full}</p>}
@@ -142,24 +147,24 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
                 <p className="mb-1 text-sm font-bold">{tx.age}</p>
                 <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={tx.age}>
                   {AGES.map((a) => (
-                    <button key={a} role="radio" aria-checked={age === a} onClick={() => setAge(a)} className={`${big} ${age === a ? 'bg-blush text-white' : 'bg-petal'}`}>{a === 6 ? '🐣 ' + tx.age6 : '🦊 ' + tx.age8}</button>
+                    <button key={a} role="radio" aria-checked={age === a} onClick={() => setAge(a)} className={`${big} ${age === a ? 'bg-[#246f55] text-white' : 'bg-[#eaf0e3]'}`}>{a === 6 ? '🐣 ' + tx.age6 : '🦊 ' + tx.age8}</button>
                   ))}
                 </div>
                 <div className="mt-3 flex gap-2">
-                  <button onClick={() => setAdding(false)} className={`${big} flex-1 bg-petal`}>{tx.cancel}</button>
-                  <button disabled={!name.trim()} onClick={create} className={`${big} flex-1 bg-blush text-white disabled:opacity-40`}>{tx.make}</button>
+                  <button onClick={() => setAdding(false)} className={`${big} flex-1 bg-[#eaf0e3]`}>{tx.cancel}</button>
+                  <button disabled={!name.trim()} onClick={create} className={`${big} flex-1 bg-[#246f55] text-white disabled:opacity-40`}>{tx.make}</button>
                 </div>
               </div>
             )}
           </>
         ) : gift ? (
           <div className="py-2 text-center">
-            <p className="text-2xl font-extrabold text-blush-deep">🎁 {tx.gift}</p>
+            <p className="text-2xl font-extrabold text-[#246f55]">🎁 {tx.gift}</p>
             {giftItem ? (
               <>
                 <img src={assetUrl(giftItem.thumb)} alt="" className="mx-auto my-3 h-40 w-40 animate-bounce object-contain" />
                 <p className="mb-3 text-lg font-bold">{giftItem.name[lang]}</p>
-                <button className={`${big} mb-2 w-full bg-blush text-white`} onClick={() => { onClose(); onWear(giftItem.id) }}>{tx.wear}</button>
+                <button className={`${big} mb-2 w-full bg-[#246f55] text-white`} onClick={() => { onClose(); onWear(giftItem.id) }}>{tx.wear}</button>
               </>
             ) : <p className="my-6 text-lg font-bold">{tx.allFound}</p>}
             <div className="flex gap-2">
@@ -173,16 +178,16 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
               <p className="m-0 text-base font-bold">{lv.icon} {lv.title[lang]}</p>
               <span className="text-sm font-extrabold">{count}/{GOAL}{isCleared(profile, lv.id) ? ' ⭐' : ''}</span>
             </div>
-            <div className="h-4 overflow-hidden rounded-full bg-white">
-              <div className="h-full rounded-full bg-blush transition-all" style={{ width: `${(count / GOAL) * 100}%` }} />
+            <div className="h-3 overflow-hidden rounded-full bg-[#edf0e7]">
+              <div className="h-full rounded-full bg-[#8db674] transition-all" style={{ width: `${(count / GOAL) * 100}%` }} />
             </div>
             <div className="mt-4 flex items-center justify-center gap-2">
               <p className="m-0 text-center text-xl font-extrabold">{q.prompt[lang]}</p>
               <button aria-label={tx.read} onClick={() => speak(`${q.prompt[lang]} ${q.visual ? '' : q.text.replace(/[=?]/g, '')}`, lang)} className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow">🔊</button>
             </div>
-            <div className="my-4 rounded-3xl bg-white/80 p-4 text-center shadow-sm">
+            <div className="my-4 rounded-[30px] bg-[#e8efdc] p-5 text-center [font-family:Jua,'Noto_Sans_KR',sans-serif]">
               {q.visual && <Pictures v={q.visual} />}
-              {(!q.visual || q.visual.op) && <p className={`m-0 font-extrabold ${q.visual ? 'mt-3 text-2xl text-cocoa-soft' : 'text-5xl'}`}>{q.text}{q.visual ? ' = ?' : ''}</p>}
+              {(!q.visual || q.visual.op) && <p className={`m-0 font-extrabold ${q.visual ? 'mt-3 text-2xl text-[#6b8a78]' : 'text-5xl'}`}>{q.text}{q.visual ? ' = ?' : ''}</p>}
             </div>
             <div className={`grid gap-3 ${q.choices.length === 2 ? 'grid-cols-2' : 'grid-cols-2'}`}>
               {q.choices.map((n) => (
@@ -190,26 +195,29 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
                   key={n}
                   disabled={picked.includes(n) || (!!right && n !== q.answer)}
                   onClick={() => answer(n)}
-                  className={`math-choice min-h-20 rounded-3xl shadow ${right && n === q.answer ? 'animate-bounce bg-mint text-white' : picked.includes(n) ? 'bg-white' : 'bg-white active:scale-95'} disabled:opacity-40`}
+                  className={`math-choice min-h-20 rounded-[20px] border-2 border-b-[6px] text-[#246f55] [font-family:Jua,'Noto_Sans_KR',sans-serif] ${right && n === q.answer ? 'animate-bounce border-[#7caf69] bg-[#d0edbd]' : picked.includes(n) ? 'border-[#edb4a6] bg-[#ffe2dc]' : 'border-[#e0e7d7] border-b-[#dce5d0] bg-white active:scale-95'} disabled:opacity-60`}
                 >
                   {n}
                 </button>
               ))}
             </div>
             <p className="mt-4 min-h-8 text-center text-lg font-extrabold" aria-live="polite">{right ?? (picked.length ? tx.again : '')}</p>
-            {right && <button className={`${big} mt-1 w-full bg-blush text-white`} onClick={() => ask(lv.id)}>{tx.next}</button>}
+            {right && <button className={`${big} mt-1 w-full bg-[#246f55] text-white`} onClick={() => ask(lv.id)}>{tx.next}</button>}
           </div>
         ) : (
           <>
-            <p className="mt-0 text-center text-base">{tx.intro}</p>
+            <p className="mt-0 rounded-2xl bg-white px-4 py-3 text-center text-sm text-[#678071]">🌿 {tx.intro}</p>
             <div className="mt-3 flex flex-col gap-3">
               {levels.map((l, i) => {
                 const ok = isUnlocked(profile, l.id)
                 return (
                   <button key={l.id} disabled={!ok} onClick={() => open(l.id)} className={`${big} flex items-center justify-between bg-white text-left disabled:opacity-50`}>
-                    <span>
-                      {ok ? l.icon : '🔒'} {i + 1}. {l.title[lang]}
-                      <span className="mt-1 block text-sm font-bold text-cocoa-soft">{ok ? l.hint[lang] : tx.locked}</span>
+                    <span className="flex items-center gap-3">
+                      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-3xl" style={{ background: ['#fce9e2', '#e9eedb', '#fff1cd', '#e4edf7'][i % 4] }}>{ok ? l.icon : '🔒'}</span>
+                      <span>
+                        <span className="text-xl font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]">{i + 1}. {l.title[lang]}</span>
+                        <span className="mt-1 block text-sm font-bold text-[#6b8a78]">{ok ? l.hint[lang] : tx.locked}</span>
+                      </span>
                     </span>
                     <span className="shrink-0 text-sm">{isCleared(profile, l.id) ? `⭐ ${tx.cleared}` : ok ? `${countOf(profile, l.id)}/${GOAL}` : ''}</span>
                   </button>
