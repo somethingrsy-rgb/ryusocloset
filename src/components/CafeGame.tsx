@@ -105,22 +105,26 @@ const AVATAR = {
   wide: { h: 21.3, w: 1024 / 1536 / (1672 / 941), feet: [43, 62, 86] },
 } as const
 
+/** 다른 탭(농장·여행 등)에 다녀와도 손님·주문·아바타 자리가 그대로 남도록 화면 밖에 기억해 둔다 (앱을 완전히 닫으면 새로 시작) */
+let kept: { guests: Guest[]; pos: { x: number; y: number; wide: boolean } | null; hold: string | null } | null = null
+
 export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }) {
   const { lang } = useI18n()
   const tx = T[lang]
   const [st, setSt] = useState<Saved>(loadSaved)
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
-  const [guests, setGuests] = useState<Guest[]>(() => SEATS.map((_, i) => newGuest(i)))
+  const [guests, setGuests] = useState<Guest[]>(() => kept?.guests ?? SEATS.map((_, i) => newGuest(i)))
   const [now, setNow] = useState(() => Date.now())
   const [sound, setSound] = useState(false)
   const [toast, setToast] = useState('')
   const [floats, setFloats] = useState<{ id: number; seat: number; amount: number }[]>([])
   const toastTimer = useRef<number>(0)
   const secRef = useRef<HTMLElement>(null)
-  const [pos, setPos] = useState<{ x: number; y: number; wide: boolean } | null>(null)
+  const [pos, setPos] = useState<{ x: number; y: number; wide: boolean } | null>(() => kept?.pos ?? null)
   const [walking, setWalking] = useState(false)
-  const [hold, setHold] = useState<string | null>(null) // 들고 있는 메뉴 그림
+  const [hold, setHold] = useState<string | null>(() => kept?.hold ?? null) // 들고 있는 메뉴 그림
   const busy = useRef(false)
+  useEffect(() => { kept = { guests, pos, hold } }, [guests, pos, hold])
   const timers = useRef<number[]>([])
   const [wide, setWide] = useState(false) // 가로로 넓은 화면(패드 가로 등): 가로 그림을 쓴다
   useEffect(() => {
