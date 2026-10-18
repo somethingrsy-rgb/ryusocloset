@@ -101,8 +101,8 @@ function tone() {
  * h = 아바타 키(그림 높이에 대한 %), feet = 발 위치(그림 높이에 대한 %): 카운터 앞, 윗줄, 아랫줄. 테이블·동물과 겹치지 않는 자리다.
  */
 const AVATAR = {
-  portrait: { h: 10, w: 1024 / 1536 / (940 / 1672), feet: [40, 61, 79] },
-  wide: { h: 15, w: 1024 / 1536 / (1672 / 941), feet: [43, 62, 86] },
+  portrait: { h: 20, w: 1024 / 1536 / (940 / 1672), feet: [40, 61, 79] },
+  wide: { h: 30, w: 1024 / 1536 / (1672 / 941), feet: [43, 62, 86] },
 } as const
 
 export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }) {
