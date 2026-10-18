@@ -58,7 +58,7 @@ const T = {
   ko: {
     title: '딸기 카페', open: '딸기 카페 영업 중', happy: (n: number) => `오늘의 행복 ${n}잔`,
     hint: '💬 눌러 주문받기 → 눌러서 만들기 → 완성되면 눌러서 서빙',
-    askOrder: '주문받기', tapCook: '눌러서 만들기', cooking: '만드는 중', ready: '완성!', notReady: '아직 만드는 중이에요 👩‍🍳',
+    askOrder: '주문받기', tapCook: '눌러서 만들기', cooking: '만드는 중', ready: '완성!', notReady: '아직 만드는 중이에요 🐰',
     bonus: `🎉 첫 단골 달성! 보너스 ${BONUS}코인!`,
     mission: '첫 단골 만들기', missionDone: '첫 단골 만들기 완료!', missionText: `손님 ${GOAL}명에게 행복을 전해 주세요`,
     count: (n: number) => `${n} / ${GOAL}명 · 달성 보너스 ${BONUS}코인`, countDone: `달성 완료 · 보너스 ${BONUS}코인을 받았어요!`,
@@ -69,7 +69,7 @@ const T = {
   en: {
     title: 'Strawberry Cafe', open: 'Strawberry cafe is open', happy: (n: number) => `${n} happy cups today`,
     hint: 'Tap 💬 to take an order → tap to cook → tap when done to serve',
-    askOrder: 'Take order', tapCook: 'Tap to cook', cooking: 'Cooking', ready: 'Done!', notReady: 'Still cooking 👩‍🍳',
+    askOrder: 'Take order', tapCook: 'Tap to cook', cooking: 'Cooking', ready: 'Done!', notReady: 'Still cooking 🐰',
     bonus: `🎉 First regular! Bonus ${BONUS} coins!`,
     mission: 'Make a first regular', missionDone: 'First regular made!', missionText: `Make ${GOAL} guests happy`,
     count: (n: number) => `${n} / ${GOAL} guests · ${BONUS} bonus coins`, countDone: `Done · you got ${BONUS} bonus coins!`,
@@ -236,7 +236,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
                   ? <span className="block h-11 w-11 animate-pulse text-center text-4xl leading-[2.75rem]">💬</span>
                   : <span className="relative block h-11 w-11">
                       <Ico id={m.id} className={`h-11 w-11 ${x.stage === 'ordered' || (x.stage === 'cooking' && !ready) ? 'opacity-60' : ready ? 'animate-bounce' : ''}`} />
-                      {x.stage === 'ordered' && <span aria-hidden className="absolute -right-1.5 -bottom-1.5 rounded-full bg-[#e8707f] px-1 text-xs leading-5 text-white">👩‍🍳</span>}
+                      {x.stage === 'ordered' && <span aria-hidden className="absolute -right-1.5 -bottom-1.5 rounded-full bg-[#e8707f] px-1 text-xs leading-5 text-white">🐰</span>}
                       {ready && <span aria-hidden className="absolute -top-2 -right-2 text-lg">✨</span>}
                     </span>}
                 {x.stage === 'cooking' && !ready && <span className="mt-0.5 block h-1.5 w-11 overflow-hidden rounded-full bg-[#eee4d3]"><i className="block h-full bg-[#ef8d99]" style={{ width: `${frac * 100}%` }} /></span>}
