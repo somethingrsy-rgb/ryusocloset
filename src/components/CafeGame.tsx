@@ -201,9 +201,9 @@ export function CafeGame() {
               <span
                 key={`bubble${i}`}
                 aria-hidden
-                className="pointer-events-none absolute z-[2] -translate-x-1/2 -translate-y-[85%] rounded-3xl bg-[#fffdf8] p-1.5 shadow-[0_4px_0_#f0c6cd]"
+                className="pointer-events-none absolute z-[2] -translate-x-1/2 -translate-y-full rounded-3xl bg-[#fffdf8] p-1.5 shadow-[0_4px_0_#f0c6cd]"
                 style={{ left: `${Math.min(Math.max(bx.left + bx.width / 2, 14), 86)}%`, top: `${bx.top}%` }}
-              ><Ico id={MENU[x.order].id} className="h-16 w-16" /></span>
+              ><Ico id={MENU[x.order].id} className="h-14 w-14" /></span>
             )
           })}
         </div>
