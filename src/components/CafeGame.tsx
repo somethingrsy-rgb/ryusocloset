@@ -128,11 +128,12 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
   // 메뉴 그림을 미리 받아 둔다: 서빙하려고 처음 들 때 그림이 늦게 떠서 안 보이던 것을 막는다
   useEffect(() => { MENU.forEach((m) => { new Image().src = assetUrl(`cafe/menu2/${m.id}.webp`) }) }, [])
   const timers = useRef<number[]>([])
+  const [pad, setPad] = useState(false) // 패드 세로처럼 폰보다 넓은 세로 화면: 세로 그림을 가로폭에 꽉 채우고 위아래를 조금 자른다
   const [wide, setWide] = useState(false) // 가로로 넓은 화면(패드 가로 등): 가로 그림을 쓴다
   useEffect(() => {
     const el = secRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => setWide(el.clientWidth > el.clientHeight * 1.2))
+    const ro = new ResizeObserver(() => { setWide(el.clientWidth > el.clientHeight * 1.2); setPad(el.clientWidth / el.clientHeight > 0.6) })
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -205,14 +206,14 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
   return (
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-hidden rounded-3xl bg-[#b9c97a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
       {/* 그림 아래 남는 자리(폰 세로): 그림 맨 아래 덤불·풀밭 부분을 위아래로 뒤집고 늘려 이어 붙여서 정원이 끝까지 이어져 보이게 한다 */}
-      {!wide && (
+      {!wide && !pad && (
         <div aria-hidden className="absolute left-1/2 -translate-x-1/2 overflow-hidden" style={{ width: 'min(100cqw, calc(100cqh / 1.7787))', top: 'calc(min(100cqw, 100cqh / 1.7787) * 1.7787 - 1px)', bottom: 0 }}>
           <div className="h-full w-full" style={{ backgroundImage: `url(${assetUrl('cafe/garden2_portrait.webp')})`, backgroundSize: '100% calc((100cqh - min(100cqw, 100cqh / 1.7787) * 1.7787) / 0.16)', backgroundPosition: 'bottom', backgroundRepeat: 'no-repeat', transform: 'scaleY(-1)' }} />
         </div>
       )}
       <div
-        className={`absolute overflow-hidden select-none ${wide ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : 'top-0 left-1/2 -translate-x-1/2'}`}
-        style={wide ? { width: 'max(100cqw, calc(100cqh * 1672 / 941))', aspectRatio: '1672 / 941' } : { width: 'min(100cqw, calc(100cqh / 1.7787))', aspectRatio: '940 / 1672' }}
+        className={`absolute overflow-hidden select-none ${wide || pad ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : 'top-0 left-1/2 -translate-x-1/2'}`}
+        style={wide ? { width: 'max(100cqw, calc(100cqh * 1672 / 941))', aspectRatio: '1672 / 941' } : { width: pad ? '100cqw' : 'min(100cqw, calc(100cqh / 1.7787))', aspectRatio: '940 / 1672' }}
       >
         <img src={assetUrl(wide ? 'cafe/garden2_wide.webp' : 'cafe/garden2_portrait.webp')} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
         <FarmFx />
