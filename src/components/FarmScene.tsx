@@ -17,7 +17,7 @@ type Tool = 'seed' | 'water' | 'harvest'
  */
 const LAYOUT = {
   portrait: { img: 'farm_portrait3', w: 1024, h: 1536, cols: 4, rows: 5, cx: 512, cy: 885, tw: 215, rowGap: 21, avatarH: 19, home: { x: 44, y: 12 }, stall: { left: '68%', top: '17%', width: '20%', height: '17%' } },
-  wide: { img: 'farm_wide2', w: 1672, h: 941, cols: 5, rows: 4, cx: 690, cy: 565, tw: 195, rowGap: 3, avatarH: 22, home: { x: 41, y: 12 }, stall: { left: '63%', top: '17%', width: '12%', height: '20%' } },
+  wide: { img: 'farm_wide2', w: 1672, h: 941, cols: 5, rows: 4, cx: 690, cy: 560, tw: 160, rowGap: 3, avatarH: 22, home: { x: 41, y: 12 }, stall: { left: '63%', top: '17%', width: '12%', height: '20%' } },
 } as const
 type Layout = (typeof LAYOUT)[keyof typeof LAYOUT]
 /** 밭 한 칸의 가운데 위치(그림 가로·세로 %)와 칸 크기(%) */
