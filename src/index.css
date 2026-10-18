@@ -237,11 +237,17 @@ button:focus-visible {
 @keyframes fx-cloud { from { transform: translateX(-130%); } to { transform: translateX(380%); } }
 @keyframes fx-fly-a { 0%, 100% { transform: translate(0, 0) rotate(8deg); } 25% { transform: translate(260%, -140%) rotate(-10deg); } 50% { transform: translate(560%, 60%) rotate(12deg); } 75% { transform: translate(260%, 220%) rotate(-8deg); } }
 @keyframes fx-fly-b { 0%, 100% { transform: translate(0, 0) rotate(-6deg); } 30% { transform: translate(-300%, 120%) rotate(10deg); } 60% { transform: translate(-520%, -80%) rotate(-12deg); } 80% { transform: translate(-200%, -200%) rotate(6deg); } }
+@keyframes fx-roam-a { 0%, 100% { transform: translate(0, 0) rotate(8deg); } 20% { transform: translate(1200%, 500%) rotate(-10deg); } 45% { transform: translate(300%, 1500%) rotate(12deg); } 70% { transform: translate(1100%, 2400%) rotate(-8deg); } 85% { transform: translate(100%, 1100%) rotate(6deg); } }
+@keyframes fx-roam-b { 0%, 100% { transform: translate(0, 0) rotate(-6deg); } 25% { transform: translate(-1100%, -900%) rotate(10deg); } 50% { transform: translate(-600%, -2300%) rotate(-12deg); } 75% { transform: translate(-1300%, -1200%) rotate(6deg); } }
+@keyframes fx-roam-c { 0%, 100% { transform: translate(0, 0) rotate(4deg); } 25% { transform: translate(-700%, -1500%) rotate(-10deg); } 50% { transform: translate(800%, -1100%) rotate(12deg); } 75% { transform: translate(600%, 1300%) rotate(-6deg); } }
 @keyframes fx-flap { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.4); } }
 @keyframes fx-fall { from { top: -6%; opacity: 0; } 8% { opacity: 0.95; } 92% { opacity: 0.95; } to { top: 104%; opacity: 0; } }
 @keyframes fx-sway { 0%, 100% { transform: translateX(-60%) rotate(-25deg); } 50% { transform: translateX(60%) rotate(35deg); } }
 .fx-cloud { animation: fx-cloud linear infinite; }
 .fx-fly-a { animation: fx-fly-a ease-in-out infinite; }
+.fx-fly-roam-a { animation: fx-roam-a ease-in-out infinite; }
+.fx-fly-roam-b { animation: fx-roam-b ease-in-out infinite; }
+.fx-fly-roam-c { animation: fx-roam-c ease-in-out infinite; }
 .fx-fly-b { animation: fx-fly-b ease-in-out infinite; }
 .fx-flap { animation: fx-flap 0.45s ease-in-out infinite; }
 .fx-fall { animation: fx-fall linear infinite; }

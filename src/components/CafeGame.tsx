@@ -216,7 +216,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
         style={wide ? { width: 'max(100cqw, calc(100cqh * 1672 / 941))', aspectRatio: '1672 / 941' } : { width: pad ? '100cqw' : 'min(100cqw, calc(100cqh / 1.7787))', aspectRatio: '940 / 1672' }}
       >
         <img src={assetUrl(wide ? 'cafe/garden2_wide.webp' : 'cafe/garden2_portrait.webp')} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
-        <FarmFx />
+        <FarmFx roam />
         {guests.map((x, i) => {
           const [cx, cy] = SEATS[i][wide ? 'wide' : 'portrait']
           const m = MENU[x.wish]
