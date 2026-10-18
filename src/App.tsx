@@ -364,7 +364,7 @@ export default function App() {
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
       }`}
     >
-      <span aria-hidden className="text-2xl">{icon}</span>
+      <img src={assetUrl(`assets/tabs/${icon}.webp`)} alt="" draggable={false} className="h-9 w-9 object-contain" />
       <span className="sr-only">{label}</span>
     </button>
   )
@@ -375,12 +375,12 @@ export default function App() {
         <header className="flex shrink-0 items-center justify-between gap-2 px-1">
             <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep xl:block">{t('title')}</h1>
             <div role="tablist" className="flex min-w-0 flex-1 overflow-x-auto rounded-full bg-white/80 p-0.5 shadow-sm">
-              {modeBtn('closet', '👗', t('modeCloset'))}
-              {modeBtn('farm', '🌱', lang === 'ko' ? '농장' : 'Farm')}
-              {modeBtn('cafe', '☕', lang === 'ko' ? '카페' : 'Cafe')}
-              {modeBtn('room', '🏠', t('modeRoom'))}
-              {modeBtn('travel', '🧭', t('modeTravel'))}
-              {modeBtn('shop', '🛍', lang === 'ko' ? '상점' : 'Shop')}
+              {modeBtn('closet', 'closet', t('modeCloset'))}
+              {modeBtn('farm', 'farm', lang === 'ko' ? '농장' : 'Farm')}
+              {modeBtn('cafe', 'cafe', lang === 'ko' ? '카페' : 'Cafe')}
+              {modeBtn('room', 'room', t('modeRoom'))}
+              {modeBtn('travel', 'travel', t('modeTravel'))}
+              {modeBtn('shop', 'shop', lang === 'ko' ? '상점' : 'Shop')}
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <button
