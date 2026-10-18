@@ -143,7 +143,7 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
       {!wide && <div aria-hidden className="absolute inset-x-0 bottom-0" style={{ top: 'calc(min(150cqw, 100cqh) - 3rem)', background: 'linear-gradient(to bottom, #9bad3f 0%, #aac24f 30%, #b9d77a 100%)' }} />}
       <div className={`absolute overflow-hidden select-none ${wide ? 'top-1/2 left-0 -translate-y-1/2' : 'top-0 left-1/2 -translate-x-1/2'}`} style={wide ? { width: 'min(100cqw, calc(100cqh * 1586 / 992))', aspectRatio: '1586 / 992' } : { width: 'min(100cqw, calc((100cqh - 11rem) / 1.08))', aspectRatio: '1024 / 1536', WebkitMaskImage: 'linear-gradient(to bottom, #000 95%, transparent 100%)', maskImage: 'linear-gradient(to bottom, #000 95%, transparent 100%)' }}>
         <img src={assetUrl(`assets/farm/${L.img}.webp`)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
-        <FarmFx />
+        <FarmFx roam />
         {/* 노점: 눌러서 주민의 부탁·바구니 팔기 */}
         <button aria-label={ko ? '노점' : 'Market stall'} className="absolute rounded-2xl" style={L.stall} onClick={() => setStall(true)}>
           <span className="absolute -top-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-bold shadow">{ko ? '주문' : 'Orders'} · {farm.inventory[order.id]}/2</span>

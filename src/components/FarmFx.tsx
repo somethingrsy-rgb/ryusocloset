@@ -19,7 +19,7 @@ const FALLERS = [
   { img: 'fx_petal_1', left: 88, w: 3, dur: 16, delay: -7 },
 ]
 
-/** 카페용: 나비가 화면 곳곳(위·아래·좌·우)을 크게 돌아다닌다 */
+/** 카페·농장용: 나비가 화면 곳곳(위·아래·좌·우)을 크게 돌아다닌다 */
 const ROAMERS = [
   { img: 'fx_butterfly_1', left: 8, top: 18, w: 5.5, dur: 46, delay: -6, path: 'roam-a' },
   { img: 'fx_butterfly_2', left: 70, top: 70, w: 5, dur: 54, delay: -22, path: 'roam-b' },
