@@ -101,3 +101,13 @@ describe('새 땅 밭 사기', () => {
     expect(sanitizeFarm({ owned: 'x' }).owned.filter(Boolean)).toHaveLength(9)
   })
 })
+
+describe('earn (다른 게임에서 번 코인)', () => {
+  it('정수 코인을 더하고, 잘못된 값은 무시한다', () => {
+    const s = defaultFarm()
+    expect(reduceFarm(s, { type: 'earn', amount: 35 }, 0).coins).toBe(35)
+    expect(reduceFarm(s, { type: 'earn', amount: 0 }, 0)).toBe(s)
+    expect(reduceFarm(s, { type: 'earn', amount: 1.5 }, 0)).toBe(s)
+    expect(reduceFarm(s, { type: 'earn', amount: 5000 }, 0)).toBe(s)
+  })
+})

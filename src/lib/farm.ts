@@ -13,7 +13,7 @@ export interface Plot { crop: CropId; wateredAt: number | null }
 export interface FarmState {
   plots: (Plot | null)[]; /** 산 밭 칸 (앞의 9칸은 처음부터 true) */ owned: boolean[]; inventory: Record<CropId, number>; coins: number; deliveries: number; decorations: string[]
 }
-export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number } | { type: 'buy'; plot: number }
+export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number } | { type: 'earn'; amount: number } | { type: 'buy'; plot: number }
 /** 새 땅 밭 한 칸 값: 처음 20코인, 하나 살 때마다 5코인씩 올라간다 */
 export const PLOT_BASE_PRICE = 20
 export const PLOT_PRICE_STEP = 5
@@ -76,6 +76,9 @@ export function reduceFarm(state: FarmState, action: FarmAction, now: number): F
     const crop = cropById(action.crop)
     if (!crop || !state.inventory[crop.id]) return state
     next.inventory[crop.id]--; next.coins += crop.price
+  } else if (action.type === 'earn') {
+    if (!Number.isInteger(action.amount) || action.amount <= 0 || action.amount > 1000) return state
+    next.coins += action.amount
   } else if (action.type === 'spend') {
     if (!Number.isInteger(action.amount) || action.amount <= 0 || state.coins < action.amount) return state
     next.coins -= action.amount
