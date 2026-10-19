@@ -63,7 +63,8 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
   const [walking, setWalking] = useState(false)
   const [watering, setWatering] = useState(false)
   const [hold, setHold] = useState<'can' | 'basket' | 'seed'>('can')
-  const busy = useRef(false)
+  const pending = useRef(new Set<number>()) // 지금 처리 중인 밭 (같은 밭을 두 번 누르는 것만 막는다. 걷는 중에 다른 밭은 바로 누를 수 있다)
+  const walkToken = useRef(0)
   const secRef = useRef<HTMLElement>(null)
   const [wide, setWide] = useState(false) // 가로로 넓은 화면(패드 가로 등): 가로 그림을 쓰고 도구 버튼을 오른쪽에 세로로 얹는다
   useEffect(() => {
@@ -103,22 +104,23 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
       return
     }
     if (!need) { setNotice(ko ? '자라는 중이에요' : 'Still growing'); return }
-    if (busy.current) return
-    busy.current = true
+    if (pending.current.has(i)) return
+    pending.current.add(i)
+    const token = ++walkToken.current
     const box = plotBox(i, L)
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
     setHold(need === 'harvest' ? 'basket' : need === 'seed' ? 'seed' : 'can')
     setWalking(true)
     setPos({ x: box.x - aw / 2, y: box.y + box.h / 2 - L.avatarH, z: 10 })
     later(() => {
-      setWalking(false)
+      if (token === walkToken.current) setWalking(false)
       if (need === 'water') setWatering(true)
       later(() => {
         setWatering(false)
         if (need === 'seed') apply({ type: 'plant', plot: i, crop: selected })
         else if (need === 'water') apply({ type: 'water', plot: i })
         else apply({ type: 'harvest', plot: i })
-        busy.current = false
+        pending.current.delete(i)
       }, need === 'water' ? 350 : 200)
     }, 500)
   }
