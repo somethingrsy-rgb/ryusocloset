@@ -1300,19 +1300,6 @@
     "color": "black",
     "native": true
   },
-  "costume_boy_white_blue_coat": {
-    "ko": "화이트 블루 코트 의상",
-    "en": "White Blue Coat Outfit",
-    "category": "costume",
-    "color": "white",
-    "native": true
-  },
-  "shoes_boy_white_blue_coat": {
-    "ko": "네이비 보석 부츠",
-    "en": "Navy Gem Boots",
-    "color": "navy",
-    "native": true
-  },
   "costume_boy_navy_white_rose": {
     "ko": "네이비 흰장미 의상",
     "en": "Navy White Rose Outfit",
@@ -1372,19 +1359,6 @@
     "color": "navy",
     "native": true
   },
-  "costume_boy_light_prince": {
-    "ko": "라이트 블루 왕자 의상",
-    "en": "Light Blue Prince Outfit",
-    "category": "costume",
-    "color": "skyblue",
-    "native": true
-  },
-  "shoes_boy_light_prince": {
-    "ko": "화이트 골드 부츠",
-    "en": "White Gold Boots",
-    "color": "white",
-    "native": true
-  },
   "costume_boy_green_ranger": {
     "ko": "그린 레인저 의상",
     "en": "Green Ranger Outfit",
@@ -1424,6 +1398,32 @@
     "en": "Pink Teddy Bear Overall Dress",
     "category": "costume",
     "color": "pink",
+    "native": true
+  },
+  "costume_boy_prince_skyblue": {
+    "ko": "라이트 블루 왕자 의상",
+    "en": "Light Blue Prince Outfit",
+    "category": "costume",
+    "color": "skyblue",
+    "native": true
+  },
+  "shoes_boy_prince_skyblue": {
+    "ko": "브라운 레이스업 슈즈",
+    "en": "Brown Lace-up Shoes",
+    "color": "brown",
+    "native": true
+  },
+  "costume_boy_coat_whiteblue": {
+    "ko": "화이트 블루 코트 의상",
+    "en": "White Blue Coat Outfit",
+    "category": "costume",
+    "color": "white",
+    "native": true
+  },
+  "shoes_boy_coat_whiteblue": {
+    "ko": "네이비 슈즈",
+    "en": "Navy Shoes",
+    "color": "navy",
     "native": true
   }
 }
