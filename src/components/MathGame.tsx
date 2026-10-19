@@ -7,6 +7,7 @@ import {
   type Age, type Choice, type MathState, type Pic, type Profile, type Question, type Shape, type Visual,
 } from '../lib/mathGame'
 import { playSnap } from '../lib/sound'
+import { StarIcon } from './Icons'
 
 const T = {
   ko: {
@@ -317,7 +318,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
           <div ref={setInnerEl} className="flex min-h-full flex-col" style={fit < 1 ? { transform: `scale(${fit})`, transformOrigin: 'top center' } : undefined}>
             <div className="mb-3 flex items-center justify-between gap-2">
               <p className="m-0 text-base font-bold">{lv.icon} {lv.title[lang]}</p>
-              <span className="text-sm font-extrabold">{idx + 1}/{total}{isCleared(profile, lv.id) ? ' ⭐' : ''}</span>
+              <span className="text-sm font-extrabold">{idx + 1}/{total}{isCleared(profile, lv.id) ? <> <StarIcon /></> : null}</span>
             </div>
             <div className="h-3 overflow-hidden rounded-full bg-[#edf0e7]">
               <div className="h-full rounded-full bg-[#8db674] transition-all" style={{ width: `${((right ? idx + 1 : idx) / total) * 100}%` }} />
@@ -407,7 +408,7 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
                         <span className="mt-1 block text-sm font-bold text-[#6b8a78]">{ok ? l.hint[lang] : tx.locked}</span>
                       </span>
                     </span>
-                    <span className="shrink-0 text-sm">{isCleared(profile, l.id) ? `⭐ ${tx.cleared}` : ok ? `${countOf(profile, l.id)}/${totalOf(l.id)}` : ''}</span>
+                    <span className="shrink-0 text-sm">{isCleared(profile, l.id) ? <><StarIcon /> {tx.cleared}</> : ok ? `${countOf(profile, l.id)}/${totalOf(l.id)}` : ''}</span>
                   </button>
                 )
               })}

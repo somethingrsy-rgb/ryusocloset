@@ -8,6 +8,7 @@ import { useItemsVersion } from '../lib/useItemsVersion'
 import { playSnap } from '../lib/sound'
 import { FigureLayers } from './FigureLayers'
 import type { Outfit, Tweaks } from '../lib/types'
+import { CoinIcon, StarIcon, DressIcon } from './Icons'
 
 const TABS = ['costume', 'accessory', 'wand', 'shoes', 'room'] as const
 type Tab = (typeof TABS)[number]
@@ -42,7 +43,8 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
   const wallet = useMemo(readWallet, [spentTick, getFarm().coins, getGame().found.length]) // eslint-disable-line react-hooks/exhaustive-deps
   const pool = travelPool()
   const items = pool.filter((i) => i.category === tab)
-  const sym = currency === 'star' ? '⭐' : '🪙'
+  const sym = currency === 'star' ? <StarIcon /> : <CoinIcon />
+  const symName = currency === 'star' ? (ko ? '별' : 'stars') : (ko ? '코인' : 'coins')
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && (preview ? setPreview(null) : onClose())
     window.addEventListener('keydown', onKey)
@@ -71,7 +73,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-2 rounded-full border border-[#e3d3b3] bg-white/60 px-3 py-1.5 text-sm font-bold whitespace-nowrap"><span>⭐ {wallet.stars}</span><span>🪙 {wallet.coins}</span></div>
+            <div className="flex items-center gap-2 rounded-full border border-[#e3d3b3] bg-white/60 px-3 py-1.5 text-sm font-bold whitespace-nowrap"><span><StarIcon /> {wallet.stars}</span><span><CoinIcon /> {wallet.coins}</span></div>
             <button onClick={onClose} aria-label={ko ? '닫기' : 'Close'} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d9c7a3] bg-white/60 text-lg">✕</button>
           </div>
         </div>
@@ -89,7 +91,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
           <div role="radiogroup" aria-label={ko ? '내는 방법' : 'Pay with'} className="mt-3 flex items-center gap-1.5">
             {(['star', 'coin'] as const).map((c) => (
               <button key={c} role="radio" aria-checked={currency === c} onClick={() => setCurrency(c)} className={`min-h-9 rounded-full border px-3 text-sm font-bold ${currency === c ? 'border-[#d36f8b] bg-[#f4a9bb] text-white' : 'border-[#e3d3b3] bg-white/60'}`}>
-                {c === 'star' ? '⭐' : '🪙'} {ko ? (c === 'star' ? '별로 사기' : '코인으로 사기') : c === 'star' ? 'Pay stars' : 'Pay coins'}
+                {c === 'star' ? <StarIcon /> : <CoinIcon />} {ko ? (c === 'star' ? '별로 사기' : '코인으로 사기') : c === 'star' ? 'Pay stars' : 'Pay coins'}
               </button>
             ))}
           </div>
@@ -125,10 +127,10 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
                   </div>
                   <p className="mt-1 mb-0 w-full truncate text-center text-sm font-bold" style={{ fontFamily: SERIF }}>{it.name[lang]}</p>
                   <div className="mt-1 flex w-full items-center justify-between gap-1">
-                    <button disabled={own || poor} onClick={() => buy(it.id)} className="min-h-9 rounded-full bg-transparent px-1 text-base font-bold disabled:opacity-60" aria-label={own ? (ko ? '보유' : 'Owned') : `${price}${sym}`}>
-                      {own ? (ko ? '보유 ✓' : 'Owned ✓') : `${price} ${sym}`}
+                    <button disabled={own || poor} onClick={() => buy(it.id)} className="min-h-9 rounded-full bg-transparent px-1 text-base font-bold disabled:opacity-60" aria-label={own ? (ko ? '보유' : 'Owned') : `${price} ${symName}`}>
+                      {own ? (ko ? '보유 ✓' : 'Owned ✓') : <>{price} {sym}</>}
                     </button>
-                    {canPreview && <button onClick={() => setPreview(it.id)} className="min-h-9 rounded-full bg-[#e98aa3] px-3 text-xs font-bold text-white shadow">👗 {ko ? '입어보기' : 'Try on'}</button>}
+                    {canPreview && <button onClick={() => setPreview(it.id)} className="min-h-9 rounded-full bg-[#e98aa3] px-3 text-xs font-bold text-white shadow"><DressIcon className="mr-1" /> {ko ? '입어보기' : 'Try on'}</button>}
                   </div>
                 </div>
               )
