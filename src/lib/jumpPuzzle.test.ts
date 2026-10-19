@@ -48,3 +48,32 @@ describe('점프 퍼즐', () => {
     expect(isOver(empty())).toBe(true)
   })
 })
+
+import { newVs, planCpuTurn, vsCpuMove, vsEndTurn, vsHumanMove, vsResult } from './jumpPuzzle'
+describe('컴퓨터와 겨루기', () => {
+  it('내가 뛰고 더 못 뛰면 컴퓨터 차례가 되고, 더 뛸 수 있으면 같은 말로 이어간다', () => {
+    const b = empty(); b[0][0] = 1; b[0][1] = 2; b[0][3] = 3; b[4][4] = 4
+    const vs = { ...newVs(seeded()), board: b }
+    const one = vsHumanMove(vs, { from: { r: 0, c: 0 }, over: { r: 0, c: 1 }, to: { r: 0, c: 2 } })
+    expect(one.mine).toEqual([0, 1, 0, 0]); expect(one.turn).toBe('me'); expect(one.chain).toEqual({ r: 0, c: 2 })
+    expect(vsHumanMove(one, { from: { r: 4, c: 4 }, over: { r: 4, c: 3 }, to: { r: 4, c: 2 } })).toBe(one) // 이어갈 때는 그 말만
+    const two = vsHumanMove(one, { from: { r: 0, c: 2 }, over: { r: 0, c: 3 }, to: { r: 0, c: 4 } })
+    expect(two.mine).toEqual([0, 1, 1, 0]); expect(two.turn).toBe('cpu'); expect(two.chain).toBeNull() // 더 뛸 수 없으면 차례가 넘어감
+    const end = vsEndTurn(one)
+    expect(end.turn).toBe('cpu'); expect(end.chain).toBeNull() // 끝내기
+  })
+  it('컴퓨터는 가능한 수만 두고 차례를 내게 돌려준다', () => {
+    let vs = newVs(seeded()); vs = { ...vs, turn: 'cpu' }
+    const plan = planCpuTurn(vs.board, vs.cpu, seeded())
+    expect(plan.length).toBeGreaterThan(0); expect(plan.length).toBeLessThanOrEqual(3)
+    plan.forEach((m, i) => { vs = vsCpuMove(vs, m, i === plan.length - 1) })
+    expect(vs.turn).toBe('me')
+    expect(vs.cpu.reduce((s, n) => s + n, 0)).toBe(plan.length)
+  })
+  it('결과: 세트 → 모은 말 → 비김 순서로 가린다', () => {
+    expect(vsResult({ mine: [2, 2, 2, 2], cpu: [1, 3, 3, 3] })).toBe('win')
+    expect(vsResult({ mine: [1, 1, 1, 1], cpu: [2, 2, 2, 2] })).toBe('lose')
+    expect(vsResult({ mine: [2, 2, 2, 5], cpu: [2, 2, 2, 3] })).toBe('win')
+    expect(vsResult({ mine: [2, 2, 2, 2], cpu: [2, 2, 2, 2] })).toBe('draw')
+  })
+})
