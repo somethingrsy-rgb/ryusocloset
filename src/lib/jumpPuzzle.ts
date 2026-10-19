@@ -80,7 +80,7 @@ export const isOver = (board: Board) => allMoves(board).length === 0
 
 /* ---------- 컴퓨터와 겨루기 ---------- */
 /** 이긴 사람에게 주는 보너스 코인 (세트 코인과 별도) */
-export const WIN_BONUS = 10
+export const WIN_BONUS = 20
 export interface Vs {
   board: Board
   mine: number[]
