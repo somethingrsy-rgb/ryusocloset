@@ -122,7 +122,7 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
         else apply({ type: 'harvest', plot: i })
         pending.current.delete(i)
       }, need === 'water' ? 350 : 200)
-    }, 500)
+    }, 800)
   }
 
   const pick = (t: Tool) => {
