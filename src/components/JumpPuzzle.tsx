@@ -117,7 +117,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
         <button onClick={onClose} aria-label={tx.close} className="flex h-11 w-11 items-center justify-center rounded-full border border-[#dce4d7] bg-white text-xl text-[#246f55]">✕</button>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-3 py-2">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden px-3 py-2">
         <div className="flex w-full max-w-[34rem] flex-col gap-1.5 rounded-2xl bg-white px-3 py-2 shadow-sm">
           <div className="flex items-center justify-between gap-2">
             <span className="w-16 shrink-0 text-xs font-bold text-[#678071]">{tx.you}</span>
@@ -141,7 +141,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
-        <div role="grid" aria-label={tx.title} className="grid aspect-square w-full max-w-[min(34rem,calc(100dvh-21rem))] gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5" style={{ gridTemplateColumns: `repeat(${SIZE}, 1fr)` }}>
+        <div role="grid" aria-label={tx.title} className="grid aspect-square w-full max-w-[min(34rem,calc(100dvh-24rem))] gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5" style={{ gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))` }}>
           {board.flatMap((row, r) => row.map((v, c) => {
             const picked = sel && sel.r === r && sel.c === c
             return (
@@ -150,7 +150,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
                 role="gridcell"
                 aria-label={v ? `${r + 1}-${c + 1} ${MARK[v - 1]}` : `${r + 1}-${c + 1}`}
                 onClick={() => tap(r, c)}
-                className={`flex aspect-square items-center justify-center rounded-lg border-0 p-[8%] ${v === 0 ? 'bg-[#eef3e6]' : 'bg-[#f6f9f0]'}`}
+                className={`flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-lg border-0 p-[8%] ${v === 0 ? 'bg-[#eef3e6]' : 'bg-[#f6f9f0]'}`}
               >
                 {v !== 0 && (
                   <span
