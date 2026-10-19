@@ -117,8 +117,17 @@ export function vsCpuMove(vs: Vs, m: Move, last: boolean): Vs {
   return { ...vs, board, cpu, turn: last ? 'me' : 'cpu' }
 }
 
-/** 컴퓨터가 이번 차례에 할 수를 미리 정한다(연속 점프 포함, 최대 3번). 모자란 색을 잡는 수를 좋아하고, 가끔(15%)은 아무 수나 둔다 */
-export function planCpuTurn(board: Board, cpu: number[], rng: () => number = Math.random): Move[] {
+export type Level = 'easy' | 'normal' | 'hard'
+/** 난이도별 컴퓨터: random = 아무 수나 둘 확률, stop/stepStop = 이어 뛸 수 있을 때 멈출 확률(첫 점프 뒤 stop, 한 번 더 뛸 때마다 stepStop 만큼 늘어남), noise = 점수에 섞는 흔들림, chain = 이어 뛸 수 있는 수에 주는 점수 */
+const LEVELS: Record<Level, { random: number; stop: number; stepStop: number; noise: number; chain: number }> = {
+  easy: { random: 0.6, stop: 1, stepStop: 0, noise: 1, chain: 0 },
+  normal: { random: 0.15, stop: 0.3, stepStop: 0.3, noise: 0.5, chain: 0 },
+  hard: { random: 0, stop: 0.1, stepStop: 0.2, noise: 0.1, chain: 0.6 },
+}
+
+/** 컴퓨터가 이번 차례에 할 수를 미리 정한다(연속 점프 포함, 최대 3번). 모자란 색을 잡는 수를 좋아하고, 난이도에 따라 실수·연속 점프 정도가 다르다 */
+export function planCpuTurn(board: Board, cpu: number[], rng: () => number = Math.random, level: Level = 'normal'): Move[] {
+  const L = LEVELS[level]
   const plan: Move[] = []
   let b = board
   let from: Pos | null = null
@@ -127,15 +136,17 @@ export function planCpuTurn(board: Board, cpu: number[], rng: () => number = Mat
     const moves: Move[] = from ? movesFrom(b, from) : allMoves(b)
     if (moves.length === 0) break
     const top = Math.max(...have)
-    const score = (m: Move) => top - have[b[m.over.r][m.over.c] - 1] + 1 + rng() * 0.5
-    const m: Move = rng() < 0.15 ? moves[Math.floor(rng() * moves.length)] : moves.reduce((best, x) => (score(x) > score(best) ? x : best))
+    const score = (m: Move) => {
+      const next = jump(b, m).board
+      return top - have[b[m.over.r][m.over.c] - 1] + 1 + rng() * L.noise + (movesFrom(next, m.to).length > 0 ? L.chain : 0)
+    }
+    const m: Move = rng() < L.random ? moves[Math.floor(rng() * moves.length)] : moves.map((x) => ({ x, v: score(x) })).reduce((best, y) => (y.v > best.v ? y : best)).x
     plan.push(m)
     const r = jump(b, m)
     have[r.caught - 1]++
     b = r.board
     from = m.to
-    // 이어서 더 뛸 수 있어도 점점 멈출 확률을 둔다(첫 점프 뒤 30%, 두 번째 뒤 60%)
-    if (movesFrom(b, m.to).length === 0 || rng() < 0.3 + step * 0.3) break
+    if (movesFrom(b, m.to).length === 0 || rng() < L.stop + step * L.stepStop) break
   }
   return plan
 }

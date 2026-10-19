@@ -2,10 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { actFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
-import { COINS_PER_SET, COLORS, SIZE, WIN_BONUS, applyMove, type Move, findMove, isOver, newGame, newVs, parseSaved, planCpuTurn, setsOf, undo, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, type Game, type Pos, type Vs } from '../lib/jumpPuzzle'
+import { COINS_PER_SET, COLORS, SIZE, WIN_BONUS, applyMove, type Move, findMove, isOver, newGame, newVs, parseSaved, planCpuTurn, setsOf, undo, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, type Game, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
 import { CoinIcon } from './Icons'
 
 const KEY = 'ryuso.jumppuzzle.v1'
+const LEVEL_KEY = 'ryuso.jumppuzzle.level.v1'
+const LEVELS: Level[] = ['easy', 'normal', 'hard']
+const loadLevel = (): Level => { try { const v = localStorage.getItem(LEVEL_KEY); return LEVELS.find((l) => l === v) ?? 'normal' } catch { return 'normal' } }
 const STATE_KEY = 'ryuso.jumppuzzle.state.v1' // 하던 판(탭을 옮기거나 닫아도 이어서)
 const loadState = () => { try { return parseSaved(JSON.parse(localStorage.getItem(STATE_KEY) ?? 'null')) } catch { return null } }
 const loadBest = () => { try { const n = Number(localStorage.getItem(KEY)); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0 } catch { return 0 } }
@@ -23,6 +26,7 @@ const T = {
     howVs: '내 차례에 말을 뛰어넘어 모아요. 이어서 더 뛸 수 있으면 계속하거나 끝내기를 눌러요. 컴퓨터보다 세트를 많이 모으면 이겨요!',
     undo: '되돌리기', again: '새 판', close: '닫기', sets: '세트', best: '최고 기록', badMove: '그곳으로는 뛸 수 없어요', over: '더 뛸 수 없어요!',
     result: (n: number) => `${n}세트 완성!`, got: (c: number) => `+${c} 코인`, new: '새 기록!',
+    level: { easy: '초급', normal: '중급', hard: '고급' },
     solo: '혼자', vs: '컴퓨터와', you: '나', cpu: '컴퓨터', myTurn: '내 차례예요', cpuTurn: '컴퓨터 차례예요…', endTurn: '끝내기',
     win: '이겼어요!', lose: '아쉬워요, 졌어요', draw: '비겼어요', bonus: (c: number) => `이긴 보너스 +${c}`,
   },
@@ -31,6 +35,7 @@ const T = {
     howVs: 'On your turn, jump and collect pieces. If you can jump again, keep going or end your turn. Beat the computer with more sets!',
     undo: 'Undo', again: 'New game', close: 'Close', sets: 'sets', best: 'Best', badMove: "You can't jump there", over: 'No more jumps!',
     result: (n: number) => `${n} sets!`, got: (c: number) => `+${c} coins`, new: 'New best!',
+    level: { easy: 'Easy', normal: 'Normal', hard: 'Hard' },
     solo: 'Solo', vs: 'Vs computer', you: 'You', cpu: 'Computer', myTurn: 'Your turn', cpuTurn: 'Computer is thinking…', endTurn: 'End turn',
     win: 'You win!', lose: 'You lost, try again', draw: "It's a tie", bonus: (c: number) => `Win bonus +${c}`,
   },
@@ -43,6 +48,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const [mode, setMode] = useState<'solo' | 'vs'>(saved?.mode ?? 'solo')
   const [game, setGame] = useState<Game>(() => saved?.game ?? newGame())
   const [vs, setVs] = useState<Vs>(() => saved?.vs ?? newVs())
+  const [level, setLevel] = useState<Level>(loadLevel)
   const [sel, setSel] = useState<Pos | null>(null)
   const [anim, setAnim] = useState<{ m: Move; color: number; gone: boolean } | null>(null) // 지금 날아가는 컴퓨터의 말
   const [lastCpu, setLastCpu] = useState<Move | null>(null) // 컴퓨터가 방금 둔 수(내가 다음에 두기 전까지 빛나게 보여 준다)
@@ -68,7 +74,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   // 컴퓨터 차례: 정해 둔 수를 하나씩 슬로 모션으로 보여 주며 둔다
   useEffect(() => {
     if (solo || vs.turn !== 'cpu' || isOver(vs.board)) return
-    const plan = planCpuTurn(vs.board, vs.cpu)
+    const plan = planCpuTurn(vs.board, vs.cpu, Math.random, level)
     const ids: number[] = []
     let t = CPU_PAUSE_MS
     let board = vs.board
@@ -83,7 +89,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
       board = b2 as typeof board
     })
     return () => { ids.forEach(clearTimeout); setAnim(null) }
-  }, [solo, vs.turn, vs.board, vs.cpu])
+  }, [solo, vs.turn, vs.board, vs.cpu, level])
 
   // 코인: 세트를 새로 모았을 때(되돌린 세트는 다시 주지 않음), 겨루기에서는 이긴 보너스도
   useEffect(() => {
@@ -123,6 +129,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const doUndo = () => { setGame((g) => undo(g)); setSel(null); setFresh(false) }
   const endTurn = () => { setVs((v) => vsEndTurn(v)); setSel(null) }
   const restart = () => { setGame(newGame()); setVs(newVs()); setSel(null); setLastCpu(null); setPaid(0); setBonusPaid(0); setFresh(false); setMsg('') }
+  const pickLevel = (l: Level) => { setLevel(l); try { localStorage.setItem(LEVEL_KEY, l) } catch { /* 저장 실패는 무시 */ } }
   const switchMode = (m: 'solo' | 'vs') => { if (m !== mode) { setMode(m); restart() } }
 
   const turnText = solo ? '' : vs.turn === 'cpu' ? tx.cpuTurn : tx.myTurn // 화면 읽기용(위 큰 표시는 aria-hidden)
@@ -141,6 +148,13 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden px-3 py-2">
+        {!solo && (
+          <div role="radiogroup" aria-label="level" className="flex rounded-full bg-[#e8efdc] p-0.5 text-xs font-bold">
+            {LEVELS.map((l) => (
+              <button key={l} role="radio" aria-checked={level === l} onClick={() => pickLevel(l)} className={`min-h-8 rounded-full border-0 px-4 ${level === l ? 'bg-[#246f55] text-white' : 'bg-transparent text-[#246f55]'}`}>{tx.level[l]}</button>
+            ))}
+          </div>
+        )}
         <div className="flex w-full max-w-[34rem] flex-col gap-1.5 rounded-2xl bg-white px-3 py-2 shadow-sm">
           <div className="flex items-center justify-between gap-2">
             <span className="w-16 shrink-0 text-xs font-bold text-[#678071]">{tx.you}</span>
