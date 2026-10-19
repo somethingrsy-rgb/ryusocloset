@@ -102,7 +102,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const restart = () => { setGame(newGame()); setVs(newVs()); setSel(null); setPaid(0); setBonusPaid(0); setFresh(false); setMsg('') }
   const switchMode = (m: 'solo' | 'vs') => { if (m !== mode) { setMode(m); restart() } }
 
-  const turnText = solo ? '' : vs.turn === 'cpu' ? tx.cpuTurn : tx.myTurn
+  const turnText = solo ? '' : vs.turn === 'cpu' ? tx.cpuTurn : tx.myTurn // 화면 읽기용(위 큰 표시는 aria-hidden)
   const total = paid * COINS_PER_SET + bonusPaid
 
   return (
@@ -141,7 +141,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
-        <div role="grid" aria-label={tx.title} className="grid aspect-square w-full max-w-[min(34rem,calc(100dvh-24rem))] gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5" style={{ gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))` }}>
+        <div role="grid" aria-label={tx.title} className={`grid aspect-square w-full max-w-[min(34rem,calc(100dvh-24rem))] gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5 transition-shadow ${!solo && !over && vs.turn === 'me' ? 'shadow-[0_0_0_4px_#7cc545,0_0_22px_6px_rgba(124,197,69,.55)]' : ''}`} style={{ gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))` }}>
           {board.flatMap((row, r) => row.map((v, c) => {
             const picked = sel && sel.r === r && sel.c === c
             return (
@@ -163,7 +163,13 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           }))}
         </div>
 
-        <p className="m-0 min-h-5 text-center text-sm font-bold text-[#246f55]" role="status" aria-live="polite">{msg || turnText}</p>
+        <p className={`m-0 min-h-5 text-center text-sm font-bold text-[#246f55] ${!solo && !msg ? 'sr-only' : ''}`} role="status" aria-live="polite">{msg || turnText}</p>
+        {!solo && !over && (
+          <p
+            className={`m-0 rounded-full px-6 py-2 text-center text-xl font-extrabold [font-family:Jua,'Noto_Sans_KR',sans-serif] ${vs.turn === 'me' ? 'jump-my-turn bg-[#246f55] text-white' : 'bg-[#eef0e8] text-[#678071]'}`}
+            aria-hidden
+          >{vs.turn === 'me' ? `✨ ${tx.myTurn} ✨` : tx.cpuTurn}</p>
+        )}
         {(solo ? game.history.length === 0 : vs.mine.every((n) => n === 0) && vs.turn === 'me') && !msg && <p className="m-0 max-w-[34rem] text-center text-xs leading-relaxed text-[#678071]">{solo ? tx.how : tx.howVs}</p>}
 
         <div className="flex gap-2">
