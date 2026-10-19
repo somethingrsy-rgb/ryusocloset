@@ -744,6 +744,54 @@
     "native": true
   },
   {
+    "id": "costume_bear_overall_green",
+    "category": "costume",
+    "name": {
+      "ko": "곰돌이 멜빵 원피스",
+      "en": "Teddy Bear Overall Dress"
+    },
+    "color": "gray",
+    "colorName": {
+      "ko": "그레이",
+      "en": "Gray"
+    },
+    "colorHex": "#a3a5ab",
+    "box": {
+      "x": 152,
+      "y": 604,
+      "w": 720,
+      "h": 600
+    },
+    "image": "assets/clothes/costume/costume_bear_overall_green.webp",
+    "thumb": "assets/thumbs/costume_bear_overall_green.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_bear_overall_pink",
+    "category": "costume",
+    "name": {
+      "ko": "핑크 곰돌이 멜빵 원피스",
+      "en": "Pink Teddy Bear Overall Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 152,
+      "y": 604,
+      "w": 720,
+      "h": 608
+    },
+    "image": "assets/clothes/costume/costume_bear_overall_pink.webp",
+    "thumb": "assets/thumbs/costume_bear_overall_pink.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_blue_rose_lolita",
     "category": "costume",
     "name": {
@@ -1584,6 +1632,30 @@
     "native": true
   },
   {
+    "id": "costume_panda_sailor_blue",
+    "category": "costume",
+    "name": {
+      "ko": "판다 세일러 가디건",
+      "en": "Panda Sailor Cardigan"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 152,
+      "y": 604,
+      "w": 720,
+      "h": 546
+    },
+    "image": "assets/clothes/costume/costume_panda_sailor_blue.webp",
+    "thumb": "assets/thumbs/costume_panda_sailor_blue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_pastel_star",
     "category": "costume",
     "name": {
@@ -1820,6 +1892,30 @@
     },
     "image": "assets/clothes/costume/costume_starry_cross.webp",
     "thumb": "assets/thumbs/costume_starry_cross.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_strawberry_cardigan_pink",
+    "category": "costume",
+    "name": {
+      "ko": "딸기 가디건 원피스",
+      "en": "Strawberry Cardigan Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 152,
+      "y": 604,
+      "w": 720,
+      "h": 576
+    },
+    "image": "assets/clothes/costume/costume_strawberry_cardigan_pink.webp",
+    "thumb": "assets/thumbs/costume_strawberry_cardigan_pink.webp",
     "zIndex": 41,
     "native": true
   },

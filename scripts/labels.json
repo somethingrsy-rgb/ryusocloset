@@ -1397,5 +1397,33 @@
     "en": "Brown Lace-up Boots",
     "color": "brown",
     "native": true
+  },
+  "costume_panda_sailor_blue": {
+    "ko": "판다 세일러 가디건",
+    "en": "Panda Sailor Cardigan",
+    "category": "costume",
+    "color": "skyblue",
+    "native": true
+  },
+  "costume_strawberry_cardigan_pink": {
+    "ko": "딸기 가디건 원피스",
+    "en": "Strawberry Cardigan Dress",
+    "category": "costume",
+    "color": "pink",
+    "native": true
+  },
+  "costume_bear_overall_green": {
+    "ko": "곰돌이 멜빵 원피스",
+    "en": "Teddy Bear Overall Dress",
+    "category": "costume",
+    "color": "gray",
+    "native": true
+  },
+  "costume_bear_overall_pink": {
+    "ko": "핑크 곰돌이 멜빵 원피스",
+    "en": "Pink Teddy Bear Overall Dress",
+    "category": "costume",
+    "color": "pink",
+    "native": true
   }
 }
