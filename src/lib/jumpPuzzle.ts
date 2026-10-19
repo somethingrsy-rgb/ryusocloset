@@ -134,8 +134,8 @@ export function planCpuTurn(board: Board, cpu: number[], rng: () => number = Mat
     have[r.caught - 1]++
     b = r.board
     from = m.to
-    // 이어서 더 뛸 수 있어도 점점 멈출 확률을 둔다(첫 점프 뒤 40%, 두 번째 뒤 70%)
-    if (movesFrom(b, m.to).length === 0 || rng() < 0.4 + step * 0.3) break
+    // 이어서 더 뛸 수 있어도 점점 멈출 확률을 둔다(첫 점프 뒤 30%, 두 번째 뒤 60%)
+    if (movesFrom(b, m.to).length === 0 || rng() < 0.3 + step * 0.3) break
   }
   return plan
 }
