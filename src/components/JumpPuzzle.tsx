@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { actFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
-import { COINS_PER_SET, COLORS, SIZE, WIN_BONUS, applyMove, type Move, findMove, isOver, newGame, newVs, planCpuTurn, setsOf, undo, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, type Game, type Pos, type Vs } from '../lib/jumpPuzzle'
+import { COINS_PER_SET, COLORS, SIZE, WIN_BONUS, applyMove, type Move, findMove, isOver, newGame, newVs, parseSaved, planCpuTurn, setsOf, undo, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, type Game, type Pos, type Vs } from '../lib/jumpPuzzle'
 import { CoinIcon } from './Icons'
 
 const KEY = 'ryuso.jumppuzzle.v1'
+const STATE_KEY = 'ryuso.jumppuzzle.state.v1' // 하던 판(탭을 옮기거나 닫아도 이어서)
+const loadState = () => { try { return parseSaved(JSON.parse(localStorage.getItem(STATE_KEY) ?? 'null')) } catch { return null } }
 const loadBest = () => { try { const n = Number(localStorage.getItem(KEY)); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0 } catch { return 0 } }
 /** 네 색: 빨강·초록·파랑·주황 (색마다 가운데 무늬가 달라서 색을 구분하기 어려워도 알 수 있다) */
 const FILL = ['#ef5a3c', '#7cc545', '#4aa6ea', '#f5a623']
@@ -37,18 +39,22 @@ const T = {
 export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const { lang } = useI18n()
   const tx = T[lang]
-  const [mode, setMode] = useState<'solo' | 'vs'>('solo')
-  const [game, setGame] = useState<Game>(() => newGame())
-  const [vs, setVs] = useState<Vs>(() => newVs())
+  const [saved] = useState(loadState)
+  const [mode, setMode] = useState<'solo' | 'vs'>(saved?.mode ?? 'solo')
+  const [game, setGame] = useState<Game>(() => saved?.game ?? newGame())
+  const [vs, setVs] = useState<Vs>(() => saved?.vs ?? newVs())
   const [sel, setSel] = useState<Pos | null>(null)
   const [anim, setAnim] = useState<{ m: Move; color: number; gone: boolean } | null>(null) // 지금 날아가는 컴퓨터의 말
   const [lastCpu, setLastCpu] = useState<Move | null>(null) // 컴퓨터가 방금 둔 수(내가 다음에 두기 전까지 빛나게 보여 준다)
-  const [paid, setPaid] = useState(0) // 이 판에서 코인을 이미 받은 세트 수 (되돌렸다 다시 해도 같은 세트는 한 번만)
-  const [bonusPaid, setBonusPaid] = useState(0)
+  const [paid, setPaid] = useState(saved?.paid ?? 0) // 이 판에서 코인을 이미 받은 세트 수 (되돌렸다 다시 해도 같은 세트는 한 번만)
+  const [bonusPaid, setBonusPaid] = useState(saved?.bonusPaid ?? 0)
   const [best, setBest] = useState(loadBest)
   const [msg, setMsg] = useState('')
   const [fresh, setFresh] = useState(false)
   const timers = useRef<number[]>([])
+  useEffect(() => {
+    try { localStorage.setItem(STATE_KEY, JSON.stringify({ mode, game, vs, paid, bonusPaid })) } catch { /* 저장 실패는 무시 */ }
+  }, [mode, game, vs, paid, bonusPaid])
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
   const say = (t: string) => { setMsg(t); const id = window.setTimeout(() => setMsg(''), 1800); timers.current.push(id) }
 

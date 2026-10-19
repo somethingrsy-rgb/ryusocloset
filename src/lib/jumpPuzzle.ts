@@ -147,3 +147,21 @@ export function vsResult(vs: Pick<Vs, 'mine' | 'cpu'>): 'win' | 'lose' | 'draw' 
   const x = vs.mine.reduce((s, n) => s + n, 0), y = vs.cpu.reduce((s, n) => s + n, 0)
   return x === y ? 'draw' : x > y ? 'win' : 'lose'
 }
+
+/** 이어서 하려고 저장해 두는 판 상태 */
+export interface Saved { mode: 'solo' | 'vs'; game: Game; vs: Vs; paid: number; bonusPaid: number }
+
+const okBoard = (b: unknown): b is Board => Array.isArray(b) && b.length === SIZE && b.every((row) => Array.isArray(row) && row.length === SIZE && row.every((v) => Number.isInteger(v) && v >= 0 && v <= COLORS))
+const okPocket = (p: unknown): p is number[] => Array.isArray(p) && p.length === COLORS && p.every((n) => Number.isInteger(n) && n >= 0)
+const okPos = (p: unknown): p is Pos => !!p && typeof p === 'object' && Number.isInteger((p as Pos).r) && Number.isInteger((p as Pos).c)
+
+/** 저장된 값이 쓸 수 있는 모양인지 검사하고, 아니면 null (새 판으로 시작) */
+export function parseSaved(raw: unknown): Saved | null {
+  const s = raw as Saved | null
+  if (!s || typeof s !== 'object' || (s.mode !== 'solo' && s.mode !== 'vs')) return null
+  const g = s.game, v = s.vs
+  if (!g || !okBoard(g.board) || !okPocket(g.pocket) || !Array.isArray(g.history) || !g.history.every((h) => okBoard(h?.board) && okPocket(h?.pocket))) return null
+  if (!v || !okBoard(v.board) || !okPocket(v.mine) || !okPocket(v.cpu) || (v.turn !== 'me' && v.turn !== 'cpu') || (v.chain !== null && !okPos(v.chain))) return null
+  const n = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0)
+  return { mode: s.mode, game: g, vs: v, paid: n(s.paid), bonusPaid: n(s.bonusPaid) }
+}
