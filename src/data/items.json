@@ -877,10 +877,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 110,
-      "y": 595,
-      "w": 805,
-      "h": 876
+      "x": 146,
+      "y": 555,
+      "w": 732,
+      "h": 796
     },
     "image": "assets/clothes/costume/costume_boy_coat_whiteblue.webp",
     "thumb": "assets/thumbs/costume_boy_coat_whiteblue.webp",
