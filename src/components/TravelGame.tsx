@@ -56,7 +56,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, initialPlaceId = nu
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
     />}
     {speaking && <SpeakingGame onClose={() => setSpeaking(false)} />}
-    {math && <MathGame onClose={() => setMath(false)} onWear={onWear} />}
+    {math && <MathGame onClose={() => setMath(false)} />}
     {jump && <JumpPuzzle onClose={() => setJump(false)} />}
   </div>
 }

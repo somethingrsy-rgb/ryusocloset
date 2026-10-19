@@ -1,4 +1,4 @@
-import { currentAssignment, findItem, getGame, travelItem } from './game'
+import { actFarm } from './farm'
 import { isRestoring } from './restoreGuard'
 import { EIGHT_TOPICS, SIX_TOPICS } from './mathQuestions'
 
@@ -63,7 +63,7 @@ export interface Profile {
   age: Age
   /** 단계별로 끝낸 문제 수 */
   correct: Record<number, number>
-  /** 단계 목표를 채워서 받은 선물 아이템 */
+  /** 단계를 다 풀어서 코인을 받았다는 표시(예전에 받은 아이템 id 도 같은 뜻) */
   gifts: Record<number, string>
 }
 
@@ -140,22 +140,12 @@ export function addCorrect(p: Profile, level: number, done: number): { next: Pro
 
 export const updateProfile = (s: MathState, p: Profile): MathState => ({ profiles: s.profiles.map((x) => (x.id === p.id ? p : x)) })
 
-/**
- * 선물로 줄 아이템: 아직 못 찾은 옷·신발·헤어핀·마법봉 중에서 무작위 (방 소품은 제외).
- * 다 찾았으면 null.
- */
-export function pickGift(found: readonly string[], rnd: () => number = Math.random): string | null {
-  const ids = Object.values(currentAssignment())
-    .flat()
-    .filter((id) => !found.includes(id) && travelItem(id)?.kind !== 'room')
-  return ids.length ? ids[Math.floor(rnd() * ids.length)] : null
-}
+/** 단계를 다 풀었을 때 받는 코인 */
+export const CLEAR_COINS = 10
 
-/** 목표를 채운 단계의 선물을 정해서 찾은 아이템에 넣는다. 줄 게 없으면 null */
-export function claimGift(p: Profile, level: number): { next: Profile; gift: string | null } {
-  if (p.gifts[level]) return { next: p, gift: p.gifts[level] }
-  const gift = pickGift(getGame().found)
-  if (!gift) return { next: p, gift: null }
-  findItem(gift)
-  return { next: { ...p, gifts: { ...p.gifts, [level]: gift } }, gift }
+/** 단계를 처음 다 풀었으면 코인을 주고 받았다고 적는다(같은 단계는 한 번만). 이미 받았으면 0 */
+export function claimCoins(p: Profile, level: number): { next: Profile; coins: number } {
+  if (p.gifts[level]) return { next: p, coins: 0 }
+  actFarm({ type: 'earn', amount: CLEAR_COINS })
+  return { next: { ...p, gifts: { ...p.gifts, [level]: 'coin' } }, coins: CLEAR_COINS }
 }

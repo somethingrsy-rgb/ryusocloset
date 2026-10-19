@@ -94,9 +94,9 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [solo, vs.turn, level])
 
-  // 코인: 세트를 새로 모았을 때(되돌린 세트는 다시 주지 않음), 겨루기에서는 이긴 보너스도
+  // 코인: 혼자 할 때는 세트를 새로 모았을 때(되돌린 세트는 다시 주지 않음), 컴퓨터와는 이겼을 때만 보너스
   useEffect(() => {
-    if (sets > paid) { actFarm({ type: 'earn', amount: (sets - paid) * COINS_PER_SET }); setPaid(sets); say(tx.got((sets - paid) * COINS_PER_SET)) }
+    if (solo && sets > paid) { actFarm({ type: 'earn', amount: (sets - paid) * COINS_PER_SET }); setPaid(sets); say(tx.got((sets - paid) * COINS_PER_SET)) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sets])
   useEffect(() => {
@@ -244,7 +244,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           <div className="flex w-full max-w-xs flex-col items-center gap-3 rounded-3xl bg-white p-6 text-center shadow-xl">
             <p className="m-0 text-lg font-extrabold">{result ? tx[result] : tx.over}</p>
             <p className="m-0 text-3xl font-extrabold text-[#246f55]">{result ? `${sets} : ${setsOf(vs.cpu)}` : tx.result(sets)}</p>
-            <p className="m-0 flex items-center gap-1 text-sm font-bold text-[#c9751f]">{tx.got(total)} <CoinIcon /></p>
+            {total > 0 && <p className="m-0 flex items-center gap-1 text-sm font-bold text-[#c9751f]">{tx.got(total)} <CoinIcon /></p>}
             {bonusPaid > 0 && <p className="m-0 text-xs font-bold text-[#678071]">{tx.bonus(bonusPaid)}</p>}
             {solo && fresh && <p className="m-0 text-sm font-bold text-[#e8707f]">🎉 {tx.new}</p>}
             <div className="flex gap-2">
