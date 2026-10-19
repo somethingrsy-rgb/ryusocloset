@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { COLORS, SIZE, allMoves, applyMove, findMove, isOver, movesFrom, newGame, setsOf, undo, type Board } from './jumpPuzzle'
+import { COLORS, SIZE, allMoves, applyMove, findMove, isOver, movesFrom, newGame, parseSaved, setsOf, undo, type Board } from './jumpPuzzle'
 
 const seeded = () => { let s = 7; return () => ((s = (s * 16807) % 2147483647) / 2147483647) }
 const empty = (): Board => Array.from({ length: SIZE }, () => Array(SIZE).fill(0))
@@ -75,5 +75,13 @@ describe('컴퓨터와 겨루기', () => {
     expect(vsResult({ mine: [1, 1, 1, 1], cpu: [2, 2, 2, 2] })).toBe('lose')
     expect(vsResult({ mine: [2, 2, 2, 5], cpu: [2, 2, 2, 3] })).toBe('win')
     expect(vsResult({ mine: [2, 2, 2, 2], cpu: [2, 2, 2, 2] })).toBe('draw')
+  })
+  it('저장한 판은 그대로 불러오고, 망가진 값은 버린다', () => {
+    const saved = { mode: 'vs', game: newGame(seeded()), vs: newVs(seeded()), paid: 2, bonusPaid: 0 }
+    expect(parseSaved(JSON.parse(JSON.stringify(saved)))).toEqual(saved)
+    expect(parseSaved(null)).toBeNull()
+    expect(parseSaved({ ...saved, mode: 'x' })).toBeNull()
+    expect(parseSaved({ ...saved, game: { ...saved.game, board: [[1]] } })).toBeNull()
+    expect(parseSaved({ ...saved, vs: { ...saved.vs, turn: 'zzz' } })).toBeNull()
   })
 })
