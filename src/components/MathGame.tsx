@@ -1,25 +1,23 @@
 import { useLayoutEffect, useState } from 'react'
 import { useI18n } from '../i18n'
-import { travelItem } from '../lib/game'
-import { assetUrl } from '../lib/items'
 import {
-  AGES, MAX_PROFILES, addCorrect, addProfile, claimGift, countOf, isCleared, isUnlocked, levelsFor, readMath, removeProfile, totalOf, updateProfile, writeMath,
+  AGES, MAX_PROFILES, addCorrect, addProfile, claimCoins, countOf, isCleared, isUnlocked, levelsFor, readMath, removeProfile, totalOf, updateProfile, writeMath,
   type Age, type Choice, type MathState, type Pic, type Profile, type Question, type Shape, type Visual,
 } from '../lib/mathGame'
 import { playSnap } from '../lib/sound'
-import { StarIcon } from './Icons'
+import { CoinIcon, StarIcon } from './Icons'
 
 const T = {
   ko: {
     title: '수학 놀이터', who: '누가 할까요?', add: '새 친구', name: '이름', age: '나이', age6: '6살', age8: '8살', make: '만들기', cancel: '취소', del: '지우기',
-    delAsk: '이 친구의 기록을 지울까요?', intro: '문제를 모두 풀면 선물을 받아요. 틀려도 괜찮아요, 다시 해보면 돼요!', locked: '앞 단계를 먼저 깨요', cleared: '클리어', levels: '단계 고르기',
-    right: ['잘했어요! 🎉', '맞아요! ⭐', '대단해요! 👏', '정답이에요! 🌟'], again: '괜찮아요, 다시 해볼까요? 💪', next: '다음 문제', gift: '선물이 도착했어요!', wear: '옷장에서 입어보기',
+    delAsk: '이 친구의 기록을 지울까요?', intro: '문제를 모두 풀면 코인을 받아요. 틀려도 괜찮아요, 다시 해보면 돼요!', locked: '앞 단계를 먼저 깨요', cleared: '클리어', levels: '단계 고르기',
+    right: ['잘했어요! 🎉', '맞아요! ⭐', '대단해요! 👏', '정답이에요! 🌟'], again: '괜찮아요, 다시 해볼까요? 💪', next: '다음 문제', gift: '코인 10개를 받았어요!', already: '이 단계의 코인은 이미 받았어요', wear: '옷장에서 입어보기',
     allFound: '모든 선물을 이미 받았어요 ⭐', nextLevel: '다음 단계로', close: '닫기', back: '뒤로', read: '읽어 주기', calc: '계산해서 알맞은 수를 찾아요', ok: '확인', erase: '지우기', done: '다 풀었어요!', full: '친구는 4명까지 만들 수 있어요',
   },
   en: {
     title: 'Math Playground', who: 'Who is playing?', add: 'New friend', name: 'Name', age: 'Age', age6: '6 years', age8: '8 years', make: 'Create', cancel: 'Cancel', del: 'Delete',
-    delAsk: "Delete this friend's progress?", intro: 'Finish every question to get a gift. Mistakes are fine, just try again!', locked: 'Clear the level before first', cleared: 'Cleared', levels: 'Levels',
-    right: ['Great job! 🎉', 'Correct! ⭐', 'Awesome! 👏', "You got it! 🌟"], again: "That's okay, try again! 💪", next: 'Next', gift: 'A gift for you!', wear: 'Try it on',
+    delAsk: "Delete this friend's progress?", intro: 'Finish every question to get coins. Mistakes are fine, just try again!', locked: 'Clear the level before first', cleared: 'Cleared', levels: 'Levels',
+    right: ['Great job! 🎉', 'Correct! ⭐', 'Awesome! 👏', "You got it! 🌟"], again: "That's okay, try again! 💪", next: 'Next', gift: 'You got 10 coins!', already: 'You already got this level\'s coins', wear: 'Try it on',
     allFound: 'You already have every gift ⭐', nextLevel: 'Next level', close: 'Close', back: 'Back', read: 'Read it', calc: 'Work it out and find the number', ok: 'OK', erase: 'Erase', done: 'All done!', full: 'Up to 4 friends',
   },
 }
@@ -139,7 +137,7 @@ function speak(text: string, lang: string) {
 }
 
 /** 아이용 수학 놀이터: 친구(이름·나이)를 고르면 나이에 맞는 단계가 나오고, 단계의 문제를 모두 풀면 선물을 준다 */
-export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id: string) => void }) {
+export function MathGame({ onClose }: { onClose: () => void }) {
   const { lang } = useI18n()
   const tx = T[lang]
   const [state, setState] = useState<MathState>(readMath)
@@ -174,11 +172,10 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
   const [wrong, setWrong] = useState(false)
   const [right, setRight] = useState<string | null>(null)
   const [gifted, setGifted] = useState(false)
-  const [gift, setGift] = useState<{ id: string | null } | null>(null)
+  const [gift, setGift] = useState<{ coins: number } | null>(null) // 단계를 다 풀었을 때 받은 코인
 
   const profile: Profile | undefined = state.profiles.find((p) => p.id === pid)
   const lv = levelsFor(profile?.age ?? 6).find((l) => l.id === level)
-  const giftItem = gift?.id ? travelItem(gift.id) : undefined
   const save = (s: MathState) => { setState(s); writeMath(s) }
 
   const q: Question | null = lv ? lv.questions[idx] ?? null : null
@@ -198,9 +195,9 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
     const { next, justCleared } = addCorrect(profile, lv.id, idx + 1)
     let saved = next
     if (justCleared) {
-      const c = claimGift(next, lv.id)
+      const c = claimCoins(next, lv.id)
       saved = c.next
-      setGift({ id: c.gift })
+      setGift({ coins: c.coins })
     }
     if (saved !== profile) save(updateProfile(state, saved))
   }
@@ -301,14 +298,9 @@ export function MathGame({ onClose, onWear }: { onClose: () => void; onWear: (id
           </>
         ) : gift && gifted ? (
           <div className="py-2 text-center">
-            <p className="text-2xl font-extrabold text-[#246f55]">🎁 {tx.gift}</p>
-            {giftItem ? (
-              <>
-                <img src={assetUrl(giftItem.thumb)} alt="" className="mx-auto my-3 h-40 w-40 animate-bounce object-contain" />
-                <p className="mb-3 text-lg font-bold">{giftItem.name[lang]}</p>
-                <button className={`${big} mb-2 w-full bg-[#246f55] text-white`} onClick={() => { onClose(); onWear(giftItem.id) }}>{tx.wear}</button>
-              </>
-            ) : <p className="my-6 text-lg font-bold">{tx.allFound}</p>}
+            <p className="text-2xl font-extrabold text-[#246f55]">🪙 {gift.coins > 0 ? tx.gift : tx.cleared}</p>
+            <div className="my-6 flex items-center justify-center gap-2 text-3xl font-extrabold text-[#c27d0c]"><CoinIcon className="h-12 w-12 animate-bounce" />{gift.coins > 0 ? `+${gift.coins}` : ''}</div>
+            {gift.coins === 0 && <p className="mb-4 text-lg font-bold">{tx.already}</p>}
             <div className="flex gap-2">
               <button className={`${big} flex-1 bg-white`} onClick={() => { setLevel(null); setGift(null); setGifted(false); reset() }}>{tx.levels}</button>
               {hasNext && lv && <button className={`${big} flex-1 bg-white`} onClick={() => open(levels[levels.findIndex((l) => l.id === lv.id) + 1].id)}>{tx.nextLevel}</button>}
