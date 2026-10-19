@@ -269,3 +269,12 @@ button:focus-visible {
 }
 .cafe-float { animation: cafe-float 1.2s ease-out forwards; }
 @media (prefers-reduced-motion: reduce) { .cafe-float { animation: none; } }
+
+/* 점프 퍼즐: 컴퓨터의 말이 천천히 떠올라 이웃 말을 넘어 내려앉는다 */
+@keyframes jump-fly {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(var(--mx), var(--my)) scale(1.45); }
+  100% { transform: translate(var(--tx), var(--ty)) scale(1); }
+}
+.jump-fly { animation: jump-fly ease-in-out forwards; }
+@media (prefers-reduced-motion: reduce) { .jump-fly { animation: none; } }
