@@ -128,6 +128,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
   // 메뉴 그림을 미리 받아 둔다: 서빙하려고 처음 들 때 그림이 늦게 떠서 안 보이던 것을 막는다
   useEffect(() => { MENU.forEach((m) => { new Image().src = assetUrl(`cafe/menu2/${m.id}.webp`) }) }, [])
   const timers = useRef<number[]>([])
+  const pending = useRef(new Set<number>())
   const [pad, setPad] = useState(false) // 패드 세로처럼 폰보다 넓은 세로 화면: 세로 그림을 가로폭에 꽉 채우고 위아래를 조금 자른다
   const [wide, setWide] = useState(false) // 가로로 넓은 화면(패드 가로 등): 가로 그림을 쓴다
   useEffect(() => {
@@ -169,34 +170,39 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
     const g = guests[i]
     const m = MENU[g.wish]
     if (g.stage === 'cooking' && !isReady(g)) { say(tx.notReady); return }
+    if (pending.current.has(i)) return // 같은 손님을 연달아 두 번 누르는 것만 막는다
+    pending.current.add(i)
     const toSeat = lane(i < 4 ? 1 : 2)
     const toCounter = lane(0)
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
     const stage = g.stage
-    // 결과(주문 받기·만들기 시작·서빙)는 누르는 순간 바로 나타나고, 아바타는 그와 함께 걸어가는 모습만 보여 준다
+    // 아바타가 걸어가는 도중(0.4초 뒤)에 결과(주문 받기·만들기 시작·서빙)가 나타난다
     setWalking(true)
     setPos(stage === 'ordered' ? toCounter : toSeat)
     later(() => setWalking(false), 800)
-    if (stage === 'new') {
-      setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'ordered' } : x)))
-      beep()
-    } else if (stage === 'ordered') {
-      const at = Date.now()
-      setNow(at)
-      setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'cooking', doneAt: at + cookMs(m.price) } : x)))
-    } else {
-      const bonus = st.served + 1 >= GOAL && !st.reward
-      save({ served: st.served + 1, reward: st.reward || bonus })
-      actFarm({ type: 'earn', amount: m.price + (bonus ? BONUS : 0) })
-      beep()
-      setHold(m.id)
-      later(() => setHold(null), 800)
-      setGuests((gs) => gs.map((x, k) => (k === i ? newGuest(i) : x)))
-      const id = ++floatId.current
-      setFloats((f) => [...f, { id, seat: i, amount: m.price + (bonus ? BONUS : 0) }])
-      later(() => setFloats((f) => f.filter((x) => x.id !== id)), 1300)
-      if (bonus) say(tx.bonus)
-    }
+    if (stage === 'cooking') setHold(m.id)
+    later(() => {
+      pending.current.delete(i)
+      if (stage === 'new') {
+        setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'ordered' } : x)))
+        beep()
+      } else if (stage === 'ordered') {
+        const at = Date.now()
+        setNow(at)
+        setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'cooking', doneAt: at + cookMs(m.price) } : x)))
+      } else {
+        const bonus = st.served + 1 >= GOAL && !st.reward
+        save({ served: st.served + 1, reward: st.reward || bonus })
+        actFarm({ type: 'earn', amount: m.price + (bonus ? BONUS : 0) })
+        beep()
+        setHold(null)
+        setGuests((gs) => gs.map((x, k) => (k === i ? newGuest(i) : x)))
+        const id = ++floatId.current
+        setFloats((f) => [...f, { id, seat: i, amount: m.price + (bonus ? BONUS : 0) }])
+        later(() => setFloats((f) => f.filter((x) => x.id !== id)), 1300)
+        if (bonus) say(tx.bonus)
+      }
+    }, 400)
   }
 
   return (
