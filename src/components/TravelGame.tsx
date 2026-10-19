@@ -3,6 +3,7 @@ import { currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from
 import type { Outfit, Tweaks } from '../lib/types'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import { StarRainWalk } from './StarRainWalk'
+import { JumpPuzzle } from './JumpPuzzle'
 import { MathGame } from './MathGame'
 import { SpeakingGame } from './SpeakingGame'
 import { useI18n } from '../i18n'
@@ -31,7 +32,8 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, initialPlaceId = nu
   const [starRain, setStarRain] = useState(false)
   const [speaking, setSpeaking] = useState(false)
   const [math, setMath] = useState(false)
-  useEffect(() => { onFull?.(math || speaking); return () => onFull?.(false) }, [math, speaking, onFull])
+  const [jump, setJump] = useState(false)
+  useEffect(() => { onFull?.(math || speaking || jump); return () => onFull?.(false) }, [math, speaking, jump, onFull])
   const game = useGame()
   const ver = useItemsVersion()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -49,11 +51,13 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, initialPlaceId = nu
         <button className={actionButton} aria-label="한마디 영어" onClick={() => setSpeaking(true)}>{label(lang === 'ko' ? '영어' : 'Talk')}</button>
         <button className={actionButton} aria-label="별비 산책" onClick={() => setStarRain(true)}>{label(lang === 'ko' ? '별비' : 'Stars')}</button>
         <button className={actionButton} aria-label="수학 놀이터" onClick={() => setMath(true)}>{label(lang === 'ko' ? '수학' : 'Math')}</button>
+        <button className={actionButton} aria-label="점프 퍼즐" onClick={() => setJump(true)}>{label(lang === 'ko' ? '점프' : 'Jump')}</button>
       </>}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
     />}
     {speaking && <SpeakingGame onClose={() => setSpeaking(false)} />}
     {math && <MathGame onClose={() => setMath(false)} onWear={onWear} />}
+    {jump && <JumpPuzzle onClose={() => setJump(false)} />}
   </div>
 }
 
