@@ -11,7 +11,9 @@ const loadBest = () => { try { const n = Number(localStorage.getItem(KEY)); retu
 const FILL = ['#ef5a3c', '#7cc545', '#4aa6ea', '#f5a623']
 const DARK = ['#b8381f', '#4f9526', '#2a78b8', '#c27d0c']
 const MARK = ['●', '▲', '■', '★']
-const CPU_STEP_MS = 1000 // 컴퓨터가 한 수를 두기까지(그리고 다음 수까지) 걸리는 시간
+// 컴퓨터의 한 수를 슬로 모션으로 보여 준다: 0.5초 쉬고 → 1.4초 동안 말이 날아가 뛰어넘고(잡힌 말은 중간에 사라짐) → 도착하면 0.5초 쉰다
+const CPU_PAUSE_MS = 500
+const CPU_FLY_MS = 1400
 
 const T = {
   ko: {
@@ -39,6 +41,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const [game, setGame] = useState<Game>(() => newGame())
   const [vs, setVs] = useState<Vs>(() => newVs())
   const [sel, setSel] = useState<Pos | null>(null)
+  const [anim, setAnim] = useState<{ m: Move; color: number; gone: boolean } | null>(null) // 지금 날아가는 컴퓨터의 말
   const [lastCpu, setLastCpu] = useState<Move | null>(null) // 컴퓨터가 방금 둔 수(내가 다음에 두기 전까지 빛나게 보여 준다)
   const [paid, setPaid] = useState(0) // 이 판에서 코인을 이미 받은 세트 수 (되돌렸다 다시 해도 같은 세트는 한 번만)
   const [bonusPaid, setBonusPaid] = useState(0)
@@ -56,12 +59,24 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const over = isOver(board)
   const result = !solo && over ? vsResult(vs) : null
 
-  // 컴퓨터 차례: 정해 둔 수를 하나씩 보여 주며 둔다
+  // 컴퓨터 차례: 정해 둔 수를 하나씩 슬로 모션으로 보여 주며 둔다
   useEffect(() => {
     if (solo || vs.turn !== 'cpu' || isOver(vs.board)) return
     const plan = planCpuTurn(vs.board, vs.cpu)
-    const ids = plan.map((m, i) => window.setTimeout(() => { setVs((v) => vsCpuMove(v, m, i === plan.length - 1)); setLastCpu(m) }, CPU_STEP_MS * (i + 1)))
-    return () => ids.forEach(clearTimeout)
+    const ids: number[] = []
+    let t = CPU_PAUSE_MS
+    let board = vs.board
+    plan.forEach((m, i) => {
+      const color = board[m.from.r][m.from.c]
+      ids.push(window.setTimeout(() => setAnim({ m, color, gone: false }), t))
+      ids.push(window.setTimeout(() => setAnim((a) => (a ? { ...a, gone: true } : a)), t + CPU_FLY_MS * 0.5))
+      ids.push(window.setTimeout(() => { setVs((v) => vsCpuMove(v, m, i === plan.length - 1)); setLastCpu(m); setAnim(null) }, t + CPU_FLY_MS))
+      t += CPU_FLY_MS + CPU_PAUSE_MS
+      const b2 = board.map((row) => [...row])
+      b2[m.to.r][m.to.c] = b2[m.from.r][m.from.c]; b2[m.from.r][m.from.c] = 0; b2[m.over.r][m.over.c] = 0
+      board = b2 as typeof board
+    })
+    return () => { ids.forEach(clearTimeout); setAnim(null) }
   }, [solo, vs.turn, vs.board, vs.cpu])
 
   // 코인: 세트를 새로 모았을 때(되돌린 세트는 다시 주지 않음), 겨루기에서는 이긴 보너스도
@@ -143,28 +158,45 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
-        <div role="grid" aria-label={tx.title} className={`grid aspect-square w-full max-w-[min(34rem,calc(100dvh-24rem))] gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5 transition-shadow ${!solo && !over && vs.turn === 'me' ? 'shadow-[0_0_0_4px_#7cc545,0_0_22px_6px_rgba(124,197,69,.55)]' : ''}`} style={{ gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))` }}>
+        <div role="grid" aria-label={tx.title} className={`relative grid aspect-square w-full max-w-[min(34rem,calc(100dvh-24rem))] gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5 transition-shadow ${!solo && !over && vs.turn === 'me' ? 'shadow-[0_0_0_4px_#7cc545,0_0_22px_6px_rgba(124,197,69,.55)]' : ''}`} style={{ gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))` }}>
           {board.flatMap((row, r) => row.map((v, c) => {
             const picked = sel && sel.r === r && sel.c === c
+            const hidden = anim && ((anim.m.from.r === r && anim.m.from.c === c) || (anim.gone && anim.m.over.r === r && anim.m.over.c === c))
+            const cv = hidden ? 0 : v
             const landed = !solo && lastCpu && lastCpu.to.r === r && lastCpu.to.c === c
             const left = !solo && lastCpu && ((lastCpu.from.r === r && lastCpu.from.c === c) || (lastCpu.over.r === r && lastCpu.over.c === c))
             return (
               <button
                 key={`${r}-${c}`}
                 role="gridcell"
-                aria-label={v ? `${r + 1}-${c + 1} ${MARK[v - 1]}` : `${r + 1}-${c + 1}`}
+                aria-label={cv ? `${r + 1}-${c + 1} ${MARK[cv - 1]}` : `${r + 1}-${c + 1}`}
                 onClick={() => tap(r, c)}
-                className={`flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-lg border-0 p-[8%] ${landed ? 'bg-[#fff6d6] shadow-[0_0_0_3px_#f5a623,0_0_14px_4px_rgba(245,166,35,.6)]' : left ? 'bg-[#fff6d6]/70 shadow-[inset_0_0_0_2px_#f5c36b]' : v === 0 ? 'bg-[#eef3e6]' : 'bg-[#f6f9f0]'}`}
+                className={`flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-lg border-0 p-[8%] ${landed && !anim ? 'bg-[#fff6d6] shadow-[0_0_0_3px_#f5a623,0_0_14px_4px_rgba(245,166,35,.6)]' : left ? 'bg-[#fff6d6]/70 shadow-[inset_0_0_0_2px_#f5c36b]' : v === 0 ? 'bg-[#eef3e6]' : 'bg-[#f6f9f0]'}`}
               >
-                {v !== 0 && (
+                {cv !== 0 && (
                   <span
                     className={`flex h-full w-full items-center justify-center rounded-full text-[min(3.2vw,1.1rem)] font-black text-white/80 shadow-[inset_0_-3px_0_rgba(0,0,0,.18)] transition ${picked ? 'scale-110 ring-4 ring-[#213f35]' : ''}`}
-                    style={{ background: FILL[v - 1], border: `2px solid ${DARK[v - 1]}` }}
-                  >{MARK[v - 1]}</span>
+                    style={{ background: FILL[cv - 1], border: `2px solid ${DARK[cv - 1]}` }}
+                  >{MARK[cv - 1]}</span>
                 )}
               </button>
             )
           }))}
+          {anim && (
+            <div aria-hidden className="pointer-events-none absolute inset-1.5 z-10">
+              <div
+                className="jump-fly absolute aspect-square"
+                style={{
+                  left: `calc(${anim.m.from.c} * (100% + 3px) / ${SIZE})`, top: `calc(${anim.m.from.r} * (100% + 3px) / ${SIZE})`, width: `calc((100% - ${(SIZE - 1) * 3}px) / ${SIZE})`,
+                  ['--tx' as string]: `calc(${anim.m.to.c - anim.m.from.c} * (100% + 3px))`, ['--ty' as string]: `calc(${anim.m.to.r - anim.m.from.r} * (100% + 3px))`,
+                  ['--mx' as string]: `calc(${(anim.m.to.c - anim.m.from.c) / 2} * (100% + 3px))`, ['--my' as string]: `calc(${(anim.m.to.r - anim.m.from.r) / 2} * (100% + 3px))`,
+                  animationDuration: `${CPU_FLY_MS}ms`,
+                } as React.CSSProperties}
+              >
+                <span className="absolute inset-[8%] flex items-center justify-center rounded-full text-[min(3.2vw,1.1rem)] font-black text-white/80 shadow-[inset_0_-3px_0_rgba(0,0,0,.18),0_6px_10px_rgba(0,0,0,.3)]" style={{ background: FILL[anim.color - 1], border: `2px solid ${DARK[anim.color - 1]}` }}>{MARK[anim.color - 1]}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <p className={`m-0 min-h-5 text-center text-sm font-bold text-[#246f55] ${!solo && !msg ? 'sr-only' : ''}`} role="status" aria-live="polite">{msg || turnText}</p>
