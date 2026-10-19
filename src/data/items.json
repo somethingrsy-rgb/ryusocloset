@@ -864,6 +864,30 @@
     "native": true
   },
   {
+    "id": "costume_boy_coat_whiteblue",
+    "category": "costume",
+    "name": {
+      "ko": "화이트 블루 코트 의상",
+      "en": "White Blue Coat Outfit"
+    },
+    "color": "white",
+    "colorName": {
+      "ko": "화이트",
+      "en": "White"
+    },
+    "colorHex": "#fbfbfb",
+    "box": {
+      "x": 110,
+      "y": 595,
+      "w": 805,
+      "h": 876
+    },
+    "image": "assets/clothes/costume/costume_boy_coat_whiteblue.webp",
+    "thumb": "assets/thumbs/costume_boy_coat_whiteblue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_boy_feather_blue",
     "category": "costume",
     "name": {
@@ -984,30 +1008,6 @@
     "native": true
   },
   {
-    "id": "costume_boy_light_prince",
-    "category": "costume",
-    "name": {
-      "ko": "라이트 블루 왕자 의상",
-      "en": "Light Blue Prince Outfit"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 137,
-      "y": 602,
-      "w": 750,
-      "h": 790
-    },
-    "image": "assets/clothes/costume/costume_boy_light_prince.webp",
-    "thumb": "assets/thumbs/costume_boy_light_prince.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
     "id": "costume_boy_navy_crane",
     "category": "costume",
     "name": {
@@ -1076,6 +1076,30 @@
     },
     "image": "assets/clothes/costume/costume_boy_navy_white_rose.webp",
     "thumb": "assets/thumbs/costume_boy_navy_white_rose.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_boy_prince_skyblue",
+    "category": "costume",
+    "name": {
+      "ko": "라이트 블루 왕자 의상",
+      "en": "Light Blue Prince Outfit"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 110,
+      "y": 602,
+      "w": 803,
+      "h": 796
+    },
+    "image": "assets/clothes/costume/costume_boy_prince_skyblue.webp",
+    "thumb": "assets/thumbs/costume_boy_prince_skyblue.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1172,30 +1196,6 @@
     },
     "image": "assets/clothes/costume/costume_boy_teal_admiral.webp",
     "thumb": "assets/thumbs/costume_boy_teal_admiral.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
-    "id": "costume_boy_white_blue_coat",
-    "category": "costume",
-    "name": {
-      "ko": "화이트 블루 코트 의상",
-      "en": "White Blue Coat Outfit"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 171,
-      "y": 595,
-      "w": 682,
-      "h": 765
-    },
-    "image": "assets/clothes/costume/costume_boy_white_blue_coat.webp",
-    "thumb": "assets/thumbs/costume_boy_white_blue_coat.webp",
     "zIndex": 41,
     "native": true
   },
@@ -2640,6 +2640,30 @@
     "native": true
   },
   {
+    "id": "shoes_boy_coat_whiteblue",
+    "category": "shoes",
+    "name": {
+      "ko": "네이비 슈즈",
+      "en": "Navy Shoes"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 399,
+      "y": 1398,
+      "w": 226,
+      "h": 107
+    },
+    "image": "assets/clothes/shoes/shoes_boy_coat_whiteblue.webp",
+    "thumb": "assets/thumbs/shoes_boy_coat_whiteblue.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_boy_feather_blue",
     "category": "shoes",
     "name": {
@@ -2760,30 +2784,6 @@
     "native": true
   },
   {
-    "id": "shoes_boy_light_prince",
-    "category": "shoes",
-    "name": {
-      "ko": "화이트 골드 부츠",
-      "en": "White Gold Boots"
-    },
-    "color": "white",
-    "colorName": {
-      "ko": "화이트",
-      "en": "White"
-    },
-    "colorHex": "#fbfbfb",
-    "box": {
-      "x": 376,
-      "y": 1210,
-      "w": 274,
-      "h": 323
-    },
-    "image": "assets/clothes/shoes/shoes_boy_light_prince.webp",
-    "thumb": "assets/thumbs/shoes_boy_light_prince.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
     "id": "shoes_boy_navy_crane",
     "category": "shoes",
     "name": {
@@ -2852,6 +2852,30 @@
     },
     "image": "assets/clothes/shoes/shoes_boy_navy_white_rose.webp",
     "thumb": "assets/thumbs/shoes_boy_navy_white_rose.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_boy_prince_skyblue",
+    "category": "shoes",
+    "name": {
+      "ko": "브라운 레이스업 슈즈",
+      "en": "Brown Lace-up Shoes"
+    },
+    "color": "brown",
+    "colorName": {
+      "ko": "브라운",
+      "en": "Brown"
+    },
+    "colorHex": "#8a5a3b",
+    "box": {
+      "x": 399,
+      "y": 1394,
+      "w": 226,
+      "h": 111
+    },
+    "image": "assets/clothes/shoes/shoes_boy_prince_skyblue.webp",
+    "thumb": "assets/thumbs/shoes_boy_prince_skyblue.webp",
     "zIndex": 10,
     "native": true
   },
@@ -2972,30 +2996,6 @@
     },
     "image": "assets/clothes/shoes/shoes_boy_teal_admiral.webp",
     "thumb": "assets/thumbs/shoes_boy_teal_admiral.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_boy_white_blue_coat",
-    "category": "shoes",
-    "name": {
-      "ko": "네이비 보석 부츠",
-      "en": "Navy Gem Boots"
-    },
-    "color": "navy",
-    "colorName": {
-      "ko": "네이비",
-      "en": "Navy"
-    },
-    "colorHex": "#27355b",
-    "box": {
-      "x": 376,
-      "y": 1209,
-      "w": 275,
-      "h": 315
-    },
-    "image": "assets/clothes/shoes/shoes_boy_white_blue_coat.webp",
-    "thumb": "assets/thumbs/shoes_boy_white_blue_coat.webp",
     "zIndex": 10,
     "native": true
   },
