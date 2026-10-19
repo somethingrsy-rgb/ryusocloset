@@ -5,6 +5,7 @@ import { actFarm, getFarm, subscribeFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
+import { CoinIcon } from './Icons'
 
 type Menu = { id: string; ko: string; en: string; price: number }
 /** 메뉴 그림은 public/cafe/menu2/<id>.webp */
@@ -254,14 +255,14 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
         </div>
         {floats.map((f) => {
           const [cx, cy] = SEATS[f.seat][wide ? 'wide' : 'portrait']
-          return <span key={f.id} aria-hidden className="cafe-float pointer-events-none absolute z-[6] -translate-x-1/2 text-lg font-extrabold text-[#c9751f] drop-shadow-[0_1px_0_#fff]" style={{ left: `${cx}%`, top: `${cy - 6}%` }}>+{f.amount} 🪙</span>
+          return <span key={f.id} aria-hidden className="cafe-float pointer-events-none absolute z-[6] -translate-x-1/2 text-lg font-extrabold text-[#c9751f] drop-shadow-[0_1px_0_#fff]" style={{ left: `${cx}%`, top: `${cy - 6}%` }}>+{f.amount} <CoinIcon /></span>
         })}
       </div>
 
       <div className="absolute inset-x-2 top-2 z-20 flex items-center justify-between gap-2">
         <span className="rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold shadow">🎁 {st.reward ? tx.missionDone : `${Math.min(st.served, GOAL)} / ${GOAL}`}</span>
         <div className="flex items-center gap-1.5">
-          <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm shadow">🪙 <b>{farm.coins}</b></span>
+          <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
           <button aria-label={tx.sound[sound ? 1 : 0]} aria-pressed={sound} onClick={() => { const v = !sound; setSound(v); if (v) tone() }} className="h-9 w-9 rounded-full bg-white/90 shadow">{sound ? '🔊' : '🔇'}</button>
         </div>
       </div>
