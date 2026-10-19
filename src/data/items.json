@@ -757,10 +757,10 @@
     },
     "colorHex": "#a3a5ab",
     "box": {
-      "x": 152,
-      "y": 604,
-      "w": 720,
-      "h": 600
+      "x": 184,
+      "y": 632,
+      "w": 655,
+      "h": 545
     },
     "image": "assets/clothes/costume/costume_bear_overall_green.webp",
     "thumb": "assets/thumbs/costume_bear_overall_green.webp",
@@ -781,10 +781,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 152,
-      "y": 604,
-      "w": 720,
-      "h": 608
+      "x": 184,
+      "y": 632,
+      "w": 655,
+      "h": 553
     },
     "image": "assets/clothes/costume/costume_bear_overall_pink.webp",
     "thumb": "assets/thumbs/costume_bear_overall_pink.webp",
@@ -1645,10 +1645,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 152,
-      "y": 604,
-      "w": 720,
-      "h": 546
+      "x": 184,
+      "y": 629,
+      "w": 655,
+      "h": 496
     },
     "image": "assets/clothes/costume/costume_panda_sailor_blue.webp",
     "thumb": "assets/thumbs/costume_panda_sailor_blue.webp",
@@ -1909,10 +1909,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 152,
-      "y": 604,
-      "w": 720,
-      "h": 576
+      "x": 184,
+      "y": 630,
+      "w": 655,
+      "h": 524
     },
     "image": "assets/clothes/costume/costume_strawberry_cardigan_pink.webp",
     "thumb": "assets/thumbs/costume_strawberry_cardigan_pink.webp",
