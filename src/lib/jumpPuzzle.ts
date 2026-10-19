@@ -88,8 +88,10 @@ export interface Vs {
   turn: 'me' | 'cpu'
   /** 내가 방금 뛴 말(이어서 더 뛸 수 있을 때). 이 말만 더 뛸 수 있고 "끝내기"로 차례를 넘긴다 */
   chain: Pos | null
+  /** 컴퓨터가 이번 차례에 방금 뛴 말(이어 뛰는 중). 이어 뛸 때는 이 말만 움직인다 */
+  cpuChain: Pos | null
 }
-export const newVs = (rng: () => number = Math.random): Vs => ({ board: newGame(rng).board, mine: Array(COLORS).fill(0), cpu: Array(COLORS).fill(0), turn: 'me', chain: null })
+export const newVs = (rng: () => number = Math.random): Vs => ({ board: newGame(rng).board, mine: Array(COLORS).fill(0), cpu: Array(COLORS).fill(0), turn: 'me', chain: null, cpuChain: null })
 
 function jump(board: Board, m: Move): { board: Board; caught: Cell } {
   const b = clone(board)
@@ -111,10 +113,10 @@ export function vsHumanMove(vs: Vs, m: Move): Vs {
 }
 export const vsEndTurn = (vs: Vs): Vs => (vs.turn === 'me' && vs.chain ? { ...vs, chain: null, turn: 'cpu' } : vs)
 export function vsCpuMove(vs: Vs, m: Move, last: boolean): Vs {
-  if (!findMove(vs.board, m.from, m.to)) return { ...vs, turn: 'me' }
+  if (!findMove(vs.board, m.from, m.to)) return { ...vs, turn: 'me', cpuChain: null }
   const { board, caught } = jump(vs.board, m)
   const cpu = [...vs.cpu]; cpu[caught - 1]++
-  return { ...vs, board, cpu, turn: last ? 'me' : 'cpu' }
+  return { ...vs, board, cpu, turn: last ? 'me' : 'cpu', cpuChain: last ? null : m.to }
 }
 
 export type Level = 'easy' | 'normal' | 'hard'
@@ -126,11 +128,11 @@ const LEVELS: Record<Level, { random: number; stop: number; stepStop: number; no
 }
 
 /** 컴퓨터가 이번 차례에 할 수를 미리 정한다(연속 점프 포함, 최대 3번). 모자란 색을 잡는 수를 좋아하고, 난이도에 따라 실수·연속 점프 정도가 다르다 */
-export function planCpuTurn(board: Board, cpu: number[], rng: () => number = Math.random, level: Level = 'normal'): Move[] {
+export function planCpuTurn(board: Board, cpu: number[], rng: () => number = Math.random, level: Level = 'normal', start: Pos | null = null): Move[] {
   const L = LEVELS[level]
   const plan: Move[] = []
   let b = board
-  let from: Pos | null = null
+  let from: Pos | null = start
   const have = [...cpu]
   for (let step = 0; step < 3; step++) {
     const moves: Move[] = from ? movesFrom(b, from) : allMoves(b)
@@ -172,7 +174,7 @@ export function parseSaved(raw: unknown): Saved | null {
   if (!s || typeof s !== 'object' || (s.mode !== 'solo' && s.mode !== 'vs')) return null
   const g = s.game, v = s.vs
   if (!g || !okBoard(g.board) || !okPocket(g.pocket) || !Array.isArray(g.history) || !g.history.every((h) => okBoard(h?.board) && okPocket(h?.pocket))) return null
-  if (!v || !okBoard(v.board) || !okPocket(v.mine) || !okPocket(v.cpu) || (v.turn !== 'me' && v.turn !== 'cpu') || (v.chain !== null && !okPos(v.chain))) return null
+  if (!v || !okBoard(v.board) || !okPocket(v.mine) || !okPocket(v.cpu) || (v.turn !== 'me' && v.turn !== 'cpu') || (v.chain !== null && !okPos(v.chain)) || (v.cpuChain != null && !okPos(v.cpuChain))) return null
   const n = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0)
-  return { mode: s.mode, game: g, vs: v, paid: n(s.paid), bonusPaid: n(s.bonusPaid) }
+  return { mode: s.mode, game: g, vs: { ...v, cpuChain: v.cpuChain ?? null }, paid: n(s.paid), bonusPaid: n(s.bonusPaid) }
 }

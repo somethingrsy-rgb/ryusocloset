@@ -92,4 +92,12 @@ describe('컴퓨터와 겨루기', () => {
       expect(hard.length).toBeGreaterThan(0); expect(hard.length).toBeLessThanOrEqual(3)
     }
   })
+  it('컴퓨터가 이어 뛸 때는 방금 뛴 말만 움직인다', () => {
+    const b = empty(); b[0][0] = 1; b[0][1] = 2; b[0][3] = 3; b[2][2] = 4; b[3][2] = 1
+    const plan = planCpuTurn(b, [0, 0, 0, 0], seeded(), 'hard', { r: 0, c: 0 })
+    expect(plan.length).toBeGreaterThan(0)
+    expect(plan[0].from).toEqual({ r: 0, c: 0 })
+    plan.slice(1).forEach((m, i) => expect(m.from).toEqual(plan[i].to))
+    expect(planCpuTurn(b, [0, 0, 0, 0], seeded(), 'hard', { r: 7, c: 7 })).toEqual([]) // 이어 뛸 수 없으면 빈 계획
+  })
 })

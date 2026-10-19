@@ -74,7 +74,8 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   // 컴퓨터 차례: 정해 둔 수를 하나씩 슬로 모션으로 보여 주며 둔다
   useEffect(() => {
     if (solo || vs.turn !== 'cpu' || isOver(vs.board)) return
-    const plan = planCpuTurn(vs.board, vs.cpu, Math.random, level)
+    const plan = planCpuTurn(vs.board, vs.cpu, Math.random, level, vs.cpuChain)
+    if (plan.length === 0) { setVs((v) => ({ ...v, turn: 'me', cpuChain: null })); return }
     const ids: number[] = []
     let t = CPU_PAUSE_MS
     let board = vs.board
@@ -89,7 +90,9 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
       board = b2 as typeof board
     })
     return () => { ids.forEach(clearTimeout); setAnim(null) }
-  }, [solo, vs.turn, vs.board, vs.cpu, level])
+    // 한 차례의 수는 처음에 한 번만 정한다(수를 둘 때마다 판이 바뀌어도 다시 정하면 다른 말이 움직인다)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [solo, vs.turn, level])
 
   // 코인: 세트를 새로 모았을 때(되돌린 세트는 다시 주지 않음), 겨루기에서는 이긴 보너스도
   useEffect(() => {
