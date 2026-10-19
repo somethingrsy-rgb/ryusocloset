@@ -124,7 +124,6 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
   const [pos, setPos] = useState<{ x: number; y: number; wide: boolean } | null>(() => kept?.pos ?? null)
   const [walking, setWalking] = useState(false)
   const [hold, setHold] = useState<string | null>(() => kept?.hold ?? null) // 들고 있는 메뉴 그림
-  const busy = useRef(false)
   useEffect(() => { kept = { guests, pos, hold } }, [guests, pos, hold])
   // 메뉴 그림을 미리 받아 둔다: 서빙하려고 처음 들 때 그림이 늦게 떠서 안 보이던 것을 막는다
   useEffect(() => { MENU.forEach((m) => { new Image().src = assetUrl(`cafe/menu2/${m.id}.webp`) }) }, [])
@@ -169,39 +168,35 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
   const tap = (i: number) => {
     const g = guests[i]
     const m = MENU[g.wish]
-    if (busy.current) return
     if (g.stage === 'cooking' && !isReady(g)) { say(tx.notReady); return }
-    busy.current = true
     const toSeat = lane(i < 4 ? 1 : 2)
     const toCounter = lane(0)
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
     const stage = g.stage
+    // 결과(주문 받기·만들기 시작·서빙)는 누르는 순간 바로 나타나고, 아바타는 그와 함께 걸어가는 모습만 보여 준다
     setWalking(true)
     setPos(stage === 'ordered' ? toCounter : toSeat)
-    if (stage === 'cooking') setHold(m.id)
-    later(() => {
-      setWalking(false)
-      if (stage === 'new') {
-        setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'ordered' } : x)))
-        beep()
-      } else if (stage === 'ordered') {
-        const at = Date.now()
-        setNow(at)
-        setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'cooking', doneAt: at + cookMs(m.price) } : x)))
-      } else {
-        const bonus = st.served + 1 >= GOAL && !st.reward
-        save({ served: st.served + 1, reward: st.reward || bonus })
-        actFarm({ type: 'earn', amount: m.price + (bonus ? BONUS : 0) })
-        beep()
-        setHold(null)
-        setGuests((gs) => gs.map((x, k) => (k === i ? newGuest(i) : x)))
-        const id = ++floatId.current
-        setFloats((f) => [...f, { id, seat: i, amount: m.price + (bonus ? BONUS : 0) }])
-        later(() => setFloats((f) => f.filter((x) => x.id !== id)), 1300)
-        if (bonus) say(tx.bonus)
-      }
-      later(() => { busy.current = false }, 250)
-    }, 450)
+    later(() => setWalking(false), 800)
+    if (stage === 'new') {
+      setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'ordered' } : x)))
+      beep()
+    } else if (stage === 'ordered') {
+      const at = Date.now()
+      setNow(at)
+      setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'cooking', doneAt: at + cookMs(m.price) } : x)))
+    } else {
+      const bonus = st.served + 1 >= GOAL && !st.reward
+      save({ served: st.served + 1, reward: st.reward || bonus })
+      actFarm({ type: 'earn', amount: m.price + (bonus ? BONUS : 0) })
+      beep()
+      setHold(m.id)
+      later(() => setHold(null), 800)
+      setGuests((gs) => gs.map((x, k) => (k === i ? newGuest(i) : x)))
+      const id = ++floatId.current
+      setFloats((f) => [...f, { id, seat: i, amount: m.price + (bonus ? BONUS : 0) }])
+      later(() => setFloats((f) => f.filter((x) => x.id !== id)), 1300)
+      if (bonus) say(tx.bonus)
+    }
   }
 
   return (
@@ -247,7 +242,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
           )
         })}
         {/* 내 아바타: 손님 자리까지 걸어가서 주문을 받고, 카운터에서 만들고, 음식을 들고 가서 서빙한다 */}
-        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 4, transition: 'left 0.4s ease-in-out, top 0.4s ease-in-out' }}>
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 4, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
           <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             {hold && <img src={assetUrl(`cafe/menu2/${hold}.webp`)} alt="" draggable={false} className="absolute object-contain" style={{ left: '56%', top: '42%', width: '41%', zIndex: 1000 }} />}

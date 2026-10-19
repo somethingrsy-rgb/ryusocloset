@@ -63,7 +63,6 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
   const [walking, setWalking] = useState(false)
   const [watering, setWatering] = useState(false)
   const [hold, setHold] = useState<'can' | 'basket' | 'seed'>('can')
-  const busy = useRef(false)
   const secRef = useRef<HTMLElement>(null)
   const [wide, setWide] = useState(false) // 가로로 넓은 화면(패드 가로 등): 가로 그림을 쓰고 도구 버튼을 오른쪽에 세로로 얹는다
   useEffect(() => {
@@ -103,24 +102,22 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
       return
     }
     if (!need) { setNotice(ko ? '자라는 중이에요' : 'Still growing'); return }
-    if (busy.current) return
-    busy.current = true
     const box = plotBox(i, L)
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
+    // 결과(심기·물 주기·수확)는 누르는 순간 바로 나타나고, 아바타는 그와 함께 밭까지 걸어가 일하는 모습만 보여 준다
+    if (need === 'seed') apply({ type: 'plant', plot: i, crop: selected })
+    else if (need === 'water') apply({ type: 'water', plot: i })
+    else apply({ type: 'harvest', plot: i })
     setHold(need === 'harvest' ? 'basket' : need === 'seed' ? 'seed' : 'can')
     setWalking(true)
     setPos({ x: box.x - aw / 2, y: box.y + box.h / 2 - L.avatarH, z: 10 })
     later(() => {
       setWalking(false)
-      if (need === 'water') setWatering(true)
-      later(() => {
-        setWatering(false)
-        if (need === 'seed') apply({ type: 'plant', plot: i, crop: selected })
-        else if (need === 'water') apply({ type: 'water', plot: i })
-        else apply({ type: 'harvest', plot: i })
-        busy.current = false
-      }, need === 'water' ? 350 : 180)
-    }, 450)
+      if (need === 'water') {
+        setWatering(true)
+        later(() => setWatering(false), 700)
+      }
+    }, 850)
   }
 
   const pick = (t: Tool) => {
@@ -175,7 +172,7 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
         })}
 
         {/* 내 아바타: 밭 옆까지 걸어가서 직접 물 주고 수확한다 */}
-        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 10, transition: 'left 0.4s ease-in-out, top 0.4s ease-in-out' }}>
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 10, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
           <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             {hold === 'can' ? (
