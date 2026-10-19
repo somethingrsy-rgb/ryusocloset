@@ -229,7 +229,7 @@ button:focus-visible {
   25% { transform: translateY(-1.5%) rotate(-2deg); }
   75% { transform: translateY(-1.5%) rotate(2deg); }
 }
-.farm-walk { animation: farm-walk 0.4s ease-in-out infinite; }
+.farm-walk { animation: farm-walk 0.25s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .farm-walk { animation: none; } }
 
 
