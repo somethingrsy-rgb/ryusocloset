@@ -77,3 +77,73 @@ export function undo(game: Game): Game {
 /** 4색을 하나씩 모은 세트 수 */
 export const setsOf = (pocket: number[]) => Math.min(...pocket)
 export const isOver = (board: Board) => allMoves(board).length === 0
+
+/* ---------- 컴퓨터와 겨루기 ---------- */
+/** 이긴 사람에게 주는 보너스 코인 (세트 코인과 별도) */
+export const WIN_BONUS = 10
+export interface Vs {
+  board: Board
+  mine: number[]
+  cpu: number[]
+  turn: 'me' | 'cpu'
+  /** 내가 방금 뛴 말(이어서 더 뛸 수 있을 때). 이 말만 더 뛸 수 있고 "끝내기"로 차례를 넘긴다 */
+  chain: Pos | null
+}
+export const newVs = (rng: () => number = Math.random): Vs => ({ board: newGame(rng).board, mine: Array(COLORS).fill(0), cpu: Array(COLORS).fill(0), turn: 'me', chain: null })
+
+function jump(board: Board, m: Move): { board: Board; caught: Cell } {
+  const b = clone(board)
+  const caught = b[m.over.r][m.over.c]
+  b[m.to.r][m.to.c] = b[m.from.r][m.from.c]
+  b[m.from.r][m.from.c] = 0
+  b[m.over.r][m.over.c] = 0
+  return { board: b, caught }
+}
+
+/** 내가 한 번 뛴다. 이어서 같은 말로 더 뛸 수 있으면 chain 이 남고, 없으면 컴퓨터 차례가 된다 */
+export function vsHumanMove(vs: Vs, m: Move): Vs {
+  if (vs.turn !== 'me' || (vs.chain && (vs.chain.r !== m.from.r || vs.chain.c !== m.from.c))) return vs
+  if (!findMove(vs.board, m.from, m.to)) return vs
+  const { board, caught } = jump(vs.board, m)
+  const mine = [...vs.mine]; mine[caught - 1]++
+  const more = movesFrom(board, m.to).length > 0
+  return { ...vs, board, mine, chain: more ? m.to : null, turn: more ? 'me' : 'cpu' }
+}
+export const vsEndTurn = (vs: Vs): Vs => (vs.turn === 'me' && vs.chain ? { ...vs, chain: null, turn: 'cpu' } : vs)
+export function vsCpuMove(vs: Vs, m: Move, last: boolean): Vs {
+  if (!findMove(vs.board, m.from, m.to)) return { ...vs, turn: 'me' }
+  const { board, caught } = jump(vs.board, m)
+  const cpu = [...vs.cpu]; cpu[caught - 1]++
+  return { ...vs, board, cpu, turn: last ? 'me' : 'cpu' }
+}
+
+/** 컴퓨터가 이번 차례에 할 수를 미리 정한다(연속 점프 포함, 최대 3번). 모자란 색을 잡는 수를 좋아하고, 가끔(15%)은 아무 수나 둔다 */
+export function planCpuTurn(board: Board, cpu: number[], rng: () => number = Math.random): Move[] {
+  const plan: Move[] = []
+  let b = board
+  let from: Pos | null = null
+  const have = [...cpu]
+  for (let step = 0; step < 3; step++) {
+    const moves: Move[] = from ? movesFrom(b, from) : allMoves(b)
+    if (moves.length === 0) break
+    const top = Math.max(...have)
+    const score = (m: Move) => top - have[b[m.over.r][m.over.c] - 1] + 1 + rng() * 0.5
+    const m: Move = rng() < 0.15 ? moves[Math.floor(rng() * moves.length)] : moves.reduce((best, x) => (score(x) > score(best) ? x : best))
+    plan.push(m)
+    const r = jump(b, m)
+    have[r.caught - 1]++
+    b = r.board
+    from = m.to
+    // 이어서 더 뛸 수 있어도 점점 멈출 확률을 둔다(첫 점프 뒤 40%, 두 번째 뒤 70%)
+    if (movesFrom(b, m.to).length === 0 || rng() < 0.4 + step * 0.3) break
+  }
+  return plan
+}
+
+/** 결과: 세트가 많은 쪽이 이기고, 같으면 모은 말이 많은 쪽, 그래도 같으면 비김 */
+export function vsResult(vs: Pick<Vs, 'mine' | 'cpu'>): 'win' | 'lose' | 'draw' {
+  const a = setsOf(vs.mine), b = setsOf(vs.cpu)
+  if (a !== b) return a > b ? 'win' : 'lose'
+  const x = vs.mine.reduce((s, n) => s + n, 0), y = vs.cpu.reduce((s, n) => s + n, 0)
+  return x === y ? 'draw' : x > y ? 'win' : 'lose'
+}
