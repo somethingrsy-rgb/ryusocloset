@@ -35,7 +35,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
   useSyncExternalStore(subscribeFarm, getFarm)
   useSyncExternalStore(subscribeGame, gameVersion)
   const [spentTick, setSpentTick] = useState(0) // 별을 쓰면 다시 읽는다
-  const [currency, setCurrency] = useState<Currency>('star')
+  const [currency, setCurrency] = useState<Currency>('coin')
   const [tab, setTab] = useState<Tab>('costume')
   const [msg, setMsg] = useState('')
   const [bought, setBought] = useState<string | null>(null)
@@ -73,7 +73,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-2 rounded-full border border-[#e3d3b3] bg-white/60 px-3 py-1.5 text-sm font-bold whitespace-nowrap"><span><StarIcon /> {wallet.stars}</span><span><CoinIcon /> {wallet.coins}</span></div>
+            <div className="flex items-center gap-2 rounded-full border border-[#e3d3b3] bg-white/60 px-3 py-1.5 text-sm font-bold whitespace-nowrap"><span><CoinIcon /> {wallet.coins}</span><span><StarIcon /> {wallet.stars}</span></div>
             <button onClick={onClose} aria-label={ko ? '닫기' : 'Close'} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d9c7a3] bg-white/60 text-lg">✕</button>
           </div>
         </div>
@@ -89,7 +89,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
           </div>
 
           <div role="radiogroup" aria-label={ko ? '내는 방법' : 'Pay with'} className="mt-3 flex items-center gap-1.5">
-            {(['star', 'coin'] as const).map((c) => (
+            {(['coin', 'star'] as const).map((c) => (
               <button key={c} role="radio" aria-checked={currency === c} onClick={() => setCurrency(c)} className={`min-h-9 rounded-full border px-3 text-sm font-bold ${currency === c ? 'border-[#d36f8b] bg-[#f4a9bb] text-white' : 'border-[#e3d3b3] bg-white/60'}`}>
                 {c === 'star' ? <StarIcon /> : <CoinIcon />} {ko ? (c === 'star' ? '별로 사기' : '코인으로 사기') : c === 'star' ? 'Pay stars' : 'Pay coins'}
               </button>
