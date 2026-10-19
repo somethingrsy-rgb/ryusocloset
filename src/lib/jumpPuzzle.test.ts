@@ -84,4 +84,12 @@ describe('컴퓨터와 겨루기', () => {
     expect(parseSaved({ ...saved, game: { ...saved.game, board: [[1]] } })).toBeNull()
     expect(parseSaved({ ...saved, vs: { ...saved.vs, turn: 'zzz' } })).toBeNull()
   })
+  it('난이도: 초급은 한 번만 뛰고, 고급은 이어 뛸 수 있는 수를 잘 둔다', () => {
+    for (let k = 1; k <= 20; k++) {
+      const vs = newVs(seeded()); const rng = (() => { let x = k; return () => ((x = (x * 16807) % 2147483647) / 2147483647) })()
+      expect(planCpuTurn(vs.board, vs.cpu, rng, 'easy').length).toBe(1)
+      const hard = planCpuTurn(vs.board, vs.cpu, rng, 'hard')
+      expect(hard.length).toBeGreaterThan(0); expect(hard.length).toBeLessThanOrEqual(3)
+    }
+  })
 })
