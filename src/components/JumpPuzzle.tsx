@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { actFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
-import { COINS_PER_SET, COLORS, SIZE, WIN_BONUS, applyMove, findMove, isOver, newGame, newVs, planCpuTurn, setsOf, undo, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, type Game, type Pos, type Vs } from '../lib/jumpPuzzle'
+import { COINS_PER_SET, COLORS, SIZE, WIN_BONUS, applyMove, type Move, findMove, isOver, newGame, newVs, planCpuTurn, setsOf, undo, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, type Game, type Pos, type Vs } from '../lib/jumpPuzzle'
 import { CoinIcon } from './Icons'
 
 const KEY = 'ryuso.jumppuzzle.v1'
@@ -11,7 +11,7 @@ const loadBest = () => { try { const n = Number(localStorage.getItem(KEY)); retu
 const FILL = ['#ef5a3c', '#7cc545', '#4aa6ea', '#f5a623']
 const DARK = ['#b8381f', '#4f9526', '#2a78b8', '#c27d0c']
 const MARK = ['●', '▲', '■', '★']
-const CPU_STEP_MS = 700
+const CPU_STEP_MS = 1000 // 컴퓨터가 한 수를 두기까지(그리고 다음 수까지) 걸리는 시간
 
 const T = {
   ko: {
@@ -39,6 +39,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const [game, setGame] = useState<Game>(() => newGame())
   const [vs, setVs] = useState<Vs>(() => newVs())
   const [sel, setSel] = useState<Pos | null>(null)
+  const [lastCpu, setLastCpu] = useState<Move | null>(null) // 컴퓨터가 방금 둔 수(내가 다음에 두기 전까지 빛나게 보여 준다)
   const [paid, setPaid] = useState(0) // 이 판에서 코인을 이미 받은 세트 수 (되돌렸다 다시 해도 같은 세트는 한 번만)
   const [bonusPaid, setBonusPaid] = useState(0)
   const [best, setBest] = useState(loadBest)
@@ -59,7 +60,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     if (solo || vs.turn !== 'cpu' || isOver(vs.board)) return
     const plan = planCpuTurn(vs.board, vs.cpu)
-    const ids = plan.map((m, i) => window.setTimeout(() => setVs((v) => vsCpuMove(v, m, i === plan.length - 1)), CPU_STEP_MS * (i + 1)))
+    const ids = plan.map((m, i) => window.setTimeout(() => { setVs((v) => vsCpuMove(v, m, i === plan.length - 1)); setLastCpu(m) }, CPU_STEP_MS * (i + 1)))
     return () => ids.forEach(clearTimeout)
   }, [solo, vs.turn, vs.board, vs.cpu])
 
@@ -90,6 +91,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     const m = findMove(board, sel, { r, c })
     if (!m) { say(tx.badMove); setSel(solo || !vs.chain ? null : vs.chain); return }
     setSel(null)
+    setLastCpu(null)
     if (solo) setGame((g) => applyMove(g, m))
     else {
       const next = vsHumanMove(vs, m)
@@ -99,7 +101,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   }
   const doUndo = () => { setGame((g) => undo(g)); setSel(null); setFresh(false) }
   const endTurn = () => { setVs((v) => vsEndTurn(v)); setSel(null) }
-  const restart = () => { setGame(newGame()); setVs(newVs()); setSel(null); setPaid(0); setBonusPaid(0); setFresh(false); setMsg('') }
+  const restart = () => { setGame(newGame()); setVs(newVs()); setSel(null); setLastCpu(null); setPaid(0); setBonusPaid(0); setFresh(false); setMsg('') }
   const switchMode = (m: 'solo' | 'vs') => { if (m !== mode) { setMode(m); restart() } }
 
   const turnText = solo ? '' : vs.turn === 'cpu' ? tx.cpuTurn : tx.myTurn // 화면 읽기용(위 큰 표시는 aria-hidden)
@@ -144,13 +146,15 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
         <div role="grid" aria-label={tx.title} className={`grid aspect-square w-full max-w-[min(34rem,calc(100dvh-24rem))] gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5 transition-shadow ${!solo && !over && vs.turn === 'me' ? 'shadow-[0_0_0_4px_#7cc545,0_0_22px_6px_rgba(124,197,69,.55)]' : ''}`} style={{ gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))` }}>
           {board.flatMap((row, r) => row.map((v, c) => {
             const picked = sel && sel.r === r && sel.c === c
+            const landed = !solo && lastCpu && lastCpu.to.r === r && lastCpu.to.c === c
+            const left = !solo && lastCpu && ((lastCpu.from.r === r && lastCpu.from.c === c) || (lastCpu.over.r === r && lastCpu.over.c === c))
             return (
               <button
                 key={`${r}-${c}`}
                 role="gridcell"
                 aria-label={v ? `${r + 1}-${c + 1} ${MARK[v - 1]}` : `${r + 1}-${c + 1}`}
                 onClick={() => tap(r, c)}
-                className={`flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-lg border-0 p-[8%] ${v === 0 ? 'bg-[#eef3e6]' : 'bg-[#f6f9f0]'}`}
+                className={`flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-lg border-0 p-[8%] ${landed ? 'bg-[#fff6d6] shadow-[0_0_0_3px_#f5a623,0_0_14px_4px_rgba(245,166,35,.6)]' : left ? 'bg-[#fff6d6]/70 shadow-[inset_0_0_0_2px_#f5c36b]' : v === 0 ? 'bg-[#eef3e6]' : 'bg-[#f6f9f0]'}`}
               >
                 {v !== 0 && (
                   <span
@@ -166,17 +170,17 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
         <p className={`m-0 min-h-5 text-center text-sm font-bold text-[#246f55] ${!solo && !msg ? 'sr-only' : ''}`} role="status" aria-live="polite">{msg || turnText}</p>
         {!solo && !over && (
           <p
-            className={`m-0 rounded-full px-6 py-2 text-center text-xl font-extrabold [font-family:Jua,'Noto_Sans_KR',sans-serif] ${vs.turn === 'me' ? 'jump-my-turn bg-[#246f55] text-white' : 'bg-[#eef0e8] text-[#678071]'}`}
+            className={`m-0 rounded-full px-4 py-1 text-center text-sm font-extrabold ${vs.turn === 'me' ? 'bg-white text-[#246f55] shadow-[0_0_0_2px_#7cc545,0_0_12px_3px_rgba(124,197,69,.5)]' : 'bg-[#eef0e8] text-[#678071]'}`}
             aria-hidden
-          >{vs.turn === 'me' ? `✨ ${tx.myTurn} ✨` : tx.cpuTurn}</p>
+          >{vs.turn === 'me' ? tx.myTurn : tx.cpuTurn}</p>
         )}
         {(solo ? game.history.length === 0 : vs.mine.every((n) => n === 0) && vs.turn === 'me') && !msg && <p className="m-0 max-w-[34rem] text-center text-xs leading-relaxed text-[#678071]">{solo ? tx.how : tx.howVs}</p>}
 
         <div className="flex gap-2">
           {solo
-            ? <button onClick={doUndo} disabled={game.history.length === 0} className="min-h-11 rounded-full border border-[#dce4d7] bg-white px-5 text-sm font-bold disabled:opacity-40">↩ {tx.undo}</button>
-            : <button onClick={endTurn} disabled={!vs.chain || vs.turn !== 'me'} className="min-h-11 rounded-full border border-[#dce4d7] bg-white px-5 text-sm font-bold disabled:opacity-40">✋ {tx.endTurn}</button>}
-          <button onClick={restart} className="min-h-11 rounded-full bg-[#246f55] px-5 text-sm font-bold text-white">🔄 {tx.again}</button>
+            ? <button onClick={doUndo} disabled={game.history.length === 0} className="min-h-9 rounded-full border border-[#dce4d7] bg-white px-4 text-xs font-bold disabled:opacity-40">↩ {tx.undo}</button>
+            : <button onClick={endTurn} disabled={!vs.chain || vs.turn !== 'me'} className="min-h-9 rounded-full border border-[#dce4d7] bg-white px-4 text-xs font-bold disabled:opacity-40">✋ {tx.endTurn}</button>}
+          <button onClick={restart} className="min-h-9 rounded-full bg-[#246f55] px-4 text-xs font-bold text-white">🔄 {tx.again}</button>
         </div>
       </div>
 
