@@ -119,8 +119,8 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
         else if (need === 'water') apply({ type: 'water', plot: i })
         else apply({ type: 'harvest', plot: i })
         busy.current = false
-      }, need === 'water' ? 350 : 180)
-    }, 450)
+      }, need === 'water' ? 700 : 350)
+    }, 850)
   }
 
   const pick = (t: Tool) => {
@@ -175,7 +175,7 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
         })}
 
         {/* 내 아바타: 밭 옆까지 걸어가서 직접 물 주고 수확한다 */}
-        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 10, transition: 'left 0.4s ease-in-out, top 0.4s ease-in-out' }}>
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 10, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
           <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             {hold === 'can' ? (

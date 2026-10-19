@@ -201,7 +201,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
         if (bonus) say(tx.bonus)
       }
       later(() => { busy.current = false }, 250)
-    }, 450)
+    }, 850)
   }
 
   return (
@@ -247,7 +247,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
           )
         })}
         {/* 내 아바타: 손님 자리까지 걸어가서 주문을 받고, 카운터에서 만들고, 음식을 들고 가서 서빙한다 */}
-        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 4, transition: 'left 0.4s ease-in-out, top 0.4s ease-in-out' }}>
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 4, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
           <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             {hold && <img src={assetUrl(`cafe/menu2/${hold}.webp`)} alt="" draggable={false} className="absolute object-contain" style={{ left: '56%', top: '42%', width: '41%', zIndex: 1000 }} />}
