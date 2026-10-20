@@ -27,7 +27,7 @@ interface Props {
 }
 
 /** 여행 탭: 넓은 맵(OverWorld)을 걸어다니다가 문에 들어가면 그 장소 장면(TravelScene)으로 */
-export function TravelGame({ outfit, tweaks, onFull, initialPlaceId = null }: Props) {
+export function TravelGame({ outfit, tweaks, onWear, onFull, initialPlaceId = null }: Props) {
   const { lang } = useI18n()
   const [starRain, setStarRain] = useState(false)
   const [speaking, setSpeaking] = useState(false)
@@ -45,7 +45,7 @@ export function TravelGame({ outfit, tweaks, onFull, initialPlaceId = null }: Pr
   const actionButton = PILL
   const label = (text: string) => <PillText>{text}</PillText>
   return <div className="relative h-full">
-    {scene ? <TravelScene paused={speaking} key={scene} placeId={scene} assign={assign} outfit={outfit} tweaks={tweaks} onExit={() => setScene(null)} /> : <OverWorld
+    {scene ? <TravelScene paused={speaking} key={scene} placeId={scene} assign={assign} outfit={outfit} tweaks={tweaks} onExit={() => setScene(null)} onWear={onWear} /> : <OverWorld
       paused={speaking} reach={game.reach} chunk={game.chunk} assign={assign} outfit={outfit} tweaks={tweaks}
       actions={<>
         <button className={actionButton} aria-label="한마디 영어" onClick={() => setSpeaking(true)}>{label(lang === 'ko' ? '영어' : 'Talk')}</button>

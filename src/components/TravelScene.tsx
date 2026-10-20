@@ -18,7 +18,7 @@ import { sceneAssets } from '../lib/exportRoom'
 import { drawables } from '../lib/room'
 import { AVATAR_BASE_W, AVATAR_FEET_RATIO, ROOM_W, ROOM_H } from '../lib/roomTypes'
 
-/** 찾은 아이템 그림을 보여 주는 시간(ms) */
+/** 찾았다 상자를 보여 주는 시간(ms) */
 const FOUND_POP_MS = 700
 const TEXT = {
   ko: { map: '지도', found: '찾음', hint: '바닥: 이동 · 방향키/WASD · 소품: 살펴보기',
@@ -43,9 +43,10 @@ interface Props {
   outfit: Outfit
   tweaks: Tweaks
   onExit: () => void
+  onWear: (id: string) => void
 }
 
-export function TravelScene({ placeId, assign, outfit, tweaks, onExit, paused = false }: Props) {
+export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, paused = false }: Props) {
   const { lang } = useI18n()
   const tx = TEXT[lang]
   useGame()
@@ -74,7 +75,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, paused = 
   const talkLock = useRef(false)
   const boxRef = useRef<HTMLDivElement>(null)
   const blocked = !!popup || talk || paused
-  // 찾은 아이템 그림은 0.5초만 보여 주고 저절로 사라진다
+  // 찾았다 상자는 0.7초 뒤에 저절로 사라진다
   useEffect(() => {
     if (!popup) return
     const id = window.setTimeout(() => setPopup(null), FOUND_POP_MS)
@@ -307,9 +308,27 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, paused = 
         />
       )}
       {popup && collected && (
-        <div aria-hidden className="pointer-events-none absolute inset-0 z-50 flex flex-col items-center justify-center gap-2">
-          <p className="found-pop m-0 text-3xl font-extrabold text-blush-deep drop-shadow">🎉 {tx.got}</p>
-          <img src={assetUrl(collected.thumb)} alt="" draggable={false} className="found-pop h-48 w-48 object-contain drop-shadow-2xl" />
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/30 p-6" onClick={() => setPopup(null)}>
+          <div className="w-64 rounded-3xl bg-white p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <p className="text-lg font-extrabold text-blush-deep">🎉 {tx.got}</p>
+            <img src={assetUrl(collected.thumb)} alt="" className="mx-auto my-3 h-32 w-32 object-contain" />
+            <p className="mb-3 font-bold">{collected.name[lang]}</p>
+            <div className="flex flex-col gap-2">
+              <button
+                className="h-11 rounded-full bg-blush font-bold text-white"
+                onClick={() => {
+                  const id = popup
+                  setPopup(null)
+                  onWear(id)
+                }}
+              >
+                {collected.kind === 'room' ? (lang === 'ko' ? '내 방에서 꾸미기' : 'Decorate my room') : tx.wear}
+              </button>
+              <button className="h-11 rounded-full bg-petal font-bold" onClick={() => setPopup(null)}>
+                {tx.keep}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
