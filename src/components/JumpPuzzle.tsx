@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { earnStars } from '../lib/shop'
 import { assetUrl } from '../lib/items'
-import { ANIMALS, COLORS, MAX_CPUS, SIZE, WIN_BONUS, type Move, findMove, isOver, newVs, parseSaved, planCpuTurn, setsOf, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, vsSkipCpu, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
+import { ANIMALS, COLORS, MAX_CPUS, SIZE, STARS_PER_SET, WIN_BONUS, type Move, findMove, isOver, newVs, parseSaved, planCpuTurn, setsOf, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, vsSkipCpu, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
 import { getAvatar } from '../lib/avatars'
 import { StarIcon } from './Icons'
 
@@ -21,9 +21,9 @@ const MARK = ['●', '▲', '■', '★']
 const TURN_GAP_MS = 1100 // 차례가 바뀐 뒤, 동물이 말을 고르기 전에 잠깐 기다림(누구 차례인지 알아보도록)
 const CPU_PICK_MS = 900 // 동물이 움직일 말 위에 올라가 있는 시간
 const CPU_CHAIN_PICK_MS = 600 // 이어 뛸 때 다음 말을 고르는 시간
-const CPU_FLY_MS = 1000
+const CPU_FLY_MS = 600
 const MY_POP_MS = 500
-const ME_FLY_MS = 1000 // 내 말이 뛰어넘는 시간(동물보다 조금 빠르게)
+const ME_FLY_MS = 600 // 내 말이 뛰어넘는 시간(동물보다 조금 빠르게)
 
 /** 점프 퍼즐에서 내 얼굴 그림: 류소·유하·유엘만 있고, 소영은 뺐다(소영이면 유하 얼굴) */
 const FACES: Record<string, string> = { ryuso: 'face_ryuso', yuha: 'face_yuha', yuel: 'face_yuel' }
@@ -40,14 +40,14 @@ const T = {
     again: '새 판', close: '닫기', sets: '세트', badMove: '그곳으로는 뛸 수 없어요', over: '더 뛸 수 없어요!',
     level: { easy: '초급', normal: '중급', hard: '고급' },
     you: '나', cpu: '컴퓨터', cpuCount: (n: number) => `${n}마리`, animals: ['토끼', '강아지', '호랑이', '곰돌이', '고양이', '팬더'], myTurn: '내 차례예요', cpuTurn: (name: string) => `${name} 차례예요…`, endTurn: '끝내기',
-    win: '이겼어요!', lose: '아쉬워요, 졌어요', draw: '비겼어요', bonus: (c: number) => `이긴 보너스 +${c}`,
+    win: '이겼어요!', lose: '아쉬워요, 졌어요', draw: '비겼어요', bonus: (c: number) => `이긴 보너스 +${c}`, setStars: (n: number) => `세트 완성! +${n} 별`, setStarsTotal: (n: number) => `세트 별 +${n}`,
   },
   en: {
     title: 'Jump Puzzle', howVs: 'On your turn, jump and collect pieces. If you can jump again, keep going or end your turn. Beat the computer with more sets!',
     again: 'New game', close: 'Close', sets: 'sets', badMove: "You can't jump there", over: 'No more jumps!',
     level: { easy: 'Easy', normal: 'Normal', hard: 'Hard' },
     you: 'You', cpu: 'Computer', cpuCount: (n: number) => `${n}`, animals: ['Bunny', 'Puppy', 'Tiger', 'Teddy', 'Kitty', 'Panda'], myTurn: 'Your turn', cpuTurn: (name: string) => `${name} is thinking…`, endTurn: 'End turn',
-    win: 'You win!', lose: 'You lost, try again', draw: "It's a tie", bonus: (c: number) => `Win bonus +${c}`,
+    win: 'You win!', lose: 'You lost, try again', draw: "It's a tie", bonus: (c: number) => `Win bonus +${c}`, setStars: (n: number) => `Set complete! +${n} stars`, setStarsTotal: (n: number) => `Set stars +${n}`,
   },
 }
 
@@ -64,11 +64,12 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const [lastMe, setLastMe] = useState<Move | null>(null) // 내가 방금 둔 수(동물이 다음에 두기 전까지 얼굴을 보여 준다)
   const [lastCpu, setLastCpu] = useState<{ m: Move; animal: number } | null>(null) // 동물이 방금 둔 수(내가 다음에 두기 전까지 빛나게 보여 준다)
   const [bonusPaid, setBonusPaid] = useState(saved?.bonusPaid ?? 0)
+  const [setsPaid, setSetsPaid] = useState(saved?.setsPaid ?? 0) // 별을 이미 받은 내 세트 수
   const [msg, setMsg] = useState('')
   const timers = useRef<number[]>([])
   useEffect(() => {
-    try { localStorage.setItem(STATE_KEY, JSON.stringify({ vs, bonusPaid })) } catch { /* 저장 실패는 무시 */ }
-  }, [vs, bonusPaid])
+    try { localStorage.setItem(STATE_KEY, JSON.stringify({ vs, bonusPaid, setsPaid })) } catch { /* 저장 실패는 무시 */ }
+  }, [vs, bonusPaid, setsPaid])
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
   const say = (t: string) => { setMsg(t); const id = window.setTimeout(() => setMsg(''), 1800); timers.current.push(id) }
 
@@ -113,6 +114,11 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   }, [vs.turn, level])
 
   // 이기면 별(상점에서 쓸 수 있음). 지거나 비기면 없음
+  // 내가 한 세트를 완성할 때마다 별 5개
+  useEffect(() => {
+    if (sets > setsPaid) { const n = (sets - setsPaid) * STARS_PER_SET; earnStars(n); setSetsPaid(sets); say(tx.setStars(n)) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sets])
   useEffect(() => {
     if (result === 'win' && bonusPaid === 0) { earnStars(WIN_BONUS); setBonusPaid(WIN_BONUS) }
   }, [result, bonusPaid])
@@ -138,7 +144,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     )
   }
   const endTurn = () => { setVs((v) => vsEndTurn(v)); setSel(null) }
-  const restart = (count = cpuCount) => { setVs(newVs(Math.random, count)); setSel(null); setLastCpu(null); setLastMe(null); setBonusPaid(0); setMsg('') }
+  const restart = (count = cpuCount) => { setVs(newVs(Math.random, count)); setSel(null); setLastCpu(null); setLastMe(null); setBonusPaid(0); setSetsPaid(0); setMsg('') }
   const pickLevel = (l: Level) => { setLevel(l); try { localStorage.setItem(LEVEL_KEY, l) } catch { /* 저장 실패는 무시 */ } }
   const pickCpus = (n: number) => { if (n === cpuCount) return; setCpuCount(n); try { localStorage.setItem(CPUS_KEY, String(n)) } catch { /* 저장 실패는 무시 */ } restart(n) }
   const animalOf = (i: number) => vs.animals[i] ?? i
@@ -274,6 +280,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           <div className="flex w-full max-w-xs flex-col items-center gap-3 rounded-3xl bg-white p-6 text-center shadow-xl">
             <p className="m-0 text-lg font-extrabold">{result ? tx[result] : tx.over}</p>
             <p className="m-0 text-3xl font-extrabold text-[#246f55]">{[sets, ...vs.cpus.map(setsOf)].join(' : ')}</p>
+            {setsPaid > 0 && <p className="m-0 flex items-center gap-1 text-sm font-bold text-[#c9751f]">{tx.setStarsTotal(setsPaid * STARS_PER_SET)} <StarIcon /></p>}
             {bonusPaid > 0 && <p className="m-0 flex items-center gap-1 text-sm font-bold text-[#c9751f]">{tx.bonus(bonusPaid)} <StarIcon /></p>}
             <div className="flex gap-2">
               <button onClick={() => restart()} className="min-h-11 rounded-full bg-[#246f55] px-4 text-sm font-bold text-white">🔄 {tx.again}</button>

@@ -77,7 +77,7 @@ describe('컴퓨터와 겨루기', () => {
     expect(vsResult({ mine: [2, 2, 2, 2], cpus: [[2, 2, 2, 2]] })).toBe('draw')
   })
   it('저장한 판은 그대로 불러오고, 망가진 값은 버린다', () => {
-    const saved = { vs: newVs(seeded(), 2), bonusPaid: 60 }
+    const saved = { vs: newVs(seeded(), 2), bonusPaid: 60, setsPaid: 2 }
     expect(parseSaved(JSON.parse(JSON.stringify(saved)))).toEqual(saved)
     expect(parseSaved(null)).toBeNull()
     expect(parseSaved({ ...saved, vs: { ...saved.vs, board: [[1]] } })).toBeNull()
