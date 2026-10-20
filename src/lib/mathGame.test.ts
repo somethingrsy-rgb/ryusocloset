@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AGES, CLEAR_COINS, EMPTY, LEVELS, addCorrect, addProfile, claimCoins, isCleared, isUnlocked, levelsFor, removeProfile, sanitizeState, totalOf, type Profile } from './mathGame'
+import { AGES, CLEAR_STARS, EMPTY, LEVELS, addCorrect, addProfile, claimStars, isCleared, isUnlocked, levelsFor, removeProfile, sanitizeState, totalOf, type Profile } from './mathGame'
 import { EIGHT_TOPICS, SIX_TOPICS } from './mathQuestions'
 
 const SIX = SIX_TOPICS.flatMap((t) => t.questions)
@@ -105,11 +105,11 @@ describe('아이 수학 게임', () => {
     expect(dirty.profiles[0].gifts).toEqual({ 9: 'x' })
     expect(sanitizeState('boom')).toEqual(EMPTY)
   })
-  it('단계를 다 풀면 코인 10개를 한 번만 받는다(아이템은 주지 않는다)', () => {
+  it('단계를 다 풀면 별 30개를 한 번만 받는다(아이템은 주지 않는다)', () => {
     const p = kid(6)
-    const a = claimCoins(p, 1)
-    expect(a.coins).toBe(CLEAR_COINS); expect(CLEAR_COINS).toBe(10); expect(a.next.gifts[1]).toBe('coin')
-    expect(claimCoins(a.next, 1).coins).toBe(0)
-    expect(claimCoins({ ...p, gifts: { 1: 'old_item' } }, 1).coins).toBe(0) // 예전에 아이템을 받은 단계는 다시 주지 않음
+    const a = claimStars(p, 1)
+    expect(a.stars).toBe(CLEAR_STARS); expect(CLEAR_STARS).toBe(30); expect(a.next.gifts[1]).toBe('star')
+    expect(claimStars(a.next, 1).stars).toBe(0)
+    expect(claimStars({ ...p, gifts: { 1: 'old_item' } }, 1).stars).toBe(0) // 예전에 아이템을 받은 단계는 다시 주지 않음
   })
 })

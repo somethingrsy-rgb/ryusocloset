@@ -117,7 +117,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
           <div className="grid grid-cols-2 gap-x-3 gap-y-4 pt-2 pb-4 sm:grid-cols-3 lg:grid-cols-4">
             {items.map((it, idx) => {
               const own = isFound(it.id)
-              const price = priceOf(it.category)
+              const price = priceOf(it.category, currency)
               const poor = (currency === 'star' ? wallet.stars : wallet.coins) < price
               return (
                 <div key={it.id} className="flex flex-col items-center">
@@ -149,7 +149,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
             <div className="flex w-full max-w-xs gap-2" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => setPreview(null)} className="min-h-11 flex-1 rounded-full border border-[#d9c7a3] bg-white/70 text-sm font-bold">{ko ? '닫기' : 'Close'}</button>
               {!isFound(previewItem.id) && (
-                <button disabled={(currency === 'star' ? wallet.stars : wallet.coins) < priceOf(previewItem.category)} onClick={() => { buy(previewItem.id); setPreview(null) }} className="min-h-11 flex-1 rounded-full bg-[#e98aa3] text-sm font-bold text-white disabled:opacity-50">{priceOf(previewItem.category)} {sym} {ko ? '사기' : 'Buy'}</button>
+                <button disabled={(currency === 'star' ? wallet.stars : wallet.coins) < priceOf(previewItem.category, currency)} onClick={() => { buy(previewItem.id); setPreview(null) }} className="min-h-11 flex-1 rounded-full bg-[#e98aa3] text-sm font-bold text-white disabled:opacity-50">{priceOf(previewItem.category, currency)} {sym} {ko ? '사기' : 'Buy'}</button>
               )}
             </div>
           </div>

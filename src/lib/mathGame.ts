@@ -1,4 +1,4 @@
-import { actFarm } from './farm'
+import { earnStars } from './shop'
 import { isRestoring } from './restoreGuard'
 import { EIGHT_TOPICS, SIX_TOPICS } from './mathQuestions'
 
@@ -63,7 +63,7 @@ export interface Profile {
   age: Age
   /** 단계별로 끝낸 문제 수 */
   correct: Record<number, number>
-  /** 단계를 다 풀어서 코인을 받았다는 표시(예전에 받은 아이템 id 도 같은 뜻) */
+  /** 단계를 다 풀어서 별(또는 예전 코인·아이템)을 받았다는 표시(예전에 받은 아이템 id 도 같은 뜻) */
   gifts: Record<number, string>
 }
 
@@ -140,12 +140,12 @@ export function addCorrect(p: Profile, level: number, done: number): { next: Pro
 
 export const updateProfile = (s: MathState, p: Profile): MathState => ({ profiles: s.profiles.map((x) => (x.id === p.id ? p : x)) })
 
-/** 단계를 다 풀었을 때 받는 코인 */
-export const CLEAR_COINS = 10
+/** 단계를 다 풀었을 때 받는 별 */
+export const CLEAR_STARS = 30
 
-/** 단계를 처음 다 풀었으면 코인을 주고 받았다고 적는다(같은 단계는 한 번만). 이미 받았으면 0 */
-export function claimCoins(p: Profile, level: number): { next: Profile; coins: number } {
-  if (p.gifts[level]) return { next: p, coins: 0 }
-  actFarm({ type: 'earn', amount: CLEAR_COINS })
-  return { next: { ...p, gifts: { ...p.gifts, [level]: 'coin' } }, coins: CLEAR_COINS }
+/** 단계를 처음 다 풀었으면 별을 주고 받았다고 적는다(같은 단계는 한 번만). 이미 받았으면 0 */
+export function claimStars(p: Profile, level: number): { next: Profile; stars: number } {
+  if (p.gifts[level]) return { next: p, stars: 0 }
+  earnStars(CLEAR_STARS)
+  return { next: { ...p, gifts: { ...p.gifts, [level]: 'star' } }, stars: CLEAR_STARS }
 }

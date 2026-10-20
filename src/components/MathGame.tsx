@@ -1,23 +1,23 @@
-import { useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import {
-  AGES, MAX_PROFILES, addCorrect, addProfile, claimCoins, countOf, isCleared, isUnlocked, levelsFor, readMath, removeProfile, totalOf, updateProfile, writeMath,
+  AGES, MAX_PROFILES, addCorrect, addProfile, claimStars, countOf, isCleared, isUnlocked, levelsFor, readMath, removeProfile, totalOf, updateProfile, writeMath,
   type Age, type Choice, type MathState, type Pic, type Profile, type Question, type Shape, type Visual,
 } from '../lib/mathGame'
 import { playSnap } from '../lib/sound'
-import { CoinIcon, StarIcon } from './Icons'
+import { StarIcon } from './Icons'
 
 const T = {
   ko: {
     title: '수학 놀이터', who: '누가 할까요?', add: '새 친구', name: '이름', age: '나이', age6: '6살', age8: '8살', make: '만들기', cancel: '취소', del: '지우기',
-    delAsk: '이 친구의 기록을 지울까요?', intro: '문제를 모두 풀면 코인을 받아요. 틀려도 괜찮아요, 다시 해보면 돼요!', locked: '앞 단계를 먼저 깨요', cleared: '클리어', levels: '단계 고르기',
-    right: ['잘했어요! 🎉', '맞아요! ⭐', '대단해요! 👏', '정답이에요! 🌟'], again: '괜찮아요, 다시 해볼까요? 💪', next: '다음 문제', gift: '코인 10개를 받았어요!', already: '이 단계의 코인은 이미 받았어요', wear: '옷장에서 입어보기',
+    delAsk: '이 친구의 기록을 지울까요?', intro: '문제를 모두 풀면 별을 받아요. 틀려도 괜찮아요, 다시 해보면 돼요!', locked: '앞 단계를 먼저 깨요', cleared: '클리어', levels: '단계 고르기',
+    right: ['잘했어요! 🎉', '맞아요! ⭐', '대단해요! 👏', '정답이에요! 🌟'], again: '괜찮아요, 다시 해볼까요? 💪', next: '다음 문제', gift: '별 30개를 받았어요!', already: '이 단계의 별은 이미 받았어요', wear: '옷장에서 입어보기',
     allFound: '모든 선물을 이미 받았어요 ⭐', nextLevel: '다음 단계로', close: '닫기', back: '뒤로', read: '읽어 주기', calc: '계산해서 알맞은 수를 찾아요', ok: '확인', erase: '지우기', done: '다 풀었어요!', full: '친구는 4명까지 만들 수 있어요',
   },
   en: {
     title: 'Math Playground', who: 'Who is playing?', add: 'New friend', name: 'Name', age: 'Age', age6: '6 years', age8: '8 years', make: 'Create', cancel: 'Cancel', del: 'Delete',
-    delAsk: "Delete this friend's progress?", intro: 'Finish every question to get coins. Mistakes are fine, just try again!', locked: 'Clear the level before first', cleared: 'Cleared', levels: 'Levels',
-    right: ['Great job! 🎉', 'Correct! ⭐', 'Awesome! 👏', "You got it! 🌟"], again: "That's okay, try again! 💪", next: 'Next', gift: 'You got 10 coins!', already: 'You already got this level\'s coins', wear: 'Try it on',
+    delAsk: "Delete this friend's progress?", intro: 'Finish every question to get stars. Mistakes are fine, just try again!', locked: 'Clear the level before first', cleared: 'Cleared', levels: 'Levels',
+    right: ['Great job! 🎉', 'Correct! ⭐', 'Awesome! 👏', "You got it! 🌟"], again: "That's okay, try again! 💪", next: 'Next', gift: 'You got 30 stars!', already: 'You already got this level\'s stars', wear: 'Try it on',
     allFound: 'You already have every gift ⭐', nextLevel: 'Next level', close: 'Close', back: 'Back', read: 'Read it', calc: 'Work it out and find the number', ok: 'OK', erase: 'Erase', done: 'All done!', full: 'Up to 4 friends',
   },
 }
@@ -137,6 +137,9 @@ function speak(text: string, lang: string) {
 }
 
 /** 아이용 수학 놀이터: 친구(이름·나이)를 고르면 나이에 맞는 단계가 나오고, 단계의 문제를 모두 풀면 선물을 준다 */
+/** 정답을 맞힌 뒤 칭찬·풀이를 읽을 시간을 주고 다음 문제로 넘어가는 시간(ms) */
+const ADVANCE_MS = 1800
+
 export function MathGame({ onClose }: { onClose: () => void }) {
   const { lang } = useI18n()
   const tx = T[lang]
@@ -172,7 +175,10 @@ export function MathGame({ onClose }: { onClose: () => void }) {
   const [wrong, setWrong] = useState(false)
   const [right, setRight] = useState<string | null>(null)
   const [gifted, setGifted] = useState(false)
-  const [gift, setGift] = useState<{ coins: number } | null>(null) // 단계를 다 풀었을 때 받은 코인
+  const advance = useRef<() => void>(() => {}) // 맞히면 잠깐 뒤 저절로 다음으로 넘어간다(항상 가장 새 상태로 부름)
+  const advanceTimer = useRef<number | undefined>(undefined)
+  useEffect(() => () => clearTimeout(advanceTimer.current), [])
+  const [gift, setGift] = useState<{ stars: number } | null>(null) // 단계를 다 풀었을 때 받은 별
 
   const profile: Profile | undefined = state.profiles.find((p) => p.id === pid)
   const lv = levelsFor(profile?.age ?? 6).find((l) => l.id === level)
@@ -195,11 +201,13 @@ export function MathGame({ onClose }: { onClose: () => void }) {
     const { next, justCleared } = addCorrect(profile, lv.id, idx + 1)
     let saved = next
     if (justCleared) {
-      const c = claimCoins(next, lv.id)
+      const c = claimStars(next, lv.id)
       saved = c.next
-      setGift({ coins: c.coins })
+      setGift({ stars: c.stars })
     }
     if (saved !== profile) save(updateProfile(state, saved))
+    clearTimeout(advanceTimer.current)
+    advanceTimer.current = window.setTimeout(() => advance.current(), ADVANCE_MS)
   }
   const pickChoice = (i: number) => {
     if (!q || q.kind !== 'choice' || right || picked.includes(i)) return
@@ -220,11 +228,13 @@ export function MathGame({ onClose }: { onClose: () => void }) {
     if (now.length === q.cards.length) solved()
   }
   const nextQuestion = () => {
+    clearTimeout(advanceTimer.current)
     if (!lv) return
     if (idx + 1 < lv.questions.length) { setIdx(idx + 1); reset(); return }
     if (gift && !gifted) { setGifted(true); return } // 선물 화면으로
     setLevel(null); setGift(null); setGifted(false); reset()
   }
+  advance.current = nextQuestion
   const create = () => {
     const r = addProfile(state, name, age)
     if (!r.id) return
@@ -243,7 +253,7 @@ export function MathGame({ onClose }: { onClose: () => void }) {
   const answerText = q && q.kind === 'input' ? typed : q && right && q.kind === 'choice' ? q.choices[q.answer].label : ''
   const levels = profile ? levelsFor(profile.age) : []
   const hasNext = lv ? levels.findIndex((l) => l.id === lv.id) < levels.length - 1 : false
-  const goBack = () => { if (gift || level !== null) { setLevel(null); setGift(null); setGifted(false); reset() } else if (pid) setPid(null); else onClose() }
+  const goBack = () => { clearTimeout(advanceTimer.current); if (gift || level !== null) { setLevel(null); setGift(null); setGifted(false); reset() } else if (pid) setPid(null); else onClose() }
 
   return (
     <div className="absolute inset-0 z-30 flex flex-col overflow-hidden rounded-3xl bg-[#faf9f2] text-[#213f35] ring-1 ring-black/5">
@@ -298,9 +308,9 @@ export function MathGame({ onClose }: { onClose: () => void }) {
           </>
         ) : gift && gifted ? (
           <div className="py-2 text-center">
-            <p className="text-2xl font-extrabold text-[#246f55]">🪙 {gift.coins > 0 ? tx.gift : tx.cleared}</p>
-            <div className="my-6 flex items-center justify-center gap-2 text-3xl font-extrabold text-[#c27d0c]"><CoinIcon className="h-12 w-12 animate-bounce" />{gift.coins > 0 ? `+${gift.coins}` : ''}</div>
-            {gift.coins === 0 && <p className="mb-4 text-lg font-bold">{tx.already}</p>}
+            <p className="text-2xl font-extrabold text-[#246f55]">🪙 {gift.stars > 0 ? tx.gift : tx.cleared}</p>
+            <div className="my-6 flex items-center justify-center gap-2 text-3xl font-extrabold text-[#c27d0c]"><StarIcon className="h-12 w-12 animate-bounce" />{gift.stars > 0 ? `+${gift.stars}` : ''}</div>
+            {gift.stars === 0 && <p className="mb-4 text-lg font-bold">{tx.already}</p>}
             <div className="flex gap-2">
               <button className={`${big} flex-1 bg-white`} onClick={() => { setLevel(null); setGift(null); setGifted(false); reset() }}>{tx.levels}</button>
               {hasNext && lv && <button className={`${big} flex-1 bg-white`} onClick={() => open(levels[levels.findIndex((l) => l.id === lv.id) + 1].id)}>{tx.nextLevel}</button>}

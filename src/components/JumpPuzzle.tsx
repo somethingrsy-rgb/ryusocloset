@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { actFarm } from '../lib/farm'
+import { earnStars } from '../lib/shop'
 import { assetUrl } from '../lib/items'
 import { COINS_PER_SET, COLORS, MAX_CPUS, SIZE, WIN_BONUS, applyMove, type Move, findMove, isOver, newGame, newVs, parseSaved, planCpuTurn, setsOf, undo, vsCpuMove, vsEndTurn, vsSkipCpu, vsHumanMove, vsResult, type Game, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
-import { CoinIcon } from './Icons'
+import { CoinIcon, StarIcon } from './Icons'
 
 const KEY = 'ryuso.jumppuzzle.v1'
 const LEVEL_KEY = 'ryuso.jumppuzzle.level.v1'
@@ -103,7 +104,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sets])
   useEffect(() => {
-    if (result === 'win' && bonusPaid === 0) { actFarm({ type: 'earn', amount: WIN_BONUS }); setBonusPaid(WIN_BONUS) }
+    if (result === 'win' && bonusPaid === 0) { earnStars(WIN_BONUS); setBonusPaid(WIN_BONUS) }
   }, [result, bonusPaid])
   useEffect(() => {
     if (solo && over && sets > best) {
@@ -141,7 +142,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const switchMode = (m: 'solo' | 'vs') => { if (m !== mode) { setMode(m); restart() } }
 
   const turnText = solo ? '' : typeof vs.turn === 'number' ? tx.cpuTurn(vs.turn + 1, cpuCount > 1) : tx.myTurn // 화면 읽기용(위 큰 표시는 aria-hidden)
-  const total = paid * COINS_PER_SET + bonusPaid
+  const total = paid * COINS_PER_SET // 코인(혼자 하기의 세트 보상)
 
   return (
     <div className="absolute inset-0 z-30 flex flex-col overflow-hidden rounded-3xl bg-[#faf9f2] text-[#213f35] ring-1 ring-black/5">
@@ -257,7 +258,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
             <p className="m-0 text-lg font-extrabold">{result ? tx[result] : tx.over}</p>
             <p className="m-0 text-3xl font-extrabold text-[#246f55]">{result ? [sets, ...vs.cpus.map(setsOf)].join(' : ') : tx.result(sets)}</p>
             {total > 0 && <p className="m-0 flex items-center gap-1 text-sm font-bold text-[#c9751f]">{tx.got(total)} <CoinIcon /></p>}
-            {bonusPaid > 0 && <p className="m-0 text-xs font-bold text-[#678071]">{tx.bonus(bonusPaid)}</p>}
+            {bonusPaid > 0 && <p className="m-0 flex items-center gap-1 text-sm font-bold text-[#c9751f]">{tx.bonus(bonusPaid)} <StarIcon /></p>}
             {solo && fresh && <p className="m-0 text-sm font-bold text-[#e8707f]">🎉 {tx.new}</p>}
             <div className="flex gap-2">
               {solo && <button onClick={doUndo} className="min-h-11 rounded-full border border-[#dce4d7] bg-white px-4 text-sm font-bold">↩ {tx.undo}</button>}
