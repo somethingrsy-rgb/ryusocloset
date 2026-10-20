@@ -22,4 +22,9 @@ describe('avatars', () => {
     setHairstyle(yuha, 'braid')
     expect(getHairstyle(yuha).id).toBe('braid')
   })
+  it('유하의 기본 머리는 양갈래', () => {
+    const yuha = AVATARS.find((a) => a.id === 'yuha')!
+    expect(yuha.hairstyles[0].id).toBe('twin')
+    expect(baseFiles(yuha, yuha.hairstyles[0]).hairFront).toBe('assets/base/yuha/hair_twin.webp')
+  })
 })
