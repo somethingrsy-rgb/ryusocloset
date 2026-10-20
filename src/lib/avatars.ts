@@ -19,12 +19,14 @@ export interface Avatar {
   dir: string
   /** 헤어숍에서 고를 수 있는 머리. 첫 번째가 기본 */
   hairstyles: Hairstyle[]
+  /** 기본 단발이 몸 그림에 같이 그려진 아바타가 가발을 쓸 때 쓰는 머리 없는 몸(dir 안, 확장자·_barefoot 뺀 것) */
+  baldBody?: string
 }
 
 /** 고를 수 있는 아바타. 몸·발 위치는 모두 같아서 같은 옷이 맞는다 */
 export const AVATARS: Avatar[] = [
   {
-    id: 'ryuso', name: { ko: '류소', en: 'Ryuso' }, dir: 'assets/base',
+    id: 'ryuso', name: { ko: '류소', en: 'Ryuso' }, dir: 'assets/base', baldBody: 'body_bald',
     hairstyles: [
       { id: 'bob', name: { ko: '단발', en: 'Bob' }, file: 'hair_front.webp' },
       { id: 'wig', name: { ko: '레이어드 긴 머리', en: 'Layered long hair' }, file: 'hair_wig.webp', body: 'body_bald', behind: true },

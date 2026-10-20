@@ -1,6 +1,5 @@
 import { memo } from 'react'
-import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from '../lib/items'
-import { hairZ } from '../lib/avatars'
+import { ITEM_BY_ID, assetUrl, baseFor } from '../lib/items'
 import { wornItems } from '../lib/outfit'
 import { cssTransform, effectiveZ } from '../lib/tweaks'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -23,7 +22,8 @@ export const FigureLayers = memo(function FigureLayers({
 }) {
   useAvatar() // 아바타를 바꾸면 다시 그린다
   const items = wornItems(outfit, ITEM_BY_ID, tweaks)
-  const body = outfit.shoes ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body
+  const bl = baseFor(outfit)
+  const body = bl.body
   return (
     <>
       <img src={body} alt="" className="layer" style={{ zIndex: 0 }} draggable={false} />
@@ -40,7 +40,7 @@ export const FigureLayers = memo(function FigureLayers({
           </div>
         )
       })}
-      <img src={BASE_LAYERS.hairFront} alt="" className="layer" style={{ zIndex: hairZ() }} draggable={false} />
+      {bl.hair && <img src={bl.hair} alt="" className="layer" style={{ zIndex: bl.hairZ }} draggable={false} />}
     </>
   )
 })

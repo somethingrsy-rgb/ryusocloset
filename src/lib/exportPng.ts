@@ -1,6 +1,5 @@
 import { drawBackground, type Background } from './backgrounds'
-import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from './items'
-import { hairZ } from './avatars'
+import { ITEM_BY_ID, assetUrl, baseFor } from './items'
 import { CANVAS_H, CANVAS_W } from './layers'
 import { wornItems } from './outfit'
 import { effectiveZ, getTweak, pivotOf } from './tweaks'
@@ -34,10 +33,10 @@ function makeCanvas(w: number, h: number) {
 /** 아바타 + 옷을 화면과 같은 레이어 순서로 1024x1536 캔버스에 합성 */
 export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}): Promise<HTMLCanvasElement> {
   const items = wornItems(outfit, ITEM_BY_ID, tweaks)
-  const barefoot = !!outfit.shoes
+  const bl = baseFor(outfit)
   const [body, hair, ...imgs] = await Promise.all([
-    loadImage(barefoot ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body),
-    loadImage(BASE_LAYERS.hairFront),
+    loadImage(bl.body),
+    bl.hair ? loadImage(bl.hair) : Promise.resolve(null),
     ...items.map((i) => loadImage(assetUrl(i.image))),
   ])
   const canvas = makeCanvas(CANVAS_W, CANVAS_H)
@@ -46,7 +45,7 @@ export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}): Promise
   // 앞머리(60)는 아우터(50) 위, 액세서리(70) 아래
   let hairDrawn = false
   items.forEach((it, idx) => {
-    if (!hairDrawn && effectiveZ(it.zIndex, tweaks[it.category]) > hairZ()) {
+    if (!hairDrawn && hair && effectiveZ(it.zIndex, tweaks[it.category]) > bl.hairZ) {
       ctx.drawImage(hair, 0, 0, CANVAS_W, CANVAS_H)
       hairDrawn = true
     }
@@ -64,7 +63,7 @@ export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}): Promise
       ctx.restore()
     }
   })
-  if (!hairDrawn) ctx.drawImage(hair, 0, 0, CANVAS_W, CANVAS_H)
+  if (!hairDrawn && hair) ctx.drawImage(hair, 0, 0, CANVAS_W, CANVAS_H)
   return canvas
 }
 
