@@ -3,6 +3,7 @@ import { useI18n } from '../i18n'
 import { earnStars } from '../lib/shop'
 import { assetUrl } from '../lib/items'
 import { ANIMALS, COLORS, MAX_CPUS, SIZE, WIN_BONUS, type Move, findMove, isOver, newVs, parseSaved, planCpuTurn, setsOf, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, vsSkipCpu, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
+import { baseFiles, getAvatar } from '../lib/avatars'
 import { StarIcon } from './Icons'
 
 const LEVEL_KEY = 'ryuso.jumppuzzle.level.v1'
@@ -21,6 +22,19 @@ const TURN_GAP_MS = 1100 // 차례가 바뀐 뒤, 동물이 말을 고르기 전
 const CPU_PICK_MS = 900 // 동물이 움직일 말 위에 올라가 있는 시간
 const CPU_CHAIN_PICK_MS = 600 // 이어 뛸 때 다음 말을 고르는 시간
 const CPU_FLY_MS = 1400
+
+/** 내 아바타의 얼굴만 오려서 보여 준다(몸 + 앞머리 레이어를 얼굴 부분만 보이게 자름). className 으로 크기·자리를 정한다 */
+function FaceBadge({ className = '' }: { className?: string }) {
+  const f = baseFiles(getAvatar())
+  const layer = 'pointer-events-none absolute top-0 left-0 w-[128%] max-w-none origin-top-left select-none'
+  const shift = { transform: 'translate(-10.94%, -0.65%)' }
+  return (
+    <span aria-hidden className={`relative inline-block aspect-[4/3] overflow-hidden ${className}`}>
+      <img src={assetUrl(f.body)} alt="" draggable={false} className={layer} style={shift} />
+      <img src={assetUrl(f.hairFront)} alt="" draggable={false} className={layer} style={shift} />
+    </span>
+  )
+}
 
 const T = {
   ko: {
@@ -48,6 +62,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const [level, setLevel] = useState<Level>(loadLevel)
   const [sel, setSel] = useState<Pos | null>(null)
   const [anim, setAnim] = useState<{ m: Move; color: number; animal: number; flying: boolean; gone: boolean } | null>(null) // 지금 움직이는 동물의 말(고르는 중 → 날아가는 중)
+  const [lastMe, setLastMe] = useState<Move | null>(null) // 내가 방금 둔 수(동물이 다음에 두기 전까지 얼굴을 보여 준다)
   const [lastCpu, setLastCpu] = useState<{ m: Move; animal: number } | null>(null) // 동물이 방금 둔 수(내가 다음에 두기 전까지 빛나게 보여 준다)
   const [bonusPaid, setBonusPaid] = useState(saved?.bonusPaid ?? 0)
   const [msg, setMsg] = useState('')
@@ -79,7 +94,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
       t += pick
       ids.push(window.setTimeout(() => setAnim((a) => (a ? { ...a, flying: true } : a)), t))
       ids.push(window.setTimeout(() => setAnim((a) => (a ? { ...a, gone: true } : a)), t + CPU_FLY_MS * 0.5))
-      ids.push(window.setTimeout(() => { setVs((v) => vsCpuMove(v, m, i === plan.length - 1)); setLastCpu({ m, animal }); setAnim(null) }, t + CPU_FLY_MS))
+      ids.push(window.setTimeout(() => { setVs((v) => vsCpuMove(v, m, i === plan.length - 1)); setLastCpu({ m, animal }); setLastMe(null); setAnim(null) }, t + CPU_FLY_MS))
       t += CPU_FLY_MS
       const b2 = board.map((row) => [...row])
       b2[m.to.r][m.to.c] = b2[m.from.r][m.from.c]; b2[m.from.r][m.from.c] = 0; b2[m.over.r][m.over.c] = 0
@@ -107,12 +122,13 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     if (!m) { say(tx.badMove); setSel(vs.chain); return }
     setSel(null)
     setLastCpu(null)
+    setLastMe(m)
     const next = vsHumanMove(vs, m)
     setVs(next)
     if (next.chain) setSel(next.chain)
   }
   const endTurn = () => { setVs((v) => vsEndTurn(v)); setSel(null) }
-  const restart = (count = cpuCount) => { setVs(newVs(Math.random, count)); setSel(null); setLastCpu(null); setBonusPaid(0); setMsg('') }
+  const restart = (count = cpuCount) => { setVs(newVs(Math.random, count)); setSel(null); setLastCpu(null); setLastMe(null); setBonusPaid(0); setMsg('') }
   const pickLevel = (l: Level) => { setLevel(l); try { localStorage.setItem(LEVEL_KEY, l) } catch { /* 저장 실패는 무시 */ } }
   const pickCpus = (n: number) => { if (n === cpuCount) return; setCpuCount(n); try { localStorage.setItem(CPUS_KEY, String(n)) } catch { /* 저장 실패는 무시 */ } restart(n) }
   const animalOf = (i: number) => vs.animals[i] ?? i
@@ -145,7 +161,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
         )}
         <div className="flex w-full max-w-[34rem] flex-col gap-1.5 rounded-2xl bg-white px-3 py-2 shadow-sm">
           <div className="flex items-center justify-between gap-2">
-            <span className="w-[4.6rem] shrink-0 text-xs font-bold text-[#678071]">{tx.you}</span>
+            <span className="flex w-[4.6rem] shrink-0 items-center gap-1 text-xs font-bold text-[#678071]"><FaceBadge className="h-6" />{tx.you}</span>
             <div className="flex flex-1 gap-1" aria-label="pocket">
               {Array.from({ length: COLORS }, (_, i) => (
                 <span key={i} className="flex items-center gap-1 rounded-full px-1.5 py-0.5 text-sm font-bold text-white" style={{ background: FILL[i] }}><span aria-hidden>{MARK[i]}</span>{vs.mine[i]}</span>
@@ -187,6 +203,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
                     style={{ background: FILL[cv - 1], border: `2px solid ${DARK[cv - 1]}` }}
                   >{MARK[cv - 1]}</span>
                 )}
+                {(picked || (lastMe && lastMe.to.r === r && lastMe.to.c === c && !lastCpu)) && <span className="pointer-events-none absolute -top-1 -right-1 z-[1] w-[95%] drop-shadow"><FaceBadge className="w-full" /></span>}
                 {landed && !anim && <img src={assetUrl(`assets/jump/${ANIMALS[lastCpu.animal]}.webp`)} alt="" draggable={false} className="pointer-events-none absolute -top-0.5 -right-0.5 z-[1] w-[62%] object-contain drop-shadow" />}
               </button>
             )
@@ -214,7 +231,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           <p
             className={`m-0 rounded-full px-4 py-1 text-center text-sm font-extrabold ${vs.turn === 'me' ? 'bg-white text-[#246f55] shadow-[0_0_0_2px_#7cc545,0_0_12px_3px_rgba(124,197,69,.5)]' : 'bg-[#eef0e8] text-[#678071]'}`}
             aria-hidden
-          >{typeof vs.turn === 'number' ? <><img src={animalSrc(vs.turn)} alt="" draggable={false} className="mr-1 inline-block h-5 w-5 object-contain align-text-bottom" />{tx.cpuTurn(cpuName(vs.turn))}</> : tx.myTurn}</p>
+          >{typeof vs.turn === 'number' ? <><img src={animalSrc(vs.turn)} alt="" draggable={false} className="mr-1 inline-block h-5 w-5 object-contain align-text-bottom" />{tx.cpuTurn(cpuName(vs.turn))}</> : <><FaceBadge className="mr-1 h-5 align-text-bottom" />{tx.myTurn}</>}</p>
         )}
         {vs.mine.every((n) => n === 0) && vs.turn === 'me' && !msg && <p className="m-0 max-w-[34rem] text-center text-xs leading-relaxed text-[#678071]">{tx.howVs}</p>}
 
