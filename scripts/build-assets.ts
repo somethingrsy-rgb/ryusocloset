@@ -136,9 +136,9 @@ async function main() {
     .map((d) => d.name).sort()]
   for (const sub of baseDirs) {
     fs.mkdirSync(path.join(OUT, 'base', sub), { recursive: true })
-    // body·body_barefoot 와 머리 레이어(hair_front 또는 hair_<이름>)
+    // body·body_barefoot 와 머리 레이어(hair_front 또는 hair_<이름>), 머리마다 몸이 다르면 body_<이름>(+ _barefoot)
     const names = ['body', 'body_barefoot', ...fs.readdirSync(path.join(SRC, 'base', sub))
-      .filter((f) => /^hair_.+\.png$/.test(f)).map((f) => f.replace(/\.png$/, '')).sort()]
+      .filter((f) => /^(hair|body)_.+\.png$/.test(f) && !/^body_barefoot\.png$/.test(f)).map((f) => f.replace(/\.png$/, '')).sort()]
     if (sub === '' && !names.includes('hair_front')) throw new Error('없음: assets-src/base/hair_front.png')
     for (const name of names) {
       const src = path.join(SRC, 'base', sub, `${name}.png`)
