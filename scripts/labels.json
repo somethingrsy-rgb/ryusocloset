@@ -1425,5 +1425,26 @@
     "en": "Navy Shoes",
     "color": "navy",
     "native": true
+  },
+  "wig_layered": {
+    "ko": "레이어드 긴 머리",
+    "en": "Layered long wig",
+    "category": "wig",
+    "color": "brown",
+    "native": true
+  },
+  "wig_pigtails": {
+    "ko": "웨이브 양갈래",
+    "en": "Wavy pigtail wig",
+    "category": "wig",
+    "color": "black",
+    "native": true
+  },
+  "wig_crownbraid": {
+    "ko": "땋은 왕관 웨이브",
+    "en": "Crown braid wig",
+    "category": "wig",
+    "color": "black",
+    "native": true
   }
 }

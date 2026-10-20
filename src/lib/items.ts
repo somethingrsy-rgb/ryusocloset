@@ -1,6 +1,6 @@
 import raw from '../data/items.json'
 import { CATEGORIES, type Category } from './layers'
-import { baseFiles, getAvatar } from './avatars'
+import { baseFiles, getAvatar, getHairstyle, hairZ } from './avatars'
 import type { Item } from './types'
 
 export const ITEMS: Item[] = [...(raw as Item[])]
@@ -17,6 +17,23 @@ export const BASE_LAYERS = {
   get body() { return assetUrl(baseFiles(getAvatar()).body) },
   get bodyBarefoot() { return assetUrl(baseFiles(getAvatar()).bodyBarefoot) },
   get hairFront() { return assetUrl(baseFiles(getAvatar()).hairFront) },
+}
+
+/**
+ * 지금 입은 것에 맞는 몸·머리 그림. 가발(wig)을 쓰면 기본 머리는 숨기고(머리 레이어 없음),
+ * 머리가 몸에 그려져 있는 아바타는 머리 없는 몸으로 바꾼다. 신발을 신으면 맨발 몸.
+ */
+export function baseFor(outfit: { wig?: string; shoes?: string }) {
+  const a = getAvatar()
+  const style = getHairstyle(a)
+  const wigged = !!outfit.wig
+  const bodyName = wigged && a.baldBody ? a.baldBody : (style.body ?? 'body')
+  const suffix = outfit.shoes ? '_barefoot' : ''
+  return {
+    body: assetUrl(`${a.dir}/${bodyName}${suffix}.webp`),
+    hair: wigged ? null : assetUrl(baseFiles(a, style).hairFront),
+    hairZ: hairZ(a),
+  }
 }
 
 /** 옷 파일명이 바뀌기 전의 id → 현재 id (예전에 저장한 코디가 깨지지 않게) */

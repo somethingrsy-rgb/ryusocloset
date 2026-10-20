@@ -2,8 +2,7 @@ import type { ReactNode, RefObject } from 'react'
 import { useI18n } from '../i18n'
 import type { Background } from '../lib/backgrounds'
 import { useAvatar } from '../lib/useAvatar'
-import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from '../lib/items'
-import { hairZ } from '../lib/avatars'
+import { ITEM_BY_ID, assetUrl, baseFor } from '../lib/items'
 import { type Category } from '../lib/layers'
 import { wornItems } from '../lib/outfit'
 import { effectiveZ } from '../lib/tweaks'
@@ -43,9 +42,7 @@ export function Stage({ outfit, ...rest }: Props) {
     box: it.box,
     label: it.name[lang],
   }))
-  const base: BaseLayer[] = [
-    { src: outfit.shoes ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body, z: 0 },
-    { src: BASE_LAYERS.hairFront, z: hairZ() },
-  ]
+  const bl = baseFor(outfit)
+  const base: BaseLayer[] = [{ src: bl.body, z: 0 }, ...(bl.hair ? [{ src: bl.hair, z: bl.hairZ }] : [])]
   return <LayerStage base={base} layers={layers} ariaLabel={t('tweakAria')} {...rest} />
 }

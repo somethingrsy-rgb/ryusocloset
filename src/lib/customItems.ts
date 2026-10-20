@@ -24,6 +24,7 @@ const PLACEMENT: Record<Category, { cx: number; cy: number; w: number; maxH: num
   costume: { cx: 512, cy: 1000, w: 440, maxH: 760 },
   outer: { cx: 512, cy: 830, w: 620, maxH: 520 },
   shoes: { cx: 512, cy: 1485, w: 320, maxH: 120 },
+  wig: { cx: 512, cy: 420, w: 840, maxH: 900 },
   accessory: { cx: 512, cy: 230, w: 300, maxH: 250 },
   wand: { cx: 864, cy: 900, w: 160, maxH: 520 },
   bag: { cx: 770, cy: 1050, w: 230, maxH: 300 },

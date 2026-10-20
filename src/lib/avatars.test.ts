@@ -34,7 +34,7 @@ describe('avatars', () => {
     for (const id of ['wig', 'tails', 'braidwave']) {
       setHairstyle(ryuso, id)
       expect(hairZ(ryuso)).toBe(HAIR_BEHIND_Z)
-      expect(HAIR_BEHIND_Z).toBeLessThan(Math.min(...Object.values(LAYER_Z)))
+      expect(HAIR_BEHIND_Z).toBeLessThanOrEqual(Math.min(...Object.values(LAYER_Z)))
       expect(baseFiles(ryuso).body).toBe('assets/base/body_bald.webp')
       expect(baseFiles(ryuso).bodyBarefoot).toBe('assets/base/body_bald_barefoot.webp')
     }

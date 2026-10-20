@@ -234,8 +234,8 @@ const en: Dict = {
 export const MESSAGES: Record<Lang, Dict> = { ko, en }
 
 export const CATEGORY_LABEL: Record<Lang, Record<Category, string>> = {
-  ko: { top: '상의', bottom: '하의', dress: '원피스', costume: '테마옷', outer: '아우터', shoes: '신발', accessory: '헤어핀', wand: '마법봉', bag: '가방' },
-  en: { top: 'Tops', bottom: 'Bottoms', dress: 'Dresses', costume: 'Costumes', outer: 'Outerwear', shoes: 'Shoes', accessory: 'Hairpins', wand: 'Wands', bag: 'Bags' },
+  ko: { top: '상의', bottom: '하의', dress: '원피스', costume: '테마옷', outer: '아우터', shoes: '신발', wig: '가발', accessory: '헤어핀', wand: '마법봉', bag: '가방' },
+  en: { top: 'Tops', bottom: 'Bottoms', dress: 'Dresses', costume: 'Costumes', outer: 'Outerwear', shoes: 'Shoes', wig: 'Wigs', accessory: 'Hairpins', wand: 'Wands', bag: 'Bags' },
 }
 
 export const BG_LABEL: Record<Lang, Record<string, string>> = {
