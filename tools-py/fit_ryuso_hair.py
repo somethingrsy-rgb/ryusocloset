@@ -1,6 +1,8 @@
 """머리만 그려진 투명 PNG(1024×1536)를 머리 없는 류소(assets-src/base/body_bald.png)의 턱 선에 맞춰 hair_<이름>.png 로 저장한다.
 
-  python tools-py/fit_ryuso_hair.py <이름> <머리.png>
+  python tools-py/fit_ryuso_hair.py <이름> <머리.png> [--behind] [--up N]
+  --behind: 머리를 몸 '뒤'에 그린다(몸이 머리 위). 이때 머리 쪽을 얼굴·귀·목만 남긴 body_<이름>.png 도 만든다. 없으면 머리는 body_bald 위·옷 뒤
+  --up N: 머리를 N 픽셀 위로 올린다(한 칸 = 8px)
 
 1) 떨어진 작은 조각을 지운다
 2) 머리 그림의 얼굴 구멍이 턱 쪽에서 얼굴보다 넓으면, 그 줄(가로 한 줄)의 머리를 가운데로 밀어서 구멍 가장자리가 턱 선에 닿게 한다 (500~590 줄 턱 선까지 맞추고, 640~900 줄에서 서서히 줄어 0)
@@ -16,6 +18,8 @@ from PIL import Image
 from scipy import ndimage as ndi
 
 name, src = sys.argv[1:3]
+behind = '--behind' in sys.argv
+lift = int(sys.argv[sys.argv.index('--up') + 1]) if '--up' in sys.argv else 0
 H, W = 1536, 1024
 body = np.array(Image.open('assets-src/base/body_bald.png').convert('RGBA'))
 face = body[..., 3] > 8
@@ -70,9 +74,28 @@ for c in range(3):
     out[..., c] = np.where(gap, col[c], out[..., c])
 out[..., 3] = np.where(gap, np.maximum(out[..., 3], (fade * 255).astype(np.uint8)), out[..., 3])
 
-# 4) 팔 높이(720~840 줄)부터 팔 위의 머리는 서서히 지워서 손이 보이게 한다 (머리는 몸 위·옷 뒤에 그려진다)
-f2 = np.clip((yy - 720) / 120.0, 0, 1)
-arm = (np.abs(xx - 512) > 150) & (yy >= 640) & bm
-out[..., 3] = np.where(arm, (out[..., 3] * (1 - f2)).astype(np.uint8), out[..., 3])
-Image.fromarray(out).save(f'assets-src/base/hair_{name}.png')
-print(name, 'ok')
+if lift:
+    out = np.roll(out, -lift, axis=0)
+    out[H - lift:] = 0
+
+if not behind:
+    # 4) 팔 높이(720~840 줄)부터 팔 위의 머리는 서서히 지워서 손이 보이게 한다 (머리는 body_bald 위·옷 뒤에 그려진다)
+    f2 = np.clip((yy - 720) / 120.0, 0, 1)
+    arm = (np.abs(xx - 512) > 150) & (yy >= 640) & bm
+    out[..., 3] = np.where(arm, (out[..., 3] * (1 - f2)).astype(np.uint8), out[..., 3])
+    Image.fromarray(out).save(f'assets-src/base/hair_{name}.png')
+else:
+    Image.fromarray(out).save(f'assets-src/base/hair_{name}.png')
+    # 4) 머리가 몸 뒤에 그려지므로, 몸의 머리 쪽은 머리카락이 덮던 부분을 지워서(얼굴·귀·목만 남김) 맨머리가 머리카락 위로 보이지 않게 한다
+    hair_a = out[..., 3] > 128
+    keep = cv2.dilate((face & ~hair_a).astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))).astype(bool) & face
+    keep_soft = cv2.GaussianBlur(keep.astype(np.float32), (0, 0), 1.6)
+    for suf, srcf in (('', 'body_bald.png'), ('_barefoot', 'body_bald_barefoot.png')):
+        b = np.array(Image.open(f'assets-src/base/{srcf}').convert('RGBA'))
+        b[:640][~keep[:640]] = 0
+        b[:640, :, 3] = (b[:640, :, 3] * np.where(keep[:640], 1.0, 0.0) * np.clip(keep_soft[:640] * 1.4, 0, 1)).astype(np.uint8)
+        lab3, n3 = ndi.label(b[..., 3] > 0)
+        sz3 = ndi.sum(b[..., 3] > 0, lab3, range(1, n3 + 1))
+        b[~np.isin(lab3, [i + 1 for i, s_ in enumerate(sz3) if s_ > 2000])] = 0
+        Image.fromarray(b).save(f'assets-src/base/body_{name}{suf}.png')
+print(name, 'ok', 'behind' if behind else 'front', 'up', lift)
