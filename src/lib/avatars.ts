@@ -5,6 +5,8 @@ export interface Hairstyle {
   name: { ko: string; en: string }
   /** dir 안의 머리 레이어 파일 (옷 위에 얹는다) */
   file: string
+  /** 이 머리일 때 쓰는 몸 파일 이름(dir 안, 확장자·_barefoot 뺀 것). 없으면 body. 기본 머리가 몸에 그려져 있는 아바타가 다른 머리를 쓸 때 */
+  body?: string
 }
 
 export interface Avatar {
@@ -20,7 +22,10 @@ export interface Avatar {
 export const AVATARS: Avatar[] = [
   {
     id: 'ryuso', name: { ko: '류소', en: 'Ryuso' }, dir: 'assets/base',
-    hairstyles: [{ id: 'bob', name: { ko: '단발', en: 'Bob' }, file: 'hair_front.webp' }],
+    hairstyles: [
+      { id: 'bob', name: { ko: '단발', en: 'Bob' }, file: 'hair_front.webp' },
+      { id: 'wig', name: { ko: '레이어드 긴 머리', en: 'Layered long hair' }, file: 'hair_wig.webp', body: 'body_wig' },
+    ],
   },
   {
     id: 'soyoung', name: { ko: '소영', en: 'Soyoung' }, dir: 'assets/base/soyoung',
@@ -105,7 +110,7 @@ export function setHairstyle(a: Avatar, styleId: string) {
 
 /** 아바타의 베이스 레이어 파일 경로(assetUrl 을 거치기 전). 머리는 지금 고른 머리 */
 export const baseFiles = (a: Avatar, style: Hairstyle = getHairstyle(a)) => ({
-  body: `${a.dir}/body.webp`,
-  bodyBarefoot: `${a.dir}/body_barefoot.webp`,
+  body: `${a.dir}/${style.body ?? 'body'}.webp`,
+  bodyBarefoot: `${a.dir}/${style.body ?? 'body'}_barefoot.webp`,
   hairFront: `${a.dir}/${style.file}`,
 })
