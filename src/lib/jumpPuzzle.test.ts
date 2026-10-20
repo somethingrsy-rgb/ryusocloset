@@ -5,12 +5,12 @@ const seeded = () => { let s = 7; return () => ((s = (s * 16807) % 2147483647) /
 const empty = (): Board => Array.from({ length: SIZE }, () => Array(SIZE).fill(0))
 
 describe('점프 퍼즐', () => {
-  it('새 판은 가운데 4칸만 비고 네 색이 15개씩이다', () => {
+  it('새 판은 가운데 4칸만 비고 다섯 색이 12개씩이다', () => {
     const g = newGame(seeded())
     const flat = g.board.flat()
     expect(flat.filter((v) => v === 0)).toHaveLength(4)
     for (const k of [3, 4]) for (const j of [3, 4]) expect(g.board[k][j]).toBe(0)
-    for (let c = 1; c <= COLORS; c++) expect(flat.filter((v) => v === c)).toHaveLength(15)
+    for (let c = 1; c <= COLORS; c++) expect(flat.filter((v) => v === c)).toHaveLength(12)
   })
   it('처음에는 뛸 수 있는 수가 있고 가운데 쪽으로만 뛴다', () => {
     const g = newGame(seeded())
@@ -20,9 +20,9 @@ describe('점프 퍼즐', () => {
   })
   it('이웃한 말을 뛰어넘어 빈칸에 내려놓고 그 말을 모은다', () => {
     const b = empty(); b[0][0] = 1; b[0][1] = 3
-    const g = applyMove({ board: b, pocket: [0, 0, 0, 0], history: [] }, { from: { r: 0, c: 0 }, over: { r: 0, c: 1 }, to: { r: 0, c: 2 } })
+    const g = applyMove({ board: b, pocket: [0, 0, 0, 0, 0], history: [] }, { from: { r: 0, c: 0 }, over: { r: 0, c: 1 }, to: { r: 0, c: 2 } })
     expect(g.board[0][0]).toBe(0); expect(g.board[0][1]).toBe(0); expect(g.board[0][2]).toBe(1)
-    expect(g.pocket).toEqual([0, 0, 1, 0])
+    expect(g.pocket).toEqual([0, 0, 1, 0, 0])
   })
   it('대각선, 빈칸 뛰어넘기, 두 칸 이상 뛰기, 말 위에 내리기는 안 된다', () => {
     const b = empty(); b[2][2] = 1; b[3][3] = 2; b[2][3] = 3; b[2][4] = 4; b[4][2] = 2
@@ -44,7 +44,7 @@ describe('점프 퍼즐', () => {
     expect(undo(g0)).toBe(g0)
   })
   it('세트는 네 색 중 가장 적게 모은 수이고, 뛸 곳이 없으면 끝난다', () => {
-    expect(setsOf([3, 2, 5, 4])).toBe(2); expect(setsOf([1, 0, 1, 1])).toBe(0)
+    expect(setsOf([3, 2, 5, 4, 6])).toBe(2); expect(setsOf([1, 0, 1, 1, 1])).toBe(0)
     expect(isOver(empty())).toBe(true)
   })
 })
@@ -55,10 +55,10 @@ describe('컴퓨터와 겨루기', () => {
     const b = empty(); b[0][0] = 1; b[0][1] = 2; b[0][3] = 3; b[4][4] = 4
     const vs = { ...newVs(seeded()), board: b }
     const one = vsHumanMove(vs, { from: { r: 0, c: 0 }, over: { r: 0, c: 1 }, to: { r: 0, c: 2 } })
-    expect(one.mine).toEqual([0, 1, 0, 0]); expect(one.turn).toBe('me'); expect(one.chain).toEqual({ r: 0, c: 2 })
+    expect(one.mine).toEqual([0, 1, 0, 0, 0]); expect(one.turn).toBe('me'); expect(one.chain).toEqual({ r: 0, c: 2 })
     expect(vsHumanMove(one, { from: { r: 4, c: 4 }, over: { r: 4, c: 3 }, to: { r: 4, c: 2 } })).toBe(one) // 이어갈 때는 그 말만
     const two = vsHumanMove(one, { from: { r: 0, c: 2 }, over: { r: 0, c: 3 }, to: { r: 0, c: 4 } })
-    expect(two.mine).toEqual([0, 1, 1, 0]); expect(two.turn).toBe(0); expect(two.chain).toBeNull() // 더 뛸 수 없으면 차례가 넘어감
+    expect(two.mine).toEqual([0, 1, 1, 0, 0]); expect(two.turn).toBe(0); expect(two.chain).toBeNull() // 더 뛸 수 없으면 차례가 넘어감
     const end = vsEndTurn(one)
     expect(end.turn).toBe(0); expect(end.chain).toBeNull() // 끝내기
   })
@@ -71,10 +71,10 @@ describe('컴퓨터와 겨루기', () => {
     expect(vs.cpus[0].reduce((s, n) => s + n, 0)).toBe(plan.length)
   })
   it('결과: 세트 → 모은 말 → 비김 순서로 가린다', () => {
-    expect(vsResult({ mine: [2, 2, 2, 2], cpus: [[1, 3, 3, 3]] })).toBe('win')
-    expect(vsResult({ mine: [1, 1, 1, 1], cpus: [[2, 2, 2, 2]] })).toBe('lose')
-    expect(vsResult({ mine: [2, 2, 2, 5], cpus: [[2, 2, 2, 3]] })).toBe('win')
-    expect(vsResult({ mine: [2, 2, 2, 2], cpus: [[2, 2, 2, 2]] })).toBe('draw')
+    expect(vsResult({ mine: [2, 2, 2, 2, 2], cpus: [[1, 3, 3, 3, 3]] })).toBe('win')
+    expect(vsResult({ mine: [1, 1, 1, 1, 1], cpus: [[2, 2, 2, 2, 2]] })).toBe('lose')
+    expect(vsResult({ mine: [2, 2, 2, 2, 5], cpus: [[2, 2, 2, 2, 3]] })).toBe('win')
+    expect(vsResult({ mine: [2, 2, 2, 2, 2], cpus: [[2, 2, 2, 2, 2]] })).toBe('draw')
   })
   it('저장한 판은 그대로 불러오고, 망가진 값은 버린다', () => {
     const saved = { vs: newVs(seeded(), 2), bonusPaid: 60, setsPaid: 2 }
@@ -93,11 +93,11 @@ describe('컴퓨터와 겨루기', () => {
   })
   it('컴퓨터가 이어 뛸 때는 방금 뛴 말만 움직인다', () => {
     const b = empty(); b[0][0] = 1; b[0][1] = 2; b[0][3] = 3; b[2][2] = 4; b[3][2] = 1
-    const plan = planCpuTurn(b, [0, 0, 0, 0], seeded(), 'hard', { r: 0, c: 0 })
+    const plan = planCpuTurn(b, [0, 0, 0, 0, 0], seeded(), 'hard', { r: 0, c: 0 })
     expect(plan.length).toBeGreaterThan(0)
     expect(plan[0].from).toEqual({ r: 0, c: 0 })
     plan.slice(1).forEach((m, i) => expect(m.from).toEqual(plan[i].to))
-    expect(planCpuTurn(b, [0, 0, 0, 0], seeded(), 'hard', { r: 7, c: 7 })).toEqual([]) // 이어 뛸 수 없으면 빈 계획
+    expect(planCpuTurn(b, [0, 0, 0, 0, 0], seeded(), 'hard', { r: 7, c: 7 })).toEqual([]) // 이어 뛸 수 없으면 빈 계획
   })
   it('컴퓨터 여러 대: 나 → 컴퓨터 1 → 2 → 3 → 나 순서로 차례가 돈다', () => {
     let vs = newVs(seeded(), 3)
@@ -114,14 +114,14 @@ describe('컴퓨터와 겨루기', () => {
     expect(vs.cpus.map((p) => p.reduce((s, n) => s + n, 0)).every((n) => n > 0)).toBe(true)
   })
   it('컴퓨터 여러 대의 결과: 가장 높은 쪽이 이긴다', () => {
-    expect(vsResult({ mine: [2, 2, 2, 2], cpus: [[1, 1, 1, 1], [1, 2, 2, 2], [0, 1, 1, 1]] })).toBe('win')
-    expect(vsResult({ mine: [2, 2, 2, 2], cpus: [[1, 1, 1, 1], [3, 3, 3, 3]] })).toBe('lose')
-    expect(vsResult({ mine: [2, 2, 2, 2], cpus: [[1, 1, 1, 1], [2, 2, 2, 2]] })).toBe('draw')
+    expect(vsResult({ mine: [2, 2, 2, 2, 2], cpus: [[1, 1, 1, 1, 1], [1, 2, 2, 2, 2], [0, 1, 1, 1, 1]] })).toBe('win')
+    expect(vsResult({ mine: [2, 2, 2, 2, 2], cpus: [[1, 1, 1, 1, 1], [3, 3, 3, 3, 3]] })).toBe('lose')
+    expect(vsResult({ mine: [2, 2, 2, 2, 2], cpus: [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2]] })).toBe('draw')
   })
   it('예전 저장본(컴퓨터 1대)도 불러온다', () => {
-    const old = { vs: { board: newVs(seeded()).board, mine: [0, 0, 0, 0], cpu: [1, 0, 0, 0], turn: 'cpu', chain: null }, bonusPaid: 0 }
+    const old = { vs: { board: newVs(seeded()).board, mine: [0, 0, 0, 0, 0], cpu: [1, 0, 0, 0, 0], turn: 'cpu', chain: null }, bonusPaid: 0 }
     const got = parseSaved(old)
-    expect(got?.vs.cpus).toEqual([[1, 0, 0, 0]]); expect(got?.vs.turn).toBe(0)
+    expect(got?.vs.cpus).toEqual([[1, 0, 0, 0, 0]]); expect(got?.vs.turn).toBe(0)
     expect(parseSaved({ ...old, vs: { ...old.vs, turn: 'cpu', cpu: undefined } })).toBeNull()
   })
   it('상대 동물은 겹치지 않게 뽑고, 옛 저장본에는 순서대로 붙인다', () => {
@@ -133,5 +133,9 @@ describe('컴퓨터와 겨루기', () => {
     const v = newVs(seeded(), 2)
     expect(parseSaved({ mode: 'vs', game: newGame(seeded()), vs: { ...v, animals: undefined }, bonusPaid: 0 })?.vs.animals).toEqual([0, 1])
     expect(parseSaved({ mode: 'vs', game: newGame(seeded()), vs: { ...v, animals: [5, 3] }, bonusPaid: 0 })?.vs.animals).toEqual([5, 3])
+  })
+  it('네 색이던 예전 저장 판은 버리고 새 판으로 시작한다', () => {
+    const v = newVs(seeded(), 1)
+    expect(parseSaved({ vs: { ...v, mine: [0, 0, 0, 0] }, bonusPaid: 0, setsPaid: 0 })).toBeNull()
   })
 })

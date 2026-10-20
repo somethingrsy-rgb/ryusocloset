@@ -1,10 +1,10 @@
 /** 점프 퍼즐(혼자 하는 말 뛰어넘기): 8×8 판에 4가지 색 말을 채우고 가운데 2×2만 비운다. 말을 가로·세로로 이웃한 말 위로 뛰어넘어 빈칸에 내려놓으면 뛰어넘은 말을 모은다. */
 export const SIZE = 8
-export const COLORS = 4
-/** 보상: 4색을 하나씩 모은 한 세트마다 코인 */
+export const COLORS = 5
+/** 말 색 수(빨강·초록·파랑·주황·노랑). 한 세트 = 다섯 색을 하나씩 */
 /** 내가 한 세트를 완성할 때마다 받는 별 */
 export const STARS_PER_SET = 5
-export type Cell = 0 | 1 | 2 | 3 | 4 // 0 = 빈칸, 1~4 = 색
+export type Cell = 0 | 1 | 2 | 3 | 4 | 5 // 0 = 빈칸, 1~5 = 색
 export type Board = Cell[][]
 export interface Pos { r: number; c: number }
 export interface Move { from: Pos; over: Pos; to: Pos }
@@ -75,7 +75,7 @@ export function undo(game: Game): Game {
   return last ? { board: last.board, pocket: last.pocket, history: game.history.slice(0, -1) } : game
 }
 
-/** 4색을 하나씩 모은 세트 수 */
+/** 다섯 색을 하나씩 모은 세트 수 */
 export const setsOf = (pocket: number[]) => Math.min(...pocket)
 export const isOver = (board: Board) => allMoves(board).length === 0
 
