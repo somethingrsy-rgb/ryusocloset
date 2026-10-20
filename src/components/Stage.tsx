@@ -3,7 +3,7 @@ import { useI18n } from '../i18n'
 import type { Background } from '../lib/backgrounds'
 import { useAvatar } from '../lib/useAvatar'
 import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from '../lib/items'
-import { hairZ } from '../lib/avatars'
+import { bodyZ, hairZ } from '../lib/avatars'
 import { type Category } from '../lib/layers'
 import { wornItems } from '../lib/outfit'
 import { effectiveZ } from '../lib/tweaks'
@@ -44,7 +44,7 @@ export function Stage({ outfit, ...rest }: Props) {
     label: it.name[lang],
   }))
   const base: BaseLayer[] = [
-    { src: outfit.shoes ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body, z: 0 },
+    { src: outfit.shoes ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body, z: bodyZ() },
     { src: BASE_LAYERS.hairFront, z: hairZ() },
   ]
   return <LayerStage base={base} layers={layers} ariaLabel={t('tweakAria')} {...rest} />
