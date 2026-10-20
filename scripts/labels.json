@@ -1440,21 +1440,14 @@
     "color": "black",
     "native": true
   },
-  "wig_crownbraid": {
+  "wig_crownbraid2": {
     "ko": "땋은 왕관 웨이브",
     "en": "Crown braid wig",
     "category": "wig",
     "color": "black",
     "native": true
   },
-  "wig_longwave": {
-    "ko": "긴 웨이브",
-    "en": "Long wavy wig",
-    "category": "wig",
-    "color": "black",
-    "native": true
-  },
-  "wig_sidebraid": {
+  "wig_sidebraid2": {
     "ko": "옆으로 땋은 머리",
     "en": "Side braid wig",
     "category": "wig",
