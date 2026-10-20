@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { actFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
-import { COINS_PER_SET, COLORS, SIZE, WIN_BONUS, applyMove, type Move, findMove, isOver, newGame, newVs, parseSaved, planCpuTurn, setsOf, undo, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, type Game, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
+import { COINS_PER_SET, COLORS, MAX_CPUS, SIZE, WIN_BONUS, applyMove, type Move, findMove, isOver, newGame, newVs, parseSaved, planCpuTurn, setsOf, undo, vsCpuMove, vsEndTurn, vsSkipCpu, vsHumanMove, vsResult, type Game, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
 import { CoinIcon } from './Icons'
 
 const KEY = 'ryuso.jumppuzzle.v1'
 const LEVEL_KEY = 'ryuso.jumppuzzle.level.v1'
 const LEVELS: Level[] = ['easy', 'normal', 'hard']
 const loadLevel = (): Level => { try { const v = localStorage.getItem(LEVEL_KEY); return LEVELS.find((l) => l === v) ?? 'normal' } catch { return 'normal' } }
+const CPUS_KEY = 'ryuso.jumppuzzle.cpus.v1'
+const loadCpus = () => { try { const n = Number(localStorage.getItem(CPUS_KEY)); return n >= 1 && n <= MAX_CPUS ? Math.floor(n) : 1 } catch { return 1 } }
 const STATE_KEY = 'ryuso.jumppuzzle.state.v1' // 하던 판(탭을 옮기거나 닫아도 이어서)
 const loadState = () => { try { return parseSaved(JSON.parse(localStorage.getItem(STATE_KEY) ?? 'null')) } catch { return null } }
 const loadBest = () => { try { const n = Number(localStorage.getItem(KEY)); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0 } catch { return 0 } }
@@ -27,7 +29,7 @@ const T = {
     undo: '되돌리기', again: '새 판', close: '닫기', sets: '세트', best: '최고 기록', badMove: '그곳으로는 뛸 수 없어요', over: '더 뛸 수 없어요!',
     result: (n: number) => `${n}세트 완성!`, got: (c: number) => `+${c} 코인`, new: '새 기록!',
     level: { easy: '초급', normal: '중급', hard: '고급' },
-    solo: '혼자', vs: '컴퓨터와', you: '나', cpu: '컴퓨터', myTurn: '내 차례예요', cpuTurn: '컴퓨터 차례예요…', endTurn: '끝내기',
+    solo: '혼자', vs: '컴퓨터와', you: '나', cpu: '컴퓨터', cpuCount: (n: number) => `${n}대`, myTurn: '내 차례예요', cpuTurn: (n: number, multi: boolean) => (multi ? `컴퓨터 ${n} 차례예요…` : '컴퓨터 차례예요…'), endTurn: '끝내기',
     win: '이겼어요!', lose: '아쉬워요, 졌어요', draw: '비겼어요', bonus: (c: number) => `이긴 보너스 +${c}`,
   },
   en: {
@@ -36,7 +38,7 @@ const T = {
     undo: 'Undo', again: 'New game', close: 'Close', sets: 'sets', best: 'Best', badMove: "You can't jump there", over: 'No more jumps!',
     result: (n: number) => `${n} sets!`, got: (c: number) => `+${c} coins`, new: 'New best!',
     level: { easy: 'Easy', normal: 'Normal', hard: 'Hard' },
-    solo: 'Solo', vs: 'Vs computer', you: 'You', cpu: 'Computer', myTurn: 'Your turn', cpuTurn: 'Computer is thinking…', endTurn: 'End turn',
+    solo: 'Solo', vs: 'Vs computer', you: 'You', cpu: 'Computer', cpuCount: (n: number) => `${n} CPU`, myTurn: 'Your turn', cpuTurn: (n: number, multi: boolean) => (multi ? `Computer ${n} is thinking…` : 'Computer is thinking…'), endTurn: 'End turn',
     win: 'You win!', lose: 'You lost, try again', draw: "It's a tie", bonus: (c: number) => `Win bonus +${c}`,
   },
 }
@@ -47,7 +49,8 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const [saved] = useState(loadState)
   const [mode, setMode] = useState<'solo' | 'vs'>(saved?.mode ?? 'solo')
   const [game, setGame] = useState<Game>(() => saved?.game ?? newGame())
-  const [vs, setVs] = useState<Vs>(() => saved?.vs ?? newVs())
+  const [cpuCount, setCpuCount] = useState(() => saved?.vs.cpus.length ?? loadCpus())
+  const [vs, setVs] = useState<Vs>(() => saved?.vs ?? newVs(Math.random, cpuCount))
   const [level, setLevel] = useState<Level>(loadLevel)
   const [sel, setSel] = useState<Pos | null>(null)
   const [anim, setAnim] = useState<{ m: Move; color: number; gone: boolean } | null>(null) // 지금 날아가는 컴퓨터의 말
@@ -73,9 +76,9 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
 
   // 컴퓨터 차례: 정해 둔 수를 하나씩 슬로 모션으로 보여 주며 둔다
   useEffect(() => {
-    if (solo || vs.turn !== 'cpu' || isOver(vs.board)) return
-    const plan = planCpuTurn(vs.board, vs.cpu, Math.random, level, vs.cpuChain)
-    if (plan.length === 0) { setVs((v) => ({ ...v, turn: 'me', cpuChain: null })); return }
+    if (solo || vs.turn === 'me' || isOver(vs.board)) return
+    const plan = planCpuTurn(vs.board, vs.cpus[vs.turn], Math.random, level, vs.cpuChain)
+    if (plan.length === 0) { setVs(vsSkipCpu); return }
     const ids: number[] = []
     let t = CPU_PAUSE_MS
     let board = vs.board
@@ -131,11 +134,13 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   }
   const doUndo = () => { setGame((g) => undo(g)); setSel(null); setFresh(false) }
   const endTurn = () => { setVs((v) => vsEndTurn(v)); setSel(null) }
-  const restart = () => { setGame(newGame()); setVs(newVs()); setSel(null); setLastCpu(null); setPaid(0); setBonusPaid(0); setFresh(false); setMsg('') }
+  const restart = (count = cpuCount) => { setGame(newGame()); setVs(newVs(Math.random, count)); setSel(null); setLastCpu(null); setPaid(0); setBonusPaid(0); setFresh(false); setMsg('') }
   const pickLevel = (l: Level) => { setLevel(l); try { localStorage.setItem(LEVEL_KEY, l) } catch { /* 저장 실패는 무시 */ } }
+  const pickCpus = (n: number) => { if (n === cpuCount) return; setCpuCount(n); try { localStorage.setItem(CPUS_KEY, String(n)) } catch { /* 저장 실패는 무시 */ } restart(n) }
+  const cpuName = (i: number) => (cpuCount > 1 ? `${tx.cpu} ${i + 1}` : tx.cpu)
   const switchMode = (m: 'solo' | 'vs') => { if (m !== mode) { setMode(m); restart() } }
 
-  const turnText = solo ? '' : vs.turn === 'cpu' ? tx.cpuTurn : tx.myTurn // 화면 읽기용(위 큰 표시는 aria-hidden)
+  const turnText = solo ? '' : typeof vs.turn === 'number' ? tx.cpuTurn(vs.turn + 1, cpuCount > 1) : tx.myTurn // 화면 읽기용(위 큰 표시는 aria-hidden)
   const total = paid * COINS_PER_SET + bonusPaid
 
   return (
@@ -152,36 +157,43 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden px-3 py-2">
         {!solo && (
-          <div role="radiogroup" aria-label="level" className="flex rounded-full bg-[#e8efdc] p-0.5 text-xs font-bold">
-            {LEVELS.map((l) => (
-              <button key={l} role="radio" aria-checked={level === l} onClick={() => pickLevel(l)} className={`min-h-8 rounded-full border-0 px-4 ${level === l ? 'bg-[#246f55] text-white' : 'bg-transparent text-[#246f55]'}`}>{tx.level[l]}</button>
-            ))}
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+            <div role="radiogroup" aria-label="level" className="flex rounded-full bg-[#e8efdc] p-0.5 text-xs font-bold">
+              {LEVELS.map((l) => (
+                <button key={l} role="radio" aria-checked={level === l} onClick={() => pickLevel(l)} className={`min-h-8 rounded-full border-0 px-3 ${level === l ? 'bg-[#246f55] text-white' : 'bg-transparent text-[#246f55]'}`}>{tx.level[l]}</button>
+              ))}
+            </div>
+            <div role="radiogroup" aria-label="computers" className="flex rounded-full bg-[#e8efdc] p-0.5 text-xs font-bold">
+              {Array.from({ length: MAX_CPUS }, (_, i) => i + 1).map((n) => (
+                <button key={n} role="radio" aria-checked={cpuCount === n} onClick={() => pickCpus(n)} className={`min-h-8 rounded-full border-0 px-3 ${cpuCount === n ? 'bg-[#246f55] text-white' : 'bg-transparent text-[#246f55]'}`}>{tx.cpuCount(n)}</button>
+              ))}
+            </div>
           </div>
         )}
         <div className="flex w-full max-w-[34rem] flex-col gap-1.5 rounded-2xl bg-white px-3 py-2 shadow-sm">
           <div className="flex items-center justify-between gap-2">
-            <span className="w-16 shrink-0 text-xs font-bold text-[#678071]">{tx.you}</span>
-            <div className="flex flex-1 gap-1.5" aria-label="pocket">
+            <span className="w-[4.6rem] shrink-0 text-xs font-bold text-[#678071]">{tx.you}</span>
+            <div className="flex flex-1 gap-1" aria-label="pocket">
               {Array.from({ length: COLORS }, (_, i) => (
-                <span key={i} className="flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-bold text-white" style={{ background: FILL[i] }}><span aria-hidden>{MARK[i]}</span>{mine[i]}</span>
+                <span key={i} className="flex items-center gap-1 rounded-full px-1.5 py-0.5 text-sm font-bold text-white" style={{ background: FILL[i] }}><span aria-hidden>{MARK[i]}</span>{mine[i]}</span>
               ))}
             </div>
-            <div className="text-right text-xs leading-tight font-bold"><div className="text-base text-[#246f55]">{sets} {tx.sets}</div>{solo && <div className="text-[#678071]">{tx.best} {best}</div>}</div>
+            <div className="shrink-0 whitespace-nowrap text-right text-xs leading-tight font-bold"><div className="text-base text-[#246f55]">{sets} {tx.sets}</div>{solo && <div className="text-[#678071]">{tx.best} {best}</div>}</div>
           </div>
-          {!solo && (
-            <div className="flex items-center justify-between gap-2">
-              <span className="flex w-16 shrink-0 items-center gap-1 whitespace-nowrap text-xs font-bold text-[#678071]"><img src={assetUrl('assets/tabs/bunny.webp')} alt="" draggable={false} className="h-5 w-5 object-contain" />{tx.cpu}</span>
-              <div className="flex flex-1 gap-1.5" aria-label="computer pocket">
+          {!solo && vs.cpus.map((pocket, ci) => (
+            <div key={ci} className={`flex items-center justify-between gap-2 ${vs.turn === ci ? 'font-extrabold' : ''}`}>
+              <span className="flex w-[4.6rem] shrink-0 items-center gap-1 whitespace-nowrap text-xs font-bold text-[#678071]"><img src={assetUrl('assets/tabs/bunny.webp')} alt="" draggable={false} className="h-5 w-5 object-contain" />{cpuName(ci)}</span>
+              <div className="flex flex-1 gap-1" aria-label={`computer ${ci + 1} pocket`}>
                 {Array.from({ length: COLORS }, (_, i) => (
-                  <span key={i} className="flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-bold text-white" style={{ background: FILL[i] }}><span aria-hidden>{MARK[i]}</span>{vs.cpu[i]}</span>
+                  <span key={i} className="flex items-center gap-1 rounded-full px-1.5 py-0.5 text-sm font-bold text-white" style={{ background: FILL[i] }}><span aria-hidden>{MARK[i]}</span>{pocket[i]}</span>
                 ))}
               </div>
-              <div className="text-right text-base font-bold text-[#246f55]">{setsOf(vs.cpu)} {tx.sets}</div>
+              <div className="shrink-0 whitespace-nowrap text-right text-base font-bold text-[#246f55]">{setsOf(pocket)} {tx.sets}</div>
             </div>
-          )}
+          ))}
         </div>
 
-        <div role="grid" aria-label={tx.title} className={`relative grid aspect-square w-full max-w-[min(34rem,calc(100dvh-24rem))] gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5 transition-shadow ${!solo && !over && vs.turn === 'me' ? 'shadow-[0_0_0_4px_#7cc545,0_0_22px_6px_rgba(124,197,69,.55)]' : ''}`} style={{ gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))` }}>
+        <div role="grid" aria-label={tx.title} className={`relative grid aspect-square w-full gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5 transition-shadow ${!solo && !over && vs.turn === 'me' ? 'shadow-[0_0_0_4px_#7cc545,0_0_22px_6px_rgba(124,197,69,.55)]' : ''}`} style={{ maxWidth: `min(34rem, calc(100dvh - ${solo ? 24 : 24 + (cpuCount - 1) * 2.3}rem))`, gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))` }}>
           {board.flatMap((row, r) => row.map((v, c) => {
             const picked = sel && sel.r === r && sel.c === c
             const hidden = anim && ((anim.m.from.r === r && anim.m.from.c === c) || (anim.gone && anim.m.over.r === r && anim.m.over.c === c))
@@ -227,7 +239,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           <p
             className={`m-0 rounded-full px-4 py-1 text-center text-sm font-extrabold ${vs.turn === 'me' ? 'bg-white text-[#246f55] shadow-[0_0_0_2px_#7cc545,0_0_12px_3px_rgba(124,197,69,.5)]' : 'bg-[#eef0e8] text-[#678071]'}`}
             aria-hidden
-          >{vs.turn === 'me' ? tx.myTurn : tx.cpuTurn}</p>
+          >{typeof vs.turn === 'number' ? tx.cpuTurn(vs.turn + 1, cpuCount > 1) : tx.myTurn}</p>
         )}
         {(solo ? game.history.length === 0 : vs.mine.every((n) => n === 0) && vs.turn === 'me') && !msg && <p className="m-0 max-w-[34rem] text-center text-xs leading-relaxed text-[#678071]">{solo ? tx.how : tx.howVs}</p>}
 
@@ -235,7 +247,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           {solo
             ? <button onClick={doUndo} disabled={game.history.length === 0} className="min-h-9 rounded-full border border-[#dce4d7] bg-white px-4 text-xs font-bold disabled:opacity-40">↩ {tx.undo}</button>
             : <button onClick={endTurn} disabled={!vs.chain || vs.turn !== 'me'} className="min-h-9 rounded-full border border-[#dce4d7] bg-white px-4 text-xs font-bold disabled:opacity-40">✋ {tx.endTurn}</button>}
-          <button onClick={restart} className="min-h-9 rounded-full bg-[#246f55] px-4 text-xs font-bold text-white">🔄 {tx.again}</button>
+          <button onClick={() => restart()} className="min-h-9 rounded-full bg-[#246f55] px-4 text-xs font-bold text-white">🔄 {tx.again}</button>
         </div>
       </div>
 
@@ -243,13 +255,13 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
         <div role="dialog" aria-label={tx.over} className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 p-6">
           <div className="flex w-full max-w-xs flex-col items-center gap-3 rounded-3xl bg-white p-6 text-center shadow-xl">
             <p className="m-0 text-lg font-extrabold">{result ? tx[result] : tx.over}</p>
-            <p className="m-0 text-3xl font-extrabold text-[#246f55]">{result ? `${sets} : ${setsOf(vs.cpu)}` : tx.result(sets)}</p>
+            <p className="m-0 text-3xl font-extrabold text-[#246f55]">{result ? [sets, ...vs.cpus.map(setsOf)].join(' : ') : tx.result(sets)}</p>
             {total > 0 && <p className="m-0 flex items-center gap-1 text-sm font-bold text-[#c9751f]">{tx.got(total)} <CoinIcon /></p>}
             {bonusPaid > 0 && <p className="m-0 text-xs font-bold text-[#678071]">{tx.bonus(bonusPaid)}</p>}
             {solo && fresh && <p className="m-0 text-sm font-bold text-[#e8707f]">🎉 {tx.new}</p>}
             <div className="flex gap-2">
               {solo && <button onClick={doUndo} className="min-h-11 rounded-full border border-[#dce4d7] bg-white px-4 text-sm font-bold">↩ {tx.undo}</button>}
-              <button onClick={restart} className="min-h-11 rounded-full bg-[#246f55] px-4 text-sm font-bold text-white">🔄 {tx.again}</button>
+              <button onClick={() => restart()} className="min-h-11 rounded-full bg-[#246f55] px-4 text-sm font-bold text-white">🔄 {tx.again}</button>
             </div>
           </div>
         </div>

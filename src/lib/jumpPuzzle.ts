@@ -84,14 +84,17 @@ export const WIN_BONUS = 15
 export interface Vs {
   board: Board
   mine: number[]
-  cpu: number[]
-  turn: 'me' | 'cpu'
+  /** 컴퓨터마다 모은 말 (1~3대) */
+  cpus: number[][]
+  /** 지금 차례: 나 또는 컴퓨터 번호(0부터). 나 → 컴퓨터 1 → 컴퓨터 2 → … → 나 */
+  turn: 'me' | number
   /** 내가 방금 뛴 말(이어서 더 뛸 수 있을 때). 이 말만 더 뛸 수 있고 "끝내기"로 차례를 넘긴다 */
   chain: Pos | null
   /** 컴퓨터가 이번 차례에 방금 뛴 말(이어 뛰는 중). 이어 뛸 때는 이 말만 움직인다 */
   cpuChain: Pos | null
 }
-export const newVs = (rng: () => number = Math.random): Vs => ({ board: newGame(rng).board, mine: Array(COLORS).fill(0), cpu: Array(COLORS).fill(0), turn: 'me', chain: null, cpuChain: null })
+export const MAX_CPUS = 3
+export const newVs = (rng: () => number = Math.random, cpuCount = 1): Vs => ({ board: newGame(rng).board, mine: Array(COLORS).fill(0), cpus: Array.from({ length: Math.min(MAX_CPUS, Math.max(1, cpuCount)) }, () => Array(COLORS).fill(0)), turn: 'me', chain: null, cpuChain: null })
 
 function jump(board: Board, m: Move): { board: Board; caught: Cell } {
   const b = clone(board)
@@ -109,14 +112,18 @@ export function vsHumanMove(vs: Vs, m: Move): Vs {
   const { board, caught } = jump(vs.board, m)
   const mine = [...vs.mine]; mine[caught - 1]++
   const more = movesFrom(board, m.to).length > 0
-  return { ...vs, board, mine, chain: more ? m.to : null, turn: more ? 'me' : 'cpu' }
+  return { ...vs, board, mine, chain: more ? m.to : null, turn: more ? 'me' : 0 }
 }
-export const vsEndTurn = (vs: Vs): Vs => (vs.turn === 'me' && vs.chain ? { ...vs, chain: null, turn: 'cpu' } : vs)
+export const vsEndTurn = (vs: Vs): Vs => (vs.turn === 'me' && vs.chain ? { ...vs, chain: null, turn: 0 } : vs)
+/** 컴퓨터 차례가 끝났을 때 다음 차례(다음 컴퓨터, 마지막이면 나) */
+const nextTurn = (vs: Vs): 'me' | number => (typeof vs.turn === 'number' && vs.turn + 1 < vs.cpus.length ? vs.turn + 1 : 'me')
+export const vsSkipCpu = (vs: Vs): Vs => (typeof vs.turn === 'number' ? { ...vs, turn: nextTurn(vs), cpuChain: null } : vs)
 export function vsCpuMove(vs: Vs, m: Move, last: boolean): Vs {
-  if (!findMove(vs.board, m.from, m.to)) return { ...vs, turn: 'me', cpuChain: null }
+  if (typeof vs.turn !== 'number') return vs
+  if (!findMove(vs.board, m.from, m.to)) return vsSkipCpu(vs)
   const { board, caught } = jump(vs.board, m)
-  const cpu = [...vs.cpu]; cpu[caught - 1]++
-  return { ...vs, board, cpu, turn: last ? 'me' : 'cpu', cpuChain: last ? null : m.to }
+  const cpus = vs.cpus.map((p, i) => { if (i !== vs.turn) return p; const q = [...p]; q[caught - 1]++; return q })
+  return last ? vsSkipCpu({ ...vs, board, cpus }) : { ...vs, board, cpus, cpuChain: m.to }
 }
 
 export type Level = 'easy' | 'normal' | 'hard'
@@ -153,12 +160,12 @@ export function planCpuTurn(board: Board, cpu: number[], rng: () => number = Mat
   return plan
 }
 
-/** 결과: 세트가 많은 쪽이 이기고, 같으면 모은 말이 많은 쪽, 그래도 같으면 비김 */
-export function vsResult(vs: Pick<Vs, 'mine' | 'cpu'>): 'win' | 'lose' | 'draw' {
-  const a = setsOf(vs.mine), b = setsOf(vs.cpu)
-  if (a !== b) return a > b ? 'win' : 'lose'
-  const x = vs.mine.reduce((s, n) => s + n, 0), y = vs.cpu.reduce((s, n) => s + n, 0)
-  return x === y ? 'draw' : x > y ? 'win' : 'lose'
+/** 결과: 세트가 많은 쪽이 이기고, 같으면 모은 말이 많은 쪽. 나보다 나은 컴퓨터가 있으면 지고, 나만 가장 높으면 이기고, 나와 같은 점수가 있으면 비김 */
+export function vsResult(vs: Pick<Vs, 'mine' | 'cpus'>): 'win' | 'lose' | 'draw' {
+  const score = (p: number[]) => setsOf(p) * 1000 + p.reduce((s, n) => s + n, 0)
+  const me = score(vs.mine)
+  const best = Math.max(...vs.cpus.map(score))
+  return me > best ? 'win' : me < best ? 'lose' : 'draw'
 }
 
 /** 이어서 하려고 저장해 두는 판 상태 */
@@ -172,9 +179,17 @@ const okPos = (p: unknown): p is Pos => !!p && typeof p === 'object' && Number.i
 export function parseSaved(raw: unknown): Saved | null {
   const s = raw as Saved | null
   if (!s || typeof s !== 'object' || (s.mode !== 'solo' && s.mode !== 'vs')) return null
-  const g = s.game, v = s.vs
+  const g = s.game
+  const v = s.vs as unknown as Record<string, unknown> | undefined
   if (!g || !okBoard(g.board) || !okPocket(g.pocket) || !Array.isArray(g.history) || !g.history.every((h) => okBoard(h?.board) && okPocket(h?.pocket))) return null
-  if (!v || !okBoard(v.board) || !okPocket(v.mine) || !okPocket(v.cpu) || (v.turn !== 'me' && v.turn !== 'cpu') || (v.chain !== null && !okPos(v.chain)) || (v.cpuChain != null && !okPos(v.cpuChain))) return null
+  if (!v || !okBoard(v.board) || !okPocket(v.mine)) return null
+  // 예전 저장본(컴퓨터 1대: cpu, turn 'cpu')도 읽는다
+  const cpus = Array.isArray(v.cpus) ? v.cpus : okPocket(v.cpu) ? [v.cpu] : null
+  if (!cpus || cpus.length < 1 || cpus.length > MAX_CPUS || !cpus.every(okPocket)) return null
+  const turn = v.turn === 'cpu' ? 0 : v.turn
+  if (turn !== 'me' && !(Number.isInteger(turn) && (turn as number) >= 0 && (turn as number) < cpus.length)) return null
+  if ((v.chain !== null && !okPos(v.chain)) || (v.cpuChain != null && !okPos(v.cpuChain))) return null
   const n = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0)
-  return { mode: s.mode, game: g, vs: { ...v, cpuChain: v.cpuChain ?? null }, paid: n(s.paid), bonusPaid: n(s.bonusPaid) }
+  const vs: Vs = { board: v.board, mine: v.mine, cpus: cpus as number[][], turn: turn as 'me' | number, chain: (v.chain as Pos | null) ?? null, cpuChain: (v.cpuChain as Pos | null) ?? null }
+  return { mode: s.mode, game: g, vs, paid: n(s.paid), bonusPaid: n(s.bonusPaid) }
 }
