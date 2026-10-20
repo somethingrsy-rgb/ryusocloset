@@ -22,6 +22,7 @@ const TURN_GAP_MS = 1100 // 차례가 바뀐 뒤, 동물이 말을 고르기 전
 const CPU_PICK_MS = 900 // 동물이 움직일 말 위에 올라가 있는 시간
 const CPU_CHAIN_PICK_MS = 600 // 이어 뛸 때 다음 말을 고르는 시간
 const CPU_FLY_MS = 1400
+const ME_FLY_MS = 1000 // 내 말이 뛰어넘는 시간(동물보다 조금 빠르게)
 
 /** 점프 퍼즐에서 내 얼굴 그림: 류소·유하·유엘만 있고, 소영은 뺐다(소영이면 유하 얼굴) */
 const FACES: Record<string, string> = { ryuso: 'face_ryuso', yuha: 'face_yuha', yuel: 'face_yuel' }
@@ -122,8 +123,8 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     setAnim({ m, color: board[m.from.r][m.from.c], who: 'me', flying: true, gone: false })
     const next = vsHumanMove(vs, m)
     timers.current.push(
-      window.setTimeout(() => setAnim((a) => (a ? { ...a, gone: true } : a)), CPU_FLY_MS * 0.5),
-      window.setTimeout(() => { setVs(next); setLastMe(m); setAnim(null); if (next.chain) setSel(next.chain) }, CPU_FLY_MS),
+      window.setTimeout(() => setAnim((a) => (a ? { ...a, gone: true } : a)), ME_FLY_MS * 0.5),
+      window.setTimeout(() => { setVs(next); setLastMe(m); setAnim(null); if (next.chain) setSel(next.chain) }, ME_FLY_MS),
     )
   }
   const endTurn = () => { setVs((v) => vsEndTurn(v)); setSel(null) }
@@ -215,7 +216,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
                   left: `calc(${anim.m.from.c} * (100% + 3px) / ${SIZE})`, top: `calc(${anim.m.from.r} * (100% + 3px) / ${SIZE})`, width: `calc((100% - ${(SIZE - 1) * 3}px) / ${SIZE})`,
                   ['--tx' as string]: `calc(${anim.m.to.c - anim.m.from.c} * (100% + 3px))`, ['--ty' as string]: `calc(${anim.m.to.r - anim.m.from.r} * (100% + 3px))`,
                   ['--mx' as string]: `calc(${(anim.m.to.c - anim.m.from.c) / 2} * (100% + 3px))`, ['--my' as string]: `calc(${(anim.m.to.r - anim.m.from.r) / 2} * (100% + 3px))`,
-                  animationDuration: `${CPU_FLY_MS}ms`,
+                  animationDuration: `${anim.who === 'me' ? ME_FLY_MS : CPU_FLY_MS}ms`,
                 } as React.CSSProperties}
               >
                 <span className="absolute inset-[8%] flex items-center justify-center rounded-full text-[min(3.2vw,1.1rem)] font-black text-white/80 shadow-[inset_0_-3px_0_rgba(0,0,0,.18),0_6px_10px_rgba(0,0,0,.3)]" style={{ background: FILL[anim.color - 1], border: `2px solid ${DARK[anim.color - 1]}` }}>{MARK[anim.color - 1]}</span>
