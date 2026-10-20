@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from '../lib/items'
-import { HAIR_FRONT_Z } from '../lib/layers'
+import { hairZ } from '../lib/avatars'
 import { wornItems } from '../lib/outfit'
 import { cssTransform, effectiveZ } from '../lib/tweaks'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -40,7 +40,7 @@ export const FigureLayers = memo(function FigureLayers({
           </div>
         )
       })}
-      <img src={BASE_LAYERS.hairFront} alt="" className="layer" style={{ zIndex: HAIR_FRONT_Z }} draggable={false} />
+      <img src={BASE_LAYERS.hairFront} alt="" className="layer" style={{ zIndex: hairZ() }} draggable={false} />
     </>
   )
 })
