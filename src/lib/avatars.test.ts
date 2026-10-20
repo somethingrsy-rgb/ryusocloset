@@ -31,7 +31,7 @@ describe('avatars', () => {
   it('류소의 긴 머리 둘은 옷 뒤(몸 바로 위)에 그리고, 단발은 앞머리 높이', () => {
     const ryuso = AVATARS.find((a) => a.id === 'ryuso')!
     expect(hairZ(ryuso)).toBe(HAIR_FRONT_Z)
-    for (const id of ['wig', 'tails']) {
+    for (const id of ['wig', 'tails', 'braidwave', 'longwave']) {
       setHairstyle(ryuso, id)
       expect(hairZ(ryuso)).toBe(HAIR_BEHIND_Z)
       expect(HAIR_BEHIND_Z).toBeLessThan(Math.min(...Object.values(LAYER_Z)))
