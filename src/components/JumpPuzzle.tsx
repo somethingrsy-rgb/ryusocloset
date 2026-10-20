@@ -22,6 +22,7 @@ const TURN_GAP_MS = 1100 // 차례가 바뀐 뒤, 동물이 말을 고르기 전
 const CPU_PICK_MS = 900 // 동물이 움직일 말 위에 올라가 있는 시간
 const CPU_CHAIN_PICK_MS = 600 // 이어 뛸 때 다음 말을 고르는 시간
 const CPU_FLY_MS = 1000
+const MY_POP_MS = 500
 const ME_FLY_MS = 1000 // 내 말이 뛰어넘는 시간(동물보다 조금 빠르게)
 
 /** 점프 퍼즐에서 내 얼굴 그림: 류소·유하·유엘만 있고, 소영은 뺐다(소영이면 유하 얼굴) */
@@ -59,6 +60,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const [level, setLevel] = useState<Level>(loadLevel)
   const [sel, setSel] = useState<Pos | null>(null)
   const [anim, setAnim] = useState<{ m: Move; color: number; who: 'me' | number; flying: boolean; gone: boolean } | null>(null) // 지금 움직이는 말과 그 주인(나 또는 동물 번호): 고르는 중 → 날아가는 중
+  const [myPop, setMyPop] = useState(false) // 내 차례가 되면 내 얼굴을 0.5초만 크게 띄운다(돌이 오래 가려지지 않게)
   const [lastMe, setLastMe] = useState<Move | null>(null) // 내가 방금 둔 수(동물이 다음에 두기 전까지 얼굴을 보여 준다)
   const [lastCpu, setLastCpu] = useState<{ m: Move; animal: number } | null>(null) // 동물이 방금 둔 수(내가 다음에 두기 전까지 빛나게 보여 준다)
   const [bonusPaid, setBonusPaid] = useState(saved?.bonusPaid ?? 0)
@@ -74,6 +76,14 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const sets = setsOf(vs.mine)
   const over = isOver(board)
   const result = over ? vsResult(vs) : null
+
+  useEffect(() => {
+    if (vs.turn !== 'me' || isOver(vs.board)) { setMyPop(false); return }
+    setMyPop(true)
+    const id = window.setTimeout(() => setMyPop(false), MY_POP_MS)
+    return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vs.turn])
 
   // 컴퓨터 차례: 정해 둔 수를 하나씩 슬로 모션으로 보여 주며 둔다
   useEffect(() => {
@@ -221,6 +231,11 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
                 <span className="absolute inset-[8%] flex items-center justify-center rounded-full text-[min(3.2vw,1.1rem)] font-black text-white/80 shadow-[inset_0_-3px_0_rgba(0,0,0,.18),0_6px_10px_rgba(0,0,0,.3)]" style={{ background: FILL[anim.color - 1], border: `2px solid ${DARK[anim.color - 1]}` }}>{MARK[anim.color - 1]}</span>
                 <img src={anim.who === 'me' ? faceSrc() : assetUrl(`assets/jump/${ANIMALS[anim.who]}.webp`)} alt="" draggable={false} className={`absolute -top-[62%] left-1/2 w-[120%] -translate-x-1/2 object-contain drop-shadow-md ${anim.flying ? '' : 'animate-bounce'}`} />
               </div>
+            </div>
+          )}
+          {myPop && (
+            <div aria-hidden className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+              <img src={faceSrc()} alt="" draggable={false} className="jump-pop w-[46%] object-contain drop-shadow-xl" />
             </div>
           )}
           {sel && !anim && vs.turn === 'me' && !over && (
