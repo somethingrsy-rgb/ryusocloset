@@ -17,7 +17,9 @@ const FILL = ['#ef5a3c', '#7cc545', '#4aa6ea', '#f5a623']
 const DARK = ['#b8381f', '#4f9526', '#2a78b8', '#c27d0c']
 const MARK = ['●', '▲', '■', '★']
 // 컴퓨터의 한 수를 슬로 모션으로 보여 준다: 0.5초 쉬고 → 1.4초 동안 말이 날아가 뛰어넘고(잡힌 말은 중간에 사라짐) → 도착하면 0.5초 쉰다
-const CPU_PAUSE_MS = 500
+const TURN_GAP_MS = 1100 // 차례가 바뀐 뒤, 동물이 말을 고르기 전에 잠깐 기다림(누구 차례인지 알아보도록)
+const CPU_PICK_MS = 900 // 동물이 움직일 말 위에 올라가 있는 시간
+const CPU_CHAIN_PICK_MS = 600 // 이어 뛸 때 다음 말을 고르는 시간
 const CPU_FLY_MS = 1400
 
 const T = {
@@ -45,8 +47,8 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const [vs, setVs] = useState<Vs>(() => saved?.vs ?? newVs(Math.random, cpuCount))
   const [level, setLevel] = useState<Level>(loadLevel)
   const [sel, setSel] = useState<Pos | null>(null)
-  const [anim, setAnim] = useState<{ m: Move; color: number; gone: boolean } | null>(null) // 지금 날아가는 컴퓨터의 말
-  const [lastCpu, setLastCpu] = useState<Move | null>(null) // 컴퓨터가 방금 둔 수(내가 다음에 두기 전까지 빛나게 보여 준다)
+  const [anim, setAnim] = useState<{ m: Move; color: number; animal: number; flying: boolean; gone: boolean } | null>(null) // 지금 움직이는 동물의 말(고르는 중 → 날아가는 중)
+  const [lastCpu, setLastCpu] = useState<{ m: Move; animal: number } | null>(null) // 동물이 방금 둔 수(내가 다음에 두기 전까지 빛나게 보여 준다)
   const [bonusPaid, setBonusPaid] = useState(saved?.bonusPaid ?? 0)
   const [msg, setMsg] = useState('')
   const timers = useRef<number[]>([])
@@ -67,14 +69,18 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     const plan = planCpuTurn(vs.board, vs.cpus[vs.turn], Math.random, level, vs.cpuChain)
     if (plan.length === 0) { setVs(vsSkipCpu); return }
     const ids: number[] = []
-    let t = CPU_PAUSE_MS
+    const animal = animalOf(vs.turn)
+    let t = TURN_GAP_MS
     let board = vs.board
     plan.forEach((m, i) => {
       const color = board[m.from.r][m.from.c]
-      ids.push(window.setTimeout(() => setAnim({ m, color, gone: false }), t))
+      const pick = i === 0 ? CPU_PICK_MS : CPU_CHAIN_PICK_MS
+      ids.push(window.setTimeout(() => setAnim({ m, color, animal, flying: false, gone: false }), t))
+      t += pick
+      ids.push(window.setTimeout(() => setAnim((a) => (a ? { ...a, flying: true } : a)), t))
       ids.push(window.setTimeout(() => setAnim((a) => (a ? { ...a, gone: true } : a)), t + CPU_FLY_MS * 0.5))
-      ids.push(window.setTimeout(() => { setVs((v) => vsCpuMove(v, m, i === plan.length - 1)); setLastCpu(m); setAnim(null) }, t + CPU_FLY_MS))
-      t += CPU_FLY_MS + CPU_PAUSE_MS
+      ids.push(window.setTimeout(() => { setVs((v) => vsCpuMove(v, m, i === plan.length - 1)); setLastCpu({ m, animal }); setAnim(null) }, t + CPU_FLY_MS))
+      t += CPU_FLY_MS
       const b2 = board.map((row) => [...row])
       b2[m.to.r][m.to.c] = b2[m.from.r][m.from.c]; b2[m.from.r][m.from.c] = 0; b2[m.over.r][m.over.c] = 0
       board = b2 as typeof board
@@ -165,15 +171,15 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
             const picked = sel && sel.r === r && sel.c === c
             const hidden = anim && ((anim.m.from.r === r && anim.m.from.c === c) || (anim.gone && anim.m.over.r === r && anim.m.over.c === c))
             const cv = hidden ? 0 : v
-            const landed = lastCpu && lastCpu.to.r === r && lastCpu.to.c === c
-            const left = lastCpu && ((lastCpu.from.r === r && lastCpu.from.c === c) || (lastCpu.over.r === r && lastCpu.over.c === c))
+            const landed = lastCpu && lastCpu.m.to.r === r && lastCpu.m.to.c === c
+            const left = lastCpu && ((lastCpu.m.from.r === r && lastCpu.m.from.c === c) || (lastCpu.m.over.r === r && lastCpu.m.over.c === c))
             return (
               <button
                 key={`${r}-${c}`}
                 role="gridcell"
                 aria-label={cv ? `${r + 1}-${c + 1} ${MARK[cv - 1]}` : `${r + 1}-${c + 1}`}
                 onClick={() => tap(r, c)}
-                className={`flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-lg border-0 p-[8%] ${landed && !anim ? 'bg-[#fff6d6] shadow-[0_0_0_3px_#f5a623,0_0_14px_4px_rgba(245,166,35,.6)]' : left ? 'bg-[#fff6d6]/70 shadow-[inset_0_0_0_2px_#f5c36b]' : v === 0 ? 'bg-[#eef3e6]' : 'bg-[#f6f9f0]'}`}
+                className={`relative flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-lg border-0 p-[8%] ${landed && !anim ? 'bg-[#fff6d6] shadow-[0_0_0_3px_#f5a623,0_0_14px_4px_rgba(245,166,35,.6)]' : left ? 'bg-[#fff6d6]/70 shadow-[inset_0_0_0_2px_#f5c36b]' : v === 0 ? 'bg-[#eef3e6]' : 'bg-[#f6f9f0]'}`}
               >
                 {cv !== 0 && (
                   <span
@@ -181,13 +187,14 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
                     style={{ background: FILL[cv - 1], border: `2px solid ${DARK[cv - 1]}` }}
                   >{MARK[cv - 1]}</span>
                 )}
+                {landed && !anim && <img src={assetUrl(`assets/jump/${ANIMALS[lastCpu.animal]}.webp`)} alt="" draggable={false} className="pointer-events-none absolute -top-0.5 -right-0.5 z-[1] w-[62%] object-contain drop-shadow" />}
               </button>
             )
           }))}
           {anim && (
             <div aria-hidden className="pointer-events-none absolute inset-1.5 z-10">
               <div
-                className="jump-fly absolute aspect-square"
+                className={`${anim.flying ? 'jump-fly ' : ''}absolute aspect-square`}
                 style={{
                   left: `calc(${anim.m.from.c} * (100% + 3px) / ${SIZE})`, top: `calc(${anim.m.from.r} * (100% + 3px) / ${SIZE})`, width: `calc((100% - ${(SIZE - 1) * 3}px) / ${SIZE})`,
                   ['--tx' as string]: `calc(${anim.m.to.c - anim.m.from.c} * (100% + 3px))`, ['--ty' as string]: `calc(${anim.m.to.r - anim.m.from.r} * (100% + 3px))`,
@@ -196,6 +203,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
                 } as React.CSSProperties}
               >
                 <span className="absolute inset-[8%] flex items-center justify-center rounded-full text-[min(3.2vw,1.1rem)] font-black text-white/80 shadow-[inset_0_-3px_0_rgba(0,0,0,.18),0_6px_10px_rgba(0,0,0,.3)]" style={{ background: FILL[anim.color - 1], border: `2px solid ${DARK[anim.color - 1]}` }}>{MARK[anim.color - 1]}</span>
+                <img src={assetUrl(`assets/jump/${ANIMALS[anim.animal]}.webp`)} alt="" draggable={false} className={`absolute -top-[62%] left-1/2 w-[120%] -translate-x-1/2 object-contain drop-shadow-md ${anim.flying ? '' : 'animate-bounce'}`} />
               </div>
             </div>
           )}
