@@ -38,6 +38,8 @@ export function baseFor(outfit: { wig?: string; shoes?: string }) {
 
 /** 옷 파일명이 바뀌기 전의 id → 현재 id (예전에 저장한 코디가 깨지지 않게) */
 export const ID_ALIASES: Record<string, string> = {
+  "wig_crownbraid": "wig_crownbraid2",
+  "wig_sidebraid": "wig_sidebraid2",
   "bottom_belt_skirt_black": "bottom_skirt_black",
   "bottom_skirt_brown": "bottom_shezmig_skirt_brown",
   "bottom_pants_ivory": "bottom_thick_pants_ivory",
