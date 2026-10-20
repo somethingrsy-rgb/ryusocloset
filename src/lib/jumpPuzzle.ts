@@ -2,7 +2,8 @@
 export const SIZE = 8
 export const COLORS = 4
 /** 보상: 4색을 하나씩 모은 한 세트마다 코인 */
-export const COINS_PER_SET = 5
+/** 내가 한 세트를 완성할 때마다 받는 별 */
+export const STARS_PER_SET = 5
 export type Cell = 0 | 1 | 2 | 3 | 4 // 0 = 빈칸, 1~4 = 색
 export type Board = Cell[][]
 export interface Pos { r: number; c: number }
@@ -178,7 +179,7 @@ export function vsResult(vs: Pick<Vs, 'mine' | 'cpus'>): 'win' | 'lose' | 'draw'
 }
 
 /** 이어서 하려고 저장해 두는 판 상태 */
-export interface Saved { vs: Vs; bonusPaid: number }
+export interface Saved { vs: Vs; bonusPaid: number; setsPaid: number }
 
 const okBoard = (b: unknown): b is Board => Array.isArray(b) && b.length === SIZE && b.every((row) => Array.isArray(row) && row.length === SIZE && row.every((v) => Number.isInteger(v) && v >= 0 && v <= COLORS))
 const okPocket = (p: unknown): p is number[] => Array.isArray(p) && p.length === COLORS && p.every((n) => Number.isInteger(n) && n >= 0)
@@ -199,5 +200,5 @@ export function parseSaved(raw: unknown): Saved | null {
   if ((v.chain !== null && !okPos(v.chain)) || (v.cpuChain != null && !okPos(v.cpuChain))) return null
   const n = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0)
   const vs: Vs = { board: v.board, mine: v.mine, animals, cpus: cpus as number[][], turn: turn as 'me' | number, chain: (v.chain as Pos | null) ?? null, cpuChain: (v.cpuChain as Pos | null) ?? null }
-  return { vs, bonusPaid: n(s.bonusPaid) }
+  return { vs, bonusPaid: n(s.bonusPaid), setsPaid: n(s.setsPaid) }
 }
