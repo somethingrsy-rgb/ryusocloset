@@ -29,6 +29,7 @@ export const AVATARS: Avatar[] = [
       { id: 'bob', name: { ko: '단발', en: 'Bob' }, file: 'hair_front.webp' },
       { id: 'wig', name: { ko: '레이어드 긴 머리', en: 'Layered long hair' }, file: 'hair_wig.webp', body: 'body_bald', behind: true },
       { id: 'tails', name: { ko: '웨이브 양갈래', en: 'Wavy pigtails' }, file: 'hair_tails.webp', body: 'body_bald', behind: true },
+      { id: 'braidwave', name: { ko: '땋은 왕관 웨이브', en: 'Crown braid waves' }, file: 'hair_braid.webp', body: 'body_bald', behind: true },
     ],
   },
   {
