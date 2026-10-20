@@ -187,15 +187,14 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
             const picked = sel && sel.r === r && sel.c === c
             const hidden = anim && ((anim.m.from.r === r && anim.m.from.c === c) || (anim.gone && anim.m.over.r === r && anim.m.over.c === c))
             const cv = hidden ? 0 : v
-            const landed = lastCpu && lastCpu.m.to.r === r && lastCpu.m.to.c === c
-            const left = lastCpu && ((lastCpu.m.from.r === r && lastCpu.m.from.c === c) || (lastCpu.m.over.r === r && lastCpu.m.over.c === c))
+            const landed = vs.turn !== 'me' && lastCpu && lastCpu.m.to.r === r && lastCpu.m.to.c === c
             return (
               <button
                 key={`${r}-${c}`}
                 role="gridcell"
                 aria-label={cv ? `${r + 1}-${c + 1} ${MARK[cv - 1]}` : `${r + 1}-${c + 1}`}
                 onClick={() => tap(r, c)}
-                className={`relative flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-lg border-0 p-[8%] ${landed && !anim ? 'bg-[#fff6d6] shadow-[0_0_0_3px_#f5a623,0_0_14px_4px_rgba(245,166,35,.6)]' : left ? 'bg-[#fff6d6]/70 shadow-[inset_0_0_0_2px_#f5c36b]' : v === 0 ? 'bg-[#eef3e6]' : 'bg-[#f6f9f0]'}`}
+                className={`relative flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-lg border-0 p-[8%] ${v === 0 ? 'bg-[#eef3e6]' : 'bg-[#f6f9f0]'}`}
               >
                 {cv !== 0 && (
                   <span
@@ -203,7 +202,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
                     style={{ background: FILL[cv - 1], border: `2px solid ${DARK[cv - 1]}` }}
                   >{MARK[cv - 1]}</span>
                 )}
-                {lastMe && lastMe.to.r === r && lastMe.to.c === c && !lastCpu && !anim && <span className="pointer-events-none absolute -top-1 -right-1 z-[1] w-[95%] drop-shadow"><FaceBadge className="w-full" /></span>}
+                {vs.turn !== 'me' && lastMe && lastMe.to.r === r && lastMe.to.c === c && !lastCpu && !anim && <span className="pointer-events-none absolute -top-1 -right-1 z-[1] w-[95%] drop-shadow"><FaceBadge className="w-full" /></span>}
                 {landed && !anim && <img src={assetUrl(`assets/jump/${ANIMALS[lastCpu.animal]}.webp`)} alt="" draggable={false} className="pointer-events-none absolute -top-0.5 -right-0.5 z-[1] w-[62%] object-contain drop-shadow" />}
               </button>
             )
