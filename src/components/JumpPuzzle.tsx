@@ -13,10 +13,10 @@ const CPUS_KEY = 'ryuso.jumppuzzle.cpus.v1'
 const loadCpus = () => { try { const n = Number(localStorage.getItem(CPUS_KEY)); return n >= 1 && n <= MAX_CPUS ? Math.floor(n) : 1 } catch { return 1 } }
 const STATE_KEY = 'ryuso.jumppuzzle.state.v1' // 하던 판(탭을 옮기거나 닫아도 이어서)
 const loadState = () => { try { return parseSaved(JSON.parse(localStorage.getItem(STATE_KEY) ?? 'null')) } catch { return null } }
-/** 네 색: 빨강·초록·파랑·주황 (색마다 가운데 무늬가 달라서 색을 구분하기 어려워도 알 수 있다) */
-const FILL = ['#ef5a3c', '#7cc545', '#4aa6ea', '#f5a623']
-const DARK = ['#b8381f', '#4f9526', '#2a78b8', '#c27d0c']
-const MARK = ['●', '▲', '■', '★']
+/** 다섯 색: 빨강·초록·파랑·주황·노랑 (색마다 가운데 무늬가 달라서 색을 구분하기 어려워도 알 수 있다) */
+const FILL = ['#ef5a3c', '#7cc545', '#4aa6ea', '#f28c28', '#f8d84a']
+const DARK = ['#b8381f', '#4f9526', '#2a78b8', '#b85f0c', '#c2a10c']
+const MARK = ['●', '▲', '■', '★', '◆']
 // 컴퓨터의 한 수를 슬로 모션으로 보여 준다: 0.5초 쉬고 → 1.4초 동안 말이 날아가 뛰어넘고(잡힌 말은 중간에 사라짐) → 도착하면 0.5초 쉰다
 const TURN_GAP_MS = 1100 // 차례가 바뀐 뒤, 동물이 말을 고르기 전에 잠깐 기다림(누구 차례인지 알아보도록)
 const CPU_PICK_MS = 900 // 동물이 움직일 말 위에 올라가 있는 시간
@@ -181,7 +181,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
             <span className="flex w-[4.6rem] shrink-0 items-center gap-1 text-xs font-bold text-[#678071]"><FaceBadge className="h-6" />{tx.you}</span>
             <div className="flex flex-1 gap-1" aria-label="pocket">
               {Array.from({ length: COLORS }, (_, i) => (
-                <span key={i} className="flex items-center gap-1 rounded-full px-1.5 py-0.5 text-sm font-bold text-white" style={{ background: FILL[i] }}><span aria-hidden>{MARK[i]}</span>{vs.mine[i]}</span>
+                <span key={i} className="flex items-center gap-0.5 rounded-full px-1 py-0.5 text-xs font-bold text-white" style={{ background: FILL[i] }}><span aria-hidden>{MARK[i]}</span>{vs.mine[i]}</span>
               ))}
             </div>
             <div className="shrink-0 whitespace-nowrap text-right text-xs leading-tight font-bold"><div className="text-base text-[#246f55]">{sets} {tx.sets}</div></div>
@@ -191,7 +191,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
               <span className="flex w-[4.6rem] shrink-0 items-center gap-1 whitespace-nowrap text-xs font-bold text-[#678071]"><img src={animalSrc(ci)} alt="" draggable={false} className="h-6 w-6 object-contain" />{cpuName(ci)}</span>
               <div className="flex flex-1 gap-1" aria-label={`computer ${ci + 1} pocket`}>
                 {Array.from({ length: COLORS }, (_, i) => (
-                  <span key={i} className="flex items-center gap-1 rounded-full px-1.5 py-0.5 text-sm font-bold text-white" style={{ background: FILL[i] }}><span aria-hidden>{MARK[i]}</span>{pocket[i]}</span>
+                  <span key={i} className="flex items-center gap-0.5 rounded-full px-1 py-0.5 text-xs font-bold text-white" style={{ background: FILL[i] }}><span aria-hidden>{MARK[i]}</span>{pocket[i]}</span>
                 ))}
               </div>
               <div className="shrink-0 whitespace-nowrap text-right text-base font-bold text-[#246f55]">{setsOf(pocket)} {tx.sets}</div>
