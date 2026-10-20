@@ -1,4 +1,4 @@
-import { HAIR_BEHIND_Z, HAIR_FRONT_Z } from './layers'
+import { BODY_OVER_HAIR_Z, HAIR_BEHIND_Z, HAIR_FRONT_Z } from './layers'
 import { isRestoring } from './restoreGuard'
 
 export interface Hairstyle {
@@ -8,7 +8,7 @@ export interface Hairstyle {
   file: string
   /** 이 머리일 때 쓰는 몸 파일 이름(dir 안, 확장자·_barefoot 뺀 것). 없으면 body. 기본 머리가 몸에 그려져 있는 아바타가 다른 머리를 쓸 때 */
   body?: string
-  /** true 면 머리를 옷 뒤(몸 바로 위)에 그린다. 옷 위로 내려오는 긴 머리용 */
+  /** true 면 머리를 몸 뒤(몸보다 아래)에 그린다. 몸의 머리 쪽은 이 머리에 맞춰 얼굴·귀만 남긴 body 파일을 쓴다 */
   behind?: boolean
 }
 
@@ -27,10 +27,10 @@ export const AVATARS: Avatar[] = [
     id: 'ryuso', name: { ko: '류소', en: 'Ryuso' }, dir: 'assets/base',
     hairstyles: [
       { id: 'bob', name: { ko: '단발', en: 'Bob' }, file: 'hair_front.webp' },
-      { id: 'wig', name: { ko: '레이어드 긴 머리', en: 'Layered long hair' }, file: 'hair_wig.webp', body: 'body_bald', behind: true },
-      { id: 'tails', name: { ko: '웨이브 양갈래', en: 'Wavy pigtails' }, file: 'hair_tails.webp', body: 'body_bald', behind: true },
-      { id: 'braidwave', name: { ko: '땋은 왕관 웨이브', en: 'Crown braid waves' }, file: 'hair_braid.webp', body: 'body_bald', behind: true },
-      { id: 'longwave', name: { ko: '긴 웨이브', en: 'Long waves' }, file: 'hair_wave.webp', body: 'body_bald', behind: true },
+      { id: 'wig', name: { ko: '레이어드 긴 머리', en: 'Layered long hair' }, file: 'hair_wig.webp', body: 'body_wig', behind: true },
+      { id: 'tails', name: { ko: '웨이브 양갈래', en: 'Wavy pigtails' }, file: 'hair_tails.webp', body: 'body_tails', behind: true },
+      { id: 'braidwave', name: { ko: '땋은 왕관 웨이브', en: 'Crown braid waves' }, file: 'hair_braid.webp', body: 'body_braid', behind: true },
+      { id: 'longwave', name: { ko: '긴 웨이브', en: 'Long waves' }, file: 'hair_wave.webp', body: 'body_wave', behind: true },
     ],
   },
   {
@@ -114,8 +114,10 @@ export function setHairstyle(a: Avatar, styleId: string) {
   listeners.forEach((fn) => fn())
 }
 
-/** 지금 머리가 그려지는 높이: 옷 뒤로 가는 머리면 몸 바로 위, 아니면 앞머리 높이 */
+/** 지금 머리가 그려지는 높이: 몸 뒤로 가는 머리면 몸 아래, 아니면 앞머리 높이 */
 export const hairZ = (a: Avatar = getAvatar()) => (getHairstyle(a).behind ? HAIR_BEHIND_Z : HAIR_FRONT_Z)
+/** 몸이 그려지는 높이: 머리가 몸 뒤로 가면 머리 위(2), 아니면 맨 아래(0) */
+export const bodyZ = (a: Avatar = getAvatar()) => (getHairstyle(a).behind ? BODY_OVER_HAIR_Z : 0)
 
 /** 아바타의 베이스 레이어 파일 경로(assetUrl 을 거치기 전). 머리는 지금 고른 머리 */
 export const baseFiles = (a: Avatar, style: Hairstyle = getHairstyle(a)) => ({
