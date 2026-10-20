@@ -19,9 +19,8 @@ export const LAYER_Z: Record<Category, number> = {
 
 /** 앞머리 레이어(옷 위, 액세서리 아래) */
 export const HAIR_FRONT_Z = 60
-/** 몸 뒤로 가는 머리(몸·옷보다 아래): 긴 머리가 옷·손을 가리지 않게. 이때 몸은 머리 위(BODY_OVER_HAIR_Z)에 그린다 */
-export const HAIR_BEHIND_Z = 1
-export const BODY_OVER_HAIR_Z = 2
+/** 옷 뒤로 가는 머리(몸 바로 위, 신발·옷 아래): 긴 머리가 옷을 가리지 않게 */
+export const HAIR_BEHIND_Z = 5
 
 /** 아바타·옷 PNG 공통 캔버스 크기 (옷은 이 캔버스 전체를 (0,0)에 겹쳐 올린다) */
 export const CANVAS_W = 1024

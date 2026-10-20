@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from '../lib/items'
-import { bodyZ, hairZ } from '../lib/avatars'
+import { hairZ } from '../lib/avatars'
 import { wornItems } from '../lib/outfit'
 import { cssTransform, effectiveZ } from '../lib/tweaks'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -26,7 +26,7 @@ export const FigureLayers = memo(function FigureLayers({
   const body = outfit.shoes ? BASE_LAYERS.bodyBarefoot : BASE_LAYERS.body
   return (
     <>
-      <img src={body} alt="" className="layer" style={{ zIndex: bodyZ() }} draggable={false} />
+      <img src={body} alt="" className="layer" style={{ zIndex: 0 }} draggable={false} />
       {items.map((it) => {
         const t = tweaks[it.category]
         return (
