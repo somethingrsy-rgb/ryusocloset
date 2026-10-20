@@ -19,7 +19,7 @@ import { drawables } from '../lib/room'
 import { AVATAR_BASE_W, AVATAR_FEET_RATIO, ROOM_W, ROOM_H } from '../lib/roomTypes'
 
 /** 찾은 아이템 그림을 보여 주는 시간(ms) */
-const FOUND_POP_MS = 500
+const FOUND_POP_MS = 700
 const TEXT = {
   ko: { map: '지도', found: '찾음', hint: '바닥: 이동 · 방향키/WASD · 소품: 살펴보기',
     nightHint: '밤에는 반짝임이 더 잘 보여요 ✨ 소품도 눌러봐요', done: '모두 찾았어요 ⭐ 이제 소품을 살펴볼까요?', got: '찾았다!', wear: '옷장에서 입어보기', keep: '계속 걷기', talkTo: '말 걸기' },
@@ -307,7 +307,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, paused = 
         />
       )}
       {popup && collected && (
-        <div aria-hidden className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center">
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-50 flex flex-col items-center justify-center gap-2">
+          <p className="found-pop m-0 text-3xl font-extrabold text-blush-deep drop-shadow">🎉 {tx.got}</p>
           <img src={assetUrl(collected.thumb)} alt="" draggable={false} className="found-pop h-48 w-48 object-contain drop-shadow-2xl" />
         </div>
       )}
