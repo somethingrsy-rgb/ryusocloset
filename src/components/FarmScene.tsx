@@ -99,10 +99,7 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
     const plot = farm.plots[i]
     const ready = growth(plot, now) === 1
     const need = !plot ? 'seed' : plot.wateredAt === null ? 'water' : ready ? 'harvest' : null
-    if (tool && need !== tool) {
-      setNotice(tool === 'seed' ? (ko ? '빈 밭에 심어요' : 'Plant in an empty plot') : tool === 'water' ? (ko ? '심고 물 안 준 밭에 물을 줘요' : 'Water a planted plot') : (ko ? '다 자란 밭을 수확해요' : 'Harvest a grown plot'))
-      return
-    }
+    // 어떤 도구를 골라 둬도, 밭이 필요로 하는 일(심기·물주기·수확)을 바로 한다 — 물방울 💧 이 보이는 밭은 눌러서 물을 준다
     if (!need) { setNotice(ko ? '자라는 중이에요' : 'Still growing'); return }
     if (pending.current.has(i)) return
     pending.current.add(i)
