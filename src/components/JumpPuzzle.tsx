@@ -3,7 +3,7 @@ import { useI18n } from '../i18n'
 import { earnStars } from '../lib/shop'
 import { assetUrl } from '../lib/items'
 import { ANIMALS, COLORS, MAX_CPUS, SIZE, WIN_BONUS, type Move, findMove, isOver, newVs, parseSaved, planCpuTurn, setsOf, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, vsSkipCpu, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
-import { AVATARS, baseFiles, getAvatar, getHairstyle } from '../lib/avatars'
+import { getAvatar } from '../lib/avatars'
 import { StarIcon } from './Icons'
 
 const LEVEL_KEY = 'ryuso.jumppuzzle.level.v1'
@@ -22,28 +22,15 @@ const TURN_GAP_MS = 1100 // 차례가 바뀐 뒤, 동물이 말을 고르기 전
 const CPU_PICK_MS = 900 // 동물이 움직일 말 위에 올라가 있는 시간
 const CPU_CHAIN_PICK_MS = 600 // 이어 뛸 때 다음 말을 고르는 시간
 const CPU_FLY_MS = 1400
+const ME_FLY_MS = 1000 // 내 말이 뛰어넘는 시간(동물보다 조금 빠르게)
 
-/** 점프 퍼즐에서 내 얼굴로 쓰는 아바타: 소영은 뺐고(유하로 대신 보임), 유하는 항상 양갈래 머리 */
-function faceOf() {
-  const av = getAvatar()
-  const a = av.id === 'soyoung' ? AVATARS.find((x) => x.id === 'yuha') ?? av : av
-  const style = a.id === 'yuha' ? a.hairstyles.find((h) => h.id === 'twin') ?? getHairstyle(a) : getHairstyle(a)
-  // 4:3 로 오릴 자리(1024×1536 그림 기준): 양갈래는 머리가 넓어서 더 넓게
-  const crop = a.id === 'yuha' && style.id === 'twin' ? { x: 72, y: 20, w: 880 } : { x: 112, y: 10, w: 800 }
-  return { files: baseFiles(a, style), crop }
-}
+/** 점프 퍼즐에서 내 얼굴 그림: 류소·유하·유엘만 있고, 소영은 뺐다(소영이면 유하 얼굴) */
+const FACES: Record<string, string> = { ryuso: 'face_ryuso', yuha: 'face_yuha', yuel: 'face_yuel' }
+const faceSrc = () => assetUrl(`assets/jump/${FACES[getAvatar().id] ?? 'face_yuha'}.webp`)
 
-/** 내 아바타의 얼굴만 오려서 보여 준다(몸 + 앞머리 레이어를 얼굴 부분만 보이게 자르고 목 아래는 서서히 지움). className 으로 크기·자리를 정한다 */
+/** 내 얼굴(작은 표시용). className 으로 크기·자리를 정한다 */
 function FaceBadge({ className = '' }: { className?: string }) {
-  const { files: f, crop } = faceOf()
-  const layer = 'pointer-events-none absolute top-0 left-0 max-w-none origin-top-left select-none'
-  const style = { width: `${(1024 / crop.w) * 100}%`, transform: `translate(${(-crop.x / 1024) * 100}%, ${(-crop.y / 1536) * 100}%)` }
-  return (
-    <span aria-hidden className={`relative inline-block aspect-[4/3] overflow-hidden [mask-image:linear-gradient(to_bottom,#000_78%,transparent)] ${className}`}>
-      <img src={assetUrl(f.body)} alt="" draggable={false} className={layer} style={style} />
-      <img src={assetUrl(f.hairFront)} alt="" draggable={false} className={layer} style={style} />
-    </span>
-  )
+  return <img aria-hidden src={faceSrc()} alt="" draggable={false} className={`inline-block object-contain ${className}`} />
 }
 
 const T = {
@@ -71,7 +58,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const [vs, setVs] = useState<Vs>(() => saved?.vs ?? newVs(Math.random, cpuCount))
   const [level, setLevel] = useState<Level>(loadLevel)
   const [sel, setSel] = useState<Pos | null>(null)
-  const [anim, setAnim] = useState<{ m: Move; color: number; animal: number; flying: boolean; gone: boolean } | null>(null) // 지금 움직이는 동물의 말(고르는 중 → 날아가는 중)
+  const [anim, setAnim] = useState<{ m: Move; color: number; who: 'me' | number; flying: boolean; gone: boolean } | null>(null) // 지금 움직이는 말과 그 주인(나 또는 동물 번호): 고르는 중 → 날아가는 중
   const [lastMe, setLastMe] = useState<Move | null>(null) // 내가 방금 둔 수(동물이 다음에 두기 전까지 얼굴을 보여 준다)
   const [lastCpu, setLastCpu] = useState<{ m: Move; animal: number } | null>(null) // 동물이 방금 둔 수(내가 다음에 두기 전까지 빛나게 보여 준다)
   const [bonusPaid, setBonusPaid] = useState(saved?.bonusPaid ?? 0)
@@ -100,7 +87,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     plan.forEach((m, i) => {
       const color = board[m.from.r][m.from.c]
       const pick = i === 0 ? CPU_PICK_MS : CPU_CHAIN_PICK_MS
-      ids.push(window.setTimeout(() => setAnim({ m, color, animal, flying: false, gone: false }), t))
+      ids.push(window.setTimeout(() => setAnim({ m, color, who: animal, flying: false, gone: false }), t))
       t += pick
       ids.push(window.setTimeout(() => setAnim((a) => (a ? { ...a, flying: true } : a)), t))
       ids.push(window.setTimeout(() => setAnim((a) => (a ? { ...a, gone: true } : a)), t + CPU_FLY_MS * 0.5))
@@ -120,7 +107,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     if (result === 'win' && bonusPaid === 0) { earnStars(WIN_BONUS); setBonusPaid(WIN_BONUS) }
   }, [result, bonusPaid])
   const tap = (r: number, c: number) => {
-    if (over || vs.turn !== 'me') return
+    if (over || vs.turn !== 'me' || anim) return
     const v = board[r][c]
     if (v !== 0) {
       if (vs.chain && (vs.chain.r !== r || vs.chain.c !== c)) return // 이어 뛸 때는 방금 뛴 말만
@@ -130,12 +117,15 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     if (!sel) return
     const m = findMove(board, sel, { r, c })
     if (!m) { say(tx.badMove); setSel(vs.chain); return }
+    // 내 말도 동물처럼 천천히 뛰어넘는다(내 얼굴이 말 위에 올라탄 채로)
     setSel(null)
     setLastCpu(null)
-    setLastMe(m)
+    setAnim({ m, color: board[m.from.r][m.from.c], who: 'me', flying: true, gone: false })
     const next = vsHumanMove(vs, m)
-    setVs(next)
-    if (next.chain) setSel(next.chain)
+    timers.current.push(
+      window.setTimeout(() => setAnim((a) => (a ? { ...a, gone: true } : a)), ME_FLY_MS * 0.5),
+      window.setTimeout(() => { setVs(next); setLastMe(m); setAnim(null); if (next.chain) setSel(next.chain) }, ME_FLY_MS),
+    )
   }
   const endTurn = () => { setVs((v) => vsEndTurn(v)); setSel(null) }
   const restart = (count = cpuCount) => { setVs(newVs(Math.random, count)); setSel(null); setLastCpu(null); setLastMe(null); setBonusPaid(0); setMsg('') }
@@ -213,7 +203,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
                     style={{ background: FILL[cv - 1], border: `2px solid ${DARK[cv - 1]}` }}
                   >{MARK[cv - 1]}</span>
                 )}
-                {(picked || (lastMe && lastMe.to.r === r && lastMe.to.c === c && !lastCpu)) && <span className="pointer-events-none absolute -top-1 -right-1 z-[1] w-[95%] drop-shadow"><FaceBadge className="w-full" /></span>}
+                {lastMe && lastMe.to.r === r && lastMe.to.c === c && !lastCpu && !anim && <span className="pointer-events-none absolute -top-1 -right-1 z-[1] w-[95%] drop-shadow"><FaceBadge className="w-full" /></span>}
                 {landed && !anim && <img src={assetUrl(`assets/jump/${ANIMALS[lastCpu.animal]}.webp`)} alt="" draggable={false} className="pointer-events-none absolute -top-0.5 -right-0.5 z-[1] w-[62%] object-contain drop-shadow" />}
               </button>
             )
@@ -226,11 +216,18 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
                   left: `calc(${anim.m.from.c} * (100% + 3px) / ${SIZE})`, top: `calc(${anim.m.from.r} * (100% + 3px) / ${SIZE})`, width: `calc((100% - ${(SIZE - 1) * 3}px) / ${SIZE})`,
                   ['--tx' as string]: `calc(${anim.m.to.c - anim.m.from.c} * (100% + 3px))`, ['--ty' as string]: `calc(${anim.m.to.r - anim.m.from.r} * (100% + 3px))`,
                   ['--mx' as string]: `calc(${(anim.m.to.c - anim.m.from.c) / 2} * (100% + 3px))`, ['--my' as string]: `calc(${(anim.m.to.r - anim.m.from.r) / 2} * (100% + 3px))`,
-                  animationDuration: `${CPU_FLY_MS}ms`,
+                  animationDuration: `${anim.who === 'me' ? ME_FLY_MS : CPU_FLY_MS}ms`,
                 } as React.CSSProperties}
               >
                 <span className="absolute inset-[8%] flex items-center justify-center rounded-full text-[min(3.2vw,1.1rem)] font-black text-white/80 shadow-[inset_0_-3px_0_rgba(0,0,0,.18),0_6px_10px_rgba(0,0,0,.3)]" style={{ background: FILL[anim.color - 1], border: `2px solid ${DARK[anim.color - 1]}` }}>{MARK[anim.color - 1]}</span>
-                <img src={assetUrl(`assets/jump/${ANIMALS[anim.animal]}.webp`)} alt="" draggable={false} className={`absolute -top-[62%] left-1/2 w-[120%] -translate-x-1/2 object-contain drop-shadow-md ${anim.flying ? '' : 'animate-bounce'}`} />
+                <img src={anim.who === 'me' ? faceSrc() : assetUrl(`assets/jump/${ANIMALS[anim.who]}.webp`)} alt="" draggable={false} className={`absolute -top-[62%] left-1/2 w-[120%] -translate-x-1/2 object-contain drop-shadow-md ${anim.flying ? '' : 'animate-bounce'}`} />
+              </div>
+            </div>
+          )}
+          {sel && !anim && vs.turn === 'me' && !over && (
+            <div aria-hidden className="pointer-events-none absolute inset-1.5 z-10">
+              <div className="absolute aspect-square" style={{ left: `calc(${sel.c} * (100% + 3px) / ${SIZE})`, top: `calc(${sel.r} * (100% + 3px) / ${SIZE})`, width: `calc((100% - ${(SIZE - 1) * 3}px) / ${SIZE})` }}>
+                <img src={faceSrc()} alt="" draggable={false} className="absolute -top-[62%] left-1/2 w-[120%] -translate-x-1/2 animate-bounce object-contain drop-shadow-md" />
               </div>
             </div>
           )}
