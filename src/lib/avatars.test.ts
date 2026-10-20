@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { AVATARS, baseFiles, getAvatar, getHairstyle, setAvatar, setHairstyle } from './avatars'
+import { AVATARS, baseFiles, getAvatar, getHairstyle, hairZ, setAvatar, setHairstyle } from './avatars'
+import { HAIR_BEHIND_Z, HAIR_FRONT_Z, LAYER_Z } from './layers'
 
 describe('avatars', () => {
   beforeEach(() => setAvatar(AVATARS[0].id))
@@ -26,5 +27,17 @@ describe('avatars', () => {
     const yuha = AVATARS.find((a) => a.id === 'yuha')!
     expect(yuha.hairstyles[0].id).toBe('twin')
     expect(baseFiles(yuha, yuha.hairstyles[0]).hairFront).toBe('assets/base/yuha/hair_twin.webp')
+  })
+  it('류소의 긴 머리 둘은 옷 뒤(몸 바로 위)에 그리고, 단발은 앞머리 높이', () => {
+    const ryuso = AVATARS.find((a) => a.id === 'ryuso')!
+    expect(hairZ(ryuso)).toBe(HAIR_FRONT_Z)
+    for (const id of ['wig', 'tails']) {
+      setHairstyle(ryuso, id)
+      expect(hairZ(ryuso)).toBe(HAIR_BEHIND_Z)
+      expect(HAIR_BEHIND_Z).toBeLessThan(Math.min(...Object.values(LAYER_Z)))
+      expect(baseFiles(ryuso).body).toBe(`assets/base/body_${id}.webp`)
+      expect(baseFiles(ryuso).bodyBarefoot).toBe(`assets/base/body_${id}_barefoot.webp`)
+    }
+    setHairstyle(ryuso, 'bob')
   })
 })
