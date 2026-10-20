@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { COLORS, SIZE, allMoves, applyMove, findMove, isOver, movesFrom, newGame, parseSaved, setsOf, undo, type Board } from './jumpPuzzle'
+import { ANIMALS, COLORS, SIZE, allMoves, applyMove, findMove, isOver, movesFrom, newGame, parseSaved, setsOf, undo, type Board } from './jumpPuzzle'
 
 const seeded = () => { let s = 7; return () => ((s = (s * 16807) % 2147483647) / 2147483647) }
 const empty = (): Board => Array.from({ length: SIZE }, () => Array(SIZE).fill(0))
@@ -124,5 +124,15 @@ describe('컴퓨터와 겨루기', () => {
     const got = parseSaved(old)
     expect(got?.vs.cpus).toEqual([[1, 0, 0, 0]]); expect(got?.vs.turn).toBe(0)
     expect(parseSaved({ ...old, vs: { ...old.vs, turn: 'cpu', cpu: undefined } })).toBeNull()
+  })
+  it('상대 동물은 겹치지 않게 뽑고, 옛 저장본에는 순서대로 붙인다', () => {
+    for (let k = 1; k <= 3; k++) {
+      const vs = newVs(seeded(), k)
+      expect(vs.animals).toHaveLength(k); expect(new Set(vs.animals).size).toBe(k)
+      expect(vs.animals.every((a) => a >= 0 && a < ANIMALS.length)).toBe(true)
+    }
+    const v = newVs(seeded(), 2)
+    expect(parseSaved({ mode: 'vs', game: newGame(seeded()), vs: { ...v, animals: undefined }, paid: 0, bonusPaid: 0 })?.vs.animals).toEqual([0, 1])
+    expect(parseSaved({ mode: 'vs', game: newGame(seeded()), vs: { ...v, animals: [5, 3] }, paid: 0, bonusPaid: 0 })?.vs.animals).toEqual([5, 3])
   })
 })

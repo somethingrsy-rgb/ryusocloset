@@ -3,7 +3,7 @@ import { useI18n } from '../i18n'
 import { actFarm } from '../lib/farm'
 import { earnStars } from '../lib/shop'
 import { assetUrl } from '../lib/items'
-import { COINS_PER_SET, COLORS, MAX_CPUS, SIZE, WIN_BONUS, applyMove, type Move, findMove, isOver, newGame, newVs, parseSaved, planCpuTurn, setsOf, undo, vsCpuMove, vsEndTurn, vsSkipCpu, vsHumanMove, vsResult, type Game, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
+import { ANIMALS, COINS_PER_SET, COLORS, MAX_CPUS, SIZE, WIN_BONUS, applyMove, type Move, findMove, isOver, newGame, newVs, parseSaved, planCpuTurn, setsOf, undo, vsCpuMove, vsEndTurn, vsSkipCpu, vsHumanMove, vsResult, type Game, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
 import { CoinIcon, StarIcon } from './Icons'
 
 const KEY = 'ryuso.jumppuzzle.v1'
@@ -30,7 +30,7 @@ const T = {
     undo: '되돌리기', again: '새 판', close: '닫기', sets: '세트', best: '최고 기록', badMove: '그곳으로는 뛸 수 없어요', over: '더 뛸 수 없어요!',
     result: (n: number) => `${n}세트 완성!`, got: (c: number) => `+${c} 코인`, new: '새 기록!',
     level: { easy: '초급', normal: '중급', hard: '고급' },
-    solo: '혼자', vs: '컴퓨터와', you: '나', cpu: '컴퓨터', cpuCount: (n: number) => `${n}대`, myTurn: '내 차례예요', cpuTurn: (n: number, multi: boolean) => (multi ? `컴퓨터 ${n} 차례예요…` : '컴퓨터 차례예요…'), endTurn: '끝내기',
+    solo: '혼자', vs: '컴퓨터와', you: '나', cpu: '컴퓨터', cpuCount: (n: number) => `${n}마리`, animals: ['토끼', '강아지', '호랑이', '곰돌이', '고양이', '팬더'], myTurn: '내 차례예요', cpuTurn: (name: string) => `${name} 차례예요…`, endTurn: '끝내기',
     win: '이겼어요!', lose: '아쉬워요, 졌어요', draw: '비겼어요', bonus: (c: number) => `이긴 보너스 +${c}`,
   },
   en: {
@@ -39,7 +39,7 @@ const T = {
     undo: 'Undo', again: 'New game', close: 'Close', sets: 'sets', best: 'Best', badMove: "You can't jump there", over: 'No more jumps!',
     result: (n: number) => `${n} sets!`, got: (c: number) => `+${c} coins`, new: 'New best!',
     level: { easy: 'Easy', normal: 'Normal', hard: 'Hard' },
-    solo: 'Solo', vs: 'Vs computer', you: 'You', cpu: 'Computer', cpuCount: (n: number) => `${n} CPU`, myTurn: 'Your turn', cpuTurn: (n: number, multi: boolean) => (multi ? `Computer ${n} is thinking…` : 'Computer is thinking…'), endTurn: 'End turn',
+    solo: 'Solo', vs: 'Vs computer', you: 'You', cpu: 'Computer', cpuCount: (n: number) => `${n}`, animals: ['Bunny', 'Puppy', 'Tiger', 'Teddy', 'Kitty', 'Panda'], myTurn: 'Your turn', cpuTurn: (name: string) => `${name} is thinking…`, endTurn: 'End turn',
     win: 'You win!', lose: 'You lost, try again', draw: "It's a tie", bonus: (c: number) => `Win bonus +${c}`,
   },
 }
@@ -138,10 +138,12 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const restart = (count = cpuCount) => { setGame(newGame()); setVs(newVs(Math.random, count)); setSel(null); setLastCpu(null); setPaid(0); setBonusPaid(0); setFresh(false); setMsg('') }
   const pickLevel = (l: Level) => { setLevel(l); try { localStorage.setItem(LEVEL_KEY, l) } catch { /* 저장 실패는 무시 */ } }
   const pickCpus = (n: number) => { if (n === cpuCount) return; setCpuCount(n); try { localStorage.setItem(CPUS_KEY, String(n)) } catch { /* 저장 실패는 무시 */ } restart(n) }
-  const cpuName = (i: number) => (cpuCount > 1 ? `${tx.cpu} ${i + 1}` : tx.cpu)
+  const animalOf = (i: number) => vs.animals[i] ?? i
+  const cpuName = (i: number) => tx.animals[animalOf(i)]
+  const animalSrc = (i: number) => assetUrl(`assets/jump/${ANIMALS[animalOf(i)]}.webp`)
   const switchMode = (m: 'solo' | 'vs') => { if (m !== mode) { setMode(m); restart() } }
 
-  const turnText = solo ? '' : typeof vs.turn === 'number' ? tx.cpuTurn(vs.turn + 1, cpuCount > 1) : tx.myTurn // 화면 읽기용(위 큰 표시는 aria-hidden)
+  const turnText = solo ? '' : typeof vs.turn === 'number' ? tx.cpuTurn(cpuName(vs.turn)) : tx.myTurn // 화면 읽기용(위 큰 표시는 aria-hidden)
   const total = paid * COINS_PER_SET // 코인(혼자 하기의 세트 보상)
 
   return (
@@ -183,7 +185,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           </div>
           {!solo && vs.cpus.map((pocket, ci) => (
             <div key={ci} className={`flex items-center justify-between gap-2 ${vs.turn === ci ? 'font-extrabold' : ''}`}>
-              <span className="flex w-[4.6rem] shrink-0 items-center gap-1 whitespace-nowrap text-xs font-bold text-[#678071]"><img src={assetUrl('assets/tabs/bunny.webp')} alt="" draggable={false} className="h-5 w-5 object-contain" />{cpuName(ci)}</span>
+              <span className="flex w-[4.6rem] shrink-0 items-center gap-1 whitespace-nowrap text-xs font-bold text-[#678071]"><img src={animalSrc(ci)} alt="" draggable={false} className="h-6 w-6 object-contain" />{cpuName(ci)}</span>
               <div className="flex flex-1 gap-1" aria-label={`computer ${ci + 1} pocket`}>
                 {Array.from({ length: COLORS }, (_, i) => (
                   <span key={i} className="flex items-center gap-1 rounded-full px-1.5 py-0.5 text-sm font-bold text-white" style={{ background: FILL[i] }}><span aria-hidden>{MARK[i]}</span>{pocket[i]}</span>
@@ -240,7 +242,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           <p
             className={`m-0 rounded-full px-4 py-1 text-center text-sm font-extrabold ${vs.turn === 'me' ? 'bg-white text-[#246f55] shadow-[0_0_0_2px_#7cc545,0_0_12px_3px_rgba(124,197,69,.5)]' : 'bg-[#eef0e8] text-[#678071]'}`}
             aria-hidden
-          >{typeof vs.turn === 'number' ? tx.cpuTurn(vs.turn + 1, cpuCount > 1) : tx.myTurn}</p>
+          >{typeof vs.turn === 'number' ? <><img src={animalSrc(vs.turn)} alt="" draggable={false} className="mr-1 inline-block h-5 w-5 object-contain align-text-bottom" />{tx.cpuTurn(cpuName(vs.turn))}</> : tx.myTurn}</p>
         )}
         {(solo ? game.history.length === 0 : vs.mine.every((n) => n === 0) && vs.turn === 'me') && !msg && <p className="m-0 max-w-[34rem] text-center text-xs leading-relaxed text-[#678071]">{solo ? tx.how : tx.howVs}</p>}
 

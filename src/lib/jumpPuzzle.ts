@@ -86,6 +86,8 @@ export interface Vs {
   mine: number[]
   /** 컴퓨터마다 모은 말 (1~3대) */
   cpus: number[][]
+  /** 상대 동물(ANIMALS 번호): 컴퓨터마다 하나씩, 겹치지 않게 */
+  animals: number[]
   /** 지금 차례: 나 또는 컴퓨터 번호(0부터). 나 → 컴퓨터 1 → 컴퓨터 2 → … → 나 */
   turn: 'me' | number
   /** 내가 방금 뛴 말(이어서 더 뛸 수 있을 때). 이 말만 더 뛸 수 있고 "끝내기"로 차례를 넘긴다 */
@@ -94,7 +96,14 @@ export interface Vs {
   cpuChain: Pos | null
 }
 export const MAX_CPUS = 3
-export const newVs = (rng: () => number = Math.random, cpuCount = 1): Vs => ({ board: newGame(rng).board, mine: Array(COLORS).fill(0), cpus: Array.from({ length: Math.min(MAX_CPUS, Math.max(1, cpuCount)) }, () => Array(COLORS).fill(0)), turn: 'me', chain: null, cpuChain: null })
+/** 상대가 되는 동물 6마리(그림 파일 이름). 판마다 이 중에서 겹치지 않게 뽑는다 */
+export const ANIMALS = ['bunny', 'puppy', 'tiger', 'bear', 'kitty', 'panda'] as const
+function pickAnimals(n: number, rng: () => number): number[] {
+  const pool = ANIMALS.map((_, i) => i)
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]] }
+  return pool.slice(0, n)
+}
+export const newVs = (rng: () => number = Math.random, cpuCount = 1): Vs => ({ animals: pickAnimals(Math.min(MAX_CPUS, Math.max(1, cpuCount)), rng), board: newGame(rng).board, mine: Array(COLORS).fill(0), cpus: Array.from({ length: Math.min(MAX_CPUS, Math.max(1, cpuCount)) }, () => Array(COLORS).fill(0)), turn: 'me', chain: null, cpuChain: null })
 
 function jump(board: Board, m: Move): { board: Board; caught: Cell } {
   const b = clone(board)
@@ -186,10 +195,11 @@ export function parseSaved(raw: unknown): Saved | null {
   // 예전 저장본(컴퓨터 1대: cpu, turn 'cpu')도 읽는다
   const cpus = Array.isArray(v.cpus) ? v.cpus : okPocket(v.cpu) ? [v.cpu] : null
   if (!cpus || cpus.length < 1 || cpus.length > MAX_CPUS || !cpus.every(okPocket)) return null
+  const animals = Array.isArray(v.animals) && v.animals.length === cpus.length && v.animals.every((x) => Number.isInteger(x) && x >= 0 && x < ANIMALS.length) ? (v.animals as number[]) : cpus.map((_, i) => i)
   const turn = v.turn === 'cpu' ? 0 : v.turn
   if (turn !== 'me' && !(Number.isInteger(turn) && (turn as number) >= 0 && (turn as number) < cpus.length)) return null
   if ((v.chain !== null && !okPos(v.chain)) || (v.cpuChain != null && !okPos(v.cpuChain))) return null
   const n = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0)
-  const vs: Vs = { board: v.board, mine: v.mine, cpus: cpus as number[][], turn: turn as 'me' | number, chain: (v.chain as Pos | null) ?? null, cpuChain: (v.cpuChain as Pos | null) ?? null }
+  const vs: Vs = { board: v.board, mine: v.mine, animals, cpus: cpus as number[][], turn: turn as 'me' | number, chain: (v.chain as Pos | null) ?? null, cpuChain: (v.cpuChain as Pos | null) ?? null }
   return { mode: s.mode, game: g, vs, paid: n(s.paid), bonusPaid: n(s.bonusPaid) }
 }
