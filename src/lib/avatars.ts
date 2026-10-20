@@ -27,8 +27,8 @@ export const AVATARS: Avatar[] = [
     id: 'ryuso', name: { ko: '류소', en: 'Ryuso' }, dir: 'assets/base',
     hairstyles: [
       { id: 'bob', name: { ko: '단발', en: 'Bob' }, file: 'hair_front.webp' },
-      { id: 'wig', name: { ko: '레이어드 긴 머리', en: 'Layered long hair' }, file: 'hair_wig.webp', body: 'body_wig', behind: true },
-      { id: 'tails', name: { ko: '웨이브 양갈래', en: 'Wavy pigtails' }, file: 'hair_tails.webp', body: 'body_tails', behind: true },
+      { id: 'wig', name: { ko: '레이어드 긴 머리', en: 'Layered long hair' }, file: 'hair_wig.webp', body: 'body_bald', behind: true },
+      { id: 'tails', name: { ko: '웨이브 양갈래', en: 'Wavy pigtails' }, file: 'hair_tails.webp', body: 'body_bald', behind: true },
     ],
   },
   {
