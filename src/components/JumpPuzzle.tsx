@@ -3,7 +3,7 @@ import { useI18n } from '../i18n'
 import { earnStars } from '../lib/shop'
 import { assetUrl } from '../lib/items'
 import { ANIMALS, COLORS, MAX_CPUS, SIZE, WIN_BONUS, type Move, findMove, isOver, newVs, parseSaved, planCpuTurn, setsOf, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, vsSkipCpu, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
-import { baseFiles, getAvatar } from '../lib/avatars'
+import { AVATARS, baseFiles, getAvatar, getHairstyle } from '../lib/avatars'
 import { StarIcon } from './Icons'
 
 const LEVEL_KEY = 'ryuso.jumppuzzle.level.v1'
@@ -23,15 +23,25 @@ const CPU_PICK_MS = 900 // 동물이 움직일 말 위에 올라가 있는 시�
 const CPU_CHAIN_PICK_MS = 600 // 이어 뛸 때 다음 말을 고르는 시간
 const CPU_FLY_MS = 1400
 
-/** 내 아바타의 얼굴만 오려서 보여 준다(몸 + 앞머리 레이어를 얼굴 부분만 보이게 자름). className 으로 크기·자리를 정한다 */
+/** 점프 퍼즐에서 내 얼굴로 쓰는 아바타: 소영은 뺐고(유하로 대신 보임), 유하는 항상 양갈래 머리 */
+function faceOf() {
+  const av = getAvatar()
+  const a = av.id === 'soyoung' ? AVATARS.find((x) => x.id === 'yuha') ?? av : av
+  const style = a.id === 'yuha' ? a.hairstyles.find((h) => h.id === 'twin') ?? getHairstyle(a) : getHairstyle(a)
+  // 4:3 로 오릴 자리(1024×1536 그림 기준): 양갈래는 머리가 넓어서 더 넓게
+  const crop = a.id === 'yuha' && style.id === 'twin' ? { x: 72, y: 20, w: 880 } : { x: 112, y: 10, w: 800 }
+  return { files: baseFiles(a, style), crop }
+}
+
+/** 내 아바타의 얼굴만 오려서 보여 준다(몸 + 앞머리 레이어를 얼굴 부분만 보이게 자르고 목 아래는 서서히 지움). className 으로 크기·자리를 정한다 */
 function FaceBadge({ className = '' }: { className?: string }) {
-  const f = baseFiles(getAvatar())
-  const layer = 'pointer-events-none absolute top-0 left-0 w-[128%] max-w-none origin-top-left select-none'
-  const shift = { transform: 'translate(-10.94%, -0.65%)' }
+  const { files: f, crop } = faceOf()
+  const layer = 'pointer-events-none absolute top-0 left-0 max-w-none origin-top-left select-none'
+  const style = { width: `${(1024 / crop.w) * 100}%`, transform: `translate(${(-crop.x / 1024) * 100}%, ${(-crop.y / 1536) * 100}%)` }
   return (
-    <span aria-hidden className={`relative inline-block aspect-[4/3] overflow-hidden ${className}`}>
-      <img src={assetUrl(f.body)} alt="" draggable={false} className={layer} style={shift} />
-      <img src={assetUrl(f.hairFront)} alt="" draggable={false} className={layer} style={shift} />
+    <span aria-hidden className={`relative inline-block aspect-[4/3] overflow-hidden [mask-image:linear-gradient(to_bottom,#000_78%,transparent)] ${className}`}>
+      <img src={assetUrl(f.body)} alt="" draggable={false} className={layer} style={style} />
+      <img src={assetUrl(f.hairFront)} alt="" draggable={false} className={layer} style={style} />
     </span>
   )
 }
