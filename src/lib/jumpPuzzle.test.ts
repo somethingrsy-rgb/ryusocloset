@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { COLORS, SIZE, allMoves, applyMove, findMove, isOver, movesFrom, newGame, parseSaved, setsOf, undo, type Board } from './jumpPuzzle'
+import { ANIMALS, COLORS, SIZE, allMoves, applyMove, findMove, isOver, movesFrom, newGame, parseSaved, setsOf, undo, type Board } from './jumpPuzzle'
 
 const seeded = () => { let s = 7; return () => ((s = (s * 16807) % 2147483647) / 2147483647) }
 const empty = (): Board => Array.from({ length: SIZE }, () => Array(SIZE).fill(0))
@@ -77,11 +77,10 @@ describe('컴퓨터와 겨루기', () => {
     expect(vsResult({ mine: [2, 2, 2, 2], cpus: [[2, 2, 2, 2]] })).toBe('draw')
   })
   it('저장한 판은 그대로 불러오고, 망가진 값은 버린다', () => {
-    const saved = { mode: 'vs', game: newGame(seeded()), vs: newVs(seeded()), paid: 2, bonusPaid: 0 }
+    const saved = { vs: newVs(seeded(), 2), bonusPaid: 60 }
     expect(parseSaved(JSON.parse(JSON.stringify(saved)))).toEqual(saved)
     expect(parseSaved(null)).toBeNull()
-    expect(parseSaved({ ...saved, mode: 'x' })).toBeNull()
-    expect(parseSaved({ ...saved, game: { ...saved.game, board: [[1]] } })).toBeNull()
+    expect(parseSaved({ ...saved, vs: { ...saved.vs, board: [[1]] } })).toBeNull()
     expect(parseSaved({ ...saved, vs: { ...saved.vs, turn: 'zzz' } })).toBeNull()
   })
   it('난이도: 초급은 한 번만 뛰고, 고급은 이어 뛸 수 있는 수를 잘 둔다', () => {
@@ -120,9 +119,19 @@ describe('컴퓨터와 겨루기', () => {
     expect(vsResult({ mine: [2, 2, 2, 2], cpus: [[1, 1, 1, 1], [2, 2, 2, 2]] })).toBe('draw')
   })
   it('예전 저장본(컴퓨터 1대)도 불러온다', () => {
-    const old = { mode: 'vs', game: newGame(seeded()), vs: { board: newVs(seeded()).board, mine: [0, 0, 0, 0], cpu: [1, 0, 0, 0], turn: 'cpu', chain: null }, paid: 0, bonusPaid: 0 }
+    const old = { vs: { board: newVs(seeded()).board, mine: [0, 0, 0, 0], cpu: [1, 0, 0, 0], turn: 'cpu', chain: null }, bonusPaid: 0 }
     const got = parseSaved(old)
     expect(got?.vs.cpus).toEqual([[1, 0, 0, 0]]); expect(got?.vs.turn).toBe(0)
     expect(parseSaved({ ...old, vs: { ...old.vs, turn: 'cpu', cpu: undefined } })).toBeNull()
+  })
+  it('상대 동물은 겹치지 않게 뽑고, 옛 저장본에는 순서대로 붙인다', () => {
+    for (let k = 1; k <= 3; k++) {
+      const vs = newVs(seeded(), k)
+      expect(vs.animals).toHaveLength(k); expect(new Set(vs.animals).size).toBe(k)
+      expect(vs.animals.every((a) => a >= 0 && a < ANIMALS.length)).toBe(true)
+    }
+    const v = newVs(seeded(), 2)
+    expect(parseSaved({ mode: 'vs', game: newGame(seeded()), vs: { ...v, animals: undefined }, bonusPaid: 0 })?.vs.animals).toEqual([0, 1])
+    expect(parseSaved({ mode: 'vs', game: newGame(seeded()), vs: { ...v, animals: [5, 3] }, bonusPaid: 0 })?.vs.animals).toEqual([5, 3])
   })
 })
