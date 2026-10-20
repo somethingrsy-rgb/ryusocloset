@@ -154,7 +154,8 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
         <button onClick={onClose} aria-label={tx.close} className="flex h-11 w-11 items-center justify-center rounded-full border border-[#dce4d7] bg-white text-xl text-[#246f55]">✕</button>
       </div>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden px-3 py-2">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center gap-2 overflow-hidden px-3 py-2 landscape:grid landscape:grid-cols-[minmax(0,1fr)_minmax(15rem,22rem)] landscape:grid-rows-[auto_minmax(0,1fr)] landscape:items-start landscape:gap-x-4">
+        <div className="flex w-full flex-col items-center gap-2 landscape:col-start-2 landscape:row-start-1">
         {(
           <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
             <div role="radiogroup" aria-label="level" className="flex rounded-full bg-[#e8efdc] p-0.5 text-xs font-bold">
@@ -169,7 +170,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         )}
-        <div className="flex w-full max-w-[34rem] flex-col gap-1.5 rounded-2xl bg-white px-3 py-2 shadow-sm">
+        <div className="flex w-full max-w-[44rem] landscape:max-w-none flex-col gap-1.5 rounded-2xl bg-white px-3 py-2 shadow-sm">
           <div className="flex items-center justify-between gap-2">
             <span className="flex w-[4.6rem] shrink-0 items-center gap-1 text-xs font-bold text-[#678071]"><FaceBadge className="h-6" />{tx.you}</span>
             <div className="flex flex-1 gap-1" aria-label="pocket">
@@ -191,8 +192,10 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
             </div>
           ))}
         </div>
+        </div>
 
-        <div role="grid" aria-label={tx.title} className={`relative grid aspect-square w-full gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5 transition-shadow ${!over && vs.turn === 'me' ? 'shadow-[0_0_0_4px_#7cc545,0_0_22px_6px_rgba(124,197,69,.55)]' : ''}`} style={{ maxWidth: `min(34rem, calc(100dvh - ${24 + (cpuCount - 1) * 2.3}rem))`, gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))` }}>
+        <div className="flex min-h-0 w-full min-w-0 flex-1 items-center justify-center landscape:col-start-1 landscape:row-span-2 landscape:row-start-1 landscape:h-full" style={{ containerType: 'size' }}>
+        <div role="grid" aria-label={tx.title} className={`relative grid aspect-square gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5 transition-shadow ${!over && vs.turn === 'me' ? 'shadow-[0_0_0_4px_#7cc545,0_0_22px_6px_rgba(124,197,69,.55)]' : ''}`} style={{ width: 'min(100cqw, 100cqh)', gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))` }}>
           {board.flatMap((row, r) => row.map((v, c) => {
             const picked = sel && sel.r === r && sel.c === c
             const hidden = anim && ((anim.m.from.r === r && anim.m.from.c === c) || (anim.gone && anim.m.over.r === r && anim.m.over.c === c))
@@ -246,6 +249,9 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
             </div>
           )}
         </div>
+        </div>
+
+        <div className="flex w-full flex-col items-center gap-2 landscape:col-start-2 landscape:row-start-2 landscape:self-start">
 
         <p className={`m-0 min-h-5 text-center text-sm font-bold text-[#246f55] ${!msg ? 'sr-only' : ''}`} role="status" aria-live="polite">{msg || turnText}</p>
         {!over && (
@@ -254,11 +260,12 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
             aria-hidden
           >{typeof vs.turn === 'number' ? <><img src={animalSrc(vs.turn)} alt="" draggable={false} className="mr-1 inline-block h-5 w-5 object-contain align-text-bottom" />{tx.cpuTurn(cpuName(vs.turn))}</> : <><FaceBadge className="mr-1 h-5 align-text-bottom" />{tx.myTurn}</>}</p>
         )}
-        {vs.mine.every((n) => n === 0) && vs.turn === 'me' && !msg && <p className="m-0 max-w-[34rem] text-center text-xs leading-relaxed text-[#678071]">{tx.howVs}</p>}
+        {vs.mine.every((n) => n === 0) && vs.turn === 'me' && !msg && <p className="m-0 max-w-[44rem] landscape:max-w-none text-center text-xs leading-relaxed text-[#678071]">{tx.howVs}</p>}
 
         <div className="flex gap-2">
           <button onClick={endTurn} disabled={!vs.chain || vs.turn !== 'me'} className="min-h-9 rounded-full border border-[#dce4d7] bg-white px-4 text-xs font-bold disabled:opacity-40">✋ {tx.endTurn}</button>
           <button onClick={() => restart()} className="min-h-9 rounded-full bg-[#246f55] px-4 text-xs font-bold text-white">🔄 {tx.again}</button>
+        </div>
         </div>
       </div>
 
