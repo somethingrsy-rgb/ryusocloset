@@ -178,7 +178,7 @@ export function vsResult(vs: Pick<Vs, 'mine' | 'cpus'>): 'win' | 'lose' | 'draw'
 }
 
 /** 이어서 하려고 저장해 두는 판 상태 */
-export interface Saved { mode: 'solo' | 'vs'; game: Game; vs: Vs; paid: number; bonusPaid: number }
+export interface Saved { vs: Vs; bonusPaid: number }
 
 const okBoard = (b: unknown): b is Board => Array.isArray(b) && b.length === SIZE && b.every((row) => Array.isArray(row) && row.length === SIZE && row.every((v) => Number.isInteger(v) && v >= 0 && v <= COLORS))
 const okPocket = (p: unknown): p is number[] => Array.isArray(p) && p.length === COLORS && p.every((n) => Number.isInteger(n) && n >= 0)
@@ -187,10 +187,8 @@ const okPos = (p: unknown): p is Pos => !!p && typeof p === 'object' && Number.i
 /** 저장된 값이 쓸 수 있는 모양인지 검사하고, 아니면 null (새 판으로 시작) */
 export function parseSaved(raw: unknown): Saved | null {
   const s = raw as Saved | null
-  if (!s || typeof s !== 'object' || (s.mode !== 'solo' && s.mode !== 'vs')) return null
-  const g = s.game
+  if (!s || typeof s !== 'object') return null
   const v = s.vs as unknown as Record<string, unknown> | undefined
-  if (!g || !okBoard(g.board) || !okPocket(g.pocket) || !Array.isArray(g.history) || !g.history.every((h) => okBoard(h?.board) && okPocket(h?.pocket))) return null
   if (!v || !okBoard(v.board) || !okPocket(v.mine)) return null
   // 예전 저장본(컴퓨터 1대: cpu, turn 'cpu')도 읽는다
   const cpus = Array.isArray(v.cpus) ? v.cpus : okPocket(v.cpu) ? [v.cpu] : null
@@ -201,5 +199,5 @@ export function parseSaved(raw: unknown): Saved | null {
   if ((v.chain !== null && !okPos(v.chain)) || (v.cpuChain != null && !okPos(v.cpuChain))) return null
   const n = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? Math.floor(x) : 0)
   const vs: Vs = { board: v.board, mine: v.mine, animals, cpus: cpus as number[][], turn: turn as 'me' | number, chain: (v.chain as Pos | null) ?? null, cpuChain: (v.cpuChain as Pos | null) ?? null }
-  return { mode: s.mode, game: g, vs, paid: n(s.paid), bonusPaid: n(s.bonusPaid) }
+  return { vs, bonusPaid: n(s.bonusPaid) }
 }
