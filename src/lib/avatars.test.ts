@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { AVATARS, baseFiles, bodyZ, getAvatar, getHairstyle, hairZ, setAvatar, setHairstyle } from './avatars'
-import { BODY_OVER_HAIR_Z, HAIR_BEHIND_Z, HAIR_FRONT_Z, LAYER_Z } from './layers'
+import { AVATARS, baseFiles, getAvatar, getHairstyle, hairZ, setAvatar, setHairstyle } from './avatars'
+import { HAIR_BEHIND_Z, HAIR_FRONT_Z, LAYER_Z } from './layers'
 
 describe('avatars', () => {
   beforeEach(() => setAvatar(AVATARS[0].id))
@@ -28,15 +28,15 @@ describe('avatars', () => {
     expect(yuha.hairstyles[0].id).toBe('twin')
     expect(baseFiles(yuha, yuha.hairstyles[0]).hairFront).toBe('assets/base/yuha/hair_twin.webp')
   })
-  it('류소의 긴 머리 넷은 몸 뒤(몸·옷보다 아래)에 그리고, 단발은 앞머리 높이', () => {
+  it('류소의 긴 머리 둘은 옷 뒤(몸 바로 위)에 그리고, 단발은 앞머리 높이', () => {
     const ryuso = AVATARS.find((a) => a.id === 'ryuso')!
-    expect(hairZ(ryuso)).toBe(HAIR_FRONT_Z); expect(bodyZ(ryuso)).toBe(0)
-    for (const id of ['wig', 'tails', 'braidwave', 'longwave']) {
+    expect(hairZ(ryuso)).toBe(HAIR_FRONT_Z)
+    for (const id of ['wig', 'tails']) {
       setHairstyle(ryuso, id)
-      expect(hairZ(ryuso)).toBe(HAIR_BEHIND_Z); expect(bodyZ(ryuso)).toBe(BODY_OVER_HAIR_Z)
-      expect(HAIR_BEHIND_Z).toBeLessThan(BODY_OVER_HAIR_Z)
-      expect(BODY_OVER_HAIR_Z).toBeLessThan(Math.min(...Object.values(LAYER_Z)))
-      expect(baseFiles(ryuso).body).toMatch(/^assets\/base\/body_(wig|tails|braid|wave)\.webp$/)
+      expect(hairZ(ryuso)).toBe(HAIR_BEHIND_Z)
+      expect(HAIR_BEHIND_Z).toBeLessThan(Math.min(...Object.values(LAYER_Z)))
+      expect(baseFiles(ryuso).body).toBe('assets/base/body_bald.webp')
+      expect(baseFiles(ryuso).bodyBarefoot).toBe('assets/base/body_bald_barefoot.webp')
     }
     setHairstyle(ryuso, 'bob')
   })

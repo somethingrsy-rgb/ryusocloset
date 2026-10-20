@@ -1,6 +1,6 @@
 import { drawBackground, type Background } from './backgrounds'
 import { BASE_LAYERS, ITEM_BY_ID, assetUrl } from './items'
-import { bodyZ, hairZ } from './avatars'
+import { hairZ } from './avatars'
 import { CANVAS_H, CANVAS_W } from './layers'
 import { wornItems } from './outfit'
 import { effectiveZ, getTweak, pivotOf } from './tweaks'
@@ -42,12 +42,9 @@ export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}): Promise
   ])
   const canvas = makeCanvas(CANVAS_W, CANVAS_H)
   const ctx = canvas.getContext('2d')!
-  // 머리가 몸 뒤(hairZ < bodyZ)면 머리를 먼저 그리고 그 위에 몸, 아니면 몸 → 옷 → 앞머리 순서
-  const hairFirst = hairZ() < bodyZ()
-  if (hairFirst) ctx.drawImage(hair, 0, 0, CANVAS_W, CANVAS_H)
   ctx.drawImage(body, 0, 0, CANVAS_W, CANVAS_H)
   // 앞머리(60)는 아우터(50) 위, 액세서리(70) 아래
-  let hairDrawn = hairFirst
+  let hairDrawn = false
   items.forEach((it, idx) => {
     if (!hairDrawn && effectiveZ(it.zIndex, tweaks[it.category]) > hairZ()) {
       ctx.drawImage(hair, 0, 0, CANVAS_W, CANVAS_H)
