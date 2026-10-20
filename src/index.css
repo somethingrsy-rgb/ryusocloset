@@ -283,5 +283,11 @@ button:focus-visible {
   100% { transform: scale(.9); opacity: 0; }
 }
 .jump-pop { animation: jump-pop .5s ease-out forwards; }
+@keyframes jump-reward {
+  0% { transform: scale(.4); opacity: 0; }
+  60% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.jump-reward { animation: jump-reward .6s cubic-bezier(.2,.9,.3,1.2) both; }
 .jump-fly { animation: jump-fly ease-in-out forwards; }
-@media (prefers-reduced-motion: reduce) { .jump-fly, .jump-pop { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .jump-fly, .jump-pop, .jump-reward { animation: none; } }
