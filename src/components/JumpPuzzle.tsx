@@ -17,6 +17,31 @@ const loadState = () => { try { return parseSaved(JSON.parse(localStorage.getIte
 const FILL = ['#ef5a3c', '#7cc545', '#4aa6ea', '#f28c28', '#f8d84a']
 const DARK = ['#b8381f', '#4f9526', '#2a78b8', '#b85f0c', '#c2a10c']
 const MARK = ['●', '▲', '■', '★', '◆']
+const LIGHT = ['#ffa58c', '#c4ee9a', '#add8f8', '#ffc678', '#fff3a0']
+
+/** 반투명 보석 말: 빛이 비치는 둥근 몸 + 바깥 톱니 무늬 + 가운데 동전 + 반짝이. 빛 반사는 위쪽 왼쪽에서 든다 */
+function Gem({ c, className = '', style }: { c: number; className?: string; style?: React.CSSProperties }) {
+  const i = c - 1
+  const ridges = 'repeating-conic-gradient(rgba(255,255,255,.55) 0deg 4deg, rgba(0,0,0,.14) 4deg 8deg)'
+  const ring = 'radial-gradient(circle, transparent 46%, #000 49%, #000 90%, transparent 93%)'
+  return (
+    <span
+      className={`relative block overflow-hidden rounded-full transition ${className}`}
+      style={{
+        background: `radial-gradient(circle at 50% 58%, ${LIGHT[i]} 0%, ${FILL[i]} 52%, ${DARK[i]} 100%)`,
+        boxShadow: `inset 0 -4px 7px rgba(0,0,0,.28), inset 0 3px 6px rgba(255,255,255,.6), 0 3px 6px rgba(0,0,0,.28)`,
+        border: `1.5px solid ${DARK[i]}`,
+        ...style,
+      }}
+    >
+      <span aria-hidden className="absolute inset-[9%] rounded-full opacity-80" style={{ background: ridges, WebkitMaskImage: ring, maskImage: ring }} />
+      <span aria-hidden className="absolute inset-[30%] flex items-center justify-center rounded-full text-[min(3vw,1rem)] leading-none font-black text-white/90" style={{ background: `radial-gradient(circle at 40% 35%, ${LIGHT[i]}, ${FILL[i]} 70%)`, boxShadow: `inset 0 1.5px 3px rgba(255,255,255,.7), inset 0 -2px 3px ${DARK[i]}, 0 0 0 1px ${DARK[i]}55`, textShadow: `0 1px 1px ${DARK[i]}` }}>{MARK[i]}</span>
+      <span aria-hidden className="absolute top-[9%] left-[16%] h-[20%] w-[34%] -rotate-[28deg] rounded-full bg-white/75 blur-[1px]" />
+      <span aria-hidden className="absolute right-[14%] bottom-[16%] h-[10%] w-[10%] rounded-full bg-white/60 blur-[0.5px]" />
+      <span aria-hidden className="absolute top-[58%] left-[14%] h-[6%] w-[6%] rounded-full bg-white/50" />
+    </span>
+  )
+}
 // 컴퓨터의 한 수를 슬로 모션으로 보여 준다: 0.5초 쉬고 → 1.4초 동안 말이 날아가 뛰어넘고(잡힌 말은 중간에 사라짐) → 도착하면 0.5초 쉰다
 const TURN_GAP_MS = 1100 // 차례가 바뀐 뒤, 동물이 말을 고르기 전에 잠깐 기다림(누구 차례인지 알아보도록)
 const CPU_PICK_MS = 900 // 동물이 움직일 말 위에 올라가 있는 시간
@@ -216,10 +241,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
                 className={`relative flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-lg border-0 p-[8%] ${v === 0 ? 'bg-[#eef3e6]' : 'bg-[#f6f9f0]'}`}
               >
                 {cv !== 0 && (
-                  <span
-                    className={`flex h-full w-full items-center justify-center rounded-full text-[min(3.2vw,1.1rem)] font-black text-white/80 shadow-[inset_0_-3px_0_rgba(0,0,0,.18)] transition ${picked ? 'scale-110 ring-4 ring-[#213f35]' : ''}`}
-                    style={{ background: FILL[cv - 1], border: `2px solid ${DARK[cv - 1]}` }}
-                  >{MARK[cv - 1]}</span>
+                  <Gem c={cv} className={`h-full w-full ${picked ? 'scale-110 ring-4 ring-[#213f35]' : ''}`} />
                 )}
                 {vs.turn !== 'me' && lastMe && lastMe.to.r === r && lastMe.to.c === c && !lastCpu && !anim && <span className="pointer-events-none absolute -top-1 -right-1 z-[1] w-[95%] drop-shadow"><FaceBadge className="w-full" /></span>}
                 {landed && !anim && <img src={assetUrl(`assets/jump/${ANIMALS[lastCpu.animal]}.webp`)} alt="" draggable={false} className="pointer-events-none absolute -top-0.5 -right-0.5 z-[1] w-[62%] object-contain drop-shadow" />}
@@ -237,7 +259,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
                   animationDuration: `${anim.who === 'me' ? ME_FLY_MS : CPU_FLY_MS}ms`,
                 } as React.CSSProperties}
               >
-                <span className="absolute inset-[8%] flex items-center justify-center rounded-full text-[min(3.2vw,1.1rem)] font-black text-white/80 shadow-[inset_0_-3px_0_rgba(0,0,0,.18),0_6px_10px_rgba(0,0,0,.3)]" style={{ background: FILL[anim.color - 1], border: `2px solid ${DARK[anim.color - 1]}` }}>{MARK[anim.color - 1]}</span>
+                <span className="absolute inset-[8%]"><Gem c={anim.color} className="h-full w-full" style={{ boxShadow: `inset 0 -4px 7px rgba(0,0,0,.28), inset 0 3px 6px rgba(255,255,255,.6), 0 8px 12px rgba(0,0,0,.35)` }} /></span>
                 <img src={anim.who === 'me' ? faceSrc() : assetUrl(`assets/jump/${ANIMALS[anim.who]}.webp`)} alt="" draggable={false} className={`absolute -top-[62%] left-1/2 w-[120%] -translate-x-1/2 object-contain drop-shadow-md ${anim.flying ? '' : 'animate-bounce'}`} />
               </div>
             </div>
