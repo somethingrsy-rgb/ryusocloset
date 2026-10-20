@@ -280,8 +280,16 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
           <div className="flex w-full max-w-xs flex-col items-center gap-3 rounded-3xl bg-white p-6 text-center shadow-xl">
             <p className="m-0 text-lg font-extrabold">{result ? tx[result] : tx.over}</p>
             <p className="m-0 text-3xl font-extrabold text-[#246f55]">{[sets, ...vs.cpus.map(setsOf)].join(' : ')}</p>
-            {setsPaid > 0 && <p className="m-0 flex items-center gap-1 text-sm font-bold text-[#c9751f]">{tx.setStarsTotal(setsPaid * STARS_PER_SET)} <StarIcon /></p>}
-            {bonusPaid > 0 && <p className="m-0 flex items-center gap-1 text-sm font-bold text-[#c9751f]">{tx.bonus(bonusPaid)} <StarIcon /></p>}
+            {setsPaid * STARS_PER_SET + bonusPaid > 0 && (
+              <div className="jump-reward flex w-full flex-col items-center gap-1 rounded-3xl bg-gradient-to-b from-[#fff3c4] to-[#ffd96b] px-4 py-4 shadow-[0_0_0_4px_#f5a623,0_0_26px_8px_rgba(245,166,35,.55)]">
+                <span className="animate-bounce text-[5rem] leading-none drop-shadow-lg"><StarIcon /></span>
+                <p className="m-0 text-6xl leading-none font-black text-[#b8610a] [text-shadow:0_3px_0_#fff]">+{setsPaid * STARS_PER_SET + bonusPaid}</p>
+                <div className="mt-1 flex flex-col items-center text-sm font-bold text-[#8a5a12]">
+                  {setsPaid > 0 && <span>{tx.setStarsTotal(setsPaid * STARS_PER_SET)}</span>}
+                  {bonusPaid > 0 && <span>{tx.bonus(bonusPaid)}</span>}
+                </div>
+              </div>
+            )}
             <div className="flex gap-2">
               <button onClick={() => restart()} className="min-h-11 rounded-full bg-[#246f55] px-4 text-sm font-bold text-white">🔄 {tx.again}</button>
             </div>
