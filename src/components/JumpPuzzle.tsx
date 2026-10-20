@@ -21,7 +21,7 @@ const MARK = ['●', '▲', '■', '★']
 const TURN_GAP_MS = 1100 // 차례가 바뀐 뒤, 동물이 말을 고르기 전에 잠깐 기다림(누구 차례인지 알아보도록)
 const CPU_PICK_MS = 900 // 동물이 움직일 말 위에 올라가 있는 시간
 const CPU_CHAIN_PICK_MS = 600 // 이어 뛸 때 다음 말을 고르는 시간
-const CPU_FLY_MS = 1400
+const CPU_FLY_MS = 1000
 const ME_FLY_MS = 1000 // 내 말이 뛰어넘는 시간(동물보다 조금 빠르게)
 
 /** 점프 퍼즐에서 내 얼굴 그림: 류소·유하·유엘만 있고, 소영은 뺐다(소영이면 유하 얼굴) */
