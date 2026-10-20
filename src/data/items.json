@@ -3792,30 +3792,6 @@
     "native": true
   },
   {
-    "id": "wig_braidbuns",
-    "category": "wig",
-    "name": {
-      "ko": "땋은 양쪽 번 머리",
-      "en": "Braided buns wig"
-    },
-    "color": "brown",
-    "colorName": {
-      "ko": "브라운",
-      "en": "Brown"
-    },
-    "colorHex": "#8a5a3b",
-    "box": {
-      "x": 63,
-      "y": 92,
-      "w": 900,
-      "h": 763
-    },
-    "image": "assets/clothes/wig/wig_braidbuns.webp",
-    "thumb": "assets/thumbs/wig_braidbuns.webp",
-    "zIndex": 5,
-    "native": true
-  },
-  {
     "id": "wig_crownbraid",
     "category": "wig",
     "name": {
@@ -3860,30 +3836,6 @@
     },
     "image": "assets/clothes/wig/wig_layered.webp",
     "thumb": "assets/thumbs/wig_layered.webp",
-    "zIndex": 5,
-    "native": true
-  },
-  {
-    "id": "wig_longwave",
-    "category": "wig",
-    "name": {
-      "ko": "긴 웨이브",
-      "en": "Long wavy wig"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 42,
-      "y": 34,
-      "w": 942,
-      "h": 1230
-    },
-    "image": "assets/clothes/wig/wig_longwave.webp",
-    "thumb": "assets/thumbs/wig_longwave.webp",
     "zIndex": 5,
     "native": true
   },

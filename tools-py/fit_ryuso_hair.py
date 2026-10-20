@@ -16,7 +16,6 @@ from PIL import Image
 from scipy import ndimage as ndi
 
 name, src = sys.argv[1:3]
-nofill = '--nofill' in sys.argv  # 턱·목 둘레 빈틈을 머리색으로 채우지 않는다(가발 아이템용)
 H, W = 1536, 1024
 body = np.array(Image.open('assets-src/base/body_bald.png').convert('RGBA'))
 face = body[..., 3] > 8
@@ -64,7 +63,7 @@ for y in range(380, 760):
     if len(xs):
         span[y, xs.min():xs.max() + 1] = True
 near = cv2.dilate(bm.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (111, 111))).astype(bool)  # 얼굴·목 둘레만
-gap = span & ~m & ~bm & near & (not nofill)
+gap = span & ~m & ~bm & near
 fade = np.clip((690 - yy) / 40.0, 0, 1)  # 690 줄까지 꽉 채우고 730 줄에서 사라짐(반투명 회색으로 보이지 않게 짧게)
 out = h.copy()
 for c in range(3):

@@ -1446,19 +1446,5 @@
     "category": "wig",
     "color": "black",
     "native": true
-  },
-  "wig_longwave": {
-    "ko": "긴 웨이브",
-    "en": "Long wavy wig",
-    "category": "wig",
-    "color": "black",
-    "native": true
-  },
-  "wig_braidbuns": {
-    "ko": "땋은 양쪽 번 머리",
-    "en": "Braided buns wig",
-    "category": "wig",
-    "color": "brown",
-    "native": true
   }
 }
