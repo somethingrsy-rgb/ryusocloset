@@ -3792,7 +3792,7 @@
     "native": true
   },
   {
-    "id": "wig_blondemess",
+    "id": "wig_blondemess2",
     "category": "wig",
     "name": {
       "ko": "금발 덥수룩 단발",
@@ -3805,13 +3805,13 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 145,
-      "y": 4,
+      "x": 137,
+      "y": 20,
       "w": 731,
       "h": 482
     },
-    "image": "assets/clothes/wig/wig_blondemess.webp",
-    "thumb": "assets/thumbs/wig_blondemess.webp",
+    "image": "assets/clothes/wig/wig_blondemess2.webp",
+    "thumb": "assets/thumbs/wig_blondemess2.webp",
     "zIndex": 5,
     "native": true
   },
@@ -3864,7 +3864,7 @@
     "native": true
   },
   {
-    "id": "wig_icemess",
+    "id": "wig_icemess2",
     "category": "wig",
     "name": {
       "ko": "아이스블루 덥수룩 단발",
@@ -3877,13 +3877,13 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 37,
-      "y": 7,
-      "w": 966,
-      "h": 614
+      "x": 139,
+      "y": 140,
+      "w": 726,
+      "h": 462
     },
-    "image": "assets/clothes/wig/wig_icemess.webp",
-    "thumb": "assets/thumbs/wig_icemess.webp",
+    "image": "assets/clothes/wig/wig_icemess2.webp",
+    "thumb": "assets/thumbs/wig_icemess2.webp",
     "zIndex": 5,
     "native": true
   },
@@ -3936,7 +3936,7 @@
     "native": true
   },
   {
-    "id": "wig_mintmess",
+    "id": "wig_mintmess2",
     "category": "wig",
     "name": {
       "ko": "민트 덥수룩 단발",
@@ -3949,13 +3949,13 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 37,
-      "y": 7,
-      "w": 968,
-      "h": 614
+      "x": 139,
+      "y": 141,
+      "w": 727,
+      "h": 461
     },
-    "image": "assets/clothes/wig/wig_mintmess.webp",
-    "thumb": "assets/thumbs/wig_mintmess.webp",
+    "image": "assets/clothes/wig/wig_mintmess2.webp",
+    "thumb": "assets/thumbs/wig_mintmess2.webp",
     "zIndex": 5,
     "native": true
   },
@@ -4080,7 +4080,7 @@
     "native": true
   },
   {
-    "id": "wig_purplemess",
+    "id": "wig_purplemess2",
     "category": "wig",
     "name": {
       "ko": "보라 덥수룩 단발",
@@ -4093,13 +4093,13 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 141,
-      "y": 3,
+      "x": 133,
+      "y": 35,
       "w": 726,
       "h": 603
     },
-    "image": "assets/clothes/wig/wig_purplemess.webp",
-    "thumb": "assets/thumbs/wig_purplemess.webp",
+    "image": "assets/clothes/wig/wig_purplemess2.webp",
+    "thumb": "assets/thumbs/wig_purplemess2.webp",
     "zIndex": 5,
     "native": true
   },
