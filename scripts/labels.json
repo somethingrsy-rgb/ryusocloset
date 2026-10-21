@@ -1482,11 +1482,18 @@
     "color": "purple",
     "native": true
   },
-  "wig_pastelbuns": {
-    "ko": "파스텔 줄무늬 번 머리",
-    "en": "Pastel striped buns wig",
+  "wig_pastelbuns2": {
+    "ko": "파스텔 양쪽 번 긴 머리",
+    "en": "Pastel buns long wig",
     "category": "wig",
     "color": "pink",
+    "native": true
+  },
+  "wig_bluemess": {
+    "ko": "하늘색 덥수룩 단발",
+    "en": "Sky blue messy wig",
+    "category": "wig",
+    "color": "skyblue",
     "native": true
   }
 }
