@@ -59,8 +59,8 @@ export function gateAt(pos: { x: number; y: number }, radius = 90): number {
   return -1
 }
 
-/** 구간 c 의 문 바로 앞(아래)에서 시작한다 */
-export const startPos = (c: number) => ({ x: gateX(Math.max(0, c)), y: GROUND.maxY - 10 })
+/** 구간 c 의 문 앞 길 위(문 오른쪽 옆)에서 시작한다. 문에는 닿지 않는다 */
+export const startPos = (c: number) => ({ x: gateX(Math.max(0, c)) + 100, y: 650 })
 
 /** 걸은 거리(m): 논리 px 50 이 1m */
 export const metersOf = (x: number) => Math.max(0, Math.floor(x / 50))
