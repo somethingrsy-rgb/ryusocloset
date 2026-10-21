@@ -1502,5 +1502,26 @@
     "category": "wig",
     "color": "purple",
     "native": true
+  },
+  "wig_blondemess": {
+    "ko": "금발 덥수룩 단발",
+    "en": "Blonde messy wig",
+    "category": "wig",
+    "color": "beige",
+    "native": true
+  },
+  "wig_mintmess": {
+    "ko": "민트 덥수룩 단발",
+    "en": "Mint messy wig",
+    "category": "wig",
+    "color": "mint",
+    "native": true
+  },
+  "wig_icemess": {
+    "ko": "아이스블루 덥수룩 단발",
+    "en": "Ice blue messy wig",
+    "category": "wig",
+    "color": "skyblue",
+    "native": true
   }
 }
