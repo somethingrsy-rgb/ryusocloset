@@ -4008,6 +4008,30 @@
     "native": true
   },
   {
+    "id": "wig_purplemess",
+    "category": "wig",
+    "name": {
+      "ko": "보라 덥수룩 단발",
+      "en": "Purple messy wig"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 141,
+      "y": 3,
+      "w": 726,
+      "h": 603
+    },
+    "image": "assets/clothes/wig/wig_purplemess.webp",
+    "thumb": "assets/thumbs/wig_purplemess.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
     "id": "wig_sidebraid3",
     "category": "wig",
     "name": {

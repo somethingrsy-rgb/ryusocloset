@@ -1495,5 +1495,12 @@
     "category": "wig",
     "color": "pink",
     "native": true
+  },
+  "wig_purplemess": {
+    "ko": "보라 덥수룩 단발",
+    "en": "Purple messy wig",
+    "category": "wig",
+    "color": "purple",
+    "native": true
   }
 }
