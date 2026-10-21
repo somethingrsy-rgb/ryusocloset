@@ -3792,6 +3792,30 @@
     "native": true
   },
   {
+    "id": "wig_bluemess",
+    "category": "wig",
+    "name": {
+      "ko": "하늘색 덥수룩 단발",
+      "en": "Sky blue messy wig"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 115,
+      "y": 13,
+      "w": 817,
+      "h": 671
+    },
+    "image": "assets/clothes/wig/wig_bluemess.webp",
+    "thumb": "assets/thumbs/wig_bluemess.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
     "id": "wig_crownbraid2",
     "category": "wig",
     "name": {
@@ -3912,11 +3936,11 @@
     "native": true
   },
   {
-    "id": "wig_pastelbuns",
+    "id": "wig_pastelbuns2",
     "category": "wig",
     "name": {
-      "ko": "파스텔 줄무늬 번 머리",
-      "en": "Pastel striped buns wig"
+      "ko": "파스텔 양쪽 번 긴 머리",
+      "en": "Pastel buns long wig"
     },
     "color": "pink",
     "colorName": {
@@ -3925,13 +3949,13 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 85,
+      "x": 61,
       "y": 30,
-      "w": 860,
-      "h": 1324
+      "w": 908,
+      "h": 1362
     },
-    "image": "assets/clothes/wig/wig_pastelbuns.webp",
-    "thumb": "assets/thumbs/wig_pastelbuns.webp",
+    "image": "assets/clothes/wig/wig_pastelbuns2.webp",
+    "thumb": "assets/thumbs/wig_pastelbuns2.webp",
     "zIndex": 5,
     "native": true
   },
