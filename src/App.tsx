@@ -31,7 +31,7 @@ import { CATEGORIES, type Category } from './lib/layers'
 import { toggleItem } from './lib/outfit'
 import { ROOM_ITEMS, ROOM_ITEM_BY_ID, addItem, defaultRoom, isCustomRoomItem } from './lib/room'
 import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
-import { playSnap } from './lib/sound'
+import { playSnap, setSoundEnabled } from './lib/sound'
 import {
   MAX_SAVED,
   loadCurrent,
@@ -79,6 +79,7 @@ export default function App() {
   const initial = useMemo(loadSettings, [])
   const [lang, setLang] = useState<Lang>(initial.lang ?? detectLang())
   const [sound, setSound] = useState(initial.sound ?? true)
+  setSoundEnabled(sound) // 놀이 효과음도 설정의 효과음 켜기/끄기를 따른다
   const [bgId, setBgId] = useState(
     initial.bgId && BACKGROUNDS.some((b) => b.id === initial.bgId) ? initial.bgId : DEFAULT_BG_ID,
   )

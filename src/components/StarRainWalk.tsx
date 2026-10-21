@@ -1,3 +1,4 @@
+import { playCloud, playGold, playStar } from '../lib/sound'
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { isRestoring } from '../lib/restoreGuard'
 import { newRain, readRainRecord, RAIN_DURATION, stepRain } from '../lib/starRain'
@@ -38,6 +39,8 @@ export function StarRainWalk({ outfit, tweaks, onExit }: { outfit: Outfit; tweak
       const direction = (keys.current.has('ArrowRight') || keys.current.has('d') ? 1 : 0) - (keys.current.has('ArrowLeft') || keys.current.has('a') ? 1 : 0)
       if (direction) current = { ...current, targetX: current.playerX + direction * 8 }
       const next = stepRain(current, dt)
+      if (next.score > current.score) (next.score - current.score >= 5 ? playGold : playStar)()
+      if (next.clouds > current.clouds) playCloud()
       live.current = next; setRain(next)
       if (next.elapsed >= RAIN_DURATION) { setPhase('done'); return }
       frame = requestAnimationFrame(tick)

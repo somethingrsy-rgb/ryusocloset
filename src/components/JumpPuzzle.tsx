@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { earnStars } from '../lib/shop'
+import { playHop, playLand, playLose, playPop, playSetDone, playWin } from '../lib/sound'
 import { assetUrl } from '../lib/items'
 import { ANIMALS, COLORS, MAX_CPUS, SIZE, STARS_PER_SET, WIN_BONUS, type Move, findMove, isOver, newVs, parseSaved, planCpuTurn, setsOf, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, vsSkipCpu, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
 import { getAvatar } from '../lib/avatars'
@@ -100,9 +101,9 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
       const pick = i === 0 ? CPU_PICK_MS : CPU_CHAIN_PICK_MS
       ids.push(window.setTimeout(() => setAnim({ m, color, who: animal, flying: false, gone: false }), t))
       t += pick
-      ids.push(window.setTimeout(() => setAnim((a) => (a ? { ...a, flying: true } : a)), t))
-      ids.push(window.setTimeout(() => setAnim((a) => (a ? { ...a, gone: true } : a)), t + CPU_FLY_MS * 0.5))
-      ids.push(window.setTimeout(() => { setVs((v) => vsCpuMove(v, m, i === plan.length - 1)); setLastCpu({ m, animal }); setLastMe(null); setAnim(null) }, t + CPU_FLY_MS))
+      ids.push(window.setTimeout(() => { playHop(); setAnim((a) => (a ? { ...a, flying: true } : a)) }, t))
+      ids.push(window.setTimeout(() => { playPop(); setAnim((a) => (a ? { ...a, gone: true } : a)) }, t + CPU_FLY_MS * 0.5))
+      ids.push(window.setTimeout(() => { playLand(); setVs((v) => vsCpuMove(v, m, i === plan.length - 1)); setLastCpu({ m, animal }); setLastMe(null); setAnim(null) }, t + CPU_FLY_MS))
       t += CPU_FLY_MS
       const b2 = board.map((row) => [...row])
       b2[m.to.r][m.to.c] = b2[m.from.r][m.from.c]; b2[m.from.r][m.from.c] = 0; b2[m.over.r][m.over.c] = 0
@@ -116,12 +117,18 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   // 이기면 별(상점에서 쓸 수 있음). 지거나 비기면 없음
   // 내가 한 세트를 완성할 때마다 별 5개
   useEffect(() => {
-    if (sets > setsPaid) { const n = (sets - setsPaid) * STARS_PER_SET; earnStars(n); setSetsPaid(sets); say(tx.setStars(n)) }
+    if (sets > setsPaid) { const n = (sets - setsPaid) * STARS_PER_SET; earnStars(n); setSetsPaid(sets); playSetDone(); say(tx.setStars(n)) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sets])
   useEffect(() => {
-    if (result === 'win' && bonusPaid === 0) { earnStars(WIN_BONUS); setBonusPaid(WIN_BONUS) }
+    if (result === 'win' && bonusPaid === 0) { earnStars(WIN_BONUS); setBonusPaid(WIN_BONUS); playWin() }
   }, [result, bonusPaid])
+  // 졌을 때 부드러운 소리(끝난 판을 다시 열 때는 울리지 않게 이 화면에서 결과가 처음 나올 때만)
+  const lastResult = useRef(result)
+  useEffect(() => {
+    if (result === 'lose' && lastResult.current !== 'lose') playLose()
+    lastResult.current = result
+  }, [result])
   const tap = (r: number, c: number) => {
     if (over || vs.turn !== 'me' || anim) return
     const v = board[r][c]
@@ -136,11 +143,12 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     // 내 말도 동물처럼 천천히 뛰어넘는다(내 얼굴이 말 위에 올라탄 채로)
     setSel(null)
     setLastCpu(null)
+    playHop()
     setAnim({ m, color: board[m.from.r][m.from.c], who: 'me', flying: true, gone: false })
     const next = vsHumanMove(vs, m)
     timers.current.push(
-      window.setTimeout(() => setAnim((a) => (a ? { ...a, gone: true } : a)), ME_FLY_MS * 0.5),
-      window.setTimeout(() => { setVs(next); setLastMe(m); setAnim(null); if (next.chain) setSel(next.chain) }, ME_FLY_MS),
+      window.setTimeout(() => { playPop(); setAnim((a) => (a ? { ...a, gone: true } : a)) }, ME_FLY_MS * 0.5),
+      window.setTimeout(() => { playLand(); setVs(next); setLastMe(m); setAnim(null); if (next.chain) setSel(next.chain) }, ME_FLY_MS),
     )
   }
   const endTurn = () => { setVs((v) => vsEndTurn(v)); setSel(null) }
