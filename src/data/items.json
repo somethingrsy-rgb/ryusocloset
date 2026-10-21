@@ -3864,7 +3864,31 @@
     "native": true
   },
   {
-    "id": "wig_icemess2",
+    "id": "wig_galaxy",
+    "category": "wig",
+    "name": {
+      "ko": "은하 반짝 단발",
+      "en": "Galaxy sparkle wig"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 187,
+      "y": 26,
+      "w": 681,
+      "h": 482
+    },
+    "image": "assets/clothes/wig/wig_galaxy.webp",
+    "thumb": "assets/thumbs/wig_galaxy.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
+    "id": "wig_icemess3",
     "category": "wig",
     "name": {
       "ko": "아이스블루 덥수룩 단발",
@@ -3877,13 +3901,13 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 139,
-      "y": 140,
+      "x": 141,
+      "y": 28,
       "w": 726,
-      "h": 462
+      "h": 461
     },
-    "image": "assets/clothes/wig/wig_icemess2.webp",
-    "thumb": "assets/thumbs/wig_icemess2.webp",
+    "image": "assets/clothes/wig/wig_icemess3.webp",
+    "thumb": "assets/thumbs/wig_icemess3.webp",
     "zIndex": 5,
     "native": true
   },
@@ -3936,7 +3960,7 @@
     "native": true
   },
   {
-    "id": "wig_mintmess2",
+    "id": "wig_mintmess3",
     "category": "wig",
     "name": {
       "ko": "민트 덥수룩 단발",
@@ -3949,13 +3973,13 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 139,
-      "y": 141,
-      "w": 727,
+      "x": 142,
+      "y": 28,
+      "w": 726,
       "h": 461
     },
-    "image": "assets/clothes/wig/wig_mintmess2.webp",
-    "thumb": "assets/thumbs/wig_mintmess2.webp",
+    "image": "assets/clothes/wig/wig_mintmess3.webp",
+    "thumb": "assets/thumbs/wig_mintmess3.webp",
     "zIndex": 5,
     "native": true
   },
