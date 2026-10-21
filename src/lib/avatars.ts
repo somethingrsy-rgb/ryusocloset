@@ -47,7 +47,7 @@ export const AVATARS: Avatar[] = [
     ],
   },
   {
-    id: 'yuel', name: { ko: '유엘', en: 'Yuel' }, dir: 'assets/base/yuel', baldBody: 'body_bald',
+    id: 'yuel', name: { ko: '유엘', en: 'Yuel' }, dir: 'assets/base/yuel', baldBody: 'body_bald2',
     hairstyles: [{ id: 'short', name: { ko: '짧은 머리', en: 'Short hair' }, file: 'hair_front.webp' }],
   },
 ]
