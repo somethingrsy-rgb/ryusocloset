@@ -1447,28 +1447,28 @@
     "color": "black",
     "native": true
   },
-  "wig_sidebraid2": {
-    "ko": "옆으로 땋은 머리",
-    "en": "Side braid wig",
-    "category": "wig",
-    "color": "brown",
-    "native": true
-  },
-  "wig_ombrebraid": {
+  "wig_ombrebraid2": {
     "ko": "블루 옴브레 왕관 땋은 머리",
     "en": "Blue ombre crown braid wig",
     "category": "wig",
     "color": "skyblue",
     "native": true
   },
-  "wig_ombrebangs": {
+  "wig_ombrebangs2": {
     "ko": "블루 옴브레 진주 앞머리",
     "en": "Blue ombre pearl bangs wig",
     "category": "wig",
     "color": "skyblue",
     "native": true
   },
-  "wig_pinkbuns": {
+  "wig_sidebraid3": {
+    "ko": "옆으로 땋은 머리",
+    "en": "Side braid wig",
+    "category": "wig",
+    "color": "brown",
+    "native": true
+  },
+  "wig_pinkbuns2": {
     "ko": "핑크 양쪽 번 머리",
     "en": "Pink buns wig",
     "category": "wig",

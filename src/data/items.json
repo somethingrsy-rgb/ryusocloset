@@ -3840,7 +3840,7 @@
     "native": true
   },
   {
-    "id": "wig_ombrebangs",
+    "id": "wig_ombrebangs2",
     "category": "wig",
     "name": {
       "ko": "블루 옴브레 진주 앞머리",
@@ -3854,17 +3854,17 @@
     "colorHex": "#8fb8e0",
     "box": {
       "x": 60,
-      "y": 47,
+      "y": 55,
       "w": 908,
       "h": 1064
     },
-    "image": "assets/clothes/wig/wig_ombrebangs.webp",
-    "thumb": "assets/thumbs/wig_ombrebangs.webp",
+    "image": "assets/clothes/wig/wig_ombrebangs2.webp",
+    "thumb": "assets/thumbs/wig_ombrebangs2.webp",
     "zIndex": 5,
     "native": true
   },
   {
-    "id": "wig_ombrebraid",
+    "id": "wig_ombrebraid2",
     "category": "wig",
     "name": {
       "ko": "블루 옴브레 왕관 땋은 머리",
@@ -3878,12 +3878,12 @@
     "colorHex": "#8fb8e0",
     "box": {
       "x": 74,
-      "y": 15,
+      "y": 23,
       "w": 877,
       "h": 1293
     },
-    "image": "assets/clothes/wig/wig_ombrebraid.webp",
-    "thumb": "assets/thumbs/wig_ombrebraid.webp",
+    "image": "assets/clothes/wig/wig_ombrebraid2.webp",
+    "thumb": "assets/thumbs/wig_ombrebraid2.webp",
     "zIndex": 5,
     "native": true
   },
@@ -3912,7 +3912,7 @@
     "native": true
   },
   {
-    "id": "wig_pinkbuns",
+    "id": "wig_pinkbuns2",
     "category": "wig",
     "name": {
       "ko": "핑크 양쪽 번 머리",
@@ -3925,18 +3925,18 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 14,
-      "y": 48,
-      "w": 997,
-      "h": 1204
+      "x": 50,
+      "y": 19,
+      "w": 928,
+      "h": 1086
     },
-    "image": "assets/clothes/wig/wig_pinkbuns.webp",
-    "thumb": "assets/thumbs/wig_pinkbuns.webp",
+    "image": "assets/clothes/wig/wig_pinkbuns2.webp",
+    "thumb": "assets/thumbs/wig_pinkbuns2.webp",
     "zIndex": 5,
     "native": true
   },
   {
-    "id": "wig_sidebraid2",
+    "id": "wig_sidebraid3",
     "category": "wig",
     "name": {
       "ko": "옆으로 땋은 머리",
@@ -3949,13 +3949,13 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 162,
+      "x": 154,
       "y": 24,
       "w": 702,
       "h": 1072
     },
-    "image": "assets/clothes/wig/wig_sidebraid2.webp",
-    "thumb": "assets/thumbs/wig_sidebraid2.webp",
+    "image": "assets/clothes/wig/wig_sidebraid3.webp",
+    "thumb": "assets/thumbs/wig_sidebraid3.webp",
     "zIndex": 5,
     "native": true
   },
