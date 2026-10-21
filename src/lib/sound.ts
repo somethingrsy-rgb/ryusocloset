@@ -80,19 +80,24 @@ export function playSnap() {
 let enabled = true
 export const setSoundEnabled = (on: boolean) => { enabled = on }
 
-/** 톤 하나: 시작 주파수 → 끝 주파수로 미끄러지며 사라진다 */
+/** 톤 하나: 시작 주파수 → 끝 주파수로 미끄러지며 사라진다. 한 옥타브 위 소리를 살짝 얹어 맑게 만든다 */
 function tone(c: AudioContext, at: number, f0: number, f1: number, dur: number, gain: number, type: OscillatorType = 'sine') {
-  const o = c.createOscillator()
   const g = c.createGain()
-  o.type = type
-  o.frequency.setValueAtTime(f0, at)
-  o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), at + dur)
   g.gain.setValueAtTime(0.0001, at)
-  g.gain.exponentialRampToValueAtTime(gain, at + 0.012)
+  g.gain.exponentialRampToValueAtTime(gain, at + 0.006)
   g.gain.exponentialRampToValueAtTime(0.0001, at + dur)
-  o.connect(g).connect(c.destination)
-  o.start(at)
-  o.stop(at + dur + 0.02)
+  g.connect(c.destination)
+  for (const [mul, vol, t] of [[1, 1, type], [2, 0.4, 'sine'], [3, 0.12, 'sine']] as const) {
+    const o = c.createOscillator()
+    const og = c.createGain()
+    o.type = t
+    o.frequency.setValueAtTime(f0 * mul, at)
+    o.frequency.exponentialRampToValueAtTime(Math.max(20, f1 * mul), at + dur)
+    og.gain.value = vol
+    o.connect(og).connect(g)
+    o.start(at)
+    o.stop(at + dur + 0.02)
+  }
 }
 
 const play = (fn: (c: AudioContext, t: number) => void) => {
@@ -104,36 +109,36 @@ const play = (fn: (c: AudioContext, t: number) => void) => {
 const jitter = (n: number) => n * (0.97 + Math.random() * 0.06)
 
 /** 점프: 말이 폴짝 떠오른다 */
-export const playHop = () => play((c, t) => { tone(c, t, jitter(360), jitter(640), 0.14, 0.22); tone(c, t, jitter(720), jitter(1280), 0.1, 0.05, 'triangle') })
+export const playHop = () => play((c, t) => { tone(c, t, jitter(700), jitter(1250), 0.12, 0.2); tone(c, t + 0.05, jitter(1100), jitter(1700), 0.09, 0.08, 'triangle') })
 /** 점프: 뛰어넘은 말이 톡 사라진다 */
-export const playPop = () => play((c, t) => { tone(c, t, jitter(820), jitter(260), 0.09, 0.22); click(c, t, 2600, 0.25) })
+export const playPop = () => play((c, t) => { tone(c, t, jitter(1500), jitter(700), 0.07, 0.18); click(c, t, 4200, 0.2) })
 /** 점프: 말이 내려앉는다 */
-export const playLand = () => play((c, t) => { tone(c, t, jitter(240), jitter(140), 0.1, 0.28, 'triangle'); click(c, t, 1400, 0.3) })
+export const playLand = () => play((c, t) => { tone(c, t, jitter(620), jitter(420), 0.08, 0.2, 'triangle'); click(c, t, 3200, 0.22) })
 /** 세트를 완성했다 */
-export const playSetDone = () => play((c, t) => { [523, 659, 784, 1047].forEach((f, i) => tone(c, t + i * 0.09, f, f * 1.01, 0.22, 0.2, 'triangle')) })
+export const playSetDone = () => play((c, t) => { [659, 831, 988, 1319].forEach((f, i) => tone(c, t + i * 0.08, f, f * 1.01, 0.2, 0.16, 'triangle')) })
 /** 이겼다 */
-export const playWin = () => play((c, t) => { [523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(c, t + i * 0.11, f, f * 1.01, 0.26, 0.22, 'triangle')) })
+export const playWin = () => play((c, t) => { [659, 831, 988, 831, 988, 1319, 1661].forEach((f, i) => tone(c, t + i * 0.1, f, f * 1.01, 0.24, 0.17, 'triangle')) })
 /** 졌다(부드럽게) */
-export const playLose = () => play((c, t) => { [392, 330, 262].forEach((f, i) => tone(c, t + i * 0.16, f, f * 0.99, 0.3, 0.16, 'sine')) })
+export const playLose = () => play((c, t) => { [659, 554, 440].forEach((f, i) => tone(c, t + i * 0.15, f, f * 0.99, 0.28, 0.14, 'sine')) })
 /** 별비: 별을 받았다 */
-export const playStar = () => play((c, t) => { tone(c, t, jitter(1320), jitter(1760), 0.12, 0.2); tone(c, t + 0.06, jitter(1760), jitter(2200), 0.14, 0.12, 'triangle') })
+export const playStar = () => play((c, t) => { tone(c, t, jitter(1568), jitter(2093), 0.1, 0.16); tone(c, t + 0.05, jitter(2093), jitter(2637), 0.13, 0.11, 'triangle') })
 /** 별비: 금빛 별(5점)을 받았다 */
-export const playGold = () => play((c, t) => { [1047, 1319, 1568, 2093].forEach((f, i) => tone(c, t + i * 0.055, f, f * 1.01, 0.2, 0.18, 'triangle')) })
+export const playGold = () => play((c, t) => { [1175, 1568, 1976, 2637].forEach((f, i) => tone(c, t + i * 0.05, f, f * 1.01, 0.2, 0.15, 'triangle')) })
 /** 별비: 구름에 부딪혔다 */
-export const playCloud = () => play((c, t) => { tone(c, t, 180, 90, 0.22, 0.3, 'sawtooth') })
+export const playCloud = () => play((c, t) => { tone(c, t, 520, 300, 0.16, 0.16, 'triangle') })
 
 /* ---------- 농장·카페 효과음 ---------- */
 /** 씨앗을 심는다(흙을 톡톡) */
-export const playPlant = () => play((c, t) => { tone(c, t, jitter(200), jitter(120), 0.09, 0.3, 'triangle'); tone(c, t + 0.09, jitter(230), jitter(130), 0.09, 0.26, 'triangle') })
+export const playPlant = () => play((c, t) => { tone(c, t, jitter(560), jitter(400), 0.07, 0.2, 'triangle'); tone(c, t + 0.09, jitter(640), jitter(440), 0.07, 0.18, 'triangle') })
 /** 물을 준다(찰랑) */
-export const playWater = () => play((c, t) => { for (let i = 0; i < 4; i++) { tone(c, t + i * 0.07, jitter(900 + i * 170), jitter(500 + i * 90), 0.1, 0.14); click(c, t + i * 0.07, 3000, 0.1) } })
+export const playWater = () => play((c, t) => { for (let i = 0; i < 4; i++) { tone(c, t + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12); click(c, t + i * 0.07, 4000, 0.08) } })
 /** 수확한다(톡 + 반짝) */
-export const playHarvest = () => play((c, t) => { tone(c, t, jitter(500), jitter(900), 0.09, 0.22); [880, 1175, 1568].forEach((f, i) => tone(c, t + 0.08 + i * 0.07, f, f * 1.01, 0.16, 0.14, 'triangle')) })
+export const playHarvest = () => play((c, t) => { tone(c, t, jitter(800), jitter(1250), 0.08, 0.18); [1175, 1568, 2093].forEach((f, i) => tone(c, t + 0.07 + i * 0.06, f, f * 1.01, 0.15, 0.13, 'triangle')) })
 /** 코인을 받거나 쓴다(짤랑) */
-export const playCoin = () => play((c, t) => { tone(c, t, 1319, 1319, 0.1, 0.18, 'square'); tone(c, t + 0.08, 1760, 1760, 0.22, 0.16, 'square') })
+export const playCoin = () => play((c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
 /** 카페: 주문을 받았다(뾰롱) */
-export const playOrder = () => play((c, t) => { tone(c, t, jitter(660), jitter(990), 0.12, 0.2); tone(c, t + 0.1, jitter(880), jitter(1100), 0.12, 0.14, 'triangle') })
+export const playOrder = () => play((c, t) => { tone(c, t, jitter(880), jitter(1320), 0.11, 0.17); tone(c, t + 0.09, jitter(1175), jitter(1480), 0.12, 0.12, 'triangle') })
 /** 카페: 만들기를 시작했다(보글) */
-export const playCook = () => play((c, t) => { for (let i = 0; i < 3; i++) tone(c, t + i * 0.08, jitter(300 + i * 60), jitter(520 + i * 80), 0.09, 0.16, 'triangle') })
+export const playCook = () => play((c, t) => { for (let i = 0; i < 3; i++) tone(c, t + i * 0.07, jitter(600 + i * 100), jitter(950 + i * 120), 0.08, 0.13, 'triangle') })
 /** 카페: 음식이 다 됐다(딩동) */
-export const playBell = () => play((c, t) => { tone(c, t, 1568, 1568, 0.5, 0.2, 'triangle'); tone(c, t + 0.18, 1175, 1175, 0.6, 0.2, 'triangle') })
+export const playBell = () => play((c, t) => { tone(c, t, 1976, 1976, 0.45, 0.16, 'triangle'); tone(c, t + 0.17, 1480, 1480, 0.55, 0.16, 'triangle') })
