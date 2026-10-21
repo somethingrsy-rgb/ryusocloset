@@ -3912,7 +3912,7 @@
     "native": true
   },
   {
-    "id": "wig_pinkbuns2",
+    "id": "wig_pinkbuns3",
     "category": "wig",
     "name": {
       "ko": "핑크 양쪽 번 머리",
@@ -3926,12 +3926,12 @@
     "colorHex": "#f4a9bd",
     "box": {
       "x": 50,
-      "y": 19,
+      "y": 27,
       "w": 928,
       "h": 1086
     },
-    "image": "assets/clothes/wig/wig_pinkbuns2.webp",
-    "thumb": "assets/thumbs/wig_pinkbuns2.webp",
+    "image": "assets/clothes/wig/wig_pinkbuns3.webp",
+    "thumb": "assets/thumbs/wig_pinkbuns3.webp",
     "zIndex": 5,
     "native": true
   },
