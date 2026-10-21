@@ -1496,32 +1496,32 @@
     "color": "pink",
     "native": true
   },
-  "wig_purplemess": {
-    "ko": "보라 덥수룩 단발",
-    "en": "Purple messy wig",
-    "category": "wig",
-    "color": "purple",
-    "native": true
-  },
-  "wig_blondemess": {
+  "wig_blondemess2": {
     "ko": "금발 덥수룩 단발",
     "en": "Blonde messy wig",
     "category": "wig",
     "color": "beige",
     "native": true
   },
-  "wig_mintmess": {
+  "wig_icemess2": {
+    "ko": "아이스블루 덥수룩 단발",
+    "en": "Ice blue messy wig",
+    "category": "wig",
+    "color": "skyblue",
+    "native": true
+  },
+  "wig_mintmess2": {
     "ko": "민트 덥수룩 단발",
     "en": "Mint messy wig",
     "category": "wig",
     "color": "mint",
     "native": true
   },
-  "wig_icemess": {
-    "ko": "아이스블루 덥수룩 단발",
-    "en": "Ice blue messy wig",
+  "wig_purplemess2": {
+    "ko": "보라 덥수룩 단발",
+    "en": "Purple messy wig",
     "category": "wig",
-    "color": "skyblue",
+    "color": "purple",
     "native": true
   }
 }
