@@ -3840,6 +3840,30 @@
     "native": true
   },
   {
+    "id": "wig_lilacmid",
+    "category": "wig",
+    "name": {
+      "ko": "라일락 웨이브 단발",
+      "en": "Lilac wavy bob wig"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 94,
+      "y": 34,
+      "w": 837,
+      "h": 890
+    },
+    "image": "assets/clothes/wig/wig_lilacmid.webp",
+    "thumb": "assets/thumbs/wig_lilacmid.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
     "id": "wig_ombrebangs2",
     "category": "wig",
     "name": {
@@ -3884,6 +3908,30 @@
     },
     "image": "assets/clothes/wig/wig_ombrebraid2.webp",
     "thumb": "assets/thumbs/wig_ombrebraid2.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
+    "id": "wig_pastelbuns",
+    "category": "wig",
+    "name": {
+      "ko": "파스텔 줄무늬 번 머리",
+      "en": "Pastel striped buns wig"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 85,
+      "y": 30,
+      "w": 860,
+      "h": 1324
+    },
+    "image": "assets/clothes/wig/wig_pastelbuns.webp",
+    "thumb": "assets/thumbs/wig_pastelbuns.webp",
     "zIndex": 5,
     "native": true
   },

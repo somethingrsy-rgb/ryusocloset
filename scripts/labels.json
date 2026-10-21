@@ -1474,5 +1474,19 @@
     "category": "wig",
     "color": "pink",
     "native": true
+  },
+  "wig_lilacmid": {
+    "ko": "라일락 웨이브 단발",
+    "en": "Lilac wavy bob wig",
+    "category": "wig",
+    "color": "purple",
+    "native": true
+  },
+  "wig_pastelbuns": {
+    "ko": "파스텔 줄무늬 번 머리",
+    "en": "Pastel striped buns wig",
+    "category": "wig",
+    "color": "pink",
+    "native": true
   }
 }
