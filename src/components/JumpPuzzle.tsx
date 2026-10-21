@@ -37,14 +37,14 @@ function FaceBadge({ className = '' }: { className?: string }) {
 
 const T = {
   ko: {
-    title: '점프 퍼즐', howVs: '내 차례에 말을 뛰어넘어 모아요. 이어서 더 뛸 수 있으면 계속하거나 끝내기를 눌러요. 컴퓨터보다 세트를 많이 모으면 이겨요!',
+    title: '점프 퍼즐',
     again: '새 판', close: '닫기', sets: '세트', badMove: '그곳으로는 뛸 수 없어요', over: '더 뛸 수 없어요!',
     level: { easy: '초급', normal: '중급', hard: '고급' },
     you: '나', cpu: '컴퓨터', cpuCount: (n: number) => `${n}마리`, animals: ['토끼', '강아지', '호랑이', '곰돌이', '고양이', '팬더'], myTurn: '내 차례예요', cpuTurn: (name: string) => `${name} 차례예요…`, endTurn: '끝내기',
     win: '이겼어요!', lose: '아쉬워요, 졌어요', draw: '비겼어요', bonus: (c: number) => `이긴 보너스 +${c}`, setStars: (n: number) => `세트 완성! +${n} 별`, setStarsTotal: (n: number) => `세트 별 +${n}`,
   },
   en: {
-    title: 'Jump Puzzle', howVs: 'On your turn, jump and collect pieces. If you can jump again, keep going or end your turn. Beat the computer with more sets!',
+    title: 'Jump Puzzle',
     again: 'New game', close: 'Close', sets: 'sets', badMove: "You can't jump there", over: 'No more jumps!',
     level: { easy: 'Easy', normal: 'Normal', hard: 'Hard' },
     you: 'You', cpu: 'Computer', cpuCount: (n: number) => `${n}`, animals: ['Bunny', 'Puppy', 'Tiger', 'Teddy', 'Kitty', 'Panda'], myTurn: 'Your turn', cpuTurn: (name: string) => `${name} is thinking…`, endTurn: 'End turn',
@@ -274,7 +274,6 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
             aria-hidden
           >{typeof vs.turn === 'number' ? <><img src={animalSrc(vs.turn)} alt="" draggable={false} className="mr-1 inline-block h-5 w-5 object-contain align-text-bottom" />{tx.cpuTurn(cpuName(vs.turn))}</> : <><FaceBadge className="mr-1 h-5 align-text-bottom" />{tx.myTurn}</>}</p>
         )}
-        {vs.mine.every((n) => n === 0) && vs.turn === 'me' && !msg && <p className="m-0 max-w-[44rem] landscape:max-w-none text-center text-xs leading-relaxed text-[#678071]">{tx.howVs}</p>}
 
         <div className="flex gap-2">
           <button onClick={endTurn} disabled={!vs.chain || vs.turn !== 'me'} className="min-h-9 rounded-full border border-[#dce4d7] bg-white px-4 text-xs font-bold disabled:opacity-40">✋ {tx.endTurn}</button>
