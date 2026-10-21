@@ -5,12 +5,37 @@ function getCtx(): AudioContext | null {
   try {
     const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!AC) return null
-    ctx ??= new AC()
-    if (ctx.state === 'suspended') void ctx.resume()
+    if (!ctx) {
+      // iOS: 무음 스위치가 켜져 있어도 소리가 나게 한다 (iOS 17+)
+      try {
+        const s = (navigator as unknown as { audioSession?: { type: string } }).audioSession
+        if (s) s.type = 'playback'
+      } catch { /* 지원하지 않으면 무시 */ }
+      ctx = new AC()
+    }
+    if (ctx.state !== 'running') void ctx.resume()
     return ctx
   } catch {
     return null
   }
+}
+
+/** iOS 는 화면을 처음 만질 때 한 번 소리를 열어줘야 이후 효과음이 난다 */
+function unlock() {
+  const c = getCtx()
+  if (!c) return
+  try {
+    const src = c.createBufferSource()
+    src.buffer = c.createBuffer(1, 1, 22050)
+    src.connect(c.destination)
+    src.start(0)
+  } catch { /* 무시 */ }
+  if (c.state === 'running') {
+    for (const e of ['pointerdown', 'touchend', 'click', 'keydown']) window.removeEventListener(e, unlock, true)
+  }
+}
+if (typeof window !== 'undefined') {
+  for (const e of ['pointerdown', 'touchend', 'click', 'keydown']) window.addEventListener(e, unlock, true)
 }
 
 function click(c: AudioContext, at: number, freq: number, gain: number) {
