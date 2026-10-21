@@ -46,11 +46,11 @@ function click(c: AudioContext, at: number, freq: number, gain: number) {
   const src = c.createBufferSource()
   src.buffer = buf
   const hp = c.createBiquadFilter()
-  hp.type = 'bandpass'
-  hp.frequency.value = freq
-  hp.Q.value = 0.8
+  hp.type = 'lowpass'
+  hp.frequency.value = Math.min(freq, 1500)
+  hp.Q.value = 0.5
   const g = c.createGain()
-  g.gain.setValueAtTime(gain, at)
+  g.gain.setValueAtTime(gain * 0.35, at)
   g.gain.exponentialRampToValueAtTime(0.001, at + 0.05)
   src.connect(hp).connect(g).connect(c.destination)
   src.start(at)
@@ -60,7 +60,7 @@ function click(c: AudioContext, at: number, freq: number, gain: number) {
   osc.type = 'triangle'
   osc.frequency.setValueAtTime(freq / 3, at)
   osc.frequency.exponentialRampToValueAtTime(freq / 6, at + 0.05)
-  og.gain.setValueAtTime(gain * 0.5, at)
+  og.gain.setValueAtTime(gain * 0.25, at)
   og.gain.exponentialRampToValueAtTime(0.001, at + 0.06)
   osc.connect(og).connect(c.destination)
   osc.start(at)
@@ -80,23 +80,27 @@ export function playSnap() {
 let enabled = true
 export const setSoundEnabled = (on: boolean) => { enabled = on }
 
-/** 톤 하나: 시작 주파수 → 끝 주파수로 미끄러지며 사라진다. 한 옥타브 위 소리를 살짝 얹어 맑게 만든다 */
+/** 톤 하나: 시작 주파수 → 끝 주파수로 미끄러지며 사라진다. 높은 소리는 한 옥타브 내리고, 부드럽게 깎아 귀가 편하게 한다 */
 function tone(c: AudioContext, at: number, f0: number, f1: number, dur: number, gain: number, type: OscillatorType = 'sine') {
+  while (f0 > 1250) { f0 /= 2; f1 /= 2 }
+  const lp = c.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.frequency.value = 2200
   const g = c.createGain()
   g.gain.setValueAtTime(0.0001, at)
-  g.gain.exponentialRampToValueAtTime(gain, at + 0.006)
-  g.gain.exponentialRampToValueAtTime(0.0001, at + dur)
-  g.connect(c.destination)
-  for (const [mul, vol, t] of [[1, 1, type], [2, 0.4, 'sine'], [3, 0.12, 'sine']] as const) {
+  g.gain.exponentialRampToValueAtTime(gain * 0.6, at + 0.02)
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur + 0.05)
+  lp.connect(g).connect(c.destination)
+  for (const [mul, vol] of [[1, 1], [2, 0.15]] as const) {
     const o = c.createOscillator()
     const og = c.createGain()
-    o.type = t
+    o.type = mul === 1 && type === 'triangle' ? 'triangle' : 'sine'
     o.frequency.setValueAtTime(f0 * mul, at)
     o.frequency.exponentialRampToValueAtTime(Math.max(20, f1 * mul), at + dur)
     og.gain.value = vol
-    o.connect(og).connect(g)
+    o.connect(og).connect(lp)
     o.start(at)
-    o.stop(at + dur + 0.02)
+    o.stop(at + dur + 0.08)
   }
 }
 
