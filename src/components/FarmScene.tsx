@@ -1,3 +1,4 @@
+import { playCoin, playHarvest, playPlant, playWater } from '../lib/sound'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
 import { actFarm, CROPS, getFarm, growth, orderCrop, PLOT_COUNT, plotPrice, subscribeFarm, type CropId, type FarmAction } from '../lib/farm'
@@ -81,6 +82,12 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
 
   const apply = (action: FarmAction) => {
     const result = actFarm(action)
+    if (result === 'saved') {
+      if (action.type === 'plant') playPlant()
+      else if (action.type === 'water') playWater()
+      else if (action.type === 'harvest') playHarvest()
+      else playCoin() // 밭 사기·납품·팔기
+    }
     setNow(Date.now())
     if (result === 'failed') setNotice(ko ? '저장하지 못했어요. 저장 공간을 확인해주세요.' : 'Could not save. Check storage.')
     else if (result === 'invalid') setNotice(ko ? '아직 할 수 없는 동작이에요.' : 'Not possible yet.')

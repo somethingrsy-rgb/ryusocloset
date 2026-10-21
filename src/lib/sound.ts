@@ -96,3 +96,19 @@ export const playStar = () => play((c, t) => { tone(c, t, jitter(1320), jitter(1
 export const playGold = () => play((c, t) => { [1047, 1319, 1568, 2093].forEach((f, i) => tone(c, t + i * 0.055, f, f * 1.01, 0.2, 0.18, 'triangle')) })
 /** 별비: 구름에 부딪혔다 */
 export const playCloud = () => play((c, t) => { tone(c, t, 180, 90, 0.22, 0.3, 'sawtooth') })
+
+/* ---------- 농장·카페 효과음 ---------- */
+/** 씨앗을 심는다(흙을 톡톡) */
+export const playPlant = () => play((c, t) => { tone(c, t, jitter(200), jitter(120), 0.09, 0.3, 'triangle'); tone(c, t + 0.09, jitter(230), jitter(130), 0.09, 0.26, 'triangle') })
+/** 물을 준다(찰랑) */
+export const playWater = () => play((c, t) => { for (let i = 0; i < 4; i++) { tone(c, t + i * 0.07, jitter(900 + i * 170), jitter(500 + i * 90), 0.1, 0.14); click(c, t + i * 0.07, 3000, 0.1) } })
+/** 수확한다(톡 + 반짝) */
+export const playHarvest = () => play((c, t) => { tone(c, t, jitter(500), jitter(900), 0.09, 0.22); [880, 1175, 1568].forEach((f, i) => tone(c, t + 0.08 + i * 0.07, f, f * 1.01, 0.16, 0.14, 'triangle')) })
+/** 코인을 받거나 쓴다(짤랑) */
+export const playCoin = () => play((c, t) => { tone(c, t, 1319, 1319, 0.1, 0.18, 'square'); tone(c, t + 0.08, 1760, 1760, 0.22, 0.16, 'square') })
+/** 카페: 주문을 받았다(뾰롱) */
+export const playOrder = () => play((c, t) => { tone(c, t, jitter(660), jitter(990), 0.12, 0.2); tone(c, t + 0.1, jitter(880), jitter(1100), 0.12, 0.14, 'triangle') })
+/** 카페: 만들기를 시작했다(보글) */
+export const playCook = () => play((c, t) => { for (let i = 0; i < 3; i++) tone(c, t + i * 0.08, jitter(300 + i * 60), jitter(520 + i * 80), 0.09, 0.16, 'triangle') })
+/** 카페: 음식이 다 됐다(딩동) */
+export const playBell = () => play((c, t) => { tone(c, t, 1568, 1568, 0.5, 0.2, 'triangle'); tone(c, t + 0.18, 1175, 1175, 0.6, 0.2, 'triangle') })

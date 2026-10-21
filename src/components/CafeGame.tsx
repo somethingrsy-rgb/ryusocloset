@@ -1,3 +1,4 @@
+import { playBell, playCoin, playCook, playOrder } from '../lib/sound'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { FarmFx } from './FarmFx'
 import { useI18n } from '../i18n'
@@ -80,23 +81,6 @@ const T = {
   },
 }
 
-function tone() {
-  try {
-    const c = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-    const g = c.createGain()
-    g.connect(c.destination)
-    g.gain.value = 0.045
-    ;[523, 659, 784].forEach((f, i) => {
-      const o = c.createOscillator()
-      o.frequency.value = f
-      o.connect(g)
-      o.start(c.currentTime + i * 0.09)
-      o.stop(c.currentTime + i * 0.09 + 0.13)
-    })
-    setTimeout(() => c.close(), 600)
-  } catch { /* 소리 실패는 무시 */ }
-}
-
 /**
  * 아바타는 가운데 잔디 길(x=50%)로만 다닌다: 카운터 앞 → 윗줄 테이블 사이 → 아랫줄 테이블 사이.
  * h = 아바타 키(그림 높이에 대한 %, 화면에서 농장 아바타와 같은 크기가 되도록 맞춤), feet = 발 위치(그림 높이에 대한 %): 카운터 앞, 윗줄, 아랫줄. 테이블·동물과 겹치지 않는 자리다.
@@ -116,7 +100,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
   const [guests, setGuests] = useState<Guest[]>(() => kept?.guests ?? SEATS.map((_, i) => newGuest(i)))
   const [now, setNow] = useState(() => Date.now())
-  const [sound, setSound] = useState(false)
+  const [sound, setSound] = useState(true) // 이 화면에서만 끄고 켤 수 있는 소리(설정의 효과음이 꺼져 있으면 어차피 안 남)
   const [toast, setToast] = useState('')
   const [floats, setFloats] = useState<{ id: number; seat: number; amount: number }[]>([])
   const toastTimer = useRef<number>(0)
@@ -157,8 +141,18 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
     clearTimeout(toastTimer.current)
     toastTimer.current = window.setTimeout(() => setToast(''), 2500)
   }
-  const beep = () => { if (sound) tone() }
+  const sfx = (fn: () => void) => { if (sound) fn() }
   const isReady = (g: Guest) => g.stage === 'cooking' && g.doneAt <= now
+  // 음식이 다 되면 딩동(손님마다 처음 다 됐을 때 한 번만)
+  const readyBefore = useRef<boolean[]>([])
+  useEffect(() => {
+    guests.forEach((g, i) => {
+      const r = g.stage === 'cooking' && g.doneAt <= now
+      if (r && readyBefore.current[i] === false) { if (sound) playBell() }
+      readyBefore.current[i] = r
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [now, guests])
 
   const A = wide ? AVATAR.wide : AVATAR.portrait
   const aw = A.h * A.w
@@ -185,16 +179,17 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
       pending.current.delete(i)
       if (stage === 'new') {
         setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'ordered' } : x)))
-        beep()
+        sfx(playOrder)
       } else if (stage === 'ordered') {
         const at = Date.now()
         setNow(at)
         setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'cooking', doneAt: at + cookMs(m.price) } : x)))
+        sfx(playCook)
       } else {
         const bonus = st.served + 1 >= GOAL && !st.reward
         save({ served: st.served + 1, reward: st.reward || bonus })
         actFarm({ type: 'earn', amount: m.price + (bonus ? BONUS : 0) })
-        beep()
+        sfx(playCoin)
         setHold(null)
         setGuests((gs) => gs.map((x, k) => (k === i ? newGuest(i) : x)))
         const id = ++floatId.current
@@ -264,7 +259,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
         <span className="rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold shadow">🎁 {st.reward ? tx.missionDone : `${Math.min(st.served, GOAL)} / ${GOAL}`}</span>
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
-          <button aria-label={tx.sound[sound ? 1 : 0]} aria-pressed={sound} onClick={() => { const v = !sound; setSound(v); if (v) tone() }} className="h-9 w-9 rounded-full bg-white/90 shadow">{sound ? '🔊' : '🔇'}</button>
+          <button aria-label={tx.sound[sound ? 1 : 0]} aria-pressed={sound} onClick={() => { const v = !sound; setSound(v); if (v) playOrder() }} className="h-9 w-9 rounded-full bg-white/90 shadow">{sound ? '🔊' : '🔇'}</button>
         </div>
       </div>
       <p className="absolute inset-x-3 bottom-2 z-20 m-0 rounded-full bg-white/90 px-3 py-1.5 text-center text-[11px] shadow">{tx.hint}</p>
