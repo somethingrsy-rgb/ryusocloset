@@ -1453,5 +1453,26 @@
     "category": "wig",
     "color": "brown",
     "native": true
+  },
+  "wig_ombrebraid": {
+    "ko": "블루 옴브레 왕관 땋은 머리",
+    "en": "Blue ombre crown braid wig",
+    "category": "wig",
+    "color": "skyblue",
+    "native": true
+  },
+  "wig_ombrebangs": {
+    "ko": "블루 옴브레 진주 앞머리",
+    "en": "Blue ombre pearl bangs wig",
+    "category": "wig",
+    "color": "skyblue",
+    "native": true
+  },
+  "wig_pinkbuns": {
+    "ko": "핑크 양쪽 번 머리",
+    "en": "Pink buns wig",
+    "category": "wig",
+    "color": "pink",
+    "native": true
   }
 }

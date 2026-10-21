@@ -3840,6 +3840,54 @@
     "native": true
   },
   {
+    "id": "wig_ombrebangs",
+    "category": "wig",
+    "name": {
+      "ko": "블루 옴브레 진주 앞머리",
+      "en": "Blue ombre pearl bangs wig"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 60,
+      "y": 47,
+      "w": 908,
+      "h": 1064
+    },
+    "image": "assets/clothes/wig/wig_ombrebangs.webp",
+    "thumb": "assets/thumbs/wig_ombrebangs.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
+    "id": "wig_ombrebraid",
+    "category": "wig",
+    "name": {
+      "ko": "블루 옴브레 왕관 땋은 머리",
+      "en": "Blue ombre crown braid wig"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 74,
+      "y": 15,
+      "w": 877,
+      "h": 1293
+    },
+    "image": "assets/clothes/wig/wig_ombrebraid.webp",
+    "thumb": "assets/thumbs/wig_ombrebraid.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
     "id": "wig_pigtails",
     "category": "wig",
     "name": {
@@ -3860,6 +3908,30 @@
     },
     "image": "assets/clothes/wig/wig_pigtails.webp",
     "thumb": "assets/thumbs/wig_pigtails.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
+    "id": "wig_pinkbuns",
+    "category": "wig",
+    "name": {
+      "ko": "핑크 양쪽 번 머리",
+      "en": "Pink buns wig"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 14,
+      "y": 48,
+      "w": 997,
+      "h": 1204
+    },
+    "image": "assets/clothes/wig/wig_pinkbuns.webp",
+    "thumb": "assets/thumbs/wig_pinkbuns.webp",
     "zIndex": 5,
     "native": true
   },
