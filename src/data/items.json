@@ -3792,6 +3792,30 @@
     "native": true
   },
   {
+    "id": "wig_blondemess",
+    "category": "wig",
+    "name": {
+      "ko": "금발 덥수룩 단발",
+      "en": "Blonde messy wig"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 145,
+      "y": 4,
+      "w": 731,
+      "h": 482
+    },
+    "image": "assets/clothes/wig/wig_blondemess.webp",
+    "thumb": "assets/thumbs/wig_blondemess.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
     "id": "wig_bluemess3",
     "category": "wig",
     "name": {
@@ -3840,6 +3864,30 @@
     "native": true
   },
   {
+    "id": "wig_icemess",
+    "category": "wig",
+    "name": {
+      "ko": "아이스블루 덥수룩 단발",
+      "en": "Ice blue messy wig"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 37,
+      "y": 7,
+      "w": 966,
+      "h": 614
+    },
+    "image": "assets/clothes/wig/wig_icemess.webp",
+    "thumb": "assets/thumbs/wig_icemess.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
     "id": "wig_layered",
     "category": "wig",
     "name": {
@@ -3884,6 +3932,30 @@
     },
     "image": "assets/clothes/wig/wig_lilacmid.webp",
     "thumb": "assets/thumbs/wig_lilacmid.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
+    "id": "wig_mintmess",
+    "category": "wig",
+    "name": {
+      "ko": "민트 덥수룩 단발",
+      "en": "Mint messy wig"
+    },
+    "color": "mint",
+    "colorName": {
+      "ko": "민트",
+      "en": "Mint"
+    },
+    "colorHex": "#a9dcc8",
+    "box": {
+      "x": 37,
+      "y": 7,
+      "w": 968,
+      "h": 614
+    },
+    "image": "assets/clothes/wig/wig_mintmess.webp",
+    "thumb": "assets/thumbs/wig_mintmess.webp",
     "zIndex": 5,
     "native": true
   },
