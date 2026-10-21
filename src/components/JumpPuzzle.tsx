@@ -208,7 +208,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
         </div>
         </div>
 
-        <div className="flex min-h-0 w-full min-w-0 flex-1 items-center justify-center landscape:col-start-1 landscape:row-span-2 landscape:row-start-1 landscape:h-full" style={{ containerType: 'size' }}>
+        <div className="flex min-h-0 w-full min-w-0 flex-1 items-end justify-center landscape:items-center landscape:col-start-1 landscape:row-span-2 landscape:row-start-1 landscape:h-full" style={{ containerType: 'size' }}>
         <div role="grid" aria-label={tx.title} className={`relative grid aspect-square gap-[3px] rounded-2xl bg-[#d9e3cf] p-1.5 transition-shadow ${!over && vs.turn === 'me' ? 'shadow-[0_0_0_4px_#7cc545,0_0_22px_6px_rgba(124,197,69,.55)]' : ''}`} style={{ width: 'min(100cqw, 100cqh)', gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))` }}>
           {board.flatMap((row, r) => row.map((v, c) => {
             const picked = sel && sel.r === r && sel.c === c
