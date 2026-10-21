@@ -3864,7 +3864,7 @@
     "native": true
   },
   {
-    "id": "wig_galaxy",
+    "id": "wig_galaxy2",
     "category": "wig",
     "name": {
       "ko": "은하 반짝 단발",
@@ -3877,13 +3877,13 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 187,
-      "y": 26,
-      "w": 681,
-      "h": 482
+      "x": 194,
+      "y": 32,
+      "w": 619,
+      "h": 438
     },
-    "image": "assets/clothes/wig/wig_galaxy.webp",
-    "thumb": "assets/thumbs/wig_galaxy.webp",
+    "image": "assets/clothes/wig/wig_galaxy2.webp",
+    "thumb": "assets/thumbs/wig_galaxy2.webp",
     "zIndex": 5,
     "native": true
   },

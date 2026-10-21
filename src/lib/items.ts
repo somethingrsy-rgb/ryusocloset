@@ -53,6 +53,7 @@ export const ID_ALIASES: Record<string, string> = {
   "wig_mintmess": "wig_mintmess3",
   "wig_mintmess2": "wig_mintmess3",
   "wig_purplemess": "wig_purplemess2",
+  "wig_galaxy": "wig_galaxy2",
   "bottom_belt_skirt_black": "bottom_skirt_black",
   "bottom_skirt_brown": "bottom_shezmig_skirt_brown",
   "bottom_pants_ivory": "bottom_thick_pants_ivory",
