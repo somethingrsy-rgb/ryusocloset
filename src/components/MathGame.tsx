@@ -4,7 +4,7 @@ import {
   AGES, MAX_PROFILES, addCorrect, addProfile, claimStars, countOf, isCleared, isUnlocked, levelsFor, readMath, removeProfile, totalOf, updateProfile, writeMath,
   type Age, type Choice, type MathState, type Pic, type Profile, type Question, type Shape, type Visual,
 } from '../lib/mathGame'
-import { playCorrect } from '../lib/sound'
+import { playCorrect, playLevelDone } from '../lib/sound'
 import { StarIcon } from './Icons'
 
 const T = {
@@ -195,11 +195,12 @@ export function MathGame({ onClose }: { onClose: () => void }) {
   /** 문제를 맞혔을 때: 소리·칭찬·기록 */
   const solved = () => {
     if (!q || !lv || !profile) return
-    playCorrect()
     setWrong(false)
     setRight(tx.right[Math.floor(Math.random() * tx.right.length)])
     const { next, justCleared } = addCorrect(profile, lv.id, idx + 1)
     let saved = next
+    if (justCleared) playLevelDone() // 한 단원을 끝낸 문제는 정답 소리 대신 단원 완료 소리
+    else playCorrect()
     if (justCleared) {
       const c = claimStars(next, lv.id)
       saved = c.next
