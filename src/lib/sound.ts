@@ -215,9 +215,9 @@ export const playHarvest = () => playSample('shine', 0.25, (c, t) => { tone(c, t
 /** 코인을 받거나 쓴다(짤랑) */
 export const playCoin = () => play((c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
 /** 카페: 주문을 받았다(뾰롱) */
-export const playOrder = () => playSample('pop', 0.3, (c, t) => { tone(c, t, jitter(880), jitter(1320), 0.11, 0.17); tone(c, t + 0.09, jitter(1175), jitter(1480), 0.12, 0.12, 'triangle') })
+export const playOrder = () => playSample('cook', 0.25, (c, t) => { tone(c, t, jitter(880), jitter(1320), 0.11, 0.17); tone(c, t + 0.09, jitter(1175), jitter(1480), 0.12, 0.12, 'triangle') })
 /** 카페: 만들기를 시작했다(보글) */
-export const playCook = () => playSample('cook', 0.25, (c, t) => { for (let i = 0; i < 3; i++) tone(c, t + i * 0.07, jitter(600 + i * 100), jitter(950 + i * 120), 0.08, 0.13, 'triangle') })
+export const playCook = () => playSample('pop', 0.3, (c, t) => { for (let i = 0; i < 3; i++) tone(c, t + i * 0.07, jitter(600 + i * 100), jitter(950 + i * 120), 0.08, 0.13, 'triangle') })
 /** 카페: 음식이 다 됐다(딩동) */
 /** 카페: 서빙했다(직접 고른 소리 shine.mp3, 수확과 같은 소리). 코인 소리는 농장 등 다른 곳에서 계속 쓴다 */
 export const playServe = () => playSample('shine', 0.25, (c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
