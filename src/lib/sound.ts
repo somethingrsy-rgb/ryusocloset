@@ -1,3 +1,5 @@
+import { assetUrl } from './items'
+
 /** "찰칵" 효과음: 에셋 없이 WebAudio 로 합성 (노이즈 클릭 + 저음 톡) */
 let ctx: AudioContext | null = null
 
@@ -134,8 +136,27 @@ export const playCloud = () => play((c, t) => { tone(c, t, 520, 300, 0.16, 0.16,
 /* ---------- 농장·카페 효과음 ---------- */
 /** 씨앗을 심는다(흙을 톡톡) */
 export const playPlant = () => play((c, t) => { tone(c, t, jitter(560), jitter(400), 0.07, 0.2, 'triangle'); tone(c, t + 0.09, jitter(640), jitter(440), 0.07, 0.18, 'triangle') })
-/** 물을 준다(찰랑) */
-export const playWater = () => play((c, t) => { for (let i = 0; i < 4; i++) { tone(c, t + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12); click(c, t + i * 0.07, 4000, 0.08) } })
+/** 물을 준다: 직접 고른 소리 파일(public/assets/sfx/water.mp3). 처음 한 번만 받아서 풀어 둔다 */
+let water: Promise<AudioBuffer | null> | null = null
+const loadWater = (c: AudioContext) => (water ??= fetch(assetUrl('assets/sfx/water.mp3'))
+  .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('sfx'))))
+  .then((b) => c.decodeAudioData(b))
+  .catch(() => { water = null; return null }))
+export const playWater = () => {
+  if (!enabled) return
+  const c = getCtx()
+  if (!c) return
+  void loadWater(c).then((buf) => {
+    if (!enabled) return
+    if (!buf) { for (let i = 0; i < 4; i++) tone(c, c.currentTime + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12); return } // 못 받으면 합성음
+    const src = c.createBufferSource()
+    const g = c.createGain()
+    g.gain.value = 0.6
+    src.buffer = buf
+    src.connect(g).connect(c.destination)
+    src.start()
+  })
+}
 /** 수확한다(톡 + 반짝) */
 export const playHarvest = () => play((c, t) => { tone(c, t, jitter(800), jitter(1250), 0.08, 0.18); [1175, 1568, 2093].forEach((f, i) => tone(c, t + 0.07 + i * 0.06, f, f * 1.01, 0.15, 0.13, 'triangle')) })
 /** 코인을 받거나 쓴다(짤랑) */
