@@ -1,3 +1,4 @@
+import { playSelect } from '../lib/sound'
 import { useSyncExternalStore, type RefObject } from 'react'
 import { subscribeGame, gameVersion, isLocked } from '../lib/game'
 import { type Category } from '../lib/layers'
@@ -100,7 +101,7 @@ export function Closet({ category, onCategory, outfit, onToggle, onDragWear, dro
               <li key={it.id} className="relative">
                 <button
                   onPointerDown={(e) => press(e, it.thumb, () => onDragWear(it))}
-                  onClick={() => !ignoreClick() && onToggle(it)}
+                  onClick={() => { if (!ignoreClick()) { playSelect(); onToggle(it) } }}
                   onContextMenu={(e) => e.preventDefault()}
                   aria-pressed={worn}
                   aria-label={color ? `${name} ${color}` : name}
