@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
-import { MY_ROOM_ID, currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from '../lib/game'
+import { currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from '../lib/game'
 import type { Outfit, Tweaks } from '../lib/types'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import { StarRainWalk } from './StarRainWalk'
@@ -53,7 +53,6 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, initial
         <button className={actionButton} aria-label="한마디 영어" onClick={() => setSpeaking(true)}>{label(lang === 'ko' ? '영어' : 'Talk')}</button>
         <button className={actionButton} aria-label="별비 산책" onClick={() => setStarRain(true)}>{label(lang === 'ko' ? '별비' : 'Stars')}</button>
         <button className={actionButton} aria-label="수학 놀이터" onClick={() => setMath(true)}>{label(lang === 'ko' ? '수학' : 'Math')}</button>
-        <button className={actionButton} aria-label="내 방" onClick={() => setScene(MY_ROOM_ID)}>{label(lang === 'ko' ? '내 방' : 'My room')}</button>
         <button className={actionButton} aria-label="점프 퍼즐" onClick={() => setJump(true)}>{label(lang === 'ko' ? '점프' : 'Jump')}</button>
       </>}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}

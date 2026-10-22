@@ -1,4 +1,4 @@
-import { PLACES } from './game'
+import { MY_ROOM, PLACES } from './game'
 
 /**
  * 끝없이 이어지는 맵. 맵은 구간(chunk)으로 나뉘고, 오른쪽으로 걸어가 끝이 가까워지면 새 구간이 이어 붙는다.
@@ -26,8 +26,10 @@ export const gateX = (c: number) => {
   const t = Math.floor(c / HOUSE_X.length)
   return t * TILE_W + Math.round(1.3 * HOUSE_X[((c % HOUSE_X.length) + HOUSE_X.length) % HOUSE_X.length])
 }
-/** 구간 c 의 장소 */
-export const placeOfChunk = (c: number) => PLACES[((c % PLACES.length) + PLACES.length) % PLACES.length]
+/** 길의 집 20채(그림 한 장) 중 몇 번째 집이 내 방인지: 시작하는 집 바로 다음 집 */
+export const MY_ROOM_HOUSE = 1
+/** 구간 c 의 장소 (그림 한 장마다 한 채는 내 방, 나머지는 장소 10곳이 두 번 돈다) */
+export const placeOfChunk = (c: number) => ((c % HOUSE_X.length) + HOUSE_X.length) % HOUSE_X.length === MY_ROOM_HOUSE ? MY_ROOM : PLACES[((c % PLACES.length) + PLACES.length) % PLACES.length]
 
 export const clampWalk = (x: number, y: number, chunks: number) => ({
   x: Math.min(worldWidth(chunks) - 60, Math.max(60, x)),

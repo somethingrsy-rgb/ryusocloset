@@ -39,7 +39,16 @@ describe('여행 게임', () => {
     const oldAssignment = assignPlaces(oldPool.map(i => i.id))
     const current = currentAssignment()
     const eligible = new Set(ITEMS.filter(i => inPool(i) && i.category !== 'costume').map(i => i.id))
-    for (const place of PLACES) expect(current[place.id].filter(id => eligible.has(id))).toEqual(oldAssignment[place.id].filter(id => eligible.has(id)))
+    // 내 방으로 넘긴 끝 쪽 몇 개를 빼면 장소별 숨은 곳은 그대로
+    for (const place of PLACES) {
+      const before = oldAssignment[place.id].filter(id => eligible.has(id))
+      const after = current[place.id].filter(id => eligible.has(id))
+      expect(after).toEqual(before.slice(0, after.length))
+    }
+    const mine = current.myroom.filter(id => eligible.has(id))
+    expect(mine.length).toBeGreaterThan(0)
+    const everyone = PLACES.flatMap(p => current[p.id].filter(id => eligible.has(id))).concat(mine)
+    expect(new Set(everyone)).toEqual(new Set(Object.values(oldAssignment).flat().filter(id => eligible.has(id))))
     expect(Object.values(current).flat().some(id => dresses.some(d => d.id === id))).toBe(false)
   })
   it('아우터와 가방은 기본 제공하고 여행 배정에서 제외한다', () => {
@@ -115,6 +124,8 @@ describe('끝없는 맵', () => {
     expect(placeOfChunk(0).id).toBe(PLACES[0].id)
     expect(placeOfChunk(PLACES.length).id).toBe(PLACES[0].id)
     expect(placeOfChunk(PLACES.length + 2).id).toBe(PLACES[2].id)
+    expect(placeOfChunk(1).id).toBe('myroom') // 시작 집 바로 다음 집은 내 방
+    expect(placeOfChunk(21).id).toBe('myroom') // 그림이 한 바퀴 돌아도 그 자리
   })
   it('끝에 가까워지면 구간이 늘어나고 줄어들지는 않는다', () => {
     expect(chunksNeeded(100, 10)).toBe(10)

@@ -227,6 +227,12 @@ export const currentAssignment = () => {
   const legacyPool = ITEMS.filter((i) => !!i.native && !i.id.startsWith('custom_') && ['costume', 'accessory', 'wand', 'shoes', 'bag', 'outer', 'dress'].includes(i.category))
   const eligible = new Set(ITEMS.filter((i) => inPool(i) && !SHOP_ONLY.includes(i.category)).map((i) => i.id))
   const out = Object.fromEntries(Object.entries(assignPlaces(legacyPool.map((i) => i.id))).map(([place, ids]) => [place, ids.filter((id) => eligible.has(id))]))
+  // 내 방에도 다른 집처럼 숨은 아이템을 둔다: 장소마다 자기 몫(약 1/11)의 끝 쪽 아이템을 내 방으로 넘긴다(정해진 규칙이라 늘 같은 결과)
+  out[MY_ROOM_ID] = []
+  for (const place of PLACES) {
+    const give = Math.round(out[place.id].length / (PLACES.length + 1))
+    if (give > 0) out[MY_ROOM_ID].push(...out[place.id].splice(out[place.id].length - give, give))
+  }
   for (const item of ROOM_ITEMS.filter(inRoomPool)) {
     const place = item.theme && Object.hasOwn(PLACE_BY_ID, item.theme) ? item.theme : PLACES[0].id
     out[place].push(item.id)
