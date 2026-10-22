@@ -1,4 +1,4 @@
-import { playBell, playCoin, playCook, playOrder } from '../lib/sound'
+import { playBell, playCook, playOrder, playServe } from '../lib/sound'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { FarmFx } from './FarmFx'
 import { useI18n } from '../i18n'
@@ -190,7 +190,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
         const bonus = st.served + 1 >= GOAL && !st.reward
         save({ served: st.served + 1, reward: st.reward || bonus })
         actFarm({ type: 'earn', amount: m.price + (bonus ? BONUS : 0) })
-        sfx(playCoin)
+        sfx(playServe)
         setHold(null)
         setGuests((gs) => gs.map((x, k) => (k === i ? newGuest(i) : x)))
         const id = ++floatId.current
