@@ -56,6 +56,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const { lang } = useI18n()
   const tx = T[lang]
   const [saved] = useState(loadState)
+  const [round, setRound] = useState(0) // 새 판마다 올려서, 첫 차례가 컴퓨터여도 새 판에서 다시 시작되게 한다
   const [cpuCount, setCpuCount] = useState(() => saved?.vs.cpus.length ?? loadCpus())
   const [vs, setVs] = useState<Vs>(() => saved?.vs ?? newVs(Math.random, cpuCount))
   const [level, setLevel] = useState<Level>(loadLevel)
@@ -112,7 +113,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     return () => { ids.forEach(clearTimeout); setAnim(null) }
     // 한 차례의 수는 처음에 한 번만 정한다(수를 둘 때마다 판이 바뀌어도 다시 정하면 다른 말이 움직인다)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vs.turn, level])
+  }, [vs.turn, level, round])
 
   // 이기면 별(상점에서 쓸 수 있음). 지거나 비기면 없음
   // 내가 한 세트를 완성할 때마다 별 5개
@@ -152,7 +153,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
     )
   }
   const endTurn = () => { setVs((v) => vsEndTurn(v)); setSel(null) }
-  const restart = (count = cpuCount) => { setVs(newVs(Math.random, count)); setSel(null); setLastCpu(null); setLastMe(null); setBonusPaid(0); setSetsPaid(0); setMsg('') }
+  const restart = (count = cpuCount) => { setRound((r) => r + 1); setVs(newVs(Math.random, count)); setSel(null); setLastCpu(null); setLastMe(null); setBonusPaid(0); setSetsPaid(0); setMsg('') }
   const pickLevel = (l: Level) => { setLevel(l); try { localStorage.setItem(LEVEL_KEY, l) } catch { /* 저장 실패는 무시 */ } }
   const pickCpus = (n: number) => { if (n === cpuCount) return; setCpuCount(n); try { localStorage.setItem(CPUS_KEY, String(n)) } catch { /* 저장 실패는 무시 */ } restart(n) }
   const animalOf = (i: number) => vs.animals[i] ?? i
