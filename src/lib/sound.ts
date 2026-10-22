@@ -204,6 +204,8 @@ function playSample(name: string, gain: number, fallback: (c: AudioContext, t: n
     src.start()
   })
 }
+/** 아이템을 고르거나 찾았다: 직접 고른 소리(select.mp3) */
+export const playSelect = () => playSample('select', 0.3, (c, t) => { tone(c, t, jitter(700), jitter(1100), 0.08, 0.14) })
 /** 물을 준다: 직접 고른 소리(water.mp3) */
 export const playWater = () => playSample('water', 0.1, (c, t) => { for (let i = 0; i < 4; i++) tone(c, t + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12) })
 /** 수확한다(톡 + 반짝) */
