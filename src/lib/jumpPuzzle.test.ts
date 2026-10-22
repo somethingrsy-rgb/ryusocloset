@@ -53,14 +53,21 @@ import { newVs, planCpuTurn, vsCpuMove, vsEndTurn, vsHumanMove, vsResult } from 
 describe('컴퓨터와 겨루기', () => {
   it('내가 뛰고 더 못 뛰면 컴퓨터 차례가 되고, 더 뛸 수 있으면 같은 말로 이어간다', () => {
     const b = empty(); b[0][0] = 1; b[0][1] = 2; b[0][3] = 3; b[4][4] = 4
-    const vs = { ...newVs(seeded()), board: b }
+    const vs = { ...newVs(seeded()), board: b, turn: 'me' as const }
     const one = vsHumanMove(vs, { from: { r: 0, c: 0 }, over: { r: 0, c: 1 }, to: { r: 0, c: 2 } })
     expect(one.mine).toEqual([0, 1, 0, 0, 0]); expect(one.turn).toBe('me'); expect(one.chain).toEqual({ r: 0, c: 2 })
     expect(vsHumanMove(one, { from: { r: 4, c: 4 }, over: { r: 4, c: 3 }, to: { r: 4, c: 2 } })).toBe(one) // 이어갈 때는 그 말만
     const two = vsHumanMove(one, { from: { r: 0, c: 2 }, over: { r: 0, c: 3 }, to: { r: 0, c: 4 } })
-    expect(two.mine).toEqual([0, 1, 1, 0, 0]); expect(two.turn).toBe(0); expect(two.chain).toBeNull() // 더 뛸 수 없으면 차례가 넘어감
+    expect(two.mine).toEqual([0, 1, 1, 0, 0]); expect(two.turn).toBe(0); expect(two.chain).toBeNull() // 더 뛸 수 없으면 차례가 넘어감(컴퓨터 1대면 그 컴퓨터)
+    const many = { ...vs, cpus: [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]] }
+    const m1 = vsHumanMove(many, { from: { r: 0, c: 0 }, over: { r: 0, c: 1 }, to: { r: 0, c: 2 } })
+    expect(vsHumanMove(m1, { from: { r: 0, c: 2 }, over: { r: 0, c: 3 }, to: { r: 0, c: 4 } }).turn).toBe(1) // 컴퓨터가 여럿이면 내 다음은 컴퓨터 2
+    expect(vsHumanMove(vsHumanMove(vsHumanMove(many, { from: { r: 0, c: 0 }, over: { r: 0, c: 1 }, to: { r: 0, c: 2 } }), { from: { r: 0, c: 2 }, over: { r: 0, c: 3 }, to: { r: 0, c: 4 } }), { from: { r: 4, c: 4 }, over: { r: 4, c: 3 }, to: { r: 4, c: 2 } }).turn).toBe(1) // 컴퓨터가 여럿이면 내 다음은 컴퓨터 2
     const end = vsEndTurn(one)
     expect(end.turn).toBe(0); expect(end.chain).toBeNull() // 끝내기
+  })
+  it('첫 차례는 컴퓨터, 내 차례는 두 번째', () => {
+    expect(newVs(seeded()).turn).toBe(0)
   })
   it('컴퓨터는 가능한 수만 두고 차례를 내게 돌려준다', () => {
     let vs = newVs(seeded()); vs = { ...vs, turn: 0 }
@@ -99,18 +106,19 @@ describe('컴퓨터와 겨루기', () => {
     plan.slice(1).forEach((m, i) => expect(m.from).toEqual(plan[i].to))
     expect(planCpuTurn(b, [0, 0, 0, 0, 0], seeded(), 'hard', { r: 7, c: 7 })).toEqual([]) // 이어 뛸 수 없으면 빈 계획
   })
-  it('컴퓨터 여러 대: 나 → 컴퓨터 1 → 2 → 3 → 나 순서로 차례가 돈다', () => {
+  it('컴퓨터 여러 대: 컴퓨터 1 → 나 → 컴퓨터 2 → 3 → 컴퓨터 1 순서로 차례가 돈다', () => {
     let vs = newVs(seeded(), 3)
     expect(vs.cpus).toHaveLength(3)
     expect(newVs(seeded(), 9).cpus).toHaveLength(3); expect(newVs(seeded(), 0).cpus).toHaveLength(1)
     vs = { ...vs, turn: 0 }
     const seen: (string | number)[] = []
     for (let k = 0; k < 3; k++) {
+      if (vs.turn === 'me') vs = { ...vs, turn: 1 } // 내 차례는 건너뛰고 내 다음 컴퓨터로
       const plan = planCpuTurn(vs.board, vs.cpus[vs.turn as number], seeded())
       plan.forEach((m, i) => { vs = vsCpuMove(vs, m, i === plan.length - 1) })
       seen.push(vs.turn)
     }
-    expect(seen).toEqual([1, 2, 'me'])
+    expect(seen).toEqual(['me', 2, 0])
     expect(vs.cpus.map((p) => p.reduce((s, n) => s + n, 0)).every((n) => n > 0)).toBe(true)
   })
   it('컴퓨터 여러 대의 결과: 가장 높은 쪽이 이긴다', () => {

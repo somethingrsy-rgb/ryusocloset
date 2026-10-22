@@ -104,7 +104,7 @@ function pickAnimals(n: number, rng: () => number): number[] {
   for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]] }
   return pool.slice(0, n)
 }
-export const newVs = (rng: () => number = Math.random, cpuCount = 1): Vs => ({ animals: pickAnimals(Math.min(MAX_CPUS, Math.max(1, cpuCount)), rng), board: newGame(rng).board, mine: Array(COLORS).fill(0), cpus: Array.from({ length: Math.min(MAX_CPUS, Math.max(1, cpuCount)) }, () => Array(COLORS).fill(0)), turn: 'me', chain: null, cpuChain: null })
+export const newVs = (rng: () => number = Math.random, cpuCount = 1): Vs => ({ animals: pickAnimals(Math.min(MAX_CPUS, Math.max(1, cpuCount)), rng), board: newGame(rng).board, mine: Array(COLORS).fill(0), cpus: Array.from({ length: Math.min(MAX_CPUS, Math.max(1, cpuCount)) }, () => Array(COLORS).fill(0)), turn: 0, chain: null, cpuChain: null })
 
 function jump(board: Board, m: Move): { board: Board; caught: Cell } {
   const b = clone(board)
@@ -115,6 +115,8 @@ function jump(board: Board, m: Move): { board: Board; caught: Cell } {
   return { board: b, caught }
 }
 
+/** 차례 순서: 컴퓨터 1 → 나 → 컴퓨터 2 → 컴퓨터 3 → (다시) 컴퓨터 1. 내 다음 차례(컴퓨터가 하나뿐이면 그 컴퓨터) */
+const afterMe = (vs: Pick<Vs, 'cpus'>): number => (vs.cpus.length > 1 ? 1 : 0)
 /** 내가 한 번 뛴다. 이어서 같은 말로 더 뛸 수 있으면 chain 이 남고, 없으면 컴퓨터 차례가 된다 */
 export function vsHumanMove(vs: Vs, m: Move): Vs {
   if (vs.turn !== 'me' || (vs.chain && (vs.chain.r !== m.from.r || vs.chain.c !== m.from.c))) return vs
@@ -122,11 +124,11 @@ export function vsHumanMove(vs: Vs, m: Move): Vs {
   const { board, caught } = jump(vs.board, m)
   const mine = [...vs.mine]; mine[caught - 1]++
   const more = movesFrom(board, m.to).length > 0
-  return { ...vs, board, mine, chain: more ? m.to : null, turn: more ? 'me' : 0 }
+  return { ...vs, board, mine, chain: more ? m.to : null, turn: more ? 'me' : afterMe(vs) }
 }
-export const vsEndTurn = (vs: Vs): Vs => (vs.turn === 'me' && vs.chain ? { ...vs, chain: null, turn: 0 } : vs)
-/** 컴퓨터 차례가 끝났을 때 다음 차례(다음 컴퓨터, 마지막이면 나) */
-const nextTurn = (vs: Vs): 'me' | number => (typeof vs.turn === 'number' && vs.turn + 1 < vs.cpus.length ? vs.turn + 1 : 'me')
+export const vsEndTurn = (vs: Vs): Vs => (vs.turn === 'me' && vs.chain ? { ...vs, chain: null, turn: afterMe(vs) } : vs)
+/** 컴퓨터 차례가 끝났을 때 다음 차례(첫 번째 컴퓨터 다음은 나, 마지막 컴퓨터 다음은 다시 첫 번째 컴퓨터) */
+const nextTurn = (vs: Vs): 'me' | number => (typeof vs.turn !== 'number' ? 'me' : vs.turn === 0 ? 'me' : vs.turn + 1 < vs.cpus.length ? vs.turn + 1 : 0)
 export const vsSkipCpu = (vs: Vs): Vs => (typeof vs.turn === 'number' ? { ...vs, turn: nextTurn(vs), cpuChain: null } : vs)
 export function vsCpuMove(vs: Vs, m: Move, last: boolean): Vs {
   if (typeof vs.turn !== 'number') return vs
