@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useI18n } from '../i18n'
-import { getGame, PLACES } from '../lib/game'
+import { getGame, MY_ROOM, PLACES } from '../lib/game'
 import type { RoomState } from '../lib/roomTypes'
 import { getTravelRoom, removeTravelRoom, saveTravelRoom } from '../lib/travelRooms'
 import { Modal } from './Modal'
@@ -18,7 +18,7 @@ export function SendToGameSheet({ scene, room, onClose, onApplied }: {
     <p className="my-3 text-sm">{ko ? `벽지·바닥·소품 ${room.items.length}개를 게임 장소에 복사해요. 이동, 주민 대화와 영어 퀴즈도 그대로 즐길 수 있어요.` : `Copy your walls, floor and ${room.items.length} furnishings into a game destination. Walk, talk to residents and play English quizzes there.`}</p>
     <label className="block text-sm font-bold" htmlFor="game-room-place">{ko ? '적용할 장소' : 'Destination'}</label>
     <select id="game-room-place" value={place} onChange={e => { setPlace(e.target.value); setError('') }} className="my-2 min-h-12 w-full rounded-xl border border-black/15 bg-white px-3">
-      {PLACES.map(p => <option key={p.id} value={p.id}>{p.icon} {p[lang]}</option>)}
+      {[...PLACES, MY_ROOM].map(p => <option key={p.id} value={p.id}>{p.icon} {p[lang]}</option>)}
     </select>
     <p className="mb-4 text-sm text-black/60">{customized ? (ko ? '이 장소에 보낸 방을 현재 모습으로 업데이트해요.' : 'Update the room already sent here.') : (ko ? '꾸민 모습은 저장돼요. 나중에 방을 바꾸면 다시 보내주세요.' : 'Your design is saved. Send it again after editing your room.')}</p>
     <button className="min-h-12 w-full rounded-xl bg-blush px-4 font-bold text-white" onClick={() => {

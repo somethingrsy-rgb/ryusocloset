@@ -46,7 +46,10 @@ export const PLACES: Place[] = [
   theme('christmas', '크리스마스', 'Christmas', '🎄', 60, 30, 411),
   theme('winter', '겨울왕국', 'Winter Wonderland', '❄️', 82, 14, 539),
 ]
-export const PLACE_BY_ID: Record<string, Place> = Object.fromEntries(PLACES.map((p) => [p.id, p]))
+/** 내 방: 지도의 집 순서(PLACES)에는 넣지 않고, "게임에 보내기"로 보낸 내 방을 걸어 다니는 장소 */
+export const MY_ROOM_ID = 'myroom'
+export const MY_ROOM: Place = { id: MY_ROOM_ID, ko: '내 방', en: 'My room', icon: '🏠', x: 50, y: 50, wall: 'assets/room/wall.webp', floor: 'assets/room/floor.webp', floorH: 434 }
+export const PLACE_BY_ID: Record<string, Place> = Object.fromEntries([...PLACES, MY_ROOM].map((p) => [p.id, p]))
 
 /** 게임에서 찾아야 하는 카테고리 (기본 상의·하의·원피스·아우터·가방은 처음부터 쓸 수 있다) */
 export const POOL_CATEGORIES: readonly Category[] = ['costume', 'accessory', 'wand', 'shoes']

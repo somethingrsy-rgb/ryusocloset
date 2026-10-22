@@ -232,6 +232,7 @@ export default function App() {
   /** 방을 바꾼다 (되돌릴 수 있게 이전 상태를 기록) */
   /** 여행 장소 안에서 "방 꾸미기": 그 테마 벽·바닥으로 바꾸고 내 방 탭을 연다 (놓은 소품은 그대로) */
   const decorateWith = (placeId: string) => {
+    if (placeId === 'myroom') { setSelection(null); setMode('room'); return } // 내 방은 테마를 바꾸지 않고 그대로 연다
     if (!ROOM_THEME_BY_ID[placeId]) return
     editRoom({ ...room, wallId: placeId, floorId: placeId })
     setSelection(null)
@@ -431,7 +432,6 @@ export default function App() {
                 onWear={wearFound}
                 onFull={handleFull}
                 onDecorate={decorateWith}
-                onMyRoom={() => { setSelection(null); setMode('room') }}
               />
             ) : mode === 'closet' ? (
               <Stage

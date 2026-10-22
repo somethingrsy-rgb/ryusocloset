@@ -151,7 +151,7 @@ export const playWater = () => {
     if (!buf) { for (let i = 0; i < 4; i++) tone(c, c.currentTime + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12); return } // 못 받으면 합성음
     const src = c.createBufferSource()
     const g = c.createGain()
-    g.gain.value = 0.6
+    g.gain.value = 0.3
     src.buffer = buf
     src.connect(g).connect(c.destination)
     src.start()
