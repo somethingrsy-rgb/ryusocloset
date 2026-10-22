@@ -48,7 +48,7 @@ function FarmImg({ name, emoji, className, style, alt = '' }: { name: string; em
 
 const stageOf = (wateredAt: number | null, progress: number) => (wateredAt === null ? 1 : progress >= 1 ? 4 : progress < 0.4 ? 2 : 3)
 
-export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; tweaks: Tweaks; onExit: () => void; onShop: () => void }) {
+export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: Tweaks; onShop: () => void }) {
   const { lang } = useI18n()
   const ko = lang === 'ko'
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
@@ -202,10 +202,9 @@ export function FarmScene({ outfit, tweaks, onExit, onShop }: { outfit: Outfit; 
           </div>
         )}
 
-        {/* 위쪽: 코인, 지도 */}
+        {/* 위쪽: 코인 */}
         <div className="absolute flex items-center gap-1" style={{ right: '2.5%', top: '1.8%', zIndex: 12 }}>
           <span className={PILL}><PillText><CoinIcon /> {farm.coins}</PillText></span>
-          <button className={PILL} onClick={onExit}><PillText>🗺️ {ko ? '지도' : 'Map'}</PillText></button>
         </div>
         {notice && <p role="status" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-xs font-bold shadow-md" style={{ top: '14%', maxWidth: '90%', zIndex: 13 }}>{notice}</p>}
       </div>
