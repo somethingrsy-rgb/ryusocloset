@@ -5,7 +5,7 @@ import { gameVersion, getGame, isFound, subscribeGame, travelPool } from '../lib
 import { assetUrl } from '../lib/items'
 import { buyItem, priceOf, readWallet, type BuyResult, type Currency } from '../lib/shop'
 import { useItemsVersion } from '../lib/useItemsVersion'
-import { playSnap } from '../lib/sound'
+import { playCoin } from '../lib/sound'
 import { FigureLayers } from './FigureLayers'
 import type { Outfit, Tweaks } from '../lib/types'
 import { CoinIcon, StarIcon, DressIcon } from './Icons'
@@ -54,7 +54,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
   const buy = (id: string) => {
     const r = buyItem(id, currency)
     setMsg(MSG[lang][r])
-    if (r === 'bought') { playSnap(); setSpentTick((n) => n + 1); setBought(id) }
+    if (r === 'bought') { playCoin(); setSpentTick((n) => n + 1); setBought(id) }
   }
   const boughtItem = bought ? pool.find((i) => i.id === bought) : undefined
   const previewItem = preview ? pool.find((i) => i.id === preview) : undefined

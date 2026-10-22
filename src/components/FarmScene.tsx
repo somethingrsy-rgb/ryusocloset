@@ -1,4 +1,4 @@
-import { playCoin, playHarvest, playPlant, playWater } from '../lib/sound'
+import { playCoin, playHarvest, playPlant, playWater, startBgm, stopBgm } from '../lib/sound'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
 import { actFarm, CROPS, getFarm, growth, orderCrop, PLOT_COUNT, plotPrice, subscribeFarm, type CropId, type FarmAction } from '../lib/farm'
@@ -77,6 +77,8 @@ export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: 
   }, [])
   const timers = useRef<number[]>([])
   useEffect(() => () => { timers.current.forEach(clearTimeout) }, [])
+  // 농장에 있는 동안 새소리 배경음
+  useEffect(() => { startBgm('birds'); return stopBgm }, [])
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer) }, [])
   useEffect(() => { if (!notice) return; const t = setTimeout(() => setNotice(''), 2600); return () => clearTimeout(t) }, [notice])
 
