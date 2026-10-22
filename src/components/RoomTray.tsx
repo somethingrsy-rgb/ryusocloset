@@ -35,16 +35,18 @@ interface Props {
   onRestore: (defs: RoomItemDef[]) => void
   /** 벽(배경)·바닥 고르기. id 가 undefined 면 기본 */
   onBackground?: (part: 'wall' | 'floor', id: string | undefined) => void
+  /** 처음 열 때 보여 줄 테마 소품 묶음(여행 장소에서 "방 꾸미기"로 들어왔을 때) */
+  initialTheme?: string
 }
 
-export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCustom, onRestore, onBackground, onLoadCamp }: Props) {
+export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCustom, onRestore, onBackground, onLoadCamp, initialTheme }: Props) {
   useItemsVersion()
   useSyncExternalStore(subscribeGame, gameVersion)
   const { lang, t } = useI18n()
   const tabs = TABS
   const [tab, setTab] = useState<RoomTab>(tabs[0].id)
   /** 아이템 탭에서 보는 묶음: 처음엔 기본(가구·벽 장식·조명) (벽·바닥과는 상관없이 목록만 거른다) */
-  const [themeFilter, setThemeFilter] = useState<string | undefined>(BASE_CHIP)
+  const [themeFilter, setThemeFilter] = useState<string | undefined>(initialTheme ?? BASE_CHIP)
   const inThisTab = ROOM_ITEMS.filter((d) => inTab(d, tab, themeFilter))
   const items = visible(inThisTab)
   const nHidden = hiddenCount(inThisTab.map((d) => d.id))
