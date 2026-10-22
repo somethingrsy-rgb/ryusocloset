@@ -422,7 +422,7 @@ export default function App() {
             ) : mode === 'cafe' ? (
               <CafeGame outfit={outfit} tweaks={tweaks} />
             ) : mode === 'farm' ? (
-              <FarmScene outfit={outfit} tweaks={tweaks} onExit={() => setMode('travel')} onShop={() => openShop('farm')} />
+              <FarmScene outfit={outfit} tweaks={tweaks} onShop={() => openShop('farm')} />
             ) : mode === 'travel' ? (
               <TravelGame
                 initialPlaceId={travelPreview}
