@@ -431,6 +431,7 @@ export default function App() {
                 onWear={wearFound}
                 onFull={handleFull}
                 onDecorate={decorateWith}
+                onMyRoom={() => { setSelection(null); setMode('room') }}
               />
             ) : mode === 'closet' ? (
               <Stage

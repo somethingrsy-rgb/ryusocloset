@@ -26,10 +26,12 @@ interface Props {
   onFull?: (full: boolean) => void
   /** 장소 안에서 "방 꾸미기"를 누르면 그 테마로 내 방을 연다 */
   onDecorate?: (placeId: string) => void
+  /** 지도에서 "내 방"을 눌러 내 방 꾸미기를 연다 */
+  onMyRoom?: () => void
 }
 
 /** 여행 탭: 넓은 맵(OverWorld)을 걸어다니다가 문에 들어가면 그 장소 장면(TravelScene)으로 */
-export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, initialPlaceId = null }: Props) {
+export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onMyRoom, initialPlaceId = null }: Props) {
   const { lang } = useI18n()
   const [starRain, setStarRain] = useState(false)
   const [speaking, setSpeaking] = useState(false)
@@ -53,6 +55,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, initial
         <button className={actionButton} aria-label="한마디 영어" onClick={() => setSpeaking(true)}>{label(lang === 'ko' ? '영어' : 'Talk')}</button>
         <button className={actionButton} aria-label="별비 산책" onClick={() => setStarRain(true)}>{label(lang === 'ko' ? '별비' : 'Stars')}</button>
         <button className={actionButton} aria-label="수학 놀이터" onClick={() => setMath(true)}>{label(lang === 'ko' ? '수학' : 'Math')}</button>
+        {onMyRoom && <button className={actionButton} aria-label="내 방" onClick={onMyRoom}>{label(lang === 'ko' ? '내 방' : 'My room')}</button>}
         <button className={actionButton} aria-label="점프 퍼즐" onClick={() => setJump(true)}>{label(lang === 'ko' ? '점프' : 'Jump')}</button>
       </>}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
