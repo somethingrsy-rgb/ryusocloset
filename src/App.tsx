@@ -29,7 +29,7 @@ import { AVATARS, baseFiles } from './lib/avatars'
 import { ITEMS, ITEM_BY_ID, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
 import { toggleItem } from './lib/outfit'
-import { ROOM_ITEMS, ROOM_ITEM_BY_ID, addItem, defaultRoom, isCustomRoomItem } from './lib/room'
+import { ROOM_ITEMS, ROOM_ITEM_BY_ID, ROOM_THEME_BY_ID, addItem, defaultRoom, isCustomRoomItem } from './lib/room'
 import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
 import { playSnap, setSoundEnabled } from './lib/sound'
 import {
@@ -85,6 +85,9 @@ export default function App() {
   )
   const [travelPreview, setTravelPreview] = useState<string | null>(null)
   const [mode, setMode] = useState<Mode>('closet')
+  /** 여행 장소에서 "방 꾸미기"로 들어오면 그 테마 소품 묶음부터 보여 준다 (방 탭을 떠나면 비움) */
+  const [trayTheme, setTrayTheme] = useState<string | undefined>()
+  useEffect(() => { if (mode !== 'room') setTrayTheme(undefined) }, [mode])
   const [outfit, setOutfit] = useState<Outfit>(loadCurrent)
   const [tweaks, setTweaks] = useState<Tweaks>(() => loadTweaks(loadCurrent()))
   /** 위치·크기 조절의 실행 취소 기록 (옷을 바꾸면 비운다) */
@@ -227,6 +230,15 @@ export default function App() {
   }
 
   /** 방을 바꾼다 (되돌릴 수 있게 이전 상태를 기록) */
+  /** 여행 장소 안에서 "방 꾸미기": 그 테마 벽·바닥으로 바꾸고 내 방 탭을 연다 (놓은 소품은 그대로) */
+  const decorateWith = (placeId: string) => {
+    if (!ROOM_THEME_BY_ID[placeId]) return
+    editRoom({ ...room, wallId: placeId, floorId: placeId })
+    setSelection(null)
+    setTrayTheme(placeId)
+    setMode('room')
+    showToast(lang === 'ko' ? `${ROOM_THEME_BY_ID[placeId].ko} 방으로 꾸며 보세요!` : `Decorate your ${ROOM_THEME_BY_ID[placeId].en} room!`)
+  }
   const editRoom = (next: RoomState) => {
     const now = Date.now()
     if (now - lastRoomEdit.current > ROOM_UNDO_GAP_MS) {
@@ -418,6 +430,7 @@ export default function App() {
                 tweaks={tweaks}
                 onWear={wearFound}
                 onFull={handleFull}
+                onDecorate={decorateWith}
               />
             ) : mode === 'closet' ? (
               <Stage
@@ -469,7 +482,7 @@ export default function App() {
               onRestore={(list) => { restoreItems(list.map((i) => i.id)); showToast(t('restored')) }}
             />
           ) : (
-            <RoomTray key={scene} scene={scene} room={sceneState} onAdd={addToRoom} onLoadCamp={() => { const old = loadCamp(); editRoom({ ...old, wallId: 'camp', floorId: 'camp' }); setSelection(null); showToast(lang === 'ko' ? '이전 캠핑을 내 방으로 불러왔어요.' : 'Your previous campsite is now in My room.') }} onAddCustom={(tab) => { setPropGroup(tab === 'theme' || tab === 'background' ? 'furniture' : tab); setModal('addProp') }} onBackground={(part, id) => { const next = { ...room, items: [] }; setSelection(null); const key = part === 'wall' ? 'wallId' : 'floorId'; if (id) next[key] = id; else delete next[key]; editRoom(next) }} onRemoveCustom={removeMyProp} onRestore={(list) => { restoreItems(list.map((d) => d.id)); showToast(t('restored')) }} />
+            <RoomTray key={scene} initialTheme={trayTheme} scene={scene} room={sceneState} onAdd={addToRoom} onLoadCamp={() => { const old = loadCamp(); editRoom({ ...old, wallId: 'camp', floorId: 'camp' }); setSelection(null); showToast(lang === 'ko' ? '이전 캠핑을 내 방으로 불러왔어요.' : 'Your previous campsite is now in My room.') }} onAddCustom={(tab) => { setPropGroup(tab === 'theme' || tab === 'background' ? 'furniture' : tab); setModal('addProp') }} onBackground={(part, id) => { const next = { ...room, items: [] }; setSelection(null); const key = part === 'wall' ? 'wallId' : 'floorId'; if (id) next[key] = id; else delete next[key]; editRoom(next) }} onRemoveCustom={removeMyProp} onRestore={(list) => { restoreItems(list.map((d) => d.id)); showToast(t('restored')) }} />
           )}
         </aside>
         </div>

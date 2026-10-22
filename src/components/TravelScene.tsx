@@ -21,9 +21,9 @@ import { AVATAR_BASE_W, AVATAR_FEET_RATIO, ROOM_W, ROOM_H } from '../lib/roomTyp
 /** 찾았다 상자를 보여 주는 시간(ms) */
 const FOUND_POP_MS = 700
 const TEXT = {
-  ko: { map: '지도', found: '찾음', hint: '바닥: 이동 · 방향키/WASD · 소품: 살펴보기',
+  ko: { map: '지도', decorate: '방 꾸미기', found: '찾음', hint: '바닥: 이동 · 방향키/WASD · 소품: 살펴보기',
     nightHint: '밤에는 반짝임이 더 잘 보여요 ✨ 소품도 눌러봐요', done: '모두 찾았어요 ⭐ 이제 소품을 살펴볼까요?', got: '찾았다!', wear: '옷장에서 입어보기', keep: '계속 걷기', talkTo: '말 걸기' },
-  en: { map: 'Map', found: 'Found', hint: 'Tap to walk · Arrow keys/WASD · Tap props to explore',
+  en: { map: 'Map', decorate: 'Decorate', found: 'Found', hint: 'Tap to walk · Arrow keys/WASD · Tap props to explore',
     nightHint: 'Sparkles glow at night ✨ Try tapping the props, too', done: 'All found ⭐ Time to explore the furnishings!', got: 'Found it!', wear: 'Try it on', keep: 'Keep walking', talkTo: 'Talk' },
 }
 
@@ -44,9 +44,11 @@ interface Props {
   tweaks: Tweaks
   onExit: () => void
   onWear: (id: string) => void
+  /** 이 장소 테마로 방 꾸미기를 연다 */
+  onDecorate?: (placeId: string) => void
 }
 
-export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, paused = false }: Props) {
+export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, onDecorate, paused = false }: Props) {
   const { lang } = useI18n()
   const tx = TEXT[lang]
   useGame()
@@ -282,6 +284,13 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, p
           {p.icon} {lang === 'ko' ? p.ko : p.en} · {tx.found} {got}/{ids.length}
         </span>
       </div>
+
+      {onDecorate && (
+        <button onClick={() => onDecorate(placeId)} className="absolute top-16 left-2 z-30 flex h-12 items-center gap-1 rounded-full bg-white/90 px-4 text-sm font-bold shadow-md ring-1 ring-black/5">
+          <span aria-hidden>🏠</span>
+          {tx.decorate}
+        </button>
+      )}
 
       {talk && npc && (
         <NpcDialog
