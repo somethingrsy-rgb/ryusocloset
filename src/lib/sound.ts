@@ -127,7 +127,7 @@ export const playWin = () => play((c, t) => { [659, 831, 988, 831, 988, 1319, 16
 /** 졌다(부드럽게) */
 export const playLose = () => play((c, t) => { [659, 554, 440].forEach((f, i) => tone(c, t + i * 0.15, f, f * 0.99, 0.28, 0.14, 'sine')) })
 /** 별비: 별을 받았다 */
-export const playStar = () => play((c, t) => { tone(c, t, jitter(1568), jitter(2093), 0.1, 0.16); tone(c, t + 0.05, jitter(2093), jitter(2637), 0.13, 0.11, 'triangle') })
+export const playStar = () => playSample('star', 0.2, (c, t) => { tone(c, t, jitter(1568), jitter(2093), 0.1, 0.16); tone(c, t + 0.05, jitter(2093), jitter(2637), 0.13, 0.11, 'triangle') })
 /** 별비: 금빛 별(5점)을 받았다 */
 export const playGold = () => play((c, t) => { [1175, 1568, 1976, 2637].forEach((f, i) => tone(c, t + i * 0.05, f, f * 1.01, 0.2, 0.15, 'triangle')) })
 /** 별비: 구름에 부딪혔다 */
@@ -136,27 +136,37 @@ export const playCloud = () => play((c, t) => { tone(c, t, 520, 300, 0.16, 0.16,
 /* ---------- 농장·카페 효과음 ---------- */
 /** 씨앗을 심는다(흙을 톡톡) */
 export const playPlant = () => play((c, t) => { tone(c, t, jitter(560), jitter(400), 0.07, 0.2, 'triangle'); tone(c, t + 0.09, jitter(640), jitter(440), 0.07, 0.18, 'triangle') })
-/** 물을 준다: 직접 고른 소리 파일(public/assets/sfx/water.mp3). 처음 한 번만 받아서 풀어 둔다 */
-let water: Promise<AudioBuffer | null> | null = null
-const loadWater = (c: AudioContext) => (water ??= fetch(assetUrl('assets/sfx/water.mp3'))
-  .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('sfx'))))
-  .then((b) => c.decodeAudioData(b))
-  .catch(() => { water = null; return null }))
-export const playWater = () => {
+/** 직접 고른 소리 파일(public/assets/sfx/<이름>.mp3). 처음 한 번만 받아서 풀어 둔다 */
+const samples = new Map<string, Promise<AudioBuffer | null>>()
+const loadSample = (c: AudioContext, name: string) => {
+  let p = samples.get(name)
+  if (!p) {
+    p = fetch(assetUrl(`assets/sfx/${name}.mp3`))
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('sfx'))))
+      .then((b) => c.decodeAudioData(b))
+      .catch(() => { samples.delete(name); return null })
+    samples.set(name, p)
+  }
+  return p
+}
+/** 소리 파일을 재생한다. 파일을 못 받으면 fallback(합성음)을 대신 울린다 */
+function playSample(name: string, gain: number, fallback: (c: AudioContext, t: number) => void) {
   if (!enabled) return
   const c = getCtx()
   if (!c) return
-  void loadWater(c).then((buf) => {
+  void loadSample(c, name).then((buf) => {
     if (!enabled) return
-    if (!buf) { for (let i = 0; i < 4; i++) tone(c, c.currentTime + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12); return } // 못 받으면 합성음
+    if (!buf) { fallback(c, c.currentTime); return }
     const src = c.createBufferSource()
     const g = c.createGain()
-    g.gain.value = 0.1
+    g.gain.value = gain
     src.buffer = buf
     src.connect(g).connect(c.destination)
     src.start()
   })
 }
+/** 물을 준다: 직접 고른 소리(water.mp3) */
+export const playWater = () => playSample('water', 0.1, (c, t) => { for (let i = 0; i < 4; i++) tone(c, t + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12) })
 /** 수확한다(톡 + 반짝) */
 export const playHarvest = () => play((c, t) => { tone(c, t, jitter(800), jitter(1250), 0.08, 0.18); [1175, 1568, 2093].forEach((f, i) => tone(c, t + 0.07 + i * 0.06, f, f * 1.01, 0.15, 0.13, 'triangle')) })
 /** 코인을 받거나 쓴다(짤랑) */
