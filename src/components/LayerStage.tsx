@@ -289,10 +289,10 @@ export function LayerStage<K extends string>({
       {sel && selected && <AdjustmentPanel key={sel.id} name={sel.label} onRemove={() => onTakeOff(selected)} removeLabel={t('takeOff')}
         onMove={(x,y) => onTweaks(moveTweak(live.current.tweaks, selected, x * NUDGE, y * NUDGE))}
         onSmaller={() => onTweaks(scaleTweak(tweaks, selected, 1 / 1.1))}
-        onBigger={() => onTweaks(scaleTweak(tweaks, selected, 1.1))} onClose={() => onSelect(null)}>
+        onBigger={() => onTweaks(scaleTweak(tweaks, selected, 1.1))} onClose={() => onSelect(null)}
+        onFront={() => onTweaks(shiftLayer(tweaks, layers, selected, 1))} frontDisabled={!canShiftLayer(layers, selected, 1)}>
         <button className={`${btn} bg-petal`} onClick={() => onTweaks(rotateTweak(tweaks, selected, -7))}>{t('rotateLeft')}</button>
         <button className={`${btn} bg-petal`} onClick={() => onTweaks(rotateTweak(tweaks, selected, 7))}>{t('rotateRight')}</button>
-        <button className={`${btn} bg-petal`} disabled={!canShiftLayer(layers, selected, 1)} onClick={() => onTweaks(shiftLayer(tweaks, layers, selected, 1))}>{t('layerFront')}</button>
         <button className={`${btn} bg-petal`} disabled={!canShiftLayer(layers, selected, -1)} onClick={() => onTweaks(shiftLayer(tweaks, layers, selected, -1))}>{t('layerBack')}</button>
         <button className={`${btn} bg-petal`} disabled={!canUndo} onClick={() => onUndo?.()}>{t('undo')}</button>
         <button className={`${btn} bg-petal`} disabled={!selTweak} onClick={() => onTweaks(resetTweak(tweaks, selected))}>{t('tweakReset')}</button>
