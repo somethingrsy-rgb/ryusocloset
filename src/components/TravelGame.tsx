@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { startBgm, stopBgm } from '../lib/sound'
 import { currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from '../lib/game'
 import type { Outfit, Tweaks } from '../lib/types'
 import { useItemsVersion } from '../lib/useItemsVersion'
@@ -41,6 +42,9 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, initial
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const assign = useMemo(currentAssignment, [ver])
   const [scene, setScene] = useState<string | null>(initialPlaceId)
+  // 마을을 걸을 때만 배경 음악(집 안·게임 화면에서는 끈다)
+  const walking = !scene && !starRain && !math && !jump && !speaking
+  useEffect(() => { if (!walking) return; startBgm('walk'); return stopBgm }, [walking])
 
   if (starRain) return <StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} />
 

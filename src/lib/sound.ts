@@ -80,7 +80,46 @@ export function playSnap() {
 
 /* ---------- 놀이 효과음 (모두 합성음, 설정의 효과음 켜기/끄기를 따른다) ---------- */
 let enabled = true
-export const setSoundEnabled = (on: boolean) => { enabled = on }
+export const setSoundEnabled = (on: boolean) => { enabled = on; syncBgm() }
+
+/* ---------- 배경 음악(마을 산책): 한 곡을 반복한다. 효과음 끄기를 따르고, 앱이 가려지면 멈춘다 ---------- */
+let bgmWant: string | null = null
+let bgmNode: { src: AudioBufferSourceNode; name: string } | null = null
+const BGM_GAIN = 0.12
+function stopBgmNode() {
+  if (!bgmNode) return
+  try { bgmNode.src.stop() } catch { /* 이미 멈춤 */ }
+  bgmNode = null
+}
+function syncBgm() {
+  if (!bgmWant || !enabled) { stopBgmNode(); return }
+  if (bgmNode?.name === bgmWant) return
+  stopBgmNode()
+  const name = bgmWant
+  const c = getCtx()
+  if (!c) return
+  void loadSample(c, name).then((buf) => {
+    if (!buf || bgmWant !== name || !enabled || bgmNode) return
+    const src = c.createBufferSource()
+    const g = c.createGain()
+    g.gain.value = BGM_GAIN
+    src.buffer = buf
+    src.loop = true
+    src.connect(g).connect(c.destination)
+    src.start()
+    bgmNode = { src, name }
+  })
+}
+/** 배경 음악을 켠다(이미 같은 곡이면 그대로) */
+export const startBgm = (name: string) => { bgmWant = name; syncBgm() }
+export const stopBgm = () => { bgmWant = null; syncBgm() }
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (!ctx || !bgmNode) return
+    if (document.hidden) void ctx.suspend()
+    else void ctx.resume()
+  })
+}
 
 /** 톤 하나: 시작 주파수 → 끝 주파수로 미끄러지며 사라진다. 높은 소리는 한 옥타브 내리고, 부드럽게 깎아 귀가 편하게 한다 */
 function tone(c: AudioContext, at: number, f0: number, f1: number, dur: number, gain: number, type: OscillatorType = 'sine') {
@@ -123,9 +162,9 @@ export const playLand = () => play((c, t) => { tone(c, t, jitter(620), jitter(42
 /** 세트를 완성했다 */
 export const playSetDone = () => play((c, t) => { [659, 831, 988, 1319].forEach((f, i) => tone(c, t + i * 0.08, f, f * 1.01, 0.2, 0.16, 'triangle')) })
 /** 이겼다 */
-export const playWin = () => play((c, t) => { [659, 831, 988, 831, 988, 1319, 1661].forEach((f, i) => tone(c, t + i * 0.1, f, f * 1.01, 0.24, 0.17, 'triangle')) })
+export const playWin = () => playSample('gold', 0.25, (c, t) => { [659, 831, 988, 831, 988, 1319, 1661].forEach((f, i) => tone(c, t + i * 0.1, f, f * 1.01, 0.24, 0.17, 'triangle')) })
 /** 졌다(부드럽게) */
-export const playLose = () => play((c, t) => { [659, 554, 440].forEach((f, i) => tone(c, t + i * 0.15, f, f * 0.99, 0.28, 0.14, 'sine')) })
+export const playLose = () => playSample('lose', 0.25, (c, t) => { [659, 554, 440].forEach((f, i) => tone(c, t + i * 0.15, f, f * 0.99, 0.28, 0.14, 'sine')) })
 /** 별비: 별을 받았다 */
 export const playStar = () => playSample('star', 0.2, (c, t) => { tone(c, t, jitter(1568), jitter(2093), 0.1, 0.16); tone(c, t + 0.05, jitter(2093), jitter(2637), 0.13, 0.11, 'triangle') })
 /** 별비: 금빛 별(5점)을 받았다 */
@@ -172,7 +211,7 @@ export const playHarvest = () => play((c, t) => { tone(c, t, jitter(800), jitter
 /** 코인을 받거나 쓴다(짤랑) */
 export const playCoin = () => play((c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
 /** 카페: 주문을 받았다(뾰롱) */
-export const playOrder = () => play((c, t) => { tone(c, t, jitter(880), jitter(1320), 0.11, 0.17); tone(c, t + 0.09, jitter(1175), jitter(1480), 0.12, 0.12, 'triangle') })
+export const playOrder = () => playSample('pop', 0.3, (c, t) => { tone(c, t, jitter(880), jitter(1320), 0.11, 0.17); tone(c, t + 0.09, jitter(1175), jitter(1480), 0.12, 0.12, 'triangle') })
 /** 카페: 만들기를 시작했다(보글) */
 export const playCook = () => play((c, t) => { for (let i = 0; i < 3; i++) tone(c, t + i * 0.07, jitter(600 + i * 100), jitter(950 + i * 120), 0.08, 0.13, 'triangle') })
 /** 카페: 음식이 다 됐다(딩동) */
