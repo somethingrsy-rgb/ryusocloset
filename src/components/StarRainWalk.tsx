@@ -112,7 +112,7 @@ export function StarRainWalk({ outfit, tweaks, onExit }: { outfit: Outfit; tweak
         <p className="my-1 text-4xl">{phase==='done'?'🌟':'🌠'}</p><h2 className="my-2 text-xl font-bold">{phase==='intro'?'별비 산책':phase==='done'?'산책 완료!':'잠깐 쉬어가요'}</h2>
         {phase==='intro'?<><p className="text-sm leading-relaxed">60초 동안 길을 걸으며 떨어지는 별을 받아요.<br/><StarIcon /> 1점 · <StarIcon className="drop-shadow-[0_0_4px_#ffd54a]" /><StarIcon className="drop-shadow-[0_0_4px_#ffd54a]" /> 5점<br/>먹구름에 닿으면 잠깐 느려져요.<br/>별을 놓쳐도 점수는 줄지 않아요.</p><p className="text-xs">화면을 누르거나 좌우로 밀어서 이동해요.<br/>키보드는 ← → 또는 A / D</p><p className="text-sm">최고 기록 <StarIcon /> {record.best} · 모은 별 {record.total}</p></>:phase==='done'?<><p className="text-lg font-bold"><StarIcon /> {rain.score}점 · 별 {rain.caught}개</p><p className="text-sm">최고 기록 {record.best}점 · 누적 별 {record.total}</p>{saveError&&<p role="alert" className="text-xs text-red-700">기록을 저장하지 못했어요. 이번 점수는 위에서 확인할 수 있어요.</p>}<p className="text-xs">모은 별과 최고 기록은 이 기기에 저장돼요. 별은 여행의 🛍 상점에서 쓸 수 있어요.</p></>:<p className="text-sm">쉬는 동안 시간과 별은 멈춰 있어요.</p>}
         <button className="min-h-12 w-full rounded-full bg-blush px-4 font-bold text-white" onClick={()=>phase==='playing'?(setPaused(false),host.current?.focus({preventScroll:true})):start()}>{phase==='intro'?'산책 시작':phase==='done'?'다시 산책하기':'계속 걷기'}</button>
-        <button className="mt-2 min-h-11 w-full rounded-full bg-petal font-bold" onClick={onExit}>지도로 돌아가기</button>
+        <button className="mt-2 min-h-11 w-full rounded-full bg-petal font-bold" onClick={onExit}>산책으로 돌아가기</button>
       </div>
     </div>}
   </section>
