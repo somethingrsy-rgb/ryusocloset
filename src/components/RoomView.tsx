@@ -335,8 +335,8 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
         onMove={(x,y) => onChange(moveBy(roomState.current, selection, x * NUDGE, y * NUDGE))}
         onSmaller={() => onChange(scaleBy(room, selection, 1 / 1.12))}
         onBigger={() => onChange(scaleBy(room, selection, 1.12))} onClose={() => onSelect(null)}
-        onFront={() => onChange(shiftLayer(room, selection, 1))} frontDisabled={!canShiftLayer(room, selection, 1)}>
-        <button className={`${btn} bg-petal`} disabled={!canShiftLayer(room, selection, -1)} onClick={() => onChange(shiftLayer(room, selection, -1))}>{t('layerBack')}</button>
+        onFront={() => onChange(shiftLayer(room, selection, 1))} frontDisabled={!canShiftLayer(room, selection, 1)}
+        onBack={() => onChange(shiftLayer(room, selection, -1))} backDisabled={!canShiftLayer(room, selection, -1)}>
         <button className={`${btn} bg-petal`} disabled={!canUndo} onClick={() => onUndo?.()}>{t('roomUndo')}</button>
         <button className={`${btn} bg-petal`} onClick={() => onChange(toggleFlip(room, selection))}>{t('flip')}</button>
       </AdjustmentPanel>}

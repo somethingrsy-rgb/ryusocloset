@@ -30,8 +30,8 @@ function NudgeButton({ label, children, onMove }: { label: string; children: Rea
     {children}
   </button>
 }
-export function AdjustmentPanel({ name, onMove, onSmaller, onBigger, onClose, onRemove, removeLabel, onFront, frontDisabled = false, lift = false, children }: {
-  name: string; onMove: (x: number, y: number) => void; onSmaller: () => void; onBigger: () => void; onClose: () => void; onRemove?: () => void; removeLabel?: string; /** "앞으로(위에 겹치기)" 둥근 버튼: 휴지통 위에 놓인다 */ onFront?: () => void; frontDisabled?: boolean; lift?: boolean; children: ReactNode
+export function AdjustmentPanel({ name, onMove, onSmaller, onBigger, onClose, onRemove, removeLabel, onFront, frontDisabled = false, onBack, backDisabled = false, lift = false, children }: {
+  name: string; onMove: (x: number, y: number) => void; onSmaller: () => void; onBigger: () => void; onClose: () => void; onRemove?: () => void; removeLabel?: string; /** "앞으로(위에 겹치기)" 둥근 버튼: 휴지통 위에 놓인다 */ onFront?: () => void; frontDisabled?: boolean; /** "뒤로(아래로 겹치기)" 둥근 버튼: 앞으로 버튼 옆 */ onBack?: () => void; backDisabled?: boolean; lift?: boolean; children: ReactNode
 }) {
   const { lang, t } = useI18n()
   const ko = lang === 'ko'
@@ -46,9 +46,14 @@ export function AdjustmentPanel({ name, onMove, onSmaller, onBigger, onClose, on
       <NudgeButton label={ko?'오른쪽으로 조금 이동':'Move slightly right'} onMove={() => onMove(1,0)}>→</NudgeButton>
       <span/><NudgeButton label={t('moveDown')} onMove={() => onMove(0,1)}>↓</NudgeButton><span/>
     </div>
-    {onFront && <button className={`pointer-events-auto absolute left-2 ${lift ? 'bottom-[7.5rem]' : 'bottom-[3.75rem]'} z-30 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-xl shadow-sm ring-1 ring-black/10 disabled:opacity-40`} aria-label={t('layerFront')} title={t('layerFront')} disabled={frontDisabled} onClick={onFront}>
-      <svg aria-hidden width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="2" opacity=".45" /><rect x="8.5" y="8.5" width="11" height="11" rx="2" fill="currentColor" fillOpacity=".25" /></svg>
-    </button>}
+    {(onFront || onBack) && <div className={`pointer-events-none absolute left-2 ${lift ? 'bottom-[7.5rem]' : 'bottom-[3.75rem]'} z-30 flex gap-0.5`}>
+      {onFront && <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-xl shadow-sm ring-1 ring-black/10 disabled:opacity-40" aria-label={t('layerFront')} title={t('layerFront')} disabled={frontDisabled} onClick={onFront}>
+        <svg aria-hidden width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="2" opacity=".45" /><rect x="8.5" y="8.5" width="11" height="11" rx="2" fill="currentColor" fillOpacity=".25" /></svg>
+      </button>}
+      {onBack && <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-xl shadow-sm ring-1 ring-black/10 disabled:opacity-40" aria-label={t('layerBack')} title={t('layerBack')} disabled={backDisabled} onClick={onBack}>
+        <svg aria-hidden width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><rect x="8.5" y="8.5" width="11" height="11" rx="2" opacity=".45" /><rect x="2.5" y="2.5" width="11" height="11" rx="2" fill="currentColor" fillOpacity=".25" /></svg>
+      </button>}
+    </div>}
     <div role="group" aria-label={ko?'크기·삭제':'Size and remove'} className={`pointer-events-none absolute ${lift ? 'bottom-16' : 'bottom-2'} left-2 z-30 flex gap-0.5`}>
       {onRemove ? <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-blush text-white shadow-sm" aria-label={removeLabel ?? t('remove')} title={removeLabel ?? t('remove')} onClick={onRemove}>🗑️</button> : null}
       <button className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-xl shadow-sm ring-1 ring-black/10" aria-label={t('smaller')} onClick={onSmaller}>−</button>
