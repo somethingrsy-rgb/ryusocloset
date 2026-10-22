@@ -4,7 +4,7 @@ import {
   AGES, MAX_PROFILES, addCorrect, addProfile, claimStars, countOf, isCleared, isUnlocked, levelsFor, readMath, removeProfile, totalOf, updateProfile, writeMath,
   type Age, type Choice, type MathState, type Pic, type Profile, type Question, type Shape, type Visual,
 } from '../lib/mathGame'
-import { playSnap } from '../lib/sound'
+import { playCorrect } from '../lib/sound'
 import { StarIcon } from './Icons'
 
 const T = {
@@ -195,7 +195,7 @@ export function MathGame({ onClose }: { onClose: () => void }) {
   /** 문제를 맞혔을 때: 소리·칭찬·기록 */
   const solved = () => {
     if (!q || !lv || !profile) return
-    playSnap()
+    playCorrect()
     setWrong(false)
     setRight(tx.right[Math.floor(Math.random() * tx.right.length)])
     const { next, justCleared } = addCorrect(profile, lv.id, idx + 1)
