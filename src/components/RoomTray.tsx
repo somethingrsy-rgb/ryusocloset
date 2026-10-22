@@ -1,4 +1,4 @@
-import { playSelect } from '../lib/sound'
+import { playTap } from '../lib/sound'
 import { useState, useSyncExternalStore } from 'react'
 import { subscribeGame, gameVersion, isRoomLocked } from '../lib/game'
 import { useI18n } from '../i18n'
@@ -158,7 +158,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
               <li key={d.id} className="relative">
                 <button
                   disabled={locked}
-                  onClick={() => { playSelect(); onAdd(d) }}
+                  onClick={() => { playTap(); onAdd(d) }}
                   aria-label={locked ? (lang === 'ko' ? '여행에서 찾을 아이템' : 'Find this item on your travels') : d.name[lang]}
                   title={d.name[lang]}
                   className="relative flex aspect-square w-full items-center justify-center rounded-2xl bg-white p-1 ring-2 ring-petal transition hover:ring-blush/50 active:scale-95"
