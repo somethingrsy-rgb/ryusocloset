@@ -129,7 +129,7 @@ export const playLose = () => play((c, t) => { [659, 554, 440].forEach((f, i) =>
 /** 별비: 별을 받았다 */
 export const playStar = () => playSample('star', 0.2, (c, t) => { tone(c, t, jitter(1568), jitter(2093), 0.1, 0.16); tone(c, t + 0.05, jitter(2093), jitter(2637), 0.13, 0.11, 'triangle') })
 /** 별비: 금빛 별(5점)을 받았다 */
-export const playGold = () => play((c, t) => { [1175, 1568, 1976, 2637].forEach((f, i) => tone(c, t + i * 0.05, f, f * 1.01, 0.2, 0.15, 'triangle')) })
+export const playGold = () => playSample('gold', 0.25, (c, t) => { [1175, 1568, 1976, 2637].forEach((f, i) => tone(c, t + i * 0.05, f, f * 1.01, 0.2, 0.15, 'triangle')) })
 /** 별비: 구름에 부딪혔다 */
 export const playCloud = () => play((c, t) => { tone(c, t, 520, 300, 0.16, 0.16, 'triangle') })
 
