@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent, type React
 import { useI18n } from '../i18n'
 import { extendReach, findItem, travelItem } from '../lib/game'
 import { roadSpot } from '../lib/roadItems'
-import { playSelect } from '../lib/sound'
+import { playSelect, playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import {
   CHUNK_W,
@@ -193,7 +193,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
         {range.map((c) => {
           const sp = roadSpot(c)
           return sp ? (
-            <button key={`s${c}`} aria-label={lang === 'ko' ? '반짝이는 것' : 'Something sparkly'} onPointerUp={(e) => e.stopPropagation()} onClick={() => walkTo(sp.x, sp.y)} className="absolute -translate-x-1/2 -translate-y-1/2 animate-pulse text-5xl drop-shadow-lg" style={{ left: sp.x, top: sp.y, zIndex: 3 }}>✨</button>
+            <button key={`s${c}`} aria-label={lang === 'ko' ? '반짝이는 것' : 'Something sparkly'} onPointerUp={(e) => e.stopPropagation()} onClick={() => { playTap(); walkTo(sp.x, sp.y) }} className="absolute -translate-x-1/2 -translate-y-1/2 animate-pulse text-5xl drop-shadow-lg" style={{ left: sp.x, top: sp.y, zIndex: 3 }}>✨</button>
           ) : null
         })}
 
