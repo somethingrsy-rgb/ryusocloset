@@ -31,7 +31,7 @@ import { CATEGORIES, type Category } from './lib/layers'
 import { toggleItem } from './lib/outfit'
 import { ROOM_ITEMS, ROOM_ITEM_BY_ID, ROOM_THEME_BY_ID, addItem, isCustomRoomItem } from './lib/room'
 import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
-import { playSnap, setSoundEnabled } from './lib/sound'
+import { setSoundEnabled } from './lib/sound'
 import {
   MAX_SAVED,
   loadCurrent,
@@ -180,7 +180,6 @@ export default function App() {
   }, [])
 
   const snap = useCallback(() => {
-    if (sound) playSnap()
     if (!prefersReducedMotion()) {
       figureRef.current?.animate(
         [
@@ -191,7 +190,7 @@ export default function App() {
         { duration: 260, easing: 'ease-out' },
       )
     }
-  }, [sound])
+  }, [])
 
   /* ── 코디 ── */
   /** 입은 옷을 바꾼다: 바뀐 카테고리의 위치·크기 조절은 버리고, 새로 입은 옷을 선택한다 */
@@ -312,7 +311,6 @@ export default function App() {
     if (!next) return showToast(t('roomFull', { n: MAX_PLACED }))
     editRoom(next)
     setSelection({ kind: 'item', uid })
-    if (sound) playSnap()
   }
 
   const resetRoom = () => {
