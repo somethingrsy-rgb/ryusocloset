@@ -206,10 +206,12 @@ function playSample(name: string, gain: number, fallback: (c: AudioContext, t: n
 }
 /** 아이템을 고르거나 찾았다: 직접 고른 소리(select.mp3) */
 export const playSelect = () => playSample('select', 0.3, (c, t) => { tone(c, t, jitter(700), jitter(1100), 0.08, 0.14) })
+/** 반짝이는 아이템 같은 것을 눌렀다: 직접 고른 소리(tap.mp3) */
+export const playTap = () => playSample('tap', 0.3, (c, t) => { tone(c, t, jitter(520), jitter(380), 0.06, 0.14, 'triangle') })
 /** 물을 준다: 직접 고른 소리(water.mp3) */
 export const playWater = () => playSample('water', 0.1, (c, t) => { for (let i = 0; i < 4; i++) tone(c, t + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12) })
 /** 수확한다(톡 + 반짝) */
-export const playHarvest = () => play((c, t) => { tone(c, t, jitter(800), jitter(1250), 0.08, 0.18); [1175, 1568, 2093].forEach((f, i) => tone(c, t + 0.07 + i * 0.06, f, f * 1.01, 0.15, 0.13, 'triangle')) })
+export const playHarvest = () => playSample('shine', 0.25, (c, t) => { tone(c, t, jitter(800), jitter(1250), 0.08, 0.18); [1175, 1568, 2093].forEach((f, i) => tone(c, t + 0.07 + i * 0.06, f, f * 1.01, 0.15, 0.13, 'triangle')) })
 /** 코인을 받거나 쓴다(짤랑) */
 export const playCoin = () => play((c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
 /** 카페: 주문을 받았다(뾰롱) */
@@ -217,6 +219,6 @@ export const playOrder = () => playSample('pop', 0.3, (c, t) => { tone(c, t, jit
 /** 카페: 만들기를 시작했다(보글) */
 export const playCook = () => playSample('cook', 0.25, (c, t) => { for (let i = 0; i < 3; i++) tone(c, t + i * 0.07, jitter(600 + i * 100), jitter(950 + i * 120), 0.08, 0.13, 'triangle') })
 /** 카페: 음식이 다 됐다(딩동) */
-/** 카페: 서빙했다(직접 고른 소리 serve.mp3). 코인 소리는 농장 등 다른 곳에서 계속 쓴다 */
-export const playServe = () => playSample('serve', 0.25, (c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
+/** 카페: 서빙했다(직접 고른 소리 shine.mp3, 수확과 같은 소리). 코인 소리는 농장 등 다른 곳에서 계속 쓴다 */
+export const playServe = () => playSample('shine', 0.25, (c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
 export const playBell = () => play((c, t) => { tone(c, t, 1976, 1976, 0.45, 0.16, 'triangle'); tone(c, t + 0.17, 1480, 1480, 0.55, 0.16, 'triangle') })

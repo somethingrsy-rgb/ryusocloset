@@ -3,7 +3,7 @@ import { useI18n } from '../i18n'
 import { PLACE_BY_ID, eventDone, finishEnglish, finishEvent, findItem, getGame, isFound, pickReward, spotFor, travelItem } from '../lib/game'
 import { assetUrl } from '../lib/items'
 import { NPCS } from '../lib/npcs'
-import { playSelect } from '../lib/sound'
+import { playSelect, playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { WALK_BOUNDS, clampToBounds, depthScale, distPx, stepToward, type Vec } from '../lib/walk'
 import { FigureLayers } from './FigureLayers'
@@ -223,6 +223,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
               disabled={blocked}
               onClick={() => {
                 if (blocked) return
+                playTap()
                 if (s.y < minY) {
                   stop()
                   pick(id)
@@ -275,7 +276,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
         </div>
       </div>
 
-      <div className="absolute top-2 left-2 right-24 z-30 flex min-w-0 items-center gap-2">
+      <div className="absolute top-2 left-2 right-24 z-30 flex min-w-0 flex-wrap items-center gap-2">
         <button onClick={onExit} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
           <span aria-hidden>🗺️</span>
           {tx.map}
@@ -286,7 +287,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             {tx.decorate}
           </button>
         )}
-        <span className="min-w-0 truncate rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
+        <span className="rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
           {p.icon} {lang === 'ko' ? p.ko : p.en}{ids.length > 0 && <> · {tx.found} {got}/{ids.length}</>}
         </span>
       </div>
