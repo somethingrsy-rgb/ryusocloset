@@ -38,8 +38,8 @@ const SEATS = [
 ] as const
 const BONUS = 15
 const GOAL = 5
-/** 만드는 시간: 농장 작물 자라는 시간(60~120초)과 비슷하게. 메뉴 값이 클수록 오래 걸린다(3코인 63초 ~ 8코인 118초) */
-const cookMs = (price: number) => 30000 + price * 11000
+/** 만드는 시간: 메뉴 값이 클수록 조금 더 걸린다(3코인 18초 ~ 8코인 28초) */
+const cookMs = (price: number) => 12000 + price * 2000
 const KEY = 'ryuso.cafe.v1'
 
 type Saved = { served: number; reward: boolean }
