@@ -29,7 +29,7 @@ import { AVATARS, baseFiles } from './lib/avatars'
 import { ITEMS, ITEM_BY_ID, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
 import { toggleItem } from './lib/outfit'
-import { ROOM_ITEMS, ROOM_ITEM_BY_ID, ROOM_THEME_BY_ID, addItem, defaultRoom, isCustomRoomItem } from './lib/room'
+import { ROOM_ITEMS, ROOM_ITEM_BY_ID, ROOM_THEME_BY_ID, addItem, isCustomRoomItem } from './lib/room'
 import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
 import { playSnap, setSoundEnabled } from './lib/sound'
 import {
@@ -317,7 +317,7 @@ export default function App() {
 
   const resetRoom = () => {
     if (!window.confirm(t('roomResetConfirm'))) return
-    editRoom(defaultRoom())
+    editRoom({ ...room, items: [] }) // 벽지·바닥(과 낮밤)은 두고 놓은 아이템만 모두 치운다
     setSelection(null)
     showToast(t('roomResetDone'))
   }
