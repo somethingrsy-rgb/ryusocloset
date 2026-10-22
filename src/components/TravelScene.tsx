@@ -276,12 +276,12 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
       </div>
 
       <div className="absolute top-2 left-2 right-24 z-30 flex min-w-0 items-center gap-2">
-        <button onClick={onExit} className="flex h-12 flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-4 text-sm font-bold shadow-md ring-1 ring-black/5">
+        <button onClick={onExit} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
           <span aria-hidden>🗺️</span>
           {tx.map}
         </button>
         {onDecorate && (
-          <button onClick={() => onDecorate(placeId)} className="flex h-12 flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-4 text-sm font-bold shadow-md ring-1 ring-black/5">
+          <button onClick={() => onDecorate(placeId)} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
             <span aria-hidden>🏠</span>
             {tx.decorate}
           </button>
