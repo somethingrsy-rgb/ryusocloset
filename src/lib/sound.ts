@@ -206,6 +206,8 @@ function playSample(name: string, gain: number, fallback: (c: AudioContext, t: n
 }
 /** 아이템을 고르거나 찾았다: 직접 고른 소리(select.mp3) */
 export const playSelect = () => playSample('select', 0.3, (c, t) => { tone(c, t, jitter(700), jitter(1100), 0.08, 0.14) })
+/** 수학 문제를 맞혔다: 직접 고른 소리(correct.mp3) */
+export const playCorrect = () => playSample('correct', 0.25, (c, t) => { [784, 988, 1319].forEach((f, k) => tone(c, t + k * 0.08, f, f * 1.01, 0.2, 0.14, 'triangle')) })
 /** 반짝이는 아이템 같은 것을 눌렀다: 직접 고른 소리(tap.mp3) */
 export const playTap = () => playSample('tap', 0.3, (c, t) => { tone(c, t, jitter(520), jitter(380), 0.06, 0.14, 'triangle') })
 /** 물을 준다: 직접 고른 소리(water.mp3) */
@@ -213,7 +215,7 @@ export const playWater = () => playSample('water', 0.1, (c, t) => { for (let i =
 /** 수확한다(톡 + 반짝) */
 export const playHarvest = () => playSample('shine', 0.25, (c, t) => { tone(c, t, jitter(800), jitter(1250), 0.08, 0.18); [1175, 1568, 2093].forEach((f, i) => tone(c, t + 0.07 + i * 0.06, f, f * 1.01, 0.15, 0.13, 'triangle')) })
 /** 코인을 받거나 쓴다(짤랑) */
-export const playCoin = () => play((c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
+export const playCoin = () => playSample('coin', 0.25, (c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
 /** 카페: 주문을 받았다(뾰롱) */
 export const playOrder = () => playSample('cook', 0.25, (c, t) => { tone(c, t, jitter(880), jitter(1320), 0.11, 0.17); tone(c, t + 0.09, jitter(1175), jitter(1480), 0.12, 0.12, 'triangle') })
 /** 카페: 만들기를 시작했다(보글) */
