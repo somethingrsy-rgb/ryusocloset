@@ -3,7 +3,7 @@ import { useI18n } from '../i18n'
 import { PLACE_BY_ID, eventDone, finishEnglish, finishEvent, findItem, getGame, isFound, pickReward, spotFor, travelItem } from '../lib/game'
 import { assetUrl } from '../lib/items'
 import { NPCS } from '../lib/npcs'
-import { playSelect, playTap } from '../lib/sound'
+import { playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { WALK_BOUNDS, clampToBounds, depthScale, distPx, stepToward, type Vec } from '../lib/walk'
 import { FigureLayers } from './FigureLayers'
@@ -89,7 +89,6 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
       const id = pickReward(assign, getGame().found, placeId, scope)
       finishEvent(placeId)
       if (id && findItem(id)) {
-        playSelect()
         setPopup(id)
       }
     },
@@ -98,7 +97,6 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
 
   const pick = useCallback((id: string) => {
     if (findItem(id)) {
-      playSelect()
       setPopup(id)
     }
   }, [])

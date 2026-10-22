@@ -204,13 +204,11 @@ function playSample(name: string, gain: number, fallback: (c: AudioContext, t: n
     src.start()
   })
 }
-/** 아이템을 고르거나 찾았다: 직접 고른 소리(select.mp3) */
-export const playSelect = () => playSample('select', 0.3, (c, t) => { tone(c, t, jitter(700), jitter(1100), 0.08, 0.14) })
 /** 수학 문제를 맞혔다: 직접 고른 소리(correct.mp3) */
 export const playCorrect = () => playSample('correct', 0.25, (c, t) => { [784, 988, 1319].forEach((f, k) => tone(c, t + k * 0.08, f, f * 1.01, 0.2, 0.14, 'triangle')) })
 /** 수학 한 단원을 끝냈다: 직접 고른 소리(levelup.mp3) */
 export const playLevelDone = () => playSample('levelup', 0.3, (c, t) => { [523, 659, 784, 1047, 1319].forEach((f, k) => tone(c, t + k * 0.1, f, f * 1.01, 0.3, 0.16, 'triangle')) })
-/** 반짝이는 아이템 같은 것을 눌렀다: 직접 고른 소리(tap.mp3) */
+/** 아이템을 눌렀다(옷장·방 꾸미기·상점 미리보기·산책 중 반짝이는 아이템): 이 소리 하나만 쓴다(tap.mp3) */
 export const playTap = () => playSample('tap', 0.3, (c, t) => { tone(c, t, jitter(520), jitter(380), 0.06, 0.14, 'triangle') })
 /** 물을 준다: 직접 고른 소리(water.mp3) */
 export const playWater = () => playSample('water', 0.1, (c, t) => { for (let i = 0; i < 4; i++) tone(c, t + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12) })

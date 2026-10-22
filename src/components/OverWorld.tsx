@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent, type React
 import { useI18n } from '../i18n'
 import { extendReach, findItem, travelItem } from '../lib/game'
 import { roadSpot } from '../lib/roadItems'
-import { playSelect, playTap } from '../lib/sound'
+import { playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import {
   CHUNK_W,
@@ -69,7 +69,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
     const c0 = Math.floor(pos.x / CHUNK_W)
     for (let c = Math.max(0, c0 - 1); c <= c0 + 1; c++) {
       const sp = roadSpot(c)
-      if (sp && Math.hypot(pos.x - sp.x, pos.y - sp.y) < 110 && findItem(sp.id)) { playSelect(); setGotId(sp.id) }
+      if (sp && Math.hypot(pos.x - sp.x, pos.y - sp.y) < 110 && findItem(sp.id)) setGotId(sp.id)
     }
   }
   /** 집을 눌러서 걸어가는 중이면 그 구간 번호 (지나가다 우연히 들어가지 않게) */

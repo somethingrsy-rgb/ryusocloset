@@ -5,7 +5,7 @@ import { gameVersion, getGame, isFound, subscribeGame, travelPool } from '../lib
 import { assetUrl } from '../lib/items'
 import { buyItem, priceOf, readWallet, type BuyResult, type Currency } from '../lib/shop'
 import { useItemsVersion } from '../lib/useItemsVersion'
-import { playCoin } from '../lib/sound'
+import { playCoin, playTap } from '../lib/sound'
 import { FigureLayers } from './FigureLayers'
 import type { Outfit, Tweaks } from '../lib/types'
 import { CoinIcon, StarIcon, DressIcon } from './Icons'
@@ -130,7 +130,7 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
                     <button disabled={own || poor} onClick={() => buy(it.id)} className="min-h-9 rounded-full bg-transparent px-1 text-base font-bold disabled:opacity-60" aria-label={own ? (ko ? '보유' : 'Owned') : `${price} ${symName}`}>
                       {own ? (ko ? '보유 ✓' : 'Owned ✓') : <>{price} {sym}</>}
                     </button>
-                    {canPreview && <button onClick={() => setPreview(it.id)} className="min-h-9 rounded-full bg-[#e98aa3] px-3 text-xs font-bold text-white shadow"><DressIcon className="mr-1" /> {ko ? '입어보기' : 'Try on'}</button>}
+                    {canPreview && <button onClick={() => { playTap(); setPreview(it.id) }} className="min-h-9 rounded-full bg-[#e98aa3] px-3 text-xs font-bold text-white shadow"><DressIcon className="mr-1" /> {ko ? '입어보기' : 'Try on'}</button>}
                   </div>
                 </div>
               )
