@@ -89,10 +89,8 @@ export default function App() {
   /** 여행 장소에서 "방 꾸미기"로 들어오면 그 테마 소품 묶음부터 보여 준다 (방 탭을 떠나면 비움) */
   const [trayTheme, setTrayTheme] = useState<string | undefined>()
   useEffect(() => { if (mode !== 'room') setTrayTheme(undefined) }, [mode])
-  // 장소 안 "방" 버튼으로 방 꾸미기에 들어오면 마을 노래가 이어서 나온다 (방 탭을 떠나면 멈춤)
-  const [roomMusic, setRoomMusic] = useState(false)
-  useEffect(() => { if (mode !== 'room') setRoomMusic(false) }, [mode])
-  useEffect(() => { if (!(mode === 'room' && roomMusic)) return; startBgm('walk'); return stopBgm }, [mode, roomMusic])
+  // 방 탭에 있는 동안 배경 음악(탭을 직접 눌러도, 장소 안 "방" 버튼으로 들어와도 같다)
+  useEffect(() => { if (mode !== 'room') return; startBgm('room'); return stopBgm }, [mode])
   const [outfit, setOutfit] = useState<Outfit>(loadCurrent)
   const [tweaks, setTweaks] = useState<Tweaks>(() => loadTweaks(loadCurrent()))
   /** 위치·크기 조절의 실행 취소 기록 (옷을 바꾸면 비운다) */
@@ -238,7 +236,6 @@ export default function App() {
   const decorateWith = (placeId: string) => {
     const sent = getTravelRoom(placeId)
     // 그 장소에 보낸 방이 있으면 그 방 그대로, 없으면 그 장소의 기본 모습(벽·바닥과 미리 놓인 가구)으로 시작한다
-    setRoomMusic(true)
     if (!sent && !ROOM_THEME_BY_ID[placeId]) { setSelection(null); setMode('room'); return } // 보낸 방이 없는 내 방은 지금 방을 그대로 연다
     const base = sent ? { ...sent.room, wallId: sent.room.wallId ?? placeId, floorId: sent.room.floorId ?? placeId } : roomFromDecor(placeId, room, newUid)
     editRoom(base)
