@@ -97,7 +97,7 @@ export const setSoundEnabled = (on: boolean) => { enabled = on; syncBgm() }
 /* ---------- 배경 음악(마을 산책): 한 곡을 반복한다. 효과음 끄기를 따르고, 앱이 가려지면 멈춘다 ---------- */
 let bgmWant: string | null = null
 let bgmNode: { src: AudioBufferSourceNode; name: string } | null = null
-const BGM_GAIN: Record<string, number> = { walk: 0.12, birds: 0.14, cafe: 0.1 }
+const BGM_GAIN: Record<string, number> = { walk: 0.12, birds: 0.18, cafe: 0.1 }
 function stopBgmNode() {
   if (!bgmNode) return
   try { bgmNode.src.stop() } catch { /* 이미 멈춤 */ }
@@ -178,7 +178,7 @@ export const playWin = () => playSample('gold', 0.25, (c, t) => { [659, 831, 988
 /** 졌다(부드럽게) */
 export const playLose = () => playSample('lose', 0.25, (c, t) => { [659, 554, 440].forEach((f, i) => tone(c, t + i * 0.15, f, f * 0.99, 0.28, 0.14, 'sine')) })
 /** 별비: 별을 받았다 */
-export const playStar = () => playSample('star', 0.2, (c, t) => { tone(c, t, jitter(1568), jitter(2093), 0.1, 0.16); tone(c, t + 0.05, jitter(2093), jitter(2637), 0.13, 0.11, 'triangle') })
+export const playStar = () => playSample('star', 0.3, (c, t) => { tone(c, t, jitter(1568), jitter(2093), 0.1, 0.16); tone(c, t + 0.05, jitter(2093), jitter(2637), 0.13, 0.11, 'triangle') })
 /** 별비: 금빛 별(5점)을 받았다 */
 export const playGold = () => playSample('gold', 0.25, (c, t) => { [1175, 1568, 1976, 2637].forEach((f, i) => tone(c, t + i * 0.05, f, f * 1.01, 0.2, 0.15, 'triangle')) })
 /** 별비: 구름에 부딪혔다 */
@@ -227,7 +227,7 @@ export const playCorrect = () => playSample('correct', 0.25, (c, t) => { [784, 9
 /** 수학 한 단원을 끝냈다: 직접 고른 소리(levelup.mp3) */
 export const playLevelDone = () => playSample('levelup', 0.3, (c, t) => { [523, 659, 784, 1047, 1319].forEach((f, k) => tone(c, t + k * 0.1, f, f * 1.01, 0.3, 0.16, 'triangle')) })
 /** 아이템을 눌렀다(옷장·방 꾸미기·상점 미리보기·산책 중 반짝이는 아이템): 이 소리 하나만 쓴다(tap.mp3) */
-export const playTap = () => playSample('tap', 0.3, (c, t) => { tone(c, t, jitter(520), jitter(380), 0.06, 0.14, 'triangle') })
+export const playTap = () => playSample('tap', 0.45, (c, t) => { tone(c, t, jitter(520), jitter(380), 0.06, 0.14, 'triangle') })
 /** 물을 준다: 직접 고른 소리(water.mp3) */
 export const playWater = () => playSample('water', 0.1, (c, t) => { for (let i = 0; i < 4; i++) tone(c, t + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12) })
 /** 수확한다: 직접 고른 소리(harvest.mp3) */
@@ -240,5 +240,5 @@ export const playOrder = () => playSample('cook', 0.25, (c, t) => { tone(c, t, j
 export const playCook = () => playSample('pop', 0.3, (c, t) => { for (let i = 0; i < 3; i++) tone(c, t + i * 0.07, jitter(600 + i * 100), jitter(950 + i * 120), 0.08, 0.13, 'triangle') })
 /** 카페: 음식이 다 됐다(딩동) */
 /** 카페: 서빙했다(직접 고른 소리 shine.mp3, 수확과 같은 소리). 코인 소리는 농장 등 다른 곳에서 계속 쓴다 */
-export const playServe = () => playSample('shine', 0.25, (c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
+export const playServe = () => playSample('shine', 0.6, (c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
 export const playBell = () => play((c, t) => { tone(c, t, 1976, 1976, 0.45, 0.16, 'triangle'); tone(c, t + 0.17, 1480, 1480, 0.55, 0.16, 'triangle') })
