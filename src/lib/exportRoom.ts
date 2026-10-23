@@ -96,13 +96,11 @@ export async function renderRoomCanvas(
     const img = d.group === 'avatar' ? figure : imgs[i]
     if (!img) return
     ctx.save()
-    if (d.flip) {
-      ctx.translate(d.left + d.w, d.top)
-      ctx.scale(-1, 1)
-      ctx.drawImage(img, 0, 0, d.w, d.h)
-    } else {
-      ctx.drawImage(img, d.left, d.top, d.w, d.h)
-    }
+    // 이미지 가운데를 기준으로 기울이고 뒤집는다
+    ctx.translate(d.left + d.w / 2, d.top + d.h / 2)
+    if (d.rot) ctx.rotate(((d.flip ? -d.rot : d.rot) * Math.PI) / 180)
+    if (d.flip) ctx.scale(-1, 1)
+    ctx.drawImage(img, -d.w / 2, -d.h / 2, d.w, d.h)
     ctx.restore()
   })
   return canvas

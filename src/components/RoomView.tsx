@@ -18,6 +18,8 @@ import {
   setScale,
   shadowWidthRatio,
   toggleFlip,
+  rotateBy,
+  setRot,
 } from '../lib/room'
 import { ROOM_ASSETS, type SceneAssets } from '../lib/exportRoom'
 import { hitTest, maskCache, maskFromSource } from '../lib/roomHit'
@@ -71,7 +73,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
   }, [])
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const drag = useRef<{ sel: NonNullable<Selection>; px: number; py: number; ox: number; oy: number } | null>(null)
-  const pinch = useRef<{ dist: number; scale: number } | null>(null)
+  const pinch = useRef<{ dist: number; scale: number; ang: number; rot: number } | null>(null)
   const roomState = useRef(room)
   roomState.current = room
   const [, bump] = useState(0)
@@ -129,7 +131,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
     if (pointers.current.size === 2 && selection) {
       const [a, b] = [...pointers.current.values()]
       const p = getPlacement(roomState.current, selection)
-      if (p) pinch.current = { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, scale: p.scale }
+      if (p) pinch.current = { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, scale: p.scale, ang: Math.atan2(b.y - a.y, b.x - a.x), rot: p.rot ?? 0 }
       drag.current = null
       return
     }
@@ -149,7 +151,8 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
     if (pinch.current && selection && pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()]
       const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1
-      onChange(setScale(roomState.current, selection, (pinch.current.scale * dist) / pinch.current.dist))
+      const turn = ((Math.atan2(b.y - a.y, b.x - a.x) - pinch.current.ang) * 180) / Math.PI // 두 손가락을 돌리면 기울어진다
+      onChange(setRot(setScale(roomState.current, selection, (pinch.current.scale * dist) / pinch.current.dist), selection, pinch.current.rot + turn))
       return
     }
     const d = drag.current
@@ -183,6 +186,8 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
       case 'ArrowDown': return move(0, step)
       case '+': case '=': return onChange(scaleBy(room, selection, 1.1))
       case '-': case '_': return onChange(scaleBy(room, selection, 1 / 1.1))
+      case '[': return onChange(rotateBy(room, selection, e.shiftKey ? -15 : -5))
+      case ']': return onChange(rotateBy(room, selection, e.shiftKey ? 15 : 5))
       case 'f': case 'F': return onChange(toggleFlip(room, selection))
       case 'Escape': return onSelect(null)
       case 'Delete': case 'Backspace':
@@ -271,7 +276,7 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
 
           {list.map((d) => {
             const z = Math.round(d.z) + 10
-            const flip = d.flip ? 'scaleX(-1)' : undefined
+            const flip = [d.flip ? 'scaleX(-1)' : '', d.rot ? `rotate(${d.flip ? -d.rot : d.rot}deg)` : ''].filter(Boolean).join(' ') || undefined
             return (
               <div key={d.sel.kind === 'item' ? d.sel.uid : 'avatar'}>
                 {hasContactShadow(d.group) && (
@@ -338,6 +343,9 @@ export function RoomView({ outfit, tweaks, room, selection, onSelect, onChange, 
         onFront={() => onChange(shiftLayer(room, selection, 1))} frontDisabled={!canShiftLayer(room, selection, 1)}
         onBack={() => onChange(shiftLayer(room, selection, -1))} backDisabled={!canShiftLayer(room, selection, -1)}>
         <button className={`${btn} bg-petal`} disabled={!canUndo} onClick={() => onUndo?.()}>{t('roomUndo')}</button>
+        <button className={`${btn} bg-petal`} onClick={() => onChange(rotateBy(room, selection, -7))}>{t('rotateLeft')}</button>
+        <button className={`${btn} bg-petal`} onClick={() => onChange(rotateBy(room, selection, 7))}>{t('rotateRight')}</button>
+        <button className={`${btn} bg-petal`} disabled={!getPlacement(room, selection)?.rot} onClick={() => onChange(setRot(room, selection, 0))}>{t('tweakReset')}</button>
         <button className={`${btn} bg-petal`} onClick={() => onChange(toggleFlip(room, selection))}>{t('flip')}</button>
       </AdjustmentPanel>}
 

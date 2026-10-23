@@ -114,7 +114,7 @@ export function removeItem(state: RoomState, uid: string): RoomState {
 function mapSel(
   state: RoomState,
   sel: NonNullable<Selection>,
-  f: (p: { x: number; y: number; scale: number; flip: boolean; zb?: number }) => { x: number; y: number; scale: number; flip: boolean; zb?: number },
+  f: (p: { x: number; y: number; scale: number; flip: boolean; zb?: number; rot?: number }) => { x: number; y: number; scale: number; flip: boolean; zb?: number; rot?: number },
 ): RoomState {
   if (sel.kind === 'avatar') return { ...state, avatar: { ...state.avatar, ...f(state.avatar) } }
   return { ...state, items: state.items.map((p) => (p.uid === sel.uid ? { ...p, ...f(p) } : p)) }
@@ -128,6 +128,13 @@ export const setScale = (s: RoomState, sel: NonNullable<Selection>, scale: numbe
   mapSel(s, sel, (p) => ({ ...p, scale: clampScale(scale) }))
 export const scaleBy = (s: RoomState, sel: NonNullable<Selection>, factor: number) =>
   mapSel(s, sel, (p) => ({ ...p, scale: clampScale(p.scale * factor) }))
+/** 기울기는 -180~180 도, 0 에 가까우면 없앤다 */
+const normRot = (d: number) => {
+  const r = ((((d + 180) % 360) + 360) % 360) - 180
+  return Math.abs(r) < 0.5 ? undefined : Math.round(r * 10) / 10
+}
+export const setRot = (s: RoomState, sel: NonNullable<Selection>, deg: number) => mapSel(s, sel, (p) => ({ ...p, rot: normRot(deg) }))
+export const rotateBy = (s: RoomState, sel: NonNullable<Selection>, deg: number) => mapSel(s, sel, (p) => ({ ...p, rot: normRot((p.rot ?? 0) + deg) }))
 export const toggleFlip = (s: RoomState, sel: NonNullable<Selection>) => mapSel(s, sel, (p) => ({ ...p, flip: !p.flip }))
 
 /** 겹치는 순서 한 칸 바꾸기: 앞(dir=1)/뒤(dir=-1)로 이웃한 물건과 쌓이는 값을 맞바꾼다. 갈 데가 없으면 그대로. */
@@ -156,6 +163,7 @@ export function getPlacement(state: RoomState, sel: NonNullable<Selection>) {
 }
 
 /** 저장된 겹침 순서 조절값 검증 (없거나 0 이면 넣지 않는다) */
+const rotOf = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? (normRot(v) === undefined ? {} : { rot: normRot(v) }) : {})
 const zbOf = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v !== 0 ? { zb: clamp(v, -6000, 6000) } : {})
 
 /** 저장된 데이터를 검증해 안전한 상태로 만든다 */
@@ -176,6 +184,7 @@ export function sanitizeRoom(raw: unknown, base: RoomState = defaultRoom()): Roo
     scale: clampScale(num(a.scale, 1)),
     flip: a.flip === true,
     ...zbOf(a.zb),
+    ...rotOf(a.rot),
   }
   if (!Array.isArray(r.items)) return { ...extra, avatar, items: base.items }
   const seen = new Set<string>()
@@ -193,6 +202,7 @@ export function sanitizeRoom(raw: unknown, base: RoomState = defaultRoom()): Roo
       scale: clampScale(num(it.scale, 1)),
       flip: it.flip === true,
       ...zbOf(it.zb),
+      ...rotOf(it.rot),
     })
     if (items.length >= MAX_PLACED) break
   }
@@ -215,6 +225,8 @@ export interface Drawable {
   x: number
   y: number
   flip: boolean
+  /** 기울기(도) */
+  rot: number
   src?: string
 }
 
@@ -249,6 +261,7 @@ export function drawables(state: RoomState): Drawable[] {
       x: p.x,
       y: p.y,
       flip: p.flip,
+      rot: p.rot ?? 0,
       src: def.image,
     })
   })
@@ -267,6 +280,7 @@ export function drawables(state: RoomState): Drawable[] {
     x: av.x,
     y: av.y,
     flip: av.flip,
+    rot: av.rot ?? 0,
   })
   return out.sort((a, b) => a.z - b.z)
 }
