@@ -466,7 +466,7 @@ export default function App() {
             )}
           </div>
 
-        <aside hidden={mode === 'farm' || mode === 'cafe' || mode === 'shop' || full} className={`flex ${split ? 'min-w-0 flex-1' : mode === 'travel' ? 'h-[28dvh] shrink-0' : 'h-[40dvh] shrink-0'} flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
+        <aside hidden={mode === 'farm' || mode === 'cafe' || mode === 'shop' || full} className={`flex ${split ? 'min-w-0 flex-1' : 'h-[40dvh] shrink-0'} flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
           <div id="adjustment-controls" className="shrink-0" />
           {mode === 'travel' ? (
             <TravelBook outfit={outfit} onToggle={(id) => { const it = ITEM_BY_ID[id]; if (it) onToggle(it) }} />
