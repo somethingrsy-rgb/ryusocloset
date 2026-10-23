@@ -22,8 +22,23 @@ function getCtx(): AudioContext | null {
   }
 }
 
-/** iOS 는 화면을 처음 만질 때 한 번 소리를 열어줘야 이후 효과음이 난다 */
+/** iOS(특히 옛 아이패드): 소리 스위치·무음 모드에서도 웹 소리가 나도록, 화면을 처음 만질 때 짧은 무음을 <audio> 로 한 번 재생한다 */
+const SILENT_WAV = 'data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
+let silentDone = false
+function silentAudio() {
+  if (silentDone) return
+  silentDone = true
+  try {
+    const a = new Audio(SILENT_WAV)
+    a.volume = 0.01
+    void a.play().catch(() => { silentDone = false })
+  } catch { silentDone = false }
+}
+
+/** iOS 는 화면을 만질 때 소리를 열어줘야 이후 효과음이 난다. 앱이 가려졌다 돌아오거나 전화로 끊긴 뒤에도 다시 만지면 이어서 나도록 계속 듣는다 */
 function unlock() {
+  silentAudio()
+  if (ctx && ctx.state === 'running') return
   const c = getCtx()
   if (!c) return
   try {
@@ -32,9 +47,6 @@ function unlock() {
     src.connect(c.destination)
     src.start(0)
   } catch { /* 무시 */ }
-  if (c.state === 'running') {
-    for (const e of ['pointerdown', 'touchend', 'click', 'keydown']) window.removeEventListener(e, unlock, true)
-  }
 }
 if (typeof window !== 'undefined') {
   for (const e of ['pointerdown', 'touchend', 'click', 'keydown']) window.addEventListener(e, unlock, true)
@@ -177,12 +189,18 @@ export const playCloud = () => play((c, t) => { tone(c, t, 520, 300, 0.16, 0.16,
 export const playPlant = () => play((c, t) => { tone(c, t, jitter(560), jitter(400), 0.07, 0.2, 'triangle'); tone(c, t + 0.09, jitter(640), jitter(440), 0.07, 0.18, 'triangle') })
 /** 직접 고른 소리 파일(public/assets/sfx/<이름>.mp3). 처음 한 번만 받아서 풀어 둔다 */
 const samples = new Map<string, Promise<AudioBuffer | null>>()
+/** 옛 Safari 는 decodeAudioData 가 Promise 를 안 돌려줘서 콜백 방식으로도 받는다 */
+const decode = (c: AudioContext, b: ArrayBuffer) =>
+  new Promise<AudioBuffer>((resolve, reject) => {
+    const r = c.decodeAudioData(b, resolve, reject) as Promise<AudioBuffer> | undefined
+    r?.then(resolve, reject)
+  })
 const loadSample = (c: AudioContext, name: string) => {
   let p = samples.get(name)
   if (!p) {
     p = fetch(assetUrl(`assets/sfx/${name}.mp3`))
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('sfx'))))
-      .then((b) => c.decodeAudioData(b))
+      .then((b) => decode(c, b))
       .catch(() => { samples.delete(name); return null })
     samples.set(name, p)
   }
