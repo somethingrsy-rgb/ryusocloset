@@ -1,6 +1,7 @@
 import roomData from '../data/room-items.json'
 import campData from '../data/camp-items.json'
 import themeData from '../data/themes.json'
+import { decorForPlace } from './travelDecor'
 import themeItemData from '../data/theme-items.json'
 import { notifyItemsChanged } from './items'
 import { CANVAS_H, CANVAS_W } from './layers'
@@ -294,4 +295,16 @@ export function sameSelection(a: Selection, b: Selection): boolean {
   if (!a || !b) return a === b
   if (a.kind !== b.kind) return false
   return a.kind === 'avatar' || (b.kind === 'item' && a.uid === b.uid)
+}
+
+/** 여행 장소의 기본 모습(그 장소 벽·바닥과 미리 놓아 둔 가구)을 방 꾸미기에서 이어서 꾸밀 수 있는 방으로 만든다 */
+export function roomFromDecor(placeId: string, base: RoomState, newUid: () => string): RoomState {
+  const items: Placed[] = []
+  for (const { item, x, y, width } of decorForPlace(placeId)) {
+    const def = ROOM_ITEM_BY_ID[item.id]
+    if (!def) continue
+    const scale = clampScale(((width / 100) * ROOM_W) / itemSize(def, 1).w)
+    items.push({ uid: newUid(), itemId: def.id, x: clampX((x / 100) * ROOM_W), y: clampY((y / 100) * ROOM_H), scale, flip: false })
+  }
+  return { ...base, wallId: placeId, floorId: placeId, items }
 }

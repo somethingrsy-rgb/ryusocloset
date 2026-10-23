@@ -14,7 +14,7 @@ import { SavedSheet } from './components/SavedSheet'
 import { Stage } from './components/Stage'
 import { TravelBook } from './components/TravelBook'
 import { SendToGameSheet } from './components/SendToGameSheet'
-import { travelTo } from './lib/game'
+import { PLACE_BY_ID, travelTo } from './lib/game'
 import { CafeGame } from './components/CafeGame'
 import { FarmScene } from './components/FarmScene'
 import { ShopModal } from './components/ShopModal'
@@ -29,7 +29,8 @@ import { AVATARS, baseFiles } from './lib/avatars'
 import { ITEMS, ITEM_BY_ID, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
 import { toggleItem } from './lib/outfit'
-import { ROOM_ITEMS, ROOM_ITEM_BY_ID, ROOM_THEME_BY_ID, addItem, isCustomRoomItem } from './lib/room'
+import { ROOM_ITEMS, ROOM_ITEM_BY_ID, ROOM_THEME_BY_ID, addItem, isCustomRoomItem, roomFromDecor } from './lib/room'
+import { getTravelRoom } from './lib/travelRooms'
 import { MAX_PLACED, type RoomGroup, type RoomItemDef, type RoomState, type Selection } from './lib/roomTypes'
 import { setSoundEnabled } from './lib/sound'
 import {
@@ -231,13 +232,16 @@ export default function App() {
   /** 방을 바꾼다 (되돌릴 수 있게 이전 상태를 기록) */
   /** 여행 장소 안에서 "방 꾸미기": 그 테마 벽·바닥으로 바꾸고 내 방 탭을 연다 (놓은 소품은 그대로) */
   const decorateWith = (placeId: string) => {
-    if (placeId === 'myroom') { setSelection(null); setMode('room'); return } // 내 방은 테마를 바꾸지 않고 그대로 연다
-    if (!ROOM_THEME_BY_ID[placeId]) return
-    editRoom({ ...room, wallId: placeId, floorId: placeId })
+    const sent = getTravelRoom(placeId)
+    // 그 장소에 보낸 방이 있으면 그 방 그대로, 없으면 그 장소의 기본 모습(벽·바닥과 미리 놓인 가구)으로 시작한다
+    if (!sent && !ROOM_THEME_BY_ID[placeId]) { setSelection(null); setMode('room'); return } // 보낸 방이 없는 내 방은 지금 방을 그대로 연다
+    const base = sent ? { ...sent.room, wallId: sent.room.wallId ?? placeId, floorId: sent.room.floorId ?? placeId } : roomFromDecor(placeId, room, newUid)
+    editRoom(base)
     setSelection(null)
-    setTrayTheme(placeId)
+    setTrayTheme(ROOM_THEME_BY_ID[placeId] ? placeId : undefined)
     setMode('room')
-    showToast(lang === 'ko' ? `${ROOM_THEME_BY_ID[placeId].ko} 방으로 꾸며 보세요!` : `Decorate your ${ROOM_THEME_BY_ID[placeId].en} room!`)
+    const place = PLACE_BY_ID[placeId]
+    showToast(lang === 'ko' ? `${place?.ko ?? ''} 모습으로 꾸며 보세요! (↶ 로 이전 방으로 돌아가요)` : `Decorate the ${place?.en ?? ''} look! (↶ goes back to your last room)`)
   }
   const editRoom = (next: RoomState) => {
     const now = Date.now()

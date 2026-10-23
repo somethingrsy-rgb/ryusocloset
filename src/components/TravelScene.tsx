@@ -58,7 +58,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   const layout = useMemo(() => getTravelRoom(placeId), [placeId, roomVersion, itemVersion])
   const assets = layout ? sceneAssets(layout.scene, (layout.scene === 'camp' || layout.room.wallId === 'camp') ? night : layout.room.night, layout.room.wallId, layout.room.floorId) : null
   const minY = assets ? Math.min(88, 100 - assets.floorH / ROOM_H * 100 + 2) : WALK_BOUNDS.minY
-  const layerZ = (y: number) => layout ? 2000 + y / 100 * ROOM_H : Math.round(y)
+  const layerZ = (y: number) => layout ? Math.round(2000 + y / 100 * ROOM_H) : Math.round(y)
   const p = PLACE_BY_ID[placeId]
   const npc = NPCS[placeId]
   const ids = assign[placeId] ?? []
@@ -188,7 +188,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
 
   const got = ids.length - left.length
   const scale = depthScale(pos.y)
-  const avatarLayer = layout ? Math.max(10000, ...drawables(layout.room).map(d => d.z)) + 1 : 1000
+  const avatarLayer = layout ? Math.round(Math.max(10000, ...drawables(layout.room).map(d => d.z))) + 1 : 1000
   const collected = popup ? travelItem(popup) : undefined
 
   return (
@@ -209,7 +209,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           <img src={assetUrl(night && p.wallNight ? p.wallNight : p.wall)} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
           <img src={assetUrl(p.floor)} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${p.floorH / ROOM_H * 100}%` }} draggable={false} />
         </>}
-        {layout ? drawables(layout.room).filter(d => d.group !== 'avatar').map(d => <img key={d.key} src={d.src ? assetUrl(d.src) : undefined} alt="" draggable={false} className="pointer-events-none absolute" style={{ left: `${d.left / ROOM_W * 100}%`, top: `${d.top / ROOM_H * 100}%`, width: `${d.w / ROOM_W * 100}%`, height: `${d.h / ROOM_H * 100}%`, zIndex: d.z, transform: [d.flip ? 'scaleX(-1)' : '', d.rot ? `rotate(${d.flip ? -d.rot : d.rot}deg)` : ''].filter(Boolean).join(' ') || undefined }} />) : <TravelDecor placeId={placeId} />}
+        {layout ? drawables(layout.room).filter(d => d.group !== 'avatar').map(d => <img key={d.key} src={d.src ? assetUrl(d.src) : undefined} alt="" draggable={false} className="pointer-events-none absolute" style={{ left: `${d.left / ROOM_W * 100}%`, top: `${d.top / ROOM_H * 100}%`, width: `${d.w / ROOM_W * 100}%`, height: `${d.h / ROOM_H * 100}%`, zIndex: Math.round(d.z), transform: [d.flip ? 'scaleX(-1)' : '', d.rot ? `rotate(${d.flip ? -d.rot : d.rot}deg)` : ''].filter(Boolean).join(' ') || undefined }} />) : <TravelDecor placeId={placeId} />}
 
         {ids.map((id, i) => {
           if (isFound(id)) return null
