@@ -212,8 +212,8 @@ export const playLevelDone = () => playSample('levelup', 0.3, (c, t) => { [523, 
 export const playTap = () => playSample('tap', 0.3, (c, t) => { tone(c, t, jitter(520), jitter(380), 0.06, 0.14, 'triangle') })
 /** 물을 준다: 직접 고른 소리(water.mp3) */
 export const playWater = () => playSample('water', 0.1, (c, t) => { for (let i = 0; i < 4; i++) tone(c, t + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12) })
-/** 수확한다(톡 + 반짝) */
-export const playHarvest = () => playSample('shine', 0.25, (c, t) => { tone(c, t, jitter(800), jitter(1250), 0.08, 0.18); [1175, 1568, 2093].forEach((f, i) => tone(c, t + 0.07 + i * 0.06, f, f * 1.01, 0.15, 0.13, 'triangle')) })
+/** 수확한다: 직접 고른 소리(harvest.mp3) */
+export const playHarvest = () => playSample('harvest', 0.35, () => {}) // 직접 고른 소리만 쓴다(못 받으면 소리 없음)
 /** 코인을 받거나 쓴다(짤랑) */
 export const playCoin = () => playSample('coin', 0.25, (c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
 /** 카페: 주문을 받았다(뾰롱) */
