@@ -27,8 +27,8 @@ const TEXT = {
     nightHint: 'Sparkles glow at night ✨ Try tapping the props, too', done: 'All found ⭐ Time to explore the furnishings!', got: 'Found it!', wear: 'Try it on', keep: 'Keep walking', talkTo: 'Talk' },
 }
 
-/** 내 방 탭은 아래 패널이 40dvh, 여행 탭은 28dvh 라서 무대가 12dvh 더 높다. 보낸 방이 내 방 탭보다 커 보이지 않게 그만큼 뺀 높이에 맞춘다 */
-const ROOM_STAGE_DIFF = 12
+/** 여행 탭 아래 패널도 내 방 탭과 같은 높이(40dvh)라서 무대 크기가 같다. 보낸 방은 내 방 탭과 똑같은 크기로 보인다 */
+const ROOM_STAGE_DIFF = 0
 
 const NPC_POS: Vec = { x: 84, y: 84 }
 const CHEST_POS: Vec = { x: 52, y: 74 }
