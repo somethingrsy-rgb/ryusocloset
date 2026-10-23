@@ -37,7 +37,17 @@ export function opaqueAt(m: Mask, u: number, v: number): boolean {
   return false
 }
 
-function hits(d: Drawable, px: number, py: number, getMask: (key: string) => Mask | undefined): boolean {
+function hits(d: Drawable, qx: number, qy: number, getMask: (key: string) => Mask | undefined): boolean {
+  let px = qx
+  let py = qy
+  if (d.rot) {
+    // 기울어진 물건은 누른 점을 반대로 돌려서 원래 그림 위치로 되돌려 판정한다
+    const cx = d.left + d.w / 2
+    const cy = d.top + d.h / 2
+    const a = (-(d.flip ? -d.rot : d.rot) * Math.PI) / 180
+    px = cx + (qx - cx) * Math.cos(a) - (qy - cy) * Math.sin(a)
+    py = cy + (qx - cx) * Math.sin(a) + (qy - cy) * Math.cos(a)
+  }
   if (px < d.left || px > d.left + d.w || py < d.top || py > d.top + d.h) return false
   const m = getMask(d.key)
   if (!m) return true // 마스크가 아직 없으면 사각형 영역으로 판정
