@@ -97,7 +97,7 @@ export const setSoundEnabled = (on: boolean) => { enabled = on; syncBgm() }
 /* ---------- 배경 음악(마을 산책): 한 곡을 반복한다. 효과음 끄기를 따르고, 앱이 가려지면 멈춘다 ---------- */
 let bgmWant: string | null = null
 let bgmNode: { src: AudioBufferSourceNode; name: string } | null = null
-const BGM_GAIN: Record<string, number> = { walk: 0.12, birds: 0.18, cafe: 0.1, room: 0.09, run: 0.1, shop: 0.12 }
+const BGM_GAIN: Record<string, number> = { walk: 0.12, birds: 0.18, cafe: 0.1, room: 0.2, run: 0.1, shop: 0.12 }
 function stopBgmNode() {
   if (!bgmNode) return
   try { bgmNode.src.stop() } catch { /* 이미 멈춤 */ }
