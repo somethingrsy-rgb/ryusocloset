@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { isRestoring } from '../lib/restoreGuard'
 import { BG_PER_RUN, BG_START, GIFT_Y, MAX_RISE, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, LEVELS, LEVEL_IDS, RUN_H, runDuration, readRunLevel, writeRunLevel, type LevelId, startHearts, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
 import { earnStars } from '../lib/shop'
@@ -22,6 +22,8 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const [paused, setPaused] = useState(false)
   const [level, setLevel] = useState<LevelId>(readRunLevel)
   const [run, setRun] = useState(() => newRun(undefined, readRunLevel()))
+  // 아바타 그림은 옷이 바뀔 때만 다시 그린다(매 프레임 다시 그리면 폰에서 끊김)
+  const figure = useMemo(() => <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />, [outfit, tweaks])
   const live = useRef(run)
   const [record, setRecord] = useState(readRunRecord)
   const [paid, setPaid] = useState(0)
@@ -95,8 +97,8 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   }
 
   // 세로로 긴 화면에서도 가로로 충분히(400) 보이게 하고, 위가 남으면 하늘색으로 채운다(그림 맨 위가 하늘색)
-  // 폰 가로처럼 낮은 화면: 위 버튼을 작게 하고, 배경을 조금 확대해 길을 아래로 내려(맨 아래 꽃밭을 잘라) 길 위 공간을 넓힌다
-  const short = size.h < 500
+  // 폰 가로처럼 낮은 가로 화면(세로형은 그대로): 위 버튼을 작게 하고, 배경을 조금 확대해 길을 아래로 내려(맨 아래 꽃밭을 잘라) 길 위 공간을 넓힌다
+  const short = size.w > size.h && size.h < 500
   const top = short ? 48 : 70
   const roadPx = short ? size.h * 0.9 : BG_ROAD_Y * size.h / BG_UNITS
   const bgScaleForFit = roadPx / BG_ROAD_Y
@@ -128,19 +130,24 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
     onPointerDown={(e) => { if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return; e.currentTarget.focus({ preventScroll: true }); tapJump() }}
     onKeyDown={(e) => { if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); tapJump() } }}>
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {/* 움직이는 건 묶음 하나의 transform 뿐: 그림마다 위치를 바꾸지 않아 폰에서도 부드럽다 */}
+      <div className="absolute inset-0 will-change-transform" style={{ transform: `translate3d(${-scrollPx}px,0,0)` }}>
       {bgTiles.map((t) => Array.from({ length: ROAD_PARTS }, (_, k) => {
         const x0 = Math.round(k * ROAD_PART * 1.3)
         const x1 = k === ROAD_PARTS - 1 ? TILE_W : Math.round((k + 1) * ROAD_PART * 1.3)
-        return <img key={`${t}-${k}`} src={assetUrl(`assets/farm/travel_road10_${k}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: (t * TILE_W + x0) * bgScale - scrollPx, top: -26 * bgScale, width: (x1 - x0 + 1) * bgScale, height: 867 * bgScale, maxWidth: 'none' }} />
+        return <img key={`${t}-${k}`} src={assetUrl(`assets/farm/travel_road10_${k}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: (t * TILE_W + x0) * bgScale, top: -26 * bgScale, width: (x1 - x0 + 1) * bgScale, height: 867 * bgScale, maxWidth: 'none' }} />
       }))}
+      </div>
     </div>
     <div aria-hidden className="pointer-events-none absolute left-0 origin-top-left" style={{ width: viewW, height: RUN_H, top: offsetY, transform: `scale(${scale})` }}>
-      {obstacles.map((o) => <img key={o.id} src={assetUrl(`assets/runner/${o.img}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: o.x - cam - o.dw * OB_GROW / 2, top: GROUND_Y - o.h * OB_GROW + 8, width: o.dw * OB_GROW, height: o.h * OB_GROW, maxWidth: 'none' }} />)}
-      {gifts.filter((g) => !run.taken.includes(g.id)).map((g) => <img key={g.id} src={assetUrl('assets/runner/gift.webp')} alt="" draggable={false} className="absolute -translate-x-1/2 -translate-y-1/2 animate-bounce select-none drop-shadow-[0_0_8px_#ffd54a]" style={{ left: g.x - cam, top: GROUND_Y - g.y, width: 64, height: 64, objectFit: 'contain', maxWidth: 'none' }} />)}
-      {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[50px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x - cam, top: GROUND_Y - c.y }}><StarIcon /></span>)}
-      <div className="absolute" style={{ left: px - PLAYER_W * grow / 2, top: GROUND_Y - visY - PLAYER_H * grow + 6, width: PLAYER_W * grow, height: PLAYER_H * grow, opacity: blink ? 0.35 : 1 }}>
+      <div className="absolute inset-0 will-change-transform" style={{ transform: `translate3d(${-cam}px,0,0)` }}>
+      {obstacles.map((o) => <img key={o.id} src={assetUrl(`assets/runner/${o.img}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: o.x - o.dw * OB_GROW / 2, top: GROUND_Y - o.h * OB_GROW + 8, width: o.dw * OB_GROW, height: o.h * OB_GROW, maxWidth: 'none' }} />)}
+      {gifts.filter((g) => !run.taken.includes(g.id)).map((g) => <img key={g.id} src={assetUrl('assets/runner/gift.webp')} alt="" draggable={false} className="absolute -translate-x-1/2 -translate-y-1/2 animate-bounce select-none drop-shadow-[0_0_8px_#ffd54a]" style={{ left: g.x, top: GROUND_Y - g.y, width: 64, height: 64, objectFit: 'contain', maxWidth: 'none' }} />)}
+      {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[50px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x, top: GROUND_Y - c.y }}><StarIcon /></span>)}
+      </div>
+      <div className="absolute will-change-transform" style={{ left: px - PLAYER_W * grow / 2, top: GROUND_Y - PLAYER_H * grow + 6, transform: `translate3d(0,${-visY}px,0)`, width: PLAYER_W * grow, height: PLAYER_H * grow, opacity: blink ? 0.35 : 1 }}>
         <div className={phase === 'playing' && !paused && run.y === 0 ? 'walk-bob h-full w-full' : 'h-full w-full'} style={run.y > 0 ? { transform: `rotate(${Math.max(-5, Math.min(5, run.vy / 160))}deg)` } : undefined}>
-          <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
+          {figure}
         </div>
       </div>
     </div>
