@@ -45,14 +45,14 @@ describe('달려라 아바타', () => {
     const s = run(newRun(7), 45)
     expect(s.hearts).toBeLessThan(startHearts(s.level))
   })
-  it('단계마다 알맞게 뛰면 끝까지 달리고 별을 모으며 보너스를 받는다', () => {
+  it('단계마다 알맞게 뛰면 끝까지 달리고 먹은 별만큼 받는다', () => {
     for (const level of LEVEL_IDS) {
       for (const seed of [1, 7, 42, 99, 1234, 5, 6, 8]) {
         const s = run(newRun(seed, level), LEVELS[level].duration + 1, smart)
         expect(s.over, `${level} seed ${seed}`).toBe('done')
         expect(s.hearts, `${level} seed ${seed}`).toBe(startHearts(level))
         expect(s.coins).toBeGreaterThan(0)
-        expect(rewardStars(s)).toBe(s.coins + LEVELS[level].bonus)
+        expect(rewardStars(s)).toBe(s.coins)
       }
     }
   })
@@ -111,14 +111,13 @@ describe('달려라 아바타', () => {
     let t = s; for (let i = 0; i < 30; i++) t = stepRun(t, 1 / 60)
     expect(t.y).toBeGreaterThan(0)
   })
-  it('높은 단계일수록 빠르고, 장애물이 촘촘하고, 오래 달리고, 보너스가 크다', () => {
+  it('높은 단계일수록 빠르고, 장애물이 촘촘하고, 오래 달린다', () => {
     const [e, n, h] = LEVEL_IDS.map((l) => LEVELS[l])
     expect(e.speed).toBeLessThan(n.speed); expect(n.speed).toBeLessThan(h.speed)
     // 1초에 만나는 장애물 수(끝 무렵): 높은 단계일수록 많다
     const density = (l: (typeof e)) => ((l.speed + l.up * l.duration) * l.chance) / l.slot
     expect(density(e)).toBeLessThan(density(n)); expect(density(n)).toBeLessThan(density(h))
     expect(e.chance).toBeLessThan(n.chance); expect(n.chance).toBeLessThan(h.chance)
-    expect(e.bonus).toBeLessThan(n.bonus); expect(n.bonus).toBeLessThan(h.bonus)
     // 장애물 사이는 점프 한 번(약 0.9초)과 다시 뛸 준비를 할 만큼 항상 떨어져 있다
     for (const level of LEVEL_IDS) {
       const end = LEVELS[level].speed + LEVELS[level].up * LEVELS[level].duration
@@ -156,8 +155,8 @@ describe('달려라 아바타', () => {
     expect(at(1)).toBe(0)
     expect(at(2)).toBe(1)
   })
-  it('하트를 다 써서 끝나도 모은 코인은 별로 받고 보너스는 없다', () => {
+  it('끝까지 달려도 하트를 다 써도 먹은 별만큼만 받는다(보너스 없음)', () => {
     expect(rewardStars({ coins: 6, over: 'hurt' })).toBe(6)
-    expect(rewardStars({ coins: 6, over: 'done' })).toBe(16)
+    expect(rewardStars({ coins: 6, over: 'done' })).toBe(6)
   })
 })
