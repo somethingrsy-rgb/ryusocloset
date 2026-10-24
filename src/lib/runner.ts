@@ -7,7 +7,8 @@ export const PLAYER_W = 84
 export const PLAYER_H = 126
 /** 화면에서 아바타가 서 있는 가로 위치(월드 x 에서 카메라 앞쪽으로 얼마나 떨어졌는지) */
 export const PLAYER_SCREEN_X = 110
-export const START_HEARTS = 3
+/** 시작 하트: 초급은 5개, 나머지는 3개 */
+export const startHearts = (level: LevelId) => (level === 'easy' ? 5 : 3)
 const GRAVITY = 1300
 const JUMP_V = 554
 /** 단계(난이도): 속도, 빨라지는 정도(1초마다), 장애물 사이 간격, 장애물이 나오는 칸 비율, 달리는 시간, 완주 보너스 별 */
@@ -82,7 +83,7 @@ export interface RunState {
   events: ('coin' | 'hit' | 'jump' | 'gift')[]
 }
 
-export const newRun = (seed = Math.floor(Math.random() * 1e9), level: LevelId = DEFAULT_LEVEL, k = 1): RunState => ({ elapsed: 0, x: 0, y: 0, vy: 0, hearts: START_HEARTS, coins: 0, gifts: 0, k, boost: 0, boostTo: 0, jumps: 0, invuln: 0, taken: [], seed, level, over: false, events: [] })
+export const newRun = (seed = Math.floor(Math.random() * 1e9), level: LevelId = DEFAULT_LEVEL, k = 1): RunState => ({ elapsed: 0, x: 0, y: 0, vy: 0, hearts: startHearts(level), coins: 0, gifts: 0, k, boost: 0, boostTo: 0, jumps: 0, invuln: 0, taken: [], seed, level, over: false, events: [] })
 
 const rng = (seed: number, i: number) => {
   let h = Math.imul(seed ^ Math.imul(i + 1, 2654435761), 2246822519)

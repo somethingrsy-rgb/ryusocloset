@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PLAYER_SCREEN_X, LEVELS, LEVEL_IDS, START_HEARTS, jump, newRun, rewardStars, slotContent, speedAt, stepRun, visible, type RunState } from './runner'
+import { PLAYER_SCREEN_X, LEVELS, LEVEL_IDS, startHearts, jump, newRun, rewardStars, slotContent, speedAt, stepRun, visible, type RunState } from './runner'
 
 const run = (s: RunState, secs: number, jumper?: (s: RunState) => boolean) => {
   for (let t = 0; t < secs * 60 && !s.over; t++) {
@@ -24,16 +24,21 @@ describe('달려라 아바타', () => {
       for (let i = 1; i < obstacles.length; i++) expect(obstacles[i].x - obstacles[i - 1].x).toBeGreaterThanOrEqual(LEVELS[level].slot)
     }
   })
+  it('초급은 하트 5개, 나머지는 3개로 시작한다', () => {
+    expect(newRun(1, 'easy').hearts).toBe(5)
+    expect(newRun(1, 'normal').hearts).toBe(3)
+    expect(newRun(1, 'hard').hearts).toBe(3)
+  })
   it('가만히 있으면 장애물에 부딪혀 하트가 줄고 끝날 수 있다', () => {
     const s = run(newRun(7), 45)
-    expect(s.hearts).toBeLessThan(START_HEARTS)
+    expect(s.hearts).toBeLessThan(startHearts(s.level))
   })
   it('단계마다 알맞게 뛰면 끝까지 달리고 별을 모으며 보너스를 받는다', () => {
     for (const level of LEVEL_IDS) {
       for (const seed of [1, 7, 42, 99, 1234, 5, 6, 8]) {
         const s = run(newRun(seed, level), LEVELS[level].duration + 1, smart)
         expect(s.over, `${level} seed ${seed}`).toBe('done')
-        expect(s.hearts, `${level} seed ${seed}`).toBe(START_HEARTS)
+        expect(s.hearts, `${level} seed ${seed}`).toBe(startHearts(level))
         expect(s.coins).toBeGreaterThan(0)
         expect(rewardStars(s)).toBe(s.coins + LEVELS[level].bonus)
       }
@@ -45,7 +50,7 @@ describe('달려라 아바타', () => {
         for (const seed of [1, 7, 42, 99]) {
           const s = run(newRun(seed, level, k), LEVELS[level].duration + 1, smart)
           expect(s.over, `${level} k${k} seed ${seed}`).toBe('done')
-          expect(s.hearts, `${level} k${k} seed ${seed}`).toBe(START_HEARTS)
+          expect(s.hearts, `${level} k${k} seed ${seed}`).toBe(startHearts(level))
         }
       }
     }
