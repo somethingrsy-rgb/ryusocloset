@@ -12,20 +12,20 @@ export const startHearts = (level: LevelId) => LEVELS[level].hearts
 const GRAVITY = 1300
 const JUMP_V = 554
 /** 단계(난이도) 1~10: 속도, 빨라지는 정도(1초마다), 장애물 사이 간격, 장애물이 나오는 칸 비율, 달리는 시간, 완주 보너스 별,
- *  부딪힌 뒤 무적 시간(초), 시작 하트, 장애물 중 날아다니는 것의 비율(4단계부터). 1~3단계는 예전 초급·중급·고급 그대로(저장된 단계·기록이 이어지게 이름도 그대로) */
+ *  부딪힌 뒤 무적 시간(초), 시작 하트. 1~3단계는 예전 초급·중급·고급 그대로(저장된 단계·기록이 이어지게 이름도 그대로) */
 export type LevelId = 'easy' | 'normal' | 'hard' | 'l4' | 'l5' | 'l6' | 'l7' | 'l8' | 'l9' | 'l10'
 export const LEVEL_IDS: readonly LevelId[] = ['easy', 'normal', 'hard', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10']
-export const LEVELS: Record<LevelId, { speed: number; up: number; slot: number; chance: number; duration: number; bonus: number; invuln: number; hearts: number; fly: number }> = {
-  easy: { speed: 165, up: 1, slot: 600, chance: 0.6, duration: 40, bonus: 8, invuln: 1.2, hearts: 5, fly: 0 },
-  normal: { speed: 235, up: 3, slot: 560, chance: 0.74, duration: 45, bonus: 10, invuln: 1.2, hearts: 3, fly: 0 },
-  hard: { speed: 300, up: 4, slot: 640, chance: 0.86, duration: 50, bonus: 16, invuln: 1.2, hearts: 3, fly: 0 },
-  l4: { speed: 320, up: 4, slot: 660, chance: 0.9, duration: 50, bonus: 18, invuln: 1.1, hearts: 3, fly: 0.15 },
-  l5: { speed: 340, up: 4.5, slot: 700, chance: 0.92, duration: 55, bonus: 20, invuln: 1, hearts: 3, fly: 0.2 },
-  l6: { speed: 360, up: 4.5, slot: 700, chance: 0.93, duration: 55, bonus: 23, invuln: 1, hearts: 3, fly: 0.22 },
-  l7: { speed: 380, up: 5, slot: 760, chance: 0.94, duration: 60, bonus: 26, invuln: 0.9, hearts: 3, fly: 0.25 },
-  l8: { speed: 400, up: 5, slot: 760, chance: 0.95, duration: 60, bonus: 30, invuln: 0.8, hearts: 3, fly: 0.28 },
-  l9: { speed: 420, up: 5, slot: 770, chance: 0.97, duration: 60, bonus: 35, invuln: 0.7, hearts: 2, fly: 0.3 },
-  l10: { speed: 440, up: 5, slot: 780, chance: 0.98, duration: 60, bonus: 40, invuln: 0.6, hearts: 2, fly: 0.35 },
+export const LEVELS: Record<LevelId, { speed: number; up: number; slot: number; chance: number; duration: number; bonus: number; invuln: number; hearts: number }> = {
+  easy: { speed: 165, up: 1, slot: 600, chance: 0.6, duration: 40, bonus: 8, invuln: 1.2, hearts: 5 },
+  normal: { speed: 235, up: 3, slot: 560, chance: 0.74, duration: 45, bonus: 10, invuln: 1.2, hearts: 3 },
+  hard: { speed: 300, up: 4, slot: 640, chance: 0.86, duration: 50, bonus: 16, invuln: 1.2, hearts: 3 },
+  l4: { speed: 320, up: 4, slot: 660, chance: 0.9, duration: 50, bonus: 18, invuln: 1.1, hearts: 3 },
+  l5: { speed: 340, up: 4.5, slot: 700, chance: 0.92, duration: 55, bonus: 20, invuln: 1, hearts: 3 },
+  l6: { speed: 360, up: 4.5, slot: 700, chance: 0.93, duration: 55, bonus: 23, invuln: 1, hearts: 3 },
+  l7: { speed: 380, up: 5, slot: 760, chance: 0.94, duration: 60, bonus: 26, invuln: 0.9, hearts: 3 },
+  l8: { speed: 400, up: 5, slot: 760, chance: 0.95, duration: 60, bonus: 30, invuln: 0.8, hearts: 3 },
+  l9: { speed: 420, up: 5, slot: 770, chance: 0.97, duration: 60, bonus: 35, invuln: 0.7, hearts: 2 },
+  l10: { speed: 440, up: 5, slot: 780, chance: 0.98, duration: 60, bonus: 40, invuln: 0.6, hearts: 2 },
 }
 /** 화면에 보이는 단계 이름 */
 export const levelName = (l: LevelId) => `${LEVEL_IDS.indexOf(l) + 1}단계`
@@ -57,12 +57,8 @@ export const zoneAt = (x: number) => {
   const u = (((BG_START + x * BG_PER_RUN) % TILE_W) + TILE_W) % TILE_W
   return (ZONES.find((z) => u < z.to * 1.3) ?? ZONES[ZONES.length - 1]).id
 }
-/** w, h 는 부딪히는 크기, dw 는 그림을 그리는 너비(높이는 h). fly 는 아바타 머리 바로 위를 나는 장애물: 가만히 달리면 지나가고, 뛰면 부딪힌다 */
-export interface Obstacle { id: number; x: number; w: number; h: number; dw: number; img: string; fly?: boolean }
-/** 나는 장애물에 부딪히는 발 높이: 땅에서 조금이라도 뜨면 머리가 닿는다 */
-export const FLY_HIT_Y = 16
-/** 구간마다 나는 장애물 그림(이모지) */
-export const FLYER: Record<string, string> = { spring: '🐦', alice: '🦋', palace: '🕊️', halloween: '🦇', autumn: '🦉', christmas: '🐦' }
+/** w, h 는 부딪히는 크기, dw 는 그림을 그리는 너비(높이는 h) */
+export interface Obstacle { id: number; x: number; w: number; h: number; dw: number; img: string }
 export interface Coin { id: number; x: number; y: number }
 /** 높은 곳에 뜬 선물 상자: 한 번 뛰어서는 못 닿고, 공중에서 한 번 더 뛰어야 닿는다 */
 export interface Gift { id: number; x: number; y: number }
@@ -110,11 +106,6 @@ export function slotContent(seed: number, slot: number, level: LevelId = DEFAULT
   const r = rng(seed, slot)
   const coins: Coin[] = []
   if (r < LEVELS[level].chance) {
-    if (rng(seed, slot + 7000) < LEVELS[level].fly) {
-      // 나는 장애물: 위가 막혀 있으니 뛰지 말고 그대로 달려 아래 별을 먹는다
-      for (let j = 0; j < 3; j++) coins.push({ id: slot * 10 + 1 + j, x: x - 70 + j * 70, y: 38 })
-      return { obstacle: { id: slot * 10, x, w: 56, h: 0, dw: 64, img: FLYER[zoneAt(x)], fly: true }, coins }
-    }
     const pick = Math.min(2, Math.floor(rng(seed, slot + 5000) * 3))
     const img = `${zoneAt(x)}_${pick}`
     const aspect = ASPECT[img]
@@ -175,7 +166,7 @@ export function stepRun(s: RunState, dt: number): RunState {
   if (invuln === 0) {
     for (const o of obstacles) {
       const overlapX = px + PLAYER_W * 0.18 > o.x - o.w / 2 && px - PLAYER_W * 0.18 < o.x + o.w / 2
-      if (overlapX && (o.fly ? y > FLY_HIT_Y : y < o.h - 12)) { hurt = true; break }
+      if (overlapX && y < o.h - 12) { hurt = true; break }
     }
   }
   if (hurt) { hearts -= 1; events.push('hit') }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PLAYER_SCREEN_X, LEVELS, LEVEL_IDS, levelName, startHearts, type LevelId, jump, newRun, rewardStars, slotContent, speedAt, stepRun, visible, type RunState } from './runner'
+import { PLAYER_SCREEN_X, LEVELS, LEVEL_IDS, levelName, startHearts, jump, newRun, rewardStars, slotContent, speedAt, stepRun, visible, type RunState } from './runner'
 
 const run = (s: RunState, secs: number, jumper?: (s: RunState) => boolean) => {
   for (let t = 0; t < secs * 60 && !s.over; t++) {
@@ -12,7 +12,7 @@ const run = (s: RunState, secs: number, jumper?: (s: RunState) => boolean) => {
 const smart = (s: RunState) => {
   if (s.jumps > 0) return false // 땅에서만 한 번 누른다(공중에서 또 누르면 두 번 점프가 된다)
   const px = s.x + PLAYER_SCREEN_X
-  return visible(s.seed, px, px + 260 * s.k, s.level, s.k).obstacles.some((o) => !o.fly && o.x - px > 0 && o.x - px < speedAt(s.elapsed, s.level) * s.k * 0.42)
+  return visible(s.seed, px, px + 260 * s.k, s.level, s.k).obstacles.some((o) => o.x - px > 0 && o.x - px < speedAt(s.elapsed, s.level) * s.k * 0.42)
 }
 
 describe('달려라 아바타', () => {
@@ -40,25 +40,6 @@ describe('달려라 아바타', () => {
     }
     expect(levelName('easy')).toBe('1단계')
     expect(levelName('l10')).toBe('10단계')
-  })
-  it('나는 장애물은 4단계부터 나오고, 단계가 높을수록 많다', () => {
-    const flyers = (level: LevelId) => visible(3, 0, 300000, level).obstacles.filter((o) => o.fly).length
-    expect(flyers('easy') + flyers('normal') + flyers('hard')).toBe(0)
-    expect(flyers('l4')).toBeGreaterThan(10)
-    expect(flyers('l10')).toBeGreaterThan(flyers('l4'))
-  })
-  it('나는 장애물은 그대로 달리면 지나가고 아래 별을 먹으며, 뛰면 부딪힌다', () => {
-    const find = () => { for (let seed = 1; ; seed++) { const o = visible(seed, 0, 3000, 'l10').obstacles[0]; if (o?.fly) return { seed, o } } }
-    const { seed, o } = find()
-    let stay = newRun(seed, 'l10')
-    while (stay.x + PLAYER_SCREEN_X < o.x + 120) stay = stepRun(stay, 1 / 60)
-    expect(stay.hearts).toBe(startHearts('l10'))
-    expect(stay.coins).toBeGreaterThanOrEqual(3)
-    let hop = newRun(seed, 'l10')
-    while (hop.x + PLAYER_SCREEN_X < o.x - 40) hop = stepRun(hop, 1 / 60)
-    hop = jump(hop)
-    while (hop.x + PLAYER_SCREEN_X < o.x + 120) hop = stepRun(hop, 1 / 60)
-    expect(hop.hearts).toBe(startHearts('l10') - 1)
   })
   it('가만히 있으면 장애물에 부딪혀 하트가 줄고 끝날 수 있다', () => {
     const s = run(newRun(7), 45)
@@ -95,10 +76,10 @@ describe('달려라 아바타', () => {
         let s = newRun(seed, level, k)
         for (let t = 0; t < 60 * 55 && !s.over; t++) {
           const px = s.x + PLAYER_SCREEN_X
-          if (s.jumps === 0 && visible(seed, px, px + 300 * k, level, k).obstacles.some((o) => !o.fly && o.x - px > 0 && o.x - px < speedAt(s.elapsed, level) * k * f)) s = jump(s)
+          if (s.jumps === 0 && visible(seed, px, px + 300 * k, level, k).obstacles.some((o) => o.x - px > 0 && o.x - px < speedAt(s.elapsed, level) * k * f)) s = jump(s)
           s = stepRun(s, 1 / 60)
         }
-        const obs = visible(seed, 0, s.x + 300, level, k).obstacles.filter((o) => !o.fly && o.x < s.x + PLAYER_SCREEN_X - 10)
+        const obs = visible(seed, 0, s.x + 300, level, k).obstacles.filter((o) => o.x < s.x + PLAYER_SCREEN_X - 10)
         passed += obs.length
         got += s.taken.filter((id) => obs.some((o) => id > o.id && id <= o.id + 3)).length
       }
