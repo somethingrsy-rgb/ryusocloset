@@ -22,6 +22,9 @@ function getCtx(): AudioContext | null {
   }
 }
 
+/** 효과음(배경 음악 제외) 전체 크기: 모든 효과음에 곱한다 */
+const EFFECT_VOL = 2 / 3
+
 /** iOS(특히 옛 아이패드): 소리 스위치·무음 모드에서도 웹 소리가 나도록, 화면을 처음 만질 때 짧은 무음을 <audio> 로 한 번 재생한다 */
 const SILENT_WAV = 'data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
 let silentDone = false
@@ -64,7 +67,7 @@ function click(c: AudioContext, at: number, freq: number, gain: number) {
   hp.frequency.value = Math.min(freq, 1500)
   hp.Q.value = 0.5
   const g = c.createGain()
-  g.gain.setValueAtTime(gain * 0.35, at)
+  g.gain.setValueAtTime(gain * 0.35 * EFFECT_VOL, at)
   g.gain.exponentialRampToValueAtTime(0.001, at + 0.05)
   src.connect(hp).connect(g).connect(c.destination)
   src.start(at)
@@ -74,7 +77,7 @@ function click(c: AudioContext, at: number, freq: number, gain: number) {
   osc.type = 'triangle'
   osc.frequency.setValueAtTime(freq / 3, at)
   osc.frequency.exponentialRampToValueAtTime(freq / 6, at + 0.05)
-  og.gain.setValueAtTime(gain * 0.25, at)
+  og.gain.setValueAtTime(gain * 0.25 * EFFECT_VOL, at)
   og.gain.exponentialRampToValueAtTime(0.001, at + 0.06)
   osc.connect(og).connect(c.destination)
   osc.start(at)
@@ -141,7 +144,7 @@ function tone(c: AudioContext, at: number, f0: number, f1: number, dur: number, 
   lp.frequency.value = 2200
   const g = c.createGain()
   g.gain.setValueAtTime(0.0001, at)
-  g.gain.exponentialRampToValueAtTime(gain * 0.6, at + 0.02)
+  g.gain.exponentialRampToValueAtTime(gain * 0.6 * EFFECT_VOL, at + 0.02)
   g.gain.exponentialRampToValueAtTime(0.0001, at + dur + 0.05)
   lp.connect(g).connect(c.destination)
   for (const [mul, vol] of [[1, 1], [2, 0.15]] as const) {
@@ -216,7 +219,7 @@ function playSample(name: string, gain: number, fallback: (c: AudioContext, t: n
     if (!buf) { fallback(c, c.currentTime); return }
     const src = c.createBufferSource()
     const g = c.createGain()
-    g.gain.value = gain
+    g.gain.value = gain * EFFECT_VOL
     src.buffer = buf
     src.connect(g).connect(c.destination)
     src.start()
