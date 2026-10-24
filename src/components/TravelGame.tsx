@@ -4,6 +4,7 @@ import { currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from
 import type { Outfit, Tweaks } from '../lib/types'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import { StarRainWalk } from './StarRainWalk'
+import { RunnerGame } from './RunnerGame'
 import { JumpPuzzle } from './JumpPuzzle'
 import { MathGame } from './MathGame'
 import { SpeakingGame } from './SpeakingGame'
@@ -33,19 +34,21 @@ interface Props {
 export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, initialPlaceId = null }: Props) {
   const { lang } = useI18n()
   const [starRain, setStarRain] = useState(false)
+  const [runner, setRunner] = useState(false)
   const [speaking, setSpeaking] = useState(false)
   const [math, setMath] = useState(false)
   const [jump, setJump] = useState(false)
-  useEffect(() => { onFull?.(math || speaking || jump); return () => onFull?.(false) }, [math, speaking, jump, onFull])
+  useEffect(() => { onFull?.(math || speaking || jump || runner); return () => onFull?.(false) }, [math, speaking, jump, runner, onFull])
   const game = useGame()
   const ver = useItemsVersion()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const assign = useMemo(currentAssignment, [ver])
   const [scene, setScene] = useState<string | null>(initialPlaceId)
   // 마을과 집 안에서는 배경 음악이 이어지고, 게임 화면(별비·수학·점프·영어)에서는 끈다
-  const walking = !starRain && !math && !jump && !speaking
+  const walking = !starRain && !runner && !math && !jump && !speaking
   useEffect(() => { if (!walking) return; startBgm('walk'); return stopBgm }, [walking])
 
+  if (runner) return <RunnerGame outfit={outfit} tweaks={tweaks} onExit={() => setRunner(false)} />
   if (starRain) return <StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} />
 
   const actionButton = PILL
@@ -56,6 +59,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, initial
       actions={<>
         <button className={actionButton} aria-label="한마디 영어" onClick={() => setSpeaking(true)}>{label(lang === 'ko' ? '영어' : 'Talk')}</button>
         <button className={actionButton} aria-label="별비 산책" onClick={() => setStarRain(true)}>{label(lang === 'ko' ? '별비' : 'Stars')}</button>
+        <button className={actionButton} aria-label="달려라 아바타" onClick={() => setRunner(true)}>{label(lang === 'ko' ? '달리기' : 'Run')}</button>
         <button className={actionButton} aria-label="수학 놀이터" onClick={() => setMath(true)}>{label(lang === 'ko' ? '수학' : 'Math')}</button>
         <button className={actionButton} aria-label="점프 퍼즐" onClick={() => setJump(true)}>{label(lang === 'ko' ? '점프' : 'Jump')}</button>
       </>}
