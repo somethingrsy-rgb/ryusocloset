@@ -146,8 +146,11 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[50px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x, top: GROUND_Y - c.y }}><StarIcon className="max-w-none" /></span>)}
       </div>
       <div className="absolute will-change-transform" style={{ left: px - PLAYER_W * grow / 2, top: GROUND_Y - PLAYER_H * grow + 6, transform: `translate3d(0,${-visY}px,0)`, width: PLAYER_W * grow, height: PLAYER_H * grow, opacity: blink ? 0.35 : 1 }}>
-        <div className={phase === 'playing' && !paused && run.y === 0 ? 'walk-bob h-full w-full' : 'h-full w-full'} style={run.y > 0 ? { transform: `rotate(${Math.max(-5, Math.min(5, run.vy / 160))}deg)` } : undefined}>
-          {figure}
+        {/* 걷기 흔들림과 점프 기울기는 각자 따로 된 층에서 움직인다: 큰 아바타 그림을 매 프레임 다시 그리지 않게 */}
+        <div className="walk-bob h-full w-full will-change-transform" style={{ animationPlayState: phase === 'playing' && !paused && run.y === 0 ? 'running' : 'paused' }}>
+          <div className="h-full w-full will-change-transform" style={{ transform: `rotate(${run.y > 0 ? Math.max(-5, Math.min(5, run.vy / 160)) : 0}deg)` }}>
+            {figure}
+          </div>
         </div>
       </div>
     </div>
@@ -158,7 +161,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
         <button className={btn} aria-label="닫기" onClick={onExit}>✕</button>
       </div>
     </header>
-    <div aria-hidden className="pointer-events-none absolute inset-x-3 bottom-2.5 z-10 h-2 overflow-hidden rounded-full bg-white/80 shadow-sm ring-1 ring-black/10"><div className="h-full rounded-full bg-[#ff8fab]" style={{ width: `${progress * 100}%` }} /></div>
+    <div aria-hidden className="pointer-events-none absolute inset-x-3 bottom-2.5 z-10 h-2 overflow-hidden rounded-full bg-white/80 shadow-sm ring-1 ring-black/10"><div className="h-full w-full origin-left rounded-full bg-[#ff8fab] will-change-transform" style={{ transform: `scaleX(${progress})` }} /></div>
     {phase === 'playing' && !paused && run.elapsed < 4 && <p className="pointer-events-none absolute inset-x-2 bottom-7 m-0 text-center text-sm font-bold text-[#4c6f3a]">화면을 누르면 점프! 🦘</p>}
     {(phase !== 'playing' || paused) && <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 p-4">
       <div className="max-h-full w-full max-w-sm overflow-y-auto rounded-3xl bg-white/95 p-4 text-center shadow-xl">
