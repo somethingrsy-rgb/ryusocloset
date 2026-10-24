@@ -1,6 +1,6 @@
 /** 달려라 아바타: 자동으로 달리고 터치하면 점프해서 장애물을 피하며 코인을 모으는 놀이. 논리 좌표는 높이 400 기준 */
 export const RUN_H = 400
-export const GROUND_Y = 310 // 발이 닿는 바닥 높이
+export const GROUND_Y = 335 // 발이 닿는 바닥 높이
 export const PLAYER_W = 70
 export const PLAYER_H = 105
 /** 화면에서 아바타가 서 있는 가로 위치(월드 x 에서 카메라 앞쪽으로 얼마나 떨어졌는지) */
