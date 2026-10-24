@@ -9,12 +9,10 @@ import { StarIcon } from './Icons'
 import { assetUrl } from '../lib/items'
 import { ROAD_PART, ROAD_PARTS, TILE_W } from '../lib/world'
 
-/** 보물찾기(마을 길) 배경 그림을 절반 크기로 깔아 길 위를 달린다. 그림은 한 바퀴 돌아 이어진다 */
-const K = RUN_H / 800
-const BG_W = TILE_W * K
-const BG_H = 867 * K
-const BG_TOP = -26 * K
-const BG_START = 1200 // 시작 위치: 첫 집 앞쪽
+/** 보물찾기(마을 길) 배경 그림: 마을 걷기와 똑같이 화면 높이를 꽉 채우고(그림 단위 800), 달리는 길(발 닿는 곳)은 그림 속 길 높이에 맞춘다. 그림은 한 바퀴 돌아 이어진다 */
+const BG_UNITS = 800
+const BG_ROAD_Y = 650
+const BG_START = 1200 // 시작 위치(그림 단위): 첫 집 앞쪽
 
 /** 달려라 아바타: 자동으로 달리고, 화면을 터치(또는 스페이스·↑)하면 점프. 장애물은 피하고 코인은 먹는다 */
 export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks: Tweaks; onExit: () => void }) {
@@ -80,12 +78,16 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
 
   // 세로로 긴 화면에서도 가로로 충분히(400) 보이게 하고, 위가 남으면 하늘색으로 채운다(그림 맨 위가 하늘색)
   const scale = Math.min(size.h / RUN_H, size.w / 400)
-  const offsetY = Math.max(0, size.h - RUN_H * scale)
+  // 배경은 화면 높이를 꽉 채우고, 캐릭터·장애물은 그보다 작게 그 위 길에서 달린다
+  const bgScale = size.h / BG_UNITS
+  const offsetY = Math.max(0, BG_ROAD_Y * bgScale - GROUND_Y * scale)
   const viewW = size.w / Math.max(0.1, scale)
   const cam = run.x
   const { obstacles, coins } = visible(run.seed, cam, cam + viewW)
-  const bgCam = cam + BG_START
-  const bgTiles = Array.from({ length: Math.floor((bgCam + viewW) / BG_W) - Math.floor(bgCam / BG_W) + 1 }, (_, i) => Math.floor(bgCam / BG_W) + i)
+  // 배경도 길과 같은 화면 속도로 흐르게(달린 거리 × 게임 배율)
+  const scrollPx = cam * scale + BG_START * bgScale
+  const bgTileW = TILE_W * bgScale
+  const bgTiles = Array.from({ length: Math.floor((scrollPx + size.w) / bgTileW) - Math.floor(scrollPx / bgTileW) + 1 }, (_, i) => Math.floor(scrollPx / bgTileW) + i)
   const px = PLAYER_SCREEN_X
   const blink = run.invuln > 0 && Math.floor(run.invuln * 10) % 2 === 0
   const btn = 'min-h-11 rounded-full bg-white/95 px-3 text-sm font-bold shadow-sm'
@@ -94,17 +96,14 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   return <section ref={host} tabIndex={0} aria-label="달려라 아바타" className="relative h-full touch-none select-none overflow-hidden rounded-3xl bg-[#82c6fd] outline-none ring-1 ring-black/5"
     onPointerDown={(e) => { if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return; e.currentTarget.focus({ preventScroll: true }); tapJump() }}
     onKeyDown={(e) => { if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); tapJump() } }}>
-    <div aria-hidden className="pointer-events-none absolute left-0 origin-top-left" style={{ width: viewW, height: RUN_H, top: offsetY, transform: `scale(${scale})` }}>
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {bgTiles.map((t) => Array.from({ length: ROAD_PARTS }, (_, k) => {
-        const x0 = Math.round(k * ROAD_PART * 1.3 * K)
-        const x1 = k === ROAD_PARTS - 1 ? BG_W : Math.round((k + 1) * ROAD_PART * 1.3 * K)
-        const w = x1 - x0 + 1
-        return <span key={`${t}-${k}`}>
-          {/* 화면이 세로로 길어 위가 남으면, 그림 맨 위 하늘 몇 줄을 위로 길게 늘여 이어 붙인다 */}
-          {offsetY > 0 && <span className="absolute" style={{ left: t * BG_W + x0 - bgCam, top: -offsetY / scale - 2, width: w, height: offsetY / scale + BG_TOP + 4, backgroundImage: `url(${assetUrl(`assets/farm/travel_road10_${k}.webp`)})`, backgroundSize: `${w}px ${BG_H * 80}px`, backgroundPosition: 'left top', backgroundRepeat: 'no-repeat' }} />}
-          <img src={assetUrl(`assets/farm/travel_road10_${k}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: t * BG_W + x0 - bgCam, top: BG_TOP, width: x1 - x0 + 1, height: BG_H, maxWidth: 'none' }} />
-        </span>
+        const x0 = Math.round(k * ROAD_PART * 1.3)
+        const x1 = k === ROAD_PARTS - 1 ? TILE_W : Math.round((k + 1) * ROAD_PART * 1.3)
+        return <img key={`${t}-${k}`} src={assetUrl(`assets/farm/travel_road10_${k}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: (t * TILE_W + x0) * bgScale - scrollPx, top: -26 * bgScale, width: (x1 - x0 + 1) * bgScale, height: 867 * bgScale, maxWidth: 'none' }} />
       }))}
+    </div>
+    <div aria-hidden className="pointer-events-none absolute left-0 origin-top-left" style={{ width: viewW, height: RUN_H, top: offsetY, transform: `scale(${scale})` }}>
       {obstacles.map((o) => <span key={o.id} className="absolute -translate-x-1/2 leading-none" style={{ left: o.x - cam, top: GROUND_Y - o.h + 6, fontSize: o.h }}>{o.kind}</span>)}
       {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[36px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x - cam, top: GROUND_Y - c.y }}><StarIcon /></span>)}
       <div className="absolute" style={{ left: px - PLAYER_W / 2, top: GROUND_Y - run.y - PLAYER_H + 6, width: PLAYER_W, height: PLAYER_H, opacity: blink ? 0.35 : 1 }}>
