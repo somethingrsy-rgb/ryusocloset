@@ -108,6 +108,7 @@ button:focus-visible {
   .sparkle,
   .chunk-in,
   .walk-bob,
+  .call-shake,
   .item-in,
   .sheet-in,
   .toast-in {
@@ -120,6 +121,15 @@ button:focus-visible {
   scrollbar-color: #f3c3d1 transparent;
 }
 
+/* 동물 전화: 따르릉 울릴 때 동물 얼굴이 흔들린다 */
+@keyframes call-shake {
+  0%, 50%, 100% { transform: rotate(0); }
+  10%, 30% { transform: rotate(-10deg); }
+  20%, 40% { transform: rotate(10deg); }
+}
+.call-shake {
+  animation: call-shake 1.2s ease-in-out infinite;
+}
 @keyframes walk-bob {
   0%, 100% { transform: translateY(0) rotate(-1.5deg); }
   50% { transform: translateY(-3.5%) rotate(1.5deg); }

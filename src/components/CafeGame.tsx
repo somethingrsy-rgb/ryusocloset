@@ -1,4 +1,5 @@
 import { playBell, playCook, playOrder, playServe, startBgm, stopBgm } from '../lib/sound'
+import { AnimalCall, unlockSpeech } from './AnimalCall'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { FarmFx } from './FarmFx'
 import { useI18n } from '../i18n'
@@ -60,7 +61,7 @@ const newGuest = (i: number): Guest => ({ animal: SEATS[i].animal, name: SEATS[i
 const T = {
   ko: {
     title: '딸기 카페', open: '딸기 카페 영업 중', happy: (n: number) => `오늘의 행복 ${n}잔`,
-    hint: '💬 눌러 주문받기 → 눌러서 만들기 → 완성되면 눌러서 서빙',
+    hint: '💬 눌러 주문받기 → 눌러서 만들기 → 완성되면 눌러서 서빙 · 동물을 누르면 📞 전화',
     askOrder: '주문받기', tapCook: '눌러서 만들기', cooking: '만드는 중', ready: '완성!', notReady: '아직 만드는 중이에요',
     bonus: `🎉 첫 단골 달성! 보너스 ${BONUS}코인!`,
     mission: '첫 단골 만들기', missionDone: '첫 단골 만들기 완료!', missionText: `손님 ${GOAL}명에게 행복을 전해 주세요`,
@@ -71,7 +72,7 @@ const T = {
   },
   en: {
     title: 'Strawberry Cafe', open: 'Strawberry cafe is open', happy: (n: number) => `${n} happy cups today`,
-    hint: 'Tap 💬 to take an order → tap to cook → tap when done to serve',
+    hint: 'Tap 💬 to take an order → tap to cook → tap when done to serve · tap an animal to 📞 call',
     askOrder: 'Take order', tapCook: 'Tap to cook', cooking: 'Cooking', ready: 'Done!', notReady: 'Still cooking',
     bonus: `🎉 First regular! Bonus ${BONUS} coins!`,
     mission: 'Make a first regular', missionDone: 'First regular made!', missionText: `Make ${GOAL} guests happy`,
@@ -112,7 +113,9 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
   useEffect(() => { kept = { guests, pos, hold } }, [guests, pos, hold])
   // 메뉴 그림을 미리 받아 둔다: 서빙하려고 처음 들 때 그림이 늦게 떠서 안 보이던 것을 막는다
   // 카페에 있는 동안 배경 음악(카페의 🔊 를 끄면 음악도 꺼진다)
-  useEffect(() => { if (!sound) return; startBgm('cafe'); return stopBgm }, [sound])
+  // 동물과 전화하는 동안: 동물 목소리가 잘 들리게 음악을 멈춘다
+  const [calling, setCalling] = useState<number | null>(null)
+  useEffect(() => { if (!sound || calling !== null) return; startBgm('cafe'); return stopBgm }, [sound, calling])
   useEffect(() => { MENU.forEach((m) => { new Image().src = assetUrl(`cafe/menu2/${m.id}.webp`) }) }, [])
   const timers = useRef<number[]>([])
   const pending = useRef(new Set<number>())
@@ -225,7 +228,10 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
           const label = x.stage === 'new' ? tx.askOrder : x.stage === 'ordered' ? tx.tapCook : ready ? tx.ready : tx.cooking
           return (
             <div key={i}>
-              <button aria-hidden tabIndex={-1} onClick={() => tap(i)} className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0" style={{ left: `${cx}%`, top: `${cy + 2}%`, width: wide ? '9%' : '14%', height: wide ? '16%' : '11%' }} />
+              {/* 동물을 누르면 그 동물에게 전화를 건다(주문은 말풍선으로) */}
+              <button aria-label={`${x.name}에게 전화하기`} onClick={() => { unlockSpeech(); setCalling(i) }} className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0" style={{ left: `${cx}%`, top: `${cy + 2}%`, width: wide ? '9%' : '14%', height: wide ? '16%' : '11%' }}>
+                <span aria-hidden className="absolute -right-1 bottom-0 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-sm shadow">📞</span>
+              </button>
               <button
                 aria-label={`${x.name} · ${label}`}
                 onClick={() => tap(i)}
@@ -267,6 +273,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
       </div>
       <p className="absolute inset-x-3 bottom-2 z-20 m-0 rounded-full bg-white/90 px-3 py-1.5 text-center text-[11px] shadow">{tx.hint}</p>
 
+      {calling !== null && <AnimalCall animal={calling} emoji={SEATS[calling].animal} muted={!sound} onClose={() => setCalling(null)} />}
       {toast && <div role="status" className="absolute bottom-12 left-1/2 z-30 max-w-[90%] -translate-x-1/2 rounded-full bg-[#8a4b55] px-5 py-3 text-center text-sm text-[#fff9e9] shadow-lg">{toast}</div>}
     </section>
   )
