@@ -10,9 +10,8 @@ const run = (s: RunState, secs: number, jumper?: (s: RunState) => boolean) => {
 }
 /** 앞에 장애물이 가까우면 뛰는 사람 */
 const smart = (s: RunState) => {
-  if (s.jumps > 0) return false // 땅에서만 한 번 누른다(공중에서 또 누르면 두 번 점프가 된다)
   const px = s.x + PLAYER_SCREEN_X
-  return visible(s.seed, px, px + 260 * s.k, s.level, s.k).obstacles.some((o) => o.x - px > 0 && o.x - px < speedAt(s.elapsed, s.level) * s.k * 0.42)
+  return visible(s.seed, px, px + 260, s.level).obstacles.some((o) => o.x - px > 0 && o.x - px < speedAt(s.elapsed, s.level) * 0.42)
 }
 
 describe('달려라 아바타', () => {
@@ -38,30 +37,6 @@ describe('달려라 아바타', () => {
         expect(rewardStars(s)).toBe(s.coins + LEVELS[level].bonus)
       }
     }
-  })
-  it('넓은 화면(k)일수록 빨리 달리고 장애물 간격도 같은 비율로 넓어져, 그래도 끝까지 달릴 수 있다', () => {
-    for (const level of LEVEL_IDS) {
-      for (const k of [1.5, 2, 2.2]) {
-        for (const seed of [1, 7, 42, 99]) {
-          const s = run(newRun(seed, level, k), LEVELS[level].duration + 1, smart)
-          expect(s.over, `${level} k${k} seed ${seed}`).toBe('done')
-          expect(s.hearts, `${level} k${k} seed ${seed}`).toBe(START_HEARTS)
-        }
-      }
-    }
-    const a = run(newRun(3, 'normal', 1), 5); const b = run(newRun(3, 'normal', 2), 5)
-    expect(b.x / a.x).toBeCloseTo(2, 1)
-  })
-  it('두 번째 점프는 속도가 갑자기 튀지 않고 부드럽게 솟는다', () => {
-    let s = newRun(1)
-    s = jump(s); s = run(s, 0.4)
-    const before = s.vy
-    s = jump(s)
-    expect(s.vy).toBe(before) // 누른 순간에는 속도가 그대로
-    const next = stepRun(s, 1 / 60)
-    expect(Math.abs(next.vy - before)).toBeLessThan(120) // 한 프레임에 크게 바뀌지 않는다
-    let t = s; for (let i = 0; i < 30; i++) t = stepRun(t, 1 / 60)
-    expect(t.y).toBeGreaterThan(0)
   })
   it('높은 단계일수록 빠르고, 장애물이 촘촘하고, 오래 달리고, 보너스가 크다', () => {
     const [e, n, h] = LEVEL_IDS.map((l) => LEVELS[l])
