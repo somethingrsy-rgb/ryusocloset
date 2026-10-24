@@ -1,4 +1,4 @@
-import { playCloud, playGold, playStar } from '../lib/sound'
+import { playCloud, playGold, playStar, startBgm, stopBgm } from '../lib/sound'
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { isRestoring } from '../lib/restoreGuard'
 import { newRain, readRainRecord, RAIN_DURATION, stepRain } from '../lib/starRain'
@@ -30,6 +30,8 @@ export function StarRainWalk({ outfit, tweaks, onExit }: { outfit: Outfit; tweak
     window.addEventListener('blur', stop); document.addEventListener('visibilitychange', hidden)
     return () => { window.removeEventListener('blur', stop); document.removeEventListener('visibilitychange', hidden) }
   }, [])
+  // 별을 받는 동안 배경 음악(시작 전·일시정지·끝난 뒤에는 멈춘다)
+  useEffect(() => { if (phase !== 'playing' || paused) return; startBgm('rain'); return stopBgm }, [phase, paused])
   useEffect(() => {
     if (phase !== 'playing' || paused) return
     let frame = 0, previous = performance.now()
