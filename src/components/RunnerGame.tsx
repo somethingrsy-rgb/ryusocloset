@@ -126,7 +126,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const btn = `${short ? 'min-h-9 px-2.5 text-xs' : 'min-h-11 px-3 text-sm'} rounded-full bg-white/95 font-bold shadow-sm`
   const progress = Math.min(1, run.elapsed / runDuration(run.level))
 
-  return <section ref={host} tabIndex={0} aria-label="달려라 아바타" className="relative h-full touch-none select-none overflow-hidden rounded-3xl bg-[#82c6fd] outline-none ring-1 ring-black/5"
+  return <section ref={host} tabIndex={0} aria-label="달려라 아바타" className={`relative h-full touch-none select-none overflow-hidden bg-[#82c6fd] outline-none ${short ? '' : 'rounded-3xl ring-1 ring-black/5'}`}
     onPointerDown={(e) => { if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return; e.currentTarget.focus({ preventScroll: true }); tapJump() }}
     onKeyDown={(e) => { if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); tapJump() } }}>
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -143,7 +143,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       <div className="absolute inset-0 will-change-transform" style={{ transform: `translate3d(${-cam}px,0,0)` }}>
       {obstacles.map((o) => <img key={o.id} src={assetUrl(`assets/runner/${o.img}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: o.x - o.dw * OB_GROW / 2, top: GROUND_Y - o.h * OB_GROW + 8, width: o.dw * OB_GROW, height: o.h * OB_GROW, maxWidth: 'none' }} />)}
       {gifts.filter((g) => !run.taken.includes(g.id)).map((g) => <img key={g.id} src={assetUrl('assets/runner/gift.webp')} alt="" draggable={false} className="absolute -translate-x-1/2 -translate-y-1/2 animate-bounce select-none drop-shadow-[0_0_8px_#ffd54a]" style={{ left: g.x, top: GROUND_Y - g.y, width: 64, height: 64, objectFit: 'contain', maxWidth: 'none' }} />)}
-      {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[50px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x, top: GROUND_Y - c.y }}><StarIcon /></span>)}
+      {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[50px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x, top: GROUND_Y - c.y }}><StarIcon className="max-w-none" /></span>)}
       </div>
       <div className="absolute will-change-transform" style={{ left: px - PLAYER_W * grow / 2, top: GROUND_Y - PLAYER_H * grow + 6, transform: `translate3d(0,${-visY}px,0)`, width: PLAYER_W * grow, height: PLAYER_H * grow, opacity: blink ? 0.35 : 1 }}>
         <div className={phase === 'playing' && !paused && run.y === 0 ? 'walk-bob h-full w-full' : 'h-full w-full'} style={run.y > 0 ? { transform: `rotate(${Math.max(-5, Math.min(5, run.vy / 160))}deg)` } : undefined}>
@@ -151,7 +151,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
         </div>
       </div>
     </div>
-    <header className={`absolute inset-x-2 ${short ? 'top-1.5' : 'top-2'} z-10 flex items-center justify-between gap-1`}>
+    <header className={`absolute ${short ? 'top-1.5 left-[max(0.5rem,env(safe-area-inset-left))] right-[max(0.5rem,env(safe-area-inset-right))]' : 'inset-x-2 top-2'} z-10 flex items-center justify-between gap-1`}>
       <span className={`rounded-full bg-white/95 font-bold ${short ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm'}`}>{'❤️'.repeat(Math.max(0, run.hearts))}{'🤍'.repeat(Math.max(0, startHearts(run.level) - run.hearts))} · <StarIcon /> {run.coins}{run.gifts > 0 && <> · 🎁 {run.gifts}</>}</span>
       <div className="flex gap-1">
         {phase === 'playing' && <button className={btn} aria-label={paused ? '계속하기' : '일시정지'} onClick={() => setPaused(!paused)}>{paused ? '▶' : 'Ⅱ'}</button>}
