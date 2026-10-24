@@ -11,21 +11,21 @@ export const PLAYER_SCREEN_X = 110
 export const startHearts = (level: LevelId) => LEVELS[level].hearts
 const GRAVITY = 1300
 const JUMP_V = 554
-/** 단계(난이도) 1~10: 속도, 빨라지는 정도(1초마다), 장애물 사이 간격, 장애물이 나오는 칸 비율, 달리는 시간, 완주 보너스 별,
+/** 단계(난이도) 1~10: 속도, 빨라지는 정도(1초마다), 장애물 사이 간격, 장애물이 나오는 칸 비율, 달리는 시간,
  *  부딪힌 뒤 무적 시간(초), 시작 하트. 1~3단계는 예전 초급·중급·고급 그대로(저장된 단계·기록이 이어지게 이름도 그대로) */
 export type LevelId = 'easy' | 'normal' | 'hard' | 'l4' | 'l5' | 'l6' | 'l7' | 'l8' | 'l9' | 'l10'
 export const LEVEL_IDS: readonly LevelId[] = ['easy', 'normal', 'hard', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10']
-export const LEVELS: Record<LevelId, { speed: number; up: number; slot: number; chance: number; duration: number; bonus: number; invuln: number; hearts: number }> = {
-  easy: { speed: 165, up: 1, slot: 600, chance: 0.6, duration: 40, bonus: 8, invuln: 1.2, hearts: 5 },
-  normal: { speed: 235, up: 3, slot: 560, chance: 0.74, duration: 45, bonus: 10, invuln: 1.2, hearts: 3 },
-  hard: { speed: 300, up: 4, slot: 640, chance: 0.86, duration: 50, bonus: 16, invuln: 1.2, hearts: 3 },
-  l4: { speed: 320, up: 4, slot: 660, chance: 0.9, duration: 50, bonus: 18, invuln: 1.1, hearts: 3 },
-  l5: { speed: 340, up: 4.5, slot: 700, chance: 0.92, duration: 55, bonus: 20, invuln: 1, hearts: 3 },
-  l6: { speed: 360, up: 4.5, slot: 700, chance: 0.93, duration: 55, bonus: 23, invuln: 1, hearts: 3 },
-  l7: { speed: 380, up: 5, slot: 760, chance: 0.94, duration: 60, bonus: 26, invuln: 0.9, hearts: 3 },
-  l8: { speed: 400, up: 5, slot: 760, chance: 0.95, duration: 60, bonus: 30, invuln: 0.8, hearts: 3 },
-  l9: { speed: 420, up: 5, slot: 770, chance: 0.97, duration: 60, bonus: 35, invuln: 0.7, hearts: 2 },
-  l10: { speed: 440, up: 5, slot: 780, chance: 0.98, duration: 60, bonus: 40, invuln: 0.6, hearts: 2 },
+export const LEVELS: Record<LevelId, { speed: number; up: number; slot: number; chance: number; duration: number; invuln: number; hearts: number }> = {
+  easy: { speed: 165, up: 1, slot: 600, chance: 0.6, duration: 40, invuln: 1.2, hearts: 5 },
+  normal: { speed: 235, up: 3, slot: 560, chance: 0.74, duration: 45, invuln: 1.2, hearts: 3 },
+  hard: { speed: 300, up: 4, slot: 640, chance: 0.86, duration: 50, invuln: 1.2, hearts: 3 },
+  l4: { speed: 320, up: 4, slot: 660, chance: 0.9, duration: 50, invuln: 1.1, hearts: 3 },
+  l5: { speed: 340, up: 4.5, slot: 700, chance: 0.92, duration: 55, invuln: 1, hearts: 3 },
+  l6: { speed: 360, up: 4.5, slot: 700, chance: 0.93, duration: 55, invuln: 1, hearts: 3 },
+  l7: { speed: 380, up: 5, slot: 760, chance: 0.94, duration: 60, invuln: 0.9, hearts: 3 },
+  l8: { speed: 400, up: 5, slot: 760, chance: 0.95, duration: 60, invuln: 0.8, hearts: 3 },
+  l9: { speed: 420, up: 5, slot: 770, chance: 0.97, duration: 60, invuln: 0.7, hearts: 2 },
+  l10: { speed: 440, up: 5, slot: 780, chance: 0.98, duration: 60, invuln: 0.6, hearts: 2 },
 }
 /** 화면에 보이는 단계 이름 */
 export const levelName = (l: LevelId) => `${LEVEL_IDS.indexOf(l) + 1}단계`
@@ -184,8 +184,8 @@ export function stepRun(s: RunState, dt: number): RunState {
   return { ...s, elapsed, x, y, vy, jumps, boost: Math.max(0, s.boost - dt), hearts, coins, gifts, taken, invuln: hurt ? LEVELS[s.level].invuln : invuln, over, events }
 }
 
-/** 별 보상: 모은 코인 1개당 별 1개, 끝까지 달리면 보너스. 하트를 다 써서 끝나도 모은 코인은 받는다 */
-export const rewardStars = (s: Pick<RunState, 'coins' | 'over'> & { level?: LevelId }) => s.coins + (s.over === 'done' ? LEVELS[s.level ?? DEFAULT_LEVEL].bonus : 0)
+/** 별 보상: 먹은 별 1개당 별 1개. 끝까지 달려도 보너스는 없고, 하트를 다 써서 끝나도 먹은 별은 받는다 */
+export const rewardStars = (s: Pick<RunState, 'coins' | 'over'>) => s.coins
 
 const KEY = 'ryuso.runner.v1'
 const LEVEL_KEY = 'ryuso.runner.level.v1'

@@ -167,7 +167,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       <div className={`max-h-full w-full overflow-y-auto rounded-3xl bg-white/95 text-center shadow-xl ${short ? 'max-w-2xl p-3' : 'max-w-sm p-4'}`}>
         <p className={short ? 'hidden' : 'my-1 text-4xl'}>{phase === 'done' ? (run.over === 'done' ? '🏁' : '💤') : '🏃'}</p>
         <h2 className="my-2 text-xl font-bold">{phase === 'intro' ? '달려라 아바타' : phase === 'done' ? (run.over === 'done' ? '끝까지 달렸어요!' : '하트를 다 썼어요') : '잠깐 쉬어가요'}</h2>
-        {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프, 공중에서 한 번 더 누르면 높이 뛰어요!<br />높이 뜬 🎁 선물 상자는 두 번 뛰어서 받아요.<br />장애물은 뛰어넘고 별 <StarIcon /> 은 먹어요.<br />{LEVELS[level].duration}초 동안 달리면 별 보너스 {LEVELS[level].bonus}개 <StarIcon /></p>}
+        {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프, 공중에서 한 번 더 누르면 높이 뛰어요!<br />높이 뜬 🎁 선물 상자는 두 번 뛰어서 받아요.<br />장애물은 뛰어넘고 별 <StarIcon /> 은 먹어요.<br />{LEVELS[level].duration}초 동안 달려요.</p>}
         {phase === 'done' && run.gifts > 0 && <div className="my-2 flex items-center justify-center gap-2 rounded-2xl bg-[#fff3c4] p-2">
           <span className="text-2xl">🎁</span>
           {giftItem && travelItem(giftItem) ? <><img src={assetUrl(travelItem(giftItem)!.thumb)} alt="" className="h-12 w-12 object-contain" /><span className="text-sm font-bold">선물! {travelItem(giftItem)!.name.ko}{giftStars > 0 && <> +{giftStars} <StarIcon /></>}</span></> : <span className="text-sm font-bold">선물 {run.gifts}개 · +{giftStars} <StarIcon /></span>}
