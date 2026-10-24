@@ -29,6 +29,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   // 달리는 동안 노래(일시정지·시작 전·끝난 뒤에는 멈춘다)
   useEffect(() => { if (phase !== 'playing' || paused) return; startBgm('run'); return stopBgm }, [phase, paused])
   const host = useRef<HTMLElement>(null)
+  const speedKRef = useRef(1)
   const [size, setSize] = useState({ w: 390, h: 500 })
   const saved = useRef(false)
 
@@ -81,7 +82,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   }, [phase])
 
   const start = () => {
-    const fresh = newRun(undefined, level); live.current = fresh; setRun(fresh)
+    const fresh = newRun(undefined, level, speedKRef.current); live.current = fresh; setRun(fresh)
     saved.current = false; setPaid(0); setGiftItem(null); setGiftStars(0); setPaused(false); setPhase('playing')
     host.current?.focus({ preventScroll: true })
   }
@@ -101,8 +102,10 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const bgScale = size.h / BG_UNITS
   const offsetY = Math.max(0, BG_ROAD_Y * bgScale - GROUND_Y * scale)
   const viewW = size.w / Math.max(0.1, scale)
+  // 넓은 화면일수록 빨리 달려, 화면을 가로지르는 시간이 폰과 비슷하게(가로 화면이 느리게 느껴지던 문제)
+  speedKRef.current = Math.min(2.2, Math.max(1, Math.round((viewW / 400) * 10) / 10))
   const cam = run.x
-  const { obstacles, coins, gifts } = visible(run.seed, cam, cam + viewW, run.level)
+  const { obstacles, coins, gifts } = visible(run.seed, cam, cam + viewW, run.level, run.k)
   // 배경은 달린 거리에 맞춰 흐른다(장애물 그림 구간과 배경 구간이 기기 크기와 상관없이 맞도록)
   const scrollPx = (cam * BG_PER_RUN + BG_START) * bgScale
   const bgTileW = TILE_W * bgScale
@@ -127,7 +130,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       {gifts.filter((g) => !run.taken.includes(g.id)).map((g) => <img key={g.id} src={assetUrl('assets/runner/gift.webp')} alt="" draggable={false} className="absolute -translate-x-1/2 -translate-y-1/2 animate-bounce select-none drop-shadow-[0_0_8px_#ffd54a]" style={{ left: g.x - cam, top: GROUND_Y - g.y, width: 64, height: 64, objectFit: 'contain', maxWidth: 'none' }} />)}
       {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[50px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x - cam, top: GROUND_Y - c.y }}><StarIcon /></span>)}
       <div className="absolute" style={{ left: px - PLAYER_W * grow / 2, top: GROUND_Y - run.y - PLAYER_H * grow + 6, width: PLAYER_W * grow, height: PLAYER_H * grow, opacity: blink ? 0.35 : 1 }}>
-        <div className={phase === 'playing' && !paused && run.y === 0 ? 'walk-bob h-full w-full' : 'h-full w-full'} style={run.y > 0 ? { transform: `rotate(${Math.max(-12, Math.min(12, run.vy / 60))}deg)` } : undefined}>
+        <div className={phase === 'playing' && !paused && run.y === 0 ? 'walk-bob h-full w-full' : 'h-full w-full'} style={run.y > 0 ? { transform: `rotate(${Math.max(-5, Math.min(5, run.vy / 160))}deg)` } : undefined}>
           <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
         </div>
       </div>

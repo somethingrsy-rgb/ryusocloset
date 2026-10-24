@@ -22,6 +22,8 @@ export const DEFAULT_LEVEL: LevelId = 'normal'
 export const runDuration = (l: LevelId) => LEVELS[l].duration
 const FIRST_SLOT = 760
 const INVULN = 1.2
+const BOOST_TIME = 0.18
+const BOOST_V = 800 // 두 번째 점프로 더해지는 속도(부드럽게 BOOST_TIME 동안)
 
 /** 배경 그림은 달린 거리 1 당 이만큼(그림 단위) 흐른다. 시작 위치는 첫 집 앞쪽 */
 export const BG_PER_RUN = 1.2
@@ -59,6 +61,10 @@ export interface RunState {
   coins: number
   /** 모은 선물 상자 수 */
   gifts: number
+  /** 화면이 넓을수록 빨리 달린다(화면을 가로지르는 데 걸리는 시간이 폰과 비슷하도록). 장애물 간격도 같은 비율로 넓힌다. 1 이면 폰 세로 화면 */
+  k: number
+  /** 두 번째 점프로 솟는 힘이 남은 시간(초): 한 번에 튀지 않고 부드럽게 솟는다 */
+  boost: number
   /** 지금 점프에서 뛴 횟수(땅에 닿으면 0, 최대 2) */
   jumps: number
   invuln: number
@@ -71,7 +77,7 @@ export interface RunState {
   events: ('coin' | 'hit' | 'jump' | 'gift')[]
 }
 
-export const newRun = (seed = Math.floor(Math.random() * 1e9), level: LevelId = DEFAULT_LEVEL): RunState => ({ elapsed: 0, x: 0, y: 0, vy: 0, hearts: START_HEARTS, coins: 0, gifts: 0, jumps: 0, invuln: 0, taken: [], seed, level, over: false, events: [] })
+export const newRun = (seed = Math.floor(Math.random() * 1e9), level: LevelId = DEFAULT_LEVEL, k = 1): RunState => ({ elapsed: 0, x: 0, y: 0, vy: 0, hearts: START_HEARTS, coins: 0, gifts: 0, k, boost: 0, jumps: 0, invuln: 0, taken: [], seed, level, over: false, events: [] })
 
 const rng = (seed: number, i: number) => {
   let h = Math.imul(seed ^ Math.imul(i + 1, 2654435761), 2246822519)
@@ -80,8 +86,8 @@ const rng = (seed: number, i: number) => {
 }
 
 /** 월드를 칸(슬롯)으로 나눠, 같은 씨앗이면 늘 같은 장애물·코인이 나온다. 장애물 사이는 항상 점프할 만큼 떨어져 있다 */
-export function slotContent(seed: number, slot: number, level: LevelId = DEFAULT_LEVEL): { obstacle?: Obstacle; coins: Coin[]; gift?: Gift } {
-  const x = FIRST_SLOT + slot * LEVELS[level].slot
+export function slotContent(seed: number, slot: number, level: LevelId = DEFAULT_LEVEL, k = 1): { obstacle?: Obstacle; coins: Coin[]; gift?: Gift } {
+  const x = FIRST_SLOT * k + slot * LEVELS[level].slot * k
   const r = rng(seed, slot)
   const coins: Coin[] = []
   if (r < LEVELS[level].chance) {
@@ -99,15 +105,15 @@ export function slotContent(seed: number, slot: number, level: LevelId = DEFAULT
   return { coins }
 }
 
-export function visible(seed: number, fromX: number, toX: number, level: LevelId = DEFAULT_LEVEL) {
-  const SLOT = LEVELS[level].slot
-  const a = Math.max(0, Math.floor((fromX - FIRST_SLOT - 160) / SLOT))
-  const b = Math.max(a, Math.ceil((toX - FIRST_SLOT + 160) / SLOT))
+export function visible(seed: number, fromX: number, toX: number, level: LevelId = DEFAULT_LEVEL, k = 1) {
+  const SLOT = LEVELS[level].slot * k
+  const a = Math.max(0, Math.floor((fromX - FIRST_SLOT * k - 160) / SLOT))
+  const b = Math.max(a, Math.ceil((toX - FIRST_SLOT * k + 160) / SLOT))
   const obstacles: Obstacle[] = []
   const coins: Coin[] = []
   const gifts: Gift[] = []
   for (let s = a; s <= b; s++) {
-    const c = slotContent(seed, s, level)
+    const c = slotContent(seed, s, level, k)
     if (c.obstacle) obstacles.push(c.obstacle)
     coins.push(...c.coins)
     if (c.gift) gifts.push(c.gift)
@@ -121,15 +127,18 @@ export function jump(s: RunState): RunState {
   if (s.over) return s
   const air = s.y > 0.5
   if (air && s.jumps >= 2) return s // 공중에서는 한 번만 더(두 번 점프)
-  return { ...s, vy: JUMP_V, jumps: air ? 2 : 1, events: [...s.events, 'jump'] }
+  // 두 번째 점프는 속도를 한 번에 바꾸지 않고, 올라가던(또는 내려가던) 속도에서 짧은 시간 동안 부드럽게 밀어 올린다
+  if (air) return { ...s, jumps: 2, boost: BOOST_TIME, events: [...s.events, 'jump'] }
+  return { ...s, vy: JUMP_V, jumps: 1, events: [...s.events, 'jump'] }
 }
 
 /** 한 프레임 진행. 장애물에 닿으면 하트 -1 (잠깐 안 닿게 깜빡이며 계속 달린다), 하트가 0 이면 끝 */
 export function stepRun(s: RunState, dt: number): RunState {
   if (s.over) return s
   const elapsed = s.elapsed + dt
-  const x = s.x + speedAt(s.elapsed, s.level) * dt
-  let vy = s.vy - GRAVITY * dt
+  const x = s.x + speedAt(s.elapsed, s.level) * s.k * dt
+  const boostStep = Math.min(s.boost, dt)
+  let vy = s.vy - GRAVITY * dt + (BOOST_V * boostStep) / BOOST_TIME
   let y = s.y + vy * dt
   let jumps = s.jumps
   if (y <= 0) { y = 0; vy = 0; jumps = 0 }
@@ -137,7 +146,7 @@ export function stepRun(s: RunState, dt: number): RunState {
   const events: RunState['events'] = [...s.events]
   const invuln = Math.max(0, s.invuln - dt)
   const px = x + PLAYER_SCREEN_X // 아바타의 월드 위치
-  const { obstacles, coins: cs, gifts: gs } = visible(s.seed, px - 200, px + 200, s.level)
+  const { obstacles, coins: cs, gifts: gs } = visible(s.seed, px - 200 * s.k, px + 200 * s.k, s.level, s.k)
   let hurt = false
   if (invuln === 0) {
     for (const o of obstacles) {
@@ -148,16 +157,16 @@ export function stepRun(s: RunState, dt: number): RunState {
   if (hurt) { hearts -= 1; events.push('hit') }
   for (const c of cs) {
     if (taken.includes(c.id)) continue
-    if (Math.abs(c.x - px) < 46 && Math.abs(c.y - (y + PLAYER_H * 0.45)) < 56) { coins += 1; taken = [...taken, c.id]; events.push('coin') }
+    if (Math.abs(c.x - px) < 46 * s.k && Math.abs(c.y - (y + PLAYER_H * 0.45)) < 56) { coins += 1; taken = [...taken, c.id]; events.push('coin') }
   }
   for (const g of gs) {
     if (taken.includes(g.id)) continue
-    if (Math.abs(g.x - px) < 54 && Math.abs(g.y - (y + PLAYER_H * 0.45)) < 40) { gifts += 1; taken = [...taken, g.id]; events.push('gift') }
+    if (Math.abs(g.x - px) < 54 * s.k && Math.abs(g.y - (y + PLAYER_H * 0.45)) < 40) { gifts += 1; taken = [...taken, g.id]; events.push('gift') }
   }
   let over: RunState['over'] = false
   if (hearts <= 0) over = 'hurt'
   else if (elapsed >= LEVELS[s.level].duration) over = 'done'
-  return { ...s, elapsed, x, y, vy, jumps, hearts, coins, gifts, taken, invuln: hurt ? INVULN : invuln, over, events }
+  return { ...s, elapsed, x, y, vy, jumps, boost: Math.max(0, s.boost - dt), hearts, coins, gifts, taken, invuln: hurt ? INVULN : invuln, over, events }
 }
 
 /** 별 보상: 모은 코인 1개당 별 1개, 끝까지 달리면 보너스. 하트를 다 써서 끝나도 모은 코인은 받는다 */
