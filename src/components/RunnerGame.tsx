@@ -140,7 +140,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
     <div aria-hidden className="pointer-events-none absolute inset-x-3 top-14 z-10 h-1.5 overflow-hidden rounded-full bg-white/60"><div className="h-full rounded-full bg-[#ff8fab]" style={{ width: `${progress * 100}%` }} /></div>
     {phase === 'playing' && !paused && run.elapsed < 4 && <p className="pointer-events-none absolute inset-x-2 bottom-3 m-0 text-center text-sm font-bold text-[#4c6f3a]">화면을 누르면 점프! 🦘</p>}
     {(phase !== 'playing' || paused) && <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 p-4">
-      <div className="w-full max-w-sm rounded-3xl bg-white/95 p-5 text-center shadow-xl">
+      <div className="max-h-full w-full max-w-sm overflow-y-auto rounded-3xl bg-white/95 p-4 text-center shadow-xl">
         <p className="my-1 text-4xl">{phase === 'done' ? (run.over === 'done' ? '🏁' : '💤') : '🏃'}</p>
         <h2 className="my-2 text-xl font-bold">{phase === 'intro' ? '달려라 아바타' : phase === 'done' ? (run.over === 'done' ? '끝까지 달렸어요!' : '하트를 다 썼어요') : '잠깐 쉬어가요'}</h2>
         {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프, 공중에서 한 번 더 누르면 높이 뛰어요!<br />높이 뜬 🎁 선물 상자는 두 번 뛰어서 받아요.<br />장애물은 뛰어넘고 별 <StarIcon /> 은 먹어요.<br />{LEVELS[level].duration}초 동안 달리면 별 보너스 {LEVELS[level].bonus}개 <StarIcon /></p>}
