@@ -26,23 +26,39 @@ function koreanVoices(): SpeechSynthesisVoice[] {
     .sort((x, y) => voiceScore(y) - voiceScore(x) || x.name.localeCompare(y.name))
 }
 const readSaved = (): Record<string, string> => { try { return JSON.parse(localStorage.getItem(VOICE_KEY) ?? '{}') ?? {} } catch { return {} } }
+/** 같은 목소리라도 높낮이·빠르기를 바꿔 다른 느낌으로(아이폰 웹 앱은 받은 목소리를 하나만 보여 주는 경우가 많다) */
+const TONES = [
+  { label: '', pitch: 1, rate: 1 },
+  { label: '높게', pitch: 1.3, rate: 1.05 },
+  { label: '낮게', pitch: 0.75, rate: 0.95 },
+  { label: '빠르게', pitch: 1.05, rate: 1.2 },
+  { label: '느리게', pitch: 0.95, rate: 0.82 },
+]
+interface VoiceChoice { voice?: SpeechSynthesisVoice; tone: number }
+/** 고를 수 있는 목소리: 한국어 목소리 × 높낮이 느낌 */
+const choices = (): VoiceChoice[] => {
+  const all = koreanVoices()
+  const voices: (SpeechSynthesisVoice | undefined)[] = all.length ? all : [undefined]
+  return voices.flatMap((voice) => TONES.map((_, tone) => ({ voice, tone })))
+}
+const keyOf = (c: VoiceChoice) => `${c.voice?.name ?? ''}|${c.tone}`
+export const voiceLabel = (c: VoiceChoice) => [c.voice?.name ?? '기본 목소리', TONES[c.tone].label].filter(Boolean).join(' · ')
 /** 동물마다 목소리: 고른 게 있으면 그것, 없으면 받은 고품질 목소리들을 동물마다 돌아가며 나눠 준다(여러 개 받았으면 동물마다 다른 목소리) */
-function voiceFor(animal: number): SpeechSynthesisVoice | undefined {
+function voiceFor(animal: number): VoiceChoice {
   const all = koreanVoices()
   const saved = readSaved()[animal]
-  const pickedVoice = all.find((v) => v.name === saved)
-  if (pickedVoice) return pickedVoice
+  const picked = choices().find((c) => keyOf(c) === saved || (c.tone === 0 && c.voice?.name === saved))
+  if (picked) return picked
   const best = all.filter((v) => voiceScore(v) >= 3)
   const pool = best.length ? best : all.slice(0, 1)
-  return pool[animal % Math.max(1, pool.length)]
+  return { voice: pool[animal % Math.max(1, pool.length)], tone: 0 }
 }
 /** 이 동물의 목소리를 다음 것으로 바꿔 저장하고 새 목소리를 돌려준다 */
-function nextVoice(animal: number): SpeechSynthesisVoice | undefined {
-  const all = koreanVoices()
-  if (!all.length) return undefined
-  const now = voiceFor(animal)
-  const next = all[(all.findIndex((v) => v.name === now?.name) + 1) % all.length]
-  try { localStorage.setItem(VOICE_KEY, JSON.stringify({ ...readSaved(), [animal]: next.name })) } catch { /* 저장 못 해도 이번 통화에는 쓴다 */ }
+function nextVoice(animal: number): VoiceChoice {
+  const list = choices()
+  const now = keyOf(voiceFor(animal))
+  const next = list[(list.findIndex((c) => keyOf(c) === now) + 1) % list.length]
+  try { localStorage.setItem(VOICE_KEY, JSON.stringify({ ...readSaved(), [animal]: keyOf(next) })) } catch { /* 저장 못 해도 이번 통화에는 쓴다 */ }
   return next
 }
 
@@ -84,20 +100,20 @@ export function AnimalCall({ animal, kid, muted, onClose }: { animal: number; ki
   const logRef = useRef<HTMLDivElement>(null)
   const quiet = muted || !soundOn()
   const face = assetUrl(`cafe/call/${a.img}.webp`)
-  const [voiceName, setVoiceName] = useState(() => voiceFor(animal)?.name ?? '')
+  const [voiceName, setVoiceName] = useState(() => voiceLabel(voiceFor(animal)))
+  const [voiceCount, setVoiceCount] = useState(() => koreanVoices().length)
   // 목소리 목록은 늦게 오는 기기가 있다
   useEffect(() => {
     if (!canSpeak()) return
-    const on = () => setVoiceName(voiceFor(animal)?.name ?? '')
+    const on = () => { setVoiceName(voiceLabel(voiceFor(animal))); setVoiceCount(koreanVoices().length) }
     window.speechSynthesis.addEventListener('voiceschanged', on)
     return () => window.speechSynthesis.removeEventListener('voiceschanged', on)
   }, [animal])
   const changeVoice = () => {
     const v = nextVoice(animal)
-    if (!v) return
-    setVoiceName(v.name)
+    setVoiceName(voiceLabel(v))
     window.speechSynthesis.cancel()
-    speakLine(`안녕! 나 ${a.me}${a.e}!`, a.pitch, a.rate, false, v)
+    speakLine(`안녕! 나 ${a.me}${a.e}!`, a.pitch * TONES[v.tone].pitch, a.rate * TONES[v.tone].rate, false, v.voice)
   }
 
   /** 동물이 여러 줄을 차례로 말한다 */
@@ -105,7 +121,8 @@ export function AnimalCall({ animal, kid, muted, onClose }: { animal: number; ki
     for (const text of texts) {
       if (!alive.current) return
       setLines((l) => [...l, { who: 'animal', text }])
-      const s = speakLine(text, a.pitch, a.rate, quiet, voiceFor(animal))
+      const v = voiceFor(animal)
+      const s = speakLine(text, a.pitch * TONES[v.tone].pitch, a.rate * TONES[v.tone].rate, quiet, v.voice)
       current.current = s
       await s.done
     }
@@ -163,7 +180,8 @@ export function AnimalCall({ animal, kid, muted, onClose }: { animal: number; ki
         <p className="mt-2 mb-0 text-xl font-black text-[#8a4b55]">{a.name}</p>
         <p className="m-0 text-sm text-black/50">{phase === 'ring' ? '따르릉… 전화 거는 중' : `📞 통화 중 ${time}`}</p>
         {quiet && phase !== 'ring' && <p className="m-0 text-xs text-black/40">🔇 소리가 꺼져 있어서 글로 이야기해요</p>}
-        {!quiet && voiceName && <button onClick={changeVoice} className="mt-1 min-h-9 rounded-full bg-white/80 px-3 text-xs font-bold text-[#8a4b55] shadow-sm active:scale-95">🔈 목소리 바꾸기 · {voiceName}</button>}
+        {!quiet && canSpeak() && <button onClick={changeVoice} className="mt-1 min-h-9 rounded-full bg-white/80 px-3 text-xs font-bold text-[#8a4b55] shadow-sm active:scale-95">🔈 목소리 바꾸기 · {voiceName}</button>}
+        {!quiet && canSpeak() && <p className="m-0 mt-0.5 text-[10px] text-black/35">이 기기에서 쓸 수 있는 한국어 목소리 {voiceCount}개</p>}
       </div>
 
       <div ref={logRef} className="mt-3 flex min-h-0 w-full max-w-md flex-1 flex-col gap-2 overflow-y-auto px-1">
