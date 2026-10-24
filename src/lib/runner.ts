@@ -10,8 +10,8 @@ export const PLAYER_SCREEN_X = 110
 export const RUN_DURATION = 45
 export const START_HEARTS = 3
 export const FINISH_BONUS = 10
-const SPEED0 = 210
-const SPEED_UP = 2 // 1초마다 빨라지는 양
+const SPEED0 = 235
+const SPEED_UP = 3 // 1초마다 빨라지는 양
 const GRAVITY = 2000
 const JUMP_V = 900
 const SLOT = 560
@@ -71,11 +71,11 @@ export function slotContent(seed: number, slot: number): { obstacle?: Obstacle; 
   const x = FIRST_SLOT + slot * SLOT
   const r = rng(seed, slot)
   const coins: Coin[] = []
-  if (r < 0.62) {
+  if (r < 0.74) {
     const pick = Math.min(2, Math.floor(rng(seed, slot + 5000) * 3))
     const img = `${zoneAt(x)}_${pick}`
     const aspect = ASPECT[img]
-    const o: Obstacle = { id: slot * 10, x, w: Math.min(56, Math.round(OBSTACLE_H * aspect * 0.7)), h: OBSTACLE_H, dw: Math.round(OBSTACLE_H * aspect), img }
+    const o: Obstacle = { id: slot * 10, x, w: Math.min(72, Math.round(OBSTACLE_H * aspect * 0.9)), h: OBSTACLE_H, dw: Math.round(OBSTACLE_H * aspect), img }
     // 장애물 위 공중에 코인 호(점프하면 먹는다)
     ;[-1, 0, 1].forEach((k, j) => coins.push({ id: slot * 10 + 1 + j, x: x + k * 56, y: 110 + (k === 0 ? 40 : 0) }))
     return { obstacle: o, coins }
