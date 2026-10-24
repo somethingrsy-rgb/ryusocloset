@@ -3,8 +3,8 @@ import { TILE_W } from './world'
 /** 달려라 아바타: 자동으로 달리고 터치하면 점프해서 장애물을 피하며 코인을 모으는 놀이. 논리 좌표는 높이 400 기준 */
 export const RUN_H = 400
 export const GROUND_Y = 335 // 발이 닿는 바닥 높이
-export const PLAYER_W = 70
-export const PLAYER_H = 105
+export const PLAYER_W = 84
+export const PLAYER_H = 126
 /** 화면에서 아바타가 서 있는 가로 위치(월드 x 에서 카메라 앞쪽으로 얼마나 떨어졌는지) */
 export const PLAYER_SCREEN_X = 110
 export const START_HEARTS = 3
@@ -38,7 +38,7 @@ export const ZONES = [
 ] as const
 /** 그림 가로/세로 비율(public/assets/runner/<구간>_<번호>.webp) */
 const ASPECT: Record<string, number> = { spring_0: 1.211, spring_1: 1, spring_2: 1.316, alice_0: 1.164, alice_1: 0.941, alice_2: 0.988, christmas_0: 1.078, christmas_1: 0.871, christmas_2: 0.703, autumn_0: 1.215, autumn_1: 0.93, autumn_2: 1.145, halloween_0: 1.062, halloween_1: 1.035, halloween_2: 0.895, palace_0: 1.066, palace_1: 0.914, palace_2: 1.074 }
-const OBSTACLE_H = 68
+const OBSTACLE_H = 74
 /** 달린 거리 x 지점의 배경 구간 */
 export const zoneAt = (x: number) => {
   const u = (((BG_START + x * BG_PER_RUN) % TILE_W) + TILE_W) % TILE_W
@@ -49,7 +49,7 @@ export interface Obstacle { id: number; x: number; w: number; h: number; dw: num
 export interface Coin { id: number; x: number; y: number }
 /** 높은 곳에 뜬 선물 상자: 한 번 뛰어서는 못 닿고, 공중에서 한 번 더 뛰어야 닿는다 */
 export interface Gift { id: number; x: number; y: number }
-export const GIFT_Y = 340
+export const GIFT_Y = 320
 export interface RunState {
   elapsed: number
   x: number // 달린 거리
@@ -88,7 +88,7 @@ export function slotContent(seed: number, slot: number, level: LevelId = DEFAULT
     const pick = Math.min(2, Math.floor(rng(seed, slot + 5000) * 3))
     const img = `${zoneAt(x)}_${pick}`
     const aspect = ASPECT[img]
-    const o: Obstacle = { id: slot * 10, x, w: Math.min(72, Math.round(OBSTACLE_H * aspect * 0.9)), h: OBSTACLE_H, dw: Math.round(OBSTACLE_H * aspect), img }
+    const o: Obstacle = { id: slot * 10, x, w: Math.min(84, Math.round(OBSTACLE_H * aspect * 0.8)), h: OBSTACLE_H, dw: Math.round(OBSTACLE_H * aspect), img }
     // 장애물 위 공중에 코인 호(점프하면 먹는다)
     ;[-1, 0, 1].forEach((k, j) => coins.push({ id: slot * 10 + 1 + j, x: x + k * 56, y: 110 + (k === 0 ? 40 : 0) }))
     return { obstacle: o, coins }
@@ -141,18 +141,18 @@ export function stepRun(s: RunState, dt: number): RunState {
   let hurt = false
   if (invuln === 0) {
     for (const o of obstacles) {
-      const overlapX = px + PLAYER_W * 0.22 > o.x - o.w / 2 && px - PLAYER_W * 0.22 < o.x + o.w / 2
+      const overlapX = px + PLAYER_W * 0.18 > o.x - o.w / 2 && px - PLAYER_W * 0.18 < o.x + o.w / 2
       if (overlapX && y < o.h - 8) { hurt = true; break }
     }
   }
   if (hurt) { hearts -= 1; events.push('hit') }
   for (const c of cs) {
     if (taken.includes(c.id)) continue
-    if (Math.abs(c.x - px) < 38 && Math.abs(c.y - (y + PLAYER_H * 0.45)) < 52) { coins += 1; taken = [...taken, c.id]; events.push('coin') }
+    if (Math.abs(c.x - px) < 46 && Math.abs(c.y - (y + PLAYER_H * 0.45)) < 56) { coins += 1; taken = [...taken, c.id]; events.push('coin') }
   }
   for (const g of gs) {
     if (taken.includes(g.id)) continue
-    if (Math.abs(g.x - px) < 46 && Math.abs(g.y - (y + PLAYER_H * 0.45)) < 52) { gifts += 1; taken = [...taken, g.id]; events.push('gift') }
+    if (Math.abs(g.x - px) < 54 && Math.abs(g.y - (y + PLAYER_H * 0.45)) < 40) { gifts += 1; taken = [...taken, g.id]; events.push('gift') }
   }
   let over: RunState['over'] = false
   if (hearts <= 0) over = 'hurt'
