@@ -14,9 +14,9 @@ const JUMP_V = 900
 export type LevelId = 'easy' | 'normal' | 'hard'
 export const LEVEL_IDS: readonly LevelId[] = ['easy', 'normal', 'hard']
 export const LEVELS: Record<LevelId, { speed: number; up: number; slot: number; chance: number; duration: number; bonus: number }> = {
-  easy: { speed: 195, up: 1.5, slot: 640, chance: 0.6, duration: 40, bonus: 8 },
+  easy: { speed: 165, up: 1, slot: 600, chance: 0.6, duration: 40, bonus: 8 },
   normal: { speed: 235, up: 3, slot: 560, chance: 0.74, duration: 45, bonus: 10 },
-  hard: { speed: 265, up: 3.5, slot: 520, chance: 0.86, duration: 50, bonus: 16 },
+  hard: { speed: 300, up: 4, slot: 640, chance: 0.86, duration: 50, bonus: 16 },
 }
 export const DEFAULT_LEVEL: LevelId = 'normal'
 export const runDuration = (l: LevelId) => LEVELS[l].duration

@@ -41,7 +41,9 @@ describe('달려라 아바타', () => {
   it('높은 단계일수록 빠르고, 장애물이 촘촘하고, 오래 달리고, 보너스가 크다', () => {
     const [e, n, h] = LEVEL_IDS.map((l) => LEVELS[l])
     expect(e.speed).toBeLessThan(n.speed); expect(n.speed).toBeLessThan(h.speed)
-    expect(e.slot).toBeGreaterThan(n.slot); expect(n.slot).toBeGreaterThan(h.slot)
+    // 1초에 만나는 장애물 수(끝 무렵): 높은 단계일수록 많다
+    const density = (l: (typeof e)) => ((l.speed + l.up * l.duration) * l.chance) / l.slot
+    expect(density(e)).toBeLessThan(density(n)); expect(density(n)).toBeLessThan(density(h))
     expect(e.chance).toBeLessThan(n.chance); expect(n.chance).toBeLessThan(h.chance)
     expect(e.bonus).toBeLessThan(n.bonus); expect(n.bonus).toBeLessThan(h.bonus)
     // 장애물 사이는 점프 한 번(약 0.9초)과 다시 뛸 준비를 할 만큼 항상 떨어져 있다
