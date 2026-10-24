@@ -2,6 +2,7 @@ import { assetUrl } from './items'
 
 /** "찰칵" 효과음: 에셋 없이 WebAudio 로 합성 (노이즈 클릭 + 저음 톡) */
 let ctx: AudioContext | null = null
+const hiddenNow = () => typeof document !== 'undefined' && document.hidden
 
 function getCtx(): AudioContext | null {
   try {
@@ -15,7 +16,8 @@ function getCtx(): AudioContext | null {
       } catch { /* 지원하지 않으면 무시 */ }
       ctx = new AC()
     }
-    if (ctx.state !== 'running') void ctx.resume()
+    // 앱이 가려진 동안에는 다시 켜지 않는다(가려진 채 효과음·타이머가 소리를 깨우면 배경 음악이 뒤에서 계속 나온다)
+    if (ctx.state !== 'running' && !hiddenNow()) void ctx.resume()
     return ctx
   } catch {
     return null
@@ -109,14 +111,14 @@ function stopBgmNode() {
   bgmNode = null
 }
 function syncBgm() {
-  if (!bgmWant || !enabled) { stopBgmNode(); return }
+  if (!bgmWant || !enabled || hiddenNow()) { stopBgmNode(); return }
   if (bgmNode?.name === bgmWant) return
   stopBgmNode()
   const name = bgmWant
   const c = getCtx()
   if (!c) return
   void loadSample(c, name).then((buf) => {
-    if (!buf || bgmWant !== name || !enabled || bgmNode) return
+    if (!buf || bgmWant !== name || !enabled || bgmNode || hiddenNow()) return
     const src = c.createBufferSource()
     const g = c.createGain()
     g.gain.value = BGM_GAIN[name] ?? 0.12
@@ -136,12 +138,27 @@ export const stopBgm = () => {
   clearTimeout(stopTimer)
   stopTimer = setTimeout(syncBgm, 250)
 }
+/** 앱이 가려지거나 닫히면 소리를 완전히 멈추고(배경 음악도 끊는다), 다시 보이면 그 화면의 음악을 처음부터 다시 튼다.
+ *  아이폰은 'playback' 소리 설정이라 멈추지 않으면 앱을 닫아도 뒤에서 음악이 계속 나오고, 다시 연 앱 음악과 섞인다 */
+function sessionType(type: string) {
+  try {
+    const s = (navigator as unknown as { audioSession?: { type: string } }).audioSession
+    if (s) s.type = type
+  } catch { /* 지원하지 않으면 무시 */ }
+}
+function goQuiet() {
+  stopBgmNode()
+  if (ctx && ctx.state === 'running') void ctx.suspend()
+  sessionType('auto')
+}
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
-    if (!ctx || !bgmNode) return
-    if (document.hidden) void ctx.suspend()
-    else void ctx.resume()
+    if (document.hidden) { goQuiet(); return }
+    sessionType('playback')
+    if (ctx && ctx.state !== 'running') void ctx.resume()
+    syncBgm()
   })
+  window.addEventListener('pagehide', goQuiet)
 }
 
 /** 톤 하나: 시작 주파수 → 끝 주파수로 미끄러지며 사라진다. 높은 소리는 한 옥타브 내리고, 부드럽게 깎아 귀가 편하게 한다 */
