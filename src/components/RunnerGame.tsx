@@ -13,6 +13,8 @@ import { ROAD_PART, ROAD_PARTS, TILE_W } from '../lib/world'
 /** 보물찾기(마을 길) 배경 그림: 마을 걷기와 똑같이 화면 높이를 꽉 채우고(그림 단위 800), 달리는 길(발 닿는 곳)은 그림 속 길 높이에 맞춘다. 그림은 한 바퀴 돌아 이어진다 */
 const BG_UNITS = 800
 const BG_ROAD_Y = 650
+/** 장애물 그림 크기(부딪히는 크기는 그대로): 커진 아바타에 맞춰 1.25배 */
+const OB_GROW = 1.25
 
 /** 달려라 아바타: 자동으로 달리고, 화면을 터치(또는 스페이스·↑)하면 점프. 장애물은 피하고 코인은 먹는다 */
 export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks: Tweaks; onExit: () => void }) {
@@ -93,18 +95,22 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   }
 
   // 세로로 긴 화면에서도 가로로 충분히(400) 보이게 하고, 위가 남으면 하늘색으로 채운다(그림 맨 위가 하늘색)
-  const bgScaleForFit = size.h / BG_UNITS
+  // 폰 가로처럼 낮은 화면: 위 버튼을 작게 하고, 배경을 조금 확대해 길을 아래로 내려(맨 아래 꽃밭을 잘라) 길 위 공간을 넓힌다
+  const short = size.h < 500
+  const top = short ? 48 : 70
+  const roadPx = short ? size.h * 0.9 : BG_ROAD_Y * size.h / BG_UNITS
+  const bgScaleForFit = roadPx / BG_ROAD_Y
   // 크기는 화면 높이·너비에 맞추되, 가로 화면에서 높이 뜬 선물 상자와 높은 점프가 위에서 잘리지 않게(길 위 높이가 모자라면 줄인다)
-  const scale = Math.max(0.5, Math.min(size.h / RUN_H, size.w / 400, (BG_ROAD_Y * bgScaleForFit - 70) / (Math.max(GIFT_Y + 52, 372) / 0.9)))
+  const scale = Math.max(0.5, Math.min(size.h / RUN_H, size.w / 400, (roadPx - top) / (Math.max(GIFT_Y + 52, 372) / 0.9)))
   // 아바타 그림 크기(부딪히는 크기는 그대로): 두 번 점프 꼭대기에서 머리가 위로 잘리지 않는 한도까지 키운다(가로 화면은 4/3배 이상, 세로 화면은 최대 2배)
-  const growFit = ((BG_ROAD_Y * bgScaleForFit - 70) / scale + 6 - MAX_RISE) / PLAYER_H
+  const growFit = ((roadPx - top) / scale + 6 - MAX_RISE) / PLAYER_H
   const grow = size.w > size.h ? Math.max(4 / 3, growFit) : Math.min(2, Math.max(1, growFit))
   // 배경은 화면 높이를 꽉 채우고, 캐릭터·장애물은 그보다 작게 그 위 길에서 달린다
-  const bgScale = size.h / BG_UNITS
+  const bgScale = bgScaleForFit
   const offsetY = Math.max(0, BG_ROAD_Y * bgScale - GROUND_Y * scale)
   const viewW = size.w / Math.max(0.1, scale)
   // 두 번 점프해도 아바타 머리가 위 버튼 줄 밑으로 들어가지 않게 그림만 눌러 준다(부딪힘은 그대로)
-  const visY = Math.min(run.y, Math.max(0, (BG_ROAD_Y * bgScale - 70) / scale - PLAYER_H * grow + 6))
+  const visY = Math.min(run.y, Math.max(0, (roadPx - top) / scale - PLAYER_H * grow + 6))
   // 넓은 화면일수록 빨리 달려, 화면을 가로지르는 시간이 폰과 비슷하게(가로 화면이 느리게 느껴지던 문제)
   speedKRef.current = Math.min(2.2, Math.max(1, Math.round((viewW / 400) * 10) / 10))
   const cam = run.x
@@ -115,7 +121,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const bgTiles = Array.from({ length: Math.floor((scrollPx + size.w) / bgTileW) - Math.floor(scrollPx / bgTileW) + 1 }, (_, i) => Math.floor(scrollPx / bgTileW) + i)
   const px = PLAYER_SCREEN_X
   const blink = run.invuln > 0 && Math.floor(run.invuln * 10) % 2 === 0
-  const btn = 'min-h-11 rounded-full bg-white/95 px-3 text-sm font-bold shadow-sm'
+  const btn = `${short ? 'min-h-9 px-2.5 text-xs' : 'min-h-11 px-3 text-sm'} rounded-full bg-white/95 font-bold shadow-sm`
   const progress = Math.min(1, run.elapsed / runDuration(run.level))
 
   return <section ref={host} tabIndex={0} aria-label="달려라 아바타" className="relative h-full touch-none select-none overflow-hidden rounded-3xl bg-[#82c6fd] outline-none ring-1 ring-black/5"
@@ -129,7 +135,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       }))}
     </div>
     <div aria-hidden className="pointer-events-none absolute left-0 origin-top-left" style={{ width: viewW, height: RUN_H, top: offsetY, transform: `scale(${scale})` }}>
-      {obstacles.map((o) => <img key={o.id} src={assetUrl(`assets/runner/${o.img}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: o.x - cam - o.dw / 2, top: GROUND_Y - o.h + 8, width: o.dw, height: o.h, maxWidth: 'none' }} />)}
+      {obstacles.map((o) => <img key={o.id} src={assetUrl(`assets/runner/${o.img}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: o.x - cam - o.dw * OB_GROW / 2, top: GROUND_Y - o.h * OB_GROW + 8, width: o.dw * OB_GROW, height: o.h * OB_GROW, maxWidth: 'none' }} />)}
       {gifts.filter((g) => !run.taken.includes(g.id)).map((g) => <img key={g.id} src={assetUrl('assets/runner/gift.webp')} alt="" draggable={false} className="absolute -translate-x-1/2 -translate-y-1/2 animate-bounce select-none drop-shadow-[0_0_8px_#ffd54a]" style={{ left: g.x - cam, top: GROUND_Y - g.y, width: 64, height: 64, objectFit: 'contain', maxWidth: 'none' }} />)}
       {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[50px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x - cam, top: GROUND_Y - c.y }}><StarIcon /></span>)}
       <div className="absolute" style={{ left: px - PLAYER_W * grow / 2, top: GROUND_Y - visY - PLAYER_H * grow + 6, width: PLAYER_W * grow, height: PLAYER_H * grow, opacity: blink ? 0.35 : 1 }}>
@@ -138,8 +144,8 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
         </div>
       </div>
     </div>
-    <header className="absolute inset-x-2 top-2 z-10 flex items-center justify-between gap-1">
-      <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-bold">{'❤️'.repeat(Math.max(0, run.hearts))}{'🤍'.repeat(Math.max(0, startHearts(run.level) - run.hearts))} · <StarIcon /> {run.coins}{run.gifts > 0 && <> · 🎁 {run.gifts}</>}</span>
+    <header className={`absolute inset-x-2 ${short ? 'top-1.5' : 'top-2'} z-10 flex items-center justify-between gap-1`}>
+      <span className={`rounded-full bg-white/95 font-bold ${short ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm'}`}>{'❤️'.repeat(Math.max(0, run.hearts))}{'🤍'.repeat(Math.max(0, startHearts(run.level) - run.hearts))} · <StarIcon /> {run.coins}{run.gifts > 0 && <> · 🎁 {run.gifts}</>}</span>
       <div className="flex gap-1">
         {phase === 'playing' && <button className={btn} aria-label={paused ? '계속하기' : '일시정지'} onClick={() => setPaused(!paused)}>{paused ? '▶' : 'Ⅱ'}</button>}
         <button className={btn} aria-label="닫기" onClick={onExit}>✕</button>
