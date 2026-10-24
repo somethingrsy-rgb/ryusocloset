@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from 'react'
 import { useI18n } from '../i18n'
-import { PLACE_BY_ID, eventDone, finishEnglish, finishEvent, findItem, getGame, isFound, pickReward, spotFor, travelItem } from '../lib/game'
+import { MY_ROOM_ID, PLACE_BY_ID, eventDone, finishEnglish, finishEvent, findItem, getGame, isFound, pickReward, spotFor, travelItem } from '../lib/game'
 import { assetUrl } from '../lib/items'
 import { NPCS } from '../lib/npcs'
 import { playTap } from '../lib/sound'
@@ -15,7 +15,7 @@ import { TravelDecor } from './TravelDecor'
 import { getTravelRoom, subscribeTravelRooms, travelRoomsVersion } from '../lib/travelRooms'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import { sceneAssets } from '../lib/exportRoom'
-import { drawables } from '../lib/room'
+import { defaultRoom, drawables } from '../lib/room'
 import { AVATAR_BASE_W, AVATAR_FEET_RATIO, ROOM_W, ROOM_H } from '../lib/roomTypes'
 
 /** 찾았다 상자를 보여 주는 시간(ms) */
@@ -55,7 +55,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   const night = false // 낮만 쓴다 (저녁·밤 기능은 뺐다)
   const roomVersion = useSyncExternalStore(subscribeTravelRooms, travelRoomsVersion)
   const itemVersion = useItemsVersion()
-  const layout = useMemo(() => getTravelRoom(placeId), [placeId, roomVersion, itemVersion])
+  // 내 방은 아직 게임으로 보낸 방이 없어도 빈 방 무대로 보여 준다(꽉 채운 화면으로 그리면 가로 화면에서 너무 크게 확대된다)
+  const layout = useMemo(() => getTravelRoom(placeId) ?? (placeId === MY_ROOM_ID ? { scene: 'room' as const, room: { ...defaultRoom(), items: [] } } : null), [placeId, roomVersion, itemVersion])
   const assets = layout ? sceneAssets(layout.scene, (layout.scene === 'camp' || layout.room.wallId === 'camp') ? night : layout.room.night, layout.room.wallId, layout.room.floorId) : null
   const minY = assets ? Math.min(88, 100 - assets.floorH / ROOM_H * 100 + 2) : WALK_BOUNDS.minY
   const layerZ = (y: number) => layout ? Math.round(2000 + y / 100 * ROOM_H) : Math.round(y)
