@@ -96,6 +96,8 @@ export function playSnap() {
 /* ---------- 놀이 효과음 (모두 합성음, 설정의 효과음 켜기/끄기를 따른다) ---------- */
 let enabled = true
 export const setSoundEnabled = (on: boolean) => { enabled = on; syncBgm() }
+/** 설정의 효과음이 켜져 있는지(동물 전화 목소리도 이걸 따른다) */
+export const soundOn = () => enabled
 
 /* ---------- 배경 음악(마을 산책): 한 곡을 반복한다. 효과음 끄기를 따르고, 앱이 가려지면 멈춘다 ---------- */
 let bgmWant: string | null = null
