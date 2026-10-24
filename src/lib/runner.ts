@@ -53,8 +53,6 @@ export interface Coin { id: number; x: number; y: number }
 /** 높은 곳에 뜬 선물 상자: 한 번 뛰어서는 못 닿고, 공중에서 한 번 더 뛰어야 닿는다 */
 export interface Gift { id: number; x: number; y: number }
 export const GIFT_Y = 240
-/** 두 번 점프로 올라갈 수 있는 가장 높은 곳(테스트로 확인): 아바타 머리가 화면 위로 나가지 않게 크기를 정할 때 쓴다 */
-export const MAX_RISE = 220
 export interface RunState {
   elapsed: number
   x: number // 달린 거리
