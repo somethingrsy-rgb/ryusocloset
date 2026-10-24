@@ -7,7 +7,7 @@ export type Currency = 'star' | 'coin'
 
 /** 상점 가격 (농장 코인 🪙 기준). 별 ⭐ 으로 사면 STAR_PRICE_MULT 배. 종류별로 한 곳에서 고친다. */
 export const SHOP_PRICE: Record<string, number> = { shoes: 30, accessory: 40, wand: 50, costume: 60, room: 20 }
-export const STAR_PRICE_MULT = 3
+export const STAR_PRICE_MULT = 6
 export const priceOf = (category: string, currency: Currency = 'coin') => (SHOP_PRICE[category] ?? 40) * (currency === 'star' ? STAR_PRICE_MULT : 1)
 export interface Wallet { stars: number; coins: number }
 

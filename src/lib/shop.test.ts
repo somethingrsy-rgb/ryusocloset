@@ -37,11 +37,11 @@ describe('shop', () => {
     expect(shop.buyItem(item.id, 'star')).toBe('owned')
     expect(shop.readWallet().stars).toBe(500 - price)
   })
-  it('별로 사는 값은 코인 값의 3배이고, 별을 받으면 쓸 수 있는 별이 는다', async () => {
+  it('별로 사는 값은 코인 값의 6배이고, 별을 받으면 쓸 수 있는 별이 는다', async () => {
     stubStorage({})
     const { shop } = await load()
-    expect(shop.priceOf('costume', 'coin')).toBe(60); expect(shop.priceOf('costume', 'star')).toBe(180)
-    expect(shop.priceOf('shoes', 'star')).toBe(90)
+    expect(shop.priceOf('costume', 'coin')).toBe(60); expect(shop.priceOf('costume', 'star')).toBe(360)
+    expect(shop.priceOf('shoes', 'star')).toBe(180)
     expect(shop.readWallet().stars).toBe(0)
     expect(shop.earnStars(60)).toBe(true); expect(shop.earnStars(0)).toBe(false)
     expect(shop.readWallet().stars).toBe(60)
