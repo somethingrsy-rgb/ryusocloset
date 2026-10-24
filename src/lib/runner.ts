@@ -23,7 +23,7 @@ export const runDuration = (l: LevelId) => LEVELS[l].duration
 const FIRST_SLOT = 760
 const INVULN = 1.2
 const BOOST_TIME = 0.18
-const JUMP2_V = 580 // 두 번째 점프: 올라가는 속도가 이 값까지 부드럽게 올라간다(이미 더 빠르면 그대로). 너무 높이 솟아 화면 밖으로 나가지 않게 한다
+const BOOST_V = 800 // 두 번째 점프로 더해지는 속도(부드럽게 BOOST_TIME 동안)
 
 /** 배경 그림은 달린 거리 1 당 이만큼(그림 단위) 흐른다. 시작 위치는 첫 집 앞쪽 */
 export const BG_PER_RUN = 1.2
@@ -95,10 +95,8 @@ export function slotContent(seed: number, slot: number, level: LevelId = DEFAULT
     const img = `${zoneAt(x)}_${pick}`
     const aspect = ASPECT[img]
     const o: Obstacle = { id: slot * 10, x, w: Math.min(84, Math.round(OBSTACLE_H * aspect * 0.8)), h: OBSTACLE_H, dw: Math.round(OBSTACLE_H * aspect), img }
-    // 장애물 위 공중에 별 3개: 알맞게 뛰었을 때 몸이 지나가는 포물선(점프 시작 후 공중에 떠 있는 시간의 21%·50%·79% 지점) 위에 놓는다.
-    // 속도에 따라 점프 중 가는 거리가 달라지므로 그 단계·화면의 중간 속도로 간격을 계산한다
-    const v = (LEVELS[level].speed + (LEVELS[level].up * LEVELS[level].duration) / 2) * k
-    ;([0.21, 0.5, 0.79] as const).map((f) => f * ((2 * JUMP_V) / GRAVITY)).forEach((t, j) => coins.push({ id: slot * 10 + 1 + j, x: x + (t - JUMP_V / GRAVITY) * v, y: Math.round(PLAYER_H * 0.45 + JUMP_V * t - (GRAVITY * t * t) / 2) }))
+    // 장애물 위 공중에 코인 호(점프하면 먹는다)
+    ;[-1, 0, 1].forEach((k, j) => coins.push({ id: slot * 10 + 1 + j, x: x + k * 56, y: 110 + (k === 0 ? 40 : 0) }))
     return { obstacle: o, coins }
   }
   // 장애물 없는 칸: 바닥 코인 줄. 가끔 높이 뜬 선물 상자(첫 칸들은 제외)
@@ -139,8 +137,8 @@ export function stepRun(s: RunState, dt: number): RunState {
   if (s.over) return s
   const elapsed = s.elapsed + dt
   const x = s.x + speedAt(s.elapsed, s.level) * s.k * dt
-  let vy = s.vy - GRAVITY * dt
-  if (s.boost > 0 && vy < JUMP2_V) vy += (JUMP2_V - vy) * Math.min(1, dt / Math.max(dt, s.boost))
+  const boostStep = Math.min(s.boost, dt)
+  let vy = s.vy - GRAVITY * dt + (BOOST_V * boostStep) / BOOST_TIME
   let y = s.y + vy * dt
   let jumps = s.jumps
   if (y <= 0) { y = 0; vy = 0; jumps = 0 }

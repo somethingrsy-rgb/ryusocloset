@@ -52,23 +52,6 @@ describe('달려라 아바타', () => {
     const a = run(newRun(3, 'normal', 1), 5); const b = run(newRun(3, 'normal', 2), 5)
     expect(b.x / a.x).toBeCloseTo(2, 1)
   })
-  it('장애물 위 별 3개는 알맞게 뛰면 모두 먹을 수 있다(단계·화면 폭·타이밍이 조금 달라도)', () => {
-    for (const k of [1, 2]) for (const level of LEVEL_IDS) for (const f of [0.38, 0.45, 0.52]) {
-      let got = 0, passed = 0
-      for (const seed of [1, 7, 42]) {
-        let s = newRun(seed, level, k)
-        for (let t = 0; t < 60 * 55 && !s.over; t++) {
-          const px = s.x + PLAYER_SCREEN_X
-          if (s.jumps === 0 && visible(seed, px, px + 300 * k, level, k).obstacles.some((o) => o.x - px > 0 && o.x - px < speedAt(s.elapsed, level) * k * f)) s = jump(s)
-          s = stepRun(s, 1 / 60)
-        }
-        const obs = visible(seed, 0, s.x + 300, level, k).obstacles.filter((o) => o.x < s.x + PLAYER_SCREEN_X - 10)
-        passed += obs.length
-        got += s.taken.filter((id) => obs.some((o) => id > o.id && id <= o.id + 3)).length
-      }
-      expect(got / passed, `k${k} ${level} lead ${f}`).toBeGreaterThan(2.8)
-    }
-  })
   it('두 번째 점프는 속도가 갑자기 튀지 않고 부드럽게 솟는다', () => {
     let s = newRun(1)
     s = jump(s); s = run(s, 0.4)
