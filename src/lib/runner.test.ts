@@ -50,14 +50,36 @@ describe('달려라 아바타', () => {
       expect(LEVELS[level].slot / end, level).toBeGreaterThan(1.05)
     }
   })
-  it('점프는 땅에서만, 한 번 뛰면 다시 땅에 내려온다', () => {
+  it('점프는 땅에서 한 번, 공중에서 한 번 더(두 번까지), 세 번째는 안 된다', () => {
     let s = newRun(1)
     s = jump(s); s = stepRun(s, 0.05)
-    expect(s.y).toBeGreaterThan(0)
-    const air = jump(s)
-    expect(air.vy).toBe(s.vy) // 공중에서는 다시 못 뛴다
-    s = run(s, 1.2)
-    expect(s.y).toBe(0)
+    expect(s.y).toBeGreaterThan(0); expect(s.jumps).toBe(1)
+    const vy1 = s.vy
+    s = jump(s); s = stepRun(s, 0.05)
+    expect(s.jumps).toBe(2); expect(s.vy).toBeGreaterThan(vy1 - 200) // 다시 위로 솟는다
+    const third = jump(s)
+    expect(third.vy).toBe(s.vy) // 세 번째는 안 된다
+    s = run(s, 2)
+    expect(s.y).toBe(0); expect(s.jumps).toBe(0)
+  })
+  it('높이 뜬 선물 상자는 한 번 뛰어서는 못 먹고, 두 번 뛰어야 먹는다', () => {
+    let seed = 1, slot = 0
+    outer: for (seed = 1; seed < 80; seed++) for (slot = 3; slot < 30; slot++) if (slotContent(seed, slot).gift) break outer
+    const g = slotContent(seed, slot).gift!
+    const at = (jumps: number) => {
+      let s = newRun(seed)
+      s = { ...s, x: g.x - PLAYER_SCREEN_X - 330, taken: [], hearts: 99 }
+      let did = 0
+      for (let t = 0; t < 200; t++) {
+        const dist = g.x - (s.x + PLAYER_SCREEN_X)
+        if (did === 0 && dist < 230) { s = jump(s); did = 1 }
+        else if (jumps === 2 && did === 1 && s.vy < 120 && s.y > 120) { s = jump(s); did = 2 }
+        s = stepRun(s, 1 / 60)
+      }
+      return s.gifts
+    }
+    expect(at(1)).toBe(0)
+    expect(at(2)).toBe(1)
   })
   it('하트를 다 써서 끝나도 모은 코인은 별로 받고 보너스는 없다', () => {
     expect(rewardStars({ coins: 6, over: 'hurt' })).toBe(6)
