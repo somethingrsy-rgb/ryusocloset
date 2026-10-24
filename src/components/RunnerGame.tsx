@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { isRestoring } from '../lib/restoreGuard'
-import { GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, RUN_DURATION, RUN_H, START_HEARTS, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
+import { BG_PER_RUN, BG_START, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, RUN_DURATION, RUN_H, START_HEARTS, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
 import { earnStars } from '../lib/shop'
 import { playCloud, playHop, playStar, playWin } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -12,7 +12,6 @@ import { ROAD_PART, ROAD_PARTS, TILE_W } from '../lib/world'
 /** 보물찾기(마을 길) 배경 그림: 마을 걷기와 똑같이 화면 높이를 꽉 채우고(그림 단위 800), 달리는 길(발 닿는 곳)은 그림 속 길 높이에 맞춘다. 그림은 한 바퀴 돌아 이어진다 */
 const BG_UNITS = 800
 const BG_ROAD_Y = 650
-const BG_START = 1200 // 시작 위치(그림 단위): 첫 집 앞쪽
 
 /** 달려라 아바타: 자동으로 달리고, 화면을 터치(또는 스페이스·↑)하면 점프. 장애물은 피하고 코인은 먹는다 */
 export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks: Tweaks; onExit: () => void }) {
@@ -84,8 +83,8 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const viewW = size.w / Math.max(0.1, scale)
   const cam = run.x
   const { obstacles, coins } = visible(run.seed, cam, cam + viewW)
-  // 배경도 길과 같은 화면 속도로 흐르게(달린 거리 × 게임 배율)
-  const scrollPx = cam * scale + BG_START * bgScale
+  // 배경은 달린 거리에 맞춰 흐른다(장애물 그림 구간과 배경 구간이 기기 크기와 상관없이 맞도록)
+  const scrollPx = (cam * BG_PER_RUN + BG_START) * bgScale
   const bgTileW = TILE_W * bgScale
   const bgTiles = Array.from({ length: Math.floor((scrollPx + size.w) / bgTileW) - Math.floor(scrollPx / bgTileW) + 1 }, (_, i) => Math.floor(scrollPx / bgTileW) + i)
   const px = PLAYER_SCREEN_X
@@ -104,7 +103,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       }))}
     </div>
     <div aria-hidden className="pointer-events-none absolute left-0 origin-top-left" style={{ width: viewW, height: RUN_H, top: offsetY, transform: `scale(${scale})` }}>
-      {obstacles.map((o) => <span key={o.id} className="absolute -translate-x-1/2 leading-none" style={{ left: o.x - cam, top: GROUND_Y - o.h + 6, fontSize: o.h }}>{o.kind}</span>)}
+      {obstacles.map((o) => <img key={o.id} src={assetUrl(`assets/runner/${o.img}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: o.x - cam - o.dw / 2, top: GROUND_Y - o.h + 8, width: o.dw, height: o.h, maxWidth: 'none' }} />)}
       {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[36px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x - cam, top: GROUND_Y - c.y }}><StarIcon /></span>)}
       <div className="absolute" style={{ left: px - PLAYER_W / 2, top: GROUND_Y - run.y - PLAYER_H + 6, width: PLAYER_W, height: PLAYER_H, opacity: blink ? 0.35 : 1 }}>
         <div className={phase === 'playing' && !paused && run.y === 0 ? 'walk-bob h-full w-full' : 'h-full w-full'} style={run.y > 0 ? { transform: `rotate(${Math.max(-12, Math.min(12, run.vy / 60))}deg)` } : undefined}>
@@ -125,7 +124,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       <div className="w-full max-w-sm rounded-3xl bg-white/95 p-5 text-center shadow-xl">
         <p className="my-1 text-4xl">{phase === 'done' ? (run.over === 'done' ? '🏁' : '💤') : '🏃'}</p>
         <h2 className="my-2 text-xl font-bold">{phase === 'intro' ? '달려라 아바타' : phase === 'done' ? (run.over === 'done' ? '끝까지 달렸어요!' : '하트를 다 썼어요') : '잠깐 쉬어가요'}</h2>
-        {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프!<br />🪨🌵🐌 는 뛰어넘고 별 <StarIcon /> 은 먹어요.<br />{RUN_DURATION}초 동안 달리면 별 보너스 {10}개 <StarIcon /></p>}
+        {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프!<br />장애물은 뛰어넘고 별 <StarIcon /> 은 먹어요.<br />{RUN_DURATION}초 동안 달리면 별 보너스 {10}개 <StarIcon /></p>}
         {phase === 'done' && <><p className="text-sm"><StarIcon /> {run.coins}개를 모았어요</p><p className="my-2 text-3xl font-black text-[#b8610a]">+{paid} <StarIcon /></p></>}
         {phase !== 'intro' && <p className="text-xs text-black/50">최고 기록 별 {record.best}개</p>}
         <button className="mt-2 min-h-12 w-full rounded-full bg-blush px-4 font-bold text-white" onClick={() => phase === 'playing' ? (setPaused(false), host.current?.focus({ preventScroll: true })) : start()}>{phase === 'intro' ? '달리기 시작' : phase === 'done' ? '한 번 더' : '계속하기'}</button>
