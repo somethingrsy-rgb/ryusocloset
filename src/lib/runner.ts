@@ -7,22 +7,31 @@ export const PLAYER_W = 84
 export const PLAYER_H = 126
 /** 화면에서 아바타가 서 있는 가로 위치(월드 x 에서 카메라 앞쪽으로 얼마나 떨어졌는지) */
 export const PLAYER_SCREEN_X = 110
-/** 시작 하트: 초급은 5개, 나머지는 3개 */
-export const startHearts = (level: LevelId) => (level === 'easy' ? 5 : 3)
+/** 시작 하트: 단계마다 정한 개수 */
+export const startHearts = (level: LevelId) => LEVELS[level].hearts
 const GRAVITY = 1300
 const JUMP_V = 554
-/** 단계(난이도): 속도, 빨라지는 정도(1초마다), 장애물 사이 간격, 장애물이 나오는 칸 비율, 달리는 시간, 완주 보너스 별 */
-export type LevelId = 'easy' | 'normal' | 'hard'
-export const LEVEL_IDS: readonly LevelId[] = ['easy', 'normal', 'hard']
-export const LEVELS: Record<LevelId, { speed: number; up: number; slot: number; chance: number; duration: number; bonus: number }> = {
-  easy: { speed: 165, up: 1, slot: 600, chance: 0.6, duration: 40, bonus: 8 },
-  normal: { speed: 235, up: 3, slot: 560, chance: 0.74, duration: 45, bonus: 10 },
-  hard: { speed: 300, up: 4, slot: 640, chance: 0.86, duration: 50, bonus: 16 },
+/** 단계(난이도) 1~10: 속도, 빨라지는 정도(1초마다), 장애물 사이 간격, 장애물이 나오는 칸 비율, 달리는 시간, 완주 보너스 별,
+ *  부딪힌 뒤 무적 시간(초), 시작 하트. 1~3단계는 예전 초급·중급·고급 그대로(저장된 단계·기록이 이어지게 이름도 그대로) */
+export type LevelId = 'easy' | 'normal' | 'hard' | 'l4' | 'l5' | 'l6' | 'l7' | 'l8' | 'l9' | 'l10'
+export const LEVEL_IDS: readonly LevelId[] = ['easy', 'normal', 'hard', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10']
+export const LEVELS: Record<LevelId, { speed: number; up: number; slot: number; chance: number; duration: number; bonus: number; invuln: number; hearts: number }> = {
+  easy: { speed: 165, up: 1, slot: 600, chance: 0.6, duration: 40, bonus: 8, invuln: 1.2, hearts: 5 },
+  normal: { speed: 235, up: 3, slot: 560, chance: 0.74, duration: 45, bonus: 10, invuln: 1.2, hearts: 3 },
+  hard: { speed: 300, up: 4, slot: 640, chance: 0.86, duration: 50, bonus: 16, invuln: 1.2, hearts: 3 },
+  l4: { speed: 320, up: 4, slot: 660, chance: 0.9, duration: 50, bonus: 18, invuln: 1.1, hearts: 3 },
+  l5: { speed: 340, up: 4.5, slot: 700, chance: 0.92, duration: 55, bonus: 20, invuln: 1, hearts: 3 },
+  l6: { speed: 360, up: 4.5, slot: 700, chance: 0.93, duration: 55, bonus: 23, invuln: 1, hearts: 3 },
+  l7: { speed: 380, up: 5, slot: 760, chance: 0.94, duration: 60, bonus: 26, invuln: 0.9, hearts: 3 },
+  l8: { speed: 400, up: 5, slot: 760, chance: 0.95, duration: 60, bonus: 30, invuln: 0.8, hearts: 3 },
+  l9: { speed: 420, up: 5, slot: 770, chance: 0.97, duration: 60, bonus: 35, invuln: 0.7, hearts: 2 },
+  l10: { speed: 440, up: 5, slot: 780, chance: 0.98, duration: 60, bonus: 40, invuln: 0.6, hearts: 2 },
 }
+/** 화면에 보이는 단계 이름 */
+export const levelName = (l: LevelId) => `${LEVEL_IDS.indexOf(l) + 1}단계`
 export const DEFAULT_LEVEL: LevelId = 'normal'
 export const runDuration = (l: LevelId) => LEVELS[l].duration
 const FIRST_SLOT = 760
-const INVULN = 1.2
 const BOOST_TIME = 0.18
 const BOOST_V = 380 // 두 번째 점프로 더해지는 속도(부드럽게 BOOST_TIME 동안)
 const JUMP2_CAP = 420 // 두 번째 점프 뒤 올라가는 속도의 한도: 일찍 눌러도 너무 높이 솟지 않는다
@@ -172,7 +181,7 @@ export function stepRun(s: RunState, dt: number): RunState {
   let over: RunState['over'] = false
   if (hearts <= 0) over = 'hurt'
   else if (elapsed >= LEVELS[s.level].duration) over = 'done'
-  return { ...s, elapsed, x, y, vy, jumps, boost: Math.max(0, s.boost - dt), hearts, coins, gifts, taken, invuln: hurt ? INVULN : invuln, over, events }
+  return { ...s, elapsed, x, y, vy, jumps, boost: Math.max(0, s.boost - dt), hearts, coins, gifts, taken, invuln: hurt ? LEVELS[s.level].invuln : invuln, over, events }
 }
 
 /** 별 보상: 모은 코인 1개당 별 1개, 끝까지 달리면 보너스. 하트를 다 써서 끝나도 모은 코인은 받는다 */
@@ -188,10 +197,10 @@ export function readRunRecord(): RunRecord {
     if (v && typeof v === 'object') {
       // 예전 기록(best 숫자 하나)은 중급 기록으로 이어받는다
       const b = typeof v.best === 'object' && v.best ? v.best : { normal: v.best }
-      return { best: { easy: num0(b.easy), normal: num0(b.normal), hard: num0(b.hard) }, rounds: num0(v.rounds) }
+      return { best: Object.fromEntries(LEVEL_IDS.map((l) => [l, num0(b[l])])) as Record<LevelId, number>, rounds: num0(v.rounds) }
     }
   } catch { /* 읽지 못하면 새로 */ }
-  return { best: { easy: 0, normal: 0, hard: 0 }, rounds: 0 }
+  return { best: Object.fromEntries(LEVEL_IDS.map((l) => [l, 0])) as Record<LevelId, number>, rounds: 0 }
 }
 export function writeRunRecord(stars: number, level: LevelId): RunRecord {
   const old = readRunRecord()
