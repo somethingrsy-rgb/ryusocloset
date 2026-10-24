@@ -5,7 +5,7 @@ import { gameVersion, getGame, isFound, subscribeGame, travelPool } from '../lib
 import { assetUrl } from '../lib/items'
 import { buyItem, priceOf, readWallet, type BuyResult, type Currency } from '../lib/shop'
 import { useItemsVersion } from '../lib/useItemsVersion'
-import { playCoin, playTap } from '../lib/sound'
+import { playCoin, playTap, startBgm, stopBgm } from '../lib/sound'
 import { FigureLayers } from './FigureLayers'
 import type { Outfit, Tweaks } from '../lib/types'
 import { CoinIcon, StarIcon, DressIcon } from './Icons'
@@ -50,6 +50,9 @@ export function ShopModal({ onClose, onWear, outfit, tweaks }: { onClose: () => 
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose, preview])
+
+  // 상점에 있는 동안 배경 음악
+  useEffect(() => { startBgm('shop'); return stopBgm }, [])
 
   const buy = (id: string) => {
     const r = buyItem(id, currency)
