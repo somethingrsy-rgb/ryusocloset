@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { isRestoring } from '../lib/restoreGuard'
 import { BG_PER_RUN, BG_START, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, LEVELS, LEVEL_IDS, RUN_H, runDuration, readRunLevel, writeRunLevel, type LevelId, START_HEARTS, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
 import { earnStars } from '../lib/shop'
-import { playCloud, playHop, playStar, playWin } from '../lib/sound'
+import { currentAssignment, findItem, getGame, pickReward, travelItem } from '../lib/game'
+import { playCloud, playGold, playHop, playStar, playWin, startBgm, stopBgm } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
 import { StarIcon } from './Icons'
@@ -22,6 +23,11 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const live = useRef(run)
   const [record, setRecord] = useState(readRunRecord)
   const [paid, setPaid] = useState(0)
+  /** 선물 상자로 받은 아이템(없으면 null) */
+  const [giftItem, setGiftItem] = useState<string | null>(null)
+  const [giftStars, setGiftStars] = useState(0)
+  // 달리는 동안 노래(일시정지·시작 전·끝난 뒤에는 멈춘다)
+  useEffect(() => { if (phase !== 'playing' || paused) return; startBgm('run'); return stopBgm }, [phase, paused])
   const host = useRef<HTMLElement>(null)
   const [size, setSize] = useState({ w: 390, h: 500 })
   const saved = useRef(false)
@@ -46,7 +52,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
     const tick = (now: number) => {
       const dt = Math.min(0.05, Math.max(0, (now - previous) / 1000)); previous = now
       const next = stepRun(live.current, dt)
-      for (const e of next.events) { if (e === 'coin') playStar(); else if (e === 'hit') playCloud(); else playHop() }
+      for (const e of next.events) { if (e === 'coin') playStar(); else if (e === 'hit') playCloud(); else if (e === 'gift') playGold(); else playHop() }
       live.current = { ...next, events: [] }
       setRun(live.current)
       if (next.over) { setPhase('done'); return }
@@ -62,12 +68,21 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
     const stars = rewardStars(live.current)
     if (live.current.over === 'done') playWin()
     if (stars > 0 && !isRestoring()) { earnStars(stars); setPaid(stars) }
+    // 선물 상자: 첫 상자는 여행(보물찾기)에서 아직 못 찾은 아이템을 하나 주고, 더 모은 상자는 상자마다 별 5개
+    const boxes = live.current.gifts
+    if (boxes > 0 && !isRestoring()) {
+      const id = pickReward(currentAssignment(), getGame().found, getGame().at, 'any')
+      let extra = boxes - 1
+      if (id && findItem(id)) setGiftItem(id)
+      else extra = boxes // 아이템을 다 찾았으면 상자마다 별로
+      if (extra > 0) { earnStars(extra * 5); setGiftStars(extra * 5) }
+    }
     setRecord(writeRunRecord(stars, live.current.level))
   }, [phase])
 
   const start = () => {
     const fresh = newRun(undefined, level); live.current = fresh; setRun(fresh)
-    saved.current = false; setPaid(0); setPaused(false); setPhase('playing')
+    saved.current = false; setPaid(0); setGiftItem(null); setGiftStars(0); setPaused(false); setPhase('playing')
     host.current?.focus({ preventScroll: true })
   }
   const tapJump = () => {
@@ -83,7 +98,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const offsetY = Math.max(0, BG_ROAD_Y * bgScale - GROUND_Y * scale)
   const viewW = size.w / Math.max(0.1, scale)
   const cam = run.x
-  const { obstacles, coins } = visible(run.seed, cam, cam + viewW, run.level)
+  const { obstacles, coins, gifts } = visible(run.seed, cam, cam + viewW, run.level)
   // 배경은 달린 거리에 맞춰 흐른다(장애물 그림 구간과 배경 구간이 기기 크기와 상관없이 맞도록)
   const scrollPx = (cam * BG_PER_RUN + BG_START) * bgScale
   const bgTileW = TILE_W * bgScale
@@ -105,6 +120,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
     </div>
     <div aria-hidden className="pointer-events-none absolute left-0 origin-top-left" style={{ width: viewW, height: RUN_H, top: offsetY, transform: `scale(${scale})` }}>
       {obstacles.map((o) => <img key={o.id} src={assetUrl(`assets/runner/${o.img}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: o.x - cam - o.dw / 2, top: GROUND_Y - o.h + 8, width: o.dw, height: o.h, maxWidth: 'none' }} />)}
+      {gifts.filter((g) => !run.taken.includes(g.id)).map((g) => <span key={g.id} className="absolute -translate-x-1/2 -translate-y-1/2 animate-bounce text-[44px] leading-none drop-shadow-[0_0_8px_#ffd54a]" style={{ left: g.x - cam, top: GROUND_Y - g.y }}>🎁</span>)}
       {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[36px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x - cam, top: GROUND_Y - c.y }}><StarIcon /></span>)}
       <div className="absolute" style={{ left: px - PLAYER_W / 2, top: GROUND_Y - run.y - PLAYER_H + 6, width: PLAYER_W, height: PLAYER_H, opacity: blink ? 0.35 : 1 }}>
         <div className={phase === 'playing' && !paused && run.y === 0 ? 'walk-bob h-full w-full' : 'h-full w-full'} style={run.y > 0 ? { transform: `rotate(${Math.max(-12, Math.min(12, run.vy / 60))}deg)` } : undefined}>
@@ -113,7 +129,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       </div>
     </div>
     <header className="absolute inset-x-2 top-2 z-10 flex items-center justify-between gap-1">
-      <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-bold">{'❤️'.repeat(Math.max(0, run.hearts))}{'🤍'.repeat(Math.max(0, START_HEARTS - run.hearts))} · <StarIcon /> {run.coins}</span>
+      <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-bold">{'❤️'.repeat(Math.max(0, run.hearts))}{'🤍'.repeat(Math.max(0, START_HEARTS - run.hearts))} · <StarIcon /> {run.coins}{run.gifts > 0 && <> · 🎁 {run.gifts}</>}</span>
       <div className="flex gap-1">
         {phase === 'playing' && <button className={btn} aria-label={paused ? '계속하기' : '일시정지'} onClick={() => setPaused(!paused)}>{paused ? '▶' : 'Ⅱ'}</button>}
         <button className={btn} aria-label="닫기" onClick={onExit}>✕</button>
@@ -125,7 +141,11 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       <div className="w-full max-w-sm rounded-3xl bg-white/95 p-5 text-center shadow-xl">
         <p className="my-1 text-4xl">{phase === 'done' ? (run.over === 'done' ? '🏁' : '💤') : '🏃'}</p>
         <h2 className="my-2 text-xl font-bold">{phase === 'intro' ? '달려라 아바타' : phase === 'done' ? (run.over === 'done' ? '끝까지 달렸어요!' : '하트를 다 썼어요') : '잠깐 쉬어가요'}</h2>
-        {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프!<br />장애물은 뛰어넘고 별 <StarIcon /> 은 먹어요.<br />{LEVELS[level].duration}초 동안 달리면 별 보너스 {LEVELS[level].bonus}개 <StarIcon /></p>}
+        {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프, 공중에서 한 번 더 누르면 높이 뛰어요!<br />높이 뜬 🎁 선물 상자는 두 번 뛰어서 받아요.<br />장애물은 뛰어넘고 별 <StarIcon /> 은 먹어요.<br />{LEVELS[level].duration}초 동안 달리면 별 보너스 {LEVELS[level].bonus}개 <StarIcon /></p>}
+        {phase === 'done' && run.gifts > 0 && <div className="my-2 flex items-center justify-center gap-2 rounded-2xl bg-[#fff3c4] p-2">
+          <span className="text-2xl">🎁</span>
+          {giftItem && travelItem(giftItem) ? <><img src={assetUrl(travelItem(giftItem)!.thumb)} alt="" className="h-12 w-12 object-contain" /><span className="text-sm font-bold">선물! {travelItem(giftItem)!.name.ko}{giftStars > 0 && <> +{giftStars} <StarIcon /></>}</span></> : <span className="text-sm font-bold">선물 {run.gifts}개 · +{giftStars} <StarIcon /></span>}
+        </div>}
         {phase === 'done' && <><p className="text-sm"><StarIcon /> {run.coins}개를 모았어요</p><p className="my-2 text-3xl font-black text-[#b8610a]">+{paid} <StarIcon /></p></>}
         {phase !== 'playing' && <div role="radiogroup" aria-label="단계" className="my-2 flex justify-center gap-1">
           {LEVEL_IDS.map((l) => <button key={l} role="radio" aria-checked={level === l} onClick={() => { setLevel(l); writeRunLevel(l) }} className={`min-h-10 flex-1 rounded-full border px-2 text-sm font-bold ${level === l ? 'border-blush bg-blush text-white' : 'border-black/10 bg-white'}`}>{{ easy: '초급', normal: '중급', hard: '고급' }[l]}</button>)}

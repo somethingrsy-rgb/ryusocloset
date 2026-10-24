@@ -34,11 +34,11 @@ export default defineConfig({
         // 앱 코드만 설치 때 한꺼번에 받는다 (그림 18MB 는 쓸 때 받아서 저장: 업데이트·새로고침이 가볍다)
         globPatterns: ['**/*.{js,css,html,json}', 'icons/*.png', 'assets/sfx/*.mp3'],
         // 마을·농장 배경 음악(각 0.5~1.1MB)은 설치 때 받지 않고 처음 들을 때 받아서 저장한다
-        globIgnores: ['assets/sfx/walk.mp3', 'assets/sfx/birds.mp3', 'assets/sfx/cafe.mp3', 'assets/sfx/room.mp3'],
+        globIgnores: ['assets/sfx/walk.mp3', 'assets/sfx/birds.mp3', 'assets/sfx/cafe.mp3', 'assets/sfx/room.mp3', 'assets/sfx/run.mp3'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => /assets\/sfx\/(?:walk|birds|cafe|room)\.mp3$/i.test(url.pathname),
+            urlPattern: ({ url }) => /assets\/sfx\/(?:walk|birds|cafe|room|run)\.mp3$/i.test(url.pathname),
             handler: 'CacheFirst',
             options: { cacheName: 'ryuso-music', cacheableResponse: { statuses: [0, 200] } },
           },
