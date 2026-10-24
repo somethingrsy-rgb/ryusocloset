@@ -90,7 +90,8 @@ export default function App() {
   const [trayTheme, setTrayTheme] = useState<string | undefined>()
   useEffect(() => { if (mode !== 'room') setTrayTheme(undefined) }, [mode])
   // 방 탭에 있는 동안 배경 음악(탭을 직접 눌러도, 장소 안 "방" 버튼으로 들어와도 같다)
-  useEffect(() => { if (mode !== 'room') return; startBgm('room'); return stopBgm }, [mode])
+  // 방 탭은 방 노래, 코디 탭은 상점과 같은 노래(코디 ↔ 상점을 오가도 끊기지 않고 이어진다)
+  useEffect(() => { const song = mode === 'room' ? 'room' : mode === 'closet' ? 'shop' : null; if (!song) return; startBgm(song); return stopBgm }, [mode])
   const [outfit, setOutfit] = useState<Outfit>(loadCurrent)
   const [tweaks, setTweaks] = useState<Tweaks>(() => loadTweaks(loadCurrent()))
   /** 위치·크기 조절의 실행 취소 기록 (옷을 바꾸면 비운다) */
