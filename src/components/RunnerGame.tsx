@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { isRestoring } from '../lib/restoreGuard'
-import { BG_PER_RUN, BG_START, GIFT_Y, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, LEVELS, LEVEL_IDS, RUN_H, runDuration, readRunLevel, writeRunLevel, type LevelId, START_HEARTS, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
+import { BG_PER_RUN, BG_START, GIFT_Y, MAX_RISE, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, LEVELS, LEVEL_IDS, RUN_H, runDuration, readRunLevel, writeRunLevel, type LevelId, START_HEARTS, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
 import { earnStars } from '../lib/shop'
 import { currentAssignment, findItem, getGame, pickReward, travelItem } from '../lib/game'
 import { playCloud, playGold, playHop, playStar, playWin, startBgm, stopBgm } from '../lib/sound'
@@ -97,7 +97,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const grow = size.w > size.h ? 4 / 3 : 1
   const bgScaleForFit = size.h / BG_UNITS
   // 크기는 화면 높이·너비에 맞추되, 가로 화면에서 높이 뜬 선물 상자와 높은 점프가 위에서 잘리지 않게(길 위 높이가 모자라면 줄인다)
-  const scale = Math.max(0.5, Math.min(size.h / RUN_H, size.w / 400, (BG_ROAD_Y * bgScaleForFit - 70) / (GIFT_Y + 52)))
+  const scale = Math.max(0.5, Math.min(size.h / RUN_H, size.w / 400, (BG_ROAD_Y * bgScaleForFit - 70) / Math.max(GIFT_Y + 52, MAX_RISE + PLAYER_H * grow + 8)))
   // 배경은 화면 높이를 꽉 채우고, 캐릭터·장애물은 그보다 작게 그 위 길에서 달린다
   const bgScale = size.h / BG_UNITS
   const offsetY = Math.max(0, BG_ROAD_Y * bgScale - GROUND_Y * scale)

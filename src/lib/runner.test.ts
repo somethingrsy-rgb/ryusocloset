@@ -52,6 +52,36 @@ describe('달려라 아바타', () => {
     const a = run(newRun(3, 'normal', 1), 5); const b = run(newRun(3, 'normal', 2), 5)
     expect(b.x / a.x).toBeCloseTo(2, 1)
   })
+  it('장애물 위 별 3개는 알맞게 뛰면 모두 먹을 수 있다(단계·화면 폭·타이밍이 조금 달라도)', () => {
+    for (const k of [1, 2]) for (const level of LEVEL_IDS) for (const f of [0.38, 0.45, 0.52]) {
+      let got = 0, passed = 0
+      for (const seed of [1, 7, 42]) {
+        let s = newRun(seed, level, k)
+        for (let t = 0; t < 60 * 55 && !s.over; t++) {
+          const px = s.x + PLAYER_SCREEN_X
+          if (s.jumps === 0 && visible(seed, px, px + 300 * k, level, k).obstacles.some((o) => o.x - px > 0 && o.x - px < speedAt(s.elapsed, level) * k * f)) s = jump(s)
+          s = stepRun(s, 1 / 60)
+        }
+        const obs = visible(seed, 0, s.x + 300, level, k).obstacles.filter((o) => o.x < s.x + PLAYER_SCREEN_X - 10)
+        passed += obs.length
+        got += s.taken.filter((id) => obs.some((o) => id > o.id && id <= o.id + 3)).length
+      }
+      expect(got / passed, `k${k} ${level} lead ${f}`).toBeGreaterThan(2.8)
+    }
+  })
+  it('점프는 낮고 두 번 점프해도 너무 높이 솟지 않는다(아바타가 화면 밖으로 나가지 않게)', () => {
+    let max = 0
+    for (const at of [0.05, 0.15, 0.25, 0.35, 0.43, 0.55]) {
+      let s = jump(newRun(1)); let m = 0
+      for (let t = 0; t < at; t += 1 / 60) { s = stepRun(s, 1 / 60); m = Math.max(m, s.y) }
+      s = jump(s)
+      for (let i = 0; i < 120; i++) { s = stepRun(s, 1 / 60); m = Math.max(m, s.y) }
+      max = Math.max(max, m)
+    }
+    let one = jump(newRun(1)); let m1 = 0
+    for (let i = 0; i < 90; i++) { one = stepRun(one, 1 / 60); m1 = Math.max(m1, one.y) }
+    expect(m1).toBeLessThan(125); expect(max).toBeLessThan(230)
+  })
   it('두 번째 점프는 속도가 갑자기 튀지 않고 부드럽게 솟는다', () => {
     let s = newRun(1)
     s = jump(s); s = run(s, 0.4)
@@ -99,8 +129,8 @@ describe('달려라 아바타', () => {
       let did = 0
       for (let t = 0; t < 200; t++) {
         const dist = g.x - (s.x + PLAYER_SCREEN_X)
-        if (did === 0 && dist < 230) { s = jump(s); did = 1 }
-        else if (jumps === 2 && did === 1 && s.vy < 120 && s.y > 120) { s = jump(s); did = 2 }
+        if (did === 0 && dist < 140) { s = jump(s); did = 1 }
+        else if (jumps === 2 && did === 1 && s.vy < 150 && s.y > 60) { s = jump(s); did = 2 }
         s = stepRun(s, 1 / 60)
       }
       return s.gifts
