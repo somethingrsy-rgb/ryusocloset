@@ -145,8 +145,8 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
         <button className={btn} aria-label="닫기" onClick={onExit}>✕</button>
       </div>
     </header>
-    <div aria-hidden className="pointer-events-none absolute inset-x-3 top-14 z-10 h-1.5 overflow-hidden rounded-full bg-white/60"><div className="h-full rounded-full bg-[#ff8fab]" style={{ width: `${progress * 100}%` }} /></div>
-    {phase === 'playing' && !paused && run.elapsed < 4 && <p className="pointer-events-none absolute inset-x-2 bottom-3 m-0 text-center text-sm font-bold text-[#4c6f3a]">화면을 누르면 점프! 🦘</p>}
+    <div aria-hidden className="pointer-events-none absolute inset-x-3 bottom-2.5 z-10 h-2 overflow-hidden rounded-full bg-white/80 shadow-sm ring-1 ring-black/10"><div className="h-full rounded-full bg-[#ff8fab]" style={{ width: `${progress * 100}%` }} /></div>
+    {phase === 'playing' && !paused && run.elapsed < 4 && <p className="pointer-events-none absolute inset-x-2 bottom-7 m-0 text-center text-sm font-bold text-[#4c6f3a]">화면을 누르면 점프! 🦘</p>}
     {(phase !== 'playing' || paused) && <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 p-4">
       <div className="max-h-full w-full max-w-sm overflow-y-auto rounded-3xl bg-white/95 p-4 text-center shadow-xl">
         <p className="my-1 text-4xl">{phase === 'done' ? (run.over === 'done' ? '🏁' : '💤') : '🏃'}</p>
