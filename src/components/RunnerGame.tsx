@@ -106,7 +106,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
         </span>
       }))}
       {obstacles.map((o) => <span key={o.id} className="absolute -translate-x-1/2 leading-none" style={{ left: o.x - cam, top: GROUND_Y - o.h + 6, fontSize: o.h }}>{o.kind}</span>)}
-      {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[34px] leading-none drop-shadow" style={{ left: c.x - cam, top: GROUND_Y - c.y }}>🪙</span>)}
+      {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[36px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x - cam, top: GROUND_Y - c.y }}><StarIcon /></span>)}
       <div className="absolute" style={{ left: px - PLAYER_W / 2, top: GROUND_Y - run.y - PLAYER_H + 6, width: PLAYER_W, height: PLAYER_H, opacity: blink ? 0.35 : 1 }}>
         <div className={phase === 'playing' && !paused && run.y === 0 ? 'walk-bob h-full w-full' : 'h-full w-full'} style={run.y > 0 ? { transform: `rotate(${Math.max(-12, Math.min(12, run.vy / 60))}deg)` } : undefined}>
           <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
@@ -114,7 +114,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       </div>
     </div>
     <header className="absolute inset-x-2 top-2 z-10 flex items-center justify-between gap-1">
-      <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-bold">{'❤️'.repeat(Math.max(0, run.hearts))}{'🤍'.repeat(Math.max(0, START_HEARTS - run.hearts))} · 🪙 {run.coins}</span>
+      <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-bold">{'❤️'.repeat(Math.max(0, run.hearts))}{'🤍'.repeat(Math.max(0, START_HEARTS - run.hearts))} · <StarIcon /> {run.coins}</span>
       <div className="flex gap-1">
         {phase === 'playing' && <button className={btn} aria-label={paused ? '계속하기' : '일시정지'} onClick={() => setPaused(!paused)}>{paused ? '▶' : 'Ⅱ'}</button>}
         <button className={btn} aria-label="닫기" onClick={onExit}>✕</button>
@@ -126,8 +126,8 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       <div className="w-full max-w-sm rounded-3xl bg-white/95 p-5 text-center shadow-xl">
         <p className="my-1 text-4xl">{phase === 'done' ? (run.over === 'done' ? '🏁' : '💤') : '🏃'}</p>
         <h2 className="my-2 text-xl font-bold">{phase === 'intro' ? '달려라 아바타' : phase === 'done' ? (run.over === 'done' ? '끝까지 달렸어요!' : '하트를 다 썼어요') : '잠깐 쉬어가요'}</h2>
-        {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프!<br />🪨🌵🐌 는 뛰어넘고 🪙 은 먹어요.<br />{RUN_DURATION}초 동안 달리면 별 보너스 {10}개 <StarIcon /></p>}
-        {phase === 'done' && <><p className="text-sm">🪙 {run.coins}개를 모았어요</p><p className="my-2 text-3xl font-black text-[#b8610a]">+{paid} <StarIcon /></p></>}
+        {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프!<br />🪨🌵🐌 는 뛰어넘고 별 <StarIcon /> 은 먹어요.<br />{RUN_DURATION}초 동안 달리면 별 보너스 {10}개 <StarIcon /></p>}
+        {phase === 'done' && <><p className="text-sm"><StarIcon /> {run.coins}개를 모았어요</p><p className="my-2 text-3xl font-black text-[#b8610a]">+{paid} <StarIcon /></p></>}
         {phase !== 'intro' && <p className="text-xs text-black/50">최고 기록 별 {record.best}개</p>}
         <button className="mt-2 min-h-12 w-full rounded-full bg-blush px-4 font-bold text-white" onClick={() => phase === 'playing' ? (setPaused(false), host.current?.focus({ preventScroll: true })) : start()}>{phase === 'intro' ? '달리기 시작' : phase === 'done' ? '한 번 더' : '계속하기'}</button>
         <button className="mt-2 min-h-11 w-full rounded-full bg-petal font-bold" onClick={onExit}>산책으로 돌아가기</button>
