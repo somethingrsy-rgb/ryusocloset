@@ -7,14 +7,19 @@ export const PLAYER_W = 70
 export const PLAYER_H = 105
 /** 화면에서 아바타가 서 있는 가로 위치(월드 x 에서 카메라 앞쪽으로 얼마나 떨어졌는지) */
 export const PLAYER_SCREEN_X = 110
-export const RUN_DURATION = 45
 export const START_HEARTS = 3
-export const FINISH_BONUS = 10
-const SPEED0 = 235
-const SPEED_UP = 3 // 1초마다 빨라지는 양
 const GRAVITY = 2000
 const JUMP_V = 900
-const SLOT = 560
+/** 단계(난이도): 속도, 빨라지는 정도(1초마다), 장애물 사이 간격, 장애물이 나오는 칸 비율, 달리는 시간, 완주 보너스 별 */
+export type LevelId = 'easy' | 'normal' | 'hard'
+export const LEVEL_IDS: readonly LevelId[] = ['easy', 'normal', 'hard']
+export const LEVELS: Record<LevelId, { speed: number; up: number; slot: number; chance: number; duration: number; bonus: number }> = {
+  easy: { speed: 195, up: 1.5, slot: 640, chance: 0.6, duration: 40, bonus: 8 },
+  normal: { speed: 235, up: 3, slot: 560, chance: 0.74, duration: 45, bonus: 10 },
+  hard: { speed: 265, up: 3.5, slot: 520, chance: 0.86, duration: 50, bonus: 16 },
+}
+export const DEFAULT_LEVEL: LevelId = 'normal'
+export const runDuration = (l: LevelId) => LEVELS[l].duration
 const FIRST_SLOT = 760
 const INVULN = 1.2
 
@@ -53,12 +58,13 @@ export interface RunState {
   /** 이미 먹은 코인 id */
   taken: number[]
   seed: number
+  level: LevelId
   over: false | 'done' | 'hurt'
   /** 막 일어난 일(소리·효과용): 한 번 읽으면 지움 */
   events: ('coin' | 'hit' | 'jump')[]
 }
 
-export const newRun = (seed = Math.floor(Math.random() * 1e9)): RunState => ({ elapsed: 0, x: 0, y: 0, vy: 0, hearts: START_HEARTS, coins: 0, invuln: 0, taken: [], seed, over: false, events: [] })
+export const newRun = (seed = Math.floor(Math.random() * 1e9), level: LevelId = DEFAULT_LEVEL): RunState => ({ elapsed: 0, x: 0, y: 0, vy: 0, hearts: START_HEARTS, coins: 0, invuln: 0, taken: [], seed, level, over: false, events: [] })
 
 const rng = (seed: number, i: number) => {
   let h = Math.imul(seed ^ Math.imul(i + 1, 2654435761), 2246822519)
@@ -67,11 +73,11 @@ const rng = (seed: number, i: number) => {
 }
 
 /** 월드를 칸(슬롯)으로 나눠, 같은 씨앗이면 늘 같은 장애물·코인이 나온다. 장애물 사이는 항상 점프할 만큼 떨어져 있다 */
-export function slotContent(seed: number, slot: number): { obstacle?: Obstacle; coins: Coin[] } {
-  const x = FIRST_SLOT + slot * SLOT
+export function slotContent(seed: number, slot: number, level: LevelId = DEFAULT_LEVEL): { obstacle?: Obstacle; coins: Coin[] } {
+  const x = FIRST_SLOT + slot * LEVELS[level].slot
   const r = rng(seed, slot)
   const coins: Coin[] = []
-  if (r < 0.74) {
+  if (r < LEVELS[level].chance) {
     const pick = Math.min(2, Math.floor(rng(seed, slot + 5000) * 3))
     const img = `${zoneAt(x)}_${pick}`
     const aspect = ASPECT[img]
@@ -85,20 +91,21 @@ export function slotContent(seed: number, slot: number): { obstacle?: Obstacle; 
   return { coins }
 }
 
-export function visible(seed: number, fromX: number, toX: number) {
+export function visible(seed: number, fromX: number, toX: number, level: LevelId = DEFAULT_LEVEL) {
+  const SLOT = LEVELS[level].slot
   const a = Math.max(0, Math.floor((fromX - FIRST_SLOT - 160) / SLOT))
   const b = Math.max(a, Math.ceil((toX - FIRST_SLOT + 160) / SLOT))
   const obstacles: Obstacle[] = []
   const coins: Coin[] = []
   for (let s = a; s <= b; s++) {
-    const c = slotContent(seed, s)
+    const c = slotContent(seed, s, level)
     if (c.obstacle) obstacles.push(c.obstacle)
     coins.push(...c.coins)
   }
   return { obstacles, coins }
 }
 
-export const speedAt = (elapsed: number) => SPEED0 + SPEED_UP * elapsed
+export const speedAt = (elapsed: number, level: LevelId = DEFAULT_LEVEL) => LEVELS[level].speed + LEVELS[level].up * elapsed
 
 export function jump(s: RunState): RunState {
   if (s.over || s.y > 0.5) return s
@@ -109,7 +116,7 @@ export function jump(s: RunState): RunState {
 export function stepRun(s: RunState, dt: number): RunState {
   if (s.over) return s
   const elapsed = s.elapsed + dt
-  const x = s.x + speedAt(s.elapsed) * dt
+  const x = s.x + speedAt(s.elapsed, s.level) * dt
   let vy = s.vy - GRAVITY * dt
   let y = s.y + vy * dt
   if (y <= 0) { y = 0; vy = 0 }
@@ -117,7 +124,7 @@ export function stepRun(s: RunState, dt: number): RunState {
   const events: RunState['events'] = [...s.events]
   const invuln = Math.max(0, s.invuln - dt)
   const px = x + PLAYER_SCREEN_X // 아바타의 월드 위치
-  const { obstacles, coins: cs } = visible(s.seed, px - 200, px + 200)
+  const { obstacles, coins: cs } = visible(s.seed, px - 200, px + 200, s.level)
   let hurt = false
   if (invuln === 0) {
     for (const o of obstacles) {
@@ -132,25 +139,37 @@ export function stepRun(s: RunState, dt: number): RunState {
   }
   let over: RunState['over'] = false
   if (hearts <= 0) over = 'hurt'
-  else if (elapsed >= RUN_DURATION) over = 'done'
+  else if (elapsed >= LEVELS[s.level].duration) over = 'done'
   return { ...s, elapsed, x, y, vy, hearts, coins, taken, invuln: hurt ? INVULN : invuln, over, events }
 }
 
 /** 별 보상: 모은 코인 1개당 별 1개, 끝까지 달리면 보너스. 하트를 다 써서 끝나도 모은 코인은 받는다 */
-export const rewardStars = (s: Pick<RunState, 'coins' | 'over'>) => s.coins + (s.over === 'done' ? FINISH_BONUS : 0)
+export const rewardStars = (s: Pick<RunState, 'coins' | 'over'> & { level?: LevelId }) => s.coins + (s.over === 'done' ? LEVELS[s.level ?? DEFAULT_LEVEL].bonus : 0)
 
 const KEY = 'ryuso.runner.v1'
-export interface RunRecord { best: number; rounds: number }
+const LEVEL_KEY = 'ryuso.runner.level.v1'
+export interface RunRecord { best: Record<LevelId, number>; rounds: number }
+const num0 = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(0, v) : 0)
 export function readRunRecord(): RunRecord {
   try {
     const v = JSON.parse(localStorage.getItem(KEY) ?? 'null')
-    if (v && Number.isFinite(v.best) && Number.isFinite(v.rounds)) return { best: Math.max(0, v.best), rounds: Math.max(0, v.rounds) }
+    if (v && typeof v === 'object') {
+      // 예전 기록(best 숫자 하나)은 중급 기록으로 이어받는다
+      const b = typeof v.best === 'object' && v.best ? v.best : { normal: v.best }
+      return { best: { easy: num0(b.easy), normal: num0(b.normal), hard: num0(b.hard) }, rounds: num0(v.rounds) }
+    }
   } catch { /* 읽지 못하면 새로 */ }
-  return { best: 0, rounds: 0 }
+  return { best: { easy: 0, normal: 0, hard: 0 }, rounds: 0 }
 }
-export function writeRunRecord(stars: number): RunRecord {
+export function writeRunRecord(stars: number, level: LevelId): RunRecord {
   const old = readRunRecord()
-  const next = { best: Math.max(old.best, stars), rounds: old.rounds + 1 }
+  const next = { best: { ...old.best, [level]: Math.max(old.best[level], stars) }, rounds: old.rounds + 1 }
   try { localStorage.setItem(KEY, JSON.stringify(next)) } catch { /* 저장 실패는 무시 */ }
   return next
+}
+export function readRunLevel(): LevelId {
+  try { const v = localStorage.getItem(LEVEL_KEY); return LEVEL_IDS.find((l) => l === v) ?? DEFAULT_LEVEL } catch { return DEFAULT_LEVEL }
+}
+export function writeRunLevel(l: LevelId) {
+  try { localStorage.setItem(LEVEL_KEY, l) } catch { /* 저장 실패는 무시 */ }
 }
