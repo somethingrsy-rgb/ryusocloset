@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BYES, CALL_ANIMALS, HELLOS, SHARED_TOPICS, fillLine, kidWords, planCall } from './animalCalls'
+import { BYES, CALL_ANIMALS, HELLOS, SHARED_TOPICS, allCallLines, fillLine, kidWords, lineId, planCall } from './animalCalls'
 
 const seeded = (seed: number) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 }
 
@@ -38,5 +38,17 @@ describe('동물 전화 놀이', () => {
       const own = CALL_ANIMALS[animal].topics.map((tp) => fillLine(tp.ask, CALL_ANIMALS[animal]))
       expect(plan.topics.some((tp) => own.includes(tp.ask))).toBe(true)
     }
+  })
+  it('통화에서 동물이 하는 말은 모두 녹음 목록에 있고, 같은 대사는 늘 같은 녹음 번호', () => {
+    const names = ['류소', '소영', '유하', '유엘']
+    const all = new Set(allCallLines(names).map((l) => `${l.animal}/${l.id}`))
+    for (let animal = 0; animal < CALL_ANIMALS.length; animal++) for (const kid of names) for (let s = 1; s < 20; s++) {
+      const plan = planCall(animal, seeded(s), kid)
+      for (const text of [plan.hello, plan.bye, ...plan.topics.flatMap((tp) => [tp.ask, ...tp.replies.map((r) => r.answer)])]) {
+        expect(all.has(`${animal}/${lineId(animal, text)}`), text).toBe(true)
+      }
+    }
+    expect(lineId(0, '안녕')).toBe(lineId(0, '안녕'))
+    expect(lineId(0, '안녕')).not.toBe(lineId(1, '안녕'))
   })
 })

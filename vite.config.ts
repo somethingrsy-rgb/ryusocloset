@@ -43,6 +43,12 @@ export default defineConfig({
             options: { cacheName: 'ryuso-music', cacheableResponse: { statuses: [0, 200] } },
           },
           {
+            // 동물 전화 녹음(대사마다 이름이 달라 바뀌지 않는다): 처음 들을 때 받아서 저장
+            urlPattern: ({ url }) => /cafe\/voice\/.+\.mp3$/i.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'ryuso-voice', expiration: { maxEntries: 600 }, cacheableResponse: { statuses: [0, 200] } },
+          },
+          {
             // 그림은 인터넷이 되면 항상 최신으로 받고(3초 안에 못 받으면 저장해 둔 것), 오프라인에서는 저장해 둔 것을 쓴다
             urlPattern: ({ url }) => /\.(?:webp|png|svg|jpg)$/i.test(url.pathname),
             handler: 'NetworkFirst',
