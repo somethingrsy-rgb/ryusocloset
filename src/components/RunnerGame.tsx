@@ -141,7 +141,10 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
     </div>
     <div aria-hidden className="pointer-events-none absolute left-0 origin-top-left" style={{ width: viewW, height: RUN_H, top: offsetY, transform: `scale(${scale})` }}>
       <div className="absolute inset-0 will-change-transform" style={{ transform: `translate3d(${-cam}px,0,0)` }}>
-      {obstacles.map((o) => <img key={o.id} src={assetUrl(`assets/runner/${o.img}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: o.x - o.dw * OB_GROW / 2, top: GROUND_Y - o.h * OB_GROW + 8, width: o.dw * OB_GROW, height: o.h * OB_GROW, maxWidth: 'none' }} />)}
+      {obstacles.map((o) => o.fly
+        // 나는 장애물: 서 있는 아바타 머리 바로 위를 난다(뛰면 머리가 닿는다)
+        ? <span key={o.id} className="fly-bob absolute -translate-x-1/2 text-[60px] leading-none will-change-transform" style={{ left: o.x, top: GROUND_Y - PLAYER_H * grow - 66 }}>{o.img}</span>
+        : <img key={o.id} src={assetUrl(`assets/runner/${o.img}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: o.x - o.dw * OB_GROW / 2, top: GROUND_Y - o.h * OB_GROW + 8, width: o.dw * OB_GROW, height: o.h * OB_GROW, maxWidth: 'none' }} />)}
       {gifts.filter((g) => !run.taken.includes(g.id)).map((g) => <img key={g.id} src={assetUrl('assets/runner/gift.webp')} alt="" draggable={false} className="absolute -translate-x-1/2 -translate-y-1/2 animate-bounce select-none drop-shadow-[0_0_8px_#ffd54a]" style={{ left: g.x, top: GROUND_Y - g.y, width: 64, height: 64, objectFit: 'contain', maxWidth: 'none' }} />)}
       {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[50px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x, top: GROUND_Y - c.y }}><StarIcon className="max-w-none" /></span>)}
       </div>
@@ -167,7 +170,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       <div className={`max-h-full w-full overflow-y-auto rounded-3xl bg-white/95 text-center shadow-xl ${short ? 'max-w-2xl p-3' : 'max-w-sm p-4'}`}>
         <p className={short ? 'hidden' : 'my-1 text-4xl'}>{phase === 'done' ? (run.over === 'done' ? '🏁' : '💤') : '🏃'}</p>
         <h2 className="my-2 text-xl font-bold">{phase === 'intro' ? '달려라 아바타' : phase === 'done' ? (run.over === 'done' ? '끝까지 달렸어요!' : '하트를 다 썼어요') : '잠깐 쉬어가요'}</h2>
-        {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프, 공중에서 한 번 더 누르면 높이 뛰어요!<br />높이 뜬 🎁 선물 상자는 두 번 뛰어서 받아요.<br />장애물은 뛰어넘고 별 <StarIcon /> 은 먹어요.<br />{LEVELS[level].duration}초 동안 달리면 별 보너스 {LEVELS[level].bonus}개 <StarIcon /></p>}
+        {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프, 공중에서 한 번 더 누르면 높이 뛰어요!<br />높이 뜬 🎁 선물 상자는 두 번 뛰어서 받아요.<br />장애물은 뛰어넘고 별 <StarIcon /> 은 먹어요.<br />{LEVELS[level].fly > 0 && <>🐦 하늘을 나는 친구 밑은 뛰지 말고 그대로 지나가요!<br /></>}{LEVELS[level].duration}초 동안 달리면 별 보너스 {LEVELS[level].bonus}개 <StarIcon /></p>}
         {phase === 'done' && run.gifts > 0 && <div className="my-2 flex items-center justify-center gap-2 rounded-2xl bg-[#fff3c4] p-2">
           <span className="text-2xl">🎁</span>
           {giftItem && travelItem(giftItem) ? <><img src={assetUrl(travelItem(giftItem)!.thumb)} alt="" className="h-12 w-12 object-contain" /><span className="text-sm font-bold">선물! {travelItem(giftItem)!.name.ko}{giftStars > 0 && <> +{giftStars} <StarIcon /></>}</span></> : <span className="text-sm font-bold">선물 {run.gifts}개 · +{giftStars} <StarIcon /></span>}
