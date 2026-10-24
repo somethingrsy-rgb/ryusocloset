@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PLAYER_SCREEN_X, LEVELS, LEVEL_IDS, startHearts, jump, newRun, rewardStars, slotContent, speedAt, stepRun, visible, type RunState } from './runner'
+import { PLAYER_SCREEN_X, LEVELS, LEVEL_IDS, levelName, startHearts, jump, newRun, rewardStars, slotContent, speedAt, stepRun, visible, type RunState } from './runner'
 
 const run = (s: RunState, secs: number, jumper?: (s: RunState) => boolean) => {
   for (let t = 0; t < secs * 60 && !s.over; t++) {
@@ -24,10 +24,22 @@ describe('달려라 아바타', () => {
       for (let i = 1; i < obstacles.length; i++) expect(obstacles[i].x - obstacles[i - 1].x).toBeGreaterThanOrEqual(LEVELS[level].slot)
     }
   })
-  it('초급은 하트 5개, 나머지는 3개로 시작한다', () => {
+  it('1단계는 하트 5개, 9·10단계는 2개, 나머지는 3개로 시작한다', () => {
     expect(newRun(1, 'easy').hearts).toBe(5)
     expect(newRun(1, 'normal').hearts).toBe(3)
     expect(newRun(1, 'hard').hearts).toBe(3)
+    expect(newRun(1, 'l8').hearts).toBe(3)
+    expect(newRun(1, 'l10').hearts).toBe(2)
+  })
+  it('단계가 올라갈수록 빠르고 장애물이 많고 무적 시간이 짧다, 이름은 1~10단계', () => {
+    for (let i = 1; i < LEVEL_IDS.length; i++) {
+      const a = LEVELS[LEVEL_IDS[i - 1]], b = LEVELS[LEVEL_IDS[i]]
+      expect(b.speed).toBeGreaterThan(a.speed)
+      expect(b.chance).toBeGreaterThan(a.chance)
+      expect(b.invuln).toBeLessThanOrEqual(a.invuln)
+    }
+    expect(levelName('easy')).toBe('1단계')
+    expect(levelName('l10')).toBe('10단계')
   })
   it('가만히 있으면 장애물에 부딪혀 하트가 줄고 끝날 수 있다', () => {
     const s = run(newRun(7), 45)
@@ -71,7 +83,8 @@ describe('달려라 아바타', () => {
         passed += obs.length
         got += s.taken.filter((id) => obs.some((o) => id > o.id && id <= o.id + 3)).length
       }
-      expect(got / passed, `k${k} ${level} lead ${f}`).toBeGreaterThan(2.8)
+      // 4단계부터는 빨라서 별 놓치기가 조금 더 쉽다
+      expect(got / passed, `k${k} ${level} lead ${f}`).toBeGreaterThan(LEVEL_IDS.indexOf(level) < 3 ? 2.8 : 2.6)
     }
   })
   it('점프는 낮고 두 번 점프해도 너무 높이 솟지 않는다(아바타가 화면 밖으로 나가지 않게)', () => {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { isRestoring } from '../lib/restoreGuard'
-import { BG_PER_RUN, BG_START, GIFT_Y, MAX_RISE, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, LEVELS, LEVEL_IDS, RUN_H, runDuration, readRunLevel, writeRunLevel, type LevelId, startHearts, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
+import { BG_PER_RUN, BG_START, GIFT_Y, MAX_RISE, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, LEVELS, LEVEL_IDS, levelName, RUN_H, runDuration, readRunLevel, writeRunLevel, type LevelId, startHearts, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
 import { earnStars } from '../lib/shop'
 import { currentAssignment, findItem, getGame, pickReward, travelItem } from '../lib/game'
 import { playCloud, playGold, playHop, playStar, playWin, startBgm, stopBgm } from '../lib/sound'
@@ -163,9 +163,9 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
     </header>
     <div aria-hidden className="pointer-events-none absolute inset-x-3 bottom-2.5 z-10 h-2 overflow-hidden rounded-full bg-white/80 shadow-sm ring-1 ring-black/10"><div className="h-full w-full origin-left rounded-full bg-[#ff8fab] will-change-transform" style={{ transform: `scaleX(${progress})` }} /></div>
     {phase === 'playing' && !paused && run.elapsed < 4 && <p className="pointer-events-none absolute inset-x-2 bottom-7 m-0 text-center text-sm font-bold text-[#4c6f3a]">화면을 누르면 점프! 🦘</p>}
-    {(phase !== 'playing' || paused) && <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 p-4">
-      <div className="max-h-full w-full max-w-sm overflow-y-auto rounded-3xl bg-white/95 p-4 text-center shadow-xl">
-        <p className="my-1 text-4xl">{phase === 'done' ? (run.over === 'done' ? '🏁' : '💤') : '🏃'}</p>
+    {(phase !== 'playing' || paused) && <div className={`absolute inset-0 z-20 flex items-center justify-center bg-black/20 ${short ? 'p-2' : 'p-4'}`}>
+      <div className={`max-h-full w-full overflow-y-auto rounded-3xl bg-white/95 text-center shadow-xl ${short ? 'max-w-2xl p-3' : 'max-w-sm p-4'}`}>
+        <p className={short ? 'hidden' : 'my-1 text-4xl'}>{phase === 'done' ? (run.over === 'done' ? '🏁' : '💤') : '🏃'}</p>
         <h2 className="my-2 text-xl font-bold">{phase === 'intro' ? '달려라 아바타' : phase === 'done' ? (run.over === 'done' ? '끝까지 달렸어요!' : '하트를 다 썼어요') : '잠깐 쉬어가요'}</h2>
         {phase === 'intro' && <p className="text-sm leading-relaxed">자동으로 달려요. 화면을 누르면 점프, 공중에서 한 번 더 누르면 높이 뛰어요!<br />높이 뜬 🎁 선물 상자는 두 번 뛰어서 받아요.<br />장애물은 뛰어넘고 별 <StarIcon /> 은 먹어요.<br />{LEVELS[level].duration}초 동안 달리면 별 보너스 {LEVELS[level].bonus}개 <StarIcon /></p>}
         {phase === 'done' && run.gifts > 0 && <div className="my-2 flex items-center justify-center gap-2 rounded-2xl bg-[#fff3c4] p-2">
@@ -173,8 +173,8 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
           {giftItem && travelItem(giftItem) ? <><img src={assetUrl(travelItem(giftItem)!.thumb)} alt="" className="h-12 w-12 object-contain" /><span className="text-sm font-bold">선물! {travelItem(giftItem)!.name.ko}{giftStars > 0 && <> +{giftStars} <StarIcon /></>}</span></> : <span className="text-sm font-bold">선물 {run.gifts}개 · +{giftStars} <StarIcon /></span>}
         </div>}
         {phase === 'done' && <><p className="text-sm"><StarIcon /> {run.coins}개를 모았어요</p><p className="my-2 text-3xl font-black text-[#b8610a]">+{paid} <StarIcon /></p></>}
-        {phase !== 'playing' && <div role="radiogroup" aria-label="단계" className="my-2 flex justify-center gap-1">
-          {LEVEL_IDS.map((l) => <button key={l} role="radio" aria-checked={level === l} onClick={() => { setLevel(l); writeRunLevel(l) }} className={`min-h-10 flex-1 rounded-full border px-2 text-sm font-bold ${level === l ? 'border-blush bg-blush text-white' : 'border-black/10 bg-white'}`}>{{ easy: '초급', normal: '중급', hard: '고급' }[l]}</button>)}
+        {phase !== 'playing' && <div role="radiogroup" aria-label="단계" className={`my-2 grid gap-1 ${short ? 'grid-cols-10' : 'grid-cols-5'}`}>
+          {LEVEL_IDS.map((l) => <button key={l} role="radio" aria-checked={level === l} onClick={() => { setLevel(l); writeRunLevel(l); if (phase === 'intro') { const fresh = newRun(undefined, l, speedKRef.current); live.current = fresh; setRun(fresh) } }} className={`min-h-10 rounded-full border px-0.5 font-bold whitespace-nowrap ${short ? 'text-xs' : 'text-sm'} ${level === l ? 'border-blush bg-blush text-white' : 'border-black/10 bg-white'}`}>{levelName(l)}</button>)}
         </div>}
         {phase !== 'intro' && <p className="text-xs text-black/50">최고 기록 별 {record.best[level]}개</p>}
         <button className="mt-2 min-h-12 w-full rounded-full bg-blush px-4 font-bold text-white" onClick={() => phase === 'playing' ? (setPaused(false), host.current?.focus({ preventScroll: true })) : start()}>{phase === 'intro' ? '달리기 시작' : phase === 'done' ? '한 번 더' : '계속하기'}</button>
