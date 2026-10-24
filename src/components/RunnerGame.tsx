@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { isRestoring } from '../lib/restoreGuard'
-import { BG_PER_RUN, BG_START, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, LEVELS, LEVEL_IDS, RUN_H, runDuration, readRunLevel, writeRunLevel, type LevelId, START_HEARTS, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
+import { BG_PER_RUN, BG_START, GIFT_Y, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, LEVELS, LEVEL_IDS, RUN_H, runDuration, readRunLevel, writeRunLevel, type LevelId, START_HEARTS, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
 import { earnStars } from '../lib/shop'
 import { currentAssignment, findItem, getGame, pickReward, travelItem } from '../lib/game'
 import { playCloud, playGold, playHop, playStar, playWin, startBgm, stopBgm } from '../lib/sound'
@@ -92,7 +92,9 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   }
 
   // 세로로 긴 화면에서도 가로로 충분히(400) 보이게 하고, 위가 남으면 하늘색으로 채운다(그림 맨 위가 하늘색)
-  const scale = Math.min(size.h / RUN_H, size.w / 400)
+  const bgScaleForFit = size.h / BG_UNITS
+  // 크기는 화면 높이·너비에 맞추되, 가로 화면에서 높이 뜬 선물 상자와 높은 점프가 위에서 잘리지 않게(길 위 높이가 모자라면 줄인다)
+  const scale = Math.max(0.5, Math.min(size.h / RUN_H, size.w / 400, (BG_ROAD_Y * bgScaleForFit - 70) / (GIFT_Y + 44)))
   // 배경은 화면 높이를 꽉 채우고, 캐릭터·장애물은 그보다 작게 그 위 길에서 달린다
   const bgScale = size.h / BG_UNITS
   const offsetY = Math.max(0, BG_ROAD_Y * bgScale - GROUND_Y * scale)
@@ -120,7 +122,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
     </div>
     <div aria-hidden className="pointer-events-none absolute left-0 origin-top-left" style={{ width: viewW, height: RUN_H, top: offsetY, transform: `scale(${scale})` }}>
       {obstacles.map((o) => <img key={o.id} src={assetUrl(`assets/runner/${o.img}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: o.x - cam - o.dw / 2, top: GROUND_Y - o.h + 8, width: o.dw, height: o.h, maxWidth: 'none' }} />)}
-      {gifts.filter((g) => !run.taken.includes(g.id)).map((g) => <span key={g.id} className="absolute -translate-x-1/2 -translate-y-1/2 animate-bounce text-[44px] leading-none drop-shadow-[0_0_8px_#ffd54a]" style={{ left: g.x - cam, top: GROUND_Y - g.y }}>🎁</span>)}
+      {gifts.filter((g) => !run.taken.includes(g.id)).map((g) => <img key={g.id} src={assetUrl('assets/runner/gift.webp')} alt="" draggable={false} className="absolute -translate-x-1/2 -translate-y-1/2 animate-bounce select-none drop-shadow-[0_0_8px_#ffd54a]" style={{ left: g.x - cam, top: GROUND_Y - g.y, width: 52, height: 52, objectFit: 'contain', maxWidth: 'none' }} />)}
       {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[36px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x - cam, top: GROUND_Y - c.y }}><StarIcon /></span>)}
       <div className="absolute" style={{ left: px - PLAYER_W / 2, top: GROUND_Y - run.y - PLAYER_H + 6, width: PLAYER_W, height: PLAYER_H, opacity: blink ? 0.35 : 1 }}>
         <div className={phase === 'playing' && !paused && run.y === 0 ? 'walk-bob h-full w-full' : 'h-full w-full'} style={run.y > 0 ? { transform: `rotate(${Math.max(-12, Math.min(12, run.vy / 60))}deg)` } : undefined}>
