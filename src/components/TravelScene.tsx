@@ -338,6 +338,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           </div>
         </div>
       )}
+      {/* 집 안: 테두리가 네온처럼 반짝인다(들어갈 때 한 번 환하게, 그 뒤로 은은하게) */}
+      <div aria-hidden className="neon-frame pointer-events-none absolute inset-0 z-30 rounded-3xl" />
     </div>
   )
 }
