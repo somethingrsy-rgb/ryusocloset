@@ -97,7 +97,7 @@ export const setSoundEnabled = (on: boolean) => { enabled = on; syncBgm() }
 /* ---------- 배경 음악(마을 산책): 한 곡을 반복한다. 효과음 끄기를 따르고, 앱이 가려지면 멈춘다 ---------- */
 let bgmWant: string | null = null
 let bgmNode: { src: AudioBufferSourceNode; name: string } | null = null
-const BGM_GAIN: Record<string, number> = { walk: 0.12, birds: 0.18, cafe: 0.1, room: 0.2, run: 0.1, shop: 0.12 }
+const BGM_GAIN: Record<string, number> = { walk: 0.08, birds: 0.18, cafe: 0.1, room: 0.2, run: 0.1, shop: 0.12 }
 function stopBgmNode() {
   if (!bgmNode) return
   try { bgmNode.src.stop() } catch { /* 이미 멈춤 */ }
@@ -231,7 +231,7 @@ export const playTap = () => playSample('tap', 0.45, (c, t) => { tone(c, t, jitt
 /** 물을 준다: 직접 고른 소리(water.mp3) */
 export const playWater = () => playSample('water', 0.1, (c, t) => { for (let i = 0; i < 4; i++) tone(c, t + i * 0.07, jitter(1200 + i * 220), jitter(800 + i * 120), 0.09, 0.12) })
 /** 수확한다: 직접 고른 소리(harvest.mp3) */
-export const playHarvest = () => playSample('harvest', 0.35, () => {}) // 직접 고른 소리만 쓴다(못 받으면 소리 없음)
+export const playHarvest = () => playSample('harvest', 0.23, () => {}) // 직접 고른 소리만 쓴다(못 받으면 소리 없음)
 /** 코인을 받거나 쓴다(짤랑) */
 export const playCoin = () => playSample('coin', 0.25, (c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
 /** 카페: 주문을 받았다(뾰롱) */

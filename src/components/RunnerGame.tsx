@@ -92,8 +92,8 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   }
 
   // 세로로 긴 화면에서도 가로로 충분히(400) 보이게 하고, 위가 남으면 하늘색으로 채운다(그림 맨 위가 하늘색)
-  // 아바타 그림 크기(부딪히는 크기는 그대로): 가로 화면은 2배, 세로 화면은 1.5배
-  const grow = size.w > size.h ? 2 : 1.5
+  // 아바타 그림 크기(부딪히는 크기는 그대로): 가로 화면은 4/3배, 세로 화면은 1배
+  const grow = size.w > size.h ? 4 / 3 : 1
   const bgScaleForFit = size.h / BG_UNITS
   // 크기는 화면 높이·너비에 맞추되, 가로 화면에서 높이 뜬 선물 상자와 높은 점프가 위에서 잘리지 않게(길 위 높이가 모자라면 줄인다)
   const scale = Math.max(0.5, Math.min(size.h / RUN_H, size.w / 400, (BG_ROAD_Y * bgScaleForFit - 70) / (GIFT_Y + 52)))
