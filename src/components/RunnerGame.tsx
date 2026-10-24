@@ -98,6 +98,9 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const bgScaleForFit = size.h / BG_UNITS
   // 크기는 화면 높이·너비에 맞추되, 가로 화면에서 높이 뜬 선물 상자와 높은 점프가 위에서 잘리지 않게(길 위 높이가 모자라면 줄인다)
   const scale = Math.max(0.5, Math.min(size.h / RUN_H, size.w / 400, (BG_ROAD_Y * bgScaleForFit - 70) / (GIFT_Y + 52)))
+  // 두 번 점프로 높이 올라가도 아바타 머리가 화면 위로 사라지지 않게(그림만 멈추고 별·선물 판정은 그대로)
+  const maxVisY = Math.max(0, (BG_ROAD_Y * bgScaleForFit - 64) / scale - PLAYER_H * grow)
+  const visY = Math.min(run.y, maxVisY)
   // 배경은 화면 높이를 꽉 채우고, 캐릭터·장애물은 그보다 작게 그 위 길에서 달린다
   const bgScale = size.h / BG_UNITS
   const offsetY = Math.max(0, BG_ROAD_Y * bgScale - GROUND_Y * scale)
@@ -129,7 +132,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       {obstacles.map((o) => <img key={o.id} src={assetUrl(`assets/runner/${o.img}.webp`)} alt="" draggable={false} className="absolute select-none" style={{ left: o.x - cam - o.dw / 2, top: GROUND_Y - o.h + 8, width: o.dw, height: o.h, maxWidth: 'none' }} />)}
       {gifts.filter((g) => !run.taken.includes(g.id)).map((g) => <img key={g.id} src={assetUrl('assets/runner/gift.webp')} alt="" draggable={false} className="absolute -translate-x-1/2 -translate-y-1/2 animate-bounce select-none drop-shadow-[0_0_8px_#ffd54a]" style={{ left: g.x - cam, top: GROUND_Y - g.y, width: 64, height: 64, objectFit: 'contain', maxWidth: 'none' }} />)}
       {coins.filter((c) => !run.taken.includes(c.id)).map((c) => <span key={c.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-[50px] leading-none drop-shadow-[0_0_6px_#ffd54a]" style={{ left: c.x - cam, top: GROUND_Y - c.y }}><StarIcon /></span>)}
-      <div className="absolute" style={{ left: px - PLAYER_W * grow / 2, top: GROUND_Y - run.y - PLAYER_H * grow + 6, width: PLAYER_W * grow, height: PLAYER_H * grow, opacity: blink ? 0.35 : 1 }}>
+      <div className="absolute" style={{ left: px - PLAYER_W * grow / 2, top: GROUND_Y - visY - PLAYER_H * grow + 6, width: PLAYER_W * grow, height: PLAYER_H * grow, opacity: blink ? 0.35 : 1 }}>
         <div className={phase === 'playing' && !paused && run.y === 0 ? 'walk-bob h-full w-full' : 'h-full w-full'} style={run.y > 0 ? { transform: `rotate(${Math.max(-5, Math.min(5, run.vy / 160))}deg)` } : undefined}>
           <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
         </div>
