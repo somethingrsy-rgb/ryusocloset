@@ -54,7 +54,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, initial
   const [scene, setScene] = useState<string | null>(initialPlaceId)
   // 마을과 집 안에서는 배경 음악이 이어지고, 게임 화면(별비·수학·점프·영어)에서는 끈다
   const walking = !starRain && !runner && !math && !jump && !speaking
-  useEffect(() => { if (!walking) return; startBgm('walk'); return stopBgm }, [walking])
+  useEffect(() => { if (!walking) return; startBgm('room'); return stopBgm }, [walking])
 
   if (runner) return <RunnerGame outfit={outfit} tweaks={tweaks} onExit={() => setRunner(false)} />
   if (starRain) return <StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} />

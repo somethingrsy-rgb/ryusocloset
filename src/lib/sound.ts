@@ -127,7 +127,13 @@ function syncBgm() {
 }
 /** 배경 음악을 켠다(이미 같은 곡이면 그대로) */
 export const startBgm = (name: string) => { bgmWant = name; syncBgm() }
-export const stopBgm = () => { bgmWant = null; syncBgm() }
+// 화면을 옮길 때(방 탭 → 보물 탭 등) 같은 노래가 이어지면 끊지 않도록, 멈춤은 잠깐 기다렸다가 한다
+let stopTimer: ReturnType<typeof setTimeout> | undefined
+export const stopBgm = () => {
+  bgmWant = null
+  clearTimeout(stopTimer)
+  stopTimer = setTimeout(syncBgm, 250)
+}
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (!ctx || !bgmNode) return
