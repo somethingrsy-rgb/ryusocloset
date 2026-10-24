@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { CALL_ANIMALS, planCall, type CallPlan } from '../lib/animalCalls'
+import { assetUrl } from '../lib/items'
 import { playBell, playTap, soundOn } from '../lib/sound'
 
 const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window
@@ -14,6 +15,13 @@ export function unlockSpeech() {
   } catch { /* 음성을 못 써도 글로 통화한다 */ }
 }
 
+/** 기기에 있는 한국어 목소리 중 가장 자연스러운 것: 아이폰의 '유나(고품질·프리미엄)', 안드로이드·크롬의 구글·신경망 목소리를 먼저 고른다 */
+function koreanVoice(): SpeechSynthesisVoice | undefined {
+  const ko = window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith('ko'))
+  const score = (v: SpeechSynthesisVoice) => (/premium|프리미엄/i.test(v.name) ? 4 : 0) + (/enhanced|향상|고품질/i.test(v.name) ? 3 : 0) + (/neural|natural|online|google/i.test(v.name) ? 2 : 0) + (/yuna|유나/i.test(v.name) ? 1 : 0)
+  return ko.sort((x, y) => score(y) - score(x))[0]
+}
+
 /** 동물 목소리로 한 줄 읽기. 다 읽거나(혹은 못 읽으면 글 길이만큼 기다린 뒤) 끝난다 */
 function speakLine(text: string, pitch: number, rate: number, muted: boolean): { done: Promise<void>; cancel: () => void } {
   let timer = 0
@@ -25,7 +33,7 @@ function speakLine(text: string, pitch: number, rate: number, muted: boolean): {
     try {
       const u = new SpeechSynthesisUtterance(text.replace(/[~]/g, ''))
       u.lang = 'ko-KR'
-      const ko = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith('ko'))
+      const ko = koreanVoice()
       if (ko) u.voice = ko
       u.pitch = pitch
       u.rate = rate
@@ -40,9 +48,9 @@ function speakLine(text: string, pitch: number, rate: number, muted: boolean): {
 interface Line { who: 'animal' | 'me'; text: string }
 
 /** 카페 동물에게 전화 걸기: 따르릉 → 받으면 인사 → 이야기 3개(동물이 묻고 아이가 대답 버튼을 고른다) → 끝인사 → 끊기 */
-export function AnimalCall({ animal, emoji, muted, onClose }: { animal: number; emoji: string; muted: boolean; onClose: () => void }) {
+export function AnimalCall({ animal, kid, muted, onClose }: { animal: number; kid?: string; muted: boolean; onClose: () => void }) {
   const a = CALL_ANIMALS[animal]
-  const [plan] = useState<CallPlan>(() => planCall(animal))
+  const [plan] = useState<CallPlan>(() => planCall(animal, Math.random, kid))
   const [phase, setPhase] = useState<'ring' | 'talk' | 'bye'>('ring')
   const [lines, setLines] = useState<Line[]>([])
   const [topic, setTopic] = useState(0)
@@ -52,6 +60,7 @@ export function AnimalCall({ animal, emoji, muted, onClose }: { animal: number; 
   const current = useRef<{ cancel: () => void } | null>(null)
   const logRef = useRef<HTMLDivElement>(null)
   const quiet = muted || !soundOn()
+  const face = assetUrl(`cafe/call/${a.img}.webp`)
 
   /** 동물이 여러 줄을 차례로 말한다 */
   const say = async (texts: string[]) => {
@@ -111,7 +120,7 @@ export function AnimalCall({ animal, emoji, muted, onClose }: { animal: number; 
       <div className="mt-2 flex flex-col items-center">
         <div className="relative">
           {phase === 'ring' && <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-[#f6a6b8]/60" />}
-          <div className={`relative flex h-28 w-28 items-center justify-center rounded-full bg-white text-7xl shadow-lg ring-4 ring-[#f6c3cf] ${phase === 'ring' ? 'call-shake' : ''}`}>{emoji}</div>
+          <div className={`relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg ring-4 ring-[#f6c3cf] ${phase === 'ring' ? 'call-shake' : ''}`}><img src={face} alt="" draggable={false} className="h-[88%] w-[88%] object-contain" /></div>
         </div>
         <p className="mt-2 mb-0 text-xl font-black text-[#8a4b55]">{a.name}</p>
         <p className="m-0 text-sm text-black/50">{phase === 'ring' ? '따르릉… 전화 거는 중' : `📞 통화 중 ${time}`}</p>
@@ -121,7 +130,7 @@ export function AnimalCall({ animal, emoji, muted, onClose }: { animal: number; 
       <div ref={logRef} className="mt-3 flex min-h-0 w-full max-w-md flex-1 flex-col gap-2 overflow-y-auto px-1">
         {lines.map((l, k) => (
           <p key={k} className={`m-0 max-w-[85%] rounded-3xl px-4 py-2 text-base leading-snug shadow-sm ${l.who === 'animal' ? 'self-start rounded-bl-md bg-white' : 'self-end rounded-br-md bg-[#ff8fab] text-white'}`}>
-            {l.who === 'animal' && <span aria-hidden className="mr-1">{emoji}</span>}{l.text}
+            {l.who === 'animal' && <img src={face} alt="" aria-hidden draggable={false} className="mr-1 inline-block h-6 w-6 align-[-0.35em] object-contain" />}{l.text}
           </p>
         ))}
       </div>

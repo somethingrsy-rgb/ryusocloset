@@ -1,5 +1,6 @@
 import { playBell, playCook, playOrder, playServe, startBgm, stopBgm } from '../lib/sound'
 import { AnimalCall, unlockSpeech } from './AnimalCall'
+import { avatarVersion, getAvatar, subscribeAvatar } from '../lib/avatars'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { FarmFx } from './FarmFx'
 import { useI18n } from '../i18n'
@@ -115,6 +116,9 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
   // 카페에 있는 동안 배경 음악(카페의 🔊 를 끄면 음악도 꺼진다)
   // 동물과 전화하는 동안: 동물 목소리가 잘 들리게 음악을 멈춘다
   const [calling, setCalling] = useState<number | null>(null)
+  // 지금 고른 아바타 이름으로 동물이 불러 준다(유하야·유엘아)
+  useSyncExternalStore(subscribeAvatar, avatarVersion)
+  const kidName = getAvatar().name.ko
   useEffect(() => { if (!sound || calling !== null) return; startBgm('cafe'); return stopBgm }, [sound, calling])
   useEffect(() => { MENU.forEach((m) => { new Image().src = assetUrl(`cafe/menu2/${m.id}.webp`) }) }, [])
   const timers = useRef<number[]>([])
@@ -273,7 +277,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
       </div>
       <p className="absolute inset-x-3 bottom-2 z-20 m-0 rounded-full bg-white/90 px-3 py-1.5 text-center text-[11px] shadow">{tx.hint}</p>
 
-      {calling !== null && <AnimalCall animal={calling} emoji={SEATS[calling].animal} muted={!sound} onClose={() => setCalling(null)} />}
+      {calling !== null && <AnimalCall animal={calling} kid={kidName} muted={!sound} onClose={() => setCalling(null)} />}
       {toast && <div role="status" className="absolute bottom-12 left-1/2 z-30 max-w-[90%] -translate-x-1/2 rounded-full bg-[#8a4b55] px-5 py-3 text-center text-sm text-[#fff9e9] shadow-lg">{toast}</div>}
     </section>
   )
