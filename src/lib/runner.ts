@@ -95,8 +95,10 @@ export function slotContent(seed: number, slot: number, level: LevelId = DEFAULT
     const img = `${zoneAt(x)}_${pick}`
     const aspect = ASPECT[img]
     const o: Obstacle = { id: slot * 10, x, w: Math.min(84, Math.round(OBSTACLE_H * aspect * 0.8)), h: OBSTACLE_H, dw: Math.round(OBSTACLE_H * aspect), img }
-    // 장애물 위 공중에 코인 호(점프하면 먹는다)
-    ;[-1, 0, 1].forEach((k, j) => coins.push({ id: slot * 10 + 1 + j, x: x + k * 56, y: 110 + (k === 0 ? 40 : 0) }))
+    // 장애물 위 공중에 별 3개: 알맞게 뛰었을 때 몸이 지나가는 포물선(점프 시작 후 0.19초·0.45초·0.71초 지점) 위에 놓는다.
+    // 속도에 따라 점프 중 가는 거리가 달라지므로 그 단계·화면의 중간 속도로 간격을 계산한다
+    const v = (LEVELS[level].speed + (LEVELS[level].up * LEVELS[level].duration) / 2) * k
+    ;([0.19, 0.45, 0.71] as const).forEach((t, j) => coins.push({ id: slot * 10 + 1 + j, x: x + (t - 0.45) * v, y: Math.round(PLAYER_H * 0.45 + JUMP_V * t - (GRAVITY * t * t) / 2) }))
     return { obstacle: o, coins }
   }
   // 장애물 없는 칸: 바닥 코인 줄. 가끔 높이 뜬 선물 상자(첫 칸들은 제외)
