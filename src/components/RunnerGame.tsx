@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { isRestoring } from '../lib/restoreGuard'
-import { BG_PER_RUN, BG_START, GIFT_Y, MAX_RISE, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, LEVELS, LEVEL_IDS, RUN_H, runDuration, readRunLevel, writeRunLevel, type LevelId, START_HEARTS, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
+import { BG_PER_RUN, BG_START, GIFT_Y, MAX_RISE, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, LEVELS, LEVEL_IDS, RUN_H, runDuration, readRunLevel, writeRunLevel, type LevelId, startHearts, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
 import { earnStars } from '../lib/shop'
 import { currentAssignment, findItem, getGame, pickReward, travelItem } from '../lib/game'
 import { playCloud, playGold, playHop, playStar, playWin, startBgm, stopBgm } from '../lib/sound'
@@ -95,7 +95,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   // 세로로 긴 화면에서도 가로로 충분히(400) 보이게 하고, 위가 남으면 하늘색으로 채운다(그림 맨 위가 하늘색)
   const bgScaleForFit = size.h / BG_UNITS
   // 크기는 화면 높이·너비에 맞추되, 가로 화면에서 높이 뜬 선물 상자와 높은 점프가 위에서 잘리지 않게(길 위 높이가 모자라면 줄인다)
-  const scale = Math.max(0.5, Math.min(size.h / RUN_H, size.w / 400, (BG_ROAD_Y * bgScaleForFit - 70) / Math.max(GIFT_Y + 52, 372)))
+  const scale = Math.max(0.5, Math.min(size.h / RUN_H, size.w / 400, (BG_ROAD_Y * bgScaleForFit - 70) / (Math.max(GIFT_Y + 52, 372) / 0.9)))
   // 아바타 그림 크기(부딪히는 크기는 그대로): 두 번 점프 꼭대기에서 머리가 위로 잘리지 않는 한도까지 키운다(가로 화면은 4/3배 이상, 세로 화면은 최대 2배)
   const growFit = ((BG_ROAD_Y * bgScaleForFit - 70) / scale + 6 - MAX_RISE) / PLAYER_H
   const grow = size.w > size.h ? Math.max(4 / 3, growFit) : Math.min(2, Math.max(1, growFit))
@@ -139,7 +139,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
       </div>
     </div>
     <header className="absolute inset-x-2 top-2 z-10 flex items-center justify-between gap-1">
-      <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-bold">{'❤️'.repeat(Math.max(0, run.hearts))}{'🤍'.repeat(Math.max(0, START_HEARTS - run.hearts))} · <StarIcon /> {run.coins}{run.gifts > 0 && <> · 🎁 {run.gifts}</>}</span>
+      <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-bold">{'❤️'.repeat(Math.max(0, run.hearts))}{'🤍'.repeat(Math.max(0, startHearts(run.level) - run.hearts))} · <StarIcon /> {run.coins}{run.gifts > 0 && <> · 🎁 {run.gifts}</>}</span>
       <div className="flex gap-1">
         {phase === 'playing' && <button className={btn} aria-label={paused ? '계속하기' : '일시정지'} onClick={() => setPaused(!paused)}>{paused ? '▶' : 'Ⅱ'}</button>}
         <button className={btn} aria-label="닫기" onClick={onExit}>✕</button>
