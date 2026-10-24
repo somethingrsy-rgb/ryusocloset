@@ -38,7 +38,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, initial
   const [speaking, setSpeaking] = useState(false)
   const [math, setMath] = useState(false)
   const [jump, setJump] = useState(false)
-  useEffect(() => { onFull?.(math || speaking || jump); return () => onFull?.(false) }, [math, speaking, jump, onFull])
+  useEffect(() => { onFull?.(math || speaking || jump || runner); return () => onFull?.(false) }, [math, speaking, jump, runner, onFull])
   const game = useGame()
   const ver = useItemsVersion()
   // eslint-disable-next-line react-hooks/exhaustive-deps
