@@ -17,6 +17,7 @@ import {
   clampWalk,
   gateAt,
   gateX,
+  houseBox,
   placeOfChunk,
   startPos,
   stepWorld,
@@ -59,6 +60,10 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   const frame = useRef(0)
   const last = useRef(0)
   const entered = useRef(false)
+  // 누른 집: 테두리가 네온으로 반짝이고, 문에 닿으면 잠깐 반짝인 뒤 들어간다
+  const [glow, setGlow] = useState<number | null>(null)
+  const enterTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => clearTimeout(enterTimer.current), [])
   /** 큰 배경 그림이 다 받아진 뒤에 부드럽게 나타낸다 (그 전에는 하늘·풀밭 색이 보여서 회색 화면이 없다) */
   const [bgReady, setBgReady] = useState(false)
   useEffect(() => { const im = new Image(); im.onload = im.onerror = () => setBgReady(true); im.src = assetUrl('assets/farm/travel_road10_0.webp') }, [])
@@ -115,7 +120,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
         target.current = null
         setWalking(false)
         setDestination(null)
-        onEnter(placeOfChunk(g).id, g)
+        enterTimer.current = setTimeout(() => onEnter(placeOfChunk(g).id, g), 450)
         return
       }
       if (r.arrived) {
@@ -132,6 +137,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
 
   const walkTo = (x: number, y: number, gate: number | null = null) => {
     intent.current = gate
+    setGlow(gate)
     target.current = clampWalk(x, y, chunksRef.current)
     setDestination(target.current)
     setWalking(true)
@@ -151,6 +157,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
     cancelAnimationFrame(frame.current)
     target.current = null
     intent.current = null
+    setGlow(null)
     setWalking(false)
     setDestination(null)
   }
@@ -186,6 +193,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
               >
                 <span aria-hidden className="block" style={{ width: 300, height: 300 }} />
               </button>
+              {glow === c && (() => { const b = houseBox(c); return <div aria-hidden className="house-neon pointer-events-none absolute" style={{ left: b.left - c * CHUNK_W, top: b.top, width: b.right - b.left, height: b.bottom - b.top, zIndex: 2 }} /> })()}
             </div>
           )
         })}

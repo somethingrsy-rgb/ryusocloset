@@ -19,6 +19,21 @@ export const ROAD_PART = 9600 // 그림 한 조각의 원본 가로
 export const ROAD_PARTS = 2
 const HOUSE_X = [720, 1280, 2530, 3290, 4515, 5175, 6395, 7155, 8270, 9075, 10065, 11100, 12080, 13055, 14050, 14815, 16060, 16740, 17865, 18765]
 
+/** 그림 속 집 테두리(원본 px): 문 x 기준 왼쪽·오른쪽 끝과 위 끝(집 아래 끝은 모두 HOUSE_BOTTOM). 네온 테두리를 그릴 때 쓴다 */
+const HOUSE_BOX: [number, number, number][] = [
+  [-125, 135, 185], [-135, 145, 185], [-135, 145, 185], [-140, 150, 185], [-185, 165, 175],
+  [-170, 170, 130], [-170, 150, 165], [-160, 170, 125], [-190, 180, 100], [-205, 200, 110],
+  [-205, 175, 100], [-190, 190, 100], [-150, 160, 100], [-175, 190, 100], [-170, 160, 175],
+  [-160, 150, 205], [-200, 150, 165], [-175, 180, 165], [-200, 160, 105], [-180, 180, 105],
+]
+const HOUSE_BOTTOM = 445
+/** 구간 c 의 집 테두리(월드 좌표): 배경 그림은 1.3배, 위로 26 올려 그린다 */
+export const houseBox = (c: number) => {
+  const [l, r, t] = HOUSE_BOX[((c % HOUSE_BOX.length) + HOUSE_BOX.length) % HOUSE_BOX.length]
+  const x = gateX(c)
+  return { left: x + 1.3 * l, right: x + 1.3 * r, top: 1.3 * t - 26, bottom: 1.3 * HOUSE_BOTTOM - 26 }
+}
+
 export const worldWidth = (chunks: number) => chunks * CHUNK_W
 
 /** 구간 c 의 문 x 좌표 */
