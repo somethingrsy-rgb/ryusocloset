@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { CALL_ANIMALS, lineId, planCall, type CallPlan } from '../lib/animalCalls'
 import { assetUrl } from '../lib/items'
 import { playBell, playTap, playVoiceFile, soundOn } from '../lib/sound'
+import { PHONE_THEMES, type PhoneTheme } from './phoneTheme'
 
 const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window
 
@@ -60,7 +61,7 @@ function speakLine(text: string, pitch: number, rate: number, muted: boolean, vo
 interface Line { who: 'animal' | 'me'; text: string }
 
 /** 카페 동물에게 전화 걸기: 따르릉 → 받으면 인사 → 이야기 3개(동물이 묻고 아이가 대답 버튼을 고른다) → 끝인사 → 끊기 */
-export function AnimalCall({ animal, kid, muted, onClose }: { animal: number; kid?: string; muted: boolean; onClose: () => void }) {
+export function AnimalCall({ animal, kid, muted, theme = PHONE_THEMES.pink, onClose }: { animal: number; kid?: string; muted: boolean; theme?: PhoneTheme; onClose: () => void }) {
   const a = CALL_ANIMALS[animal]
   const [plan] = useState<CallPlan>(() => planCall(animal, Math.random, kid))
   const [phase, setPhase] = useState<'ring' | 'talk' | 'bye'>('ring')
@@ -135,20 +136,20 @@ export function AnimalCall({ animal, kid, muted, onClose }: { animal: number; ki
 
   const time = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`
   return (
-    <div role="dialog" aria-modal aria-label={`${a.name}에게 전화`} className="absolute inset-0 z-40 flex flex-col items-center bg-gradient-to-b from-[#fde6ec] via-[#fff6ef] to-[#e8f4dc] p-4">
-      <div className="mt-2 flex flex-col items-center">
+    <div aria-label={`${a.name}에게 전화`} className="absolute inset-0 flex flex-col items-center px-3 pt-2 pb-3">
+      <div className="flex shrink-0 flex-col items-center">
         <div className="relative">
-          {phase === 'ring' && <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-[#f6a6b8]/60" />}
-          <div className={`relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg ring-4 ring-[#f6c3cf] ${phase === 'ring' ? 'call-shake' : ''}`}><img src={face} alt="" draggable={false} className="h-[88%] w-[88%] object-contain" /></div>
+          {phase === 'ring' && <span aria-hidden className={`absolute inset-0 animate-ping rounded-full ${theme.ping}`} />}
+          <div className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg ring-4 ${theme.ring} ${phase === 'ring' ? 'call-shake' : ''}`}><img src={face} alt="" draggable={false} className="h-[88%] w-[88%] object-contain" /></div>
         </div>
-        <p className="mt-2 mb-0 text-xl font-black text-[#8a4b55]">{a.name}</p>
+        <p className={`mt-2 mb-0 text-xl font-black ${theme.ink}`}>{a.name} <span className="text-sm font-bold tracking-widest text-black/40">{a.phone}</span></p>
         <p className="m-0 text-sm text-black/50">{phase === 'ring' ? '따르릉… 전화 거는 중' : `📞 통화 중 ${time}`}</p>
         {quiet && phase !== 'ring' && <p className="m-0 text-xs text-black/40">🔇 소리가 꺼져 있어서 글로 이야기해요</p>}
       </div>
 
       <div ref={logRef} className="mt-3 flex min-h-0 w-full max-w-md flex-1 flex-col gap-2 overflow-y-auto px-1">
         {lines.map((l, k) => (
-          <p key={k} className={`m-0 max-w-[85%] rounded-3xl px-4 py-2 text-base leading-snug shadow-sm ${l.who === 'animal' ? 'self-start rounded-bl-md bg-white' : 'self-end rounded-br-md bg-[#ff8fab] text-white'}`}>
+          <p key={k} className={`m-0 max-w-[88%] rounded-3xl px-3.5 py-2 text-[15px] leading-snug shadow-sm ${l.who === 'animal' ? 'self-start rounded-bl-md bg-white' : `self-end rounded-br-md ${theme.me} text-white`}`}>
             {l.who === 'animal' && <img src={face} alt="" aria-hidden draggable={false} className="mr-1 inline-block h-6 w-6 align-[-0.35em] object-contain" />}{l.text}
           </p>
         ))}
@@ -156,7 +157,7 @@ export function AnimalCall({ animal, kid, muted, onClose }: { animal: number; ki
 
       <div className="mt-3 flex w-full max-w-md flex-col gap-2">
         {asking && plan.topics[topic].replies.map((r, i) => (
-          <button key={i} onClick={() => answer(i)} className="min-h-12 rounded-full border-2 border-[#f6c3cf] bg-white px-4 text-base font-bold text-[#8a4b55] shadow-sm active:scale-95">{r.label}</button>
+          <button key={i} onClick={() => answer(i)} className={`min-h-11 rounded-full border-2 bg-white px-4 text-base font-bold shadow-sm active:scale-95 ${theme.border} ${theme.ink}`}>{r.label}</button>
         ))}
         <button onClick={onClose} className="mt-1 min-h-12 rounded-full bg-[#e5484d] px-4 text-base font-bold text-white shadow active:scale-95">📞 {phase === 'bye' ? '전화 끊기' : '끊기'}</button>
       </div>

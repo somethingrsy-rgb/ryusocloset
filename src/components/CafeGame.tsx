@@ -1,5 +1,7 @@
-import { playBell, playCook, playOrder, playServe, startBgm, stopBgm } from '../lib/sound'
-import { AnimalCall, unlockSpeech } from './AnimalCall'
+import { playBell, playCook, playOrder, playServe, playTap, startBgm, stopBgm } from '../lib/sound'
+import { unlockSpeech } from './AnimalCall'
+import { PhoneSheet } from './PhoneSheet'
+import { phoneThemeFor } from './phoneTheme'
 import { avatarVersion, getAvatar, subscribeAvatar } from '../lib/avatars'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { FarmFx } from './FarmFx'
@@ -114,12 +116,13 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
   useEffect(() => { kept = { guests, pos, hold } }, [guests, pos, hold])
   // 메뉴 그림을 미리 받아 둔다: 서빙하려고 처음 들 때 그림이 늦게 떠서 안 보이던 것을 막는다
   // 카페에 있는 동안 배경 음악(카페의 🔊 를 끄면 음악도 꺼진다)
-  // 동물과 전화하는 동안: 동물 목소리가 잘 들리게 음악을 멈춘다
-  const [calling, setCalling] = useState<number | null>(null)
-  // 지금 고른 아바타 이름으로 동물이 불러 준다(유하야·유엘아)
+  // 휴대폰(📞 버튼, 또는 동물을 누르면 그 동물에게 바로 건다). 휴대폰이 열려 있는 동안은 동물 목소리가 잘 들리게 음악을 멈춘다
+  const [phone, setPhone] = useState<{ dial: number | null } | null>(null)
+  // 지금 고른 아바타 이름으로 동물이 불러 주고(유하야·유엘아), 휴대폰 색도 아바타에 맞춘다(유엘 파랑, 유하 분홍)
   useSyncExternalStore(subscribeAvatar, avatarVersion)
   const kidName = getAvatar().name.ko
-  useEffect(() => { if (!sound || calling !== null) return; startBgm('cafe'); return stopBgm }, [sound, calling])
+  const phoneTheme = phoneThemeFor(getAvatar().id)
+  useEffect(() => { if (!sound || phone) return; startBgm('cafe'); return stopBgm }, [sound, phone])
   useEffect(() => { MENU.forEach((m) => { new Image().src = assetUrl(`cafe/menu2/${m.id}.webp`) }) }, [])
   const timers = useRef<number[]>([])
   const pending = useRef(new Set<number>())
@@ -233,7 +236,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
           return (
             <div key={i}>
               {/* 동물을 누르면 그 동물에게 전화를 건다(주문은 말풍선으로) */}
-              <button aria-label={`${x.name}에게 전화하기`} onClick={() => { unlockSpeech(); setCalling(i) }} className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0" style={{ left: `${cx}%`, top: `${cy + 2}%`, width: wide ? '9%' : '14%', height: wide ? '16%' : '11%' }}>
+              <button aria-label={`${x.name}에게 전화하기`} onClick={() => { unlockSpeech(); setPhone({ dial: i }) }} className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0" style={{ left: `${cx}%`, top: `${cy + 2}%`, width: wide ? '9%' : '14%', height: wide ? '16%' : '11%' }}>
                 <span aria-hidden className="absolute -right-1 bottom-0 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-sm shadow">📞</span>
               </button>
               <button
@@ -272,12 +275,13 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
         <span className="rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold shadow">🎁 {st.reward ? tx.missionDone : `${Math.min(st.served, GOAL)} / ${GOAL}`}</span>
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
+          <button aria-label="휴대폰 열기" onClick={() => { playTap(); setPhone({ dial: null }) }} className="h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">📱 전화</button>
           <button aria-label={tx.sound[sound ? 1 : 0]} aria-pressed={sound} onClick={() => { const v = !sound; setSound(v); if (v) playOrder() }} className="h-9 w-9 rounded-full bg-white/90 shadow">{sound ? '🔊' : '🔇'}</button>
         </div>
       </div>
       <p className="absolute inset-x-3 bottom-2 z-20 m-0 rounded-full bg-white/90 px-3 py-1.5 text-center text-[11px] shadow">{tx.hint}</p>
 
-      {calling !== null && <AnimalCall animal={calling} kid={kidName} muted={!sound} onClose={() => setCalling(null)} />}
+      {phone && <PhoneSheet theme={phoneTheme} kid={kidName} muted={!sound} dial={phone.dial} onClose={() => setPhone(null)} />}
       {toast && <div role="status" className="absolute bottom-12 left-1/2 z-30 max-w-[90%] -translate-x-1/2 rounded-full bg-[#8a4b55] px-5 py-3 text-center text-sm text-[#fff9e9] shadow-lg">{toast}</div>}
     </section>
   )
