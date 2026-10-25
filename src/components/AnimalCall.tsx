@@ -25,7 +25,9 @@ function koreanVoices(): SpeechSynthesisVoice[] {
     .filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith('ko') && !seen.has(v.name) && seen.add(v.name))
     .sort((x, y) => voiceScore(y) - voiceScore(x) || x.name.localeCompare(y.name))
 }
-const readSaved = (): Record<string, string> => { try { return JSON.parse(localStorage.getItem(VOICE_KEY) ?? '{}') ?? {} } catch { return {} } }
+// 기본을 '아이폰 설정 목소리'로 바꾸면서 예전에 고른 목소리(유나)는 새로 시작한다
+const SAVED_KEY = `${VOICE_KEY}.2`
+const readSaved = (): Record<string, string> => { try { return JSON.parse(localStorage.getItem(SAVED_KEY) ?? '{}') ?? {} } catch { return {} } }
 /** 같은 목소리라도 높낮이·빠르기를 바꿔 다른 느낌으로(아이폰 웹 앱은 받은 목소리를 하나만 보여 주는 경우가 많다) */
 const TONES = [
   { label: '', pitch: 1, rate: 1 },
@@ -35,30 +37,26 @@ const TONES = [
   { label: '느리게', pitch: 0.95, rate: 0.82 },
 ]
 interface VoiceChoice { voice?: SpeechSynthesisVoice; tone: number }
-/** 고를 수 있는 목소리: 한국어 목소리 × 높낮이 느낌 */
+/** 고를 수 있는 목소리: 아이폰 설정 목소리(설정 → 손쉬운 사용 → 읽기 및 말하기에서 고른 것) 먼저, 그다음 앱이 볼 수 있는 한국어 목소리들 × 높낮이 느낌 */
 const choices = (): VoiceChoice[] => {
-  const all = koreanVoices()
-  const voices: (SpeechSynthesisVoice | undefined)[] = all.length ? all : [undefined]
+  const voices: (SpeechSynthesisVoice | undefined)[] = [undefined, ...koreanVoices()]
   return voices.flatMap((voice) => TONES.map((_, tone) => ({ voice, tone })))
 }
 const keyOf = (c: VoiceChoice) => `${c.voice?.name ?? ''}|${c.tone}`
-export const voiceLabel = (c: VoiceChoice) => [c.voice?.name ?? '기본 목소리', TONES[c.tone].label].filter(Boolean).join(' · ')
-/** 동물마다 목소리: 고른 게 있으면 그것, 없으면 받은 고품질 목소리들을 동물마다 돌아가며 나눠 준다(여러 개 받았으면 동물마다 다른 목소리) */
+export const voiceLabel = (c: VoiceChoice) => [c.voice?.name ?? '기기 설정 목소리', TONES[c.tone].label].filter(Boolean).join(' · ')
+/** 동물마다 목소리: 고른 게 있으면 그것, 없으면 기기 설정 목소리(아이폰에서 고른 민수 등). 앱이 민수를 볼 수 있으면 민수를 직접 쓴다 */
 function voiceFor(animal: number): VoiceChoice {
-  const all = koreanVoices()
   const saved = readSaved()[animal]
-  const picked = choices().find((c) => keyOf(c) === saved || (c.tone === 0 && c.voice?.name === saved))
+  const picked = choices().find((c) => keyOf(c) === saved)
   if (picked) return picked
-  const best = all.filter((v) => voiceScore(v) >= 3)
-  const pool = best.length ? best : all.slice(0, 1)
-  return { voice: pool[animal % Math.max(1, pool.length)], tone: 0 }
+  return { voice: koreanVoices().find((v) => /minsu|민수/i.test(v.name)), tone: 0 }
 }
 /** 이 동물의 목소리를 다음 것으로 바꿔 저장하고 새 목소리를 돌려준다 */
 function nextVoice(animal: number): VoiceChoice {
   const list = choices()
   const now = keyOf(voiceFor(animal))
   const next = list[(list.findIndex((c) => keyOf(c) === now) + 1) % list.length]
-  try { localStorage.setItem(VOICE_KEY, JSON.stringify({ ...readSaved(), [animal]: keyOf(next) })) } catch { /* 저장 못 해도 이번 통화에는 쓴다 */ }
+  try { localStorage.setItem(SAVED_KEY, JSON.stringify({ ...readSaved(), [animal]: keyOf(next) })) } catch { /* 저장 못 해도 이번 통화에는 쓴다 */ }
   return next
 }
 
