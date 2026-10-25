@@ -292,7 +292,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             me={pos}
             // 장소 그림은 바닥(풀밭 등) 그림이 시작하는 곳보다 조금 아래부터: 하늘에 떠 보이지 않게
             floor={{ minX: 8, maxX: 92, minY: layout ? minY + 2 : Math.max(minY, 100 - p.floorH / ROOM_H * 100 + 8), maxY: layout ? 96 : WALK_BOUNDS.maxY }}
-            // 동물 키는 그 자리에 선 아바타 키와 같게(아바타 크기가 방·깊이마다 바뀌면 같이 바뀐다). 아바타보다 아래(앞)에 있으면 아바타 앞에 그린다
+            // 동물 키는 그 자리에 선 아바타 키의 2/3(아바타 크기가 방·깊이마다 바뀌면 같이 바뀐다). 아바타보다 아래(앞)에 있으면 아바타 앞에 그린다
             size={(y) => GUEST_PER_AVATAR_W * (layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * depthScale(y))}
             z={(y) => avatarLayer + (y >= posRef.current.y ? 1 : -1)}
             onGone={() => { setParty([]); setPartyEnd(false) }}

@@ -8,14 +8,15 @@ interface Bubble { text: string; until: number }
 
 /**
  * 동물 그림 칸(정사각형) 너비 ÷ 아바타 너비. 아바타 그림(1024×1536)에서 머리 꼭대기~발은 약 58~1504px(1444px),
- * 동물 그림(public/cafe/stand)은 귀 끝~발이 칸 높이에 꽉 차 있어서, 칸 높이 = 아바타 키가 되게 한다
+ * 동물 그림(public/cafe/stand)은 귀 끝~발이 칸 높이에 꽉 차 있어서, 1444/1024 이면 동물 키 = 아바타 키.
+ * 같은 키는 너무 커 보여서 아바타 키의 2/3 로 한다
  */
-export const GUEST_PER_AVATAR_W = 1444 / 1024
+export const GUEST_PER_AVATAR_W = (1444 / 1024) * (2 / 3)
 
 /**
  * 집에 초대한 동물 친구들: 하나씩 문으로 들어오며(카페 주문 벨 소리) 인사하고, 바닥을 자연스럽게 돌아다니며 이야기한다.
  * invite 가 바뀌면 새로 고른 친구만 더 들어오고, leave 가 켜지면 인사하고 모두 나간다.
- * size(y) 는 그 높이에서의 동물 그림 칸 너비(%, 칸 높이 = 동물 키 = 아바타 키), z(y) 는 그 높이에서의 겹침 순서다.
+ * size(y) 는 그 높이에서의 동물 그림 칸 너비(%, 칸 높이 = 동물 키 = 아바타 키의 2/3), z(y) 는 그 높이에서의 겹침 순서다.
  */
 export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone }: { invite: number[]; leave: boolean; kid?: string; floor: Floor; me: { x: number; y: number }; size: (y: number) => number; z: (y: number) => number; onGone: () => void }) {
   const [guests, setGuests] = useState<Guest[]>([])
