@@ -3,6 +3,7 @@
  *   npx tsx scripts/call-voices.ts list   → docs/call-voice-lines.md (녹음할 대사 목록)
  *   OPENAI_API_KEY=... npx tsx scripts/call-voices.ts make   → public/cafe/voice/<동물>/<번호>.mp3 + manifest.json
  * 이미 있는 파일은 건너뛰므로, 대사를 고치거나 더한 뒤 다시 돌리면 바뀐 것만 새로 녹음한다.
+ *   npx tsx scripts/call-voices.ts manifest   → 직접 넣은 녹음 파일로 manifest.json 만 다시 만들기
  * 앱은 manifest.json 에 있는 대사만 파일로 틀고, 없는 대사는 기기 음성으로 읽는다.
  */
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
@@ -64,17 +65,23 @@ async function make() {
     made++
     console.log(`${a.name} ${l.id} ${l.text}`)
   }
-  // 녹음 파일이 있는 대사만 앱에 알려 준다
+  console.log(`새로 녹음 ${made}줄`)
+  writeManifest()
+}
+
+/** 녹음 파일이 있는 대사만 앱에 알려 준다(캡컷 등으로 직접 만든 파일을 넣은 뒤에도 이것만 돌리면 된다) */
+function writeManifest() {
   const manifest: Record<string, string[]> = {}
   for (const l of lines) {
     const img = CALL_ANIMALS[l.animal].img
     if (existsSync(join(OUT, img, `${l.id}.mp3`))) (manifest[img] ??= []).push(l.id)
   }
   writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest))
-  console.log(`새로 녹음 ${made}줄, 전체 ${Object.values(manifest).flat().length}/${lines.length}줄`)
+  console.log(`녹음 파일 ${Object.values(manifest).flat().length}/${lines.length}줄: ${Object.entries(manifest).map(([k, v]) => `${k} ${v.length}`).join(', ')}`)
 }
 
 const cmd = process.argv[2]
 if (cmd === 'list') list()
 else if (cmd === 'make') await make()
-else console.log('사용법: npx tsx scripts/call-voices.ts list | make')
+else if (cmd === 'manifest') writeManifest()
+else console.log('사용법: npx tsx scripts/call-voices.ts list | make | manifest')
