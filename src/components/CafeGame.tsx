@@ -1,4 +1,6 @@
-import { playBell, playCook, playOrder, playServe, playTap, startBgm, stopBgm } from '../lib/sound'
+import { playOrder, playServe, playTap, startBgm, stopBgm } from '../lib/sound'
+import { MENU } from '../lib/recipes'
+import { actKitchen, getKitchen, subscribeKitchen } from '../lib/kitchen'
 import { unlockSpeech } from './AnimalCall'
 import { PhoneSheet } from './PhoneSheet'
 import { phoneThemeFor } from './phoneTheme'
@@ -12,22 +14,11 @@ import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
 import { CoinIcon } from './Icons'
 
-type Menu = { id: string; ko: string; en: string; price: number }
-/** 메뉴 그림은 public/cafe/menu2/<id>.webp */
-const MENU: Menu[] = [
-  { id: 'latte', ko: '카페라테', en: 'Cafe latte', price: 3 },
-  { id: 'coffee', ko: '아이스 커피', en: 'Iced coffee', price: 3 },
-  { id: 'shake', ko: '딸기 우유 쉐이크', en: 'Strawberry shake', price: 4 },
-  { id: 'ade', ko: '딸기 에이드', en: 'Strawberry ade', price: 4 },
-  { id: 'macaron', ko: '마카롱', en: 'Macaron', price: 5 },
-  { id: 'cupcake', ko: '딸기 컵케이크', en: 'Strawberry cupcake', price: 5 },
-  { id: 'slice', ko: '딸기 케이크', en: 'Strawberry cake', price: 6 },
-  { id: 'roll', ko: '딸기 롤케이크', en: 'Strawberry roll cake', price: 6 },
-  { id: 'choco', ko: '초코 딸기', en: 'Choco strawberries', price: 7 },
-  { id: 'jelly', ko: '딸기 젤리 케이크', en: 'Jelly cake', price: 8 },
-]
-function Ico({ id, className }: { id: string; className: string }) {
-  return <img src={assetUrl(`cafe/menu2/${id}.webp`)} alt="" draggable={false} className={`select-none object-contain ${className}`} />
+/** 메뉴 그림(public/cafe/menu2/<id>.webp). 그림이 아직 없는 메뉴는 이모지로 */
+export function Ico({ id, className }: { id: string; className: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return <span aria-hidden className={`flex items-center justify-center leading-none select-none ${className}`} style={{ fontSize: '2rem' }}>{MENU.find((m) => m.id === id)?.emoji ?? '🍽️'}</span>
+  return <img src={assetUrl(`cafe/menu2/${id}.webp`)} alt="" draggable={false} onError={() => setFailed(true)} className={`select-none object-contain ${className}`} />
 }
 /** 정원 그림 속 손님 8마리. 머리 가운데 위치(그림 크기에 대한 %)이고, 세로 그림(폰)과 가로 그림(패드)이 다르다. 눌러서 주문을 받는다 */
 const SEATS = [
@@ -42,8 +33,6 @@ const SEATS = [
 ] as const
 const BONUS = 15
 const GOAL = 5
-/** 만드는 시간: 메뉴 값이 클수록 조금 더 걸린다(3코인 30초 ~ 8코인 40초) */
-const cookMs = (price: number) => 24000 + price * 2000
 const KEY = 'ryuso.cafe.v1'
 
 type Saved = { served: number; reward: boolean }
@@ -57,15 +46,24 @@ const loadSaved = (): Saved => {
 }
 
 const pick = (n: number) => Math.floor(Math.random() * n)
-type Stage = 'new' | 'ordered' | 'cooking'
-interface Guest { animal: string; name: string; wish: number; stage: Stage; doneAt: number }
-const newGuest = (i: number): Guest => ({ animal: SEATS[i].animal, name: SEATS[i].name, wish: pick(MENU.length), stage: 'new', doneAt: 0 })
+/** 주문을 받으면(ordered) 주방에 주문서가 생기고, 주방에서 다 만들면 서빙할 수 있다 */
+type Stage = 'new' | 'ordered'
+interface Guest { animal: string; name: string; wish: number; stage: Stage }
+const newGuest = (i: number): Guest => ({ animal: SEATS[i].animal, name: SEATS[i].name, wish: pick(MENU.length), stage: 'new' })
+/** 주방에 주문서가 있는 자리는 그 주문 그대로 이어 간다(앱을 껐다 켜도) */
+const startGuests = (kept: Guest[] | undefined): Guest[] => SEATS.map((_, i) => {
+  const t = getKitchen().tickets.find((x) => x.seat === i)
+  const wish = t ? MENU.findIndex((m) => m.id === t.menu) : -1
+  if (wish >= 0) return { animal: SEATS[i].animal, name: SEATS[i].name, wish, stage: 'ordered' }
+  const k = kept?.[i]
+  return k && k.stage === 'new' && MENU[k.wish] ? k : newGuest(i)
+})
 
 const T = {
   ko: {
     title: '딸기 카페', open: '딸기 카페 영업 중', happy: (n: number) => `오늘의 행복 ${n}잔`,
-    hint: '💬 눌러 주문받기 → 눌러서 만들기 → 완성되면 눌러서 서빙 · 동물을 누르면 📞 전화',
-    askOrder: '주문받기', tapCook: '눌러서 만들기', cooking: '만드는 중', ready: '완성!', notReady: '아직 만드는 중이에요',
+    hint: '💬 눌러 주문받기 → 🍳 주방에서 만들기 → 완성되면 눌러서 서빙 · 동물을 누르면 📞 전화',
+    askOrder: '주문받기', toKitchen: '주방에서 만들어요', ready: '완성!', notReady: '🍳 주방에서 만들어 주세요!', kitchen: '🍳 주방',
     bonus: `🎉 첫 단골 달성! 보너스 ${BONUS}코인!`,
     mission: '첫 단골 만들기', missionDone: '첫 단골 만들기 완료!', missionText: `손님 ${GOAL}명에게 행복을 전해 주세요`,
     count: (n: number) => `${n} / ${GOAL}명 · 달성 보너스 ${BONUS}코인`, countDone: `달성 완료 · 보너스 ${BONUS}코인을 받았어요!`,
@@ -75,8 +73,8 @@ const T = {
   },
   en: {
     title: 'Strawberry Cafe', open: 'Strawberry cafe is open', happy: (n: number) => `${n} happy cups today`,
-    hint: 'Tap 💬 to take an order → tap to cook → tap when done to serve · tap an animal to 📞 call',
-    askOrder: 'Take order', tapCook: 'Tap to cook', cooking: 'Cooking', ready: 'Done!', notReady: 'Still cooking',
+    hint: 'Tap 💬 to take an order → 🍳 cook it in the kitchen → tap when done to serve · tap an animal to 📞 call',
+    askOrder: 'Take order', toKitchen: 'Cook in the kitchen', ready: 'Done!', notReady: '🍳 Cook it in the kitchen!', kitchen: '🍳 Kitchen',
     bonus: `🎉 First regular! Bonus ${BONUS} coins!`,
     mission: 'Make a first regular', missionDone: 'First regular made!', missionText: `Make ${GOAL} guests happy`,
     count: (n: number) => `${n} / ${GOAL} guests · ${BONUS} bonus coins`, countDone: `Done · you got ${BONUS} bonus coins!`,
@@ -98,13 +96,13 @@ const AVATAR = {
 /** 다른 탭(농장·여행 등)에 다녀와도 손님·주문·아바타 자리가 그대로 남도록 화면 밖에 기억해 둔다 (앱을 완전히 닫으면 새로 시작) */
 let kept: { guests: Guest[]; pos: { x: number; y: number; wide: boolean } | null; hold: string | null } | null = null
 
-export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }) {
+export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void }) {
   const { lang } = useI18n()
   const tx = T[lang]
   const [st, setSt] = useState<Saved>(loadSaved)
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
-  const [guests, setGuests] = useState<Guest[]>(() => kept?.guests ?? SEATS.map((_, i) => newGuest(i)))
-  const [now, setNow] = useState(() => Date.now())
+  const kitchen = useSyncExternalStore(subscribeKitchen, getKitchen)
+  const [guests, setGuests] = useState<Guest[]>(() => startGuests(kept?.guests))
   const [sound, setSound] = useState(true) // 이 화면에서만 끄고 켤 수 있는 소리(설정의 효과음이 꺼져 있으면 어차피 안 남)
   const [toast, setToast] = useState('')
   const [floats, setFloats] = useState<{ id: number; seat: number; amount: number }[]>([])
@@ -138,12 +136,6 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
   const floatId = useRef(0)
 
   useEffect(() => () => { clearTimeout(toastTimer.current); timers.current.forEach(clearTimeout) }, [])
-  const cooking = guests.some((g) => g.stage === 'cooking' && g.doneAt > now)
-  useEffect(() => {
-    if (!cooking) return
-    const id = window.setInterval(() => setNow(Date.now()), 150)
-    return () => clearInterval(id)
-  }, [cooking])
 
   const save = (s: Saved) => {
     setSt(s)
@@ -155,50 +147,36 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
     toastTimer.current = window.setTimeout(() => setToast(''), 2500)
   }
   const sfx = (fn: () => void) => { if (sound) fn() }
-  const isReady = (g: Guest) => g.stage === 'cooking' && g.doneAt <= now
-  // 음식이 다 되면 딩동(손님마다 처음 다 됐을 때 한 번만)
-  const readyBefore = useRef<boolean[]>([])
-  useEffect(() => {
-    guests.forEach((g, i) => {
-      const r = g.stage === 'cooking' && g.doneAt <= now
-      if (r && readyBefore.current[i] === false) { if (sound) playBell() }
-      readyBefore.current[i] = r
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [now, guests])
+  const isReady = (i: number) => guests[i].stage === 'ordered' && !!kitchen.tickets.find((t) => t.seat === i && t.ready)
+  const waiting = kitchen.tickets.filter((t) => !t.ready).length
 
   const A = wide ? AVATAR.wide : AVATAR.portrait
   const aw = A.h * A.w
   const lane = (row: 0 | 1 | 2) => ({ x: 50 - aw / 2, y: A.feet[row] - A.h, wide })
   const here = pos && pos.wide === wide ? pos : lane(0)
 
-  /** 말풍선(또는 손님)을 누르면 아바타가 걸어가서 다음 단계를 한다: 주문 받기(손님 자리) → 만들기 시작(카운터) → (완성되면) 서빙(손님 자리) */
+  /** 말풍선(또는 손님)을 누르면 아바타가 걸어가서 다음 단계를 한다: 주문 받기(주방에 주문서가 생긴다) → (주방에서 다 만들면) 들고 가서 서빙 */
   const tap = (i: number) => {
     const g = guests[i]
     const m = MENU[g.wish]
-    if (g.stage === 'cooking' && !isReady(g)) { say(tx.notReady); return }
+    const ready = isReady(i)
+    if (g.stage === 'ordered' && !ready) { say(tx.notReady); return }
     if (pending.current.has(i)) return // 같은 손님을 연달아 두 번 누르는 것만 막는다
     pending.current.add(i)
-    const toSeat = lane(i < 4 ? 1 : 2)
-    const toCounter = lane(0)
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
-    const stage = g.stage
-    // 아바타가 걸어가는 도중(0.4초 뒤)에 결과(주문 받기·만들기 시작·서빙)가 나타난다
+    // 아바타가 걸어가는 도중(0.4초 뒤)에 결과(주문 받기·서빙)가 나타난다
     setWalking(true)
-    setPos(stage === 'ordered' ? toCounter : toSeat)
+    setPos(lane(i < 4 ? 1 : 2))
     later(() => setWalking(false), 800)
-    if (stage === 'cooking') setHold(m.id)
+    if (ready) setHold(m.id)
     later(() => {
       pending.current.delete(i)
-      if (stage === 'new') {
+      if (!ready) {
+        actKitchen({ type: 'order', seat: i, menu: m.id })
         setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'ordered' } : x)))
         sfx(playOrder)
-      } else if (stage === 'ordered') {
-        const at = Date.now()
-        setNow(at)
-        setGuests((gs) => gs.map((x, k) => (k === i ? { ...x, stage: 'cooking', doneAt: at + cookMs(m.price) } : x)))
-        sfx(playCook)
       } else {
+        if (actKitchen({ type: 'serve', seat: i }) !== 'saved') { setHold(null); return }
         const bonus = st.served + 1 >= GOAL && !st.reward
         save({ served: st.served + 1, reward: st.reward || bonus })
         actFarm({ type: 'earn', amount: m.price + (bonus ? BONUS : 0) })
@@ -230,9 +208,8 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
         {guests.map((x, i) => {
           const [cx, cy] = SEATS[i][wide ? 'wide' : 'portrait']
           const m = MENU[x.wish]
-          const ready = isReady(x)
-          const frac = x.stage === 'cooking' ? Math.min(1, 1 - (x.doneAt - now) / cookMs(m.price)) : 0
-          const label = x.stage === 'new' ? tx.askOrder : x.stage === 'ordered' ? tx.tapCook : ready ? tx.ready : tx.cooking
+          const ready = isReady(i)
+          const label = x.stage === 'new' ? tx.askOrder : ready ? tx.ready : tx.toKitchen
           return (
             <div key={i}>
               {/* 동물을 누르면 그 동물에게 전화를 건다(주문은 말풍선으로) */}
@@ -247,11 +224,10 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
                 {x.stage === 'new'
                   ? <span className="block h-11 w-11 animate-pulse text-center text-4xl leading-[2.75rem]">💬</span>
                   : <span className="relative block h-11 w-11">
-                      <Ico id={m.id} className={`h-11 w-11 ${x.stage === 'ordered' || (x.stage === 'cooking' && !ready) ? 'opacity-60' : ready ? 'animate-bounce' : ''}`} />
-                      {x.stage === 'ordered' && <img aria-hidden src={assetUrl('assets/tabs/bunny.webp')} alt="" draggable={false} className="absolute -right-2 -bottom-2 h-6 w-6 object-contain" />}
+                      <Ico id={m.id} className={`h-11 w-11 ${ready ? 'animate-bounce' : 'opacity-60'}`} />
+                      {!ready && <span aria-hidden className="absolute -right-2 -bottom-2 text-lg leading-none">🍳</span>}
                       {ready && <span aria-hidden className="absolute -top-2 -right-2 text-lg">✨</span>}
                     </span>}
-                {x.stage === 'cooking' && !ready && <span className="mt-0.5 block h-1.5 w-11 overflow-hidden rounded-full bg-[#eee4d3]"><i className="block h-full bg-[#ef8d99]" style={{ width: `${frac * 100}%` }} /></span>}
                 {ready && <span className="block text-center text-[10px] leading-tight font-bold text-[#c04a5a]">{tx.ready}</span>}
               </button>
             </div>
@@ -274,6 +250,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
         <span className="rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold shadow">🎁 {st.reward ? tx.missionDone : `${Math.min(st.served, GOAL)} / ${GOAL}`}</span>
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
+          <button aria-label={tx.kitchen} onClick={() => { playTap(); onKitchen() }} className="relative h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">{tx.kitchen}{waiting > 0 && <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef6f86] px-1 text-[11px] text-white">{waiting}</span>}</button>
           <button aria-label="휴대폰 열기" onClick={() => { playTap(); setPhone({ dial: null }) }} className="h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">📱 전화</button>
           <button aria-label={tx.sound[sound ? 1 : 0]} aria-pressed={sound} onClick={() => { const v = !sound; setSound(v); if (v) playOrder() }} className="h-9 w-9 rounded-full bg-white/90 shadow">{sound ? '🔊' : '🔇'}</button>
         </div>

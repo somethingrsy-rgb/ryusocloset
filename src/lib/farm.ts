@@ -13,7 +13,7 @@ export interface Plot { crop: CropId; wateredAt: number | null }
 export interface FarmState {
   plots: (Plot | null)[]; /** 산 밭 칸 (앞의 9칸은 처음부터 true) */ owned: boolean[]; inventory: Record<CropId, number>; coins: number; deliveries: number; decorations: string[]
 }
-export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number } | { type: 'earn'; amount: number } | { type: 'buy'; plot: number }
+export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number } | { type: 'earn'; amount: number } | { type: 'buy'; plot: number } | { type: 'use'; items: Partial<Record<CropId, number>> }
 /** 새 땅 밭 한 칸 값: 처음 20코인, 하나 살 때마다 5코인씩 올라간다 */
 export const PLOT_BASE_PRICE = 20
 export const PLOT_PRICE_STEP = 5
@@ -79,6 +79,11 @@ export function reduceFarm(state: FarmState, action: FarmAction, now: number): F
   } else if (action.type === 'earn') {
     if (!Number.isInteger(action.amount) || action.amount <= 0 || action.amount > 1000) return state
     next.coins += action.amount
+  } else if (action.type === 'use') {
+    // 주방에서 요리할 때: 모두 충분할 때만 한꺼번에 빼고, 하나라도 모자라면 아무것도 빼지 않는다
+    const items = Object.entries(action.items ?? {})
+    if (!items.length || items.some(([id, n]) => !cropById(id) || !Number.isInteger(n) || n! <= 0 || state.inventory[id as CropId] < n!)) return state
+    for (const [id, n] of items) next.inventory[id as CropId] -= n!
   } else if (action.type === 'spend') {
     if (!Number.isInteger(action.amount) || action.amount <= 0 || state.coins < action.amount) return state
     next.coins -= action.amount
