@@ -192,7 +192,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         )}
         {/* 굳히기: 냉장고 위칸 가운데에 얼음 */}
         {nowStep === 'chill' && (
-          <img key={cooking!.taps} aria-hidden src={assetUrl('kitchen/ice.webp')} alt="" draggable={false} className="kitchen-press pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${L.fx.ice[0]}%`, top: `${L.fx.ice[1]}%`, width: `${L.fx.ice[2]}%`, zIndex: 4 }} />
+          <img key={cooking!.taps} aria-hidden src={assetUrl('kitchen/ice.webp')} alt="" draggable={false} className="kitchen-press pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${L.fx.ice[0]}%`, top: `${L.fx.ice[1]}%`, width: `${L.fx.ice[2]}%`, aspectRatio: '1 / 1', zIndex: 4 }} />
         )}
         {/* 굽는 동안 오븐 유리창 안에 불꽃: 창 크기만큼, 누를수록 커진다 */}
         {cooking && menu?.steps[cooking.step] === 'bake' && (
@@ -211,8 +211,9 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         {/* 도마 위 도구: 재료 바로 위(도마 안쪽)에 놓고, 누를 때마다 꾹 눌린다. 두 손은 계속 조물조물 움직인다. 재료와 겹치지 않게 재료 줄보다 위에 둔다 */}
         {tool && (
           <div key={cooking!.taps} aria-hidden className="kitchen-press pointer-events-none absolute -translate-x-1/2 -translate-y-full"
-            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - L.at.board.h * 0.35}%`, width: `${L.at.board.w * tool.w}%`, zIndex: 5 }}>
-            <img src={assetUrl(tool.img)} alt="" draggable={false} className={`${tool.img.includes('hands') ? 'kitchen-knead ' : ''}block h-auto w-full`} />
+            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - L.at.board.h * 0.35}%`, width: `${L.at.board.w * tool.w}%`, aspectRatio: '1 / 1', zIndex: 5 }}>
+            {/* 칸을 정사각형으로 정해 둔다: 누를 때마다 새로 그려지는데, 그림을 다 읽기 전 칸 높이가 0 이면 위로 올리기(-100%)가 안 먹어 그림이 잠깐 도마 아래로 내려가 보였다 */}
+            <img src={assetUrl(tool.img)} alt="" draggable={false} className={`${tool.img.includes('hands') ? 'kitchen-knead ' : ''}block h-full w-full object-contain`} />
           </div>
         )}
 
