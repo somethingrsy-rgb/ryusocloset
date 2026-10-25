@@ -7,9 +7,15 @@ import { playOrder, playTap } from '../lib/sound'
 interface Bubble { text: string; until: number }
 
 /**
+ * 동물 그림 칸(정사각형) 너비 ÷ 아바타 너비. 아바타 그림(1024×1536)에서 머리 꼭대기~발은 약 58~1504px(1444px),
+ * 동물 그림(public/cafe/stand)은 귀 끝~발이 칸 높이에 꽉 차 있어서, 칸 높이 = 아바타 키가 되게 한다
+ */
+export const GUEST_PER_AVATAR_W = 1444 / 1024
+
+/**
  * 집에 초대한 동물 친구들: 하나씩 문으로 들어오며(카페 주문 벨 소리) 인사하고, 바닥을 자연스럽게 돌아다니며 이야기한다.
  * invite 가 바뀌면 새로 고른 친구만 더 들어오고, leave 가 켜지면 인사하고 모두 나간다.
- * size(y) 는 그 높이에서의 동물 그림 너비(%), z(y) 는 그 높이에서의 겹침 순서다.
+ * size(y) 는 그 높이에서의 동물 그림 칸 너비(%, 칸 높이 = 동물 키 = 아바타 키), z(y) 는 그 높이에서의 겹침 순서다.
  */
 export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone }: { invite: number[]; leave: boolean; kid?: string; floor: Floor; me: { x: number; y: number }; size: (y: number) => number; z: (y: number) => number; onGone: () => void }) {
   const [guests, setGuests] = useState<Guest[]>([])
@@ -86,7 +92,7 @@ export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone }: 
       const a = CALL_ANIMALS[g.animal]
       const w = size(g.y)
       return (
-        <div key={a.img} className="absolute" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${w}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -98%)', zIndex: z(g.y) }}>
+        <div key={a.img} className="absolute" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${w}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -99.5%)', zIndex: z(g.y) }}>
           {/* 누르면 그 친구가 한마디 한다 */}
           <button aria-label={`${a.name}랑 이야기하기`} onPointerUp={(e) => e.stopPropagation()} onClick={() => { playTap(); say(g.animal, partyLine(g.animal, guests.map((h) => h.animal).filter((x) => x !== g.animal), kid)) }}
             className={`relative block h-full w-full border-0 bg-transparent p-0 ${g.wait > 0 ? '' : 'walk-bob'}`}>
@@ -103,7 +109,7 @@ export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone }: 
     {guests.map((g) => {
       const b = bubbles[g.animal]
       return b ? (
-        <div key={`b-${g.animal}`} aria-live="polite" className="pointer-events-none absolute" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${size(g.y)}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -98%)', zIndex: 100000 }}>
+        <div key={`b-${g.animal}`} aria-live="polite" className="pointer-events-none absolute" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${size(g.y)}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -99.5%)', zIndex: 100000 }}>
           <p className="absolute bottom-[96%] left-1/2 m-0 w-max max-w-[11rem] -translate-x-1/2 rounded-2xl bg-white px-2.5 py-1.5 text-center text-[13px] leading-snug font-bold text-[#6b4b52] shadow-md">{b.text}</p>
         </div>
       ) : null
