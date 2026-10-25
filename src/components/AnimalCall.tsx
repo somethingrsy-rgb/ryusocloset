@@ -25,8 +25,8 @@ function koreanVoices(): SpeechSynthesisVoice[] {
     .filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith('ko') && !seen.has(v.name) && seen.add(v.name))
     .sort((x, y) => voiceScore(y) - voiceScore(x) || x.name.localeCompare(y.name))
 }
-// 기본을 '아이폰 설정 목소리'로 바꾸면서 예전에 고른 목소리(유나)는 새로 시작한다
-const SAVED_KEY = `${VOICE_KEY}.2`
+// 동물마다 기본 목소리를 정하면서 예전에 고른 목소리는 새로 시작한다
+const SAVED_KEY = `${VOICE_KEY}.3`
 const readSaved = (): Record<string, string> => { try { return JSON.parse(localStorage.getItem(SAVED_KEY) ?? '{}') ?? {} } catch { return {} } }
 /** 같은 목소리라도 높낮이·빠르기를 바꿔 다른 느낌으로(아이폰 웹 앱은 받은 목소리를 하나만 보여 주는 경우가 많다) */
 const TONES = [
@@ -44,12 +44,15 @@ const choices = (): VoiceChoice[] => {
 }
 const keyOf = (c: VoiceChoice) => `${c.voice?.name ?? ''}|${c.tone}`
 export const voiceLabel = (c: VoiceChoice) => [c.voice?.name ?? '기기 설정 목소리', TONES[c.tone].label].filter(Boolean).join(' · ')
-/** 동물마다 목소리: 고른 게 있으면 그것, 없으면 기기 설정 목소리(아이폰에서 고른 민수 등). 앱이 민수를 볼 수 있으면 민수를 직접 쓴다 */
+/** 동물마다 정한 목소리(카페 자리 순서: 곰·토끼·고양이·강아지·병아리·오리·다람쥐·판다). 곰·강아지·판다는 민수, 토끼는 지안, 나머지는 기기 설정 목소리 */
+const ANIMAL_VOICE: (RegExp | null)[] = [/minsu|민수/i, /jian|지안/i, null, /minsu|민수/i, null, null, null, /minsu|민수/i]
+/** 동물마다 목소리: 고른 게 있으면 그것, 없으면 동물마다 정한 목소리. 앱이 그 목소리를 볼 수 없으면 기기 설정 목소리를 쓴다 */
 function voiceFor(animal: number): VoiceChoice {
   const saved = readSaved()[animal]
   const picked = choices().find((c) => keyOf(c) === saved)
   if (picked) return picked
-  return { voice: koreanVoices().find((v) => /minsu|민수/i.test(v.name)), tone: 0 }
+  const want = ANIMAL_VOICE[animal]
+  return { voice: want ? koreanVoices().find((v) => want.test(v.name)) : undefined, tone: 0 }
 }
 /** 이 동물의 목소리를 다음 것으로 바꿔 저장하고 새 목소리를 돌려준다 */
 function nextVoice(animal: number): VoiceChoice {
