@@ -126,19 +126,22 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const visY = Math.min(run.y, Math.max(0, (roadPx - top) / scale - PLAYER_H * grow + 6))
   // 넓은 화면일수록 빨리 달려, 화면을 가로지르는 시간이 폰과 비슷하게(가로 화면이 느리게 느껴지던 문제)
   speedKRef.current = Math.min(2.2, Math.max(1, Math.round((viewW / 400) * 10) / 10))
-  const cam = run.x
+  // 친구가 있으면 친구가 아바타 뒤(왼쪽)에 겹치지 않고 들어갈 만큼 화면 전체(아바타·길·장애물)를 오른쪽으로 민다(부딪힘 계산은 그대로)
+  const fh = PLAYER_H * grow * 0.5
+  const avatarHalf = PLAYER_W * grow * 0.4 // 아바타 그림에서 팔 끝까지의 반쪽 폭
+  const lead = friends.length ? Math.max(0, fh * 0.95 + avatarHalf + 4 - PLAYER_SCREEN_X) : 0
+  const cam = run.x - lead
   const { obstacles, coins, gifts } = visible(run.seed, cam, cam + viewW, run.level, run.k)
   // 배경은 달린 거리에 맞춰 흐른다(장애물 그림 구간과 배경 구간이 기기 크기와 상관없이 맞도록)
   const scrollPx = (cam * BG_PER_RUN + BG_START) * bgScale
   const bgTileW = TILE_W * bgScale
   const bgTiles = Array.from({ length: Math.floor((scrollPx + size.w) / bgTileW) - Math.floor(scrollPx / bgTileW) + 1 }, (_, i) => Math.floor(scrollPx / bgTileW) + i)
-  const px = PLAYER_SCREEN_X
+  const px = PLAYER_SCREEN_X + lead
   const blink = run.invuln > 0 && Math.floor(run.invuln * 10) % 2 === 0
   const btn = `${short ? 'min-h-9 px-2.5 text-xs' : 'min-h-11 px-3 text-sm'} rounded-full bg-white/95 font-bold shadow-sm`
   const progress = Math.min(1, run.elapsed / runDuration(run.level))
-  // 친구 자리: 아바타 바로 뒤(왼쪽)에 붙어서 달린다(화면 왼쪽 밖으로 나가지 않게)
-  const fh = PLAYER_H * grow * 0.5
-  const slots = friends.map(() => Math.max(fh * 0.5, px - PLAYER_W * grow * 0.28 - fh * 0.3))
+  // 친구 자리: 아바타 바로 뒤(왼쪽)에 붙되 아바타 그림과 겹치지 않게
+  const slots = friends.map(() => px - avatarHalf - 4 - fh * 0.47)
 
   return <section ref={host} tabIndex={0} aria-label="달려라 아바타" className={`relative h-full touch-none select-none overflow-hidden bg-[#82c6fd] outline-none ${short ? '' : 'rounded-3xl ring-1 ring-black/5'}`}
     onPointerDown={(e) => { if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return; e.currentTarget.focus({ preventScroll: true }); tapJump() }}
