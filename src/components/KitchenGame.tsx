@@ -173,13 +173,13 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
 
         {/* 도마 위: 요리하는 동안은 재료, 다 만들면 완성된 음식 */}
         <div aria-hidden className="pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-0.5" style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - 1}%`, width: `${L.at.board.w}%`, zIndex: 4 }}>
-          {doneMenu ? <Ico id={doneMenu.id} className="h-auto w-[45%] animate-bounce drop-shadow-lg" />
+          {doneMenu ? <Ico id={doneMenu.id} className="h-auto w-[30%] animate-bounce drop-shadow-lg" />
             : boardIngs.map((id) => <Ing key={id} id={id} className={`aspect-square w-[19%] ${step?.station === 'board' && cooking!.taps > 0 ? 'call-shake' : ''}`} />)}
         </div>
         {/* 반죽 섞기: 두 손이 도마 위에서 조물조물(누를 때마다 꾹 누른다) */}
         {kneading && (
           <img key={cooking!.taps} aria-hidden src={assetUrl('kitchen/hands.webp')} alt="" draggable={false} className="kitchen-knead pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y + 1}%`, width: `${L.at.board.w * 0.75}%`, zIndex: 5 }} />
+            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - 0.5}%`, width: `${L.at.board.w * 0.225}%`, zIndex: 5 }} />
         )}
 
         {/* 내 아바타: 아일랜드 뒤에 서서 요리한다(아일랜드 그림을 아바타 앞에 한 번 더 덮어서 아래쪽이 가려진다) */}
