@@ -68,7 +68,8 @@ export function PhoneSheet({ theme, kid, avatar, muted, dial, onClose }: { theme
             <div className="relative min-h-0 flex-1"><AnimalCall animal={calling} kid={kid} muted={muted} theme={theme} onClose={hangUp} /></div>
           ) : (
             <>
-              <div className="flex shrink-0 items-center justify-between px-4 pt-3">
+              {/* 번호판에서는 닫기 버튼만 위에 띄워서, 그 자리까지 아바타가 크게 보이게 한다 */}
+              <div className={`flex shrink-0 items-center justify-between px-4 pt-3 ${tab === 'keypad' ? 'absolute inset-x-0 top-6 z-10' : ''}`}>
                 <p className={`m-0 text-lg font-black ${theme.ink}`}>{tab === 'contacts' ? '📒 연락처' : ''}</p>
                 <button aria-label="휴대폰 닫기" onClick={onClose} className={`h-9 w-9 rounded-full bg-white/80 text-base font-bold shadow-sm ${theme.ink}`}>✕</button>
               </div>
@@ -89,20 +90,21 @@ export function PhoneSheet({ theme, kid, avatar, muted, dial, onClose }: { theme
                   ))}
                 </ul>
               ) : (
-                <div className="flex min-h-0 flex-1 flex-col items-center justify-end gap-1.5 px-5 pb-2">
-                  {/* 지금 아바타의 얼굴·상체: 아바타 그림(가로:세로 = 1024:1536)의 위쪽 55%(머리~가슴), 가운데 66% 폭만 크게 보여 준다 */}
-                  <div className="flex min-h-0 w-full flex-1 items-end justify-center">
-                    <div className="relative h-full max-h-64 overflow-hidden" style={{ aspectRatio: '676 / 845' }}>
-                      <div className="absolute top-0" style={{ left: '-25.8%', width: '151.5%', aspectRatio: '1024 / 1536' }}>{avatar}</div>
+                <div className="flex min-h-0 flex-1 flex-col items-center justify-end gap-1 px-3 pt-3 pb-2">
+                  {/* 지금 아바타의 머리~어깨: 아바타 그림(1024×1536)의 위쪽 700px 을 폭 전체로 보여 준다.
+                      양갈래·땋은 머리처럼 옆으로 넓게 퍼지는 머리카락(그림 폭 거의 끝까지)도 잘리지 않게 폭은 자르지 않는다 */}
+                  <div className="flex min-h-0 w-full flex-1 items-end justify-center" style={{ containerType: 'size' }}>
+                    <div className="relative overflow-hidden" style={{ width: 'min(100cqw, 100cqh * 1024 / 700)', aspectRatio: '1024 / 700' }}>
+                      <div className="absolute inset-x-0 top-0" style={{ aspectRatio: '1024 / 1536' }}>{avatar}</div>
                     </div>
                   </div>
-                  <div className="flex min-h-[3rem] shrink-0 flex-col items-center justify-center">
+                  <div className="flex min-h-[2.75rem] shrink-0 flex-col items-center justify-center">
                     <p aria-live="polite" className={`m-0 text-4xl font-black tracking-[0.2em] ${theme.ink}`}>{digits || ' '}</p>
                     {wrong ? <p className="m-0 text-sm font-bold text-[#d9534f]">없는 번호예요. 연락처를 볼까요?</p>
                       : auto ? <p className="m-0 text-sm text-black/45">번호를 누르는 중…</p>
                       : <p className="m-0 text-xs text-black/35">번호를 누르고 📞 를 눌러요</p>}
                   </div>
-                  <div className="grid w-full max-w-[16.5rem] shrink-0 grid-cols-3 gap-2.5">
+                  <div className="grid w-full max-w-[15rem] shrink-0 grid-cols-3 gap-2">
                     {/* 앱 전체의 button { font: inherit } 가 Tailwind 글자 크기·굵기보다 앞서서, 숫자 크기·굵기는 style 로 준다 */}
                     {KEYS.map((k, i) => k
                       ? <button key={i} aria-label={k === '⌫' ? '지우기' : k} onClick={() => press(k)} className={`aspect-square rounded-full shadow-sm active:scale-90 ${k === '⌫' ? 'bg-transparent shadow-none' : theme.key} ${theme.ink}`} style={{ fontSize: k === '⌫' ? '1.5rem' : '2rem', fontWeight: 800 }}>{k}</button>
