@@ -152,7 +152,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const [ax, ay] = L.cook
   const aw = L.avatarH * (1024 / 1536) / L.ratio // 아바타 너비(그림 너비에 대한 %)
   const boardIngs = cooking && menu ? needList(menu).map(({ id }) => id) : []
-  // 도마 위 재료 줄보다 위에 나오는 도구: 말기는 두 손(조물조물), 섞기는 볼, 믹서 돌리기는 믹서기, 갈기는 커피 그라인더
+  // 도마 위 재료 줄보다 위에 나오는 도구: 섞기·말기는 두 손(조물조물), 믹서 돌리기는 믹서기, 갈기는 커피 그라인더
   const nowStep = cooking && menu ? menu.steps[cooking.step] : null
   const tool = nowStep ? BOARD_TOOL[nowStep] : undefined
   const kneading = !!tool
@@ -365,10 +365,10 @@ function Ing({ id, className }: { id: IngId; className: string }) {
   return <img src={assetUrl(src)} alt="" draggable={false} onError={() => setFailed(true)} className={`object-contain ${className}`} />
 }
 
-/** 단계 아이콘: 굽기 불, 썰기 칼, 믹서 돌리기 믹서기, 섞기 볼, 갈기 그라인더, 말기 두 손(public/kitchen), 나머지는 이모지 */
-const STEP_IMG: Partial<Record<StepId, string>> = { bake: 'kitchen/fire.webp', cut: 'kitchen/knife.webp', blend: 'kitchen/blender.webp', mix: 'kitchen/bowl.webp', grind: 'kitchen/grinder.webp', roll: 'kitchen/hands.webp' }
+/** 단계 아이콘: 굽기 불, 썰기 칼, 믹서 돌리기 믹서기, 갈기 그라인더, 섞기·말기 두 손(public/kitchen), 나머지는 이모지 */
+const STEP_IMG: Partial<Record<StepId, string>> = { bake: 'kitchen/fire.webp', cut: 'kitchen/knife.webp', blend: 'kitchen/blender.webp', mix: 'kitchen/hands.webp', grind: 'kitchen/grinder.webp', roll: 'kitchen/hands.webp' }
 /** 도마 위에 놓는 도구 그림과 크기(도마 폭에 대한 비율) */
-const BOARD_TOOL: Partial<Record<StepId, { img: string; w: number }>> = { roll: { img: 'kitchen/hands.webp', w: 0.3 }, mix: { img: 'kitchen/bowl.webp', w: 0.3 }, blend: { img: 'kitchen/blender.webp', w: 0.3 }, grind: { img: 'kitchen/grinder.webp', w: 0.3 } }
+const BOARD_TOOL: Partial<Record<StepId, { img: string; w: number }>> = { roll: { img: 'kitchen/hands.webp', w: 0.3 }, mix: { img: 'kitchen/hands.webp', w: 0.3 }, blend: { img: 'kitchen/blender.webp', w: 0.3 }, grind: { img: 'kitchen/grinder.webp', w: 0.3 } }
 /** 칼 그림은 대각선으로 길어 같은 칸에서 작아 보여서 2배로 그린다(다른 그림과 비슷한 크기로) */
 const STEP_SCALE: Partial<Record<StepId, number>> = { cut: 2 }
 function StepIcon({ id, className = 'h-full w-full' }: { id: StepId; className?: string }) {
