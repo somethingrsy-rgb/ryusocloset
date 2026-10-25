@@ -16,15 +16,17 @@ import { CoinIcon } from './Icons'
  * 아바타는 아일랜드 뒤에 서서 요리한다: cook 은 발 위치, island 는 그림에서 오려 낸 아일랜드(public/kitchen/island_*.webp)를 아바타 앞에 다시 덮는 자리(왼쪽·위·너비·높이 %).
  */
 type Box = { x: number; y: number; w: number; h: number }
-const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; cook: [number, number]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
+const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; ovenGlass: Box; cook: [number, number]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
   portrait: {
     img: 'kitchen/kitchen_portrait.webp', ratio: 941 / 1672, avatarH: 24,
     at: { fridge: { x: 15.5, y: 31, w: 24, h: 32 }, sink: { x: 48, y: 36.5, w: 24, h: 7 }, stove: { x: 86, y: 33.5, w: 22, h: 6 }, oven: { x: 86.5, y: 44, w: 24, h: 12 }, board: { x: 50, y: 59, w: 40, h: 9 } },
+    ovenGlass: { x: 86.9, y: 43.9, w: 14.3, h: 5.6 },
     cook: [50, 62], island: { img: 'kitchen/island_portrait.webp', l: 12.221, t: 52.452, w: 75.452, h: 33.612 },
   },
   wide: {
     img: 'kitchen/kitchen_wide.webp', ratio: 1672 / 941, avatarH: 38,
     at: { fridge: { x: 19.7, y: 37, w: 16, h: 45 }, sink: { x: 49.3, y: 41.5, w: 15, h: 10 }, stove: { x: 81.6, y: 38, w: 14, h: 9 }, oven: { x: 83.4, y: 53.5, w: 15, h: 17 }, board: { x: 49.6, y: 60.5, w: 24, h: 12 } },
+    ovenGlass: { x: 83.2, y: 53.9, w: 9.1, h: 8.5 },
     cook: [50, 66], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
   },
 }
@@ -165,12 +167,25 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             <button key={s} aria-label={s} onClick={() => tapStation(s)}
               className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0 ${here ? 'kitchen-here' : ''} ${shake === s ? 'call-shake' : ''}`}
               style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 3 }}>
-              {here && <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className="kitchen-point absolute bottom-full left-1/2 h-10 w-10 -translate-x-1/2 object-contain" />}
-              {pops.filter((p) => p.at === s).map((p) => <span key={p.id} aria-hidden className="cafe-float pointer-events-none absolute top-0 left-1/2 flex h-9 w-9 items-center justify-center text-3xl"><StepIcon id={p.step} /></span>)}
+              {/* 가리키는 손: 보통은 위에서 아래로. 반죽하는 두 손이 도마 위에 있을 때는 겹치지 않게 오른쪽 옆에서 왼쪽으로 가리킨다 */}
+              {here && (kneading && s === 'board'
+                ? <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className="kitchen-point-side absolute top-1/2 left-full h-10 w-10 object-contain" />
+                : <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className="kitchen-point absolute bottom-full left-1/2 h-10 w-10 -translate-x-1/2 object-contain" />)}
+              {/* 누를 때 떠오르는 단계 그림: 가리키는 손(위·오른쪽)과 겹치지 않게 왼쪽 옆에서(냉장고는 화면 왼쪽 끝이라 오른쪽 옆에서) 떠오른다. 굽기는 오븐 창 안의 불꽃이 대신한다 */}
+              {pops.filter((p) => p.at === s && p.step !== 'bake').map((p) => <span key={p.id} aria-hidden className={`cafe-float pointer-events-none absolute top-0 flex h-10 w-10 items-center justify-center text-3xl ${s === 'fridge' ? 'left-full' : 'right-full'}`}><StepIcon id={p.step} /></span>)}
             </button>
           )
         })}
 
+        {/* 굽는 동안 오븐 유리창 안에 불꽃: 창 크기만큼, 누를수록 커진다 */}
+        {cooking && menu?.steps[cooking.step] === 'bake' && (
+          <div aria-hidden className="pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 items-end justify-center overflow-hidden" style={{ left: `${L.ovenGlass.x}%`, top: `${L.ovenGlass.y}%`, width: `${L.ovenGlass.w}%`, height: `${L.ovenGlass.h}%`, zIndex: 4 }}>
+            {/* 창이 옆으로 길어서 불꽃 셋을 나란히(가운데가 제일 크게) 놓아 창을 꽉 채운다 */}
+            {[0.8, 1, 0.8].map((k, i) => (
+              <img key={i} src={assetUrl('kitchen/fire.webp')} alt="" draggable={false} className="kitchen-flame -mx-[6%] h-full w-auto max-w-none object-contain" style={{ height: `${k * 100}%`, animationDelay: `${i * 0.15}s`, transform: `scale(${0.8 + 0.25 * (cooking.taps / STEPS.bake.taps)})` }} />
+            ))}
+          </div>
+        )}
         {/* 도마 위: 요리하는 동안은 재료, 다 만들면 완성된 음식 */}
         <div aria-hidden className="pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-0.5" style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - 1}%`, width: `${L.at.board.w}%`, zIndex: 4 }}>
           {doneMenu ? <Ico id={doneMenu.id} className="h-auto w-[30%] animate-bounce drop-shadow-lg" />
@@ -349,7 +364,10 @@ function Ing({ id, className }: { id: IngId; className: string }) {
 
 /** 단계 아이콘: 굽기는 불, 썰기는 칼 그림(public/kitchen), 나머지는 이모지 */
 const STEP_IMG: Partial<Record<StepId, string>> = { bake: 'kitchen/fire.webp', cut: 'kitchen/knife.webp' }
+/** 칼 그림은 대각선으로 길어 같은 칸에서 작아 보여서 2배로 그린다(다른 그림과 비슷한 크기로) */
+const STEP_SCALE: Partial<Record<StepId, number>> = { cut: 2 }
 function StepIcon({ id, className = 'h-full w-full' }: { id: StepId; className?: string }) {
   const img = STEP_IMG[id]
-  return img ? <img src={assetUrl(img)} alt="" draggable={false} className={`object-contain ${className}`} /> : <span aria-hidden>{STEPS[id].emoji}</span>
+  const k = STEP_SCALE[id]
+  return img ? <img src={assetUrl(img)} alt="" draggable={false} className={`object-contain ${className}`} style={k ? { transform: `scale(${k})`, margin: '0 0.25em' } : undefined} /> : <span aria-hidden>{STEPS[id].emoji}</span>
 }
