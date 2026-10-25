@@ -1886,7 +1886,7 @@
     "colorHex": "#b9a4e8",
     "box": {
       "x": 292,
-      "y": 606,
+      "y": 622,
       "w": 441,
       "h": 537
     },
@@ -1909,10 +1909,10 @@
     },
     "colorHex": "#c8283c",
     "box": {
-      "x": 303,
-      "y": 606,
-      "w": 418,
-      "h": 526
+      "x": 322,
+      "y": 630,
+      "w": 380,
+      "h": 478
     },
     "image": "assets/clothes/costume/costume_soccer_red.webp",
     "thumb": "assets/thumbs/costume_soccer_red.webp",
@@ -3589,10 +3589,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 366,
-      "y": 1078,
-      "w": 290,
-      "h": 434
+      "x": 379,
+      "y": 1138,
+      "w": 264,
+      "h": 395
     },
     "image": "assets/clothes/shoes/shoes_soccer_purple.webp",
     "thumb": "assets/thumbs/shoes_soccer_purple.webp",
@@ -3613,10 +3613,10 @@
     },
     "colorHex": "#c8283c",
     "box": {
-      "x": 368,
-      "y": 1083,
-      "w": 285,
-      "h": 429
+      "x": 381,
+      "y": 1142,
+      "w": 259,
+      "h": 390
     },
     "image": "assets/clothes/shoes/shoes_soccer_red.webp",
     "thumb": "assets/thumbs/shoes_soccer_red.webp",
