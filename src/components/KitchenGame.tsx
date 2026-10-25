@@ -165,7 +165,10 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             <button key={s} aria-label={s} onClick={() => tapStation(s)}
               className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0 ${here ? 'kitchen-here' : ''} ${shake === s ? 'call-shake' : ''}`}
               style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 3 }}>
-              {here && <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className="kitchen-point absolute bottom-full left-1/2 h-10 w-10 -translate-x-1/2 object-contain" />}
+              {/* 가리키는 손: 보통은 위에서 아래로. 반죽하는 두 손이 도마 위에 있을 때는 겹치지 않게 오른쪽 옆에서 왼쪽으로 가리킨다 */}
+              {here && (kneading && s === 'board'
+                ? <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className="kitchen-point-side absolute top-1/2 left-full h-10 w-10 object-contain" />
+                : <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className="kitchen-point absolute bottom-full left-1/2 h-10 w-10 -translate-x-1/2 object-contain" />)}
               {pops.filter((p) => p.at === s).map((p) => <span key={p.id} aria-hidden className="cafe-float pointer-events-none absolute top-0 left-1/2 flex h-9 w-9 items-center justify-center text-3xl"><StepIcon id={p.step} /></span>)}
             </button>
           )
