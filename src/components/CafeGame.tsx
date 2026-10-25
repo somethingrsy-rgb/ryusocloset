@@ -237,7 +237,6 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
             <div key={i}>
               {/* 동물을 누르면 그 동물에게 전화를 건다(주문은 말풍선으로) */}
               <button aria-label={`${x.name}에게 전화하기`} onClick={() => { unlockSpeech(); setPhone({ dial: i }) }} className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0" style={{ left: `${cx}%`, top: `${cy + 2}%`, width: wide ? '9%' : '14%', height: wide ? '16%' : '11%' }}>
-                <span aria-hidden className="absolute -right-1 bottom-0 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-sm shadow">📞</span>
               </button>
               <button
                 aria-label={`${x.name} · ${label}`}
@@ -281,7 +280,7 @@ export function CafeGame({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks })
       </div>
       <p className="absolute inset-x-3 bottom-2 z-20 m-0 rounded-full bg-white/90 px-3 py-1.5 text-center text-[11px] shadow">{tx.hint}</p>
 
-      {phone && <PhoneSheet theme={phoneTheme} kid={kidName} muted={!sound} dial={phone.dial} onClose={() => setPhone(null)} />}
+      {phone && <PhoneSheet theme={phoneTheme} kid={kidName} avatar={<FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />} muted={!sound} dial={phone.dial} onClose={() => setPhone(null)} />}
       {toast && <div role="status" className="absolute bottom-12 left-1/2 z-30 max-w-[90%] -translate-x-1/2 rounded-full bg-[#8a4b55] px-5 py-3 text-center text-sm text-[#fff9e9] shadow-lg">{toast}</div>}
     </section>
   )
