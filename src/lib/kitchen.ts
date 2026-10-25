@@ -12,6 +12,8 @@ export interface KitchenState { pantry: Record<PantryId, number>; tickets: Ticke
 export type KitchenAction =
   | { type: 'order'; seat: number; menu: string }
   | { type: 'buy'; id: PantryId }
+  /** 농장 동물에게 받은 우유·달걀을 냉장고에 넣는다 */
+  | { type: 'add'; id: PantryId; n: number }
   | { type: 'cook'; seat: number }
   | { type: 'serve'; seat: number }
 
@@ -43,6 +45,11 @@ export function missing(menuId: string, kitchen: KitchenState, farm: Pick<FarmSt
 
 export function reduceKitchen(state: KitchenState, action: KitchenAction): KitchenState {
   const next: KitchenState = { pantry: { ...state.pantry }, tickets: [...state.tickets] }
+  if (action.type === 'add') {
+    if (!PANTRY.some((p) => p.id === action.id) || !Number.isInteger(action.n) || action.n <= 0 || action.n > 100) return state
+    next.pantry[action.id] += action.n
+    return next
+  }
   if (action.type === 'buy') {
     if (!PANTRY.some((p) => p.id === action.id)) return state
     next.pantry[action.id] += PACK
