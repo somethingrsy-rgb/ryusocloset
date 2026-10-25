@@ -310,4 +310,7 @@ button:focus-visible {
 .kitchen-here { animation: kitchen-here 1.1s ease-in-out infinite; background: rgba(255, 246, 214, 0.18); }
 @keyframes kitchen-point { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -22%); } }
 .kitchen-point { animation: kitchen-point 0.8s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .kitchen-here, .kitchen-point { animation: none; } }
+/* 반죽할 때 두 손이 꾹 눌렀다가 올라온다 */
+@keyframes kitchen-knead { 0% { transform: translate(-50%, -50%) scale(1); } 40% { transform: translate(-50%, -42%) scale(0.94, 0.9); } 100% { transform: translate(-50%, -50%) scale(1); } }
+.kitchen-knead { animation: kitchen-knead 0.35s ease-out; }
+@media (prefers-reduced-motion: reduce) { .kitchen-here, .kitchen-point, .kitchen-knead { animation: none; } }

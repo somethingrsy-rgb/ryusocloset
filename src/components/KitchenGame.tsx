@@ -4,7 +4,7 @@ import { CALL_ANIMALS } from '../lib/animalCalls'
 import { CROPS, getFarm, subscribeFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import { buyPantry, cookTicket, getKitchen, missing, subscribeKitchen } from '../lib/kitchen'
-import { PACK, PACK_PRICE, PANTRY, STEPS, ingredient, isCrop, menuById, needList, type Station } from '../lib/recipes'
+import { PACK, PACK_PRICE, PANTRY, STEPS, ingredient, isCrop, menuById, needList, type IngId, type Station } from '../lib/recipes'
 import { playBell, playCloud, playCoin, playCook, playTap, startBgm, stopBgm } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { Ico } from './CafeGame'
@@ -153,7 +153,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const doneMenu = done !== null ? menuById(kitchen.tickets.find((t) => t.seat === done)?.menu ?? '') : undefined
   const [ax, ay] = L.spot[where]
   const aw = L.avatarH * (1024 / 1536) / L.ratio // 아바타 너비(그림 너비에 대한 %)
-  const boardEmojis = cooking && menu ? needList(menu).flatMap(({ id, n }) => Array.from({ length: Math.min(n, 3) }, () => ingredient(id).emoji)) : []
+  const boardIngs = cooking && menu ? needList(menu).map(({ id }) => id) : []
+  const kneading = !!cooking && menu?.steps[cooking.step] === 'mix'
 
   return (
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-clip rounded-3xl bg-[#e9b06c] ring-1 ring-black/5 select-none" style={{ containerType: 'size' }}>
@@ -177,8 +178,13 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         {/* 도마 위: 요리하는 동안은 재료, 다 만들면 완성된 음식 */}
         <div aria-hidden className="pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-0.5" style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - 1}%`, width: `${L.at.board.w}%`, zIndex: 4 }}>
           {doneMenu ? <Ico id={doneMenu.id} className="h-auto w-[45%] animate-bounce drop-shadow-lg" />
-            : boardEmojis.map((e, k) => <span key={k} className={`text-2xl ${step?.station === 'board' && cooking!.taps > 0 ? 'call-shake' : ''}`}>{e}</span>)}
+            : boardIngs.map((id) => <Ing key={id} id={id} className={`aspect-square w-[19%] ${step?.station === 'board' && cooking!.taps > 0 ? 'call-shake' : ''}`} />)}
         </div>
+        {/* 반죽 섞기: 두 손이 도마 위에서 조물조물(누를 때마다 꾹 누른다) */}
+        {kneading && (
+          <img key={cooking!.taps} aria-hidden src={assetUrl('kitchen/hands.webp')} alt="" draggable={false} className="kitchen-knead pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - 3}%`, width: `${L.at.board.w * 0.8}%`, zIndex: 5 }} />
+        )}
 
         {/* 내 아바타: 할 일이 있는 자리로 걸어간다 */}
         <div aria-hidden className="pointer-events-none absolute" style={{ left: `${ax}%`, top: `${ay}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', transform: `translate(-50%, -98%) scaleX(${ax > 50 ? -1 : 1})`, zIndex: 2, transition: 'left 0.6s ease-in-out, top 0.6s ease-in-out' }}>
@@ -269,7 +275,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
                     const ing = ingredient(id)
                     const have = isCrop(id) ? farm.inventory[id] : kitchen.pantry[id]
                     const ok = have >= n
-                    return <span key={id} className={`rounded-full px-2.5 py-1 text-sm font-bold ${ok ? 'bg-[#e6f6e3] text-[#3d7a35]' : 'bg-[#ffe3e3] text-[#c0392b]'}`}>{ing.emoji} {ing[lang]} {have}/{n} {ok ? '✔' : '✖'}</span>
+                    return <span key={id} className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1 text-sm font-bold ${ok ? 'bg-[#e6f6e3] text-[#3d7a35]' : 'bg-[#ffe3e3] text-[#c0392b]'}`}><Ing id={id} className="h-6 w-6" /> {ing[lang]} {have}/{n} {ok ? '✔' : '✖'}</span>
                   })}
                 </div>
                 <p className="m-0 text-xs text-black/45">{tx.how}: {menu.steps.map((s) => `${STEPS[s].emoji} ${STEPS[s][lang]}`).join(' → ')}</p>
@@ -301,7 +307,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             <div className="grid min-h-0 grid-cols-4 gap-2 overflow-y-auto">
               {PANTRY.map((p) => (
                 <div key={p.id} className="flex flex-col items-center rounded-2xl bg-white p-1.5 ring-1 ring-black/5">
-                  <span aria-hidden className="text-3xl leading-tight">{p.emoji}</span>
+                  <Ing id={p.id} className="h-10 w-10" />
                   <span className="text-[11px] font-bold text-[#8a4b2a]">{p[lang]}</span>
                   <span className="text-xs text-black/50">× {kitchen.pantry[p.id]}</span>
                   <button aria-label={`${p[lang]} ${PACK}개 사기`} disabled={farm.coins < PACK_PRICE}
@@ -312,7 +318,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             </div>
             <p className="mt-3 mb-1 text-xs text-black/45">{tx.farmNote}</p>
             <div className="flex items-center gap-2">
-              {CROPS.map((c) => <span key={c.id} className="rounded-full bg-white px-2.5 py-1 text-sm font-bold ring-1 ring-black/5">{c.emoji} × {farm.inventory[c.id]}</span>)}
+              {CROPS.map((c) => <span key={c.id} className="flex items-center gap-1 rounded-full bg-white py-0.5 pr-2.5 pl-1 text-sm font-bold ring-1 ring-black/5"><Ing id={c.id} className="h-6 w-6" /> × {farm.inventory[c.id]}</span>)}
               <button onClick={() => { playTap(); setPantry(false); onGo('farm') }} className="ml-auto rounded-full bg-[#e6f6e3] px-3 py-1.5 text-xs font-bold text-[#3d7a35]">🥕 →</button>
             </div>
             <button onClick={() => setPantry(false)} className={`${btn} mt-3 bg-white text-[#8a4b2a]`}>{tx.close}</button>
@@ -332,4 +338,12 @@ function Dots({ n, k }: { n: number; k: number }) {
       {Array.from({ length: n }, (_, i) => <span key={i} className={`h-3.5 w-3.5 rounded-full ${i < k ? 'bg-[#ef8d99]' : 'bg-[#f3e2cf]'}`} />)}
     </div>
   )
+}
+
+/** 재료 그림: 농장 재료는 농장 수확 그림, 기본 재료는 public/kitchen/ing/<id>.webp. 그림을 못 읽으면 이모지 */
+function Ing({ id, className }: { id: IngId; className: string }) {
+  const [failed, setFailed] = useState(false)
+  const src = isCrop(id) ? `assets/farm/harvest_${id}.webp` : `kitchen/ing/${id}.webp`
+  if (failed) return <span aria-hidden className={`flex items-center justify-center leading-none ${className}`} style={{ fontSize: '1.4rem' }}>{ingredient(id).emoji}</span>
+  return <img src={assetUrl(src)} alt="" draggable={false} onError={() => setFailed(true)} className={`object-contain ${className}`} />
 }
