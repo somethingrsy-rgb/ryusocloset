@@ -9,13 +9,13 @@ describe('farming lifecycle',()=>{
     expect(reduceFarm(state,{type:'harvest',plot:0},999999)).toBe(state)
     state=reduceFarm(state,{type:'water',plot:0},2000)
     expect(reduceFarm(state,{type:'water',plot:0},4000)).toBe(state)
-    expect(growth(state.plots[0],32000)).toBe(.5)
-    expect(reduceFarm(state,{type:'harvest',plot:0},61000)).toBe(state)
+    expect(growth(state.plots[0],17000)).toBe(.5)
+    expect(reduceFarm(state,{type:'harvest',plot:0},31000)).toBe(state)
     state=sanitizeFarm(JSON.parse(JSON.stringify(state)))
-    expect(growth(state.plots[0],62000)).toBe(1)
-    state=reduceFarm(state,{type:'harvest',plot:0},62000)
+    expect(growth(state.plots[0],32000)).toBe(1)
+    state=reduceFarm(state,{type:'harvest',plot:0},32000)
     expect(state.inventory.carrot).toBe(1);expect(state.plots[0]).toBeNull()
-    expect(reduceFarm(state,{type:'harvest',plot:0},62000)).toBe(state)
+    expect(reduceFarm(state,{type:'harvest',plot:0},32000)).toBe(state)
   })
   it('fulfills the current order once and charges decorations only once',()=>{
     let state=defaultFarm();state.inventory.carrot=2
