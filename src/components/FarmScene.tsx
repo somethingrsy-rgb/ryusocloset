@@ -2,7 +2,7 @@ import { playCoin, playHarvest, playPlant, playWater, startBgm, stopBgm } from '
 import { actKitchen } from '../lib/kitchen'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
-import { actFarm, CROPS, getFarm, growth, orderCrop, PLOT_COUNT, plotPrice, subscribeFarm, type CropId, type FarmAction, animalWait, type AnimalGood } from '../lib/farm'
+import { actFarm, CROPS, getFarm, growth, orderCrop, PLOT_COUNT, plotPrice, subscribeFarm, type CropId, type FarmAction, animalWait, ANIMAL_SECONDS, type AnimalGood } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { FarmFx } from './FarmFx'
@@ -21,9 +21,12 @@ type Tool = 'seed' | 'water' | 'harvest'
 const LAYOUT = {
   portrait: { img: 'farm_portrait3', w: 1024, h: 1536, cols: 4, rows: 5, cx: 512, cy: 885, tw: 215, rowGap: 21, avatarH: 19, home: { x: 44, y: 12 }, stall: { left: '68%', top: '17%', width: '20%', height: '17%' },
     // 우리 안 젖소·닭 자리(그림 크기에 대한 %): 눌러서 우유·달걀을 받는다
-    barn: { milk: { x: 14, y: 24, w: 12, h: 6 }, egg: { x: 17, y: 28.3, w: 6, h: 4 } } },
+    barn: { milk: { x: 14, y: 24, w: 12, h: 6 }, egg: { x: 17, y: 28.3, w: 6, h: 4 } },
+    // 우유·달걀 표시 자리(동물 머리보다 위, 동물을 가리지 않게): 가운데 x, 아래 끝 y
+    tag: { milk: { x: 10, y: 19.5 }, egg: { x: 21, y: 19.5 } } },
   wide: { img: 'farm_wide2', w: 1672, h: 941, cols: 5, rows: 4, cx: 690, cy: 560, tw: 160, rowGap: 3, avatarH: 22, home: { x: 41, y: 12 }, stall: { left: '63%', top: '17%', width: '12%', height: '20%' },
-    barn: { milk: { x: 11.4, y: 28, w: 7.5, h: 8 }, egg: { x: 13.3, y: 35.6, w: 3.6, h: 6 } } },
+    barn: { milk: { x: 11.4, y: 28, w: 7.5, h: 8 }, egg: { x: 13.3, y: 35.6, w: 3.6, h: 6 } },
+    tag: { milk: { x: 9, y: 23 }, egg: { x: 16.5, y: 23 } } },
 } as const
 type Layout = (typeof LAYOUT)[keyof typeof LAYOUT]
 /** 밭 한 칸의 가운데 위치(그림 가로·세로 %)와 칸 크기(%) */
@@ -173,13 +176,20 @@ export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: 
         {/* 우리 안 젖소·닭: 다 되면 우유·달걀이 머리 위에서 통통, 누르면 받아서 주방 냉장고에 넣는다. 기다리는 동안은 남은 시간 */}
         {(['milk', 'egg'] as const).map((g) => {
           const b = L.barn[g]
-          const wait = animalWait(farm, g, now)
           return (
             <button key={g} aria-label={g === 'milk' ? (ko ? '젖소: 우유 받기' : 'Cow: get milk') : (ko ? '닭: 달걀 받기' : 'Hen: get an egg')} onClick={() => collect(g)}
               className="absolute -translate-x-1/2 -translate-y-1/2 rounded-2xl border-0 bg-transparent p-0" style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 6 }}>
-              {wait === 0
-                ? <img aria-hidden src={assetUrl(`kitchen/ing/${g}.webp`)} alt="" draggable={false} className="pointer-events-none absolute bottom-[70%] left-1/2 h-9 w-9 -translate-x-1/2 animate-bounce object-contain drop-shadow-[0_0_6px_#fff6b0]" />
-                : <span aria-hidden className="pointer-events-none absolute bottom-[80%] left-1/2 -translate-x-1/2 rounded-full bg-white/85 px-1.5 text-[10px] font-bold whitespace-nowrap text-[#8a5a3b] shadow">{Math.floor(wait / 60)}:{String(wait % 60).padStart(2, '0')}</span>}
+            </button>
+          )
+        })}
+        {/* 우유·달걀 표시: 동물 머리 위쪽에 그림만. 다 되면 통통, 기다리는 동안은 흐린 그림 아래에 진행 바(카페에서 쓰던 것) */}
+        {(['milk', 'egg'] as const).map((g) => {
+          const t = L.tag[g]
+          const wait = animalWait(farm, g, now)
+          return (
+            <button key={`t-${g}`} aria-hidden tabIndex={-1} onClick={() => collect(g)} className="absolute flex -translate-x-1/2 -translate-y-full flex-col items-center border-0 bg-transparent p-0" style={{ left: `${t.x}%`, top: `${t.y}%`, zIndex: 7 }}>
+              <img src={assetUrl(`kitchen/ing/${g}.webp`)} alt="" draggable={false} className={`h-7 w-7 object-contain ${wait === 0 ? 'animate-bounce drop-shadow-[0_0_6px_#fff6b0]' : 'drop-shadow-[0_1px_2px_rgba(80,50,30,0.6)]'}`} />
+              {wait > 0 && <span className="mt-0.5 block h-1.5 w-8 overflow-hidden rounded-full bg-[#eee4d3] shadow-sm"><i className="block h-full bg-[#ef8d99]" style={{ width: `${(1 - wait / ANIMAL_SECONDS) * 100}%` }} /></span>}
             </button>
           )
         })}
