@@ -5,7 +5,7 @@ import { CROPS, getFarm, subscribeFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import { buyPantry, cookTicket, getKitchen, missing, subscribeKitchen } from '../lib/kitchen'
 import { PACK, PACK_PRICE, PANTRY, STEPS, ingredient, isCrop, menuById, needList, type IngId, type Station, type StepId } from '../lib/recipes'
-import { playBell, playCloud, playCoin, playCook, playTap, startBgm, stopBgm } from '../lib/sound'
+import { playBell, playCloud, playCoin, playCook, playTap, playWater, startBgm, stopBgm } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { Ico } from './CafeGame'
 import { FigureLayers } from './FigureLayers'
@@ -16,17 +16,20 @@ import { CoinIcon } from './Icons'
  * 아바타는 아일랜드 뒤에 서서 요리한다: cook 은 발 위치, island 는 그림에서 오려 낸 아일랜드(public/kitchen/island_*.webp)를 아바타 앞에 다시 덮는 자리(왼쪽·위·너비·높이 %).
  */
 type Box = { x: number; y: number; w: number; h: number }
-const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; ovenGlass: Box; cook: [number, number]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
+const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; ovenGlass: Box; fx: { ice: [number, number, number]; tap: [number, number, number]; pot: [number, number, number] }; cook: [number, number]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
   portrait: {
     img: 'kitchen/kitchen_portrait.webp', ratio: 941 / 1672, avatarH: 24,
     at: { fridge: { x: 15.5, y: 31, w: 24, h: 32 }, sink: { x: 48, y: 36.5, w: 24, h: 7 }, stove: { x: 86, y: 33.5, w: 22, h: 6 }, oven: { x: 86.5, y: 44, w: 24, h: 12 }, board: { x: 50, y: 59, w: 40, h: 9 } },
     ovenGlass: { x: 86.9, y: 43.9, w: 14.3, h: 5.6 },
+    // 효과 자리(그림 크기에 대한 %): ice = 냉장고 위칸 가운데 [x, y, 너비(문 폭의 1/3)], tap = 수도꼭지 [x, 물이 나오는 y, 개수대 바닥 y], pot = 냄비 [x, 냄비 바닥 y, 냄비 폭]
+    fx: { ice: [14, 22, 6.9], tap: [49.1, 31, 35.5], pot: [86.1, 34.8, 10] },
     cook: [50, 62], island: { img: 'kitchen/island_portrait.webp', l: 12.221, t: 52.452, w: 75.452, h: 33.612 },
   },
   wide: {
     img: 'kitchen/kitchen_wide.webp', ratio: 1672 / 941, avatarH: 38,
     at: { fridge: { x: 19.7, y: 37, w: 16, h: 45 }, sink: { x: 49.3, y: 41.5, w: 15, h: 10 }, stove: { x: 81.6, y: 38, w: 14, h: 9 }, oven: { x: 83.4, y: 53.5, w: 15, h: 17 }, board: { x: 49.6, y: 60.5, w: 24, h: 12 } },
     ovenGlass: { x: 83.2, y: 53.9, w: 9.1, h: 8.5 },
+    fx: { ice: [19.1, 23.4, 5], tap: [49.6, 32.3, 38.5], pot: [81.6, 40.5, 5.5] },
     cook: [50, 66], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
   },
 }
@@ -79,13 +82,11 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const [pantry, setPantry] = useState(false)
   const [toast, setToast] = useState('')
   const [shake, setShake] = useState<Station | null>(null)
-  const [pops, setPops] = useState<{ id: number; at: Station; step: StepId }[]>([])
   const [busy, setBusy] = useState(false) // 요리 단계가 바뀔 때 아바타가 통통
   const timers = useRef<number[]>([])
   const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
   const say = (t: string) => { setToast(t); later(() => setToast((x) => (x === t ? '' : x)), 2400) }
-  const popId = useRef(0)
 
   // 주문서: 아직 안 만든 것 먼저, 그다음 다 만든 것
   const tickets = [...kitchen.tickets].sort((a, b) => Number(a.ready) - Number(b.ready) || a.seat - b.seat)
@@ -119,11 +120,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       playCloud(); setShake(step.station); later(() => setShake(null), 600); say(tx.wrong)
       return
     }
-    const id = ++popId.current
-    setPops((p) => [...p, { id, at: s, step: menu.steps[cooking.step] }])
-    later(() => setPops((p) => p.filter((x) => x.id !== id)), 700)
     const taps = cooking.taps + 1
-    if (taps < step.taps) { playTap(); setCooking({ ...cooking, taps }); return }
+    if (taps < step.taps) { if (menu.steps[cooking.step] === 'wash') playWater(); else playTap(); setCooking({ ...cooking, taps }); return }
     // 이 단계 끝: 다음 단계로, 마지막이면 완성
     const nextStep = cooking.step + 1
     if (nextStep < menu.steps.length) {
@@ -170,16 +168,30 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             <button key={s} aria-label={s} onClick={() => tapStation(s)}
               className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0 ${here ? 'kitchen-here' : ''} ${shake === s ? 'call-shake' : ''}`}
               style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 3 }}>
-              {/* 가리키는 손: 보통은 위에서 아래로. 반죽하는 두 손이 도마 위에 있을 때는 겹치지 않게 오른쪽 옆에서 왼쪽으로 가리킨다 */}
-              {here && (kneading && s === 'board'
+              {/* 가리키는 손: 보통은 위에서 아래로. 도마 위 도구나 수도꼭지 물방울과 겹치지 않게 그때는 오른쪽 옆에서 왼쪽으로 가리킨다 */}
+              {here && ((kneading && s === 'board') || s === 'sink'
                 ? <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className="kitchen-point-side absolute top-1/2 left-full h-10 w-10 object-contain" />
                 : <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className="kitchen-point absolute bottom-full left-1/2 h-10 w-10 -translate-x-1/2 object-contain" />)}
-              {/* 누를 때 떠오르는 단계 그림: 가리키는 손(위·오른쪽)과 겹치지 않게 왼쪽 옆에서(냉장고는 화면 왼쪽 끝이라 오른쪽 옆에서) 떠오른다. 굽기는 오븐 창 안의 불꽃이 대신한다 */}
-              {pops.filter((p) => p.at === s && p.step !== 'bake').map((p) => <span key={p.id} aria-hidden className={`cafe-float pointer-events-none absolute top-0 flex h-10 w-10 items-center justify-center text-3xl ${s === 'fridge' ? 'left-full' : 'right-full'}`}><StepIcon id={p.step} /></span>)}
             </button>
           )
         })}
 
+        {/* 씻기: 수도꼭지에서 물방울이 개수대로 떨어진다 */}
+        {nowStep === 'wash' && (
+          <div aria-hidden className="pointer-events-none absolute -translate-x-1/2" style={{ left: `${L.fx.tap[0]}%`, top: `${L.fx.tap[1]}%`, height: `${L.fx.tap[2] - L.fx.tap[1]}%`, width: '2.4%', zIndex: 4 }}>
+            {[0, 1, 2].map((k) => <img key={k} src={assetUrl('kitchen/drop.svg')} alt="" draggable={false} className="kitchen-drop absolute left-0 w-full" style={{ animationDelay: `${k * 0.25}s` }} />)}
+          </div>
+        )}
+        {/* 끓이기·녹이기: 냄비 아래에 작은 불꽃 셋 */}
+        {(nowStep === 'boil' || nowStep === 'melt') && (
+          <div aria-hidden className="pointer-events-none absolute flex -translate-x-1/2 items-end justify-center" style={{ left: `${L.fx.pot[0]}%`, top: `${L.fx.pot[1]}%`, width: `${L.fx.pot[2]}%`, zIndex: 4 }}>
+            {[0, 1, 2].map((k) => <img key={k} src={assetUrl('kitchen/fire.webp')} alt="" draggable={false} className="kitchen-flame w-1/3 max-w-none object-contain" style={{ animationDelay: `${k * 0.15}s` }} />)}
+          </div>
+        )}
+        {/* 굳히기: 냉장고 위칸 가운데에 얼음 */}
+        {nowStep === 'chill' && (
+          <img key={cooking!.taps} aria-hidden src={assetUrl('kitchen/ice.webp')} alt="" draggable={false} className="kitchen-press pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${L.fx.ice[0]}%`, top: `${L.fx.ice[1]}%`, width: `${L.fx.ice[2]}%`, zIndex: 4 }} />
+        )}
         {/* 굽는 동안 오븐 유리창 안에 불꽃: 창 크기만큼, 누를수록 커진다 */}
         {cooking && menu?.steps[cooking.step] === 'bake' && (
           <div aria-hidden className="pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 items-end justify-center overflow-hidden" style={{ left: `${L.ovenGlass.x}%`, top: `${L.ovenGlass.y}%`, width: `${L.ovenGlass.w}%`, height: `${L.ovenGlass.h}%`, zIndex: 4 }}>
@@ -366,9 +378,9 @@ function Ing({ id, className }: { id: IngId; className: string }) {
 }
 
 /** 단계 아이콘: 굽기 불, 썰기 칼, 믹서 돌리기 믹서기, 갈기 그라인더, 섞기·말기 두 손(public/kitchen), 나머지는 이모지 */
-const STEP_IMG: Partial<Record<StepId, string>> = { bake: 'kitchen/fire.webp', cut: 'kitchen/knife.webp', blend: 'kitchen/blender.webp', mix: 'kitchen/hands.webp', grind: 'kitchen/grinder.webp', roll: 'kitchen/hands.webp' }
+const STEP_IMG: Partial<Record<StepId, string>> = { bake: 'kitchen/fire.webp', cut: 'kitchen/knife.webp', blend: 'kitchen/blender.webp', mix: 'kitchen/hands.webp', grind: 'kitchen/grinder.webp', roll: 'kitchen/hands.webp', pour: 'kitchen/pitcher.webp', chill: 'kitchen/ice.webp' }
 /** 도마 위에 놓는 도구 그림과 크기(도마 폭에 대한 비율) */
-const BOARD_TOOL: Partial<Record<StepId, { img: string; w: number }>> = { roll: { img: 'kitchen/hands.webp', w: 0.3 }, mix: { img: 'kitchen/hands.webp', w: 0.3 }, blend: { img: 'kitchen/blender.webp', w: 0.3 }, grind: { img: 'kitchen/grinder.webp', w: 0.3 } }
+const BOARD_TOOL: Partial<Record<StepId, { img: string; w: number }>> = { roll: { img: 'kitchen/hands.webp', w: 0.3 }, mix: { img: 'kitchen/hands.webp', w: 0.3 }, blend: { img: 'kitchen/blender.webp', w: 0.3 }, grind: { img: 'kitchen/grinder.webp', w: 0.3 }, cut: { img: 'kitchen/knife.webp', w: 0.3 }, pour: { img: 'kitchen/pitcher.webp', w: 0.3 } }
 /** 칼 그림은 대각선으로 길어 같은 칸에서 작아 보여서 2배로 그린다(다른 그림과 비슷한 크기로) */
 const STEP_SCALE: Partial<Record<StepId, number>> = { cut: 2 }
 function StepIcon({ id, className = 'h-full w-full' }: { id: StepId; className?: string }) {

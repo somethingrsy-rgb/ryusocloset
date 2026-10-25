@@ -312,6 +312,9 @@ button:focus-visible {
 .kitchen-point { animation: kitchen-point 0.8s ease-in-out infinite; }
 /* 오븐 속 불꽃이 일렁인다(크기는 style 의 scale, 일렁임은 바깥 칸이 아니라 그림의 위치 기준점으로) */
 @keyframes kitchen-flame { 0%, 100% { filter: brightness(1); translate: 0 0; } 50% { filter: brightness(1.15); translate: 0 -4%; } }
+/* 씻기 물방울: 수도꼭지(칸 위)에서 개수대(칸 아래)까지 떨어진다 */
+@keyframes kitchen-drop { 0% { top: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+.kitchen-drop { top: 0; opacity: 0; animation: kitchen-drop 0.75s ease-in infinite; }
 .kitchen-flame { animation: kitchen-flame 0.5s ease-in-out infinite; transform-origin: 50% 100%; transition: transform 0.2s; }
 /* 옆에서 가리킬 때: 아래를 가리키는 손을 시계 방향으로 돌려 왼쪽을 가리키게 하고 좌우로 콕콕 */
 @keyframes kitchen-point-side { 0%, 100% { transform: translate(0, -50%) rotate(90deg); } 50% { transform: translate(22%, -50%) rotate(90deg); } }
@@ -328,4 +331,4 @@ button:focus-visible {
 /* 자리 잡기(가운데·위로 올리기)는 Tailwind 의 translate 속성이 하고, 여기서는 그 자리에서 꾹 눌리기만 한다(transform 에 다시 translate(-50%,-100%) 를 넣으면 두 번 옮겨져 손이 도마 밖으로 튀었다) */
 @keyframes kitchen-press { 0%, 100% { transform: none; } 40% { transform: translateY(12%) scale(1.04, 0.9); } }
 .kitchen-press { animation: kitchen-press 0.3s ease-out; transform-origin: 50% 100%; }
-@media (prefers-reduced-motion: reduce) { .kitchen-here, .kitchen-point, .kitchen-point-side, .kitchen-flame, .kitchen-knead, .kitchen-press { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .kitchen-here, .kitchen-point, .kitchen-point-side, .kitchen-flame, .kitchen-drop, .kitchen-knead, .kitchen-press { animation: none; } }
