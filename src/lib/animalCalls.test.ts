@@ -19,13 +19,13 @@ describe('동물 전화 놀이', () => {
       const lines = [...HELLOS, ...BYES, ...[...a.topics, ...SHARED_TOPICS].flatMap((tp) => [tp.ask, ...tp.replies.flatMap((r) => [r.label, r.answer])])]
       for (const kid of ['유하', '유엘', undefined]) for (const line of lines) expect(fillLine(line, a, kid), `${a.name}: ${line}`).not.toMatch(/[{}]/)
     }
-    expect(fillLine('안녕{e}! 나 {me}{e}.', CALL_ANIMALS[2])).toBe('안녕냥! 나 냥이야냥.')
+    expect(fillLine('안녕! 나 {me}.', CALL_ANIMALS[2])).toBe('안녕! 나 냥이야.')
   })
   it('아바타 이름으로 부른다: 유하야·유하구나, 유엘아·유엘이구나', () => {
     expect(kidWords('유하')).toEqual({ call: '유하야', kid: '유하' })
     expect(kidWords('유엘')).toEqual({ call: '유엘아', kid: '유엘이' })
     expect(kidWords('소영')).toEqual({ call: '소영아', kid: '소영이' })
-    expect(fillLine(HELLOS[1], CALL_ANIMALS[0], '유하')).toBe('여보세요~? 앗, 유하구나! 유하야, 안녕? 목소리 들으니까 너무 좋다곰!')
+    expect(fillLine(HELLOS[1], CALL_ANIMALS[0], '유하')).toBe('여보세요~? 앗, 유하구나! 유하야, 안녕? 목소리 들으니까 너무 좋다!')
     const plan = planCall(2, Math.random, '유엘')
     expect(plan.hello + plan.bye).toContain('유엘')
   })

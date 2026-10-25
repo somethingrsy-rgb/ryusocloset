@@ -118,7 +118,7 @@ export function AnimalCall({ animal, kid, muted, onClose }: { animal: number; ki
     const v = nextVoice(animal)
     setVoiceName(voiceLabel(v))
     window.speechSynthesis.cancel()
-    speakLine(`안녕! 나 ${a.me}${a.e}!`, a.pitch * TONES[v.tone].pitch, a.rate * TONES[v.tone].rate, false, v.voice)
+    speakLine(`안녕! 나 ${a.me}!`, a.pitch * TONES[v.tone].pitch, a.rate * TONES[v.tone].rate, false, v.voice)
   }
 
   /** 동물이 여러 줄을 차례로 말한다 */
