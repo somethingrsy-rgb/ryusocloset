@@ -86,11 +86,15 @@ export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone }: 
       const a = CALL_ANIMALS[g.animal]
       const w = size(g.y)
       return (
-        <div key={a.img} className="absolute" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${w}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -92%)', zIndex: z(g.y) }}>
+        <div key={a.img} className="absolute" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${w}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -98%)', zIndex: z(g.y) }}>
           {/* 누르면 그 친구가 한마디 한다 */}
           <button aria-label={`${a.name}랑 이야기하기`} onPointerUp={(e) => e.stopPropagation()} onClick={() => { playTap(); say(g.animal, partyLine(g.animal, guests.map((h) => h.animal).filter((x) => x !== g.animal), kid)) }}
-            className="block h-full w-full border-0 bg-transparent p-0">
-            <img src={assetUrl(`cafe/call/${a.img}.webp`)} alt="" draggable={false} className={`h-full w-full object-contain drop-shadow-[0_4px_3px_rgba(80,50,40,0.25)] ${g.wait > 0 ? '' : 'walk-bob'}`} style={{ transform: `scaleX(${g.dir})` }} />
+            className={`relative block h-full w-full border-0 bg-transparent p-0 ${g.wait > 0 ? '' : 'walk-bob'}`}>
+            {/* 서 있는 그림(public/cafe/stand), 말할 때는 손 흔드는 그림. 두 장을 겹쳐 두고 보이기만 바꿔서 바뀔 때 깜빡이지 않는다 */}
+            {(['stand', 'wave'] as const).map((pose) => (
+              <img key={pose} src={assetUrl(`cafe/stand/${a.img}_${pose}.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_4px_3px_rgba(80,50,40,0.25)]"
+                style={{ transform: `scaleX(${g.dir})`, visibility: (pose === 'wave') === !!bubbles[g.animal] ? 'visible' : 'hidden' }} />
+            ))}
           </button>
         </div>
       )
@@ -99,8 +103,8 @@ export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone }: 
     {guests.map((g) => {
       const b = bubbles[g.animal]
       return b ? (
-        <div key={`b-${g.animal}`} aria-live="polite" className="pointer-events-none absolute" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${size(g.y)}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -92%)', zIndex: 100000 }}>
-          <p className="absolute bottom-[92%] left-1/2 m-0 w-max max-w-[11rem] -translate-x-1/2 rounded-2xl bg-white px-2.5 py-1.5 text-center text-[13px] leading-snug font-bold text-[#6b4b52] shadow-md">{b.text}</p>
+        <div key={`b-${g.animal}`} aria-live="polite" className="pointer-events-none absolute" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${size(g.y)}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -98%)', zIndex: 100000 }}>
+          <p className="absolute bottom-[96%] left-1/2 m-0 w-max max-w-[11rem] -translate-x-1/2 rounded-2xl bg-white px-2.5 py-1.5 text-center text-[13px] leading-snug font-bold text-[#6b4b52] shadow-md">{b.text}</p>
         </div>
       ) : null
     })}
