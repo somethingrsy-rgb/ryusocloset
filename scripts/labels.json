@@ -1530,5 +1530,47 @@
     "category": "wig",
     "color": "purple",
     "native": true
+  },
+  "costume_taekwondo_green": {
+    "ko": "태권도복 (초록띠)",
+    "en": "Taekwondo Uniform (Green Belt)",
+    "category": "costume",
+    "color": "green",
+    "native": true
+  },
+  "costume_taekwondo_red": {
+    "ko": "태권도복 (빨간띠 2품)",
+    "en": "Taekwondo Uniform (Red Belt)",
+    "category": "costume",
+    "color": "red",
+    "native": true
+  },
+  "costume_soccer_red": {
+    "ko": "축구 국가대표 유니폼 (빨강)",
+    "en": "Korea Soccer Kit (Red)",
+    "category": "costume",
+    "color": "red",
+    "native": true
+  },
+  "costume_soccer_purple": {
+    "ko": "축구 국가대표 유니폼 (보라)",
+    "en": "Korea Soccer Kit (Purple)",
+    "category": "costume",
+    "color": "purple",
+    "native": true
+  },
+  "shoes_soccer_red": {
+    "ko": "축구 양말·축구화 (빨강)",
+    "en": "Soccer Socks & Cleats (Red)",
+    "category": "shoes",
+    "color": "red",
+    "native": true
+  },
+  "shoes_soccer_purple": {
+    "ko": "축구 양말·축구화 (보라)",
+    "en": "Soccer Socks & Cleats (Purple)",
+    "category": "shoes",
+    "color": "purple",
+    "native": true
   }
 }
