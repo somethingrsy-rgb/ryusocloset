@@ -76,11 +76,13 @@ export function PhoneSheet({ theme, kid, muted, dial, onClose }: { theme: PhoneT
                 <ul className="m-0 mt-2 grid min-h-0 flex-1 list-none grid-cols-2 content-start gap-2.5 overflow-y-auto px-3 pb-3">
                   {CALL_ANIMALS.map((a, i) => (
                     <li key={a.img} className="min-h-0">
-                      {/* 한 칸: 동물 얼굴과 번호를 나란히, 수화기는 오른쪽 옆에 살짝 기울여서. 얼굴 그림은 모두 같은 비율이라(토끼 기준) 동그라미 안에 들어온다 */}
-                      <button aria-label={`${a.name} ${a.phone} 전화 걸기`} onClick={() => autoDial(i)} className="relative flex h-full w-full items-center justify-center gap-1.5 rounded-2xl bg-white/85 py-3 pr-7 pl-1 shadow-sm active:scale-[0.97]">
-                        <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white ring-2 ${theme.ring}`}><img src={face(i)} alt="" draggable={false} className="h-[84%] w-[84%] object-contain" /></span>
-                        <span className={`text-base font-bold tracking-wider ${theme.ink}`}>{a.phone}</span>
-                        <span aria-hidden className={`absolute top-1/2 -right-2 flex h-9 w-9 -translate-y-1/2 rotate-[20deg] items-center justify-center rounded-full text-base text-white shadow ${theme.accent}`}>📞</span>
+                      {/* 한 칸: 위에 동물 얼굴, 그 아래 가운데에 번호, 수화기는 번호 줄의 오른쪽 끝으로 뺀다. 얼굴 그림은 모두 같은 비율이라(토끼 기준) 동그라미 안에 들어온다 */}
+                      <button aria-label={`${a.name} ${a.phone} 전화 걸기`} onClick={() => autoDial(i)} className="flex w-full flex-col items-center gap-1 rounded-2xl bg-white/85 px-2 pt-2 pb-1.5 shadow-sm active:scale-[0.97]">
+                        <span className={`flex aspect-square w-[58%] max-w-24 items-center justify-center rounded-full bg-white ring-2 ${theme.ring}`}><img src={face(i)} alt="" draggable={false} className="h-[84%] w-[84%] object-contain" /></span>
+                        <span className="relative flex w-full items-center justify-center">
+                          <span className={`text-lg font-bold tracking-widest ${theme.ink}`}>{a.phone}</span>
+                          <span aria-hidden className={`absolute right-0 flex h-8 w-8 items-center justify-center rounded-full text-sm text-white ${theme.accent}`}>📞</span>
+                        </span>
                       </button>
                     </li>
                   ))}
