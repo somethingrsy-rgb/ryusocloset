@@ -11,6 +11,8 @@ import { NpcDialog } from './NpcDialog'
 import { useGame } from './TravelGame'
 import { useWalkKeys } from './useWalkKeys'
 import { TravelDecor } from './TravelDecor'
+import { GUEST_PER_AVATAR_W, PartyGuests, PartyInvite } from './PartyGuests'
+import { avatarVersion, getAvatar, subscribeAvatar } from '../lib/avatars'
 
 import { getTravelRoom, subscribeTravelRooms, travelRoomsVersion } from '../lib/travelRooms'
 import { useItemsVersion } from '../lib/useItemsVersion'
@@ -84,6 +86,12 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   const [destination, setDestination] = useState<Vec | null>(null)
   const [popup, setPopup] = useState<string | null>(null)
   const [talk, setTalk] = useState(false)
+  // 파티: 초대 창에서 고른 카페 동물 친구들이 집에 들어와 돌아다니며 이야기한다(이 집에 있는 동안만)
+  const [inviting, setInviting] = useState(false)
+  const [party, setParty] = useState<number[]>([])
+  const [partyEnd, setPartyEnd] = useState(false)
+  useSyncExternalStore(subscribeAvatar, avatarVersion)
+  const kidName = getAvatar().name.ko
   const [hint, setHint] = useState<string | null>(null)
 
   const posRef = useRef(pos)
@@ -276,6 +284,20 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           </button>
         )}
 
+        {party.length > 0 && (
+          <PartyGuests
+            invite={party}
+            leave={partyEnd}
+            kid={kidName}
+            me={pos}
+            // 장소 그림은 바닥(풀밭 등) 그림이 시작하는 곳보다 조금 아래부터: 하늘에 떠 보이지 않게
+            floor={{ minX: 8, maxX: 92, minY: layout ? minY + 2 : Math.max(minY, 100 - p.floorH / ROOM_H * 100 + 8), maxY: layout ? 96 : WALK_BOUNDS.maxY }}
+            // 동물 키는 그 자리에 선 아바타 키의 2/3(아바타 크기가 방·깊이마다 바뀌면 같이 바뀐다). 아바타보다 아래(앞)에 있으면 아바타 앞에 그린다
+            size={(y) => GUEST_PER_AVATAR_W * (layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * depthScale(y))}
+            z={(y) => avatarLayer + (y >= posRef.current.y ? 1 : -1)}
+            onGone={() => { setParty([]); setPartyEnd(false) }}
+          />
+        )}
         {destination && <div aria-hidden className="walk-destination pointer-events-none absolute" style={{ left: `${destination.x}%`, top: `${destination.y}%`, zIndex: 2 }} />}
         {/* 류소: 발 위치(pos)에 서고, 아래쪽일수록 크게. 걸을 땐 통통 튀고 가는 방향을 바라본다 */}
         <div
@@ -299,6 +321,16 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           <button onClick={() => onDecorate(placeId)} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
             <span aria-hidden>🏠</span>
             {tx.decorate}
+          </button>
+        )}
+        <button onClick={() => { playTap(); setInviting(true) }} disabled={partyEnd} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-[#ff8fab] px-3 py-2 text-sm font-bold text-white shadow-md disabled:opacity-50">
+          <span aria-hidden>🎉</span>
+          {lang === 'ko' ? '파티 초대' : 'Party'}
+        </button>
+        {party.length > 0 && !partyEnd && (
+          <button onClick={() => { playTap(); setPartyEnd(true) }} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
+            <span aria-hidden>👋</span>
+            {lang === 'ko' ? '파티 끝' : 'Bye'}
           </button>
         )}
         <span className="rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
@@ -354,6 +386,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           </div>
         </div>
       )}
+      {inviting && <PartyInvite here={party} onClose={() => setInviting(false)} onInvite={(animals) => { setInviting(false); setParty((p) => [...p, ...animals.filter((a) => !p.includes(a))]) }} />}
     </div>
   )
 }
