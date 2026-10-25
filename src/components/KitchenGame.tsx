@@ -152,7 +152,10 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const [ax, ay] = L.cook
   const aw = L.avatarH * (1024 / 1536) / L.ratio // 아바타 너비(그림 너비에 대한 %)
   const boardIngs = cooking && menu ? needList(menu).map(({ id }) => id) : []
-  const kneading = !!cooking && menu?.steps[cooking.step] === 'mix'
+  // 도마 위 재료 줄보다 위에 나오는 도구: 말기는 두 손(조물조물), 섞기는 볼, 믹서 돌리기는 믹서기, 갈기는 커피 그라인더
+  const nowStep = cooking && menu ? menu.steps[cooking.step] : null
+  const tool = nowStep ? BOARD_TOOL[nowStep] : undefined
+  const kneading = !!tool
 
   return (
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-clip rounded-3xl bg-[#e9b06c] ring-1 ring-black/5 select-none" style={{ containerType: 'size' }}>
@@ -191,11 +194,11 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
           {doneMenu ? <Ico id={doneMenu.id} className="h-auto w-[30%] animate-bounce drop-shadow-lg" />
             : boardIngs.map((id) => <Ing key={id} id={id} className={`aspect-square w-[19%] ${step?.station === 'board' && cooking!.taps > 0 ? 'call-shake' : ''}`} />)}
         </div>
-        {/* 반죽 섞기: 두 손이 재료 바로 위(도마 안쪽)에서 조물조물 움직이고, 누를 때마다 꾹 누른다. 재료와 겹치지 않게 재료 줄보다 위에 둔다 */}
-        {kneading && (
+        {/* 도마 위 도구: 재료 바로 위(도마 안쪽)에 놓고, 누를 때마다 꾹 눌린다. 두 손은 계속 조물조물 움직인다. 재료와 겹치지 않게 재료 줄보다 위에 둔다 */}
+        {tool && (
           <div key={cooking!.taps} aria-hidden className="kitchen-press pointer-events-none absolute -translate-x-1/2 -translate-y-full"
-            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - L.at.board.h * 0.35}%`, width: `${L.at.board.w * 0.3}%`, zIndex: 5 }}>
-            <img src={assetUrl('kitchen/hands.webp')} alt="" draggable={false} className="kitchen-knead block h-auto w-full" />
+            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - L.at.board.h * 0.35}%`, width: `${L.at.board.w * tool.w}%`, zIndex: 5 }}>
+            <img src={assetUrl(tool.img)} alt="" draggable={false} className={`${tool.img.includes('hands') ? 'kitchen-knead ' : ''}block h-auto w-full`} />
           </div>
         )}
 
@@ -362,8 +365,10 @@ function Ing({ id, className }: { id: IngId; className: string }) {
   return <img src={assetUrl(src)} alt="" draggable={false} onError={() => setFailed(true)} className={`object-contain ${className}`} />
 }
 
-/** 단계 아이콘: 굽기는 불, 썰기는 칼 그림(public/kitchen), 나머지는 이모지 */
-const STEP_IMG: Partial<Record<StepId, string>> = { bake: 'kitchen/fire.webp', cut: 'kitchen/knife.webp' }
+/** 단계 아이콘: 굽기 불, 썰기 칼, 믹서 돌리기 믹서기, 섞기 볼, 갈기 그라인더, 말기 두 손(public/kitchen), 나머지는 이모지 */
+const STEP_IMG: Partial<Record<StepId, string>> = { bake: 'kitchen/fire.webp', cut: 'kitchen/knife.webp', blend: 'kitchen/blender.webp', mix: 'kitchen/bowl.webp', grind: 'kitchen/grinder.webp', roll: 'kitchen/hands.webp' }
+/** 도마 위에 놓는 도구 그림과 크기(도마 폭에 대한 비율) */
+const BOARD_TOOL: Partial<Record<StepId, { img: string; w: number }>> = { roll: { img: 'kitchen/hands.webp', w: 0.3 }, mix: { img: 'kitchen/bowl.webp', w: 0.3 }, blend: { img: 'kitchen/blender.webp', w: 0.3 }, grind: { img: 'kitchen/grinder.webp', w: 0.3 } }
 /** 칼 그림은 대각선으로 길어 같은 칸에서 작아 보여서 2배로 그린다(다른 그림과 비슷한 크기로) */
 const STEP_SCALE: Partial<Record<StepId, number>> = { cut: 2 }
 function StepIcon({ id, className = 'h-full w-full' }: { id: StepId; className?: string }) {
