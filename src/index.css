@@ -311,6 +311,14 @@ button:focus-visible {
 @keyframes kitchen-point { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -22%); } }
 .kitchen-point { animation: kitchen-point 0.8s ease-in-out infinite; }
 /* 반죽할 때 두 손이 꾹 눌렀다가 올라온다 */
-@keyframes kitchen-knead { 0% { transform: translate(-50%, -50%) scale(1); } 40% { transform: translate(-50%, -42%) scale(0.94, 0.9); } 100% { transform: translate(-50%, -50%) scale(1); } }
-.kitchen-knead { animation: kitchen-knead 0.35s ease-out; }
-@media (prefers-reduced-motion: reduce) { .kitchen-here, .kitchen-point, .kitchen-knead { animation: none; } }
+/* 반죽: 두 손이 번갈아 기울며 조물조물(계속), 누를 때마다 바깥 칸이 한 번 꾹 눌린다 */
+@keyframes kitchen-knead {
+  0%, 100% { transform: translate(0, 0) rotate(0) scale(1); }
+  25% { transform: translate(-4%, 6%) rotate(-5deg) scale(0.97, 0.92); }
+  50% { transform: translate(0, 0) rotate(0) scale(1); }
+  75% { transform: translate(4%, 6%) rotate(5deg) scale(0.97, 0.92); }
+}
+.kitchen-knead { animation: kitchen-knead 0.9s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes kitchen-press { 0% { transform: translate(-50%, -100%); } 40% { transform: translate(-50%, -88%) scale(1.04, 0.9); } 100% { transform: translate(-50%, -100%); } }
+.kitchen-press { animation: kitchen-press 0.3s ease-out; }
+@media (prefers-reduced-motion: reduce) { .kitchen-here, .kitchen-point, .kitchen-knead, .kitchen-press { animation: none; } }

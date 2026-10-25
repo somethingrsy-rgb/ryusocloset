@@ -4,7 +4,7 @@ import { CALL_ANIMALS } from '../lib/animalCalls'
 import { CROPS, getFarm, subscribeFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import { buyPantry, cookTicket, getKitchen, missing, subscribeKitchen } from '../lib/kitchen'
-import { PACK, PACK_PRICE, PANTRY, STEPS, ingredient, isCrop, menuById, needList, type IngId, type Station } from '../lib/recipes'
+import { PACK, PACK_PRICE, PANTRY, STEPS, ingredient, isCrop, menuById, needList, type IngId, type Station, type StepId } from '../lib/recipes'
 import { playBell, playCloud, playCoin, playCook, playTap, startBgm, stopBgm } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { Ico } from './CafeGame'
@@ -77,7 +77,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const [pantry, setPantry] = useState(false)
   const [toast, setToast] = useState('')
   const [shake, setShake] = useState<Station | null>(null)
-  const [pops, setPops] = useState<{ id: number; at: Station; emoji: string }[]>([])
+  const [pops, setPops] = useState<{ id: number; at: Station; step: StepId }[]>([])
   const [busy, setBusy] = useState(false) // 요리 단계가 바뀔 때 아바타가 통통
   const timers = useRef<number[]>([])
   const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
@@ -118,7 +118,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       return
     }
     const id = ++popId.current
-    setPops((p) => [...p, { id, at: s, emoji: step.emoji }])
+    setPops((p) => [...p, { id, at: s, step: menu.steps[cooking.step] }])
     later(() => setPops((p) => p.filter((x) => x.id !== id)), 700)
     const taps = cooking.taps + 1
     if (taps < step.taps) { playTap(); setCooking({ ...cooking, taps }); return }
@@ -165,8 +165,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             <button key={s} aria-label={s} onClick={() => tapStation(s)}
               className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0 ${here ? 'kitchen-here' : ''} ${shake === s ? 'call-shake' : ''}`}
               style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 3 }}>
-              {here && <span aria-hidden className="kitchen-point absolute bottom-full left-1/2 -translate-x-1/2 text-3xl">👇</span>}
-              {pops.filter((p) => p.at === s).map((p) => <span key={p.id} aria-hidden className="cafe-float pointer-events-none absolute top-0 left-1/2 text-3xl">{p.emoji}</span>)}
+              {here && <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className="kitchen-point absolute bottom-full left-1/2 h-10 w-10 -translate-x-1/2 object-contain" />}
+              {pops.filter((p) => p.at === s).map((p) => <span key={p.id} aria-hidden className="cafe-float pointer-events-none absolute top-0 left-1/2 flex h-9 w-9 items-center justify-center text-3xl"><StepIcon id={p.step} /></span>)}
             </button>
           )
         })}
@@ -176,10 +176,12 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
           {doneMenu ? <Ico id={doneMenu.id} className="h-auto w-[30%] animate-bounce drop-shadow-lg" />
             : boardIngs.map((id) => <Ing key={id} id={id} className={`aspect-square w-[19%] ${step?.station === 'board' && cooking!.taps > 0 ? 'call-shake' : ''}`} />)}
         </div>
-        {/* 반죽 섞기: 두 손이 도마 위에서 조물조물(누를 때마다 꾹 누른다) */}
+        {/* 반죽 섞기: 두 손이 재료 바로 위(도마 안쪽)에서 조물조물 움직이고, 누를 때마다 꾹 누른다. 재료와 겹치지 않게 재료 줄보다 위에 둔다 */}
         {kneading && (
-          <img key={cooking!.taps} aria-hidden src={assetUrl('kitchen/hands.webp')} alt="" draggable={false} className="kitchen-knead pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - 0.5}%`, width: `${L.at.board.w * 0.225}%`, zIndex: 5 }} />
+          <div key={cooking!.taps} aria-hidden className="kitchen-press pointer-events-none absolute -translate-x-1/2 -translate-y-full"
+            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - L.at.board.h * 0.35}%`, width: `${L.at.board.w * 0.3}%`, zIndex: 5 }}>
+            <img src={assetUrl('kitchen/hands.webp')} alt="" draggable={false} className="kitchen-knead block h-auto w-full" />
+          </div>
         )}
 
         {/* 내 아바타: 아일랜드 뒤에 서서 요리한다(아일랜드 그림을 아바타 앞에 한 번 더 덮어서 아래쪽이 가려진다) */}
@@ -239,14 +241,14 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
               <Ico id={menu.id} className={short ? 'h-8 w-8' : 'h-10 w-10'} />
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-xs font-bold text-black/45">{menu[lang]} · {tx.step(cooking.step + 1, menu.steps.length)}</p>
-                <p className="m-0 text-base font-black text-[#8a4b2a]">{step.emoji} {step.how[lang]}</p>
+                <p className="m-0 flex items-center gap-1 text-base font-black text-[#8a4b2a]"><StepIcon id={menu.steps[cooking.step]} className="h-6 w-6" /> {step.how[lang]}</p>
               </div>
               {short && <Dots n={step.taps} k={cooking.taps} />}
             </div>
             {!short && <Dots n={step.taps} k={cooking.taps} />}
             {!short && (
               <p className="m-0 flex flex-wrap justify-center gap-1 text-xs text-black/50">
-                {menu.steps.map((s, k) => <span key={k} className={k === cooking.step ? 'font-black text-[#c04a5a]' : k < cooking.step ? 'line-through' : ''}>{STEPS[s].emoji} {STEPS[s][lang]}{k < menu.steps.length - 1 ? ' →' : ''}</span>)}
+                {menu.steps.map((s, k) => <span key={k} className={k === cooking.step ? 'font-black text-[#c04a5a]' : k < cooking.step ? 'line-through' : ''}><StepIcon id={s} className="inline-block h-4 w-4 align-[-2px]" /> {STEPS[s][lang]}{k < menu.steps.length - 1 ? ' →' : ''}</span>)}
               </p>
             )}
           </div>
@@ -275,7 +277,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
                     return <span key={id} className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1 text-sm font-bold ${ok ? 'bg-[#e6f6e3] text-[#3d7a35]' : 'bg-[#ffe3e3] text-[#c0392b]'}`}><Ing id={id} className="h-6 w-6" /> {ing[lang]} {have}/{n} {ok ? '✔' : '✖'}</span>
                   })}
                 </div>
-                <p className="m-0 text-xs text-black/45">{tx.how}: {menu.steps.map((s) => `${STEPS[s].emoji} ${STEPS[s][lang]}`).join(' → ')}</p>
+                <p className="m-0 text-xs text-black/45">{tx.how}: {menu.steps.map((s, k) => <span key={k}>{k > 0 && ' → '}<StepIcon id={s} className="inline-block h-4 w-4 align-[-2px]" /> {STEPS[s][lang]}</span>)}</p>
                 {lacks.length ? (
                   <div className="flex gap-2">
                     {lacks.some(({ id }) => isCrop(id)) && <button onClick={() => { playTap(); onGo('farm') }} className={`${btn} flex-1 bg-[#e6f6e3] text-[#3d7a35]`}>{tx.farm}</button>}
@@ -343,4 +345,11 @@ function Ing({ id, className }: { id: IngId; className: string }) {
   const src = isCrop(id) ? `assets/farm/harvest_${id}.webp` : `kitchen/ing/${id}.webp`
   if (failed) return <span aria-hidden className={`flex items-center justify-center leading-none ${className}`} style={{ fontSize: '1.4rem' }}>{ingredient(id).emoji}</span>
   return <img src={assetUrl(src)} alt="" draggable={false} onError={() => setFailed(true)} className={`object-contain ${className}`} />
+}
+
+/** 단계 아이콘: 굽기는 불, 썰기는 칼 그림(public/kitchen), 나머지는 이모지 */
+const STEP_IMG: Partial<Record<StepId, string>> = { bake: 'kitchen/fire.webp', cut: 'kitchen/knife.webp' }
+function StepIcon({ id, className = 'h-full w-full' }: { id: StepId; className?: string }) {
+  const img = STEP_IMG[id]
+  return img ? <img src={assetUrl(img)} alt="" draggable={false} className={`object-contain ${className}`} /> : <span aria-hidden>{STEPS[id].emoji}</span>
 }
