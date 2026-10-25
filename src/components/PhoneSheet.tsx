@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { CALL_ANIMALS, animalByPhone } from '../lib/animalCalls'
 import { assetUrl } from '../lib/items'
 import { playDial } from '../lib/dialTone'
@@ -10,9 +10,10 @@ const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫']
 
 /**
  * 카페 휴대폰: 연락처에서 동물을 누르면 번호가 하나씩 눌리며 전화가 걸리고, 번호판에서 직접 번호를 눌러 걸 수도 있다.
+ * 번호판 위에는 지금 아바타(옷·머리 그대로)의 얼굴과 상체가 보인다.
  * dial 로 동물을 넘기면(카페에서 동물을 눌렀을 때) 열리자마자 그 동물에게 건다. 통화가 끝나면 휴대폰 첫 화면으로 돌아온다.
  */
-export function PhoneSheet({ theme, kid, muted, dial, onClose }: { theme: PhoneTheme; kid?: string; muted: boolean; dial: number | null; onClose: () => void }) {
+export function PhoneSheet({ theme, kid, avatar, muted, dial, onClose }: { theme: PhoneTheme; kid?: string; avatar: ReactNode; muted: boolean; dial: number | null; onClose: () => void }) {
   const [tab, setTab] = useState<'contacts' | 'keypad'>(dial === null ? 'contacts' : 'keypad')
   const [digits, setDigits] = useState('')
   const [calling, setCalling] = useState<number | null>(null)
@@ -68,7 +69,7 @@ export function PhoneSheet({ theme, kid, muted, dial, onClose }: { theme: PhoneT
           ) : (
             <>
               <div className="flex shrink-0 items-center justify-between px-4 pt-3">
-                <p className={`m-0 text-lg font-black ${theme.ink}`}>{tab === 'contacts' ? '📒 연락처' : '☎️ 전화 걸기'}</p>
+                <p className={`m-0 text-lg font-black ${theme.ink}`}>{tab === 'contacts' ? '📒 연락처' : ''}</p>
                 <button aria-label="휴대폰 닫기" onClick={onClose} className={`h-9 w-9 rounded-full bg-white/80 text-base font-bold shadow-sm ${theme.ink}`}>✕</button>
               </div>
 
@@ -88,19 +89,26 @@ export function PhoneSheet({ theme, kid, muted, dial, onClose }: { theme: PhoneT
                   ))}
                 </ul>
               ) : (
-                <div className="flex min-h-0 flex-1 flex-col items-center justify-end gap-2 px-5 pb-2">
-                  <div className="flex min-h-[4.5rem] flex-col items-center justify-center">
+                <div className="flex min-h-0 flex-1 flex-col items-center justify-end gap-1.5 px-5 pb-2">
+                  {/* 지금 아바타의 얼굴·상체: 아바타 그림(가로:세로 = 1024:1536)의 위쪽 55%(머리~가슴), 가운데 66% 폭만 크게 보여 준다 */}
+                  <div className="flex min-h-0 w-full flex-1 items-end justify-center">
+                    <div className="relative h-full max-h-64 overflow-hidden" style={{ aspectRatio: '676 / 845' }}>
+                      <div className="absolute top-0" style={{ left: '-25.8%', width: '151.5%', aspectRatio: '1024 / 1536' }}>{avatar}</div>
+                    </div>
+                  </div>
+                  <div className="flex min-h-[3rem] shrink-0 flex-col items-center justify-center">
                     <p aria-live="polite" className={`m-0 text-4xl font-black tracking-[0.2em] ${theme.ink}`}>{digits || ' '}</p>
                     {wrong ? <p className="m-0 text-sm font-bold text-[#d9534f]">없는 번호예요. 연락처를 볼까요?</p>
                       : auto ? <p className="m-0 text-sm text-black/45">번호를 누르는 중…</p>
                       : <p className="m-0 text-xs text-black/35">번호를 누르고 📞 를 눌러요</p>}
                   </div>
-                  <div className="grid w-full max-w-[15rem] grid-cols-3 gap-2">
+                  <div className="grid w-full max-w-[16.5rem] shrink-0 grid-cols-3 gap-2.5">
+                    {/* 앱 전체의 button { font: inherit } 가 Tailwind 글자 크기·굵기보다 앞서서, 숫자 크기·굵기는 style 로 준다 */}
                     {KEYS.map((k, i) => k
-                      ? <button key={i} aria-label={k === '⌫' ? '지우기' : k} onClick={() => press(k)} className={`aspect-square rounded-full text-2xl font-bold shadow-sm active:scale-90 ${k === '⌫' ? 'bg-transparent text-xl shadow-none' : theme.key} ${theme.ink}`}>{k}</button>
+                      ? <button key={i} aria-label={k === '⌫' ? '지우기' : k} onClick={() => press(k)} className={`aspect-square rounded-full shadow-sm active:scale-90 ${k === '⌫' ? 'bg-transparent shadow-none' : theme.key} ${theme.ink}`} style={{ fontSize: k === '⌫' ? '1.5rem' : '2rem', fontWeight: 800 }}>{k}</button>
                       : <span key={i} />)}
                   </div>
-                  <button aria-label="전화 걸기" onClick={call} disabled={!digits || auto} className="mt-1 h-14 w-14 rounded-full bg-[#34c759] text-2xl text-white shadow active:scale-90 disabled:opacity-40">📞</button>
+                  <button aria-label="전화 걸기" onClick={call} disabled={!digits || auto} className="mt-1 h-14 w-14 shrink-0 rounded-full bg-[#34c759] text-2xl text-white shadow active:scale-90 disabled:opacity-40">📞</button>
                 </div>
               )}
 
