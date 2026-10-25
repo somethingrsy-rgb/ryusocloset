@@ -52,7 +52,8 @@ export function PhoneSheet({ theme, kid, muted, dial, onClose }: { theme: PhoneT
   const [now, setNow] = useState(() => new Date())
   useEffect(() => { const id = window.setInterval(() => setNow(new Date()), 20000); return () => clearInterval(id) }, [])
   const clock = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`
-  const face = (i: number) => assetUrl(`cafe/call/${CALL_ANIMALS[i].img}.webp`)
+  // 연락처는 얼굴만 나온 그림(public/cafe/face), 통화 화면은 몸 전체 그림(public/cafe/call)
+  const face = (i: number) => assetUrl(`cafe/face/${CALL_ANIMALS[i].img}.webp`)
 
   return (
     <div role="dialog" aria-modal aria-label="휴대폰" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-2" onClick={(e) => { if (e.target === e.currentTarget && calling === null) onClose() }}>
@@ -72,13 +73,13 @@ export function PhoneSheet({ theme, kid, muted, dial, onClose }: { theme: PhoneT
               </div>
 
               {tab === 'contacts' ? (
-                <ul className="m-0 mt-2 flex min-h-0 flex-1 list-none flex-col gap-1.5 overflow-y-auto px-3 pb-2">
+                <ul className="m-0 mt-2 grid min-h-0 flex-1 list-none grid-cols-2 content-start gap-2 overflow-y-auto px-3 pb-2">
                   {CALL_ANIMALS.map((a, i) => (
                     <li key={a.img}>
-                      <button onClick={() => autoDial(i)} className="flex w-full items-center gap-3 rounded-2xl bg-white/85 px-3 py-1.5 text-left shadow-sm active:scale-[0.98]">
-                        <img src={face(i)} alt="" draggable={false} className={`h-11 w-11 shrink-0 rounded-full bg-white object-contain ring-2 ${theme.ring}`} />
-                        <span className="min-w-0 flex-1"><b className={`block text-base ${theme.ink}`}>{a.name}</b><span className="text-sm tracking-widest text-black/45">{a.phone}</span></span>
-                        <span aria-hidden className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white ${theme.accent}`}>📞</span>
+                      {/* 한 칸: 동물 얼굴, 그 아래 번호와 수화기 */}
+                      <button aria-label={`${a.name} ${a.phone} 전화 걸기`} onClick={() => autoDial(i)} className="flex w-full flex-col items-center gap-1 rounded-2xl bg-white/85 px-2 pt-2 pb-1.5 shadow-sm active:scale-[0.97]">
+                        <img src={face(i)} alt="" draggable={false} className={`aspect-square w-[58%] max-w-24 rounded-full bg-white object-contain p-1 ring-2 ${theme.ring}`} />
+                        <span className={`flex items-center gap-1.5 text-lg font-bold tracking-widest ${theme.ink}`}>{a.phone}<span aria-hidden className={`flex h-8 w-8 items-center justify-center rounded-full text-sm tracking-normal text-white ${theme.accent}`}>📞</span></span>
                       </button>
                     </li>
                   ))}
