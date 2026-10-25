@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BYES, CALL_ANIMALS, HELLOS, SHARED_TOPICS, allCallLines, fillLine, kidWords, lineId, planCall } from './animalCalls'
+import { BYES, CALL_ANIMALS, HELLOS, SHARED_TOPICS, allCallLines, animalByPhone, fillLine, kidWords, lineId, planCall } from './animalCalls'
 
 const seeded = (seed: number) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 }
 
@@ -13,6 +13,13 @@ describe('동물 전화 놀이', () => {
         expect(tp.replies.length).toBeLessThanOrEqual(3)
       }
     }
+  })
+  it('전화번호: 곰이 4467 … 판다 7259, 번호로 동물을 찾고 없는 번호는 -1', () => {
+    expect(CALL_ANIMALS.map((a) => a.phone)).toEqual(['4467', '1987', '3082', '0255', '9211', '9072', '8931', '7259'])
+    expect(animalByPhone('0255')).toBe(3)
+    expect(animalByPhone('7259')).toBe(7)
+    expect(animalByPhone('1234')).toBe(-1)
+    expect(animalByPhone('446')).toBe(-1)
   })
   it('모든 대사의 {…} 가 남김없이 바뀐다', () => {
     for (const a of CALL_ANIMALS) {
