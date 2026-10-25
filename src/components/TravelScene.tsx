@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from 'react'
 import { useI18n } from '../i18n'
-import { MY_ROOM_ID, PLACE_BY_ID, eventDone, finishEnglish, finishEvent, findItem, getGame, isFound, pickReward, spotFor, travelItem } from '../lib/game'
+import { MY_ROOM_ID, PLACE_BY_ID, findItem, getGame, isFound, spotFor, travelItem } from '../lib/game'
 import { assetUrl } from '../lib/items'
-import { NPCS } from '../lib/npcs'
 import { playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { WALK_BOUNDS, clampToBounds, depthScale, distPx, stepToward, type Vec } from '../lib/walk'
 import { FigureLayers } from './FigureLayers'
-import { NpcDialog } from './NpcDialog'
 import { useGame } from './TravelGame'
 import { useWalkKeys } from './useWalkKeys'
 import { TravelDecor } from './TravelDecor'
@@ -32,11 +30,7 @@ const TEXT = {
 /** 여행 탭 아래 패널도 내 방 탭과 같은 높이(40dvh)라서 무대 크기가 같다. 보낸 방은 내 방 탭과 똑같은 크기로 보인다 */
 const ROOM_STAGE_DIFF = 0
 
-const NPC_POS: Vec = { x: 84, y: 84 }
-const CHEST_POS: Vec = { x: 52, y: 74 }
 const PICK_R = 70 // 이 거리(px) 안을 지나가면 줍는다
-const TALK_R = 130 // NPC 가까이 가면 말을 건다
-const TALK_AGAIN_R = 220 // 이만큼 멀어졌다가 다시 오면 또 말을 건다
 
 interface Props {
   paused?: boolean
@@ -61,7 +55,6 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   const layout = useMemo(() => getTravelRoom(placeId) ?? (placeId === MY_ROOM_ID ? { scene: 'room' as const, room: { ...defaultRoom(), items: [] } } : null), [placeId, roomVersion, itemVersion])
   const assets = layout ? sceneAssets(layout.scene, (layout.scene === 'camp' || layout.room.wallId === 'camp') ? night : layout.room.night, layout.room.wallId, layout.room.floorId) : null
   const minY = assets ? Math.min(88, 100 - assets.floorH / ROOM_H * 100 + 2) : WALK_BOUNDS.minY
-  const layerZ = (y: number) => layout ? Math.round(2000 + y / 100 * ROOM_H) : Math.round(y)
   const p = PLACE_BY_ID[placeId]
   // 가로로 넓은 화면: 장소 그림(세로 그림)을 늘려 꽉 채우면 너무 크게 확대돼 보이므로, 방처럼 세로 무대에 그리고 양옆은 그림을 이어 붙여 채운다
   const rootRef = useRef<HTMLDivElement>(null)
@@ -76,46 +69,30 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   }, [])
   const stage = !!layout || wide
   const bg = assets ?? { wall: assetUrl(night && p.wallNight ? p.wallNight : p.wall), floor: assetUrl(p.floor), floorH: p.floorH }
-  const npc = NPCS[placeId]
   const ids = assign[placeId] ?? []
-  const left = ids.filter((id) => !isFound(id))
 
   const [pos, setPos] = useState<Vec>(() => layout ? { x: clampToBounds({ x: layout.room.avatar.x / ROOM_W * 100, y: 86 }).x, y: Math.max(minY, Math.min(100, layout.room.avatar.y / ROOM_H * 100)) } : { x: 20, y: 86 })
   const [dir, setDir] = useState<1 | -1>(layout?.room.avatar.flip ? -1 : 1)
   const [walking, setWalking] = useState(false)
   const [destination, setDestination] = useState<Vec | null>(null)
   const [popup, setPopup] = useState<string | null>(null)
-  const [talk, setTalk] = useState(false)
   // 파티: 초대 창에서 고른 카페 동물 친구들이 집에 들어와 돌아다니며 이야기한다(이 집에 있는 동안만)
   const [inviting, setInviting] = useState(false)
   const [party, setParty] = useState<number[]>([])
   const [partyEnd, setPartyEnd] = useState(false)
   useSyncExternalStore(subscribeAvatar, avatarVersion)
   const kidName = getAvatar().name.ko
-  const [hint, setHint] = useState<string | null>(null)
 
   const posRef = useRef(pos)
   const target = useRef<Vec | null>(null)
-  const talkLock = useRef(false)
   const boxRef = useRef<HTMLDivElement>(null)
-  const blocked = !!popup || talk || paused
+  const blocked = !!popup || paused
   // 찾았다 상자는 0.7초 뒤에 저절로 사라진다
   useEffect(() => {
     if (!popup) return
     const id = window.setTimeout(() => setPopup(null), FOUND_POP_MS)
     return () => clearTimeout(id)
   }, [popup])
-
-  const reward = useCallback(
-    (scope: 'here' | 'any') => {
-      const id = pickReward(assign, getGame().found, placeId, scope)
-      finishEvent(placeId)
-      if (id && findItem(id)) {
-        setPopup(id)
-      }
-    },
-    [assign, placeId],
-  )
 
   const pick = useCallback((id: string) => {
     if (findItem(id)) {
@@ -142,7 +119,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           setDestination(null)
         }
       }
-      // 지나가다 가까워지면 줍고, NPC 에게 다가가면 말을 건다
+      // 지나가다 가까워지면 줍는다
       const me = posRef.current
       const g = getGame()
       const hitSpot = ids.findIndex((id, i) => !g.found.includes(id) && distPx(me, spotFor(id, i)) < PICK_R)
@@ -153,28 +130,9 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
         pick(ids[hitSpot])
         return
       }
-      if (npc?.event === 'gift' && !eventDone(placeId) && distPx(me, CHEST_POS) < PICK_R) {
-        target.current = null
-        setWalking(false)
-        setDestination(null)
-        reward('any')
-        return
-      }
-      if (npc) {
-        const d = distPx(me, NPC_POS)
-        if (d > TALK_AGAIN_R) talkLock.current = false
-        else if (d < TALK_R && !talkLock.current) {
-          talkLock.current = true
-          target.current = null
-          setWalking(false)
-          setDestination(null)
-          setTalk(true)
-          return
-        }
-      }
       if (target.current) frame.current = requestAnimationFrame(tick)
     },
-    [ids, npc, pick, placeId, reward],
+    [ids, pick],
   )
 
   const walkTo = (v: Vec) => {
@@ -208,7 +166,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
     !blocked,
   )
 
-  const got = ids.length - left.length
+  const got = ids.filter((id) => isFound(id)).length
   const scale = depthScale(pos.y)
   const avatarLayer = layout ? Math.round(Math.max(10000, ...drawables(layout.room).map(d => d.z))) + 1 : 1000
   const collected = popup ? travelItem(popup) : undefined
@@ -255,34 +213,9 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
               style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: layout ? 10000 : 110 }}
             >
               <span aria-hidden>✨</span>
-              {hint === id && <span className="absolute -top-3 -right-1 text-lg" aria-hidden>💡</span>}
             </button>
           )
         })}
-
-        {npc?.event === 'gift' && !eventDone(placeId) && (
-          <button
-            aria-label="gift"
-            onClick={() => walkTo(CHEST_POS)}
-            className="sparkle absolute flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-4xl"
-            style={{ left: `${CHEST_POS.x}%`, top: `${CHEST_POS.y}%`, zIndex: layerZ(CHEST_POS.y) }}
-          >
-            <span aria-hidden>🎁</span>
-          </button>
-        )}
-
-        {npc && (
-          <button
-            aria-label={npc.name[lang]}
-            onClick={() => (distPx(posRef.current, NPC_POS) < TALK_R ? setTalk(true) : walkTo({ x: NPC_POS.x - 10, y: NPC_POS.y }))}
-            className="absolute flex h-14 w-14 -translate-x-1/2 -translate-y-full items-center justify-center transition active:scale-90"
-            style={{ left: `${NPC_POS.x}%`, top: `${NPC_POS.y}%`, zIndex: layerZ(NPC_POS.y) }}
-          >
-            {/* 버튼에는 전역 `button { font: inherit }` 때문에 글자 크기 클래스가 먹지 않아서 안쪽 span 에 건다 */}
-            <span aria-hidden className="text-[48px] leading-none">{npc.emoji}</span>
-            {!eventDone(placeId) && <span className="absolute -top-1 -right-1 rounded-full bg-blush px-1.5 text-xs font-bold text-white">!</span>}
-          </button>
-        )}
 
         {party.length > 0 && (
           <PartyGuests
@@ -338,30 +271,6 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
         </span>
       </div>
 
-      {talk && npc && (
-        <NpcDialog
-          npc={npc}
-          placeId={placeId}
-          onReward={() => reward('here')}
-          onEnglishReward={() => {
-            if (!finishEnglish(placeId)) return false
-            const id = pickReward(assign, getGame().found, placeId, 'here')
-            if (!id) return false
-            pick(id)
-            return true
-          }}
-          onMissionReward={() => {
-            const id = pickReward(assign, getGame().found, placeId, 'any')
-            if (id) pick(id)
-          }}
-          onHint={() => {
-            if (!left.length) return false
-            setHint(left[Math.floor(Math.random() * left.length)])
-            return true
-          }}
-          onClose={() => setTalk(false)}
-        />
-      )}
       {popup && collected && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/30 p-6" onClick={() => setPopup(null)}>
           <div className="w-64 rounded-3xl bg-white p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
