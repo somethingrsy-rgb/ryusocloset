@@ -120,11 +120,11 @@ export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone }: 
 
 /**
  * 파티 초대 창: 카페 동물 친구 얼굴을 여러 명 골라서 초대한다(이미 온 친구는 표시).
- * 달리기 친구 고르기도 같은 창을 쓴다(title·cta 로 글자를 바꾸고, initial 로 지난번에 고른 친구를 미리 골라 둔다. 아무도 안 골라도 된다)
+ * 달리기 친구 고르기도 같은 창을 쓴다(title·cta 로 글자를 바꾸고, initial 로 지난번에 고른 친구를 미리 골라 둔다. 아무도 안 골라도 된다. single 이면 한 명만 고른다)
  */
-export function PartyInvite({ here, onInvite, onClose, initial = [], title = '🎉 파티에 누구를 초대할까요?', cta = '💌 초대하기', allowNone = false }: { here: number[]; onInvite: (animals: number[]) => void; onClose: () => void; initial?: number[]; title?: string; cta?: string; allowNone?: boolean }) {
+export function PartyInvite({ here, onInvite, onClose, initial = [], title = '🎉 파티에 누구를 초대할까요?', cta = '💌 초대하기', allowNone = false, single = false }: { here: number[]; onInvite: (animals: number[]) => void; onClose: () => void; initial?: number[]; title?: string; cta?: string; allowNone?: boolean; single?: boolean }) {
   const [picked, setPicked] = useState<number[]>(initial)
-  const toggle = (i: number) => { playTap(); setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i])) }
+  const toggle = (i: number) => { playTap(); setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : single ? [i] : [...p, i])) }
   const free = CALL_ANIMALS.map((_, i) => i).filter((i) => !here.includes(i))
   return (
     <div role="dialog" aria-modal aria-label="파티 초대" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -133,7 +133,7 @@ export function PartyInvite({ here, onInvite, onClose, initial = [], title = '�
           <p className="m-0 text-lg font-black text-[#8a4b55]">{title}</p>
           <button aria-label="닫기" onClick={onClose} className="h-9 w-9 rounded-full bg-white text-base font-bold text-[#8a4b55] shadow-sm">✕</button>
         </div>
-        <p className="mt-1 mb-2 text-xs text-black/45">여러 친구를 골라도 돼요</p>
+        <p className="mt-1 mb-2 text-xs text-black/45">{single ? '한 친구를 골라요' : '여러 친구를 골라도 돼요'}</p>
         <div className="grid min-h-0 grid-cols-4 gap-2 overflow-y-auto">
           {CALL_ANIMALS.map((a, i) => {
             const on = picked.includes(i), came = here.includes(i)
@@ -148,7 +148,7 @@ export function PartyInvite({ here, onInvite, onClose, initial = [], title = '�
           })}
         </div>
         <div className="mt-3 flex gap-2">
-          <button disabled={!free.length} onClick={() => { playTap(); setPicked(picked.length === free.length ? [] : free) }} className="min-h-11 flex-1 rounded-full bg-white font-bold text-[#8a4b55] shadow-sm disabled:opacity-40">{picked.length === free.length && free.length ? '모두 빼기' : '모두 고르기'}</button>
+          {!single && <button disabled={!free.length} onClick={() => { playTap(); setPicked(picked.length === free.length ? [] : free) }} className="min-h-11 flex-1 rounded-full bg-white font-bold text-[#8a4b55] shadow-sm disabled:opacity-40">{picked.length === free.length && free.length ? '모두 빼기' : '모두 고르기'}</button>}
           <button disabled={!picked.length && !allowNone} onClick={() => onInvite(picked)} className="min-h-11 flex-[1.4] rounded-full bg-[#ff8fab] font-bold text-white shadow disabled:opacity-40">{cta}{picked.length ? ` (${picked.length})` : ''}</button>
         </div>
       </div>

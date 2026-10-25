@@ -17,10 +17,10 @@ const BG_UNITS = 800
 const BG_ROAD_Y = 650
 /** 장애물 그림 크기(부딪히는 크기는 그대로): 커진 아바타에 맞춰 1.25배 */
 const OB_GROW = 1.25
-/** 같이 달리는 동물 친구(카페 동물 번호). 고른 친구는 다음에도 그대로 */
+/** 같이 달리는 동물 친구(카페 동물 번호, 한 명). 고른 친구는 다음에도 그대로 */
 const FRIENDS_KEY = 'ryuso.run.friends.v1'
 const readFriends = (): number[] => {
-  try { const v = JSON.parse(localStorage.getItem(FRIENDS_KEY) ?? '[]'); return Array.isArray(v) ? v.filter((n) => Number.isInteger(n) && n >= 0 && n < CALL_ANIMALS.length) : [] } catch { return [] }
+  try { const v = JSON.parse(localStorage.getItem(FRIENDS_KEY) ?? '[]'); return Array.isArray(v) ? v.filter((n) => Number.isInteger(n) && n >= 0 && n < CALL_ANIMALS.length).slice(0, 1) : [] } catch { return [] }
 }
 /** 친구는 아바타보다 조금 뒤쪽 길(화면에서 위쪽)에서 달린다: 아바타·장애물과 겹쳐 보여도 앞뒤가 분명하게 */
 const LANE_UP = 30
@@ -136,15 +136,9 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const blink = run.invuln > 0 && Math.floor(run.invuln * 10) % 2 === 0
   const btn = `${short ? 'min-h-9 px-2.5 text-xs' : 'min-h-11 px-3 text-sm'} rounded-full bg-white/95 font-bold shadow-sm`
   const progress = Math.min(1, run.elapsed / runDuration(run.level))
-  // 친구 자리: 아바타 뒤(왼쪽)에 들어가는 만큼 먼저, 나머지는 아바타 앞(오른쪽)에. 서로 겹치지 않게 친구 그림 폭만큼 띄운다
+  // 친구 자리: 아바타 바로 뒤(왼쪽)에 붙어서 달린다(화면 왼쪽 밖으로 나가지 않게)
   const fh = PLAYER_H * grow * 0.5
-  const fGap = fh * 0.85
-  const slots: number[] = []
-  for (let k = 1; slots.length < friends.length && k < 20; k++) {
-    const back = px - PLAYER_W * grow * 0.35 - (k - 0.5) * fGap
-    if (back - fh / 2 > -fh * 0.2) slots.push(back)
-    if (slots.length < friends.length) slots.push(px + PLAYER_W * grow * 0.35 + (k - 0.5) * fGap)
-  }
+  const slots = friends.map(() => Math.max(fh * 0.5, px - PLAYER_W * grow * 0.28 - fh * 0.3))
 
   return <section ref={host} tabIndex={0} aria-label="달려라 아바타" className={`relative h-full touch-none select-none overflow-hidden bg-[#82c6fd] outline-none ${short ? '' : 'rounded-3xl ring-1 ring-black/5'}`}
     onPointerDown={(e) => { if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return; e.currentTarget.focus({ preventScroll: true }); tapJump() }}
@@ -214,7 +208,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
         <button className="mt-2 min-h-11 w-full rounded-full bg-petal font-bold" onClick={onExit}>산책으로 돌아가기</button>
       </div>
     </div>}
-    {picking && <PartyInvite here={[]} initial={friends} title="🏃 누구랑 같이 달릴까요?" cta="🐾 같이 달리기" allowNone
+    {picking && <PartyInvite here={[]} initial={friends} single title="🏃 누구랑 같이 달릴까요?" cta="🐾 같이 달리기" allowNone
       onClose={() => setPicking(false)}
       onInvite={(list) => { setFriends(list); try { localStorage.setItem(FRIENDS_KEY, JSON.stringify(list)) } catch { /* 저장 못 해도 이번에는 같이 달린다 */ } setPicking(false) }} />}
   </section>
