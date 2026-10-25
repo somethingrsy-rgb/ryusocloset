@@ -160,3 +160,14 @@ describe('달려라 아바타', () => {
     expect(rewardStars({ coins: 6, over: 'done' })).toBe(6)
   })
 })
+
+describe('같이 달리는 친구', () => {
+  it('장애물 앞뒤에서만 뛰고, 장애물 위에서는 장애물보다 높다', async () => {
+    const { friendHop } = await import('./runner')
+    const o = { x: 500, w: 40, h: 50 }
+    expect(friendHop(300, [o])).toBe(0)
+    expect(friendHop(700, [o])).toBe(0)
+    expect(friendHop(500, [o])).toBeGreaterThan(50)
+    expect(friendHop(470, [o])).toBeGreaterThan(0)
+  })
+})

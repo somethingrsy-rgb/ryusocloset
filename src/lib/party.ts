@@ -22,6 +22,9 @@ export interface Guest {
 export interface Floor { minX: number; maxX: number; minY: number; maxY: number }
 
 const SPEED = 9 // %/초
+/** 친구끼리(그리고 아바타와) 이만큼(y 는 1.6배로 잼)보다 가까이 걸어 들어가지 않는다 */
+export const PERSONAL = 10
+const gap = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, (a.y - b.y) * 1.6)
 const rand = (a: number, b: number, rnd: () => number) => a + (b - a) * rnd()
 
 /** 바닥에서 다른 친구들(과 아바타)과 가장 멀리 떨어진 곳: 후보 6곳 중 고른다(한데 뭉치지 않게) */
@@ -48,6 +51,8 @@ export function stepGuests(gs: Guest[], dt: number, floor: Floor, rnd: () => num
   const guests: Guest[] = []
   for (const g0 of gs) {
     const g = { ...g0 }
+    // 지금 자리(이미 움직인 친구는 새 자리)를 기준으로 서로 부딪히지 않게 본다
+    const others = [...guests, ...gs.slice(guests.length + gone.length + 1)].filter((o) => o.animal !== g.animal && !o.leaving)
     if (g.wait > 0) { g.wait = Math.max(0, g.wait - dt); guests.push(g); continue }
     const dx = g.tx - g.x, dy = (g.ty - g.y) * 1.6
     const d = Math.hypot(dx, dy)
@@ -59,8 +64,16 @@ export function stepGuests(gs: Guest[], dt: number, floor: Floor, rnd: () => num
       const t = roomySpot(floor, [...avoid, ...gs.filter((o) => o.animal !== g.animal).flatMap((o) => [o, { x: o.tx, y: o.ty }])], rnd)
       g.tx = t.x; g.ty = t.y
     } else {
-      g.x += (dx / d) * step; g.y += (dy / d / 1.6) * step
-      if (Math.abs(dx) > 0.5) g.dir = dx > 0 ? 1 : -1
+      const nx = g.x + (dx / d) * step, ny = g.y + (dy / d / 1.6) * step
+      // 다음 걸음이 다른 친구(아바타)의 자리로 더 파고들면 멈춰 서서, 비어 있는 다른 곳으로 길을 바꾼다(나갈 때는 문으로 곧장)
+      const blocker = g.leaving ? undefined : [...others, ...avoid].find((o) => gap({ x: nx, y: ny }, o) < PERSONAL && gap({ x: nx, y: ny }, o) < gap(g, o))
+      if (blocker) {
+        const t = roomySpot(floor, [...avoid, ...others.flatMap((o) => [o, { x: o.tx, y: o.ty }])], rnd)
+        g.tx = t.x; g.ty = t.y; g.wait = 0.3
+      } else {
+        g.x = nx; g.y = ny
+        if (Math.abs(dx) > 0.5) g.dir = dx > 0 ? 1 : -1
+      }
     }
     guests.push(g)
   }

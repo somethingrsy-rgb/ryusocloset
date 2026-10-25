@@ -214,3 +214,16 @@ export function readRunLevel(): LevelId {
 export function writeRunLevel(l: LevelId) {
   try { localStorage.setItem(LEVEL_KEY, l) } catch { /* 저장 실패는 무시 */ }
 }
+
+/**
+ * 같이 달리는 동물 친구의 점프 높이: 친구가 서 있는 곳(월드 x)이 장애물 앞뒤 구간에 들어가면 저절로 둥글게 뛰어넘는다.
+ * 친구는 부딪히지 않고 점수에도 상관없다(같이 달리는 모습만). 위치만으로 정해져서 따로 기억할 것이 없다
+ */
+export function friendHop(fx: number, obstacles: Pick<Obstacle, 'x' | 'w' | 'h'>[], lead = 46): number {
+  let y = 0
+  for (const o of obstacles) {
+    const a = o.x - o.w / 2 - lead, b = o.x + o.w / 2 + lead
+    if (fx > a && fx < b) y = Math.max(y, (o.h + 40) * Math.sin(Math.PI * (fx - a) / (b - a)))
+  }
+  return y
+}

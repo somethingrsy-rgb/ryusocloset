@@ -30,6 +30,8 @@ const TEXT = {
 /** 여행 탭 아래 패널도 내 방 탭과 같은 높이(40dvh)라서 무대 크기가 같다. 보낸 방은 내 방 탭과 똑같은 크기로 보인다 */
 const ROOM_STAGE_DIFF = 0
 
+/** 방에 한 번에 보이는 보물 수 */
+const MAX_SHOWN = 5
 const PICK_R = 70 // 이 거리(px) 안을 지나가면 줍는다
 
 interface Props {
@@ -70,6 +72,9 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   const stage = !!layout || wide
   const bg = assets ?? { wall: assetUrl(night && p.wallNight ? p.wallNight : p.wall), floor: assetUrl(p.floor), floorH: p.floorH }
   const ids = assign[placeId] ?? []
+  // 방에 한 번에 보이는 보물은 5개까지: 아직 못 찾은 것 앞에서부터 5개, 하나 찾으면 다음 것이 나온다(자리는 원래 순서 그대로)
+  const shownOf = (found: string[]) => new Set(ids.filter((id) => !found.includes(id)).slice(0, MAX_SHOWN))
+  const shown = shownOf(getGame().found)
 
   const [pos, setPos] = useState<Vec>(() => layout ? { x: clampToBounds({ x: layout.room.avatar.x / ROOM_W * 100, y: 86 }).x, y: Math.max(minY, Math.min(100, layout.room.avatar.y / ROOM_H * 100)) } : { x: 20, y: 86 })
   const [dir, setDir] = useState<1 | -1>(layout?.room.avatar.flip ? -1 : 1)
@@ -122,7 +127,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
       // 지나가다 가까워지면 줍는다
       const me = posRef.current
       const g = getGame()
-      const hitSpot = ids.findIndex((id, i) => !g.found.includes(id) && distPx(me, spotFor(id, i)) < PICK_R)
+      const near = shownOf(g.found)
+      const hitSpot = ids.findIndex((id, i) => near.has(id) && distPx(me, spotFor(id, i)) < PICK_R)
       if (hitSpot >= 0) {
         target.current = null
         setWalking(false)
@@ -132,6 +138,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
       }
       if (target.current) frame.current = requestAnimationFrame(tick)
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [ids, pick],
   )
 
@@ -194,7 +201,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
         {layout ? drawables(layout.room).filter(d => d.group !== 'avatar').map(d => <img key={d.key} src={d.src ? assetUrl(d.src) : undefined} alt="" draggable={false} className="pointer-events-none absolute" style={{ left: `${d.left / ROOM_W * 100}%`, top: `${d.top / ROOM_H * 100}%`, width: `${d.w / ROOM_W * 100}%`, height: `${d.h / ROOM_H * 100}%`, zIndex: Math.round(d.z), transform: d.flip ? 'scaleX(-1)' : undefined }} />) : <TravelDecor placeId={placeId} />}
 
         {ids.map((id, i) => {
-          if (isFound(id)) return null
+          if (!shown.has(id)) return null
           const s = spotFor(id, i)
           return (
             <button
