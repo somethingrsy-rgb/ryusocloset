@@ -20,7 +20,7 @@ const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: 
   portrait: {
     img: 'kitchen/kitchen_portrait.webp', ratio: 941 / 1672, avatarH: 24,
     at: { fridge: { x: 15.5, y: 31, w: 24, h: 32 }, sink: { x: 48, y: 36.5, w: 24, h: 7 }, stove: { x: 86, y: 33.5, w: 22, h: 6 }, oven: { x: 86.5, y: 44, w: 24, h: 12 }, board: { x: 50, y: 59, w: 40, h: 9 } },
-    ovenGlass: { x: 86.9, y: 43.9, w: 14.3, h: 5.6 },
+    ovenGlass: { x: 86.7, y: 43.3, w: 14, h: 4.4 },
     // 효과 자리(그림 크기에 대한 %): ice = 냉장고 위칸 가운데 [x, y, 너비(문 폭의 1/3)], tap = 수도꼭지 끝 [x, 물이 나오는 y, 개수대 테두리 y(물방울이 여기서 사라진다)], pot = 냄비 [x, 냄비 바닥 y, 냄비 폭]
     fx: { ice: [14, 22, 6.9], tap: [47.8, 31, 33.6], pot: [86.1, 34.8, 10] },
     cook: [50, 62], island: { img: 'kitchen/island_portrait.webp', l: 12.221, t: 52.452, w: 75.452, h: 33.612 },
@@ -28,7 +28,7 @@ const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: 
   wide: {
     img: 'kitchen/kitchen_wide.webp', ratio: 1672 / 941, avatarH: 38,
     at: { fridge: { x: 19.7, y: 37, w: 16, h: 45 }, sink: { x: 49.3, y: 41.5, w: 15, h: 10 }, stove: { x: 81.6, y: 38, w: 14, h: 9 }, oven: { x: 83.4, y: 53.5, w: 15, h: 17 }, board: { x: 49.6, y: 60.5, w: 24, h: 12 } },
-    ovenGlass: { x: 83.2, y: 53.9, w: 9.1, h: 8.5 },
+    ovenGlass: { x: 83.2, y: 53.6, w: 9, h: 7 },
     fx: { ice: [19.1, 23.4, 5], tap: [49.1, 34.3, 38.6], pot: [81.6, 40.5, 5.5] },
     cook: [50, 66], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
   },
@@ -198,8 +198,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         {cooking && menu?.steps[cooking.step] === 'bake' && (
           <div aria-hidden className="pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 items-end justify-center overflow-hidden" style={{ left: `${L.ovenGlass.x}%`, top: `${L.ovenGlass.y}%`, width: `${L.ovenGlass.w}%`, height: `${L.ovenGlass.h}%`, zIndex: 4 }}>
             {/* 창이 옆으로 길어서 불꽃 셋을 나란히(가운데가 제일 크게) 놓아 창을 꽉 채운다 */}
-            {[0.8, 1, 0.8].map((k, i) => (
-              <img key={i} src={assetUrl('kitchen/fire.webp')} alt="" draggable={false} className="kitchen-flame -mx-[6%] h-full w-auto max-w-none object-contain" style={{ height: `${k * 100}%`, animationDelay: `${i * 0.15}s`, transform: `scale(${0.8 + 0.25 * (cooking.taps / STEPS.bake.taps)})` }} />
+            {[0.65, 0.85, 0.65].map((k, i) => (
+              <img key={i} src={assetUrl('kitchen/fire.webp')} alt="" draggable={false} className="kitchen-flame -mx-[3%] h-full w-auto max-w-none object-contain" style={{ height: `${k * 100}%`, animationDelay: `${i * 0.15}s`, transform: `scale(${0.8 + 0.25 * (cooking.taps / STEPS.bake.taps)})` }} />
             ))}
           </div>
         )}
