@@ -13,19 +13,19 @@ import { CoinIcon } from './Icons'
 
 /**
  * 그림 속 자리(그림 크기에 대한 %, 가운데·너비·높이). 세로 그림(폰)과 가로 그림(패드·폰 가로)이 다르다.
- * spot 은 그 일을 할 때 아바타가 서는 발 위치.
+ * 아바타는 아일랜드 뒤에 서서 요리한다: cook 은 발 위치, island 는 그림에서 오려 낸 아일랜드(public/kitchen/island_*.webp)를 아바타 앞에 다시 덮는 자리(왼쪽·위·너비·높이 %).
  */
 type Box = { x: number; y: number; w: number; h: number }
-const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; spot: Record<Station | 'idle', [number, number]> }> = {
+const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; cook: [number, number]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
   portrait: {
-    img: 'kitchen/kitchen_portrait.webp', ratio: 941 / 1672, avatarH: 22,
+    img: 'kitchen/kitchen_portrait.webp', ratio: 941 / 1672, avatarH: 24,
     at: { fridge: { x: 15.5, y: 31, w: 24, h: 32 }, sink: { x: 48, y: 36.5, w: 24, h: 7 }, stove: { x: 86, y: 33.5, w: 22, h: 6 }, oven: { x: 86.5, y: 44, w: 24, h: 12 }, board: { x: 50, y: 59, w: 40, h: 9 } },
-    spot: { idle: [74, 54], fridge: [33, 54], sink: [70, 53], stove: [72, 53], oven: [72, 54], board: [74, 54] },
+    cook: [50, 62], island: { img: 'kitchen/island_portrait.webp', l: 12.221, t: 52.452, w: 75.452, h: 33.612 },
   },
   wide: {
     img: 'kitchen/kitchen_wide.webp', ratio: 1672 / 941, avatarH: 38,
     at: { fridge: { x: 19.7, y: 37, w: 16, h: 45 }, sink: { x: 49.3, y: 41.5, w: 15, h: 10 }, stove: { x: 81.6, y: 38, w: 14, h: 9 }, oven: { x: 83.4, y: 53.5, w: 15, h: 17 }, board: { x: 49.6, y: 60.5, w: 24, h: 12 } },
-    spot: { idle: [88, 95], fridge: [13, 93], sink: [88, 95], stove: [88, 95], oven: [88, 95], board: [88, 95] },
+    cook: [50, 66], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
   },
 }
 
@@ -78,8 +78,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const [toast, setToast] = useState('')
   const [shake, setShake] = useState<Station | null>(null)
   const [pops, setPops] = useState<{ id: number; at: Station; emoji: string }[]>([])
-  const [where, setWhere] = useState<Station | 'idle'>('idle')
-  const [walking, setWalking] = useState(false)
+  const [busy, setBusy] = useState(false) // 요리 단계가 바뀔 때 아바타가 통통
   const timers = useRef<number[]>([])
   const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
@@ -96,10 +95,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   }, [kitchen.tickets, selTicket, cooking, done])
 
   const L = SPOTS[wide ? 'wide' : 'portrait']
-  const walkTo = (s: Station | 'idle') => {
-    if (s === where) return
-    setWhere(s); setWalking(true); later(() => setWalking(false), 650)
-  }
+  const bounce = () => { setBusy(true); later(() => setBusy(false), 650) }
 
   const menu = selTicket ? menuById(selTicket.menu) : undefined
   const lacks = selTicket ? missing(selTicket.menu, kitchen, farm) : []
@@ -109,7 +105,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
     if (!selTicket || !menu || lacks.length) return
     playCook()
     setCooking({ seat: selTicket.seat, step: 0, taps: 0 })
-    walkTo(STEPS[menu.steps[0]].station)
+    bounce()
   }
 
   const tapStation = (s: Station) => {
@@ -131,27 +127,27 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
     if (nextStep < menu.steps.length) {
       playCook()
       setCooking({ ...cooking, step: nextStep, taps: 0 })
-      walkTo(STEPS[menu.steps[nextStep]].station)
+      bounce()
       return
     }
-    if (!cookTicket(cooking.seat)) { playCloud(); say(tx.lack); setCooking(null); walkTo('idle'); return }
+    if (!cookTicket(cooking.seat)) { playCloud(); say(tx.lack); setCooking(null); return }
     playBell()
     setDone(cooking.seat)
     setCooking(null)
-    walkTo('board')
+    bounce()
   }
 
   const nextOrder = () => {
     playTap()
     setDone(null)
     setSel(kitchen.tickets.find((t) => !t.ready)?.seat ?? null)
-    walkTo('idle')
+    bounce()
   }
 
   const face = (seat: number) => assetUrl(`cafe/face/${CALL_ANIMALS[seat].img}.webp`)
   const btn = 'min-h-11 rounded-full px-3 font-bold shadow active:scale-95 disabled:opacity-40'
   const doneMenu = done !== null ? menuById(kitchen.tickets.find((t) => t.seat === done)?.menu ?? '') : undefined
-  const [ax, ay] = L.spot[where]
+  const [ax, ay] = L.cook
   const aw = L.avatarH * (1024 / 1536) / L.ratio // 아바타 너비(그림 너비에 대한 %)
   const boardIngs = cooking && menu ? needList(menu).map(({ id }) => id) : []
   const kneading = !!cooking && menu?.steps[cooking.step] === 'mix'
@@ -183,15 +179,16 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         {/* 반죽 섞기: 두 손이 도마 위에서 조물조물(누를 때마다 꾹 누른다) */}
         {kneading && (
           <img key={cooking!.taps} aria-hidden src={assetUrl('kitchen/hands.webp')} alt="" draggable={false} className="kitchen-knead pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - 3}%`, width: `${L.at.board.w * 0.8}%`, zIndex: 5 }} />
+            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y + 1}%`, width: `${L.at.board.w * 0.75}%`, zIndex: 5 }} />
         )}
 
-        {/* 내 아바타: 할 일이 있는 자리로 걸어간다 */}
-        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${ax}%`, top: `${ay}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', transform: `translate(-50%, -98%) scaleX(${ax > 50 ? -1 : 1})`, zIndex: 2, transition: 'left 0.6s ease-in-out, top 0.6s ease-in-out' }}>
-          <div className={walking ? 'farm-walk' : ''} style={{ position: 'relative', width: '100%', height: '100%' }}>
+        {/* 내 아바타: 아일랜드 뒤에 서서 요리한다(아일랜드 그림을 아바타 앞에 한 번 더 덮어서 아래쪽이 가려진다) */}
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${ax}%`, top: `${ay}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -98%)', zIndex: 1 }}>
+          <div className={busy ? 'farm-walk' : ''} style={{ position: 'relative', width: '100%', height: '100%' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
           </div>
         </div>
+        <img aria-hidden src={assetUrl(L.island.img)} alt="" draggable={false} className="pointer-events-none absolute" style={{ left: `${L.island.l}%`, top: `${L.island.t}%`, width: `${L.island.w}%`, height: `${L.island.h}%`, zIndex: 2 }} />
       </div>
 
       {/* 위: 코인·식료품·카페 */}
@@ -212,7 +209,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
           const on = sel === t.seat
           return (
             <button key={t.seat} aria-pressed={on} aria-label={`${CALL_ANIMALS[t.seat].name} ${m[lang]}`} disabled={!!cooking}
-              onClick={() => { playTap(); setDone(null); setSel(t.seat); walkTo('idle') }}
+              onClick={() => { playTap(); setDone(null); setSel(t.seat) }}
               className={`relative flex w-[4.6rem] shrink-0 flex-col items-center rounded-2xl bg-[#fffaf0] px-1 pt-1 pb-1.5 shadow-md ring-2 transition active:scale-95 ${on ? 'ring-[#ef8d99]' : 'ring-transparent'} ${cooking && !on ? 'opacity-50' : ''}`}>
               <span aria-hidden className="absolute top-0 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ef6f86] shadow" />
               <span className="flex w-full items-center justify-between">

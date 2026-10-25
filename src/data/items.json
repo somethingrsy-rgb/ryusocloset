@@ -1872,6 +1872,54 @@
     "native": true
   },
   {
+    "id": "costume_soccer_purple",
+    "category": "costume",
+    "name": {
+      "ko": "축구 국가대표 유니폼 (보라)",
+      "en": "Korea Soccer Kit (Purple)"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 212,
+      "y": 606,
+      "w": 600,
+      "h": 537
+    },
+    "image": "assets/clothes/costume/costume_soccer_purple.webp",
+    "thumb": "assets/thumbs/costume_soccer_purple.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_soccer_red",
+    "category": "costume",
+    "name": {
+      "ko": "축구 국가대표 유니폼 (빨강)",
+      "en": "Korea Soccer Kit (Red)"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 228,
+      "y": 606,
+      "w": 568,
+      "h": 526
+    },
+    "image": "assets/clothes/costume/costume_soccer_red.webp",
+    "thumb": "assets/thumbs/costume_soccer_red.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_starry_cross",
     "category": "costume",
     "name": {
@@ -1916,6 +1964,54 @@
     },
     "image": "assets/clothes/costume/costume_strawberry_cardigan_pink.webp",
     "thumb": "assets/thumbs/costume_strawberry_cardigan_pink.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_taekwondo_green",
+    "category": "costume",
+    "name": {
+      "ko": "태권도복 (초록띠)",
+      "en": "Taekwondo Uniform (Green Belt)"
+    },
+    "color": "green",
+    "colorName": {
+      "ko": "그린",
+      "en": "Green"
+    },
+    "colorHex": "#6f9a72",
+    "box": {
+      "x": 167,
+      "y": 605,
+      "w": 690,
+      "h": 871
+    },
+    "image": "assets/clothes/costume/costume_taekwondo_green.webp",
+    "thumb": "assets/thumbs/costume_taekwondo_green.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_taekwondo_red",
+    "category": "costume",
+    "name": {
+      "ko": "태권도복 (빨간띠 2품)",
+      "en": "Taekwondo Uniform (Red Belt)"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 167,
+      "y": 604,
+      "w": 690,
+      "h": 868
+    },
+    "image": "assets/clothes/costume/costume_taekwondo_red.webp",
+    "thumb": "assets/thumbs/costume_taekwondo_red.webp",
     "zIndex": 41,
     "native": true
   },
@@ -3476,6 +3572,54 @@
     },
     "image": "assets/clothes/shoes/shoes_sneakers_mule_navy.webp",
     "thumb": "assets/thumbs/shoes_sneakers_mule_navy.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_soccer_purple",
+    "category": "shoes",
+    "name": {
+      "ko": "축구 양말·축구화 (보라)",
+      "en": "Soccer Socks & Cleats (Purple)"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 406,
+      "y": 1237,
+      "w": 211,
+      "h": 271
+    },
+    "image": "assets/clothes/shoes/shoes_soccer_purple.webp",
+    "thumb": "assets/thumbs/shoes_soccer_purple.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_soccer_red",
+    "category": "shoes",
+    "name": {
+      "ko": "축구 양말·축구화 (빨강)",
+      "en": "Soccer Socks & Cleats (Red)"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 406,
+      "y": 1229,
+      "w": 210,
+      "h": 279
+    },
+    "image": "assets/clothes/shoes/shoes_soccer_red.webp",
+    "thumb": "assets/thumbs/shoes_soccer_red.webp",
     "zIndex": 10,
     "native": true
   },
