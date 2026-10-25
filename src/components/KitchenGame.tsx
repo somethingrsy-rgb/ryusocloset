@@ -33,19 +33,19 @@ const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: 
 
 const T = {
   ko: {
-    title: '🍳 주방', pantry: '🛒 식료품', cafe: '☕ 카페', farm: '🥕 농장에서 가져오기', buy: '🛒 식료품 사기',
+    title: '🍳 주방', pantry: '🛒 마트', cafe: '☕ 카페', farm: '🥕 농장에서 가져오기', buy: '🛒 마트에서 사기',
     noTickets: '카페에서 주문을 받아 오세요', pick: '👆 만들 주문서를 골라요', order: (n: string) => `${n}의 주문`,
     start: '🍳 요리 시작', step: (k: number, n: number) => `${k} / ${n} 단계`, done: (m: string) => `완성! ${m} 🎉`, serve: '☕ 카페에서 서빙하기',
     ready: '다 만들었어요! 카페에서 서빙해요', wrong: '여기를 눌러요 👇', lack: '재료가 모자라요', need: '필요한 재료', how: '만드는 순서',
-    pantryTitle: '🛒 식료품 칸', pantryNote: `기본 재료는 ${PACK}개 묶음에 ${PACK_PRICE}코인`, farmNote: '농장 재료는 농장에서 수확해요', close: '닫기', noCoins: '코인이 모자라요. 농장에서 팔거나 카페에서 서빙해 모아요',
+    pantryTitle: '🛒 마트', pantryNote: `기본 재료는 ${PACK}개 묶음에 ${PACK_PRICE}코인`, farmNote: '농장 재료는 농장에서 수확해요', close: '닫기', noCoins: '코인이 모자라요. 농장에서 팔거나 카페에서 서빙해 모아요',
     next: '다음 주문 만들기',
   },
   en: {
-    title: '🍳 Kitchen', pantry: '🛒 Pantry', cafe: '☕ Cafe', farm: '🥕 Get from the farm', buy: '🛒 Buy groceries',
+    title: '🍳 Kitchen', pantry: '🛒 Mart', cafe: '☕ Cafe', farm: '🥕 Get from the farm', buy: '🛒 Buy at the mart',
     noTickets: 'Take orders in the cafe first', pick: '👆 Pick an order to cook', order: (n: string) => `${n}'s order`,
     start: '🍳 Start cooking', step: (k: number, n: number) => `Step ${k} / ${n}`, done: (m: string) => `${m} is ready! 🎉`, serve: '☕ Serve it in the cafe',
     ready: 'All done! Serve it in the cafe', wrong: 'Tap here 👇', lack: 'Not enough ingredients', need: 'Ingredients', how: 'Steps',
-    pantryTitle: '🛒 Pantry', pantryNote: `Basics: ${PACK} for ${PACK_PRICE} coins`, farmNote: 'Grow these on the farm', close: 'Close', noCoins: 'Not enough coins. Sell crops or serve guests',
+    pantryTitle: '🛒 Mart', pantryNote: `Basics: ${PACK} for ${PACK_PRICE} coins`, farmNote: 'Grow these on the farm', close: 'Close', noCoins: 'Not enough coins. Sell crops or serve guests',
     next: 'Cook the next order',
   },
 }
@@ -208,7 +208,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         <img aria-hidden src={assetUrl(L.island.img)} alt="" draggable={false} className="pointer-events-none absolute" style={{ left: `${L.island.l}%`, top: `${L.island.t}%`, width: `${L.island.w}%`, height: `${L.island.h}%`, zIndex: 2 }} />
       </div>
 
-      {/* 위: 코인·식료품·카페 */}
+      {/* 위: 코인·마트·카페 */}
       <div className="absolute inset-x-2 top-2 z-20 flex items-center justify-between gap-1.5">
         <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-bold text-[#8a4b2a] shadow">{tx.title}</span>
         <div className="flex items-center gap-1.5">

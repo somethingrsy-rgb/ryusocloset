@@ -1,8 +1,8 @@
 import { isRestoring } from './restoreGuard'
 export const CROPS = [
-  { id: 'carrot', ko: '당근', en: 'carrot', plural: 'carrots', emoji: '🥕', seconds: 60, price: 3 },
-  { id: 'strawberry', ko: '딸기', en: 'strawberry', plural: 'strawberries', emoji: '🍓', seconds: 120, price: 5 },
-  { id: 'corn', ko: '옥수수', en: 'corn', plural: 'corn', emoji: '🌽', seconds: 90, price: 6 },
+  { id: 'carrot', ko: '당근', en: 'carrot', plural: 'carrots', emoji: '🥕', seconds: 30, price: 3 },
+  { id: 'strawberry', ko: '딸기', en: 'strawberry', plural: 'strawberries', emoji: '🍓', seconds: 60, price: 5 },
+  { id: 'corn', ko: '옥수수', en: 'corn', plural: 'corn', emoji: '🌽', seconds: 45, price: 6 },
 ] as const
 export type CropId = (typeof CROPS)[number]['id']
 /** 처음부터 내 것인 밭 칸 수 (앞의 9칸). 나머지는 코인으로 한 칸씩 산다 */

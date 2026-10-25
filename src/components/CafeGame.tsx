@@ -177,16 +177,14 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
         sfx(playOrder)
       } else {
         if (actKitchen({ type: 'serve', seat: i }) !== 'saved') { setHold(null); return }
-        const bonus = st.served + 1 >= GOAL && !st.reward
-        save({ served: st.served + 1, reward: st.reward || bonus })
-        actFarm({ type: 'earn', amount: m.price + (bonus ? BONUS : 0) })
+        save({ served: st.served + 1, reward: st.reward })
+        actFarm({ type: 'earn', amount: m.price })
         sfx(playServe)
         setHold(null)
         setGuests((gs) => gs.map((x, k) => (k === i ? newGuest(i) : x)))
         const id = ++floatId.current
-        setFloats((f) => [...f, { id, seat: i, amount: m.price + (bonus ? BONUS : 0) }])
+        setFloats((f) => [...f, { id, seat: i, amount: m.price }])
         later(() => setFloats((f) => f.filter((x) => x.id !== id)), 1300)
-        if (bonus) say(tx.bonus)
       }
     }, 400)
   }
@@ -246,8 +244,8 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
         })}
       </div>
 
-      <div className="absolute inset-x-2 top-2 z-20 flex items-center justify-between gap-2">
-        <span className="rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold shadow">🎁 {st.reward ? tx.missionDone : `${Math.min(st.served, GOAL)} / ${GOAL}`}</span>
+      {/* 위 버튼 줄: 글자가 두 줄로 꺾이지 않게 한 줄로(첫 단골 만들기 표시는 없앴다) */}
+      <div className="absolute inset-x-2 top-2 z-20 flex items-center justify-end gap-2 whitespace-nowrap">
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
           <button aria-label={tx.kitchen} onClick={() => { playTap(); onKitchen() }} className="relative h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">{tx.kitchen}{waiting > 0 && <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef6f86] px-1 text-[11px] text-white">{waiting}</span>}</button>
