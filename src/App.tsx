@@ -16,6 +16,7 @@ import { TravelBook } from './components/TravelBook'
 import { SendToGameSheet } from './components/SendToGameSheet'
 import { PLACE_BY_ID, travelTo } from './lib/game'
 import { CafeGame } from './components/CafeGame'
+import { KitchenGame } from './components/KitchenGame'
 import { FarmScene } from './components/FarmScene'
 import { ShopModal } from './components/ShopModal'
 import { TravelGame } from './components/TravelGame'
@@ -59,10 +60,18 @@ const ROOM_UNDO_GAP_MS = 500
 const ROOM_UNDO_LIMIT = 50
 
 type ModalKind = null | 'settings' | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport' | 'sendToGame' | 'hair'
-type Mode = 'closet' | 'farm' | 'cafe' | 'room' | 'travel' | 'shop'
+type Mode = 'closet' | 'farm' | 'cafe' | 'kitchen' | 'room' | 'travel' | 'shop'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+
+/** 탭 아이콘(public/assets/tabs2/<icon>.webp). 그림이 아직 없는 탭(주방)은 이모지로 보여 준다 */
+const TAB_EMOJI: Record<string, string> = { kitchen: '🍳' }
+function TabIcon({ icon }: { icon: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return <span aria-hidden className="flex h-10 w-10 items-center justify-center leading-none" style={{ fontSize: '1.9rem' }}>{TAB_EMOJI[icon] ?? '⭐'}</span>
+  return <img src={assetUrl(`assets/tabs2/${icon}.webp`)} alt="" draggable={false} onError={() => setFailed(true)} className="h-10 w-10 object-contain" />
+}
 
 function useWideScreen() {
   const query = '(min-aspect-ratio: 6/5)'
@@ -367,7 +376,7 @@ export default function App() {
   const [travelFull, setTravelFull] = useState(false)
   const full = mode === 'travel' && travelFull
   const handleFull = useCallback((v: boolean) => setTravelFull(v), [])
-  const split = wide && mode !== 'farm' && mode !== 'cafe' && mode !== 'shop'
+  const split = wide && mode !== 'farm' && mode !== 'cafe' && mode !== 'kitchen' && mode !== 'shop'
 
   const modeBtn = (m: Mode, icon: string, label: string) => (
     <button
@@ -383,7 +392,7 @@ export default function App() {
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
       }`}
     >
-      <img src={assetUrl(`assets/tabs2/${icon}.webp`)} alt="" draggable={false} className="h-10 w-10 object-contain" />
+      <TabIcon icon={icon} />
       <span className="sr-only">{label}</span>
     </button>
   )
@@ -397,6 +406,7 @@ export default function App() {
               {modeBtn('closet', 'closet', t('modeCloset'))}
               {modeBtn('farm', 'farm', lang === 'ko' ? '농장' : 'Farm')}
               {modeBtn('cafe', 'cafe', lang === 'ko' ? '카페' : 'Cafe')}
+              {modeBtn('kitchen', 'kitchen', lang === 'ko' ? '주방' : 'Kitchen')}
               {modeBtn('room', 'room', t('modeRoom'))}
               {modeBtn('travel', 'travel', t('modeTravel'))}
               {modeBtn('shop', 'shop', lang === 'ko' ? '상점' : 'Shop')}
@@ -426,7 +436,9 @@ export default function App() {
             {mode === 'shop' ? (
               <ShopModal onClose={() => setMode(shopFrom.current)} onWear={wearFound} outfit={outfit} tweaks={tweaks} />
             ) : mode === 'cafe' ? (
-              <CafeGame outfit={outfit} tweaks={tweaks} />
+              <CafeGame outfit={outfit} tweaks={tweaks} onKitchen={() => setMode('kitchen')} />
+            ) : mode === 'kitchen' ? (
+              <KitchenGame outfit={outfit} tweaks={tweaks} onGo={setMode} />
             ) : mode === 'farm' ? (
               <FarmScene outfit={outfit} tweaks={tweaks} onShop={() => openShop('farm')} />
             ) : mode === 'travel' ? (
@@ -469,7 +481,7 @@ export default function App() {
             )}
           </div>
 
-        <aside hidden={mode === 'farm' || mode === 'cafe' || mode === 'shop' || full} className={`flex ${split ? 'min-w-0 flex-1' : 'h-[40dvh] shrink-0'} flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
+        <aside hidden={mode === 'farm' || mode === 'cafe' || mode === 'kitchen' || mode === 'shop' || full} className={`flex ${split ? 'min-w-0 flex-1' : 'h-[40dvh] shrink-0'} flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
           <div id="adjustment-controls" className="shrink-0" />
           {mode === 'travel' ? (
             <TravelBook outfit={outfit} onToggle={(id) => { const it = ITEM_BY_ID[id]; if (it) onToggle(it) }} />
