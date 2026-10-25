@@ -234,6 +234,35 @@ const loadSample = (c: AudioContext, name: string) => {
   }
   return p
 }
+/** 미리 녹음한 목소리 파일(동물 전화 대사) 재생. 끝까지 들리면 true, 파일이 없거나 못 틀면 false(그러면 기기 음성으로 읽는다) */
+export function playVoiceFile(path: string, gain = 1): { done: Promise<boolean>; stop: () => void } {
+  let src: AudioBufferSourceNode | null = null
+  let stopped = false
+  let finish: (ok: boolean) => void = () => {}
+  let timer = 0
+  const done = new Promise<boolean>((res) => { finish = (ok) => { clearTimeout(timer); res(ok) } })
+  // 파일을 오래 못 받으면 기기 음성으로 넘어가고, 소리가 멈춰 있어 끝났다는 소식이 안 와도 길이만큼 지나면 넘어간다
+  timer = window.setTimeout(() => finish(false), 6000)
+  const c = getCtx()
+  if (!c) { finish(false); return { done, stop: () => {} } }
+  fetch(assetUrl(path))
+    .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('voice'))))
+    .then((b) => decode(c, b))
+    .then((buf) => {
+      if (stopped) { finish(true); return }
+      src = c.createBufferSource()
+      const g = c.createGain()
+      g.gain.value = gain
+      src.buffer = buf
+      src.connect(g).connect(c.destination)
+      src.onended = () => finish(true)
+      src.start()
+      clearTimeout(timer)
+      timer = window.setTimeout(() => finish(true), buf.duration * 1000 + 800)
+    })
+    .catch(() => finish(false))
+  return { done, stop: () => { stopped = true; try { src?.stop() } catch { /* 이미 멈춤 */ } finish(true) } }
+}
 /** 소리 파일을 재생한다. 파일을 못 받으면 fallback(합성음)을 대신 울린다 */
 function playSample(name: string, gain: number, fallback: (c: AudioContext, t: number) => void) {
   if (!enabled) return

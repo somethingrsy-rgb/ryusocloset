@@ -124,6 +124,23 @@ export const fillLine = (text: string, a: CallAnimal, kidName?: string) => {
   return text.replace(/\{(e|name|me|food|foodName|did|go|call|kid)\}/g, (_, k: string) => (k === 'call' || k === 'kid' ? w[k] : String(a[k as keyof CallAnimal])))
 }
 
+/** 녹음 파일 이름: 동물·대사가 같으면 늘 같은 이름(대사를 고치면 새 이름이 되어 다시 녹음한다) */
+export const lineId = (animal: number, text: string) => {
+  let h = 2166136261
+  for (const ch of `${animal}:${text}`) { h ^= ch.codePointAt(0)!; h = Math.imul(h, 16777619) }
+  return (h >>> 0).toString(36)
+}
+/** 녹음해야 하는 대사 전부(아이 이름은 아바타 이름마다): 동물별로 겹치지 않게 */
+export function allCallLines(kidNames: string[]): { animal: number; id: string; text: string }[] {
+  const out = new Map<string, { animal: number; id: string; text: string }>()
+  CALL_ANIMALS.forEach((a, animal) => {
+    const add = (text: string) => { const id = lineId(animal, text); out.set(`${animal}/${id}`, { animal, id, text }) }
+    for (const kid of kidNames) for (const line of [...HELLOS, ...BYES]) add(fillLine(line, a, kid))
+    for (const tp of [...a.topics, ...SHARED_TOPICS]) { add(fillLine(tp.ask, a)); tp.replies.forEach((r) => add(fillLine(r.answer, a))) }
+  })
+  return [...out.values()]
+}
+
 export interface CallPlan { hello: string; topics: CallTopic[]; bye: string }
 /** 한 통화: 인사 → 이야기 3개(이 동물만의 이야기 1개는 꼭) → 끝인사. 대사는 이미 바꿔 둔다 */
 export function planCall(animal: number, rnd: () => number = Math.random, kidName?: string): CallPlan {

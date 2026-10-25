@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { CALL_ANIMALS, planCall, type CallPlan } from '../lib/animalCalls'
+import { CALL_ANIMALS, lineId, planCall, type CallPlan } from '../lib/animalCalls'
 import { assetUrl } from '../lib/items'
-import { playBell, playTap, soundOn } from '../lib/sound'
+import { playBell, playTap, playVoiceFile, soundOn } from '../lib/sound'
 
 const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window
 
@@ -14,6 +14,10 @@ export function unlockSpeech() {
     window.speechSynthesis.speak(u)
   } catch { /* 음성을 못 써도 글로 통화한다 */ }
 }
+
+/** 미리 녹음한 대사 목록(public/cafe/voice/manifest.json: 동물 그림 이름 → 녹음된 대사 번호). 없으면 기기 음성으로 읽는다 */
+let recorded: Promise<Record<string, string[]>> | null = null
+const loadRecorded = (): Promise<Record<string, string[]>> => (recorded ??= fetch(assetUrl('cafe/voice/manifest.json')).then((r) => (r.ok ? r.json() : {})).catch(() => ({})))
 
 const VOICE_KEY = 'ryuso.callVoice.v1'
 const voiceScore = (v: SpeechSynthesisVoice) => (/premium|프리미엄/i.test(v.name) ? 4 : 0) + (/enhanced|향상|고품질/i.test(v.name) ? 3 : 0) + (/neural|natural|online|google/i.test(v.name) ? 2 : 0) + (/yuna|유나/i.test(v.name) ? 1 : 0)
@@ -122,6 +126,14 @@ export function AnimalCall({ animal, kid, muted, onClose }: { animal: number; ki
     for (const text of texts) {
       if (!alive.current) return
       setLines((l) => [...l, { who: 'animal', text }])
+      // 녹음 파일이 있으면 그걸 틀고, 없거나 못 틀면 기기 음성으로 읽는다
+      const id = lineId(animal, text)
+      if (!quiet && (await loadRecorded())[a.img]?.includes(id)) {
+        const f = playVoiceFile(`cafe/voice/${a.img}/${id}.mp3`)
+        current.current = { cancel: f.stop }
+        if (await f.done) continue
+        if (!alive.current) return
+      }
       const v = voiceFor(animal)
       const s = speakLine(text, a.pitch * TONES[v.tone].pitch, a.rate * TONES[v.tone].rate, quiet, v.voice)
       current.current = s
