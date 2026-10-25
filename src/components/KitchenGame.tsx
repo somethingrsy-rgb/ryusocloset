@@ -154,7 +154,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const boardIngs = cooking && menu ? needList(menu).map(({ id }) => id) : []
   // 도마 위 재료 줄보다 위에 나오는 도구: 섞기·말기는 두 손(조물조물), 믹서 돌리기는 믹서기, 갈기는 커피 그라인더
   const nowStep = cooking && menu ? menu.steps[cooking.step] : null
-  const tool = nowStep ? BOARD_TOOL[nowStep] : undefined
+  const tool = nowStep ? (nowStep === 'pour' && COFFEE.has(menu!.id) ? { img: 'kitchen/kettle.webp', w: 0.3 } : BOARD_TOOL[nowStep]) : undefined
   const kneading = !!tool
 
   return (
@@ -273,14 +273,14 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
               <Ico id={menu.id} className={short ? 'h-8 w-8' : 'h-10 w-10'} />
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-xs font-bold text-black/45">{menu[lang]} · {tx.step(cooking.step + 1, menu.steps.length)}</p>
-                <p className="m-0 flex items-center gap-1 text-base font-black text-[#8a4b2a]"><StepIcon id={menu.steps[cooking.step]} className="h-6 w-6" /> {step.how[lang]}</p>
+                <p className="m-0 flex items-center gap-1 text-base font-black text-[#8a4b2a]"><StepIcon menu={menu.id} id={menu.steps[cooking.step]} className="h-6 w-6" /> {step.how[lang]}</p>
               </div>
               {short && <Dots n={step.taps} k={cooking.taps} />}
             </div>
             {!short && <Dots n={step.taps} k={cooking.taps} />}
             {!short && (
               <p className="m-0 flex flex-wrap justify-center gap-1 text-xs text-black/50">
-                {menu.steps.map((s, k) => <span key={k} className={k === cooking.step ? 'font-black text-[#c04a5a]' : k < cooking.step ? 'line-through' : ''}><StepIcon id={s} className="inline-block h-4 w-4 align-[-2px]" /> {STEPS[s][lang]}{k < menu.steps.length - 1 ? ' →' : ''}</span>)}
+                {menu.steps.map((s, k) => <span key={k} className={k === cooking.step ? 'font-black text-[#c04a5a]' : k < cooking.step ? 'line-through' : ''}><StepIcon menu={menu.id} id={s} className="inline-block h-4 w-4 align-[-2px]" /> {STEPS[s][lang]}{k < menu.steps.length - 1 ? ' →' : ''}</span>)}
               </p>
             )}
           </div>
@@ -309,7 +309,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
                     return <span key={id} className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1 text-sm font-bold ${ok ? 'bg-[#e6f6e3] text-[#3d7a35]' : 'bg-[#ffe3e3] text-[#c0392b]'}`}><Ing id={id} className="h-6 w-6" /> {ing[lang]} {have}/{n} {ok ? '✔' : '✖'}</span>
                   })}
                 </div>
-                <p className="m-0 text-xs text-black/45">{tx.how}: {menu.steps.map((s, k) => <span key={k}>{k > 0 && ' → '}<StepIcon id={s} className="inline-block h-4 w-4 align-[-2px]" /> {STEPS[s][lang]}</span>)}</p>
+                <p className="m-0 text-xs text-black/45">{tx.how}: {menu.steps.map((s, k) => <span key={k}>{k > 0 && ' → '}<StepIcon menu={menu.id} id={s} className="inline-block h-4 w-4 align-[-2px]" /> {STEPS[s][lang]}</span>)}</p>
                 {lacks.length ? (
                   <div className="flex gap-2">
                     {lacks.some(({ id }) => isCrop(id)) && <button onClick={() => { playTap(); onGo('farm') }} className={`${btn} flex-1 bg-[#e6f6e3] text-[#3d7a35]`}>{tx.farm}</button>}
@@ -385,8 +385,10 @@ const STEP_IMG: Partial<Record<StepId, string>> = { bake: 'kitchen/fire.webp', c
 const BOARD_TOOL: Partial<Record<StepId, { img: string; w: number }>> = { roll: { img: 'kitchen/hands.webp', w: 0.3 }, mix: { img: 'kitchen/hands.webp', w: 0.3 }, blend: { img: 'kitchen/blender.webp', w: 0.3 }, grind: { img: 'kitchen/grinder.webp', w: 0.3 }, cut: { img: 'kitchen/knife.webp', w: 0.3 }, pour: { img: 'kitchen/pitcher.webp', w: 0.3 } }
 /** 칼 그림은 대각선으로 길어 같은 칸에서 작아 보여서 2배로 그린다(다른 그림과 비슷한 크기로) */
 const STEP_SCALE: Partial<Record<StepId, number>> = { cut: 2 }
-function StepIcon({ id, className = 'h-full w-full' }: { id: StepId; className?: string }) {
-  const img = STEP_IMG[id]
+/** 커피(카페라테·아이스 커피)를 부을 때는 물병 대신 드립 주전자 */
+const COFFEE = new Set(['latte', 'coffee'])
+function StepIcon({ id, menu, className = 'h-full w-full' }: { id: StepId; menu?: string; className?: string }) {
+  const img = id === 'pour' && menu && COFFEE.has(menu) ? 'kitchen/kettle.webp' : STEP_IMG[id]
   const k = STEP_SCALE[id]
   return img ? <img src={assetUrl(img)} alt="" draggable={false} className={`object-contain ${className}`} style={k ? { transform: `scale(${k})`, margin: '0 0.25em' } : undefined} /> : <span aria-hidden>{STEPS[id].emoji}</span>
 }
