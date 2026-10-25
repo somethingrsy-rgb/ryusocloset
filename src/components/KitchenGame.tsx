@@ -21,15 +21,15 @@ const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: 
     img: 'kitchen/kitchen_portrait.webp', ratio: 941 / 1672, avatarH: 24,
     at: { fridge: { x: 15.5, y: 31, w: 24, h: 32 }, sink: { x: 48, y: 36.5, w: 24, h: 7 }, stove: { x: 86, y: 33.5, w: 22, h: 6 }, oven: { x: 86.5, y: 44, w: 24, h: 12 }, board: { x: 50, y: 59, w: 40, h: 9 } },
     ovenGlass: { x: 86.9, y: 43.9, w: 14.3, h: 5.6 },
-    // 효과 자리(그림 크기에 대한 %): ice = 냉장고 위칸 가운데 [x, y, 너비(문 폭의 1/3)], tap = 수도꼭지 [x, 물이 나오는 y, 개수대 바닥 y], pot = 냄비 [x, 냄비 바닥 y, 냄비 폭]
-    fx: { ice: [14, 22, 6.9], tap: [49.1, 31, 35.5], pot: [86.1, 34.8, 10] },
+    // 효과 자리(그림 크기에 대한 %): ice = 냉장고 위칸 가운데 [x, y, 너비(문 폭의 1/3)], tap = 수도꼭지 끝 [x, 물이 나오는 y, 개수대 테두리 y(물방울이 여기서 사라진다)], pot = 냄비 [x, 냄비 바닥 y, 냄비 폭]
+    fx: { ice: [14, 22, 6.9], tap: [47.8, 31, 33.6], pot: [86.1, 34.8, 10] },
     cook: [50, 62], island: { img: 'kitchen/island_portrait.webp', l: 12.221, t: 52.452, w: 75.452, h: 33.612 },
   },
   wide: {
     img: 'kitchen/kitchen_wide.webp', ratio: 1672 / 941, avatarH: 38,
     at: { fridge: { x: 19.7, y: 37, w: 16, h: 45 }, sink: { x: 49.3, y: 41.5, w: 15, h: 10 }, stove: { x: 81.6, y: 38, w: 14, h: 9 }, oven: { x: 83.4, y: 53.5, w: 15, h: 17 }, board: { x: 49.6, y: 60.5, w: 24, h: 12 } },
     ovenGlass: { x: 83.2, y: 53.9, w: 9.1, h: 8.5 },
-    fx: { ice: [19.1, 23.4, 5], tap: [49.6, 32.3, 38.5], pot: [81.6, 40.5, 5.5] },
+    fx: { ice: [19.1, 23.4, 5], tap: [49.1, 34.3, 38.6], pot: [81.6, 40.5, 5.5] },
     cook: [50, 66], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
   },
 }
@@ -148,6 +148,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const btn = 'min-h-11 rounded-full px-3 font-bold shadow active:scale-95 disabled:opacity-40'
   const doneMenu = done !== null ? menuById(kitchen.tickets.find((t) => t.seat === done)?.menu ?? '') : undefined
   const [ax, ay] = L.cook
+  // 마트에서 네온 테두리로 알려 줄 모자란 기본 재료: 아직 안 만든 주문서 전체에서
+  const lackMart = new Set(kitchen.tickets.filter((t) => !t.ready).flatMap((t) => missing(t.menu, kitchen, farm)).map((x) => x.id).filter((id) => !isCrop(id)))
   const aw = L.avatarH * (1024 / 1536) / L.ratio // 아바타 너비(그림 너비에 대한 %)
   const boardIngs = cooking && menu ? needList(menu).map(({ id }) => id) : []
   // 도마 위 재료 줄보다 위에 나오는 도구: 섞기·말기는 두 손(조물조물), 믹서 돌리기는 믹서기, 갈기는 커피 그라인더
@@ -178,8 +180,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
 
         {/* 씻기: 수도꼭지에서 물방울이 개수대로 떨어진다 */}
         {nowStep === 'wash' && (
-          <div aria-hidden className="pointer-events-none absolute -translate-x-1/2" style={{ left: `${L.fx.tap[0]}%`, top: `${L.fx.tap[1]}%`, height: `${L.fx.tap[2] - L.fx.tap[1]}%`, width: '2.4%', zIndex: 4 }}>
-            {[0, 1, 2].map((k) => <img key={k} src={assetUrl('kitchen/drop.svg')} alt="" draggable={false} className="kitchen-drop absolute left-0 w-full" style={{ animationDelay: `${k * 0.25}s` }} />)}
+          <div aria-hidden className="pointer-events-none absolute -translate-x-1/2 overflow-hidden" style={{ left: `${L.fx.tap[0]}%`, top: `${L.fx.tap[1]}%`, height: `${L.fx.tap[2] - L.fx.tap[1]}%`, width: '2.4%', zIndex: 4 }}>
+            {[0, 1].map((k) => <img key={k} src={assetUrl('kitchen/drop.svg')} alt="" draggable={false} className="kitchen-drop absolute left-0 w-full" style={{ animationDelay: `${k * 0.375}s` }} />)}
           </div>
         )}
         {/* 끓이기·녹이기: 냄비 아래에 작은 불꽃 셋 */}
@@ -335,7 +337,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             <p className="mt-1 mb-2 text-xs text-black/45">{tx.pantryNote}</p>
             <div className="grid min-h-0 grid-cols-4 gap-2 overflow-y-auto">
               {PANTRY.map((p) => (
-                <div key={p.id} className="flex flex-col items-center rounded-2xl bg-white p-1.5 ring-1 ring-black/5">
+                <div key={p.id} className={`flex flex-col items-center rounded-2xl bg-white p-1.5 ${lackMart.has(p.id) ? 'kitchen-neon' : 'ring-1 ring-black/5'}`}>
                   <Ing id={p.id} className="h-10 w-10" />
                   <span className="text-[11px] font-bold text-[#8a4b2a]">{p[lang]}</span>
                   <span className="text-xs text-black/50">× {kitchen.pantry[p.id]}</span>
