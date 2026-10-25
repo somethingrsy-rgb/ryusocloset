@@ -56,7 +56,7 @@ export function PhoneSheet({ theme, kid, muted, dial, onClose }: { theme: PhoneT
 
   return (
     <div role="dialog" aria-modal aria-label="휴대폰" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-2" onClick={(e) => { if (e.target === e.currentTarget && calling === null) onClose() }}>
-      <div className={`phone-in relative flex max-w-full flex-col rounded-[2.6rem] p-2.5 shadow-2xl ${theme.bezel}`} style={{ height: 'min(100%, 46rem)', aspectRatio: '9 / 18.5' }}>
+      <div className={`sheet-in relative flex max-w-full flex-col rounded-[2.6rem] p-2.5 shadow-2xl ${theme.bezel}`} style={{ height: 'min(100%, 46rem)', aspectRatio: '9 / 18.5' }}>
         <div className={`relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2.1rem] ${theme.screen}`}>
           {/* 휴대폰 위쪽: 카메라 구멍과 시계·배터리 */}
           <div aria-hidden className="absolute top-2 left-1/2 z-50 h-5 w-20 -translate-x-1/2 rounded-full bg-black/85" />
