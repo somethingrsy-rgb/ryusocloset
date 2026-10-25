@@ -1,7 +1,8 @@
 import { playCoin, playHarvest, playPlant, playWater, startBgm, stopBgm } from '../lib/sound'
+import { actKitchen } from '../lib/kitchen'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
-import { actFarm, CROPS, getFarm, growth, orderCrop, PLOT_COUNT, plotPrice, subscribeFarm, type CropId, type FarmAction } from '../lib/farm'
+import { actFarm, CROPS, getFarm, growth, orderCrop, PLOT_COUNT, plotPrice, subscribeFarm, type CropId, type FarmAction, animalWait, type AnimalGood } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { FarmFx } from './FarmFx'
@@ -18,8 +19,11 @@ type Tool = 'seed' | 'water' | 'harvest'
  * 밭 칸은 오른쪽으로 기운 평행사변형 그림(1433×646)이고, 풀밭 크기에 맞춰 칸 폭(tw)과 밭 덩어리 가운데(cx, cy)를 정한다.
  */
 const LAYOUT = {
-  portrait: { img: 'farm_portrait3', w: 1024, h: 1536, cols: 4, rows: 5, cx: 512, cy: 885, tw: 215, rowGap: 21, avatarH: 19, home: { x: 44, y: 12 }, stall: { left: '68%', top: '17%', width: '20%', height: '17%' } },
-  wide: { img: 'farm_wide2', w: 1672, h: 941, cols: 5, rows: 4, cx: 690, cy: 560, tw: 160, rowGap: 3, avatarH: 22, home: { x: 41, y: 12 }, stall: { left: '63%', top: '17%', width: '12%', height: '20%' } },
+  portrait: { img: 'farm_portrait3', w: 1024, h: 1536, cols: 4, rows: 5, cx: 512, cy: 885, tw: 215, rowGap: 21, avatarH: 19, home: { x: 44, y: 12 }, stall: { left: '68%', top: '17%', width: '20%', height: '17%' },
+    // 우리 안 젖소·닭 자리(그림 크기에 대한 %): 눌러서 우유·달걀을 받는다
+    barn: { milk: { x: 14, y: 24, w: 12, h: 6 }, egg: { x: 17, y: 28.3, w: 6, h: 4 } } },
+  wide: { img: 'farm_wide2', w: 1672, h: 941, cols: 5, rows: 4, cx: 690, cy: 560, tw: 160, rowGap: 3, avatarH: 22, home: { x: 41, y: 12 }, stall: { left: '63%', top: '17%', width: '12%', height: '20%' },
+    barn: { milk: { x: 11.4, y: 28, w: 7.5, h: 8 }, egg: { x: 13.3, y: 35.6, w: 3.6, h: 6 } } },
 } as const
 type Layout = (typeof LAYOUT)[keyof typeof LAYOUT]
 /** 밭 한 칸의 가운데 위치(그림 가로·세로 %)와 칸 크기(%) */
@@ -82,6 +86,15 @@ export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: 
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer) }, [])
   useEffect(() => { if (!notice) return; const t = setTimeout(() => setNotice(''), 2600); return () => clearTimeout(t) }, [notice])
 
+  /** 젖소·닭에게서 우유·달걀 받기: 주방 냉장고(마트 재료 칸)에 하나 들어간다 */
+  const collect = (g: AnimalGood) => {
+    const wait = animalWait(getFarm(), g, Date.now())
+    if (wait > 0) { setNotice(ko ? `${wait}초 뒤에 다시 받을 수 있어요` : `Ready again in ${wait}s`); return }
+    if (actFarm({ type: 'collect', good: g }) !== 'saved') return
+    actKitchen({ type: 'add', id: g, n: 1 })
+    playHarvest(); setNow(Date.now())
+    setNotice(g === 'milk' ? (ko ? '🥛 우유를 받았어요! 주방 냉장고에 넣었어요' : '🥛 Got milk! It went to the kitchen') : (ko ? '🥚 달걀을 받았어요! 주방 냉장고에 넣었어요' : '🥚 Got an egg! It went to the kitchen'))
+  }
   const apply = (action: FarmAction) => {
     const result = actFarm(action)
     if (result === 'saved') {
@@ -157,6 +170,19 @@ export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: 
         <button aria-label={ko ? '노점' : 'Market stall'} className="absolute rounded-2xl" style={L.stall} onClick={() => setStall(true)}>
           <span className="absolute -top-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-bold shadow">{ko ? '주문' : 'Orders'} · {farm.inventory[order.id]}/2</span>
         </button>
+        {/* 우리 안 젖소·닭: 다 되면 우유·달걀이 머리 위에서 통통, 누르면 받아서 주방 냉장고에 넣는다. 기다리는 동안은 남은 시간 */}
+        {(['milk', 'egg'] as const).map((g) => {
+          const b = L.barn[g]
+          const wait = animalWait(farm, g, now)
+          return (
+            <button key={g} aria-label={g === 'milk' ? (ko ? '젖소: 우유 받기' : 'Cow: get milk') : (ko ? '닭: 달걀 받기' : 'Hen: get an egg')} onClick={() => collect(g)}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-2xl border-0 bg-transparent p-0" style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 6 }}>
+              {wait === 0
+                ? <img aria-hidden src={assetUrl(`kitchen/ing/${g}.webp`)} alt="" draggable={false} className="pointer-events-none absolute bottom-[70%] left-1/2 h-9 w-9 -translate-x-1/2 animate-bounce object-contain drop-shadow-[0_0_6px_#fff6b0]" />
+                : <span aria-hidden className="pointer-events-none absolute bottom-[80%] left-1/2 -translate-x-1/2 rounded-full bg-white/85 px-1.5 text-[10px] font-bold whitespace-nowrap text-[#8a5a3b] shadow">{Math.floor(wait / 60)}:{String(wait % 60).padStart(2, '0')}</span>}
+            </button>
+          )
+        })}
         {/* 밭 45칸 */}
         {Array.from({ length: PLOT_COUNT }, (_, i) => {
           const box = plotBox(i, L)

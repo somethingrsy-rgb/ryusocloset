@@ -111,3 +111,18 @@ describe('earn (다른 게임에서 번 코인)', () => {
     expect(reduceFarm(s, { type: 'earn', amount: 5000 }, 0)).toBe(s)
   })
 })
+
+describe('우리 안 동물', () => {
+  it('우유·달걀은 바로 받을 수 있고, 받은 뒤 2분이 지나야 다시 받는다', async () => {
+    const { animalWait } = await import('./farm')
+    let s = defaultFarm()
+    s = reduceFarm(s, { type: 'collect', good: 'milk' }, 1000)
+    expect(s.barn.milk).toBe(1000)
+    expect(reduceFarm(s, { type: 'collect', good: 'milk' }, 60000)).toBe(s)
+    expect(animalWait(s, 'milk', 61000)).toBe(60)
+    expect(reduceFarm(s, { type: 'collect', good: 'egg' }, 2000).barn.egg).toBe(2000)
+    expect(reduceFarm(s, { type: 'collect', good: 'milk' }, 121000).barn.milk).toBe(121000)
+    expect(sanitizeFarm(JSON.parse(JSON.stringify(s))).barn).toEqual({ milk: 1000, egg: 0 })
+    expect(sanitizeFarm({}).barn).toEqual({ milk: 0, egg: 0 })
+  })
+})
