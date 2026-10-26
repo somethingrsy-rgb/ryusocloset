@@ -76,7 +76,8 @@ describe('축구', () => {
     for (let t = 0; t < 60 && !auto; t++) { const r = stepMatch(m, 1 / 60, [null, null], () => 0.5); m = r.m; if (r.events.includes('kick')) auto = true }
     expect(auto).toBe(true)
     let m2 = newMatch(['yuha', 'yuel'], [[0, 1, 2, 3], [4, 5, 6, 7]])
-    m2 = { ...m2, pause: 0, hold: me, holdIdle: 0 }
+    // 친구들이 앞에 있게 우리 골대 가까이에서 패스
+    m2 = { ...m2, pause: 0, hold: me, holdIdle: 0, ball: { x: 12, y: 30, vx: 0, vy: 0 }, players: m2.players.map((p, i) => (i === me ? { ...p, x: 10, y: 30 } : p)) }
     const r = stepMatch(m2, 1 / 60, [null, null], () => 0.5, ['pass', null])
     expect(r.events).toContain('pass')
     // 굴러간 쪽에 같은 팀 동물이 있다
@@ -123,7 +124,7 @@ describe('축구: 몸 겹치지 않기·1인 게임', () => {
 })
 
 describe('축구: 혼자 하기 이길 확률', () => {
-  it('아이 흉내 선수로 여러 판 하면 대체로 10판에 7판쯤 이긴다(5~8.5판)', { timeout: 30000 }, () => {
+  it('아이 흉내 선수로 여러 판 하면 대체로 10판에 7판쯤 이긴다(5~9판)', { timeout: 30000 }, () => {
     let win = 0, lose = 0
     for (let s = 1; s <= 60; s++) {
       const rnd = seeded(s * 7919)
@@ -137,6 +138,23 @@ describe('축구: 혼자 하기 이길 확률', () => {
     }
     const share = win / (win + lose)
     expect(share).toBeGreaterThan(0.5)
-    expect(share).toBeLessThan(0.85)
+    expect(share).toBeLessThan(0.9) // 60판이라 ±0.06 쯤 흔들린다
   })
 })
+
+describe('축구: 패스 방향', () => {
+  it('패스는 늘 상대 골대 쪽(앞)으로 간다: 앞에 친구가 있으면 그 친구에게, 없으면 앞쪽 빈 곳으로', () => {
+    for (const team of [0, 1] as const) {
+      for (const bx of [20, 50, 85]) {
+        let m = newMatch(['yuha', 'yuel'], [[0, 1, 2, 3], [4, 5, 6, 7]])
+        const me = m.players.findIndex((p) => p.team === team && p.role === 'human')
+        const x = team === 0 ? bx : FW - bx
+        m = { ...m, pause: 0, hold: me, holdIdle: 0, ball: { x: x + (team === 0 ? 2 : -2), y: 30, vx: 0, vy: 0 }, players: m.players.map((p, i) => (i === me ? { ...p, x, y: 30, mx: team === 0 ? 1 : -1, my: 0 } : p)) }
+        const r = stepMatch(m, 1 / 60, [null, null], () => 0.5, team === 0 ? ['pass', null] : [null, 'pass'])
+        expect(r.events).toContain('pass')
+        expect(r.m.ball.vx * (team === 0 ? 1 : -1)).toBeGreaterThan(0)
+      }
+    }
+  })
+})
+

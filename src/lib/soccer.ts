@@ -234,10 +234,12 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
       const aimY = g.y + (rnd() - 0.5) * 6 * (vsCpu(m) ? other * other * AIM_K : 1)
       strike(h, unit(g.x - b.x, aimY - b.y), SHOOT_POWER, 'shoot')
     } else {
-      // 패스: 앞쪽에 있고 가까운 같은 팀 동물에게, 그 자리에서 멈추게 굴려 준다
+      // 패스: 나보다 상대 골대 쪽(앞)에 있는 같은 팀 동물에게만, 그 자리에서 멈추게 굴려 준다.
+      // 앞에 아무도 없으면 우리 편 골대 쪽(뒤)으로 주지 않고, 상대 골대 쪽 빈 곳으로 앞으로 굴려 준다(동물 친구가 달려가 받는다)
       const fwd = team === 0 ? 1 : -1
-      const mates = m.players.filter((p) => p.team === team && p.role === 'field')
-      const to = mates.reduce((a, p) => ((p.x - b.x) * fwd - Math.hypot(p.x - b.x, p.y - b.y) * 0.35 > (a.x - b.x) * fwd - Math.hypot(a.x - b.x, a.y - b.y) * 0.35 ? p : a), mates[0])
+      const ahead = m.players.filter((p) => p.team === team && p.role === 'field' && (p.x - b.x) * fwd > 3)
+      const score = (p: Vec) => (p.x - b.x) * fwd - Math.hypot(p.x - b.x, p.y - b.y) * 0.35
+      const to: Vec = ahead.length ? ahead.reduce((a, p) => (score(p) > score(a) ? p : a)) : { x: clamp(b.x + fwd * 18, 2, FW - 2), y: b.y + (FH / 2 - b.y) * 0.3 }
       const d = Math.hypot(to.x - b.x, to.y - b.y)
       strike(h, unit(to.x - b.x, to.y - b.y), Math.max(18, d * FRICTION * 1.05), 'pass')
     }

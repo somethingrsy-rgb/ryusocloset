@@ -45,6 +45,8 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
   const targets = useRef<[Vec | null, Vec | null]>([null, null])
   /** 다음 프레임에 할 슛·패스(버튼을 누르면 담아 두고 한 번 쓴다) */
   const acts = useRef<[Act | null, Act | null]>([null, null])
+  /** 조이스틱: 팀마다 화면 방향 기울기(-1~1). null 이면 안 쓰는 중 */
+  const joys = useRef<[Vec | null, Vec | null]>([null, null])
   /** 골 축하: 넣은 팀 동물들이 손을 흔들며 폴짝, 꽃가루, 먹힌 골대 그물이 흔들린다 */
   const [party, setParty] = useState<{ team: Team; id: number } | null>(null)
   const pointers = useRef(new Map<number, Team>())
@@ -62,8 +64,12 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
 
   // 경기장 자리: 세로 화면은 세워서(가로 60 × 세로 100), 가로 화면은 눕혀서. 위 점수판 자리(52px)를 비운다
   const portrait = size.h > size.w
-  const top = 52, pad = 10
-  const availW = size.w - pad * 2, availH = size.h - top - pad
+  const portraitRef = useRef(portrait)
+  portraitRef.current = portrait
+  // 세로 화면은 경기장 아래(둘이 하기는 위도)에 조이스틱·슛 버튼 자리를 비워 골대 이름·골키퍼를 가리지 않게 한다
+  const ctrl = portrait && phase === 'play' ? 118 : 0
+  const top = 52 + (players === 2 ? ctrl : 0), pad = 10 + ctrl
+  const availW = size.w - 20, availH = size.h - top - pad
   const scale = portrait ? Math.min(availW / (FH + 4), availH / (FW + 16)) : Math.min(availW / (FW + 16), availH / (FH + 4)) // 골대(3.5)와 그 옆 팀 이름 자리까지 비운다
   const fw = (portrait ? FH : FW) * scale, fh = (portrait ? FW : FH) * scale
   const left = (size.w - fw) / 2, fieldTop = top + (availH - fh) / 2
@@ -89,7 +95,15 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
         const p = live.current.players.find((q) => q.team === team && q.role === 'human')!
         return { x: p.x + dx * 10, y: p.y + dy * 10 }
       }
-      const t: [Vec | null, Vec | null] = [targets.current[0] ?? kb(0, 'w', 's', 'a', 'd'), targets.current[1] ?? kb(1, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight')]
+      // 조이스틱: 기운 방향(화면 기준)으로 아바타 앞 12 단위를 목표로. 세로 화면은 경기장을 세워 그려서 화면 위쪽 = 경기장 +x
+      const joy = (team: Team): Vec | null => {
+        const j = joys.current[team]
+        if (!j || Math.hypot(j.x, j.y) < 0.15) return null
+        const p = live.current.players.find((q) => q.team === team && q.role === 'human')!
+        const d = portraitRef.current ? { x: -j.y, y: j.x } : j
+        return { x: p.x + d.x * 12, y: p.y + d.y * 12 }
+      }
+      const t: [Vec | null, Vec | null] = [joy(0) ?? targets.current[0] ?? kb(0, 'w', 's', 'a', 'd'), joy(1) ?? targets.current[1] ?? kb(1, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight')]
       const r = stepMatch(live.current, dt, t, Math.random, acts.current)
       acts.current = [null, null]
       live.current = r.m
@@ -118,8 +132,13 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
     if (phase !== 'play' || (e.target as HTMLElement).closest('button')) return
     const r = host.current!.getBoundingClientRect()
     const sx = e.clientX - r.left, sy = e.clientY - r.top
-    // 1인 게임은 화면 어디를 눌러도 내 아바타(빨강)가 움직인다
-    const team: Team = players === 1 ? 0 : portrait ? (sy > fieldTop + fh / 2 ? 0 : 1) : (sx < left + fw / 2 ? 0 : 1)
+    // 아바타를 직접 만지면 그 아바타를 끌고 다닌다(둘이 하기에서 내 아바타가 상대 쪽 화면에 있어도). 아니면 1인 게임은 화면 어디든 내 아바타, 2인은 누른 쪽 팀
+    const touched = ([0, 1] as Team[]).filter((tm) => !(players === 1 && tm === 1)).find((tm) => {
+      const a = live.current.players.find((q) => q.team === tm && q.role === 'human')!
+      const c = toScreen(a.x, a.y)
+      return Math.abs(sx - c.x) < 6 * scale && sy < c.y + 2 * scale && sy > c.y - 13 * scale
+    })
+    const team: Team = touched ?? (players === 1 ? 0 : portrait ? (sy > fieldTop + fh / 2 ? 0 : 1) : (sx < left + fw / 2 ? 0 : 1))
     pointers.current.set(e.pointerId, team)
     targets.current[team] = toField(sx, sy)
     e.currentTarget.setPointerCapture?.(e.pointerId)
@@ -143,7 +162,18 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
     window.setTimeout(() => playWhistle(), 300)
   }
   /** 세로 화면에서 골대 이름을 골대 왼쪽에 둘지: 그쪽 구석에 슛·패스 버튼이 오면 반대쪽에(혼자 하기는 오른쪽 아래, 둘이 하기는 빨강 왼쪽 아래·보라 오른쪽 위) */
-  const portraitLabelLeft = (t: Team) => (t === 0 ? players === 1 : players === 2)
+  /**
+   * 조이스틱·슛 버튼 자리(서로 반대쪽 구석). 혼자 하기: 조이스틱 왼쪽 아래, 버튼 오른쪽 아래.
+   * 둘이 하기 세로: 빨강은 아래(조이스틱 왼쪽·버튼 오른쪽), 보라는 위에 뒤집어서(조이스틱 오른쪽·버튼 왼쪽).
+   * 둘이 하기 가로: 빨강은 왼쪽(조이스틱 아래·버튼 위), 보라는 오른쪽(조이스틱 아래·버튼 위)
+   */
+  const corners = (t: Team): { joystick: React.CSSProperties; buttons: React.CSSProperties } => {
+    if (players === 1 || (portrait && t === 0)) return { joystick: { left: 12, bottom: 12 }, buttons: { right: 12, bottom: 12 } }
+    if (portrait) return { joystick: { right: 12, top: 60, transform: 'rotate(180deg)' }, buttons: { left: 12, top: 60, transform: 'rotate(180deg)' } }
+    return t === 0 ? { joystick: { left: 12, bottom: 12 }, buttons: { left: 12, top: 60 } } : { joystick: { right: 12, bottom: 12 }, buttons: { right: 12, top: 60 } }
+  }
+  /** 세로 화면 골대 이름은 버튼·조이스틱이 덜 겹치는 골대 바로 옆(아래 골대는 왼쪽, 위 골대는 오른쪽) */
+  const portraitLabelLeft = (t: Team) => t === 0
   const teamName = (t: Team) => `${avatarById(avatars[t]).name.ko}팀`
   const left_ = Math.max(0, Math.ceil(MATCH_SECONDS - match.time))
 
@@ -203,7 +233,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
         const h = match.players[hi]
         const ready = match.hold === hi || Math.hypot(h.x - match.ball.x, h.y - match.ball.y) <= ACT_REACH
         if (!ready) return null
-        const pos: React.CSSProperties = players === 1 ? { right: 12, bottom: 12 } : portrait ? (t === 0 ? { left: 12, bottom: 12 } : { right: 12, top: 60, transform: 'rotate(180deg)' }) : (t === 0 ? { left: 12, bottom: 12 } : { right: 12, bottom: 12 })
+        const pos = corners(t).buttons
         const press = (a: Act) => (e: React.PointerEvent) => { e.stopPropagation(); acts.current[t] = a }
         return (
           <div key={`btn${t}`} className="absolute z-[1800] flex items-end gap-2" style={pos}>
@@ -212,6 +242,9 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
           </div>
         )
       })}
+
+      {/* 조이스틱: 슛·패스 버튼 반대쪽 구석. 기울이면 그쪽으로 달린다(손가락으로 끌기와 같이 쓸 수 있다) */}
+      {phase === 'play' && ([0, 1] as Team[]).filter((t) => !(players === 1 && t === 1)).map((t) => <Joystick key={`joy${t}`} color={KIT[t].color} style={corners(t).joystick} onMove={(v) => { joys.current[t] = v }} />)}
 
       {/* 점수판 */}
       <header className="absolute inset-x-2 top-2 z-[2000] flex items-center justify-between gap-2">
@@ -278,5 +311,34 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
         </div>
       )}
     </section>
+  )
+}
+
+/** 조이스틱: 가운데 손잡이를 끄는 만큼(반지름까지) 기울기 -1~1 을 알려 주고, 떼면 가운데로 돌아온다 */
+function Joystick({ color, style, onMove }: { color: string; style: React.CSSProperties; onMove: (v: Vec | null) => void }) {
+  const R = 44
+  const [knob, setKnob] = useState({ x: 0, y: 0 })
+  const base = useRef<HTMLDivElement>(null)
+  const id = useRef<number | null>(null)
+  const update = (e: React.PointerEvent) => {
+    const r = base.current!.getBoundingClientRect()
+    let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2)
+    const d = Math.hypot(dx, dy)
+    if (d > R) { dx *= R / d; dy *= R / d }
+    setKnob({ x: dx, y: dy })
+    onMove({ x: dx / R, y: dy / R })
+  }
+  const end = (e: React.PointerEvent) => {
+    if (id.current !== e.pointerId) return
+    id.current = null; setKnob({ x: 0, y: 0 }); onMove(null)
+  }
+  return (
+    <div ref={base} aria-label="조이스틱" className="absolute z-[1800] h-[104px] w-[104px] touch-none rounded-full bg-white/45 shadow-inner" style={{ ...style, boxShadow: `inset 0 0 0 3px ${color}55` }}
+      onPointerDown={(e) => { e.stopPropagation(); id.current = e.pointerId; e.currentTarget.setPointerCapture?.(e.pointerId); update(e) }}
+      onPointerMove={(e) => { if (id.current === e.pointerId) { e.stopPropagation(); update(e) } }}
+      onPointerUp={end} onPointerCancel={end}>
+      {/* 손잡이: 화면이 뒤집혀 있어도(보라 팀 세로) 손가락이 간 곳에 보이게 회전을 되돌린다 */}
+      <span className="pointer-events-none absolute top-1/2 left-1/2 h-12 w-12 rounded-full shadow-lg" style={{ background: color, transform: `translate(-50%, -50%) ${style.transform ? 'rotate(180deg) ' : ''}translate(${knob.x}px, ${knob.y}px)` }} />
+    </div>
   )
 }
