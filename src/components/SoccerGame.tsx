@@ -35,6 +35,8 @@ function KitFigure({ id, team }: { id: string; team: Team }) {
 export function SoccerGame({ onExit }: { onExit: () => void }) {
   const [phase, setPhase] = useState<'setup' | 'play' | 'done'>('setup')
   const [avatars, setAvatars] = useState<[string, string]>(['yuha', 'yuel'])
+  /** 1인: 빨강 팀만 사람이 하고 보라 팀 아바타는 컴퓨터가, 2인: 두 사람이 한 팀씩 */
+  const [players, setPlayers] = useState<1 | 2>(() => { try { return localStorage.getItem('ryuso.soccer.players') === '2' ? 2 : 1 } catch { return 1 } })
   const [animals, setAnimals] = useState<[number[], number[]]>([[0, 1, 2, 3], [4, 5, 6, 7]])
   const [match, setMatch] = useState<Match>(() => newMatch(avatars, animals))
   const [goal, setGoal] = useState<Team | null>(null)
@@ -101,7 +103,8 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
     if (phase !== 'play' || (e.target as HTMLElement).closest('button')) return
     const r = host.current!.getBoundingClientRect()
     const sx = e.clientX - r.left, sy = e.clientY - r.top
-    const team: Team = portrait ? (sy > fieldTop + fh / 2 ? 0 : 1) : (sx < left + fw / 2 ? 0 : 1)
+    // 1인 게임은 화면 어디를 눌러도 내 아바타(빨강)가 움직인다
+    const team: Team = players === 1 ? 0 : portrait ? (sy > fieldTop + fh / 2 ? 0 : 1) : (sx < left + fw / 2 ? 0 : 1)
     pointers.current.set(e.pointerId, team)
     targets.current[team] = toField(sx, sy)
     e.currentTarget.setPointerCapture?.(e.pointerId)
@@ -120,7 +123,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
 
   const start = () => {
     playTap()
-    const m = newMatch(avatars, animals)
+    const m = newMatch(avatars, animals, [false, players === 1])
     live.current = m; setMatch(m); targets.current = [null, null]; setGoal(null); setPhase('play')
   }
   const teamName = (t: Team) => `${avatarById(avatars[t]).name.ko}팀`
@@ -142,7 +145,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
       {match.players.map((p, i) => {
         const s = toScreen(p.x, p.y)
         const human = p.role === 'human'
-        const h = (human ? 12 : 8.5) * scale
+        const h = (human ? 12 : 8) * scale
         const w = human ? h * (1024 / 1536) : h
         const flip = portrait ? 1 : p.dir
         return (
@@ -168,7 +171,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
         </div>
         <button aria-label="닫기" onClick={onExit} className="h-10 w-10 rounded-full bg-white/95 font-bold shadow">✕</button>
       </header>
-      {phase === 'play' && match.time < 5 && <p className="pointer-events-none absolute inset-x-4 bottom-3 z-[2000] m-0 rounded-full bg-white/90 px-3 py-1.5 text-center text-xs font-bold text-[#3d6b2f] shadow">{portrait ? '아래쪽은 빨강, 위쪽은 보라' : '왼쪽은 빨강, 오른쪽은 보라'} 팀 화면이에요. 누르고 끌면 따라 달리고, 공에 닿으면 저절로 차요!</p>}
+      {phase === 'play' && match.time < 5 && <p className="pointer-events-none absolute inset-x-4 bottom-3 z-[2000] m-0 rounded-full bg-white/90 px-3 py-1.5 text-center text-xs font-bold text-[#3d6b2f] shadow">{players === 1 ? '화면을 누르고 끌면 내 아바타가 따라 달려요' : `${portrait ? '아래쪽은 빨강, 위쪽은 보라' : '왼쪽은 빨강, 오른쪽은 보라'} 팀 화면이에요. 누르고 끌면 따라 달리고`}, 공에 닿으면 저절로 차요!</p>}
       {goal !== null && <div className="pointer-events-none absolute inset-0 z-[2001] flex items-center justify-center"><p className="m-0 rounded-3xl bg-white/95 px-6 py-4 text-center text-3xl font-black shadow-xl" style={{ color: KIT[goal].color }}>골!! ⚽🎉<br /><span className="text-lg">{teamName(goal)}</span></p></div>}
 
       {/* 시작 전: 아바타 2명, 동물 팀 나누기 / 끝: 결과 */}
@@ -182,11 +185,20 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
                 <p className="m-0 text-2xl font-black"><span style={{ color: KIT[0].color }}>{match.score[0]}</span> : <span style={{ color: KIT[1].color }}>{match.score[1]}</span></p>
               </>
             ) : <h2 className="mt-0 mb-1 text-xl font-black">⚽ 축구</h2>}
-            <p className="mt-1 mb-2 text-xs text-black/50">두 명이 한 화면에서 한 팀씩 맡아요</p>
+            {/* 1인·2인 고르기 */}
+            <div role="radiogroup" aria-label="몇 명이 할까요" className="my-2 grid grid-cols-2 gap-2">
+              {([1, 2] as const).map((n) => (
+                <button key={n} role="radio" aria-checked={players === n} onClick={() => { playTap(); setPlayers(n); try { localStorage.setItem('ryuso.soccer.players', String(n)) } catch { /* 저장 못 해도 이번 판은 그대로 */ } }}
+                  className={`min-h-14 rounded-2xl px-2 font-black ${players === n ? 'bg-[#4caf50] text-white shadow' : 'bg-white text-[#3d6b2f] ring-1 ring-black/10'}`}>
+                  <span className="block text-base">{n === 1 ? '🙋 혼자 하기' : '👫 둘이 하기'}</span>
+                  <span className="block text-[11px] font-bold opacity-80">{n === 1 ? '보라 팀은 컴퓨터가 해요' : '한 화면에서 한 팀씩'}</span>
+                </button>
+              ))}
+            </div>
             <div className="grid grid-cols-2 gap-2">
               {([0, 1] as Team[]).map((t) => (
                 <div key={t} className="rounded-2xl p-2" style={{ background: KIT[t].soft, boxShadow: `inset 0 0 0 2px ${KIT[t].color}` }}>
-                  <p className="m-0 mb-1 text-sm font-black" style={{ color: KIT[t].color }}>{KIT[t].name} 팀</p>
+                  <p className="m-0 mb-1 text-sm font-black" style={{ color: KIT[t].color }}>{KIT[t].name} 팀 {players === 1 ? (t === 0 ? '· 나' : '· 컴퓨터') : ''}</p>
                   <div className="grid grid-cols-4 gap-1">
                     {AVATARS.map((a) => {
                       const on = avatars[t] === a.id, taken = avatars[t === 0 ? 1 : 0] === a.id
