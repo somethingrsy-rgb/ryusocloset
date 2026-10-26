@@ -40,6 +40,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
   const [animals, setAnimals] = useState<[number[], number[]]>([[0, 1, 2, 3], [4, 5, 6, 7]])
   const [match, setMatch] = useState<Match>(() => newMatch(avatars, animals))
   const [goal, setGoal] = useState<Team | null>(null)
+  const [golden, setGolden] = useState(false) // 비겨서 골든골 시작 안내
   const live = useRef(match)
   const targets = useRef<[Vec | null, Vec | null]>([null, null])
   const pointers = useRef(new Map<number, Team>())
@@ -91,6 +92,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
       if (r.events.includes('kick')) playHop()
       const g = r.events.find((e) => e.startsWith('goal'))
       if (g) { playWin(); const team = Number(g[4]) as Team; setGoal(team); window.setTimeout(() => setGoal(null), 1500) }
+      if (r.events.includes('golden')) { playTap(); setGolden(true); window.setTimeout(() => setGolden(false), 2200) }
       if (r.events.includes('end')) { playLevelDone(); setPhase('done'); return }
       frame = requestAnimationFrame(tick)
     }
@@ -167,11 +169,12 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
           <span style={{ color: KIT[0].color }}>{teamName(0)}</span>
           <span className="text-lg">{match.score[0]} : {match.score[1]}</span>
           <span style={{ color: KIT[1].color }}>{teamName(1)}</span>
-          {phase === 'play' && <span className="ml-1 text-xs text-black/50">⏱ {Math.floor(left_ / 60)}:{String(left_ % 60).padStart(2, '0')}</span>}
+          {phase === 'play' && <span className="ml-1 text-xs text-black/50">{match.time >= MATCH_SECONDS ? '⚽ 골든골' : `⏱ ${Math.floor(left_ / 60)}:${String(left_ % 60).padStart(2, '0')}`}</span>}
         </div>
         <button aria-label="닫기" onClick={onExit} className="h-10 w-10 rounded-full bg-white/95 font-bold shadow">✕</button>
       </header>
       {phase === 'play' && match.time < 5 && <p className="pointer-events-none absolute inset-x-4 bottom-3 z-[2000] m-0 rounded-full bg-white/90 px-3 py-1.5 text-center text-xs font-bold text-[#3d6b2f] shadow">{players === 1 ? '화면을 누르고 끌면 내 아바타가 따라 달려요' : `${portrait ? '아래쪽은 빨강, 위쪽은 보라' : '왼쪽은 빨강, 오른쪽은 보라'} 팀 화면이에요. 누르고 끌면 따라 달리고`}, 공에 닿으면 저절로 차요!</p>}
+      {golden && goal === null && <div className="pointer-events-none absolute inset-0 z-[2001] flex items-center justify-center"><p className="m-0 rounded-3xl bg-white/95 px-6 py-4 text-center text-2xl font-black text-[#3d6b2f] shadow-xl">동점! 골든골 ⚽<br /><span className="text-base">먼저 넣는 팀이 이겨요</span></p></div>}
       {goal !== null && <div className="pointer-events-none absolute inset-0 z-[2001] flex items-center justify-center"><p className="m-0 rounded-3xl bg-white/95 px-6 py-4 text-center text-3xl font-black shadow-xl" style={{ color: KIT[goal].color }}>골!! ⚽🎉<br /><span className="text-lg">{teamName(goal)}</span></p></div>}
 
       {/* 시작 전: 아바타 2명, 동물 팀 나누기 / 끝: 결과 */}
