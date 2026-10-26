@@ -188,9 +188,9 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             {[0, 1].map((k) => <img key={k} src={assetUrl('kitchen/drop.svg')} alt="" draggable={false} className="kitchen-drop absolute left-0 w-full" style={{ animationDelay: `${k * 0.375}s` }} />)}
           </div>
         )}
-        {/* 씻기: 개수대 안에 농장 재료, 누를 때마다 살짝 흔들린다 */}
+        {/* 씻기: 개수대 안에 농장 재료(위 끝이 물방울이 사라지는 곳과 살짝 겹치게), 누를 때마다 살짝 흔들린다 */}
         {sinkIngs.length > 0 && (
-          <div aria-hidden className="pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 items-end justify-center gap-0.5" style={{ left: `${L.at.sink.x}%`, top: `${L.fx.tap[2] + L.at.sink.h * 0.32}%`, width: `${L.at.sink.w * 0.7}%`, zIndex: 3 }}>
+          <div aria-hidden className="pointer-events-none absolute flex -translate-x-1/2 items-start justify-center gap-0.5" style={{ left: `${L.at.sink.x}%`, top: `${L.fx.tap[2] - 1}%`, width: `${L.at.sink.w * 0.7}%`, zIndex: 3 }}>
             {sinkIngs.map((id) => <Ing key={id} id={id} className={`aspect-square w-[34%] ${cooking!.taps > 0 ? 'call-shake' : ''}`} />)}
           </div>
         )}
