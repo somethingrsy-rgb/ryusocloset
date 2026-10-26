@@ -246,7 +246,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       </div>
 
       {/* 주문서 보드 */}
-      <div className="absolute inset-x-2 top-14 z-20 flex gap-2 overflow-x-auto pb-1">
+      <div className="absolute inset-x-1 top-12 z-20 flex gap-2 overflow-x-auto px-1 pt-2.5 pb-2">
         {tickets.length === 0 && <p className="m-0 rounded-2xl bg-white/90 px-3 py-2 text-sm font-bold text-[#8a4b2a] shadow">📝 {tx.noTickets}</p>}
         {tickets.map((t) => {
           const m = menuById(t.menu)!
@@ -345,7 +345,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
               <span className="rounded-full bg-white px-3 py-1 text-sm shadow-sm"><CoinIcon /> <b>{farm.coins}</b></span>
             </div>
             <p className="mt-1 mb-2 text-xs text-black/45">{tx.pantryNote}</p>
-            <div className="grid min-h-0 grid-cols-4 gap-2 overflow-y-auto">
+            <div className="grid min-h-0 grid-cols-4 gap-2 overflow-y-auto p-1">
               {PANTRY.map((p) => (
                 <div key={p.id} className={`flex flex-col items-center rounded-2xl bg-white p-1.5 ${lackMart.has(p.id) ? 'kitchen-neon' : 'ring-1 ring-black/5'}`}>
                   <Ing id={p.id} className="h-10 w-10" />

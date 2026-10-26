@@ -134,7 +134,7 @@ export function PartyInvite({ here, onInvite, onClose, initial = [], title = '�
           <button aria-label="닫기" onClick={onClose} className="h-9 w-9 rounded-full bg-white text-base font-bold text-[#8a4b55] shadow-sm">✕</button>
         </div>
         <p className="mt-1 mb-2 text-xs text-black/45">{single ? '한 친구를 골라요' : '여러 친구를 골라도 돼요'}</p>
-        <div className="grid min-h-0 grid-cols-4 gap-2 overflow-y-auto">
+        <div className="grid min-h-0 grid-cols-4 gap-2 overflow-y-auto p-1.5">
           {CALL_ANIMALS.map((a, i) => {
             const on = picked.includes(i), came = here.includes(i)
             return (
