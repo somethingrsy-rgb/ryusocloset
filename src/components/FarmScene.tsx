@@ -55,7 +55,7 @@ function FarmImg({ name, emoji, className, style, alt = '' }: { name: string; em
 
 const stageOf = (wateredAt: number | null, progress: number) => (wateredAt === null ? 1 : progress >= 1 ? 4 : progress < 0.4 ? 2 : 3)
 
-export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: Tweaks; onShop: () => void }) {
+export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void }) {
   const { lang } = useI18n()
   const ko = lang === 'ko'
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
@@ -157,11 +157,11 @@ export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: 
 
   const order = orderCrop(farm)
   const btn = 'min-h-11 rounded-2xl px-3 py-2 text-sm font-bold'
-  const tools: { id: Tool | 'decorate'; ko: string; en: string; icon: string; emoji: string }[] = [
+  const tools: { id: Tool | 'kitchen'; ko: string; en: string; icon: string; emoji: string }[] = [
     { id: 'seed', ko: '씨앗', en: 'Seeds', icon: 'icon_seed', emoji: '🌱' },
     { id: 'water', ko: '물주기', en: 'Water', icon: 'icon_water', emoji: '💧' },
     { id: 'harvest', ko: '수확', en: 'Harvest', icon: 'icon_basket', emoji: '🧺' },
-    { id: 'decorate', ko: '꾸미기', en: 'Shop', icon: 'icon_decorate', emoji: '🏡' },
+    { id: 'kitchen', ko: '주방', en: 'Kitchen', icon: 'icon_kitchen', emoji: '🍳' },
   ]
 
   return (
@@ -272,7 +272,7 @@ export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: 
             {tools.map((t) => {
               const active = tool === t.id
               return (
-                <button key={t.id} aria-pressed={t.id === 'decorate' ? undefined : active} className={`flex flex-1 items-center rounded-3xl border-2 shadow-md ${wide ? 'flex-col px-1 py-1.5' : 'flex-col px-1 pt-2 pb-2.5'} ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'decorate' ? onShop() : pick(t.id))}>
+                <button key={t.id} aria-pressed={t.id === 'kitchen' ? undefined : active} className={`flex flex-1 items-center rounded-3xl border-2 shadow-md ${wide ? 'flex-col px-1 py-1.5' : 'flex-col px-1 pt-2 pb-2.5'} ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'kitchen' ? onKitchen() : pick(t.id))}>
                   <FarmImg name={t.icon} emoji={t.emoji} className={wide ? 'h-12 w-12 shrink-0 object-contain' : 'aspect-square w-[85%] object-contain'} />
                   <span className="text-sm font-extrabold text-[#6b4a2b]">{t[lang]}</span>
                 </button>
