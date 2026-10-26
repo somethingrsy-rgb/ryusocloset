@@ -5,7 +5,7 @@ import { CROPS, getFarm, subscribeFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import { buyPantry, cookTicket, getKitchen, missing, subscribeKitchen } from '../lib/kitchen'
 import { PACK, PACK_PRICE, PANTRY, STEPS, ingredient, isCrop, menuById, needList, type IngId, type Station, type StepId } from '../lib/recipes'
-import { playBell, playCloud, playCoin, playCook, playTap, playWater, startBgm, stopBgm } from '../lib/sound'
+import { playBell, playCloud, playCoin, playCook, playHarvest, playTap, playWater, startBgm, stopBgm } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { Ico } from './CafeGame'
 import { FigureLayers } from './FigureLayers'
@@ -16,6 +16,8 @@ import { CoinIcon } from './Icons'
  * 아바타는 아일랜드 뒤에 서서 요리한다: cook 은 발 위치, island 는 그림에서 오려 낸 아일랜드(public/kitchen/island_*.webp)를 아바타 앞에 다시 덮는 자리(왼쪽·위·너비·높이 %).
  */
 type Box = { x: number; y: number; w: number; h: number }
+/** 불꽃이 나오는 단계(오븐 굽기·냄비 끓이기·녹이기): 불이 붙을 때와 누를 때 수확 소리를 낸다 */
+const FIRE = new Set<StepId>(['bake', 'boil', 'melt'])
 const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; ovenGlass: Box; fx: { ice: [number, number, number]; tap: [number, number, number]; drop: number; pot: [number, number, number] }; cook: [number, number]; /** 씻는 동안만 서는 자리(가로 그림은 가운데에 서면 싱크대를 가린다) */ washAt?: [number, number]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
   portrait: {
     img: 'kitchen/kitchen_portrait.webp', ratio: 941 / 1672, avatarH: 24,
@@ -111,7 +113,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
 
   const start = () => {
     if (!selTicket || !menu || lacks.length) return
-    playCook()
+    if (FIRE.has(menu.steps[0])) playHarvest(); else playCook()
     setCooking({ seat: selTicket.seat, step: 0, taps: 0 })
     bounce()
   }
@@ -126,11 +128,11 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       return
     }
     const taps = cooking.taps + 1
-    if (taps < step.taps) { if (menu.steps[cooking.step] === 'wash') playWater(); else playTap(); setCooking({ ...cooking, taps }); return }
+    if (taps < step.taps) { const id = menu.steps[cooking.step]; if (id === 'wash') playWater(); else if (FIRE.has(id)) playHarvest(); else playTap(); setCooking({ ...cooking, taps }); return }
     // 이 단계 끝: 다음 단계로, 마지막이면 완성
     const nextStep = cooking.step + 1
     if (nextStep < menu.steps.length) {
-      playCook()
+      if (FIRE.has(menu.steps[nextStep])) playHarvest(); else playCook() // 오븐·냄비에 불이 붙을 때는 수확 소리
       setCooking({ ...cooking, step: nextStep, taps: 0 })
       bounce()
       return
