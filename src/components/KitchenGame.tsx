@@ -243,10 +243,11 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       {/* 위: 코인·마트·카페 */}
       <div className={`absolute top-2 z-20 flex items-center justify-between gap-1.5 ${phoneL ? 'right-2' : 'inset-x-2'}`} style={phoneL ? { width: `calc(${SIDE} - 1rem)` } : undefined}>
         <span className={`rounded-full ${phoneL ? 'hidden' : ''} bg-white/90 px-3 py-1.5 text-sm font-bold text-[#8a4b2a] shadow`}>{tx.title}</span>
-        <div className="flex items-center gap-1.5">
-          <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
-          <button onClick={() => { playTap(); setPantry(true) }} className="h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">{tx.pantry}</button>
-          <button onClick={() => { playTap(); onGo('cafe') }} className="h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">{tx.cafe}</button>
+        {/* 폰 가로는 칸이 좁아서 마트·카페는 그림 글자(이모지)만, 모두 한 줄로 */}
+        <div className={`flex items-center gap-1.5 whitespace-nowrap ${phoneL ? 'w-full justify-between' : ''}`}>
+          <span className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-white/90 px-3 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
+          <button aria-label={tx.pantry} onClick={() => { playTap(); setPantry(true) }} className={`h-9 shrink-0 rounded-full bg-white/90 text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'}`}>{phoneL ? <span style={{ fontSize: 20 }}>🛒</span> : tx.pantry}</button>
+          <button aria-label={tx.cafe} onClick={() => { playTap(); onGo('cafe') }} className={`h-9 shrink-0 rounded-full bg-white/90 text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'}`}>{phoneL ? <span style={{ fontSize: 20 }}>☕</span> : tx.cafe}</button>
         </div>
       </div>
 
@@ -288,7 +289,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
               <Ico id={menu.id} className={short ? 'h-8 w-8' : 'h-10 w-10'} />
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-xs font-bold text-black/45">{menu[lang]} · {tx.step(cooking.step + 1, menu.steps.length)}</p>
-                <p className="m-0 flex items-center gap-1 text-base font-black text-[#8a4b2a]"><StepIcon menu={menu.id} id={menu.steps[cooking.step]} className="h-6 w-6" /> {step.how[lang]}</p>
+                <p className={`m-0 flex items-center gap-1 font-black text-[#8a4b2a] ${phoneL ? "text-sm leading-tight" : "text-base"}`}><StepIcon menu={menu.id} id={menu.steps[cooking.step]} className="h-6 w-6" /> {step.how[lang]}</p>
               </div>
               {short && <Dots n={step.taps} k={cooking.taps} />}
             </div>
@@ -300,12 +301,12 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             )}
           </div>
         ) : selTicket && menu ? (
-          <div className="flex flex-col gap-2">
+          <div className={`flex flex-col ${phoneL ? 'gap-1.5' : 'gap-2'}`}>
             <div className="flex items-center gap-2">
-              <img src={face(selTicket.seat)} alt="" draggable={false} className="h-9 w-9 object-contain" />
-              <Ico id={menu.id} className="h-10 w-10" />
+              <img src={face(selTicket.seat)} alt="" draggable={false} className={`object-contain ${phoneL ? 'h-7 w-7' : 'h-9 w-9'}`} />
+              <Ico id={menu.id} className={phoneL ? 'h-8 w-8' : 'h-10 w-10'} />
               <div className="min-w-0 flex-1">
-                <p className="m-0 text-xs font-bold text-black/45">{tx.order(CALL_ANIMALS[selTicket.seat].name)}</p>
+                <p className={`m-0 text-xs font-bold text-black/45 ${phoneL ? 'hidden' : ''}`}>{tx.order(CALL_ANIMALS[selTicket.seat].name)}</p>
                 <p className="m-0 truncate text-base font-black text-[#8a4b2a]">{menu[lang]} <span className="text-sm font-bold text-[#c9751f]">+{menu.price}<CoinIcon /></span></p>
               </div>
             </div>
@@ -321,7 +322,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
                     const ing = ingredient(id)
                     const have = isCrop(id) ? farm.inventory[id] : kitchen.pantry[id]
                     const ok = have >= n
-                    return <span key={id} className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1 text-sm font-bold ${ok ? 'bg-[#e6f6e3] text-[#3d7a35]' : 'bg-[#ffe3e3] text-[#c0392b]'}`}><Ing id={id} className="h-6 w-6" /> {ing[lang]} {have}/{n} {ok ? '✔' : '✖'}</span>
+                    return <span key={id} aria-label={ing[lang]} className={`flex items-center whitespace-nowrap gap-1 rounded-full ${phoneL ? 'py-0 pr-1.5 pl-0.5 text-xs' : 'py-0.5 pr-2.5 pl-1 text-sm'} font-bold ${ok ? 'bg-[#e6f6e3] text-[#3d7a35]' : 'bg-[#ffe3e3] text-[#c0392b]'}`}><Ing id={id} className="h-6 w-6" /> {phoneL ? "" : ing[lang]} {have}/{n} {ok ? '✔' : '✖'}</span>
                   })}
                 </div>
                 <p className={`m-0 text-xs text-black/45 ${phoneL ? "hidden" : ""}`}>{tx.how}: {menu.steps.map((s, k) => <span key={k}>{k > 0 && ' → '}<StepIcon menu={menu.id} id={s} className="inline-block h-4 w-4 align-[-2px]" /> {STEPS[s][lang]}</span>)}</p>
