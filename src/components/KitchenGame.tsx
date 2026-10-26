@@ -30,7 +30,8 @@ const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: 
     at: { fridge: { x: 19.7, y: 37, w: 16, h: 45 }, sink: { x: 49.3, y: 41.5, w: 15, h: 10 }, stove: { x: 81.6, y: 38, w: 14, h: 9 }, oven: { x: 83.4, y: 53.5, w: 15, h: 17 }, board: { x: 49.6, y: 60.5, w: 24, h: 12 } },
     ovenGlass: { x: 83.2, y: 53.6, w: 9, h: 7 },
     fx: { ice: [19.1, 23.4, 5], tap: [49.1, 34.3, 38.6], pot: [81.6, 40.5, 5.5] },
-    cook: [50, 66], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
+    // 가로 그림은 아바타가 싱크대 바로 앞을 가려서(물방울·씻는 재료가 얼굴 위에 그려짐) 아일랜드 뒤 오른쪽에 선다
+    cook: [64, 66], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
   },
 }
 
@@ -151,7 +152,10 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   // 마트에서 네온 테두리로 알려 줄 모자란 기본 재료: 아직 안 만든 주문서 전체에서
   const lackMart = new Set(kitchen.tickets.filter((t) => !t.ready).flatMap((t) => missing(t.menu, kitchen, farm)).map((x) => x.id).filter((id) => !isCrop(id)))
   const aw = L.avatarH * (1024 / 1536) / L.ratio // 아바타 너비(그림 너비에 대한 %)
-  const boardIngs = cooking && menu ? needList(menu).map(({ id }) => id) : []
+  // 씻기 동안은 농장 재료(당근·딸기·옥수수)를 싱크대에 옮겨 담고, 도마에는 나머지만 둔다
+  const washing = !!cooking && menu?.steps[cooking.step] === 'wash'
+  const sinkIngs: IngId[] = washing && menu ? needList(menu).map(({ id }) => id).filter((id) => isCrop(id)) : []
+  const boardIngs = cooking && menu ? needList(menu).map(({ id }) => id).filter((id) => !sinkIngs.includes(id)) : []
   // 도마 위 재료 줄보다 위에 나오는 도구: 섞기·말기는 두 손(조물조물), 믹서 돌리기는 믹서기, 갈기는 커피 그라인더
   const nowStep = cooking && menu ? menu.steps[cooking.step] : null
   const tool = nowStep ? (nowStep === 'pour' && COFFEE.has(menu!.id) ? { img: 'kitchen/kettle.webp', w: 0.3 } : BOARD_TOOL[nowStep]) : undefined
@@ -182,6 +186,12 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         {nowStep === 'wash' && (
           <div aria-hidden className="pointer-events-none absolute -translate-x-1/2 overflow-hidden" style={{ left: `${L.fx.tap[0]}%`, top: `${L.fx.tap[1]}%`, height: `${L.fx.tap[2] - L.fx.tap[1]}%`, width: '2.4%', zIndex: 4 }}>
             {[0, 1].map((k) => <img key={k} src={assetUrl('kitchen/drop.svg')} alt="" draggable={false} className="kitchen-drop absolute left-0 w-full" style={{ animationDelay: `${k * 0.375}s` }} />)}
+          </div>
+        )}
+        {/* 씻기: 개수대 안에 농장 재료(위 끝이 물방울이 사라지는 곳과 살짝 겹치게), 누를 때마다 살짝 흔들린다 */}
+        {sinkIngs.length > 0 && (
+          <div aria-hidden className="pointer-events-none absolute flex -translate-x-1/2 items-start justify-center gap-0.5" style={{ left: `${L.at.sink.x}%`, top: `${L.fx.tap[2] - 1}%`, width: `${L.at.sink.w * 0.7}%`, zIndex: 3 }}>
+            {sinkIngs.map((id) => <Ing key={id} id={id} className={`aspect-square w-[34%] ${cooking!.taps > 0 ? 'call-shake' : ''}`} />)}
           </div>
         )}
         {/* 끓이기·녹이기: 냄비 아래에 작은 불꽃 셋 */}
