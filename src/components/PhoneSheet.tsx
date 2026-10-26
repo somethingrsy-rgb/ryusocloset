@@ -75,7 +75,7 @@ export function PhoneSheet({ theme, kid, avatar, muted, dial, onClose }: { theme
               </div>
 
               {tab === 'contacts' ? (
-                <ul className="m-0 mt-2 grid min-h-0 flex-1 list-none grid-cols-2 content-start gap-2.5 overflow-y-auto px-3 pb-3">
+                <ul className="m-0 mt-2 grid min-h-0 flex-1 list-none grid-cols-2 content-start gap-2.5 overflow-y-auto px-3 pt-1 pb-3">
                   {CALL_ANIMALS.map((a, i) => (
                     <li key={a.img} className="min-h-0">
                       {/* 한 칸: 위에 동물 얼굴, 그 아래 가운데에 번호, 수화기는 번호 줄의 오른쪽 끝으로 뺀다. 얼굴 그림은 모두 같은 비율이고 동그라미 안쪽 여백까지 그림에 담겨 있다 */}

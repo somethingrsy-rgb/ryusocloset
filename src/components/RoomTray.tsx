@@ -74,7 +74,7 @@ export function RoomTray({ scene = 'room', room, onAdd, onAddCustom, onRemoveCus
         })}
       </div>
       {tab === 'theme' && scene === 'room' && (
-        <div className="scroll-thin flex shrink-0 gap-1.5 overflow-x-auto px-2 pb-1">
+        <div className="scroll-thin flex shrink-0 gap-1.5 overflow-x-auto px-2 pt-1 pb-1.5">
           {[{ id: BASE_CHIP as string | undefined, icon: '🛋️', ko: '기본', en: 'Basic' }, { id: undefined as string | undefined, icon: '✨', ko: '전체', en: 'All' }, ...ROOM_THEMES].map((th) => {
             const on = themeFilter === th.id
             return (
