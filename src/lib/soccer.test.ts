@@ -76,3 +76,24 @@ describe('축구: 몸 겹치지 않기·1인 게임', () => {
     expect(kicks).toBeGreaterThan(0)
   })
 })
+
+describe('축구: 혼자 하기 이길 확률', () => {
+  it('아이 흉내 선수로 여러 판 하면 대체로 10판에 7판쯤 이긴다(5~8.5판)', { timeout: 30000 }, async () => {
+    const { FW: W, FH: H } = await import('./soccer')
+    let win = 0, lose = 0
+    for (let s = 1; s <= 60; s++) {
+      const rnd = seeded(s * 7919)
+      let m: Match = newMatch(['yuha', 'yuel'], splitAnimals(rnd), [false, true])
+      let tgt = { x: 50, y: 30 }, re = 0
+      for (let t = 0; t < (MATCH_SECONDS + 45) * 30 && !m.over; t++) {
+        re -= 1 / 30
+        if (re <= 0) { re = 0.3; tgt = { x: Math.max(1, Math.min(W - 1, m.ball.x - 2 + (rnd() - 0.5) * 2)), y: Math.max(1, Math.min(H - 1, m.ball.y + (rnd() - 0.5) * 2)) } }
+        m = stepMatch(m, 1 / 30, [rnd() < 0.85 ? tgt : null, null], rnd).m
+      }
+      if (m.score[0] > m.score[1]) win++; else if (m.score[0] < m.score[1]) lose++
+    }
+    const share = win / (win + lose)
+    expect(share).toBeGreaterThan(0.5)
+    expect(share).toBeLessThan(0.85)
+  })
+})

@@ -53,6 +53,23 @@ const mirror = (v: Vec, team: Team): Vec => (team === 0 ? v : { x: FW - v.x, y: 
 /** 팀 0 기준 자리(팀 1 은 좌우 반대): 골키퍼, 수비 둘, 미드필더, 아바타 */
 const HOMES = { keeper: { x: 4, y: 30 }, field: [{ x: 20, y: 17 }, { x: 20, y: 43 }, { x: 33, y: 30 }], human: { x: 42, y: 30 } }
 
+/** 혼자 하는 게임: 한 팀만 컴퓨터 */
+export const vsCpu = (m: Pick<Match, 'cpu'>) => m.cpu[0] !== m.cpu[1]
+/** 비겼을 때 골든골로 더 하는 최대 시간 */
+export const GOLDEN_SECONDS = 45
+/**
+ * 혼자 하는 게임에서 컴퓨터 팀의 힘(빠르기 배율). 사람 팀이 지고 있으면 약해지고, 많이 이기고 있으면 조금 세져서
+ * 아이가 대체로(10판에 7판쯤) 이기되 늘 이기지는 않게 한다(아이 흉내 선수로 여러 판 돌려 맞춘 값, soccer.test.ts)
+ */
+export function cpuStrength(m: Pick<Match, 'cpu' | 'score' | 'time'>, team: Team): number {
+  if (!vsCpu(m) || !m.cpu[team]) return 1
+  const lead = m.score[team === 0 ? 1 : 0] - m.score[team] // 사람 팀이 앞선 골 수
+  const base = lead <= -1 ? CPU_LOSING : lead === 0 ? (m.time >= MATCH_SECONDS ? CPU_GOLDEN : CPU_EVEN) : lead === 1 ? CPU_AHEAD1 : CPU_AHEAD2
+  return base
+}
+const AIM_K = 2
+const CPU_LOSING = 0.45, CPU_EVEN = 1, CPU_GOLDEN = 0.45, CPU_AHEAD1 = 1.6, CPU_AHEAD2 = 1.9
+
 export function newMatch(avatars: [string, string], animals: [number[], number[]], cpu: [boolean, boolean] = [false, false]): Match {
   const players: Player[] = []
   for (const team of [0, 1] as Team[]) {
@@ -96,13 +113,17 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
   const m: Match = { ...m0, players: m0.players.map((p) => ({ ...p })), ball: { ...m0.ball }, score: [...m0.score] as [number, number], chaser: [...m0.chaser] as [number, number] }
   const events: string[] = []
   if (m.over) return { m, events }
-  m.time = Math.min(MATCH_SECONDS, m.time + dt)
-  if (m.time >= MATCH_SECONDS) { m.over = true; events.push('end'); return { m, events } }
+  m.time = Math.min(MATCH_SECONDS + GOLDEN_SECONDS, m.time + dt)
+  // 혼자 하는 게임에서 비긴 채로 끝나면 골든골(먼저 넣는 팀이 이김)로 조금 더 한다
+  const golden = vsCpu(m) && m.score[0] === m.score[1]
+  if (m.time >= (golden ? MATCH_SECONDS + GOLDEN_SECONDS : MATCH_SECONDS)) { m.over = true; events.push('end'); return { m, events } }
+  if (golden && m0.time < MATCH_SECONDS && m.time >= MATCH_SECONDS) events.push('golden')
   if (m.pause > 0) { m.pause = Math.max(0, m.pause - dt); return { m, events } }
   const b = m.ball
 
   const dist = (p: Vec) => Math.hypot(p.x - b.x, p.y - b.y)
   for (const team of [0, 1] as Team[]) {
+    const k = cpuStrength(m, team)
     const own = goalOf(team === 0 ? 1 : 0) // 내가 지키는 골대
     const toGoal = unit(goalOf(team).x - b.x, goalOf(team).y - b.y)
     const fwd = team === 0 ? 1 : -1
@@ -119,19 +140,19 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
       if (p.role === 'human' && !m.cpu[team]) { const g = targets[team]; if (g) moveToward(p, { x: clamp(g.x, 1, FW - 1), y: clamp(g.y, 1, FH - 1) }, AVATAR_SPEED, dt) }
       else if (p.role === 'human') {
         // 컴퓨터 아바타: 공 뒤로 돌아가 상대 골대 쪽으로 차러 간다
-        moveToward(p, { x: b.x - toGoal.x * 2, y: b.y - toGoal.y * 2 }, CPU_SPEED, dt)
+        moveToward(p, { x: b.x - toGoal.x * 2, y: b.y - toGoal.y * 2 }, CPU_SPEED * k, dt)
       } else if (p.role === 'keeper') {
         const near = Math.abs(b.x - own.x) < 14 && b.y > GOAL_TOP - 6 && b.y < GOAL_BOT + 6
         const g = near ? { x: b.x, y: b.y } : { x: p.home.x, y: clamp(b.y, GOAL_TOP + 2, GOAL_BOT - 2) }
-        moveToward(p, { x: clamp(g.x, Math.min(own.x, own.x + fwd * 16), Math.max(own.x, own.x + fwd * 16)), y: g.y }, KEEPER_SPEED, dt)
+        moveToward(p, { x: clamp(g.x, Math.min(own.x, own.x + fwd * 16), Math.max(own.x, own.x + fwd * 16)), y: g.y }, KEEPER_SPEED * k, dt)
       } else if (p === chaser) {
-        moveToward(p, { x: b.x - toGoal.x * 2, y: b.y - toGoal.y * 2 }, ANIMAL_SPEED * t.speed, dt)
+        moveToward(p, { x: b.x - toGoal.x * 2, y: b.y - toGoal.y * 2 }, ANIMAL_SPEED * t.speed * k, dt)
       } else if (p === helper) {
         const side = p.home.y < FH / 2 ? -1 : 1
-        moveToward(p, { x: clamp(b.x + fwd * 12 + wob.x * 0.5, 4, FW - 4), y: clamp(b.y + side * 12 + wob.y * 0.5, 4, FH - 4) }, ANIMAL_SPEED * 0.9 * t.speed, dt)
+        moveToward(p, { x: clamp(b.x + fwd * 12 + wob.x * 0.5, 4, FW - 4), y: clamp(b.y + side * 12 + wob.y * 0.5, 4, FH - 4) }, ANIMAL_SPEED * 0.9 * t.speed * k, dt)
       } else {
         // 나머지는 자기 자리 근처에서 저마다 다르게 어슬렁거리며 공 쪽으로 조금씩 따라간다
-        moveToward(p, { x: clamp(p.home.x + (b.x - FW / 2) * t.follow + wob.x, 3, FW - 3), y: clamp(p.home.y + (b.y - FH / 2) * t.follow * 0.6 + wob.y, 3, FH - 3) }, ANIMAL_SPEED * 0.7 * t.speed, dt)
+        moveToward(p, { x: clamp(p.home.x + (b.x - FW / 2) * t.follow + wob.x, 3, FW - 3), y: clamp(p.home.y + (b.y - FH / 2) * t.follow * 0.6 + wob.y, 3, FH - 3) }, ANIMAL_SPEED * 0.7 * t.speed * k, dt)
       }
     }
   }
@@ -162,10 +183,12 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
   const kicker = near.length ? near[Math.floor(rnd() * near.length)] : undefined
   for (const p of kicker ? [kicker] : []) {
     const g = goalOf(p.team)
-    const aimY = g.y + (rnd() - 0.5) * (p.role === 'human' && !m.cpu[p.team] ? 8 : 18)
+    // 혼자 하는 게임: 사람이 앞서 있을수록 슛이 조금씩 빗나가고(컴퓨터 팀 힘 k 가 클수록), 컴퓨터 팀은 세게 찬다
+    const other = cpuStrength(m, p.team === 0 ? 1 : 0), mineK = cpuStrength(m, p.team)
+    const aimY = g.y + (rnd() - 0.5) * (p.role === 'human' && !m.cpu[p.team] ? 8 * (vsCpu(m) ? other * other * AIM_K : 1) : 18)
     let d = unit(g.x - b.x, aimY - b.y)
     if (p.role !== 'human') { const a = (rnd() - 0.5) * 0.5, c = Math.cos(a), s = Math.sin(a); d = { x: d.x * c - d.y * s, y: d.x * s + d.y * c } }
-    const power = p.role === 'human' ? (m.cpu[p.team] ? 42 : 52) : p.role === 'keeper' ? 46 : 36
+    const power = (p.role === 'human' ? (m.cpu[p.team] ? 42 : 52) : p.role === 'keeper' ? 46 : 36) * Math.sqrt(mineK)
     b.vx = d.x * power; b.vy = d.y * power
     p.cd = 0.45
     events.push('kick')
@@ -182,6 +205,7 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
       const scorer: Team = b.x > FW ? 0 : 1
       m.score[scorer]++
       events.push(`goal${scorer}`)
+      if (m.time >= MATCH_SECONDS) { m.over = true; events.push('end'); return { m, events } } // 골든골
       resetPositions(m)
       m.pause = 1.6
     } else if (b.x < 0) { b.x = 0; b.vx = Math.abs(b.vx) } else { b.x = FW; b.vx = -Math.abs(b.vx) }
