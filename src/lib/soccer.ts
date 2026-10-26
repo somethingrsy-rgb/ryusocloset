@@ -72,6 +72,8 @@ const STEAL_R = REACH + 3
 const STEAL_RATE = 3
 /** 공이 이보다 빠르면 사람 아바타가 잡지 못한다 */
 const TRAP_SPEED = 30
+/** 동물이 공을 찰 때 같은 편에게 패스할 확률(상대 골대에서 SHOOT_ZONE 보다 멀 때) */
+const TEAM_PASS = 0.4, SHOOT_ZONE = 25, PASS_LANE = 6
 /** 슛·패스 버튼이 먹는 거리(공에서) */
 export const ACT_REACH = REACH + 2.5
 
@@ -246,6 +248,25 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
   /** 상대 골대 쪽 보통 차기(닿으면 저절로 차기·드리블하다 멈췄을 때) */
   const autoKick = (p: Player) => {
     const g = goalOf(p.team)
+    // 동물(골키퍼 포함)은 골대에서 멀면 가끔 앞쪽에 있는 같은 편에게 패스한다. 같은 편 아바타(유하·유엘)가 있으면 아바타에게 먼저
+    if (p.role !== 'human' && Math.abs(g.x - b.x) > SHOOT_ZONE && rnd() < TEAM_PASS) {
+      const fwd = p.team === 0 ? 1 : -1
+      // 가는 길(공→받는 친구)에 상대가 가까이 있으면 그 친구에게는 주지 않는다(뺏기기 쉬운 패스는 안 한다)
+      const open = (q: Player) => m.players.every((o) => {
+        if (o.team === p.team) return true
+        const vx = q.x - b.x, vy = q.y - b.y, L = vx * vx + vy * vy
+        const u = clamp(((o.x - b.x) * vx + (o.y - b.y) * vy) / L, 0, 1)
+        return Math.hypot(b.x + vx * u - o.x, b.y + vy * u - o.y) > PASS_LANE
+      })
+      const mates = m.players.filter((q) => q !== p && q.team === p.team && q.role !== 'keeper' && (q.x - b.x) * fwd > 2 && dist(q) > 8 && dist(q) < 30 && open(q))
+      const human = mates.find((q) => q.role === 'human')
+      const to = human && rnd() < 0.7 ? human : mates[Math.floor(rnd() * mates.length)]
+      if (to) {
+        const aim = { x: to.x + fwd * 2, y: to.y }, dd = Math.hypot(aim.x - b.x, aim.y - b.y)
+        strike(p, unit(aim.x - b.x, aim.y - b.y), Math.max(18, dd * FRICTION * 1.05), 'pass')
+        return
+      }
+    }
     // 혼자 하는 게임: 사람이 앞서 있을수록 슛이 조금씩 빗나가고(컴퓨터 팀 힘 k 가 클수록), 컴퓨터 팀은 세게 찬다
     const other = cpuStrength(m, p.team === 0 ? 1 : 0), mineK = cpuStrength(m, p.team)
     const aimY = g.y + (rnd() - 0.5) * (p.role === 'human' && !m.cpu[p.team] ? 8 * (vsCpu(m) ? other * other * AIM_K : 1) : 18)

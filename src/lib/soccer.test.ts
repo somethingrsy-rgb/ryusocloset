@@ -33,20 +33,24 @@ describe('축구', () => {
       expect(mine.filter((p) => p.role === 'keeper')).toHaveLength(1)
     }
   })
-  it('동물 친구들끼리만 뛰어도 골이 나고, 모두 경기장 안에 있고, 2분 뒤 끝난다', () => {
-    const rnd = seeded(5)
-    let m: Match = newMatch(['yuha', 'yuel'], splitAnimals(rnd))
-    let goals = 0, ended = false
-    for (let t = 0; t < MATCH_SECONDS * 60 + 10; t++) {
-      const r = stepMatch(m, 1 / 60, [null, null], rnd)
-      m = r.m
-      goals += r.events.filter((e) => e.startsWith('goal')).length
-      if (r.events.includes('end')) ended = true
-      for (const p of m.players) { expect(p.x).toBeGreaterThanOrEqual(0); expect(p.x).toBeLessThanOrEqual(FW); expect(p.y).toBeGreaterThanOrEqual(0); expect(p.y).toBeLessThanOrEqual(FH) }
+  it('동물 친구들끼리만 뛰어도 골이 나고(여러 판 중에), 모두 경기장 안에 있고, 2분 뒤 끝난다', { timeout: 30000 }, () => {
+    let total = 0
+    for (let sd = 1; sd <= 10; sd++) {
+      const rnd = seeded(sd)
+      let m: Match = newMatch(['yuha', 'yuel'], splitAnimals(rnd))
+      let goals = 0, ended = false
+      for (let t = 0; t < MATCH_SECONDS * 60 + 10; t++) {
+        const r = stepMatch(m, 1 / 60, [null, null], rnd)
+        m = r.m
+        goals += r.events.filter((e) => e.startsWith('goal')).length
+        if (r.events.includes('end')) ended = true
+        for (const p of m.players) { expect(p.x).toBeGreaterThanOrEqual(0); expect(p.x).toBeLessThanOrEqual(FW); expect(p.y).toBeGreaterThanOrEqual(0); expect(p.y).toBeLessThanOrEqual(FH) }
+      }
+      expect(ended).toBe(true)
+      expect(m.score[0] + m.score[1]).toBe(goals)
+      total += goals
     }
-    expect(ended).toBe(true)
-    expect(goals).toBeGreaterThan(0)
-    expect(m.score[0] + m.score[1]).toBe(goals)
+    expect(total).toBeGreaterThan(0)
   })
   it('아바타가 공으로 달려가면 공을 잡아 몰고, 슛 버튼을 누르면 상대 골대 쪽으로 세게 찬다', () => {
     let m = newMatch(['yuha', 'yuel'], [[0, 1, 2, 3], [4, 5, 6, 7]])
@@ -202,3 +206,25 @@ describe('축구: 혼자 하기 비켜 주기', () => {
     expect(close).toBe(0)
   })
 })
+
+describe('축구: 같은 편 패스', () => {
+  it('동물은 앞쪽에 비어 있는 같은 편 아바타가 있으면 가끔 아바타에게 패스한다', () => {
+    let passes = 0
+    for (let k = 0; k < 40; k++) {
+      let m = newMatch(['yuha', 'yuel'], [[0, 1, 2, 3], [4, 5, 6, 7]], [false, true])
+      const me = m.players.findIndex((p) => p.team === 0 && p.role === 'human')
+      const fi = m.players.findIndex((p) => p.team === 0 && p.role === 'field')
+      // 동물이 공 바로 뒤, 아바타는 앞쪽 20 에 혼자, 나머지는 멀리
+      m = { ...m, pause: 0, ball: { x: 32, y: 30, vx: 0, vy: 0 }, players: m.players.map((p, i) => (i === fi ? { ...p, x: 30, y: 30 } : i === me ? { ...p, x: 50, y: 22 } : p.role === 'keeper' ? p : { ...p, x: p.team === 0 ? 5 + i : 95 - i, y: 5 + i * 5 })) }
+      const r = stepMatch(m, 1 / 60, [null, null], seeded(k + 1))
+      if (r.events.includes('pass')) {
+        passes++
+        const v = unitOf(r.m.ball.vx, r.m.ball.vy), to = unitOf(50 + 2 - r.m.ball.x, 22 - r.m.ball.y)
+        expect(v.x * to.x + v.y * to.y).toBeGreaterThan(0.98)
+      }
+    }
+    expect(passes).toBeGreaterThan(3)
+    expect(passes).toBeLessThan(30)
+  })
+})
+const unitOf = (x: number, y: number) => { const d = Math.hypot(x, y); return { x: x / d, y: y / d } }
