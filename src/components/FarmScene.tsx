@@ -260,6 +260,8 @@ export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: 
                   <FarmImg name={`harvest_${c.id}`} emoji={c.emoji} className="h-12 w-12 object-contain" />
                   <span className="text-xs font-bold">{c[lang]}</span>
                   <span className="text-[10px]">{c.seconds}{ko ? '초' : 's'}</span>
+                  {/* 지금 가진 수 */}
+                  <span className="mt-0.5 rounded-full bg-[#fdf2d8] px-2 text-xs font-extrabold text-[#6b4a2b]">×{farm.inventory[c.id]}</span>
                 </button>
               ))}
             </div>

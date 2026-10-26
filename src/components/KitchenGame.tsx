@@ -40,7 +40,7 @@ const T = {
     title: '🍳 주방', pantry: '🛒 마트', cafe: '☕ 카페', farm: '🥕 농장에서 가져오기', buy: '🛒 마트에서 사기',
     noTickets: '카페에서 주문을 받아 오세요', pick: '👆 만들 주문서를 골라요', order: (n: string) => `${n}의 주문`,
     start: '🍳 요리 시작', step: (k: number, n: number) => `${k} / ${n} 단계`, done: (m: string) => `완성! ${m} 🎉`, serve: '☕ 카페에서 서빙하기',
-    ready: '다 만들었어요! 카페에서 서빙해요', wrong: '여기를 눌러요 👇', lack: '재료가 모자라요', need: '필요한 재료', how: '만드는 순서',
+    ready: '다 만들었어요! 카페에서 서빙해요', lack: '재료가 모자라요', need: '필요한 재료', how: '만드는 순서',
     pantryTitle: '🛒 마트', pantryNote: `기본 재료는 ${PACK}개 묶음에 ${PACK_PRICE}코인`, farmNote: '농장 재료는 농장에서 수확해요', close: '닫기', noCoins: '코인이 모자라요. 농장에서 팔거나 카페에서 서빙해 모아요',
     next: '다음 주문 만들기',
   },
@@ -48,7 +48,7 @@ const T = {
     title: '🍳 Kitchen', pantry: '🛒 Mart', cafe: '☕ Cafe', farm: '🥕 Get from the farm', buy: '🛒 Buy at the mart',
     noTickets: 'Take orders in the cafe first', pick: '👆 Pick an order to cook', order: (n: string) => `${n}'s order`,
     start: '🍳 Start cooking', step: (k: number, n: number) => `Step ${k} / ${n}`, done: (m: string) => `${m} is ready! 🎉`, serve: '☕ Serve it in the cafe',
-    ready: 'All done! Serve it in the cafe', wrong: 'Tap here 👇', lack: 'Not enough ingredients', need: 'Ingredients', how: 'Steps',
+    ready: 'All done! Serve it in the cafe', lack: 'Not enough ingredients', need: 'Ingredients', how: 'Steps',
     pantryTitle: '🛒 Mart', pantryNote: `Basics: ${PACK} for ${PACK_PRICE} coins`, farmNote: 'Grow these on the farm', close: 'Close', noCoins: 'Not enough coins. Sell crops or serve guests',
     next: 'Cook the next order',
   },
@@ -122,7 +122,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       return
     }
     if (s !== step.station) {
-      playCloud(); setShake(step.station); later(() => setShake(null), 600); say(tx.wrong)
+      playCloud(); setShake(step.station); later(() => setShake(null), 600)
       return
     }
     const taps = cooking.taps + 1
@@ -161,6 +161,16 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const boardIngs = cooking && menu ? needList(menu).map(({ id }) => id).filter((id) => !sinkIngs.includes(id)) : []
   // 도마 위 재료 줄보다 위에 나오는 도구: 섞기·말기는 두 손(조물조물), 믹서 돌리기는 믹서기, 갈기는 커피 그라인더
   const nowStep = cooking && menu ? menu.steps[cooking.step] : null
+  // 누를 때마다 도구·얼음이 그 자리에서 꾹 눌린다. 그림을 새로 그리지 않고(새로 그리면 그림을 다시 읽는 동안 잠깐 사라졌다 튀어 보였다) 같은 그림에 움직임만 다시 준다
+  // 도구 그림을 미리 받아 둔다: 단계가 바뀌어 처음 나올 때 그림이 늦게 떠서 빈칸이었다가 튀어나오지 않게
+  useEffect(() => { for (const f of ['hands', 'knife', 'grinder', 'blender', 'pitcher', 'kettle', 'ice', 'fire', 'point']) new Image().src = assetUrl(`kitchen/${f}.webp`) }, [])
+  const pressTool = useRef<HTMLDivElement>(null)
+  const pressIce = useRef<HTMLImageElement>(null)
+  const taps = cooking?.taps ?? 0
+  useEffect(() => {
+    if (!taps || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    for (const el of [pressTool.current, pressIce.current]) el?.animate?.([{ transform: 'none' }, { transform: 'translateY(5%) scale(1.03, 0.94)', offset: 0.4 }, { transform: 'none' }], { duration: 260, easing: 'ease-out' })
+  }, [taps])
   const [ax, ay] = nowStep === 'wash' && L.washAt ? L.washAt : L.cook
   const tool = nowStep ? (nowStep === 'pour' && COFFEE.has(menu!.id) ? { img: 'kitchen/kettle.webp', w: 0.3 } : BOARD_TOOL[nowStep]) : undefined
   const kneading = !!tool
@@ -207,7 +217,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         )}
         {/* 굳히기: 냉장고 위칸 가운데에 얼음 */}
         {nowStep === 'chill' && (
-          <img key={cooking!.taps} aria-hidden src={assetUrl('kitchen/ice.webp')} alt="" draggable={false} className="kitchen-press pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${L.fx.ice[0]}%`, top: `${L.fx.ice[1]}%`, width: `${L.fx.ice[2]}%`, zIndex: 4 }} />
+          <img ref={pressIce} aria-hidden src={assetUrl('kitchen/ice.webp')} alt="" draggable={false} className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${L.fx.ice[0]}%`, top: `${L.fx.ice[1]}%`, width: `${L.fx.ice[2]}%`, zIndex: 4, transformOrigin: '50% 100%' }} />
         )}
         {/* 굽는 동안 오븐 유리창 안에 불꽃: 창 크기만큼, 누를수록 커진다 */}
         {cooking && menu?.steps[cooking.step] === 'bake' && (
@@ -224,10 +234,13 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             : boardIngs.map((id) => <Ing key={id} id={id} className={`aspect-square w-[19%] ${step?.station === 'board' && cooking!.taps > 0 ? 'call-shake' : ''}`} />)}
         </div>
         {/* 도마 위 도구: 재료 바로 위(도마 안쪽)에 놓고, 누를 때마다 꾹 눌린다. 두 손은 계속 조물조물 움직인다. 재료와 겹치지 않게 재료 줄보다 위에 둔다 */}
-        {tool && (
-          <div key={cooking!.taps} aria-hidden className="kitchen-press pointer-events-none absolute -translate-x-1/2 -translate-y-full"
-            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - L.at.board.h * 0.35}%`, width: `${L.at.board.w * tool.w}%`, zIndex: 5 }}>
-            <img src={assetUrl(tool.img)} alt="" draggable={false} className={`${tool.img.includes('hands') ? 'kitchen-knead ' : ''}block h-auto w-full`} />
+        {/* 도구 그림은 요리하는 동안 모두 그려 두고 지금 도구만 보이게 한다: 그림을 바꿔 끼우면 새 그림을 읽는 동안 빈칸이 됐다가 튀어나왔다 */}
+        {cooking && (
+          <div ref={pressTool} aria-hidden className="pointer-events-none absolute -translate-x-1/2 -translate-y-full"
+            style={{ left: `${L.at.board.x}%`, top: `${L.at.board.y - L.at.board.h * 0.35}%`, width: `${L.at.board.w * (tool?.w ?? 0.3)}%`, aspectRatio: '1 / 1', zIndex: 5, transformOrigin: '50% 100%', visibility: tool ? 'visible' : 'hidden' }}>
+            {TOOL_IMGS.map((img) => (
+              <img key={img} src={assetUrl(img)} alt="" draggable={false} className={`absolute inset-0 block h-full w-full object-contain ${img.includes('hands') ? 'kitchen-knead' : ''}`} style={{ visibility: tool?.img === img ? 'visible' : 'hidden' }} />
+            ))}
           </div>
         )}
 
@@ -397,6 +410,8 @@ function Ing({ id, className }: { id: IngId; className: string }) {
 
 /** 단계 아이콘: 굽기 불, 썰기 칼, 믹서 돌리기 믹서기, 갈기 그라인더, 섞기·말기 두 손(public/kitchen), 나머지는 이모지 */
 const STEP_IMG: Partial<Record<StepId, string>> = { bake: 'kitchen/fire.webp', cut: 'kitchen/knife.webp', blend: 'kitchen/blender.webp', mix: 'kitchen/hands.webp', grind: 'kitchen/grinder.webp', roll: 'kitchen/hands.webp', pour: 'kitchen/pitcher.webp', chill: 'kitchen/ice.webp' }
+/** 도마 위에 나올 수 있는 도구 그림 전부 */
+const TOOL_IMGS = ['kitchen/hands.webp', 'kitchen/knife.webp', 'kitchen/grinder.webp', 'kitchen/blender.webp', 'kitchen/pitcher.webp', 'kitchen/kettle.webp']
 /** 도마 위에 놓는 도구 그림과 크기(도마 폭에 대한 비율) */
 const BOARD_TOOL: Partial<Record<StepId, { img: string; w: number }>> = { roll: { img: 'kitchen/hands.webp', w: 0.3 }, mix: { img: 'kitchen/hands.webp', w: 0.3 }, blend: { img: 'kitchen/blender.webp', w: 0.3 }, grind: { img: 'kitchen/grinder.webp', w: 0.3 }, cut: { img: 'kitchen/knife.webp', w: 0.3 }, pour: { img: 'kitchen/pitcher.webp', w: 0.3 } }
 /** 칼 그림은 대각선으로 길어 같은 칸에서 작아 보여서 2배로 그린다(다른 그림과 비슷한 크기로) */
