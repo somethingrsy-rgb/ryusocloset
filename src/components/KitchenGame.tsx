@@ -16,7 +16,7 @@ import { CoinIcon } from './Icons'
  * 아바타는 아일랜드 뒤에 서서 요리한다: cook 은 발 위치, island 는 그림에서 오려 낸 아일랜드(public/kitchen/island_*.webp)를 아바타 앞에 다시 덮는 자리(왼쪽·위·너비·높이 %).
  */
 type Box = { x: number; y: number; w: number; h: number }
-const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; ovenGlass: Box; fx: { ice: [number, number, number]; tap: [number, number, number]; drop: number; pot: [number, number, number] }; cook: [number, number]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
+const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; ovenGlass: Box; fx: { ice: [number, number, number]; tap: [number, number, number]; drop: number; pot: [number, number, number] }; cook: [number, number]; /** 씻는 동안만 서는 자리(가로 그림은 가운데에 서면 싱크대를 가린다) */ washAt?: [number, number]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
   portrait: {
     img: 'kitchen/kitchen_portrait.webp', ratio: 941 / 1672, avatarH: 24,
     at: { fridge: { x: 15.5, y: 31, w: 24, h: 32 }, sink: { x: 48, y: 36.5, w: 24, h: 7 }, stove: { x: 86, y: 33.5, w: 22, h: 6 }, oven: { x: 86.5, y: 44, w: 24, h: 12 }, board: { x: 50, y: 59, w: 40, h: 9 } },
@@ -30,8 +30,8 @@ const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: 
     at: { fridge: { x: 19.7, y: 37, w: 16, h: 45 }, sink: { x: 49.3, y: 41.5, w: 15, h: 10 }, stove: { x: 81.6, y: 38, w: 14, h: 9 }, oven: { x: 83.4, y: 53.5, w: 15, h: 17 }, board: { x: 49.6, y: 60.5, w: 24, h: 12 } },
     ovenGlass: { x: 83.2, y: 53.6, w: 9, h: 7 },
     fx: { ice: [19.1, 23.4, 5], tap: [49.1, 34.3, 38.6], drop: 1.1, pot: [81.6, 40.5, 5.5] },
-    // 가로 그림은 아바타가 싱크대 바로 앞을 가려서(물방울·씻는 재료가 얼굴 위에 그려짐) 아일랜드 뒤 오른쪽에 선다
-    cook: [64, 66], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
+    // 가로 그림은 아바타가 가운데에 서면 싱크대를 가린다: 평소에는 가운데, 씻는 동안만 오른쪽으로 비켜 선다(물방울·씻는 재료가 얼굴 위에 그려지지 않게)
+    cook: [50, 66], washAt: [64, 66], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
   },
 }
 
@@ -148,7 +148,6 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const face = (seat: number) => assetUrl(`cafe/face/${CALL_ANIMALS[seat].img}.webp`)
   const btn = 'min-h-11 rounded-full px-3 font-bold shadow active:scale-95 disabled:opacity-40'
   const doneMenu = done !== null ? menuById(kitchen.tickets.find((t) => t.seat === done)?.menu ?? '') : undefined
-  const [ax, ay] = L.cook
   // 마트에서 네온 테두리로 알려 줄 모자란 기본 재료: 아직 안 만든 주문서 전체에서
   const lackMart = new Set(kitchen.tickets.filter((t) => !t.ready).flatMap((t) => missing(t.menu, kitchen, farm)).map((x) => x.id).filter((id) => !isCrop(id)))
   const aw = L.avatarH * (1024 / 1536) / L.ratio // 아바타 너비(그림 너비에 대한 %)
@@ -158,6 +157,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const boardIngs = cooking && menu ? needList(menu).map(({ id }) => id).filter((id) => !sinkIngs.includes(id)) : []
   // 도마 위 재료 줄보다 위에 나오는 도구: 섞기·말기는 두 손(조물조물), 믹서 돌리기는 믹서기, 갈기는 커피 그라인더
   const nowStep = cooking && menu ? menu.steps[cooking.step] : null
+  const [ax, ay] = nowStep === 'wash' && L.washAt ? L.washAt : L.cook
   const tool = nowStep ? (nowStep === 'pour' && COFFEE.has(menu!.id) ? { img: 'kitchen/kettle.webp', w: 0.3 } : BOARD_TOOL[nowStep]) : undefined
   const kneading = !!tool
 
@@ -227,7 +227,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         )}
 
         {/* 내 아바타: 아일랜드 뒤에 서서 요리한다(아일랜드 그림을 아바타 앞에 한 번 더 덮어서 아래쪽이 가려진다) */}
-        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${ax}%`, top: `${ay}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -98%)', zIndex: 1 }}>
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${ax}%`, top: `${ay}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -98%)', zIndex: 1, transition: 'left 0.5s ease-in-out' }}>
           <div className={busy ? 'farm-walk' : ''} style={{ position: 'relative', width: '100%', height: '100%' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
           </div>
