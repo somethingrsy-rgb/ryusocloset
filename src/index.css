@@ -335,9 +335,7 @@ button:focus-visible {
 }
 .kitchen-knead { animation: kitchen-knead 0.9s ease-in-out infinite; transform-origin: 50% 100%; }
 /* 자리 잡기(가운데·위로 올리기)는 Tailwind 의 translate 속성이 하고, 여기서는 그 자리에서 꾹 눌리기만 한다(transform 에 다시 translate(-50%,-100%) 를 넣으면 두 번 옮겨져 손이 도마 밖으로 튀었다) */
-@keyframes kitchen-press { 0%, 100% { transform: none; } 40% { transform: translateY(12%) scale(1.04, 0.9); } }
-.kitchen-press { animation: kitchen-press 0.3s ease-out; transform-origin: 50% 100%; }
-@media (prefers-reduced-motion: reduce) { .kitchen-here, .kitchen-point, .kitchen-point-side, .kitchen-point-left, .kitchen-flame, .kitchen-drop, .kitchen-neon, .kitchen-knead, .kitchen-press { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .kitchen-here, .kitchen-point, .kitchen-point-side, .kitchen-point-left, .kitchen-flame, .kitchen-drop, .kitchen-neon, .kitchen-knead { animation: none; } }
 
 /* 축구: 골이 들어간 그물이 흔들리고, 넣은 팀 동물들이 폴짝, 꽃가루가 떨어진다 */
 @keyframes soccer-net { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-3px) scaleY(1.04); } 40% { transform: translateX(3px); } 60% { transform: translateX(-2px) scaleY(1.02); } 80% { transform: translateX(2px); } }
