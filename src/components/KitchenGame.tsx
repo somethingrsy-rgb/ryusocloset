@@ -184,8 +184,9 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
 
         {/* 씻기: 수도꼭지에서 물방울이 개수대로 떨어진다 */}
         {nowStep === 'wash' && (
-          <div aria-hidden className="pointer-events-none absolute -translate-x-1/2 overflow-hidden" style={{ left: `${L.fx.tap[0]}%`, top: `${L.fx.tap[1]}%`, height: `${L.fx.tap[2] - L.fx.tap[1]}%`, width: '2.4%', zIndex: 4 }}>
-            {[0, 1].map((k) => <img key={k} src={assetUrl('kitchen/drop.svg')} alt="" draggable={false} className="kitchen-drop absolute left-0 w-full" style={{ animationDelay: `${k * 0.375}s` }} />)}
+          <div aria-hidden className="pointer-events-none absolute -translate-x-1/2 overflow-hidden" style={{ left: `${L.fx.tap[0]}%`, top: `${L.fx.tap[1]}%`, height: `${L.fx.tap[2] - 1.8 - L.fx.tap[1]}%`, width: '2.4%', zIndex: 4 }}>
+            {/* 물방울 하나: 개수대 속 농장 재료(위 끝 tap[2]-1) 바로 위에서 사라져 재료에 닿지 않는다 */}
+            <img src={assetUrl('kitchen/drop.svg')} alt="" draggable={false} className="kitchen-drop absolute left-0 w-full" />
           </div>
         )}
         {/* 씻기: 개수대 안에 농장 재료(위 끝이 물방울이 사라지는 곳과 살짝 겹치게), 누를 때마다 살짝 흔들린다 */}
