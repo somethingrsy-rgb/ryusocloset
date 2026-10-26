@@ -86,8 +86,8 @@ export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: 
   }, [])
   const timers = useRef<number[]>([])
   useEffect(() => () => { timers.current.forEach(clearTimeout) }, [])
-  // 농장에 있는 동안 새소리 배경음
-  useEffect(() => { startBgm('birds'); return stopBgm }, [])
+  // 농장에 있는 동안 새소리와 카페 노래를 같이 튼다
+  useEffect(() => { startBgm('birds+cafe'); return stopBgm }, [])
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer) }, [])
   useEffect(() => { if (!notice) return; const t = setTimeout(() => setNotice(''), 2600); return () => clearTimeout(t) }, [notice])
 
