@@ -32,10 +32,10 @@ export function ingredient(id: IngId) {
 export type Station = 'fridge' | 'sink' | 'board' | 'stove' | 'oven'
 export const STEPS = {
   wash: { station: 'sink', taps: 3, emoji: '💧', ko: '씻기', en: 'Wash', how: { ko: '싱크대를 톡톡 눌러 씻어요', en: 'Tap the sink to wash' } },
-  cut: { station: 'board', taps: 4, emoji: '🔪', ko: '썰기', en: 'Cut', how: { ko: '도마를 톡톡 눌러 썰어요', en: 'Tap the board to cut' } },
-  grind: { station: 'board', taps: 4, emoji: '⚙️', ko: '갈기', en: 'Grind', how: { ko: '도마를 톡톡 눌러 커피콩을 갈아요', en: 'Tap the board to grind' } },
-  mix: { station: 'board', taps: 5, emoji: '🥣', ko: '섞기', en: 'Mix', how: { ko: '도마를 톡톡 눌러 반죽을 섞어요', en: 'Tap the board to mix' } },
-  blend: { station: 'board', taps: 5, emoji: '🌀', ko: '믹서 돌리기', en: 'Blend', how: { ko: '도마를 톡톡 눌러 믹서를 돌려요', en: 'Tap the board to blend' } },
+  cut: { station: 'board', taps: 3, emoji: '🔪', ko: '썰기', en: 'Cut', how: { ko: '도마를 톡톡 눌러 썰어요', en: 'Tap the board to cut' } },
+  grind: { station: 'board', taps: 3, emoji: '⚙️', ko: '갈기', en: 'Grind', how: { ko: '도마를 톡톡 눌러 커피콩을 갈아요', en: 'Tap the board to grind' } },
+  mix: { station: 'board', taps: 3, emoji: '🥣', ko: '섞기', en: 'Mix', how: { ko: '도마를 톡톡 눌러 반죽을 섞어요', en: 'Tap the board to mix' } },
+  blend: { station: 'board', taps: 3, emoji: '🌀', ko: '믹서 돌리기', en: 'Blend', how: { ko: '도마를 톡톡 눌러 믹서를 돌려요', en: 'Tap the board to blend' } },
   pour: { station: 'board', taps: 2, emoji: '🥤', ko: '붓기', en: 'Pour', how: { ko: '도마를 눌러 컵에 부어요', en: 'Tap the board to pour' } },
   bake: { station: 'oven', taps: 3, emoji: '🔥', ko: '굽기', en: 'Bake', how: { ko: '오븐을 톡톡 눌러 구워요', en: 'Tap the oven to bake' } },
   boil: { station: 'stove', taps: 3, emoji: '♨️', ko: '끓이기', en: 'Boil', how: { ko: '냄비를 톡톡 눌러 끓여요', en: 'Tap the pot to boil' } },
