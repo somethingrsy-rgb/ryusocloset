@@ -359,7 +359,6 @@ export default function App() {
 
   /** 상점 화면 (농장·여행에서 이동하고, 닫으면 왔던 곳으로 돌아간다) */
   const shopFrom = useRef<Mode>('closet')
-  const openShop = (from: Mode) => { shopFrom.current = from; setMode('shop') }
 
   /** 찾은 아이템을 입어보러 간다 (여행·농장 공통) */
   const wearFound = (id: string) => {
@@ -404,9 +403,9 @@ export default function App() {
             <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep xl:block">{t('title')}</h1>
             <div role="tablist" className="flex min-w-0 flex-1 overflow-x-auto rounded-full bg-white/80 p-0.5 shadow-sm">
               {modeBtn('closet', 'closet', t('modeCloset'))}
-              {modeBtn('farm', 'farm', lang === 'ko' ? '농장' : 'Farm')}
               {modeBtn('cafe', 'cafe', lang === 'ko' ? '카페' : 'Cafe')}
               {modeBtn('kitchen', 'kitchen', lang === 'ko' ? '주방' : 'Kitchen')}
+              {modeBtn('farm', 'farm', lang === 'ko' ? '농장' : 'Farm')}
               {modeBtn('room', 'room', t('modeRoom'))}
               {modeBtn('travel', 'travel', t('modeTravel'))}
               {modeBtn('shop', 'shop', lang === 'ko' ? '상점' : 'Shop')}
@@ -440,7 +439,7 @@ export default function App() {
             ) : mode === 'kitchen' ? (
               <KitchenGame outfit={outfit} tweaks={tweaks} onGo={setMode} />
             ) : mode === 'farm' ? (
-              <FarmScene outfit={outfit} tweaks={tweaks} onShop={() => openShop('farm')} />
+              <FarmScene outfit={outfit} tweaks={tweaks} onKitchen={() => setMode('kitchen')} />
             ) : mode === 'travel' ? (
               <TravelGame
                 initialPlaceId={travelPreview}
