@@ -5,6 +5,7 @@ import { assetUrl } from '../lib/items'
 import { ACT_REACH, FH, FW, GOAL_BOT, GOAL_TOP, MATCH_SECONDS, type Act, newMatch, splitAnimals, stepMatch, type Match, type Team, type Vec } from '../lib/soccer'
 import { playCheer, playKick, playLevelDone, playPass, playShoot, playTap, playWhistle, startBgm, stopBgm } from '../lib/sound'
 import { AvatarHead } from './AvatarHead'
+import { haptic } from '../lib/haptic'
 
 /** 팀 색: 빨강 팀 축구복(유하 몸에 맞춰 그림), 보라 팀 축구복(유엘 몸에 맞춰 그림) */
 const KIT: Record<Team, { costume: string; shoes: string; color: string; soft: string; name: string }> = {
@@ -234,7 +235,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
         const ready = match.hold === hi || Math.hypot(h.x - match.ball.x, h.y - match.ball.y) <= ACT_REACH
         if (!ready) return null
         const pos = corners(t).buttons
-        const press = (a: Act) => (e: React.PointerEvent) => { e.stopPropagation(); acts.current[t] = a }
+        const press = (a: Act) => (e: React.PointerEvent) => { e.stopPropagation(); acts.current[t] = a; haptic(a === 'shoot') } // 누르는 순간 손에 톡(슛은 두 번)
         return (
           <div key={`btn${t}`} className="absolute z-[1800] flex items-end gap-2" style={pos}>
             <button aria-label={`${KIT[t].name} 팀 패스`} onPointerDown={press('pass')} className="flex h-14 w-14 flex-col items-center justify-center rounded-full bg-white/95 font-black shadow-lg active:scale-90" style={{ boxShadow: `0 0 0 3px ${KIT[t].color}`, color: KIT[t].color }}><span style={{ fontSize: 22, lineHeight: 1 }}>👟</span><span style={{ fontSize: 11 }}>패스</span></button>
