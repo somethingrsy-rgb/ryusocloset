@@ -16,20 +16,20 @@ import { CoinIcon } from './Icons'
  * 아바타는 아일랜드 뒤에 서서 요리한다: cook 은 발 위치, island 는 그림에서 오려 낸 아일랜드(public/kitchen/island_*.webp)를 아바타 앞에 다시 덮는 자리(왼쪽·위·너비·높이 %).
  */
 type Box = { x: number; y: number; w: number; h: number }
-const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; ovenGlass: Box; fx: { ice: [number, number, number]; tap: [number, number, number]; pot: [number, number, number] }; cook: [number, number]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
+const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; ovenGlass: Box; fx: { ice: [number, number, number]; tap: [number, number, number]; drop: number; pot: [number, number, number] }; cook: [number, number]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
   portrait: {
     img: 'kitchen/kitchen_portrait.webp', ratio: 941 / 1672, avatarH: 24,
     at: { fridge: { x: 15.5, y: 31, w: 24, h: 32 }, sink: { x: 48, y: 36.5, w: 24, h: 7 }, stove: { x: 86, y: 33.5, w: 22, h: 6 }, oven: { x: 86.5, y: 44, w: 24, h: 12 }, board: { x: 50, y: 59, w: 40, h: 9 } },
     ovenGlass: { x: 86.7, y: 43.3, w: 14, h: 4.4 },
-    // 효과 자리(그림 크기에 대한 %): ice = 냉장고 위칸 가운데 [x, y, 너비(문 폭의 1/3)], tap = 수도꼭지 끝 [x, 물이 나오는 y, 개수대 테두리 y(물방울이 여기서 사라진다)], pot = 냄비 [x, 냄비 바닥 y, 냄비 폭]
-    fx: { ice: [14, 22, 6.9], tap: [47.8, 31, 33.6], pot: [86.1, 34.8, 10] },
+    // 효과 자리(그림 크기에 대한 %): ice = 냉장고 위칸 가운데 [x, y, 너비(문 폭의 1/3)], tap = 수도꼭지 끝 [x, 물이 나오는 y, 개수대 테두리 y(물방울이 여기서 사라진다)], drop = 물방울 너비(가로 그림은 수도꼭지~테두리가 짧아서 작게: 크면 물방울 위쪽만 잘려 세모로 보였다), pot = 냄비 [x, 냄비 바닥 y, 냄비 폭]
+    fx: { ice: [14, 22, 6.9], tap: [47.8, 31, 33.6], drop: 2.4, pot: [86.1, 34.8, 10] },
     cook: [50, 62], island: { img: 'kitchen/island_portrait.webp', l: 12.221, t: 52.452, w: 75.452, h: 33.612 },
   },
   wide: {
     img: 'kitchen/kitchen_wide.webp', ratio: 1672 / 941, avatarH: 38,
     at: { fridge: { x: 19.7, y: 37, w: 16, h: 45 }, sink: { x: 49.3, y: 41.5, w: 15, h: 10 }, stove: { x: 81.6, y: 38, w: 14, h: 9 }, oven: { x: 83.4, y: 53.5, w: 15, h: 17 }, board: { x: 49.6, y: 60.5, w: 24, h: 12 } },
     ovenGlass: { x: 83.2, y: 53.6, w: 9, h: 7 },
-    fx: { ice: [19.1, 23.4, 5], tap: [49.1, 34.3, 38.6], pot: [81.6, 40.5, 5.5] },
+    fx: { ice: [19.1, 23.4, 5], tap: [49.1, 34.3, 38.6], drop: 1.1, pot: [81.6, 40.5, 5.5] },
     // 가로 그림은 아바타가 싱크대 바로 앞을 가려서(물방울·씻는 재료가 얼굴 위에 그려짐) 아일랜드 뒤 오른쪽에 선다
     cook: [64, 66], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
   },
@@ -184,7 +184,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
 
         {/* 씻기: 수도꼭지에서 물방울이 개수대로 떨어진다 */}
         {nowStep === 'wash' && (
-          <div aria-hidden className="pointer-events-none absolute -translate-x-1/2 overflow-hidden" style={{ left: `${L.fx.tap[0]}%`, top: `${L.fx.tap[1]}%`, height: `${L.fx.tap[2] - L.fx.tap[1]}%`, width: '2.4%', zIndex: 4 }}>
+          <div aria-hidden className="pointer-events-none absolute -translate-x-1/2 overflow-hidden" style={{ left: `${L.fx.tap[0]}%`, top: `${L.fx.tap[1]}%`, height: `${L.fx.tap[2] - L.fx.tap[1]}%`, width: `${L.fx.drop}%`, zIndex: 4 }}>
             {[0, 1].map((k) => <img key={k} src={assetUrl('kitchen/drop.svg')} alt="" draggable={false} className="kitchen-drop absolute left-0 w-full" style={{ animationDelay: `${k * 0.375}s` }} />)}
           </div>
         )}
