@@ -74,11 +74,13 @@ export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: 
   const pending = useRef(new Set<number>()) // 지금 처리 중인 밭 (같은 밭을 두 번 누르는 것만 막는다. 걷는 중에 다른 밭은 바로 누를 수 있다)
   const walkToken = useRef(0)
   const secRef = useRef<HTMLElement>(null)
+  /** 폰 가로처럼 그림 오른쪽에 빈 자리가 넉넉하면 도구 버튼을 그림 위가 아니라 그 빈 자리에 둔다 */
+  const [side, setSide] = useState(false)
   const [wide, setWide] = useState(false) // 가로로 넓은 화면(패드 가로 등): 가로 그림을 쓰고 도구 버튼을 오른쪽에 세로로 얹는다
   useEffect(() => {
     const el = secRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => setWide(el.clientWidth > el.clientHeight * 1.2))
+    const ro = new ResizeObserver(() => { setWide(el.clientWidth > el.clientHeight * 1.2); setSide(el.clientWidth - Math.min(el.clientWidth, el.clientHeight * 1.6) >= 170) })
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -248,7 +250,7 @@ export function FarmScene({ outfit, tweaks, onShop }: { outfit: Outfit; tweaks: 
       </div>
 
       {/* 도구 버튼: 폰은 그림 아래, 가로 화면은 그림 오른쪽 위에 세로 한 줄로 얹는다 */}
-      <div className={`absolute flex flex-col items-center justify-center ${wide ? '' : 'inset-x-0 bottom-0 px-3 py-3'}`} style={wide ? { zIndex: 15, left: 'calc(min(100cqw, 160cqh) * 0.715)', width: 'calc(min(100cqw, 160cqh) * 0.235)', top: 'calc((100cqh - min(100cqw, 160cqh) / 1.5988) / 2 + min(100cqw, 160cqh) / 1.5988 * 0.37)' } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
+      <div className={`absolute flex flex-col items-center justify-center ${wide ? '' : 'inset-x-0 bottom-0 px-3 py-3'}`} style={wide && side ? { zIndex: 15, left: 'calc(min(100cqw, 160cqh) + 0.5rem)', right: '0.5rem', top: '50%', transform: 'translateY(-50%)' } : wide ? { zIndex: 15, left: 'calc(min(100cqw, 160cqh) * 0.715)', width: 'calc(min(100cqw, 160cqh) * 0.235)', top: 'calc((100cqh - min(100cqw, 160cqh) / 1.5988) / 2 + min(100cqw, 160cqh) / 1.5988 * 0.37)' } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
         <div className={`flex w-full flex-col gap-3 ${wide ? '' : 'max-w-[560px]'}`}>
           {/* 씨앗 고르기 */}
           {picker && (

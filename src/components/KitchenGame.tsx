@@ -54,6 +54,9 @@ const T = {
   },
 }
 
+/** 폰 가로에서 오른쪽 주문서·버튼 칸 너비 */
+const SIDE = '16rem'
+
 interface Cooking { seat: number; step: number; taps: number }
 
 /**
@@ -99,6 +102,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   }, [kitchen.tickets, selTicket, cooking, done])
 
   const L = SPOTS[wide ? 'wide' : 'portrait']
+  const phoneL = wide && short // 폰 가로
   const bounce = () => { setBusy(true); later(() => setBusy(false), 650) }
 
   const menu = selTicket ? menuById(selTicket.menu) : undefined
@@ -164,7 +168,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   return (
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-clip rounded-3xl bg-[#e9b06c] ring-1 ring-black/5 select-none" style={{ containerType: 'size' }}>
       {/* 주방 그림: 화면을 꽉 채우고(넘치는 쪽은 조금 잘림) 가운데에 둔다. 그림 속 자리는 그림 크기에 대한 % 라 그대로 맞는다 */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: `max(100cqw, calc(100cqh * ${L.ratio}))`, aspectRatio: `${L.ratio}` }}>
+      {/* 폰 가로(낮고 넓은 화면): 그림을 잘라 키우면 아일랜드가 잘리고 아래 칸이 아바타를 가려서, 그림은 왼쪽에 다 보이게 놓고 주문서·버튼은 오른쪽 칸으로 */}
+      <div className={`absolute top-1/2 -translate-y-1/2 ${phoneL ? 'left-0' : 'left-1/2 -translate-x-1/2'}`} style={{ width: phoneL ? `min(calc(100cqw - ${SIDE}), calc(100cqh * ${L.ratio}))` : `max(100cqw, calc(100cqh * ${L.ratio}))`, aspectRatio: `${L.ratio}` }}>
         <img src={assetUrl(L.img)} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
 
         {(Object.keys(L.at) as Station[]).map((s) => {
@@ -176,7 +181,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
               style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 3 }}>
               {/* 가리키는 손: 보통은 위에서 아래로. 도마 위 도구나 수도꼭지 물방울과 겹치지 않게 그때는 오른쪽 옆에서 왼쪽으로 가리킨다 */}
               {here && ((kneading && s === 'board') || s === 'sink'
-                ? <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className="kitchen-point-side absolute top-1/2 left-full h-10 w-10 object-contain" />
+                ? <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className={`${s === 'sink' ? 'kitchen-point-left right-full' : 'kitchen-point-side left-full'} absolute top-1/2 h-10 w-10 object-contain`} />
                 : <img aria-hidden src={assetUrl('kitchen/point.webp')} alt="" draggable={false} className="kitchen-point absolute bottom-full left-1/2 h-10 w-10 -translate-x-1/2 object-contain" />)}
             </button>
           )
@@ -236,8 +241,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       </div>
 
       {/* 위: 코인·마트·카페 */}
-      <div className="absolute inset-x-2 top-2 z-20 flex items-center justify-between gap-1.5">
-        <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-bold text-[#8a4b2a] shadow">{tx.title}</span>
+      <div className={`absolute top-2 z-20 flex items-center justify-between gap-1.5 ${phoneL ? 'right-2' : 'inset-x-2'}`} style={phoneL ? { width: `calc(${SIDE} - 1rem)` } : undefined}>
+        <span className={`rounded-full ${phoneL ? 'hidden' : ''} bg-white/90 px-3 py-1.5 text-sm font-bold text-[#8a4b2a] shadow`}>{tx.title}</span>
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
           <button onClick={() => { playTap(); setPantry(true) }} className="h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">{tx.pantry}</button>
@@ -246,7 +251,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       </div>
 
       {/* 주문서 보드 */}
-      <div className="absolute inset-x-1 top-12 z-20 flex gap-2 overflow-x-auto px-1 pt-2.5 pb-2">
+      <div className={`absolute top-12 z-20 flex gap-2 overflow-x-auto px-1 pt-2.5 pb-2 ${phoneL ? 'right-1' : 'inset-x-1'}`} style={phoneL ? { width: `calc(${SIDE} - 0.5rem)` } : undefined}>
         {tickets.length === 0 && <p className="m-0 rounded-2xl bg-white/90 px-3 py-2 text-sm font-bold text-[#8a4b2a] shadow">📝 {tx.noTickets}</p>}
         {tickets.map((t) => {
           const m = menuById(t.menu)!
@@ -268,7 +273,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       </div>
 
       {/* 아래: 고른 주문서의 레시피 · 요리 단계 · 완성 */}
-      <div className="absolute inset-x-2 bottom-2 z-20 mx-auto max-w-md rounded-3xl bg-white/95 p-3 shadow-xl">
+      <div className={`absolute bottom-2 z-20 rounded-3xl bg-white/95 shadow-xl ${phoneL ? 'right-2 overflow-y-auto p-2.5' : 'inset-x-2 mx-auto max-w-md p-3'}`} style={phoneL ? { width: `calc(${SIDE} - 1rem)`, maxHeight: 'calc(100cqh - 9.5rem)' } : undefined}>
         {done !== null && doneMenu ? (
           <div className="flex flex-col items-center gap-2 text-center">
             <p className="m-0 text-lg font-black text-[#c04a5a]">{tx.done(doneMenu[lang])}</p>
@@ -319,7 +324,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
                     return <span key={id} className={`flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-1 text-sm font-bold ${ok ? 'bg-[#e6f6e3] text-[#3d7a35]' : 'bg-[#ffe3e3] text-[#c0392b]'}`}><Ing id={id} className="h-6 w-6" /> {ing[lang]} {have}/{n} {ok ? '✔' : '✖'}</span>
                   })}
                 </div>
-                <p className="m-0 text-xs text-black/45">{tx.how}: {menu.steps.map((s, k) => <span key={k}>{k > 0 && ' → '}<StepIcon menu={menu.id} id={s} className="inline-block h-4 w-4 align-[-2px]" /> {STEPS[s][lang]}</span>)}</p>
+                <p className={`m-0 text-xs text-black/45 ${phoneL ? "hidden" : ""}`}>{tx.how}: {menu.steps.map((s, k) => <span key={k}>{k > 0 && ' → '}<StepIcon menu={menu.id} id={s} className="inline-block h-4 w-4 align-[-2px]" /> {STEPS[s][lang]}</span>)}</p>
                 {lacks.length ? (
                   <div className="flex gap-2">
                     {lacks.some(({ id }) => isCrop(id)) && <button onClick={() => { playTap(); onGo('farm') }} className={`${btn} flex-1 bg-[#e6f6e3] text-[#3d7a35]`}>{tx.farm}</button>}
