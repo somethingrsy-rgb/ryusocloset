@@ -8,6 +8,8 @@ import { AvatarHead } from './AvatarHead'
 import { haptic } from '../lib/haptic'
 
 /** 팀 색: 빨강 팀 축구복(유하 몸에 맞춰 그림), 보라 팀 축구복(유엘 몸에 맞춰 그림) */
+/** 팀 이름 최대 글자 수(골대 옆·점수판에 들어가게) */
+const NAME_MAX = 8
 const KIT: Record<Team, { costume: string; shoes: string; color: string; soft: string; name: string }> = {
   0: { costume: 'costume_soccer_red', shoes: 'shoes_soccer_red', color: '#e2475b', soft: '#ffe1e5', name: '빨강' },
   1: { costume: 'costume_soccer_purple', shoes: 'shoes_soccer_purple', color: '#9a7be0', soft: '#efe8ff', name: '보라' },
@@ -36,6 +38,15 @@ function KitFigure({ id, team }: { id: string; team: Team }) {
 export function SoccerGame({ onExit }: { onExit: () => void }) {
   const [phase, setPhase] = useState<'setup' | 'play' | 'done'>('setup')
   const [avatars, setAvatars] = useState<[string, string]>(['yuha', 'yuel'])
+  const [names, setNames] = useState<[string, string]>(() => {
+    try { const v = JSON.parse(localStorage.getItem('ryuso.soccer.teams') ?? 'null'); if (Array.isArray(v) && v.length === 2) return [String(v[0]).slice(0, NAME_MAX), String(v[1]).slice(0, NAME_MAX)] } catch { /* 처음 */ }
+    return ['', '']
+  })
+  const setName = (t: Team, v: string) => setNames((n) => {
+    const next: [string, string] = t === 0 ? [v.slice(0, NAME_MAX), n[1]] : [n[0], v.slice(0, NAME_MAX)]
+    try { localStorage.setItem('ryuso.soccer.teams', JSON.stringify(next)) } catch { /* 저장 못 해도 이번 판은 그 이름으로 */ }
+    return next
+  })
   /** 1인: 빨강 팀만 사람이 하고 보라 팀 아바타는 컴퓨터가, 2인: 두 사람이 한 팀씩 */
   const [players, setPlayers] = useState<1 | 2>(() => { try { return localStorage.getItem('ryuso.soccer.players') === '2' ? 2 : 1 } catch { return 1 } })
   const [animals, setAnimals] = useState<[number[], number[]]>([[0, 1, 2, 3], [4, 5, 6, 7]])
@@ -175,7 +186,8 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
   }
   /** 세로 화면 골대 이름은 버튼·조이스틱이 덜 겹치는 골대 바로 옆(아래 골대는 왼쪽, 위 골대는 오른쪽) */
   const portraitLabelLeft = (t: Team) => t === 0
-  const teamName = (t: Team) => `${avatarById(avatars[t]).name.ko}팀`
+  /** 팀 이름: 시작 창에서 직접 쓴다(다음에도 기억). 비워 두면 빨강팀·보라팀 */
+  const teamName = (t: Team) => names[t].trim() || `${KIT[t].name}팀`
   const left_ = Math.max(0, Math.ceil(MATCH_SECONDS - match.time))
 
   return (
@@ -249,11 +261,12 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
 
       {/* 점수판 */}
       <header className="absolute inset-x-2 top-2 z-[2000] flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 font-black shadow">
-          <span style={{ color: KIT[0].color }}>{teamName(0)}</span>
-          <span className="text-lg">{match.score[0]} : {match.score[1]}</span>
-          <span style={{ color: KIT[1].color }}>{teamName(1)}</span>
-          {phase === 'play' && <span className="ml-1 text-xs text-black/50">{match.time >= MATCH_SECONDS ? '⚽ 골든골' : `⏱ ${Math.floor(left_ / 60)}:${String(left_ % 60).padStart(2, '0')}`}</span>}
+        {/* 긴 팀 이름도 한 줄로: 넘치면 … 으로 줄이고 점수·시간은 늘 보이게 */}
+        <div className="flex min-w-0 items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 font-black whitespace-nowrap shadow">
+          <span className="min-w-0 truncate" style={{ color: KIT[0].color }}>{teamName(0)}</span>
+          <span className="shrink-0 text-lg">{match.score[0]} : {match.score[1]}</span>
+          <span className="min-w-0 truncate" style={{ color: KIT[1].color }}>{teamName(1)}</span>
+          {phase === 'play' && <span className="ml-1 shrink-0 text-xs text-black/50">{match.time >= MATCH_SECONDS ? '⚽ 골든골' : `⏱ ${Math.floor(left_ / 60)}:${String(left_ % 60).padStart(2, '0')}`}</span>}
         </div>
         <button aria-label="닫기" onClick={onExit} className="h-10 w-10 rounded-full bg-white/95 font-bold shadow">✕</button>
       </header>
@@ -285,7 +298,10 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
             <div className="grid grid-cols-2 gap-2">
               {([0, 1] as Team[]).map((t) => (
                 <div key={t} className="rounded-2xl p-2" style={{ background: KIT[t].soft, boxShadow: `inset 0 0 0 2px ${KIT[t].color}` }}>
-                  <p className="m-0 mb-1 text-sm font-black" style={{ color: KIT[t].color }}>{KIT[t].name} 팀 {players === 1 ? (t === 0 ? '· 나' : '· 컴퓨터') : ''}</p>
+                  {/* 팀 이름 쓰기(아이폰에서 확대되지 않게 글자 16px) */}
+                  <input value={names[t]} onChange={(e) => setName(t, e.target.value)} maxLength={NAME_MAX} placeholder={`${KIT[t].name}팀`} aria-label={`${KIT[t].name} 팀 이름`}
+                    className="mb-0.5 w-full rounded-full bg-white px-2 py-1 text-center font-black outline-none placeholder:opacity-50" style={{ fontSize: 16, color: KIT[t].color, boxShadow: `inset 0 0 0 2px ${KIT[t].color}66` }} />
+                  <p className="m-0 mb-1 text-[11px] font-bold" style={{ color: KIT[t].color }}>✏️ 팀 이름을 써요{players === 1 ? (t === 0 ? ' · 나' : ' · 컴퓨터') : ''}</p>
                   <div className="grid grid-cols-4 gap-1">
                     {AVATARS.map((a) => {
                       const on = avatars[t] === a.id, taken = avatars[t === 0 ? 1 : 0] === a.id
