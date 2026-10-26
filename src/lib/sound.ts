@@ -299,3 +299,43 @@ export const playCook = () => playSample('pop', 0.3, (c, t) => { for (let i = 0;
 /** 카페: 서빙했다(직접 고른 소리 shine.mp3, 수확과 같은 소리). 코인 소리는 농장 등 다른 곳에서 계속 쓴다 */
 export const playServe = () => playSample('shine', 0.6, (c, t) => { tone(c, t, 1760, 1760, 0.09, 0.12, 'triangle'); tone(c, t + 0.07, 2349, 2349, 0.22, 0.12, 'triangle') })
 export const playBell = () => play((c, t) => { tone(c, t, 1976, 1976, 0.45, 0.16, 'triangle'); tone(c, t + 0.17, 1480, 1480, 0.55, 0.16, 'triangle') })
+
+/** 축구: 공을 찬다(퉁) / 세게 찬다 / 굴려 준다 */
+export const playKick = () => play((c, t) => { click(c, t, 900, 0.35); tone(c, t, jitter(190), jitter(90), 0.08, 0.22) })
+export const playShoot = () => play((c, t) => { click(c, t, 1400, 0.55); tone(c, t, jitter(240), jitter(80), 0.12, 0.3); tone(c, t + 0.02, jitter(900), jitter(1200), 0.12, 0.08, 'triangle') })
+export const playPass = () => play((c, t) => { click(c, t, 700, 0.22); tone(c, t, jitter(330), jitter(220), 0.07, 0.14) })
+/** 축구: 심판 호루라기. long 이면 길게(경기 끝) */
+export function playWhistle(long = false) {
+  play((c, t) => {
+    const dur = long ? 0.9 : 0.35
+    const o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), g = c.createGain(), lp = c.createBiquadFilter()
+    o.type = 'sine'; o.frequency.value = 2300
+    lfo.frequency.value = 28; lg.gain.value = 140 // 호루라기 떨림
+    lfo.connect(lg).connect(o.frequency)
+    lp.type = 'lowpass'; lp.frequency.value = 3200
+    g.gain.setValueAtTime(0.0001, t)
+    g.gain.exponentialRampToValueAtTime(0.07 * EFFECT_VOL, t + 0.02)
+    g.gain.setValueAtTime(0.07 * EFFECT_VOL, t + dur - 0.06)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur)
+    o.connect(lp).connect(g).connect(c.destination)
+    o.start(t); lfo.start(t); o.stop(t + dur + 0.02); lfo.stop(t + dur + 0.02)
+  })
+}
+/** 축구: 골! 관중 환호(부드러운 바람 같은 함성이 커졌다 잦아든다) */
+export function playCheer() {
+  play((c, t) => {
+    const len = Math.floor(c.sampleRate * 1.6)
+    const buf = c.createBuffer(1, len, c.sampleRate)
+    const d = buf.getChannelData(0)
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1
+    const src = c.createBufferSource(); src.buffer = buf
+    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.7
+    const g = c.createGain()
+    g.gain.setValueAtTime(0.0001, t)
+    g.gain.exponentialRampToValueAtTime(0.12 * EFFECT_VOL, t + 0.25)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.55)
+    src.connect(bp).connect(g).connect(c.destination)
+    src.start(t)
+    ;[523, 659, 784].forEach((f, k) => tone(c, t + 0.1 + k * 0.09, f, f * 1.01, 0.22, 0.1, 'triangle'))
+  })
+}
