@@ -103,11 +103,11 @@ export const soundOn = () => enabled
 
 /* ---------- 배경 음악(마을 산책): 한 곡을 반복한다. 효과음 끄기를 따르고, 앱이 가려지면 멈춘다 ---------- */
 let bgmWant: string | null = null
-let bgmNode: { src: AudioBufferSourceNode; name: string } | null = null
+let bgmNode: { srcs: AudioBufferSourceNode[]; name: string } | null = null
 const BGM_GAIN: Record<string, number> = { walk: 0.08, birds: 0.18, cafe: 0.1, room: 0.2, run: 0.1, shop: 0.12, rain: 0.1 }
 function stopBgmNode() {
   if (!bgmNode) return
-  try { bgmNode.src.stop() } catch { /* 이미 멈춤 */ }
+  for (const src of bgmNode.srcs) { try { src.stop() } catch { /* 이미 멈춤 */ } }
   bgmNode = null
 }
 function syncBgm() {
@@ -117,16 +117,21 @@ function syncBgm() {
   const name = bgmWant
   const c = getCtx()
   if (!c) return
-  void loadSample(c, name).then((buf) => {
-    if (!buf || bgmWant !== name || !enabled || bgmNode || hiddenNow()) return
-    const src = c.createBufferSource()
-    const g = c.createGain()
-    g.gain.value = BGM_GAIN[name] ?? 0.12
-    src.buffer = buf
-    src.loop = true
-    src.connect(g).connect(c.destination)
-    src.start()
-    bgmNode = { src, name }
+  // 'birds+cafe' 처럼 + 로 이으면 여러 곡을 한꺼번에 겹쳐 튼다(다 불러온 뒤 같이 시작)
+  const parts = name.split('+')
+  void Promise.all(parts.map((n) => loadSample(c, n))).then((bufs) => {
+    if (bufs.some((b) => !b) || bgmWant !== name || !enabled || bgmNode || hiddenNow()) return
+    const srcs = bufs.map((buf, i) => {
+      const src = c.createBufferSource()
+      const g = c.createGain()
+      g.gain.value = BGM_GAIN[parts[i]] ?? 0.12
+      src.buffer = buf
+      src.loop = true
+      src.connect(g).connect(c.destination)
+      src.start()
+      return src
+    })
+    bgmNode = { srcs, name }
   })
 }
 /** 배경 음악을 켠다(이미 같은 곡이면 그대로) */
