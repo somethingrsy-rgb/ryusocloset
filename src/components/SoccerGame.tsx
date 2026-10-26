@@ -59,7 +59,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
   const portrait = size.h > size.w
   const top = 52, pad = 10
   const availW = size.w - pad * 2, availH = size.h - top - pad
-  const scale = portrait ? Math.min(availW / (FH + 4), availH / (FW + 8)) : Math.min(availW / (FW + 8), availH / (FH + 4))
+  const scale = portrait ? Math.min(availW / (FH + 4), availH / (FW + 16)) : Math.min(availW / (FW + 16), availH / (FH + 4)) // 골대(3.5)와 그 옆 팀 이름 자리까지 비운다
   const fw = (portrait ? FH : FW) * scale, fh = (portrait ? FW : FH) * scale
   const left = (size.w - fw) / 2, fieldTop = top + (availH - fh) / 2
   const toScreen = (x: number, y: number) => (portrait ? { x: left + (y / FH) * fw, y: fieldTop + (1 - x / FW) * fh } : { x: left + (x / FW) * fw, y: fieldTop + (y / FH) * fh })
@@ -140,6 +140,14 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
       <div aria-hidden className="absolute rounded-full border-[3px] border-white/90" style={{ ...rect(FW / 2 - 8, FH / 2 - 8, FW / 2 + 8, FH / 2 + 8) }} />
       {[0, 1].map((t) => <div key={`box${t}`} aria-hidden className="absolute border-[3px] border-white/90" style={rect(t ? FW - 14 : 0, 14, t ? FW : 14, FH - 14)} />)}
       {[0, 1].map((t) => <div key={`goal${t}`} aria-hidden className="absolute rounded-sm border-[3px] border-white" style={{ ...rect(t ? FW : -3.5, GOAL_TOP, t ? FW + 3.5 : 0, GOAL_BOT), background: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0 3px, transparent 3px 8px)', boxShadow: `0 0 0 2px ${KIT[t === 0 ? 0 : 1].color}` }} />)}
+      {/* 골대 옆 팀 이름: 이 골대를 지키는 팀(빨강 팀은 왼쪽/아래 골대). 가로 화면은 골대 바깥 옆에 세로 글씨로, 세로 화면은 골대 오른쪽 옆에(골키퍼 표시를 가리지 않게) */}
+      {([0, 1] as Team[]).map((t) => {
+        const g = rect(t === 0 ? -3.5 : FW, GOAL_TOP, t === 0 ? 0 : FW + 3.5, GOAL_BOT)
+        const style: React.CSSProperties = portrait
+          ? { left: g.left + g.width + 6, top: g.top + g.height / 2, transform: 'translateY(-50%)' }
+          : { left: t === 0 ? g.left - 3 : g.left + g.width + 3, top: g.top + g.height / 2, transform: `translate(${t === 0 ? '-100%' : '0'}, -50%)`, writingMode: 'vertical-rl' }
+        return <span key={`gl${t}`} aria-hidden className="pointer-events-none absolute z-[1600] rounded-full px-1.5 py-1 text-[11px] leading-none font-black whitespace-nowrap text-white shadow" style={{ ...style, background: KIT[t].color }}>{teamName(t)} 골대</span>
+      })}
 
       {/* 선수들(아래쪽일수록 앞에) */}
       {match.players.map((p, i) => {
@@ -155,6 +163,11 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
             </div>
             {/* 발밑 팀 색 동그라미 */}
             <span className="absolute left-1/2 -translate-x-1/2 rounded-[50%]" style={{ bottom: -3, width: w * 0.8, height: 7, background: KIT[p.team].color, opacity: 0.55, zIndex: -1 }} />
+            {/* 골키퍼: 손에 장갑, 머리 위에 팀 색 "골키퍼" 표시 */}
+            {p.role === 'keeper' && <>
+              <span className="absolute left-1/2 -translate-x-1/2 rounded-full px-1.5 text-[10px] font-black whitespace-nowrap text-white shadow" style={{ top: -14, background: KIT[p.team].color }}>🧤 골키퍼</span>
+              {[-1, 1].map((sd) => <span key={sd} className="absolute leading-none" style={{ top: '48%', [sd < 0 ? 'left' : 'right']: '-6%', fontSize: w * 0.3, transform: `scaleX(${sd})` }}>🧤</span>)}
+            </>}
             {human && <span className="absolute left-1/2 -translate-x-1/2 rounded-full px-1.5 text-[11px] font-black whitespace-nowrap text-white shadow" style={{ top: -16, background: KIT[p.team].color }}>{avatarById(p.who as string).name.ko}</span>}
           </div>
         )
@@ -171,7 +184,6 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
         </div>
         <button aria-label="닫기" onClick={onExit} className="h-10 w-10 rounded-full bg-white/95 font-bold shadow">✕</button>
       </header>
-      {phase === 'play' && match.time < 5 && <p className="pointer-events-none absolute inset-x-4 bottom-3 z-[2000] m-0 rounded-full bg-white/90 px-3 py-1.5 text-center text-xs font-bold text-[#3d6b2f] shadow">{players === 1 ? '화면을 누르고 끌면 내 아바타가 따라 달려요' : `${portrait ? '아래쪽은 빨강, 위쪽은 보라' : '왼쪽은 빨강, 오른쪽은 보라'} 팀 화면이에요. 누르고 끌면 따라 달리고`}, 공에 닿으면 저절로 차요!</p>}
       {goal !== null && <div className="pointer-events-none absolute inset-0 z-[2001] flex items-center justify-center"><p className="m-0 rounded-3xl bg-white/95 px-6 py-4 text-center text-3xl font-black shadow-xl" style={{ color: KIT[goal].color }}>골!! ⚽🎉<br /><span className="text-lg">{teamName(goal)}</span></p></div>}
 
       {/* 시작 전: 아바타 2명, 동물 팀 나누기 / 끝: 결과 */}
@@ -195,6 +207,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
                 </button>
               ))}
             </div>
+            <p className="mt-0 mb-2 rounded-xl bg-white px-2 py-1.5 text-xs font-bold text-[#3d6b2f]">{players === 1 ? '화면을 누르고 끌면 내 아바타가 따라 달려요' : `${portrait ? '아래쪽은 빨강, 위쪽은 보라' : '왼쪽은 빨강, 오른쪽은 보라'} 팀 화면이에요. 누르고 끌면 따라 달리고`}, 공에 닿으면 저절로 차요!</p>
             <div className="grid grid-cols-2 gap-2">
               {([0, 1] as Team[]).map((t) => (
                 <div key={t} className="rounded-2xl p-2" style={{ background: KIT[t].soft, boxShadow: `inset 0 0 0 2px ${KIT[t].color}` }}>
