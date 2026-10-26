@@ -227,7 +227,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
         return (
           <div key={i} aria-hidden className="pointer-events-none absolute" style={{ left: s.x - w / 2, top: s.y - h, width: w, height: h, zIndex: Math.round(s.y) }}>
             <div className="relative h-full w-full" style={{ transform: `scaleX(${flip})` }}>
-              {human ? <KitFigure id={p.who as string} team={p.team} /> : <img src={assetUrl(`cafe/stand/${CALL_ANIMALS[p.who as number].img}_${party?.team === p.team ? 'wave' : 'stand'}.webp`)} alt="" draggable={false} className={`h-full w-full object-contain ${party?.team === p.team ? 'soccer-hop' : ''}`} style={party?.team === p.team ? { animationDelay: `${(i % 5) * 0.08}s` } : undefined} />}
+              {human ? <KitFigure id={p.who as string} team={p.team} /> : <img src={assetUrl(`cafe/soccer/${CALL_ANIMALS[p.who as number].img}_${party?.team === p.team ? 'wave' : 'stand'}_${p.team === 0 ? 'red' : 'purple'}.webp`)} alt="" draggable={false} className={`h-full w-full object-contain ${party?.team === p.team ? 'soccer-hop' : ''}`} style={party?.team === p.team ? { animationDelay: `${(i % 5) * 0.08}s` } : undefined} />}
             </div>
             {/* 발밑 팀 색 동그라미 */}
             <span className="absolute left-1/2 -translate-x-1/2 rounded-[50%]" style={{ bottom: -3, width: w * 0.8, height: 7, background: KIT[p.team].color, opacity: 0.55, zIndex: -1 }} />
