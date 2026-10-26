@@ -103,36 +103,36 @@ export const soundOn = () => enabled
 
 /* ---------- 배경 음악(마을 산책): 한 곡을 반복한다. 효과음 끄기를 따르고, 앱이 가려지면 멈춘다 ---------- */
 let bgmWant: string | null = null
-let bgmNode: { srcs: AudioBufferSourceNode[]; name: string } | null = null
+// 곡마다 따로 튼다: 'birds+cafe' → 'cafe' 처럼 바뀌면 둘 다에 있는 카페 노래는 끊지 않고 이어서 나오고, 새소리만 멈춘다
+const bgmNodes = new Map<string, AudioBufferSourceNode>()
+const bgmLoading = new Set<string>()
 const BGM_GAIN: Record<string, number> = { walk: 0.08, birds: 0.18, cafe: 0.1, room: 0.2, run: 0.1, shop: 0.12, rain: 0.1 }
+const wanted = () => (bgmWant && enabled && !hiddenNow() ? bgmWant.split('+') : [])
 function stopBgmNode() {
-  if (!bgmNode) return
-  for (const src of bgmNode.srcs) { try { src.stop() } catch { /* 이미 멈춤 */ } }
-  bgmNode = null
+  for (const src of bgmNodes.values()) { try { src.stop() } catch { /* 이미 멈춤 */ } }
+  bgmNodes.clear()
 }
 function syncBgm() {
-  if (!bgmWant || !enabled || hiddenNow()) { stopBgmNode(); return }
-  if (bgmNode?.name === bgmWant) return
-  stopBgmNode()
-  const name = bgmWant
-  const c = getCtx()
+  const want = wanted()
+  for (const [n, src] of bgmNodes) if (!want.includes(n)) { try { src.stop() } catch { /* 이미 멈춤 */ } bgmNodes.delete(n) }
+  const c = want.length ? getCtx() : null
   if (!c) return
-  // 'birds+cafe' 처럼 + 로 이으면 여러 곡을 한꺼번에 겹쳐 튼다(다 불러온 뒤 같이 시작)
-  const parts = name.split('+')
-  void Promise.all(parts.map((n) => loadSample(c, n))).then((bufs) => {
-    if (bufs.some((b) => !b) || bgmWant !== name || !enabled || bgmNode || hiddenNow()) return
-    const srcs = bufs.map((buf, i) => {
+  for (const n of want) {
+    if (bgmNodes.has(n) || bgmLoading.has(n)) continue
+    bgmLoading.add(n)
+    void loadSample(c, n).then((buf) => {
+      bgmLoading.delete(n)
+      if (!buf || !wanted().includes(n) || bgmNodes.has(n)) return
       const src = c.createBufferSource()
       const g = c.createGain()
-      g.gain.value = BGM_GAIN[parts[i]] ?? 0.12
+      g.gain.value = BGM_GAIN[n] ?? 0.12
       src.buffer = buf
       src.loop = true
       src.connect(g).connect(c.destination)
       src.start()
-      return src
+      bgmNodes.set(n, src)
     })
-    bgmNode = { srcs, name }
-  })
+  }
 }
 /** 배경 음악을 켠다(이미 같은 곡이면 그대로) */
 export const startBgm = (name: string) => { bgmWant = name; syncBgm() }
