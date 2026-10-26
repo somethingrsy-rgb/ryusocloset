@@ -216,7 +216,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
           <span className="text-sm font-bold">{lang === 'ko' ? '찾았어요!' : 'Found it!'} {travelItem(gotId)!.name[lang]}</span>
         </div>
       )}
-      <div className="absolute top-2 left-2 right-28 z-10 flex min-w-0 flex-wrap items-center gap-1">
+      <div className="absolute top-2 left-2 right-2 z-10 flex min-w-0 flex-wrap items-center gap-1">
         <div className="flex min-w-0 flex-wrap items-center gap-1" onPointerUp={e => e.stopPropagation()}>{actions}</div>
       </div>
     </div>
