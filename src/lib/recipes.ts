@@ -31,18 +31,18 @@ export function ingredient(id: IngId) {
 /** 요리 단계: 어느 자리(그림 속 싱크대·도마·냄비·오븐·냉장고)를 몇 번 톡톡 누르는지 */
 export type Station = 'fridge' | 'sink' | 'board' | 'stove' | 'oven'
 export const STEPS = {
-  wash: { station: 'sink', taps: 3, emoji: '💧', ko: '씻기', en: 'Wash', how: { ko: '싱크대를 톡톡 눌러 씻어요', en: 'Tap the sink to wash' } },
-  cut: { station: 'board', taps: 3, emoji: '🔪', ko: '썰기', en: 'Cut', how: { ko: '도마를 톡톡 눌러 썰어요', en: 'Tap the board to cut' } },
-  grind: { station: 'board', taps: 3, emoji: '⚙️', ko: '갈기', en: 'Grind', how: { ko: '도마를 톡톡 눌러 커피콩을 갈아요', en: 'Tap the board to grind' } },
-  mix: { station: 'board', taps: 3, emoji: '🥣', ko: '섞기', en: 'Mix', how: { ko: '도마를 톡톡 눌러 반죽을 섞어요', en: 'Tap the board to mix' } },
-  blend: { station: 'board', taps: 3, emoji: '🌀', ko: '믹서 돌리기', en: 'Blend', how: { ko: '도마를 톡톡 눌러 믹서를 돌려요', en: 'Tap the board to blend' } },
+  wash: { station: 'sink', taps: 2, emoji: '💧', ko: '씻기', en: 'Wash', how: { ko: '싱크대를 톡톡 눌러 씻어요', en: 'Tap the sink to wash' } },
+  cut: { station: 'board', taps: 2, emoji: '🔪', ko: '썰기', en: 'Cut', how: { ko: '도마를 톡톡 눌러 썰어요', en: 'Tap the board to cut' } },
+  grind: { station: 'board', taps: 2, emoji: '⚙️', ko: '갈기', en: 'Grind', how: { ko: '도마를 톡톡 눌러 커피콩을 갈아요', en: 'Tap the board to grind' } },
+  mix: { station: 'board', taps: 2, emoji: '🥣', ko: '섞기', en: 'Mix', how: { ko: '도마를 톡톡 눌러 반죽을 섞어요', en: 'Tap the board to mix' } },
+  blend: { station: 'board', taps: 2, emoji: '🌀', ko: '믹서 돌리기', en: 'Blend', how: { ko: '도마를 톡톡 눌러 믹서를 돌려요', en: 'Tap the board to blend' } },
   pour: { station: 'board', taps: 2, emoji: '🥤', ko: '붓기', en: 'Pour', how: { ko: '도마를 눌러 컵에 부어요', en: 'Tap the board to pour' } },
-  bake: { station: 'oven', taps: 3, emoji: '🔥', ko: '굽기', en: 'Bake', how: { ko: '오븐을 톡톡 눌러 구워요', en: 'Tap the oven to bake' } },
-  boil: { station: 'stove', taps: 3, emoji: '♨️', ko: '끓이기', en: 'Boil', how: { ko: '냄비를 톡톡 눌러 끓여요', en: 'Tap the pot to boil' } },
-  melt: { station: 'stove', taps: 3, emoji: '🍫', ko: '녹이기', en: 'Melt', how: { ko: '냄비를 톡톡 눌러 초콜릿을 녹여요', en: 'Tap the pot to melt' } },
-  top: { station: 'board', taps: 3, emoji: '🍓', ko: '올리기', en: 'Decorate', how: { ko: '도마를 톡톡 눌러 딸기를 올려요', en: 'Tap the board to decorate' } },
-  roll: { station: 'board', taps: 3, emoji: '🌀', ko: '말기', en: 'Roll', how: { ko: '도마를 톡톡 눌러 돌돌 말아요', en: 'Tap the board to roll' } },
-  dip: { station: 'board', taps: 3, emoji: '🍫', ko: '찍기', en: 'Dip', how: { ko: '도마를 톡톡 눌러 딸기를 초콜릿에 찍어요', en: 'Tap the board to dip' } },
+  bake: { station: 'oven', taps: 2, emoji: '🔥', ko: '굽기', en: 'Bake', how: { ko: '오븐을 톡톡 눌러 구워요', en: 'Tap the oven to bake' } },
+  boil: { station: 'stove', taps: 2, emoji: '♨️', ko: '끓이기', en: 'Boil', how: { ko: '냄비를 톡톡 눌러 끓여요', en: 'Tap the pot to boil' } },
+  melt: { station: 'stove', taps: 2, emoji: '🍫', ko: '녹이기', en: 'Melt', how: { ko: '냄비를 톡톡 눌러 초콜릿을 녹여요', en: 'Tap the pot to melt' } },
+  top: { station: 'board', taps: 2, emoji: '🍓', ko: '올리기', en: 'Decorate', how: { ko: '도마를 톡톡 눌러 딸기를 올려요', en: 'Tap the board to decorate' } },
+  roll: { station: 'board', taps: 2, emoji: '🌀', ko: '말기', en: 'Roll', how: { ko: '도마를 톡톡 눌러 돌돌 말아요', en: 'Tap the board to roll' } },
+  dip: { station: 'board', taps: 2, emoji: '🍫', ko: '찍기', en: 'Dip', how: { ko: '도마를 톡톡 눌러 딸기를 초콜릿에 찍어요', en: 'Tap the board to dip' } },
   chill: { station: 'fridge', taps: 2, emoji: '❄️', ko: '굳히기', en: 'Chill', how: { ko: '냉장고를 눌러 차갑게 굳혀요', en: 'Tap the fridge to chill' } },
 } as const satisfies Record<string, { station: Station; taps: number; emoji: string; ko: string; en: string; how: { ko: string; en: string } }>
 export type StepId = keyof typeof STEPS
