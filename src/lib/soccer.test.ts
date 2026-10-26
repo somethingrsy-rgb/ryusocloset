@@ -45,3 +45,34 @@ describe('축구', () => {
     expect(new Set([...a, ...b]).size).toBe(8)
   })
 })
+
+describe('축구: 몸 겹치지 않기·1인 게임', () => {
+  it('경기 내내 선수끼리 몸(반지름 7.5)이 거의 겹치지 않는다', () => {
+    const rnd = seeded(8)
+    let m: Match = newMatch(['yuha', 'yuel'], splitAnimals(rnd), [false, true])
+    let bad = 0, frames = 0
+    for (let t = 0; t < 60 * 60; t++) {
+      m = stepMatch(m, 1 / 60, [{ x: m.ball.x, y: m.ball.y }, null], rnd).m
+      frames++
+      for (let i = 0; i < m.players.length; i++) for (let j = i + 1; j < m.players.length; j++) {
+        const a = m.players[i], c = m.players[j]
+        if (Math.hypot(a.x - c.x, a.y - c.y) < 7.5 * 0.8) bad++
+      }
+    }
+    expect(bad / frames).toBeLessThan(0.05)
+  })
+  it('1인 게임에서는 보라 팀 아바타를 컴퓨터가 움직여 공을 찬다', () => {
+    const rnd = seeded(4)
+    let m: Match = newMatch(['yuha', 'yuel'], [[0, 1, 2, 3], [4, 5, 6, 7]], [false, true])
+    const start = m.players.find((p) => p.team === 1 && p.role === 'human')!
+    let moved = 0, kicks = 0
+    for (let t = 0; t < 60 * 20; t++) {
+      const r = stepMatch(m, 1 / 60, [null, null], rnd); m = r.m
+      const now = m.players.find((p) => p.team === 1 && p.role === 'human')!
+      moved = Math.max(moved, Math.hypot(now.x - start.x, now.y - start.y))
+      if (r.events.includes('kick') && Math.hypot(now.x - m.ball.x, now.y - m.ball.y) < 8) kicks++
+    }
+    expect(moved).toBeGreaterThan(3)
+    expect(kicks).toBeGreaterThan(0)
+  })
+})

@@ -10,7 +10,12 @@ export const MATCH_SECONDS = 120
 const AVATAR_SPEED = 24
 const ANIMAL_SPEED = 13
 const KEEPER_SPEED = 11
-const REACH = 2.8
+const REACH = 5
+/** 1인 게임에서 컴퓨터가 움직이는 상대 아바타 빠르기(사람보다 조금 느리게) */
+const CPU_SPEED = 17
+/** 몸이 겹치지 않는 거리: SEP_X·SEP_Y 안으로는 들어오지 못한다(그림 폭에 맞춤. 세로 화면은 경기장을 세워 그려서 가로·세로를 같게) */
+const SEP_X = 7.5
+const SEP_Y = 7.5
 const FRICTION = 1.1
 
 export type Team = 0 | 1
@@ -27,6 +32,8 @@ export interface Player {
   dir: 1 | -1
   /** 다시 찰 수 있을 때까지 남은 초 */
   cd: number
+  /** 동물마다 다른 버릇: 빠르기 배율, 공을 따라가는 정도, 어슬렁거리는 크기·빠르기·시작점 */
+  trait: { speed: number; follow: number; wander: number; freq: number; phase: number }
 }
 export interface Match {
   players: Player[]
@@ -36,23 +43,31 @@ export interface Match {
   /** 골이 들어간 뒤 잠깐 멈춰 있는 시간 */
   pause: number
   over: boolean
+  /** 그 팀 아바타를 컴퓨터가 움직이나(1인 게임에서 보라 팀) */
+  cpu: [boolean, boolean]
+  /** 팀마다 지금 공을 쫓는 동물(players 번호). 조금 더 가까운 친구가 생겨도 바로 바꾸지 않아 우왕좌왕하지 않는다 */
+  chaser: [number, number]
 }
 
 const mirror = (v: Vec, team: Team): Vec => (team === 0 ? v : { x: FW - v.x, y: v.y })
 /** 팀 0 기준 자리(팀 1 은 좌우 반대): 골키퍼, 수비 둘, 미드필더, 아바타 */
 const HOMES = { keeper: { x: 4, y: 30 }, field: [{ x: 20, y: 17 }, { x: 20, y: 43 }, { x: 33, y: 30 }], human: { x: 42, y: 30 } }
 
-export function newMatch(avatars: [string, string], animals: [number[], number[]]): Match {
+export function newMatch(avatars: [string, string], animals: [number[], number[]], cpu: [boolean, boolean] = [false, false]): Match {
   const players: Player[] = []
   for (const team of [0, 1] as Team[]) {
     const add = (who: string | number, role: Player['role'], home: Vec) => {
       const h = mirror(home, team)
-      players.push({ team, who, role, home: h, x: h.x, y: h.y, dir: team === 0 ? 1 : -1, cd: 0 })
+      const k = players.length
+      // 번호로 정해지는 버릇(테스트에서도 늘 같다)
+      const r = (n: number) => ((Math.sin(k * 12.9898 + n * 78.233) * 43758.5453) % 1 + 1) % 1
+      players.push({ team, who, role, home: h, x: h.x, y: h.y, dir: team === 0 ? 1 : -1, cd: 0, trait: { speed: 0.85 + r(1) * 0.35, follow: 0.25 + r(2) * 0.4, wander: 3 + r(3) * 4, freq: 0.35 + r(4) * 0.5, phase: r(5) * 6.28 } })
     }
     add(avatars[team], 'human', HOMES.human)
     animals[team].slice(0, 4).forEach((a, k) => (k === 0 ? add(a, 'keeper', HOMES.keeper) : add(a, 'field', HOMES.field[k - 1])))
   }
-  return { players, ball: { x: FW / 2, y: FH / 2, vx: 0, vy: 0 }, score: [0, 0], time: 0, pause: 1.2, over: false }
+  const firstField = (team: Team) => players.findIndex((p) => p.team === team && p.role === 'field')
+  return { players, ball: { x: FW / 2, y: FH / 2, vx: 0, vy: 0 }, score: [0, 0], time: 0, pause: 1.2, over: false, cpu, chaser: [firstField(0), firstField(1)] }
 }
 
 const goalOf = (team: Team): Vec => ({ x: team === 0 ? FW : 0, y: FH / 2 }) // team 이 공격하는 골대
@@ -78,7 +93,7 @@ function resetPositions(m: Match) {
  * events: 'kick'(누가 찼다), 'goal0'·'goal1'(그 팀이 넣었다), 'end'
  */
 export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | null], rnd: () => number = Math.random): { m: Match; events: string[] } {
-  const m: Match = { ...m0, players: m0.players.map((p) => ({ ...p })), ball: { ...m0.ball }, score: [...m0.score] as [number, number] }
+  const m: Match = { ...m0, players: m0.players.map((p) => ({ ...p })), ball: { ...m0.ball }, score: [...m0.score] as [number, number], chaser: [...m0.chaser] as [number, number] }
   const events: string[] = []
   if (m.over) return { m, events }
   m.time = Math.min(MATCH_SECONDS, m.time + dt)
@@ -86,35 +101,58 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
   if (m.pause > 0) { m.pause = Math.max(0, m.pause - dt); return { m, events } }
   const b = m.ball
 
+  const dist = (p: Vec) => Math.hypot(p.x - b.x, p.y - b.y)
   for (const team of [0, 1] as Team[]) {
-    const mine = m.players.filter((p) => p.team === team)
     const own = goalOf(team === 0 ? 1 : 0) // 내가 지키는 골대
     const toGoal = unit(goalOf(team).x - b.x, goalOf(team).y - b.y)
-    // 공에 가장 가까운 필드 동물이 공을 쫓는다(공 뒤로 돌아가 상대 골대 쪽으로 차게)
-    const fielders = mine.filter((p) => p.role === 'field')
-    const chaser = fielders.reduce((a, p) => (Math.hypot(p.x - b.x, p.y - b.y) < Math.hypot(a.x - b.x, a.y - b.y) ? p : a), fielders[0])
-    for (const p of mine) {
-      if (p.role === 'human') { const t = targets[team]; if (t) moveToward(p, { x: clamp(t.x, 1, FW - 1), y: clamp(t.y, 1, FH - 1) }, AVATAR_SPEED, dt) }
-      else if (p.role === 'keeper') {
+    const fwd = team === 0 ? 1 : -1
+    // 공을 쫓는 동물: 지금 쫓는 친구보다 4 이상 더 가까운 친구가 생길 때만 바꾼다
+    const fielders = m.players.map((p, i) => ({ p, i })).filter(({ p }) => p.team === team && p.role === 'field')
+    const best = fielders.reduce((a, c) => (dist(c.p) < dist(a.p) ? c : a), fielders[0])
+    if (dist(best.p) < dist(m.players[m.chaser[team]]) - 4) m.chaser[team] = best.i
+    const chaser = m.players[m.chaser[team]]
+    // 도와주는 친구: 쫓는 친구 다음으로 가까운 동물이 공보다 앞쪽 빈 곳으로 달려가 기다린다
+    const helper = fielders.filter(({ p }) => p !== chaser).sort((a, c) => dist(a.p) - dist(c.p))[0]?.p
+    for (const p of m.players.filter((q) => q.team === team)) {
+      const t = p.trait
+      const wob = { x: Math.sin(m.time * t.freq + t.phase) * t.wander, y: Math.cos(m.time * t.freq * 1.3 + t.phase) * t.wander }
+      if (p.role === 'human' && !m.cpu[team]) { const g = targets[team]; if (g) moveToward(p, { x: clamp(g.x, 1, FW - 1), y: clamp(g.y, 1, FH - 1) }, AVATAR_SPEED, dt) }
+      else if (p.role === 'human') {
+        // 컴퓨터 아바타: 공 뒤로 돌아가 상대 골대 쪽으로 차러 간다
+        moveToward(p, { x: b.x - toGoal.x * 2, y: b.y - toGoal.y * 2 }, CPU_SPEED, dt)
+      } else if (p.role === 'keeper') {
         const near = Math.abs(b.x - own.x) < 14 && b.y > GOAL_TOP - 6 && b.y < GOAL_BOT + 6
-        const t = near ? { x: b.x, y: b.y } : { x: p.home.x, y: clamp(b.y, GOAL_TOP + 2, GOAL_BOT - 2) }
-        moveToward(p, { x: clamp(t.x, Math.min(own.x, own.x + (team === 0 ? 16 : -16)), Math.max(own.x, own.x + (team === 0 ? 16 : -16))), y: t.y }, KEEPER_SPEED, dt)
+        const g = near ? { x: b.x, y: b.y } : { x: p.home.x, y: clamp(b.y, GOAL_TOP + 2, GOAL_BOT - 2) }
+        moveToward(p, { x: clamp(g.x, Math.min(own.x, own.x + fwd * 16), Math.max(own.x, own.x + fwd * 16)), y: g.y }, KEEPER_SPEED, dt)
       } else if (p === chaser) {
-        moveToward(p, { x: b.x - toGoal.x * 1.6, y: b.y - toGoal.y * 1.6 }, ANIMAL_SPEED, dt)
+        moveToward(p, { x: b.x - toGoal.x * 2, y: b.y - toGoal.y * 2 }, ANIMAL_SPEED * t.speed, dt)
+      } else if (p === helper) {
+        const side = p.home.y < FH / 2 ? -1 : 1
+        moveToward(p, { x: clamp(b.x + fwd * 12 + wob.x * 0.5, 4, FW - 4), y: clamp(b.y + side * 12 + wob.y * 0.5, 4, FH - 4) }, ANIMAL_SPEED * 0.9 * t.speed, dt)
       } else {
-        // 나머지는 자기 자리를 지키며 공 쪽으로 조금씩 따라간다
-        moveToward(p, { x: clamp(p.home.x + (b.x - FW / 2) * 0.45, 3, FW - 3), y: clamp(p.home.y + (b.y - FH / 2) * 0.35, 3, FH - 3) }, ANIMAL_SPEED * 0.8, dt)
+        // 나머지는 자기 자리 근처에서 저마다 다르게 어슬렁거리며 공 쪽으로 조금씩 따라간다
+        moveToward(p, { x: clamp(p.home.x + (b.x - FW / 2) * t.follow + wob.x, 3, FW - 3), y: clamp(p.home.y + (b.y - FH / 2) * t.follow * 0.6 + wob.y, 3, FH - 3) }, ANIMAL_SPEED * 0.7 * t.speed, dt)
       }
     }
   }
   // 서로 겹치지 않게 살짝 밀어낸다
   // (지금 자리를 기준으로 한꺼번에 밀어서 배열 순서와 상관없게)
+  // 여러 명이 몰려 있으면 한 번에 다 안 풀려서 여섯 번 되풀이한다
+  for (let round = 0; round < 6; round++) {
   const shove = m.players.map(() => ({ x: 0, y: 0 }))
   for (let i = 0; i < m.players.length; i++) for (let j = i + 1; j < m.players.length; j++) {
-    const a = m.players[i], c = m.players[j], dx = c.x - a.x, dy = c.y - a.y, d = Math.hypot(dx, dy)
-    if (d > 0 && d < 3.2) { const push = (3.2 - d) / 2, ux = dx / d, uy = dy / d; shove[i].x -= ux * push; shove[i].y -= uy * push; shove[j].x += ux * push; shove[j].y += uy * push }
+    const a = m.players[i], c = m.players[j], dx = c.x - a.x, dy = c.y - a.y
+    // 타원 거리(가로 SEP_X·세로 SEP_Y)가 1 보다 가까우면 그 밖으로 반씩 밀어낸다: 그림끼리 몸이 겹치지 않게
+    const e = Math.hypot(dx / SEP_X, dy / SEP_Y)
+    if (e < 1) {
+      const d = Math.hypot(dx, dy), ux = d > 0.01 ? dx / d : (i % 2 ? 1 : -1), uy = d > 0.01 ? dy / d : 0
+      const r = 1 / Math.hypot(ux / SEP_X, uy / SEP_Y) // 이 방향으로 타원 끝까지의 거리
+      const push = (r - d) / 2
+      shove[i].x -= ux * push; shove[i].y -= uy * push; shove[j].x += ux * push; shove[j].y += uy * push
+    }
   }
   m.players.forEach((p, i) => { p.x += shove[i].x; p.y += shove[i].y })
+  }
   for (const p of m.players) { p.x = clamp(p.x, 0.5, FW - 0.5); p.y = clamp(p.y, 0.5, FH - 0.5); p.cd = Math.max(0, p.cd - dt) }
 
   // 공에 닿으면 저절로 찬다: 상대 골대 쪽으로(동물은 조금 빗나가게)
@@ -124,10 +162,10 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
   const kicker = near.length ? near[Math.floor(rnd() * near.length)] : undefined
   for (const p of kicker ? [kicker] : []) {
     const g = goalOf(p.team)
-    const aimY = g.y + (rnd() - 0.5) * (p.role === 'human' ? 8 : 18)
+    const aimY = g.y + (rnd() - 0.5) * (p.role === 'human' && !m.cpu[p.team] ? 8 : 18)
     let d = unit(g.x - b.x, aimY - b.y)
     if (p.role !== 'human') { const a = (rnd() - 0.5) * 0.5, c = Math.cos(a), s = Math.sin(a); d = { x: d.x * c - d.y * s, y: d.x * s + d.y * c } }
-    const power = p.role === 'human' ? 52 : p.role === 'keeper' ? 46 : 36
+    const power = p.role === 'human' ? (m.cpu[p.team] ? 42 : 52) : p.role === 'keeper' ? 46 : 36
     b.vx = d.x * power; b.vy = d.y * power
     p.cd = 0.45
     events.push('kick')
