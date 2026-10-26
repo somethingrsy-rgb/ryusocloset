@@ -11,6 +11,8 @@ const AVATAR_SPEED = 24
 const ANIMAL_SPEED = 13
 const KEEPER_SPEED = 11
 const REACH = 5
+/** 혼자 하기: 아바타가 공에서 이만큼 가까우면 동물 친구들이 아바타 둘레 AVOID_R 밖으로 비켜 준다 */
+const AVOID_NEAR = 10, AVOID_R = 14
 /** 슛 버튼 세기(보통 차기 52 보다 세게) */
 const SHOOT_POWER = 72
 /** 1인 게임에서 컴퓨터가 움직이는 상대 아바타 빠르기(사람보다 조금 느리게) */
@@ -54,6 +56,8 @@ export interface Match {
   chaser: [number, number]
   /** 사람 아바타가 공을 몰고 가는 중이면 그 선수 번호(-1 이면 아무도) */
   hold: number
+  /** 마지막으로 찬 팀(-1 이면 아직 없음): 화면에서 공 꼬리를 그 팀 색으로 그린다 */
+  last: Team | -1
   /** 공을 가진 채 멈춰 있던 시간: 잠깐 멈추면 저절로 찬다(버튼을 안 눌러도 되게) */
   holdIdle: number
 }
@@ -90,7 +94,7 @@ export function cpuStrength(m: Pick<Match, 'cpu' | 'score' | 'time'>, team: Team
   return base
 }
 const AIM_K = 2
-const CPU_LOSING = 0.45, CPU_EVEN = 1, CPU_GOLDEN = 0.45, CPU_AHEAD1 = 1.6, CPU_AHEAD2 = 1.9
+const CPU_LOSING = 0.45, CPU_EVEN = 0.88, CPU_GOLDEN = 0.45, CPU_AHEAD1 = 1.6, CPU_AHEAD2 = 1.9
 
 export function newMatch(avatars: [string, string], animals: [number[], number[]], cpu: [boolean, boolean] = [false, false]): Match {
   const players: Player[] = []
@@ -106,7 +110,7 @@ export function newMatch(avatars: [string, string], animals: [number[], number[]
     animals[team].slice(0, 4).forEach((a, k) => (k === 0 ? add(a, 'keeper', HOMES.keeper) : add(a, 'field', HOMES.field[k - 1])))
   }
   const firstField = (team: Team) => players.findIndex((p) => p.team === team && p.role === 'field')
-  return { players, ball: { x: FW / 2, y: FH / 2, vx: 0, vy: 0 }, score: [0, 0], time: 0, pause: 1.2, over: false, cpu, chaser: [firstField(0), firstField(1)], hold: -1, holdIdle: 0 }
+  return { players, ball: { x: FW / 2, y: FH / 2, vx: 0, vy: 0 }, score: [0, 0], time: 0, pause: 1.2, over: false, cpu, chaser: [firstField(0), firstField(1)], hold: -1, holdIdle: 0, last: -1 }
 }
 
 const goalOf = (team: Team): Vec => ({ x: team === 0 ? FW : 0, y: FH / 2 }) // team 이 공격하는 골대
@@ -150,6 +154,26 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
   const dist = (p: Vec) => Math.hypot(p.x - b.x, p.y - b.y)
   // 이번 프레임에 사람 아바타가 손가락을 따라 스스로 걸었는지(다른 선수에게 밀린 건 빼고): 드리블 중 멈춤을 알아챈다
   const walked = new Set<Player>()
+  // 혼자 하기: 사람 아바타가 공 가까이(AVOID_NEAR) 가면 동물 친구들(양 팀, 골키퍼 빼고)이 아바타 둘레(AVOID_R) 밖으로 비켜 준다
+  const me = vsCpu(m) ? m.players.find((p) => p.role === 'human' && !m.cpu[p.team]) : undefined
+  const avoid = me && dist(me) < AVOID_NEAR ? me : undefined
+  const away = (t: Vec): Vec => {
+    if (!avoid) return t
+    const dx = t.x - avoid.x, dy = t.y - avoid.y, d = Math.hypot(dx, dy)
+    if (d >= AVOID_R) return t
+    const u = d > 0.01 ? { x: dx / d, y: dy / d } : { x: 0, y: avoid.y < FH / 2 ? 1 : -1 }
+    return { x: clamp(avoid.x + u.x * AVOID_R, 3, FW - 3), y: clamp(avoid.y + u.y * AVOID_R, 3, FH - 3) }
+  }
+  /** 이미 아바타 둘레 안에 있는 동물은 아바타가 걸어가는 길 옆으로 비킨다(앞으로만 도망치면 아바타가 금방 따라잡는다) */
+  const stepAside = (p: Player): Vec | null => {
+    if (!avoid) return null
+    const dx = p.x - avoid.x, dy = p.y - avoid.y, d = Math.hypot(dx, dy)
+    if (d >= AVOID_R) return null
+    const u = d > 0.01 ? { x: dx / d, y: dy / d } : { x: 0, y: 1 }
+    const side = avoid.mx * dy - avoid.my * dx >= 0 ? 1 : -1 // 걷는 방향의 왼쪽(1)·오른쪽(-1) 어느 편에 있는지
+    const f = unit(u.x - avoid.my * side * 1.5, u.y + avoid.mx * side * 1.5)
+    return { x: clamp(p.x + f.x * 10, 3, FW - 3), y: clamp(p.y + f.y * 10, 3, FH - 3) }
+  }
   for (const team of [0, 1] as Team[]) {
     const k = cpuStrength(m, team)
     const own = goalOf(team === 0 ? 1 : 0) // 내가 지키는 골대
@@ -164,6 +188,7 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
     const helper = fielders.filter(({ p }) => p !== chaser).sort((a, c) => dist(a.p) - dist(c.p))[0]?.p
     for (const p of m.players.filter((q) => q.team === team)) {
       const t = p.trait
+      const aside = p.role === 'field' ? stepAside(p) : null
       const wob = { x: Math.sin(m.time * t.freq + t.phase) * t.wander, y: Math.cos(m.time * t.freq * 1.3 + t.phase) * t.wander }
       if (p.role === 'human' && !m.cpu[team]) { const g = targets[team]; if (g && moveToward(p, { x: clamp(g.x, 1, FW - 1), y: clamp(g.y, 1, FH - 1) }, AVATAR_SPEED * (m.hold === m.players.indexOf(p) ? Math.min(1, DRIBBLE_SPEED / cpuStrength(m, team === 0 ? 1 : 0)) : 1), dt)) walked.add(p) }
       else if (p.role === 'human') {
@@ -173,14 +198,16 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
         const near = Math.abs(b.x - own.x) < 14 && b.y > GOAL_TOP - 6 && b.y < GOAL_BOT + 6
         const g = near ? { x: b.x, y: b.y } : { x: p.home.x, y: clamp(b.y, GOAL_TOP + 2, GOAL_BOT - 2) }
         moveToward(p, { x: clamp(g.x, Math.min(own.x, own.x + fwd * 16), Math.max(own.x, own.x + fwd * 16)), y: g.y }, KEEPER_SPEED * k, dt)
+      } else if (aside) {
+        moveToward(p, aside, ANIMAL_SPEED * t.speed, dt)
       } else if (p === chaser) {
-        moveToward(p, { x: b.x - toGoal.x * 2, y: b.y - toGoal.y * 2 }, ANIMAL_SPEED * t.speed * k, dt)
+        moveToward(p, away({ x: b.x - toGoal.x * 2, y: b.y - toGoal.y * 2 }), ANIMAL_SPEED * t.speed * k, dt)
       } else if (p === helper) {
         const side = p.home.y < FH / 2 ? -1 : 1
-        moveToward(p, { x: clamp(b.x + fwd * 12 + wob.x * 0.5, 4, FW - 4), y: clamp(b.y + side * 12 + wob.y * 0.5, 4, FH - 4) }, ANIMAL_SPEED * 0.9 * t.speed * k, dt)
+        moveToward(p, away({ x: clamp(b.x + fwd * 12 + wob.x * 0.5, 4, FW - 4), y: clamp(b.y + side * 12 + wob.y * 0.5, 4, FH - 4) }), ANIMAL_SPEED * 0.9 * t.speed * k, dt)
       } else {
         // 나머지는 자기 자리 근처에서 저마다 다르게 어슬렁거리며 공 쪽으로 조금씩 따라간다
-        moveToward(p, { x: clamp(p.home.x + (b.x - FW / 2) * t.follow + wob.x, 3, FW - 3), y: clamp(p.home.y + (b.y - FH / 2) * t.follow * 0.6 + wob.y, 3, FH - 3) }, ANIMAL_SPEED * 0.7 * t.speed * k, dt)
+        moveToward(p, away({ x: clamp(p.home.x + (b.x - FW / 2) * t.follow + wob.x, 3, FW - 3), y: clamp(p.home.y + (b.y - FH / 2) * t.follow * 0.6 + wob.y, 3, FH - 3) }), ANIMAL_SPEED * 0.7 * t.speed * k, dt)
       }
     }
   }
@@ -207,6 +234,10 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
   // 공에 닿으면 저절로 찬다: 상대 골대 쪽으로(동물은 조금 빗나가게)
   /** 공을 찬다: 방향(단위 벡터)과 세기 */
   const strike = (p: Player, d: Vec, power: number, ev: string) => {
+    m.last = p.team
+    // 늘 상대 골대 쪽(앞)으로: 골대 옆 끝줄 가까이에서 골대를 노리면 거의 옆으로(또는 살짝 뒤로) 차게 되는데, 앞쪽 성분을 남겨 준다
+    const fwd = p.team === 0 ? 1 : -1
+    if (d.x * fwd < 0.3) d = { x: fwd * 0.3, y: (d.y < 0 ? -1 : 1) * Math.sqrt(1 - 0.09) }
     b.vx = d.x * power; b.vy = d.y * power
     p.cd = 0.45
     m.hold = -1; m.holdIdle = 0

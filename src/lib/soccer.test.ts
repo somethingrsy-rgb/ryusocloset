@@ -158,3 +158,47 @@ describe('축구: 패스 방향', () => {
   })
 })
 
+
+describe('축구: 차는 방향', () => {
+  it('누가 차든(동물·골키퍼·아바타·컴퓨터) 공은 늘 그 팀이 공격하는 골대 쪽으로 간다(패스·슛 포함)', { timeout: 30000 }, () => {
+    let bad = 0, kicks = 0
+    for (let s = 1; s <= 12; s++) {
+      const rnd = seeded(s * 131)
+      let m: Match = newMatch(['yuha', 'yuel'], splitAnimals(rnd), [false, s % 2 === 0])
+      const kid = kidBot(0.85)
+      for (let t = 0; t < 60 * 60 && !m.over; t++) {
+        const k = kid(m, 1 / 60, rnd)
+        const r = stepMatch(m, 1 / 60, [k.target, s % 2 === 0 ? null : { x: m.ball.x + 2, y: m.ball.y }], rnd, [k.act, null])
+        if (r.events.some((e) => e === 'kick' || e === 'shoot' || e === 'pass')) {
+          kicks++
+          const fwd = r.m.last === 0 ? 1 : -1
+          // 끝줄 벽에 바로 튕긴 공(구석에서 찬 공)은 빼고 본다
+          if (r.m.ball.x > 0 && r.m.ball.x < FW && r.m.ball.vx * fwd <= 0) bad++
+        }
+        m = r.m
+      }
+    }
+    expect(kicks).toBeGreaterThan(100)
+    expect(bad).toBe(0)
+  })
+})
+
+describe('축구: 혼자 하기 비켜 주기', () => {
+  it('아바타가 공 가까이 있으면 동물 친구들(골키퍼 빼고)이 아바타 둘레에서 비켜 준다', () => {
+    let m = newMatch(['yuha', 'yuel'], [[0, 1, 2, 3], [4, 5, 6, 7]], [false, true])
+    const me = m.players.findIndex((p) => p.team === 0 && p.role === 'human')
+    // 아바타와 공을 가운데에 두고, 동물들을 바로 옆에 모아 둔다
+    m = { ...m, pause: 0, ball: { x: 52, y: 30, vx: 0, vy: 0 }, players: m.players.map((p, i) => (i === me ? { ...p, x: 50, y: 30 } : p.role === 'field' ? { ...p, x: 50 + (i % 3) * 3 - 3, y: 30 + (i % 2 ? 11 : -11) } : p.role === 'human' ? { ...p, x: 85 } : p)) }
+    // 공을 몰고 천천히 걸어간다(멈추면 저절로 차 버리니까). 비켜 줄 시간(0.6초)이 지난 뒤, 아바타가 공 가까이 있는 동안 동물이 바짝 붙지 않는다
+    let near = 0, close = 0
+    for (let t = 0; t < 90; t++) {
+      m = stepMatch(m, 1 / 60, [{ x: m.players[me].x + 3, y: 30 }, null], () => 0.5).m
+      const h = m.players[me]
+      if (t < 36 || Math.hypot(h.x - m.ball.x, h.y - m.ball.y) > 8) continue
+      near++
+      close += m.players.filter((p) => p.role === 'field' && Math.hypot(p.x - h.x, p.y - h.y) < 10).length
+    }
+    expect(near).toBeGreaterThan(20)
+    expect(close).toBe(0)
+  })
+})
