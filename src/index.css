@@ -356,7 +356,9 @@ button:focus-visible {
 @keyframes kitchen-land { 0%, 90% { opacity: 0; } 100% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { [style*='kitchen-bring'] { animation-duration: 1ms !important; } }
 
-/* 주방: 다 만들면 파티 친구가 부드럽게 깡충깡충 */
-@keyframes kitchen-helper-hop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-10%); } }
-.kitchen-helper-hop { animation: kitchen-helper-hop 0.8s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .kitchen-helper-hop { animation: none; } }
+/* 주방: 같이 요리하는 친구는 발을 바닥에 붙인 채 살랑살랑 좌우로 흔들고, 다 만들면 조금 더 크고 빠르게 신나게 흔든다 */
+@keyframes kitchen-helper-sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes kitchen-helper-cheer { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+.kitchen-helper-sway { transform-origin: 50% 100%; animation: kitchen-helper-sway 2.4s ease-in-out infinite; }
+.kitchen-helper-cheer { transform-origin: 50% 100%; animation: kitchen-helper-cheer 0.9s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .kitchen-helper-sway, .kitchen-helper-cheer { animation: none; } }
