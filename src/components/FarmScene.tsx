@@ -12,6 +12,7 @@ import { PILL, PillText } from './pill'
 import { CoinIcon } from './Icons'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { GUEST_PER_AVATAR_W, PartyInvite } from './PartyGuests'
+import { MAX_FARM_FRIENDS, WALK_MS, claimed, getFarmFriends, getFriendJobs, setFarmFriends, setOnWatered, subscribeFarmFriends } from '../lib/farmFriends'
 
 type Tool = 'seed' | 'water' | 'harvest'
 
@@ -55,21 +56,8 @@ function FarmImg({ name, emoji, className, style, alt = '' }: { name: string; em
   return <img src={assetUrl(`assets/farm/${name}.webp`)} alt={alt} className={className} style={style} draggable={false} onError={() => setFailed(true)} />
 }
 
-/** 같이 농사짓는 동물 친구(혼자 하면 비어 있다): 최대 2명, 저장해 두고 다음에도 같이 한다. 물 주기는 친구가 해 준다 */
-const FRIENDS_KEY = 'ryuso.farm.friends'
-const MAX_FRIENDS = 2
-function readFriends(): number[] {
-  try {
-    const v = JSON.parse(localStorage.getItem(FRIENDS_KEY) ?? '[]')
-    return Array.isArray(v) ? [...new Set(v.filter((a) => Number.isInteger(a) && a >= 0 && a < CALL_ANIMALS.length))].slice(0, MAX_FRIENDS) : []
-  } catch { return [] }
-}
 /** 친구 그림 칸 너비 ÷ 아바타 너비(파티·주방과 같은 크기) */
 const FRIEND_PER_AVATAR_W = GUEST_PER_AVATAR_W * 0.8
-/** 물 주러 간 친구가 하는 말 */
-const WATER_LINES = ['내가 물 줄게!', '쑥쑥 자라라~', '촉촉하게!', '물 주기는 맡겨!']
-/** 친구가 하는 일: 어느 밭(발 위치 %)에 가서 물을 주는 중인지 */
-interface FriendJob { x: number; y: number; watering: boolean; line: string; /** 맡은 차례(말풍선은 가장 나중에 일을 맡은 친구 하나만: 겹치지 않게) */ n: number }
 
 const stageOf = (wateredAt: number | null, progress: number) => (wateredAt === null ? 1 : progress >= 1 ? 4 : progress < 0.4 ? 2 : 3)
 
@@ -89,12 +77,11 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
   const [walking, setWalking] = useState(false)
   const [watering, setWatering] = useState(false)
   const [hold, setHold] = useState<'can' | 'basket' | 'seed'>('can')
-  const [friends, setFriends] = useState<number[]>(readFriends)
+  // 같이 농사짓는 친구들과 그 친구들이 하는 일(물 주기는 lib/farmFriends 가 맡아서, 다른 탭에 가도 하던 일을 마친다)
+  const friends = useSyncExternalStore(subscribeFarmFriends, getFarmFriends)
+  const jobs = useSyncExternalStore(subscribeFarmFriends, getFriendJobs)
   const [picking, setPicking] = useState(false)
-  const [jobs, setJobs] = useState<Record<number, FriendJob>>({})
-  const busyFriends = useRef(new Set<number>())
-  const jobNo = useRef(0)
-  const chooseFriends = (a: number[]) => { setFriends(a); try { localStorage.setItem(FRIENDS_KEY, JSON.stringify(a)) } catch { /* 저장 못 해도 지금은 같이 한다 */ } }
+  useEffect(() => { setOnWatered(() => { playWater(); setNow(Date.now()) }); return () => setOnWatered(null) }, [])
   const pending = useRef(new Set<number>()) // 지금 처리 중인 밭 (같은 밭을 두 번 누르는 것만 막는다. 걷는 중에 다른 밭은 바로 누를 수 있다)
   const walkToken = useRef(0)
   const secRef = useRef<HTMLElement>(null)
@@ -144,42 +131,6 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
   const here = pos && homeKey === (wide ? 'wide' : 'portrait') ? pos : { x: L.home.x, y: L.home.y, z: 3 }
   useEffect(() => { const k = wide ? 'wide' : 'portrait'; if (k !== homeKey) { setHomeKey(k); setPos(null) } }, [wide, homeKey])
 
-  /** 친구 한 명이 물뿌리개를 들고 i번 밭으로 걸어가 물을 주고 아바타 옆으로 돌아온다(pending 에 i 를 넣은 뒤 부른다) */
-  const sendFriend = (i: number, free: number) => {
-    const box = plotBox(i, L)
-    const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
-    busyFriends.current.add(free)
-    const spot = { x: box.x - box.w * 0.18, y: box.y + box.h * 0.35, line: WATER_LINES[Math.floor(Math.random() * WATER_LINES.length)], n: ++jobNo.current }
-    setJobs((j) => ({ ...j, [free]: { ...spot, watering: false } }))
-    later(() => {
-      setJobs((j) => (j[free] ? { ...j, [free]: { ...j[free], watering: true } } : j))
-      later(() => {
-        apply({ type: 'water', plot: i })
-        pending.current.delete(i)
-        setJobs((j) => (j[free] ? { ...j, [free]: { ...j[free], watering: false } } : j))
-        // 잠깐 서 있다가 아바타 옆으로 돌아온다
-        later(() => { busyFriends.current.delete(free); setJobs((j) => { const n = { ...j }; delete n[free]; return n }) }, 500)
-      }, 450)
-    }, 900)
-  }
-  // 친구가 있으면 물 주기는 저절로: 씨앗을 심어 물이 필요한 밭이 생기면 쉬고 있는 친구가 알아서 가서 준다(누르지 않아도 된다)
-  useEffect(() => {
-    if (!friends.length) return
-    const t = window.setTimeout(() => {
-      const st = getFarm()
-      for (let i = 0; i < st.plots.length; i++) {
-        const p = st.plots[i]
-        if (!p || p.wateredAt !== null || !st.owned[i] || pending.current.has(i)) continue
-        const free = friends.find((f) => !busyFriends.current.has(f))
-        if (free === undefined) break
-        pending.current.add(i)
-        sendFriend(i, free)
-      }
-    }, 500)
-    return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [farm, friends, jobs, wide])
-
   const tapPlot = (i: number) => {
     if (!farm.owned[i]) { setBuying(i); setTool(null); setPicker(false); return }
     setBuying(null)
@@ -192,9 +143,8 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
     pending.current.add(i)
     const box = plotBox(i, L)
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
-    // 물 주기는 쉬고 있는 친구가 대신 밭까지 걸어가서 준다(친구가 여럿이면 여러 밭에 한꺼번에). 아무도 없거나 다 바쁘면 내가 한다
-    const free = need === 'water' ? friends.find((f) => !busyFriends.current.has(f)) : undefined
-    if (free !== undefined) { sendFriend(i, free); return }
+    // 친구가 있으면 물 주기는 친구들이 저절로 한다(누르지 않아도 된다)
+    if (need === 'water' && (friends.length || claimed(i))) { pending.current.delete(i); setNotice(ko ? '친구가 곧 물을 줄 거예요 💧' : 'A friend will water it soon 💧'); return }
     const token = ++walkToken.current
     setHold(need === 'harvest' ? 'basket' : need === 'seed' ? 'seed' : 'can')
     setWalking(true)
@@ -302,12 +252,13 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
           const fw = aw * FRIEND_PER_AVATAR_W // 친구 그림 칸 너비(%, 정사각형)
           const fh = fw * (L.w / L.h) // 같은 칸의 높이(그림 높이에 대한 %)
           const job = jobs[f]
-          // 발 위치(가운데 x, 발 y): 일할 때는 밭 옆, 아니면 아바타 왼쪽·오른쪽
-          const feet = job ? { x: job.x, y: job.y } : { x: here.x + aw / 2 + (k === 0 ? -1 : 1) * (aw * 0.55 + fw * 0.45), y: here.y + L.avatarH }
+          const box = job ? plotBox(job.plot, L) : null
+          // 발 위치(가운데 x, 발 y): 일할 때는 밭 옆, 쉴 때는 아바타가 처음 서 있는 곳 양옆 제자리(아바타를 따라다니지 않는다)
+          const feet = box ? { x: box.x - box.w * 0.18, y: box.y + box.h * 0.35 } : { x: L.home.x + aw / 2 + (k === 0 ? -1 : 1) * (aw * 0.55 + fw * 0.45), y: L.home.y + L.avatarH }
           const moving = !!job && !job.watering
           return (
-            <div key={a.img} aria-hidden className="pointer-events-none absolute" style={{ left: `${feet.x - fw / 2}%`, top: `${feet.y - fh}%`, width: `${fw}%`, aspectRatio: '1 / 1', zIndex: job ? 11 : 9, transition: 'left 0.9s ease-in-out, top 0.9s ease-in-out' }}>
-              <div className={`relative h-full w-full ${moving || walking ? 'farm-walk' : ''}`}>
+            <div key={a.img} aria-hidden className="pointer-events-none absolute" style={{ left: `${feet.x - fw / 2}%`, top: `${feet.y - fh}%`, width: `${fw}%`, aspectRatio: '1 / 1', zIndex: job ? 11 : 9, transition: `left ${WALK_MS}ms ease-in-out, top ${WALK_MS}ms ease-in-out` }}>
+              <div className={`relative h-full w-full ${moving ? 'farm-walk' : ''}`}>
                 <img src={assetUrl(`cafe/stand/${a.img}_stand.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain" style={{ transform: k === 1 && !job ? 'scaleX(-1)' : undefined }} />
                 {job && <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '62%', top: '42%', width: '46%', transformOrigin: '15% 60%', transform: job.watering ? 'rotate(32deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />}
                 {job?.watering && <span className="absolute text-sm" style={{ left: '102%', top: '56%' }}>💧</span>}
@@ -403,8 +354,8 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
         </Modal>
       )}
       {picking && (
-        <PartyInvite here={[]} initial={friends} max={MAX_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" note={`${MAX_FRIENDS}명까지 골라요 · 친구가 물을 줘요 · 아무도 안 고르면 혼자 해요`}
-          cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a) => { setPicking(false); chooseFriends(a) }} />
+        <PartyInvite here={[]} initial={friends} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" note={`${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물을 줘요 · 아무도 안 고르면 혼자 해요`}
+          cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a) => { setPicking(false); setFarmFriends(a) }} />
       )}
     </section>
   )
