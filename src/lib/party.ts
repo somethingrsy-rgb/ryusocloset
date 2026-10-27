@@ -1,4 +1,5 @@
 import { CALL_ANIMALS, kidWords } from './animalCalls'
+import { MENU } from './recipes'
 
 /**
  * 집 파티: 초대한 카페 동물 친구들이 집에 들어와 인사하고, 돌아다니며 이야기한다.
@@ -115,3 +116,29 @@ export function partyLine(animal: number, others: number[], kidName?: string, rn
   if (r < 0.55) return OWN[animal]
   return SOLO[Math.floor(rnd() * SOLO.length)].replace('{call}', kidWords(kidName).call)
 }
+
+/* ---------- 파티 상태: 어느 장소에 누가 와 있는지. 다른 탭(주방)에 다녀와도 친구들이 그대로 기다린다 ---------- */
+export interface PartyState { place: string | null; guests: number[] }
+const KEY = 'ryuso.party.v1'
+export function sanitizeParty(v: unknown): PartyState {
+  const r = (v && typeof v === 'object' ? v : {}) as Partial<PartyState>
+  const guests = Array.isArray(r.guests) ? [...new Set(r.guests.filter((a) => Number.isInteger(a) && a >= 0 && a < CALL_ANIMALS.length))] : []
+  return typeof r.place === 'string' && guests.length ? { place: r.place, guests } : { place: null, guests: [] }
+}
+let party: PartyState = (() => { try { return sanitizeParty(JSON.parse(localStorage.getItem(KEY) ?? 'null')) } catch { return sanitizeParty(null) } })()
+const listeners = new Set<() => void>()
+export const getParty = () => party
+export const subscribeParty = (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn) } }
+export function setPartyState(next: PartyState) {
+  party = sanitizeParty(next)
+  try { localStorage.setItem(KEY, JSON.stringify(party)) } catch { /* 저장 못 해도 지금 화면에서는 이어 간다 */ }
+  listeners.forEach((fn) => fn())
+}
+
+/** 파티 친구가 고르는 메뉴(카페 메뉴 중 하나) */
+export const partyWish = (rnd: () => number = Math.random) => MENU[Math.floor(rnd() * MENU.length)].id
+/** 주문할 때 하는 말 */
+export const orderLine = (menuKo: string) => `나는 ${menuKo} 먹고 싶어!`
+/** 같이 먹을 때 하는 말 */
+const EAT = ['냠냠! 정말 맛있어!', '{call}, 요리 최고야!', '음~ 행복해!', '{call}, 고마워! 또 해 줘!', '같이 먹으니까 더 맛있다!']
+export const eatLine = (kidName?: string, rnd: () => number = Math.random) => EAT[Math.floor(rnd() * EAT.length)].replace('{call}', kidWords(kidName).call)

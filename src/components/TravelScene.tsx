@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { useI18n } from '../i18n'
 import { MY_ROOM_ID, PLACE_BY_ID, findItem, getGame, isFound, spotFor, travelItem } from '../lib/game'
 import { assetUrl } from '../lib/items'
-import { playTap } from '../lib/sound'
+import { playOrder, playServe, playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { WALK_BOUNDS, clampToBounds, depthScale, distPx, stepToward, type Vec } from '../lib/walk'
 import { FigureLayers } from './FigureLayers'
@@ -11,6 +11,10 @@ import { useWalkKeys } from './useWalkKeys'
 import { TravelDecor } from './TravelDecor'
 import { GUEST_PER_AVATAR_W, PartyGuests, PartyInvite } from './PartyGuests'
 import { avatarVersion, getAvatar, subscribeAvatar } from '../lib/avatars'
+import { PARTY_SEAT, actKitchen, getKitchen, isPartySeat, subscribeKitchen, ticketAnimal } from '../lib/kitchen'
+import { eatLine, getParty, orderLine, partyWish, setPartyState, subscribeParty } from '../lib/party'
+import { menuById } from '../lib/recipes'
+import { Ico } from './CafeGame'
 
 import { getTravelRoom, subscribeTravelRooms, travelRoomsVersion } from '../lib/travelRooms'
 import { useItemsVersion } from '../lib/useItemsVersion'
@@ -44,9 +48,11 @@ interface Props {
   onWear: (id: string) => void
   /** 이 장소 테마로 방 꾸미기를 연다 */
   onDecorate?: (placeId: string) => void
+  /** 파티 친구 주문을 만들러 주방 탭으로 */
+  onKitchen?: () => void
 }
 
-export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, onDecorate, paused = false }: Props) {
+export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, onDecorate, onKitchen, paused = false }: Props) {
   const { lang } = useI18n()
   const tx = TEXT[lang]
   useGame()
@@ -81,10 +87,49 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   const [walking, setWalking] = useState(false)
   const [destination, setDestination] = useState<Vec | null>(null)
   const [popup, setPopup] = useState<string | null>(null)
-  // 파티: 초대 창에서 고른 카페 동물 친구들이 집에 들어와 돌아다니며 이야기한다(이 집에 있는 동안만)
+  // 파티: 초대 창에서 고른 카페 동물 친구들이 집에 들어와 돌아다니며 이야기한다.
+  // 누가 와 있는지는 저장해 두어서, 주방에 다녀오거나 집을 나갔다 와도 친구들이 그대로 기다린다
   const [inviting, setInviting] = useState(false)
-  const [party, setParty] = useState<number[]>([])
+  const partyNow = useSyncExternalStore(subscribeParty, getParty)
+  const party = useMemo(() => (partyNow.place === placeId ? partyNow.guests : []), [partyNow, placeId])
+  const [settled] = useState(party) // 이 화면을 열 때 이미 와 있던 친구들
   const [partyEnd, setPartyEnd] = useState(false)
+  // 파티 친구 주문(주방 주문서): 주문받기 → 주방에서 만들기 → 같이 먹기
+  const kitchen = useSyncExternalStore(subscribeKitchen, getKitchen)
+  const orders = useMemo(() => Object.fromEntries(kitchen.tickets.filter((t) => isPartySeat(t.seat) && party.includes(ticketAnimal(t.seat))).map((t) => [ticketAnimal(t.seat), { menu: t.menu, ready: t.ready }])), [kitchen, party])
+  const [eating, setEating] = useState<Record<number, string> | null>(null)
+  const [announce, setAnnounce] = useState<{ id: number; lines: [number, string][] } | null>(null)
+  const sayAll = (lines: [number, string][]) => setAnnounce((a) => ({ id: (a?.id ?? 0) + 1, lines }))
+  const unordered = party.filter((a) => !orders[a])
+  const cookingLeft = Object.values(orders).some((o) => !o.ready)
+  const readyOnes = party.filter((a) => orders[a]?.ready)
+  const takeOrders = () => {
+    const lines: [number, string][] = []
+    for (const a of unordered) {
+      const menu = partyWish()
+      if (actKitchen({ type: 'order', seat: PARTY_SEAT + a, menu }) === 'saved') lines.push([a, orderLine(menuById(menu)!.ko)])
+    }
+    if (!lines.length) return
+    playOrder()
+    sayAll(lines)
+  }
+  // 같이 먹기: 다 만든 음식을 친구들에게 나눠 주고, 아바타도 같이 먹는다(몇 초 뒤 접시가 비워진다)
+  const eatTogether = () => {
+    const got: Record<number, string> = {}
+    for (const a of readyOnes) if (actKitchen({ type: 'serve', seat: PARTY_SEAT + a }) === 'saved') got[a] = orders[a].menu
+    const who = Object.keys(got).map(Number)
+    if (!who.length) return
+    playServe()
+    setEating(got)
+    sayAll(who.map((a) => [a, eatLine(kidName)]))
+    window.setTimeout(() => setEating(null), Math.max(6000, who.length * 1600 + 2500))
+  }
+  const endParty = () => {
+    for (const t of getKitchen().tickets) if (isPartySeat(t.seat)) actKitchen({ type: 'cancel', seat: t.seat })
+    setPartyState({ place: null, guests: [] })
+    setPartyEnd(false)
+    setEating(null)
+  }
   useSyncExternalStore(subscribeAvatar, avatarVersion)
   const kidName = getAvatar().name.ko
 
@@ -235,7 +280,11 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             // 동물 키는 그 자리에 선 아바타 키의 2/3(아바타 크기가 방·깊이마다 바뀌면 같이 바뀐다). 아바타보다 아래(앞)에 있으면 아바타 앞에 그린다
             size={(y) => GUEST_PER_AVATAR_W * (layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * depthScale(y))}
             z={(y) => avatarLayer + (y >= posRef.current.y ? 1 : -1)}
-            onGone={() => { setParty([]); setPartyEnd(false) }}
+            onGone={endParty}
+            settled={settled}
+            orders={orders}
+            eating={eating}
+            announce={announce}
           />
         )}
         {destination && <div aria-hidden className="walk-destination pointer-events-none absolute" style={{ left: `${destination.x}%`, top: `${destination.y}%`, zIndex: 2 }} />}
@@ -248,6 +297,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             <div className={`h-full w-full ${walking ? 'walk-bob' : ''}`}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             </div>
+            {/* 같이 먹는 동안 아바타도 음식을 하나 들고 있다(카페에서 서빙할 때 드는 자리) */}
+            {eating && Object.values(eating)[0] && <span aria-hidden className="party-yum absolute block" style={{ left: '76%', top: '42%', width: '41%' }}><Ico id={Object.values(eating)[0]} className="h-auto w-full" /></span>}
           </div>
         </div>
       </div>
@@ -267,6 +318,25 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           <span aria-hidden>🎉</span>
           {lang === 'ko' ? '파티 초대' : 'Party'}
         </button>
+        {/* 파티 음식: 주문받기 → 주방에서 만들기 → 같이 먹기 */}
+        {party.length > 0 && !partyEnd && !eating && unordered.length > 0 && (
+          <button onClick={() => { playTap(); takeOrders() }} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-[#ffd166] px-3 py-2 text-sm font-bold text-[#7a4a12] shadow-md">
+            <span aria-hidden>📝</span>
+            {lang === 'ko' ? '주문받기' : 'Take orders'}
+          </button>
+        )}
+        {party.length > 0 && !partyEnd && cookingLeft && onKitchen && (
+          <button onClick={() => { playTap(); onKitchen() }} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-3 py-2 text-sm font-bold text-[#8a4b2a] shadow-md ring-1 ring-black/5">
+            <span aria-hidden>🍳</span>
+            {lang === 'ko' ? '주방에서 만들기' : 'Cook'}
+          </button>
+        )}
+        {party.length > 0 && !partyEnd && !eating && readyOnes.length > 0 && (
+          <button onClick={() => { playTap(); eatTogether() }} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-[#7bc96f] px-3 py-2 text-sm font-bold text-white shadow-md">
+            <span aria-hidden>🍽️</span>
+            {lang === 'ko' ? '같이 먹기' : 'Eat together'}
+          </button>
+        )}
         {party.length > 0 && !partyEnd && (
           <button onClick={() => { playTap(); setPartyEnd(true) }} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
             <span aria-hidden>👋</span>
@@ -302,7 +372,12 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           </div>
         </div>
       )}
-      {inviting && <PartyInvite here={party} onClose={() => setInviting(false)} onInvite={(animals) => { setInviting(false); setParty((p) => [...p, ...animals.filter((a) => !p.includes(a))]) }} />}
+      {inviting && <PartyInvite here={party} onClose={() => setInviting(false)} onInvite={(animals) => {
+        setInviting(false)
+        // 다른 장소에서 하던 파티는 끝낸다(그 친구들 주문서도 지운다)
+        if (partyNow.place && partyNow.place !== placeId) for (const t of getKitchen().tickets) if (isPartySeat(t.seat)) actKitchen({ type: 'cancel', seat: t.seat })
+        setPartyState({ place: placeId, guests: [...party, ...animals.filter((a) => !party.includes(a))] })
+      }} />}
     </div>
   )
 }

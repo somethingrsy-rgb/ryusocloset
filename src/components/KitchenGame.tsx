@@ -3,7 +3,7 @@ import { useI18n } from '../i18n'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { CROPS, getFarm, subscribeFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
-import { buyPantry, cookTicket, getKitchen, missing, subscribeKitchen } from '../lib/kitchen'
+import { buyPantry, cookTicket, getKitchen, isPartySeat, missing, subscribeKitchen, ticketAnimal } from '../lib/kitchen'
 import { PACK, PACK_PRICE, PANTRY, STEPS, ingredient, isCrop, menuById, needList, type IngId, type Station, type StepId } from '../lib/recipes'
 import { playBell, playCloud, playCoin, playCook, playHarvest, playTap, playWater, startBgm, stopBgm } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -44,7 +44,7 @@ const T = {
     start: '🍳 요리 시작', step: (k: number, n: number) => `${k} / ${n} 단계`, done: (m: string) => `완성! ${m} 🎉`, serve: '☕ 카페에서 서빙하기',
     ready: '다 만들었어요! 카페에서 서빙해요', lack: '재료가 모자라요', need: '필요한 재료', how: '만드는 순서',
     pantryTitle: '🛒 마트', pantryNote: `기본 재료는 ${PACK}개 묶음에 ${PACK_PRICE}코인`, farmNote: '농장 재료는 농장에서 수확해요', close: '닫기', noCoins: '코인이 모자라요. 농장에서 팔거나 카페에서 서빙해 모아요',
-    next: '다음 주문 만들기',
+    next: '다음 주문 만들기', toParty: '🎉 파티에 가져가기', readyParty: '다 만들었어요! 파티에 가져가요',
   },
   en: {
     title: '🍳 Kitchen', pantry: '🛒 Mart', cafe: '☕ Cafe', farm: '🥕 Get from the farm', buy: '🛒 Buy at the mart',
@@ -52,7 +52,7 @@ const T = {
     start: '🍳 Start cooking', step: (k: number, n: number) => `Step ${k} / ${n}`, done: (m: string) => `${m} is ready! 🎉`, serve: '☕ Serve it in the cafe',
     ready: 'All done! Serve it in the cafe', lack: 'Not enough ingredients', need: 'Ingredients', how: 'Steps',
     pantryTitle: '🛒 Mart', pantryNote: `Basics: ${PACK} for ${PACK_PRICE} coins`, farmNote: 'Grow these on the farm', close: 'Close', noCoins: 'Not enough coins. Sell crops or serve guests',
-    next: 'Cook the next order',
+    next: 'Cook the next order', toParty: '🎉 Take it to the party', readyParty: 'All done! Take it to the party',
   },
 }
 
@@ -65,7 +65,7 @@ interface Cooking { seat: number; step: number; taps: number }
  * 주방: 카페에서 받은 주문서를 골라, 농장 재료와 기본 재료로 음식을 만든다.
  * 단계마다 그림 속 싱크대·도마·냄비·오븐·냉장고를 톡톡 눌러 만들고, 다 만들면 카페에서 서빙한다. 실패나 시간 제한은 없다.
  */
-export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: Tweaks; onGo: (to: 'farm' | 'cafe') => void }) {
+export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: Tweaks; onGo: (to: 'farm' | 'cafe' | 'party') => void }) {
   const { lang } = useI18n()
   const tx = T[lang]
   const kitchen = useSyncExternalStore(subscribeKitchen, getKitchen)
@@ -151,7 +151,9 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
     bounce()
   }
 
-  const face = (seat: number) => assetUrl(`cafe/face/${CALL_ANIMALS[seat].img}.webp`)
+  const face = (seat: number) => assetUrl(`cafe/face/${CALL_ANIMALS[ticketAnimal(seat)].img}.webp`)
+  /** 다 만든 음식 가져가기: 카페 손님 것은 카페로, 파티 친구 것은 파티로 */
+  const serveBtn = (seat: number, cls: string, inner: (t: string) => React.ReactNode = (t) => t) => <button onClick={() => { playTap(); onGo(isPartySeat(seat) ? 'party' : 'cafe') }} className={cls}>{inner(isPartySeat(seat) ? tx.toParty : tx.serve)}</button>
   const btn = 'min-h-11 rounded-full px-3 font-bold shadow active:scale-95 disabled:opacity-40'
   const doneMenu = done !== null ? menuById(kitchen.tickets.find((t) => t.seat === done)?.menu ?? '') : undefined
   // 마트에서 네온 테두리로 알려 줄 모자란 기본 재료: 아직 안 만든 주문서 전체에서
@@ -273,7 +275,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
           const m = menuById(t.menu)!
           const on = sel === t.seat
           return (
-            <button key={t.seat} aria-pressed={on} aria-label={`${CALL_ANIMALS[t.seat].name} ${m[lang]}`} disabled={!!cooking}
+            <button key={t.seat} aria-pressed={on} aria-label={`${CALL_ANIMALS[ticketAnimal(t.seat)].name} ${m[lang]}`} disabled={!!cooking}
               onClick={() => { playTap(); setDone(null); setSel(t.seat) }}
               className={`relative flex w-[4.6rem] shrink-0 flex-col items-center rounded-2xl bg-[#fffaf0] px-1 pt-1 pb-1.5 shadow-md ring-2 transition active:scale-95 ${on ? 'ring-[#ef8d99]' : 'ring-transparent'} ${cooking && !on ? 'opacity-50' : ''}`}>
               <span aria-hidden className="absolute top-0 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ef6f86] shadow" />
@@ -283,6 +285,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
               </span>
               <span className="mt-0.5 w-full truncate text-center text-[11px] leading-tight font-bold text-[#8a4b2a]">{m[lang]}</span>
               {t.ready && <span aria-hidden className="absolute -top-1.5 -right-1.5 text-lg">✅</span>}
+              {isPartySeat(t.seat) && <span aria-label="파티 주문" className="absolute -top-1.5 -left-1.5 text-base">🎉</span>}
             </button>
           )
         })}
@@ -294,7 +297,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
           <div className="flex flex-col items-center gap-2 text-center">
             <p className="m-0 text-lg font-black text-[#c04a5a]">{tx.done(doneMenu[lang])}</p>
             <div className="flex w-full gap-2">
-              <button onClick={() => { playTap(); onGo('cafe') }} className={`${btn} flex-[1.3] bg-[#ef8d99] text-white`}><span className="text-sm">{tx.serve}</span></button>
+              {serveBtn(done, `${btn} flex-[1.3] bg-[#ef8d99] text-white`, (t) => <span className="text-sm">{t}</span>)}
               {kitchen.tickets.some((t) => !t.ready) && <button onClick={nextOrder} className={`${btn} flex-1 bg-[#fff1e0] text-[#8a4b2a]`}><span className="text-sm">{tx.next}</span></button>}
             </div>
           </div>
@@ -321,14 +324,14 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
               <img src={face(selTicket.seat)} alt="" draggable={false} className={`object-contain ${phoneL ? 'h-7 w-7' : 'h-9 w-9'}`} />
               <Ico id={menu.id} className={phoneL ? 'h-8 w-8' : 'h-10 w-10'} />
               <div className="min-w-0 flex-1">
-                <p className={`m-0 text-xs font-bold text-black/45 ${phoneL ? 'hidden' : ''}`}>{tx.order(CALL_ANIMALS[selTicket.seat].name)}</p>
-                <p className="m-0 truncate text-base font-black text-[#8a4b2a]">{menu[lang]} <span className="text-sm font-bold text-[#c9751f]">+{menu.price}<CoinIcon /></span></p>
+                <p className={`m-0 text-xs font-bold text-black/45 ${phoneL ? 'hidden' : ''}`}>{tx.order(CALL_ANIMALS[ticketAnimal(selTicket.seat)].name)}</p>
+                <p className="m-0 truncate text-base font-black text-[#8a4b2a]">{menu[lang]} {!isPartySeat(selTicket.seat) && <span className="text-sm font-bold text-[#c9751f]">+{menu.price}<CoinIcon /></span>}</p>
               </div>
             </div>
             {selTicket.ready ? (
               <>
-                <p className="m-0 text-center text-sm font-bold text-[#c04a5a]">✅ {tx.ready}</p>
-                <button onClick={() => { playTap(); onGo('cafe') }} className={`${btn} bg-[#ef8d99] text-white`}>{tx.serve}</button>
+                <p className="m-0 text-center text-sm font-bold text-[#c04a5a]">✅ {isPartySeat(selTicket.seat) ? tx.readyParty : tx.ready}</p>
+                {serveBtn(selTicket.seat, `${btn} bg-[#ef8d99] text-white`)}
               </>
             ) : (
               <>

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { assetUrl } from '../lib/items'
-import { arrive, byeLine, helloLine, leaveAll, partyLine, stepGuests, type Floor, type Guest } from '../lib/party'
+import { arrive, byeLine, helloLine, leaveAll, partyLine, roomySpot, stepGuests, type Floor, type Guest } from '../lib/party'
 import { playOrder, playTap } from '../lib/sound'
+import { Ico } from './CafeGame'
 
 interface Bubble { text: string; until: number }
 
@@ -18,7 +19,17 @@ export const GUEST_PER_AVATAR_W = (1444 / 1024) * (2 / 3)
  * invite 가 바뀌면 새로 고른 친구만 더 들어오고, leave 가 켜지면 인사하고 모두 나간다.
  * size(y) 는 그 높이에서의 동물 그림 칸 너비(%, 칸 높이 = 동물 키 = 아바타 키의 2/3), z(y) 는 그 높이에서의 겹침 순서다.
  */
-export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone }: { invite: number[]; leave: boolean; kid?: string; floor: Floor; me: { x: number; y: number }; size: (y: number) => number; z: (y: number) => number; onGone: () => void }) {
+export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone, settled = [], orders = {}, eating = null, announce = null }: {
+  invite: number[]; leave: boolean; kid?: string; floor: Floor; me: { x: number; y: number }; size: (y: number) => number; z: (y: number) => number; onGone: () => void
+  /** 처음 그릴 때 이미 집에 와 있던 친구(주방에 다녀왔을 때): 문으로 다시 들어오지 않고 바로 바닥에 있다 */
+  settled?: number[]
+  /** 친구마다 주문한 메뉴(머리 옆에 작은 주문 표시) */
+  orders?: Record<number, { menu: string; ready: boolean }>
+  /** 같이 먹는 중: 친구마다 받은 음식 */
+  eating?: Record<number, string> | null
+  /** 친구들이 차례로 할 말(id 가 바뀔 때마다 한 번) */
+  announce?: { id: number; lines: [number, string][] } | null
+}) {
   const [guests, setGuests] = useState<Guest[]>([])
   const [bubbles, setBubbles] = useState<Record<number, Bubble>>({})
   const live = useRef<Guest[]>([])
@@ -29,10 +40,28 @@ export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone }: 
   // 말풍선은 한 번에 하나만: 겹치면 읽기 어렵다
   const say = (animal: number, text: string, secs = 3) => setBubbles({ [animal]: { text, until: performance.now() + secs * 1000 } })
 
+  // 이미 와 있던 친구는 바로 바닥의 빈 곳에 서 있다
+  const settledRef = useRef(settled)
+  useEffect(() => {
+    for (const a of settledRef.current) {
+      if (live.current.some((g) => g.animal === a)) continue
+      const t = roomySpot(floorRef.current, [meRef.current, ...live.current])
+      live.current = [...live.current, { animal: a, x: t.x, y: t.y, tx: t.x, ty: t.y, wait: Math.random() * 2, dir: 1, entering: false, leaving: false }]
+    }
+    setGuests(live.current)
+  }, [])
+  // 차례로 말하기(주문할 때·같이 먹을 때): 1.6초 간격으로 한 친구씩
+  useEffect(() => {
+    if (!announce) return
+    const timers = announce.lines.map(([a, text], k) => window.setTimeout(() => say(a, text, 2.4), k * 1600))
+    return () => timers.forEach(clearTimeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [announce?.id])
+
   // 새로 초대한 친구는 1.8초 간격으로 한 명씩 들어온다(앞 친구 인사를 다 듣고 다음 친구가 온다)
   useEffect(() => {
     const timers: number[] = []
-    const fresh = invite.filter((a) => !live.current.some((g) => g.animal === a))
+    const fresh = invite.filter((a) => !live.current.some((g) => g.animal === a) && !settledRef.current.includes(a))
     fresh.forEach((a, k) => timers.push(window.setTimeout(() => {
       playOrder()
       live.current = [...live.current.filter((g) => g.animal !== a), arrive(a, floorRef.current, Math.random, [meRef.current, ...live.current.flatMap((g) => [g, { x: g.tx, y: g.ty }])])]
@@ -102,7 +131,16 @@ export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone }: 
               <img key={pose} src={assetUrl(`cafe/stand/${a.img}_${pose}.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_4px_3px_rgba(80,50,40,0.25)]"
                 style={{ transform: `scaleX(${g.dir})`, visibility: (pose === 'wave') === !!bubbles[g.animal] ? 'visible' : 'hidden' }} />
             ))}
+            {/* 같이 먹는 중: 받은 음식을 앞에 들고 냠냠 */}
+            {eating?.[g.animal] && <span aria-hidden className="party-yum absolute left-1/2 block w-[46%] -translate-x-1/2" style={{ bottom: '6%' }}><Ico id={eating[g.animal]} className="h-auto w-full drop-shadow-[0_2px_2px_rgba(80,50,40,0.35)]" /></span>}
           </button>
+          {/* 주문 표시: 머리 옆 작은 동그라미에 메뉴 그림(만드는 중 ⏳, 다 되면 ✅) */}
+          {!eating && orders[g.animal] && (
+            <span aria-label={orders[g.animal].ready ? '음식 완성' : '주문함'} className={`pointer-events-none absolute top-[4%] ${g.x > 60 ? '-left-[14%]' : '-right-[14%]'} flex aspect-square w-[42%] items-center justify-center rounded-full bg-white/95 shadow-md ring-2 ring-[#ffb3c6]`}>
+              <Ico id={orders[g.animal].menu} className="h-[80%] w-[80%]" />
+              <span aria-hidden className="absolute -right-[12%] -bottom-[12%] text-[11px] leading-none">{orders[g.animal].ready ? '✅' : '⏳'}</span>
+            </span>
+          )}
         </div>
       )
     })}
@@ -111,7 +149,7 @@ export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone }: 
       const b = bubbles[g.animal]
       return b ? (
         <div key={`b-${g.animal}`} aria-live="polite" className="pointer-events-none absolute" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${size(g.y)}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -99.5%)', zIndex: 100000 }}>
-          <p className="absolute bottom-[96%] left-1/2 m-0 w-max max-w-[11rem] -translate-x-1/2 rounded-2xl bg-white px-2.5 py-1.5 text-center text-[13px] leading-snug font-bold text-[#6b4b52] shadow-md">{b.text}</p>
+          <p className={`absolute bottom-[96%] m-0 w-max max-w-[11rem] rounded-2xl bg-white px-2.5 py-1.5 text-center text-[13px] leading-snug font-bold text-[#6b4b52] shadow-md ${g.x < 25 ? 'left-0' : g.x > 75 ? 'right-0' : 'left-1/2 -translate-x-1/2'}`}>{b.text}</p>
         </div>
       ) : null
     })}

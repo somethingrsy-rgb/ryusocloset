@@ -345,3 +345,8 @@ button:focus-visible {
 @keyframes soccer-confetti { from { transform: translateY(-20px) rotate(0); opacity: 1; } to { transform: translateY(110cqh) rotate(540deg); opacity: 0.8; } }
 .soccer-confetti { top: 0; animation: soccer-confetti 1.5s ease-in forwards; }
 @media (prefers-reduced-motion: reduce) { .soccer-net, .soccer-hop, .soccer-confetti { animation: none; } }
+
+/* 집 파티: 같이 먹는 동안 들고 있는 음식이 냠냠 흔들린다 */
+@keyframes party-yum { 0%, 100% { transform: translateX(-50%) rotate(0) scale(1); } 30% { transform: translateX(-50%) rotate(-6deg) scale(1.06); } 60% { transform: translateX(-50%) rotate(5deg) scale(0.97); } }
+.party-yum { animation: party-yum 0.7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .party-yum { animation: none; } }
