@@ -240,13 +240,15 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
           </div>
         )
       })}
-      {/* 공 꼬리: 마지막으로 찬 팀 색으로 공이 날아온 쪽에 꼬리를 그려, 어느 팀이 어느 쪽으로 찼는지 보이게 */}
+      {/* 공 꼬리: 내 아바타가 찬 공에만 팀 색 꼬리를 그려, 내가 찬 공이 어디로 가는지 보이게 */}
       {(() => {
         const b = match.ball, v = Math.hypot(b.vx, b.vy)
-        if (match.last < 0 || v < 8 || match.hold >= 0) return null
+        // 내가(손가락으로 움직이는 아바타가) 찬 공만 꼬리를 그린다
+        const by = match.players[match.lastBy]
+        if (!by || by.role !== 'human' || match.cpu[by.team] || v < 8 || match.hold >= 0) return null
         const s = toScreen(b.x, b.y), k = Math.min(0.5, 18 / v), tail = toScreen(b.x - b.vx * k, b.y - b.vy * k)
         const len = Math.hypot(s.x - tail.x, s.y - tail.y), ang = Math.atan2(s.y - tail.y, s.x - tail.x), d = 3.6 * scale
-        return <span aria-hidden className="pointer-events-none absolute rounded-full" style={{ left: s.x - len, top: s.y - d / 2 - d * 0.3, width: len, height: d * 0.6, transformOrigin: '100% 50%', transform: `rotate(${ang}rad)`, background: `linear-gradient(90deg, transparent, ${KIT[match.last as Team].color})`, opacity: Math.min(1, v / 30), zIndex: 1499 }} />
+        return <span aria-hidden className="pointer-events-none absolute rounded-full" style={{ left: s.x - len, top: s.y - d / 2 - d * 0.3, width: len, height: d * 0.6, transformOrigin: '100% 50%', transform: `rotate(${ang}rad)`, background: `linear-gradient(90deg, transparent, ${KIT[by.team].color})`, opacity: Math.min(1, v / 30), zIndex: 1499 }} />
       })()}
       {(() => { const s = toScreen(match.ball.x, match.ball.y); const d = 3.6 * scale; return <span aria-hidden className="pointer-events-none absolute flex items-center justify-center leading-none drop-shadow" style={{ left: s.x - d / 2, top: s.y - d, width: d, height: d, fontSize: d, zIndex: 1500 }}>⚽</span> })()}
 
