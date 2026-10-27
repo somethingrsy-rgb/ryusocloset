@@ -9,7 +9,7 @@ import { playBell, playCloud, playCoin, playCook, playHarvest, playTap, playWate
 import type { Outfit, Tweaks } from '../lib/types'
 import { Ico } from './CafeGame'
 import { FigureLayers } from './FigureLayers'
-import { GUEST_PER_AVATAR_W } from './PartyGuests'
+import { GUEST_PER_AVATAR_W, PartyInvite } from './PartyGuests'
 import { CoinIcon } from './Icons'
 
 /**
@@ -19,14 +19,14 @@ import { CoinIcon } from './Icons'
 type Box = { x: number; y: number; w: number; h: number }
 /** 불꽃이 나오는 단계(오븐 굽기·냄비 끓이기·녹이기): 불이 붙을 때와 누를 때 수확 소리를 낸다 */
 const FIRE = new Set<StepId>(['bake', 'boil', 'melt'])
-const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; ovenGlass: Box; fx: { ice: [number, number, number]; tap: [number, number, number]; drop: number; pot: [number, number, number] }; cook: [number, number]; /** 씻는 동안만 서는 자리(가로 그림은 가운데에 서면 싱크대를 가린다) */ washAt?: [number, number]; /** 파티 친구가 같이 요리할 때 서는 자리(발 위치, 아일랜드 뒤에서 몸이 보이게 조금 앞) */ helper: [number, number]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
+const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: number; at: Record<Station, Box>; ovenGlass: Box; fx: { ice: [number, number, number]; tap: [number, number, number]; drop: number; pot: [number, number, number] }; cook: [number, number]; /** 씻는 동안만 서는 자리(가로 그림은 가운데에 서면 싱크대를 가린다) */ washAt?: [number, number]; /** 같이 요리하는 친구가 서는 자리 두 곳(왼쪽·오른쪽, 발 위치. 아일랜드 뒤에서 몸이 보이게 조금 앞) */ helper: [[number, number], [number, number]]; island: { img: string; l: number; t: number; w: number; h: number } }> = {
   portrait: {
     img: 'kitchen/kitchen_portrait.webp', ratio: 941 / 1672, avatarH: 24,
     at: { fridge: { x: 15.5, y: 31, w: 24, h: 32 }, sink: { x: 48, y: 36.5, w: 24, h: 7 }, stove: { x: 86, y: 33.5, w: 22, h: 6 }, oven: { x: 86.5, y: 44, w: 24, h: 12 }, board: { x: 50, y: 59, w: 40, h: 9 } },
     ovenGlass: { x: 86.7, y: 43.3, w: 14, h: 4.4 },
     // 효과 자리(그림 크기에 대한 %): ice = 냉장고 위칸 가운데 [x, y, 너비(문 폭의 1/3)], tap = 수도꼭지 끝 [x, 물이 나오는 y, 개수대 테두리 y(물방울이 여기서 사라진다)], drop = 물방울 너비(가로 그림은 수도꼭지~테두리가 짧아서 작게: 크면 물방울 위쪽만 잘려 세모로 보였다), pot = 냄비 [x, 냄비 바닥 y, 냄비 폭]
     fx: { ice: [14, 22, 6.9], tap: [47.8, 31, 33.6], drop: 2.4, pot: [86.1, 34.8, 10] },
-    cook: [50, 62], helper: [27, 55.5], island: { img: 'kitchen/island_portrait.webp', l: 12.221, t: 52.452, w: 75.452, h: 33.612 },
+    cook: [50, 62], helper: [[27, 55.5], [73, 55.5]], island: { img: 'kitchen/island_portrait.webp', l: 12.221, t: 52.452, w: 75.452, h: 33.612 },
   },
   wide: {
     img: 'kitchen/kitchen_wide.webp', ratio: 1672 / 941, avatarH: 38,
@@ -34,7 +34,7 @@ const SPOTS: Record<'portrait' | 'wide', { img: string; ratio: number; avatarH: 
     ovenGlass: { x: 83.2, y: 53.6, w: 9, h: 7 },
     fx: { ice: [19.1, 23.4, 5], tap: [49.1, 34.3, 38.6], drop: 1.1, pot: [81.6, 40.5, 5.5] },
     // 가로 그림은 아바타가 가운데에 서면 싱크대를 가린다: 평소에는 가운데, 씻는 동안만 오른쪽으로 비켜 선다(물방울·씻는 재료가 얼굴 위에 그려지지 않게)
-    cook: [50, 66], washAt: [64, 66], helper: [34, 55], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
+    cook: [50, 66], washAt: [64, 66], helper: [[34, 55], [68, 55]], island: { img: 'kitchen/island_wide.webp', l: 24.342, t: 51.753, w: 51.017, h: 44.421 },
   },
 }
 
@@ -45,7 +45,7 @@ const T = {
     start: '🍳 요리 시작', step: (k: number, n: number) => `${k} / ${n} 단계`, done: (m: string) => `완성! ${m} 🎉`, serve: '☕ 카페에서 서빙하기',
     ready: '다 만들었어요! 카페에서 서빙해요', lack: '재료가 모자라요', need: '필요한 재료', how: '만드는 순서',
     pantryTitle: '🛒 마트', pantryNote: `기본 재료는 ${PACK}개 묶음에 ${PACK_PRICE}코인`, farmNote: '농장 재료는 농장에서 수확해요', close: '닫기', noCoins: '코인이 모자라요. 농장에서 팔거나 카페에서 서빙해 모아요',
-    next: '다음 주문 만들기', toParty: '🎉 파티에 가져가기', readyParty: '다 만들었어요! 파티에 가져가요',
+    next: '다음 주문 만들기', friends: '같이 요리할 친구', toParty: '🎉 파티에 가져가기', readyParty: '다 만들었어요! 파티에 가져가요',
   },
   en: {
     title: '🍳 Kitchen', pantry: '🛒 Mart', cafe: '☕ Cafe', farm: '🥕 Get from the farm', buy: '🛒 Buy at the mart',
@@ -53,7 +53,7 @@ const T = {
     start: '🍳 Start cooking', step: (k: number, n: number) => `Step ${k} / ${n}`, done: (m: string) => `${m} is ready! 🎉`, serve: '☕ Serve it in the cafe',
     ready: 'All done! Serve it in the cafe', lack: 'Not enough ingredients', need: 'Ingredients', how: 'Steps',
     pantryTitle: '🛒 Mart', pantryNote: `Basics: ${PACK} for ${PACK_PRICE} coins`, farmNote: 'Grow these on the farm', close: 'Close', noCoins: 'Not enough coins. Sell crops or serve guests',
-    next: 'Cook the next order', toParty: '🎉 Take it to the party', readyParty: 'All done! Take it to the party',
+    next: 'Cook the next order', friends: 'Cooking friends', toParty: '🎉 Take it to the party', readyParty: 'All done! Take it to the party',
   },
 }
 
@@ -62,6 +62,15 @@ const HELP_LINE: Record<StepId, string> = {
   wash: '깨끗이 씻자! 첨벙첨벙', cut: '조심조심 썰자!', grind: '드르륵~ 커피 향 좋다!', mix: '같이 섞자! 조물조물', blend: '윙~ 믹서 돌려 줘!',
   pour: '천천히 붓자!', bake: '오븐 뜨거워, 조심해!', boil: '보글보글 끓는다!', melt: '초콜릿이 녹는다~', top: '딸기 예쁘게 올리자!',
   roll: '돌돌 말자!', dip: '콕! 초콜릿에 찍자!', chill: '냉장고에서 차갑게!',
+}
+/** 같이 요리할 친구(혼자 하면 비어 있다): 최대 2명, 저장해 두고 다음에도 같이 한다 */
+const FRIENDS_KEY = 'ryuso.kitchen.friends'
+const MAX_FRIENDS = 2
+function readFriends(): number[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(FRIENDS_KEY) ?? '[]')
+    return Array.isArray(v) ? [...new Set(v.filter((a) => Number.isInteger(a) && a >= 0 && a < CALL_ANIMALS.length))].slice(0, MAX_FRIENDS) : []
+  } catch { return [] }
 }
 /** 파티 친구 그림 칸 너비 ÷ 아바타 너비(파티 화면과 같은 크기) */
 const HELPER_PER_AVATAR_W = GUEST_PER_AVATAR_W * 0.8
@@ -97,6 +106,9 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const [sel, setSel] = useState<number | null>(null)
   const [cooking, setCooking] = useState<Cooking | null>(null)
   const [bring, setBring] = useState(false)
+  const [friends, setFriends] = useState<number[]>(readFriends)
+  const [picking, setPicking] = useState(false)
+  const chooseFriends = (a: number[]) => { setFriends(a); try { localStorage.setItem(FRIENDS_KEY, JSON.stringify(a)) } catch { /* 저장 못 해도 지금은 같이 한다 */ } }
   const [done, setDone] = useState<number | null>(null) // 방금 다 만든 자리
   const [pantry, setPantry] = useState(false)
   const [toast, setToast] = useState('')
@@ -128,8 +140,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
     if (!selTicket || !menu || lacks.length) return
     if (FIRE.has(menu.steps[0])) playHarvest(); else playCook()
     setCooking({ seat: selTicket.seat, step: 0, taps: 0 })
-    // 파티 친구 주문이면 그 친구가 재료를 하나씩 도마로 가져다준다
-    if (isPartySeat(selTicket.seat)) { setBring(true); later(() => setBring(false), BRING_MS + needList(menu).length * BRING_GAP) }
+    // 같이 요리하는 친구가 있으면 재료를 하나씩 도마로 가져다준다
+    if (isPartySeat(selTicket.seat) || friends.length) { setBring(true); later(() => setBring(false), BRING_MS + needList(menu).length * BRING_GAP) }
     bounce()
   }
 
@@ -176,9 +188,13 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const aw = L.avatarH * (1024 / 1536) / L.ratio // 아바타 너비(그림 너비에 대한 %)
   // 파티 친구 주문을 고르거나 만드는 동안: 그 친구가 주방에 와서 옆에서 같이 요리한다
   const helpSeat = cooking?.seat ?? done ?? selTicket?.seat
-  const helper = helpSeat !== undefined && helpSeat !== null && isPartySeat(helpSeat) ? ticketAnimal(helpSeat) : null
+  const partyA = helpSeat !== undefined && helpSeat !== null && isPartySeat(helpSeat) ? ticketAnimal(helpSeat) : null
+  // 같이 요리하는 친구들: 파티 주문이면 그 친구가 먼저, 그다음 고른 친구(모두 2명까지)
+  const crew = [...new Set([...(partyA !== null ? [partyA] : []), ...friends])].slice(0, MAX_FRIENDS)
+  // 말은 한 번에 한 친구만: 단계마다 번갈아 말한다
+  const speaker = crew.length ? crew[(cooking?.step ?? 0) % crew.length] : null
   const hw = aw * HELPER_PER_AVATAR_W // 친구 그림 칸 너비(정사각형)
-  const helpRef = useRef<HTMLDivElement>(null)
+  const helpRefs = useRef<(HTMLDivElement | null)[]>([])
   // 씻기 동안은 농장 재료(당근·딸기·옥수수)를 싱크대에 옮겨 담고, 도마에는 나머지만 둔다
   const washing = !!cooking && menu?.steps[cooking.step] === 'wash'
   const sinkIngs: IngId[] = washing && menu ? needList(menu).map(({ id }) => id).filter((id) => isCrop(id)) : []
@@ -193,7 +209,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const taps = cooking?.taps ?? 0
   useEffect(() => {
     if (!taps || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
-    helpRef.current?.animate?.([{ transform: 'none' }, { transform: 'translateY(-12%)', offset: 0.4 }, { transform: 'none' }], { duration: 320, easing: 'ease-out' })
+    // 누를 때마다 친구들이 고개를 끄덕이듯 살짝 숙였다 편다(발은 바닥에 붙인 채)
+    for (const el of helpRefs.current) el?.animate?.([{ transform: 'none' }, { transform: 'rotate(-3deg) scale(1.02, 0.96)', offset: 0.45 }, { transform: 'none' }], { duration: 420, easing: 'ease-in-out' })
     for (const el of [pressTool.current, pressIce.current]) el?.animate?.([{ transform: 'none' }, { transform: 'translateY(5%) scale(1.03, 0.94)', offset: 0.4 }, { transform: 'none' }], { duration: 260, easing: 'ease-out' })
   }, [taps])
   const [ax, ay] = nowStep === 'wash' && L.washAt ? L.washAt : L.cook
@@ -275,26 +292,37 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
           </div>
         </div>
-        {/* 파티 친구: 아바타 옆 아일랜드 뒤에 서서 같이 요리한다. 처음에는 재료를 하나씩 도마로 가져다주고, 누를 때마다 같이 통통 */}
-        {helper !== null && (() => {
-          const a = CALL_ANIMALS[helper]
-          const [hx, hy] = L.helper
-          const line = done !== null ? '와, 다 됐다! 파티에 가져가자!' : bring ? '재료 가져왔어!' : nowStep ? HELP_LINE[nowStep] : `내 ${menu?.ko ?? ''} 같이 만들자!`
-          return <>
-            {/* 자리(translate)는 바깥 칸에, 통통 튀는 움직임은 안쪽 칸에 준다: 같은 칸에 주면 움직이는 동안 자리 옮김이 풀려 친구가 탁탁 튀어 보였다 */}
-            <div aria-hidden className="pointer-events-none absolute" style={{ left: `${hx}%`, top: `${hy}%`, width: `${hw}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -99%)', zIndex: 1 }}>
-              <div ref={helpRef} className={`relative h-full w-full ${done !== null ? 'kitchen-helper-hop' : ''}`}>
-                {/* 서 있는 그림·손 흔드는 그림을 겹쳐 두고 보이기만 바꾼다(그림을 바꿔 끼우면 새로 읽는 동안 잠깐 비었다) */}
-                {(['stand', 'wave'] as const).map((pose) => (
-                  <img key={pose} src={assetUrl(`cafe/stand/${a.img}_${pose}.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain"
-                    style={{ visibility: (pose === 'wave') === (done !== null || bring) ? 'visible' : 'hidden' }} />
-                ))}
+        {/* 같이 요리하는 친구(파티 주문한 친구·고른 친구): 아바타 양옆 아일랜드 뒤에 서서 살랑살랑 흔들며 같이 요리한다.
+            처음에는 재료를 하나씩 도마로 가져다주고, 누를 때마다 끄덕, 다 되면 신나게 흔든다. 아바타보다 뒤(zIndex 0)에 그려 씻을 때 비켜 선 아바타를 가리지 않는다 */}
+        {crew.map((animal, k) => {
+          const a = CALL_ANIMALS[animal]
+          const [hx, hy] = L.helper[k]
+          const happy = done !== null || (bring && k === 0)
+          return (
+            <div key={a.img} aria-hidden className="pointer-events-none absolute" style={{ left: `${hx}%`, top: `${hy}%`, width: `${hw}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -99%)', zIndex: 0 }}>
+              {/* 자리(바깥) · 살랑살랑(가운데) · 끄덕(안쪽) 움직임을 칸마다 따로 준다: 한 칸에 겹치면 서로 덮어써서 튀어 보였다 */}
+              <div className={`h-full w-full ${done !== null ? 'kitchen-helper-cheer' : 'kitchen-helper-sway'}`} style={{ animationDelay: `${-k * 0.9}s` }}>
+                <div ref={(el) => { helpRefs.current[k] = el }} className="relative h-full w-full" style={{ transformOrigin: '50% 100%' }}>
+                  {/* 서 있는 그림·손 흔드는 그림을 겹쳐 두고 보이기만 바꾼다(그림을 바꿔 끼우면 새로 읽는 동안 잠깐 비었다) */}
+                  {(['stand', 'wave'] as const).map((pose) => (
+                    <img key={pose} src={assetUrl(`cafe/stand/${a.img}_${pose}.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain"
+                      style={{ visibility: (pose === 'wave') === happy ? 'visible' : 'hidden', transform: k === 1 ? 'scaleX(-1)' : undefined }} />
+                  ))}
+                </div>
               </div>
             </div>
-            <p aria-live="polite" className="pointer-events-none absolute m-0 w-max max-w-[10rem] -translate-x-1/2 -translate-y-full rounded-2xl bg-white px-2 py-1 text-center text-[12px] leading-snug font-bold text-[#6b4b52] shadow-md" style={{ left: `${hx}%`, top: `calc(${hy}% - ${hw * L.ratio}% )`, zIndex: 6 }}>{line}</p>
-            {/* 가져다주는 재료: 친구 손에서 도마로 하나씩 날아간다 */}
-            {bring && boardIngs.map((id, k) => (
-              <span key={id} aria-hidden className="pointer-events-none absolute block aspect-square" style={{ width: `${L.at.board.w * 0.19}%`, zIndex: 5, animation: `kitchen-bring ${BRING_MS}ms ease-in-out ${k * BRING_GAP}ms both`, ['--fx' as string]: `${hx}%`, ['--fy' as string]: `${hy - hw * L.ratio * 0.45}%`, ['--tx' as string]: `${L.at.board.x}%`, ['--ty' as string]: `${L.at.board.y - 1}%` }}>
+          )
+        })}
+        {speaker !== null && (() => {
+          const k = crew.indexOf(speaker)
+          const [hx, hy] = L.helper[k]
+          const line = done !== null ? (partyA !== null ? '와, 다 됐다! 파티에 가져가자!' : '와, 다 됐다! 맛있겠다!') : bring ? '재료 가져왔어!' : nowStep ? HELP_LINE[nowStep] : menu ? (partyA === speaker ? `내 ${menu.ko} 같이 만들자!` : `${menu.ko} 같이 만들자!`) : null
+          const [fx, fy] = L.helper[0]
+          return <>
+            {line && <p aria-live="polite" className="pointer-events-none absolute m-0 w-max max-w-[10rem] -translate-x-1/2 -translate-y-full rounded-2xl bg-white px-2 py-1 text-center text-[12px] leading-snug font-bold text-[#6b4b52] shadow-md" style={{ left: `${hx}%`, top: `calc(${hy}% - ${hw * L.ratio}% )`, zIndex: 6 }}>{line}</p>}
+            {/* 가져다주는 재료: 첫 친구 손에서 도마로 하나씩 날아간다 */}
+            {bring && boardIngs.map((id, n) => (
+              <span key={id} aria-hidden className="pointer-events-none absolute block aspect-square" style={{ width: `${L.at.board.w * 0.19}%`, zIndex: 5, animation: `kitchen-bring ${BRING_MS}ms ease-in-out ${n * BRING_GAP}ms both`, ['--fx' as string]: `${fx}%`, ['--fy' as string]: `${fy - hw * L.ratio * 0.45}%`, ['--tx' as string]: `${L.at.board.x}%`, ['--ty' as string]: `${L.at.board.y - 1}%` }}>
                 <Ing id={id} className="h-full w-full -translate-x-1/2 -translate-y-1/2" />
               </span>
             ))}
@@ -305,10 +333,15 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
 
       {/* 위: 코인·마트·카페 */}
       <div className={`absolute top-2 z-20 flex items-center justify-between gap-1.5 ${phoneL ? 'right-2' : 'inset-x-2'}`} style={phoneL ? { width: `calc(${SIDE} - 1rem)` } : undefined}>
-        <span className={`rounded-full ${phoneL ? 'hidden' : ''} bg-white/90 px-3 py-1.5 text-sm font-bold text-[#8a4b2a] shadow`}>{tx.title}</span>
+        {/* 좁은 폰 세로는 친구·마트·카페 버튼이 들어갈 자리가 모자라 '주방' 글자를 뺀다(위 탭에 이미 주방이라고 보인다) */}
+        <span className={`rounded-full ${phoneL ? 'hidden' : 'max-[430px]:hidden'} bg-white/90 px-3 py-1.5 text-sm font-bold whitespace-nowrap text-[#8a4b2a] shadow`}>{tx.title}</span>
         {/* 폰 가로는 칸이 좁아서 마트·카페는 그림 글자(이모지)만, 모두 한 줄로 */}
         <div className={`flex items-center gap-1.5 whitespace-nowrap ${phoneL ? 'w-full justify-between' : ''}`}>
           <span className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-white/90 px-3 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
+          {/* 같이 요리할 친구 고르기: 고른 친구 얼굴(혼자면 🐾) */}
+          <button aria-label={tx.friends} disabled={!!cooking} onClick={() => { playTap(); setPicking(true) }} className="flex h-9 shrink-0 items-center rounded-full bg-white/90 px-2 shadow disabled:opacity-50">
+            {friends.length ? friends.map((f) => <img key={f} src={assetUrl(`cafe/face/${CALL_ANIMALS[f].img}.webp`)} alt="" draggable={false} className="-mx-0.5 h-7 w-7 object-contain" />) : <span style={{ fontSize: 20 }}>🐾</span>}
+          </button>
           <button aria-label={tx.pantry} onClick={() => { playTap(); setPantry(true) }} className={`h-9 shrink-0 rounded-full bg-white/90 text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'}`}>{phoneL ? <span style={{ fontSize: 20 }}>🛒</span> : tx.pantry}</button>
           <button aria-label={tx.cafe} onClick={() => { playTap(); onGo('cafe') }} className={`h-9 shrink-0 rounded-full bg-white/90 text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'}`}>{phoneL ? <span style={{ fontSize: 20 }}>☕</span> : tx.cafe}</button>
         </div>
@@ -437,6 +470,10 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         </div>
       )}
       {toast && <div role="status" className="absolute bottom-40 left-1/2 z-50 max-w-[90%] -translate-x-1/2 rounded-full bg-[#8a4b55] px-5 py-3 text-center text-sm text-[#fff9e9] shadow-lg">{toast}</div>}
+      {picking && (
+        <PartyInvite here={[]} initial={friends} max={MAX_FRIENDS} allowNone title="👩‍🍳 누구랑 같이 요리할까요?" note={`${MAX_FRIENDS}명까지 골라요 · 아무도 안 고르면 혼자 요리해요`}
+          cta="👩‍🍳 같이 요리하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a) => { playTap(); setPicking(false); chooseFriends(a) }} />
+      )}
     </section>
   )
 }
