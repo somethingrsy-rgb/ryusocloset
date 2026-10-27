@@ -144,6 +144,42 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
   const here = pos && homeKey === (wide ? 'wide' : 'portrait') ? pos : { x: L.home.x, y: L.home.y, z: 3 }
   useEffect(() => { const k = wide ? 'wide' : 'portrait'; if (k !== homeKey) { setHomeKey(k); setPos(null) } }, [wide, homeKey])
 
+  /** 친구 한 명이 물뿌리개를 들고 i번 밭으로 걸어가 물을 주고 아바타 옆으로 돌아온다(pending 에 i 를 넣은 뒤 부른다) */
+  const sendFriend = (i: number, free: number) => {
+    const box = plotBox(i, L)
+    const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
+    busyFriends.current.add(free)
+    const spot = { x: box.x - box.w * 0.18, y: box.y + box.h * 0.35, line: WATER_LINES[Math.floor(Math.random() * WATER_LINES.length)], n: ++jobNo.current }
+    setJobs((j) => ({ ...j, [free]: { ...spot, watering: false } }))
+    later(() => {
+      setJobs((j) => (j[free] ? { ...j, [free]: { ...j[free], watering: true } } : j))
+      later(() => {
+        apply({ type: 'water', plot: i })
+        pending.current.delete(i)
+        setJobs((j) => (j[free] ? { ...j, [free]: { ...j[free], watering: false } } : j))
+        // 잠깐 서 있다가 아바타 옆으로 돌아온다
+        later(() => { busyFriends.current.delete(free); setJobs((j) => { const n = { ...j }; delete n[free]; return n }) }, 500)
+      }, 450)
+    }, 900)
+  }
+  // 친구가 있으면 물 주기는 저절로: 씨앗을 심어 물이 필요한 밭이 생기면 쉬고 있는 친구가 알아서 가서 준다(누르지 않아도 된다)
+  useEffect(() => {
+    if (!friends.length) return
+    const t = window.setTimeout(() => {
+      const st = getFarm()
+      for (let i = 0; i < st.plots.length; i++) {
+        const p = st.plots[i]
+        if (!p || p.wateredAt !== null || !st.owned[i] || pending.current.has(i)) continue
+        const free = friends.find((f) => !busyFriends.current.has(f))
+        if (free === undefined) break
+        pending.current.add(i)
+        sendFriend(i, free)
+      }
+    }, 500)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [farm, friends, jobs, wide])
+
   const tapPlot = (i: number) => {
     if (!farm.owned[i]) { setBuying(i); setTool(null); setPicker(false); return }
     setBuying(null)
@@ -158,22 +194,7 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
     // 물 주기는 쉬고 있는 친구가 대신 밭까지 걸어가서 준다(친구가 여럿이면 여러 밭에 한꺼번에). 아무도 없거나 다 바쁘면 내가 한다
     const free = need === 'water' ? friends.find((f) => !busyFriends.current.has(f)) : undefined
-    if (free !== undefined) {
-      busyFriends.current.add(free)
-      const spot = { x: box.x - box.w * 0.18, y: box.y + box.h * 0.35, line: WATER_LINES[Math.floor(Math.random() * WATER_LINES.length)], n: ++jobNo.current }
-      setJobs((j) => ({ ...j, [free]: { ...spot, watering: false } }))
-      later(() => {
-        setJobs((j) => (j[free] ? { ...j, [free]: { ...j[free], watering: true } } : j))
-        later(() => {
-          apply({ type: 'water', plot: i })
-          pending.current.delete(i)
-          setJobs((j) => (j[free] ? { ...j, [free]: { ...j[free], watering: false } } : j))
-          // 잠깐 서 있다가 아바타 옆으로 돌아온다
-          later(() => { busyFriends.current.delete(free); setJobs((j) => { const n = { ...j }; delete n[free]; return n }) }, 500)
-        }, 450)
-      }, 900)
-      return
-    }
+    if (free !== undefined) { sendFriend(i, free); return }
     const token = ++walkToken.current
     setHold(need === 'harvest' ? 'basket' : need === 'seed' ? 'seed' : 'can')
     setWalking(true)
