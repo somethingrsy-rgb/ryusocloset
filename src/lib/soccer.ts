@@ -58,6 +58,8 @@ export interface Match {
   hold: number
   /** 마지막으로 찬 팀(-1 이면 아직 없음): 화면에서 공 꼬리를 그 팀 색으로 그린다 */
   last: Team | -1
+  /** 마지막으로 찬 선수 번호(players 의 자리, 아직 없으면 -1) */
+  lastBy: number
   /** 공을 가진 채 멈춰 있던 시간: 잠깐 멈추면 저절로 찬다(버튼을 안 눌러도 되게) */
   holdIdle: number
 }
@@ -112,7 +114,7 @@ export function newMatch(avatars: [string, string], animals: [number[], number[]
     animals[team].slice(0, 4).forEach((a, k) => (k === 0 ? add(a, 'keeper', HOMES.keeper) : add(a, 'field', HOMES.field[k - 1])))
   }
   const firstField = (team: Team) => players.findIndex((p) => p.team === team && p.role === 'field')
-  return { players, ball: { x: FW / 2, y: FH / 2, vx: 0, vy: 0 }, score: [0, 0], time: 0, pause: 1.2, over: false, cpu, chaser: [firstField(0), firstField(1)], hold: -1, holdIdle: 0, last: -1 }
+  return { players, ball: { x: FW / 2, y: FH / 2, vx: 0, vy: 0 }, score: [0, 0], time: 0, pause: 1.2, over: false, cpu, chaser: [firstField(0), firstField(1)], hold: -1, holdIdle: 0, last: -1, lastBy: -1 }
 }
 
 const goalOf = (team: Team): Vec => ({ x: team === 0 ? FW : 0, y: FH / 2 }) // team 이 공격하는 골대
@@ -237,6 +239,7 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
   /** 공을 찬다: 방향(단위 벡터)과 세기 */
   const strike = (p: Player, d: Vec, power: number, ev: string) => {
     m.last = p.team
+    m.lastBy = m.players.indexOf(p)
     // 늘 상대 골대 쪽(앞)으로: 골대 옆 끝줄 가까이에서 골대를 노리면 거의 옆으로(또는 살짝 뒤로) 차게 되는데, 앞쪽 성분을 남겨 준다
     const fwd = p.team === 0 ? 1 : -1
     if (d.x * fwd < 0.3) d = { x: fwd * 0.3, y: (d.y < 0 ? -1 : 1) * Math.sqrt(1 - 0.09) }
@@ -258,9 +261,11 @@ export function stepMatch(m0: Match, dt: number, targets: [Vec | null, Vec | nul
         const u = clamp(((o.x - b.x) * vx + (o.y - b.y) * vy) / L, 0, 1)
         return Math.hypot(b.x + vx * u - o.x, b.y + vy * u - o.y) > PASS_LANE
       })
-      const mates = m.players.filter((q) => q !== p && q.team === p.team && q.role !== 'keeper' && (q.x - b.x) * fwd > 2 && dist(q) > 8 && dist(q) < 30 && open(q))
+      const mates = m.players.filter((q) => q !== p && q.team === p.team && q.role !== 'keeper' && (q.x - b.x) * fwd > 2 && dist(q) > 10 && dist(q) < 60 && open(q))
+      // 아바타가 비어 있으면 가끔 아바타에게, 아니면 멀리 있는 동물 친구에게 길게 준다(가장 먼 둘 중 하나)
       const human = mates.find((q) => q.role === 'human')
-      const to = human && rnd() < 0.7 ? human : mates[Math.floor(rnd() * mates.length)]
+      const far = mates.filter((q) => q.role === 'field').sort((a, c) => dist(c) - dist(a)).slice(0, 2)
+      const to = human && (rnd() < 0.4 || !far.length) ? human : far[Math.floor(rnd() * far.length)]
       if (to) {
         const aim = { x: to.x + fwd * 2, y: to.y }, dd = Math.hypot(aim.x - b.x, aim.y - b.y)
         strike(p, unit(aim.x - b.x, aim.y - b.y), Math.max(18, dd * FRICTION * 1.05), 'pass')
