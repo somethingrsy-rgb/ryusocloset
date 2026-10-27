@@ -1,7 +1,7 @@
 import { isRestoring } from './restoreGuard'
 export const CROPS = [
-  { id: 'carrot', ko: '당근', en: 'carrot', plural: 'carrots', emoji: '🥕', seconds: 30, price: 3 },
   { id: 'strawberry', ko: '딸기', en: 'strawberry', plural: 'strawberries', emoji: '🍓', seconds: 60, price: 5 },
+  { id: 'carrot', ko: '당근', en: 'carrot', plural: 'carrots', emoji: '🥕', seconds: 30, price: 3 },
   { id: 'corn', ko: '옥수수', en: 'corn', plural: 'corn', emoji: '🌽', seconds: 45, price: 6 },
 ] as const
 export type CropId = (typeof CROPS)[number]['id']
@@ -51,7 +51,9 @@ export function growth(plot: Plot | null, now: number): number {
   const crop = cropById(plot.crop)!
   return Math.min(1, Math.max(0, (now - plot.wateredAt) / (crop.seconds * 1000)))
 }
-export const orderCrop = (state: FarmState) => CROPS[state.deliveries % CROPS.length]
+/** 노점 주문 차례(당근 → 딸기 → 옥수수). 화면에 보이는 작물 순서(CROPS)를 바꿔도 주문 차례는 그대로 둔다 */
+const ORDER_TURN: CropId[] = ['carrot', 'strawberry', 'corn']
+export const orderCrop = (state: FarmState) => CROPS.find((c) => c.id === ORDER_TURN[state.deliveries % ORDER_TURN.length])!
 /** 우유·달걀을 다시 받을 수 있을 때까지 남은 초(0 이면 지금 받을 수 있다) */
 export const animalWait = (state: Pick<FarmState, 'barn'>, good: AnimalGood, now: number) => Math.max(0, Math.ceil((state.barn[good] + ANIMAL_SECONDS * 1000 - now) / 1000))
 export const animalReady = (state: Pick<FarmState, 'barn'>, good: AnimalGood, now: number) => !state.barn[good] || animalWait(state, good, now) === 0
