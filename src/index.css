@@ -355,3 +355,8 @@ button:focus-visible {
 @keyframes kitchen-bring { 0% { left: var(--fx); top: var(--fy); opacity: 1; } 50% { top: calc((var(--fy) + var(--ty)) / 2 - 8%); } 92% { left: var(--tx); top: var(--ty); opacity: 1; } 100% { left: var(--tx); top: var(--ty); opacity: 0; } }
 @keyframes kitchen-land { 0%, 90% { opacity: 0; } 100% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { [style*='kitchen-bring'] { animation-duration: 1ms !important; } }
+
+/* 주방: 다 만들면 파티 친구가 부드럽게 깡충깡충 */
+@keyframes kitchen-helper-hop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-10%); } }
+.kitchen-helper-hop { animation: kitchen-helper-hop 0.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .kitchen-helper-hop { animation: none; } }
