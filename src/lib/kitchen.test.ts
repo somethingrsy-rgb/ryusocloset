@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CROPS, defaultFarm, reduceFarm } from './farm'
-import { defaultKitchen, missing, reduceKitchen, sanitizeKitchen } from './kitchen'
+import { PARTY_SEAT, defaultKitchen, isPartySeat, missing, reduceKitchen, sanitizeKitchen, ticketAnimal } from './kitchen'
 import { MENU, PACK, PANTRY, STEPS, ingredient, needList } from './recipes'
 
 describe('레시피', () => {
@@ -65,5 +65,24 @@ describe('주방 주문서', () => {
     expect(k.pantry.egg).toBe(4)
     expect(k.tickets).toEqual([{ seat: 1, menu: 'latte', ready: true }])
     expect(sanitizeKitchen('garbage')).toEqual(defaultKitchen())
+  })
+})
+
+describe('파티 주문서', () => {
+  it('파티 친구 주문은 PARTY_SEAT + 동물 번호 자리에 생기고, 카페 자리와 따로 간다. 파티가 끝나면 지울 수 있다', () => {
+    let k = reduceKitchen(defaultKitchen(), { type: 'order', seat: 3, menu: 'latte' })
+    k = reduceKitchen(k, { type: 'order', seat: PARTY_SEAT + 3, menu: 'shake' })
+    expect(k.tickets).toHaveLength(2)
+    expect(isPartySeat(PARTY_SEAT + 3)).toBe(true)
+    expect(isPartySeat(3)).toBe(false)
+    expect(ticketAnimal(PARTY_SEAT + 3)).toBe(3)
+    expect(ticketAnimal(3)).toBe(3)
+    // 저장했다 다시 읽어도 파티 주문서가 남는다
+    expect(sanitizeKitchen(JSON.parse(JSON.stringify(k))).tickets).toHaveLength(2)
+    // 완성 전이라도 지울 수 있다
+    k = reduceKitchen(k, { type: 'cancel', seat: PARTY_SEAT + 3 })
+    expect(k.tickets.map((t) => t.seat)).toEqual([3])
+    expect(reduceKitchen(k, { type: 'cancel', seat: PARTY_SEAT + 5 })).toBe(k)
+    expect(reduceKitchen(k, { type: 'order', seat: PARTY_SEAT + 8, menu: 'latte' })).toBe(k)
   })
 })

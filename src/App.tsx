@@ -20,6 +20,7 @@ import { KitchenGame } from './components/KitchenGame'
 import { FarmScene } from './components/FarmScene'
 import { ShopModal } from './components/ShopModal'
 import { TravelGame } from './components/TravelGame'
+import { getParty } from './lib/party'
 import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
@@ -437,7 +438,7 @@ export default function App() {
             ) : mode === 'cafe' ? (
               <CafeGame outfit={outfit} tweaks={tweaks} onKitchen={() => setMode('kitchen')} />
             ) : mode === 'kitchen' ? (
-              <KitchenGame outfit={outfit} tweaks={tweaks} onGo={setMode} />
+              <KitchenGame outfit={outfit} tweaks={tweaks} onGo={(to) => { if (to === 'party') { setTravelPreview(getParty().place); setMode('travel') } else setMode(to) }} />
             ) : mode === 'farm' ? (
               <FarmScene outfit={outfit} tweaks={tweaks} onKitchen={() => setMode('kitchen')} />
             ) : mode === 'travel' ? (
@@ -448,6 +449,7 @@ export default function App() {
                 onWear={wearFound}
                 onFull={handleFull}
                 onDecorate={decorateWith}
+                onKitchen={() => setMode('kitchen')}
               />
             ) : mode === 'closet' ? (
               <Stage

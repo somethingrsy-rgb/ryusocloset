@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CALL_ANIMALS } from './animalCalls'
-import { PERSONAL, arrive, byeLine, helloLine, leaveAll, partyLine, stepGuests } from './party'
+import { PERSONAL, arrive, byeLine, eatLine, helloLine, leaveAll, orderLine, partyLine, partyWish, sanitizeParty, stepGuests } from './party'
+import { menuById } from './recipes'
 
 const floor = { minX: 10, maxX: 90, minY: 70, maxY: 95 }
 const seeded = (seed: number) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 }
@@ -57,5 +58,19 @@ describe('집 파티', () => {
     for (const l of lines) expect(l).not.toMatch(/[{}]/)
     expect([...lines].some((l) => l.startsWith('곰이야,') || l.startsWith('몽실아,'))).toBe(true)
     expect([...lines].some((l) => l.includes('유하야'))).toBe(true)
+  })
+})
+
+describe('파티 음식', () => {
+  it('파티 상태는 장소와 친구 번호만 남기고(겹치거나 없는 친구는 빼고), 친구가 없으면 파티가 없다', () => {
+    expect(sanitizeParty({ place: 'home', guests: [1, 1, 3, 99, -1, 2.5] })).toEqual({ place: 'home', guests: [1, 3] })
+    expect(sanitizeParty({ place: 'home', guests: [] })).toEqual({ place: null, guests: [] })
+    expect(sanitizeParty('x')).toEqual({ place: null, guests: [] })
+  })
+  it('친구는 카페 메뉴 중 하나를 주문하고, 주문·먹을 때 말을 한다', () => {
+    const rnd = seeded(3)
+    for (let i = 0; i < 30; i++) expect(menuById(partyWish(rnd))).toBeTruthy()
+    expect(orderLine('카페라테')).toBe('나는 카페라테 먹고 싶어!')
+    for (let i = 0; i < 20; i++) expect(eatLine('유하', rnd)).not.toContain('{call}')
   })
 })

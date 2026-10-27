@@ -5,7 +5,7 @@ import { isRestoring } from './restoreGuard'
 /**
  * 주방: 카페에서 받은 주문서와 냉장고 속 기본 재료.
  * 카페에서 주문을 받으면 주문서가 생기고(order), 주방에서 다 만들면 완성(cook), 카페에서 서빙하면 지운다(serve).
- * 주문서는 카페 손님 자리(seat)마다 하나다.
+ * 주문서는 카페 손님 자리(seat)마다 하나다. 집 파티에 초대한 친구의 주문은 PARTY_SEAT + 동물 번호 자리를 쓴다.
  */
 export interface Ticket { seat: number; menu: string; ready: boolean }
 export interface KitchenState { pantry: Record<PantryId, number>; tickets: Ticket[] }
@@ -16,11 +16,20 @@ export type KitchenAction =
   | { type: 'add'; id: PantryId; n: number }
   | { type: 'cook'; seat: number }
   | { type: 'serve'; seat: number }
+  /** 파티가 끝나면 남은 파티 주문서를 지운다(완성 여부와 상관없이) */
+  | { type: 'cancel'; seat: number }
 
 /** 처음에는 기본 재료를 조금씩 넣어 두어 바로 해 볼 수 있게 한다 */
 export const defaultKitchen = (): KitchenState => ({ pantry: Object.fromEntries(PANTRY.map((p) => [p.id, 2])) as Record<PantryId, number>, tickets: [] })
 const count = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(9999, Math.floor(v))) : 0)
+/** 파티 친구 주문서 자리: PARTY_SEAT + 동물 번호(0~7). 카페 손님 자리는 0~7 */
+export const PARTY_SEAT = 10
 const SEATS = 8
+/** 쓸 수 있는 자리: 카페 0~7, 파티 PARTY_SEAT~PARTY_SEAT+7 */
+const validSeat = (seat: unknown): seat is number => Number.isInteger(seat) && (((seat as number) >= 0 && (seat as number) < SEATS) || ((seat as number) >= PARTY_SEAT && (seat as number) < PARTY_SEAT + SEATS))
+export const isPartySeat = (seat: number) => seat >= PARTY_SEAT
+/** 주문서 자리의 동물 번호(카페 자리 i 의 손님은 동물 i) */
+export const ticketAnimal = (seat: number) => (seat >= PARTY_SEAT ? seat - PARTY_SEAT : seat)
 
 export function sanitizeKitchen(value: unknown): KitchenState {
   const base = defaultKitchen()
@@ -29,7 +38,7 @@ export function sanitizeKitchen(value: unknown): KitchenState {
   if (raw.pantry && typeof raw.pantry === 'object') for (const p of PANTRY) base.pantry[p.id] = count((raw.pantry as Record<string, unknown>)[p.id])
   const seen = new Set<number>()
   base.tickets = (Array.isArray(raw.tickets) ? raw.tickets : []).filter((t): t is Ticket => {
-    if (!t || !Number.isInteger(t.seat) || t.seat < 0 || t.seat >= SEATS || seen.has(t.seat) || !menuById(t.menu)) return false
+    if (!t || !validSeat(t.seat) || seen.has(t.seat) || !menuById(t.menu)) return false
     seen.add(t.seat)
     return true
   }).map((t) => ({ seat: t.seat, menu: t.menu, ready: t.ready === true }))
@@ -55,7 +64,7 @@ export function reduceKitchen(state: KitchenState, action: KitchenAction): Kitch
     next.pantry[action.id] += PACK
     return next
   }
-  if (!Number.isInteger(action.seat) || action.seat < 0 || action.seat >= SEATS) return state
+  if (!validSeat(action.seat)) return state
   const k = state.tickets.findIndex((t) => t.seat === action.seat)
   if (action.type === 'order') {
     if (!menuById(action.menu) || k >= 0) return state
@@ -69,6 +78,9 @@ export function reduceKitchen(state: KitchenState, action: KitchenAction): Kitch
     if (pantryNeed.some(({ id, n }) => state.pantry[id] < n)) return state
     for (const { id, n } of pantryNeed) next.pantry[id] -= n
     next.tickets[k] = { ...t, ready: true }
+  } else if (action.type === 'cancel') {
+    if (k < 0) return state
+    next.tickets.splice(k, 1)
   } else {
     if (k < 0 || !state.tickets[k].ready) return state
     next.tickets.splice(k, 1)
