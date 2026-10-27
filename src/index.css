@@ -350,3 +350,8 @@ button:focus-visible {
 @keyframes party-yum { 0%, 100% { transform: translateX(-50%) rotate(0) scale(1); } 30% { transform: translateX(-50%) rotate(-6deg) scale(1.06); } 60% { transform: translateX(-50%) rotate(5deg) scale(0.97); } }
 .party-yum { animation: party-yum 0.7s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .party-yum { animation: none; } }
+
+/* 주방: 파티 친구가 재료를 친구 손(--fx,--fy)에서 도마(--tx,--ty)로 가져다준다(통 튀어 오르며). 도마 위 재료는 도착할 때 나타난다 */
+@keyframes kitchen-bring { 0% { left: var(--fx); top: var(--fy); opacity: 1; } 50% { top: calc((var(--fy) + var(--ty)) / 2 - 8%); } 92% { left: var(--tx); top: var(--ty); opacity: 1; } 100% { left: var(--tx); top: var(--ty); opacity: 0; } }
+@keyframes kitchen-land { 0%, 90% { opacity: 0; } 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { [style*='kitchen-bring'] { animation-duration: 1ms !important; } }
