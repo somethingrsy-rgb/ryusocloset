@@ -281,8 +281,15 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
           const [hx, hy] = L.helper
           const line = done !== null ? '와, 다 됐다! 파티에 가져가자!' : bring ? '재료 가져왔어!' : nowStep ? HELP_LINE[nowStep] : `내 ${menu?.ko ?? ''} 같이 만들자!`
           return <>
-            <div ref={helpRef} aria-hidden className="pointer-events-none absolute" style={{ left: `${hx}%`, top: `${hy}%`, width: `${hw}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -99%)', zIndex: 1 }}>
-              <img src={assetUrl(`cafe/stand/${a.img}_${done !== null || bring ? 'wave' : 'stand'}.webp`)} alt="" draggable={false} className={`h-full w-full object-contain ${done !== null ? 'soccer-hop' : ''}`} />
+            {/* 자리(translate)는 바깥 칸에, 통통 튀는 움직임은 안쪽 칸에 준다: 같은 칸에 주면 움직이는 동안 자리 옮김이 풀려 친구가 탁탁 튀어 보였다 */}
+            <div aria-hidden className="pointer-events-none absolute" style={{ left: `${hx}%`, top: `${hy}%`, width: `${hw}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -99%)', zIndex: 1 }}>
+              <div ref={helpRef} className={`relative h-full w-full ${done !== null ? 'kitchen-helper-hop' : ''}`}>
+                {/* 서 있는 그림·손 흔드는 그림을 겹쳐 두고 보이기만 바꾼다(그림을 바꿔 끼우면 새로 읽는 동안 잠깐 비었다) */}
+                {(['stand', 'wave'] as const).map((pose) => (
+                  <img key={pose} src={assetUrl(`cafe/stand/${a.img}_${pose}.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain"
+                    style={{ visibility: (pose === 'wave') === (done !== null || bring) ? 'visible' : 'hidden' }} />
+                ))}
+              </div>
             </div>
             <p aria-live="polite" className="pointer-events-none absolute m-0 w-max max-w-[10rem] -translate-x-1/2 -translate-y-full rounded-2xl bg-white px-2 py-1 text-center text-[12px] leading-snug font-bold text-[#6b4b52] shadow-md" style={{ left: `${hx}%`, top: `calc(${hy}% - ${hw * L.ratio}% )`, zIndex: 6 }}>{line}</p>
             {/* 가져다주는 재료: 친구 손에서 도마로 하나씩 날아간다 */}
