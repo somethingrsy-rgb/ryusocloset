@@ -34,6 +34,9 @@ const TEXT = {
 /** 여행 탭 아래 패널도 내 방 탭과 같은 높이(40dvh)라서 무대 크기가 같다. 보낸 방은 내 방 탭과 똑같은 크기로 보인다 */
 const ROOM_STAGE_DIFF = 0
 
+/** 파티 친구 크기: 달리기 친구와 같은 기준(아바타 키의 2/3)에서 0.8배 */
+const PARTY_GUEST_SCALE = 0.8
+
 /** 방에 한 번에 보이는 보물 수 */
 const MAX_SHOWN = 5
 const PICK_R = 70 // 이 거리(px) 안을 지나가면 줍는다
@@ -278,7 +281,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             // 장소 그림은 바닥(풀밭 등) 그림이 시작하는 곳보다 조금 아래부터: 하늘에 떠 보이지 않게
             floor={{ minX: 8, maxX: 92, minY: layout ? minY + 2 : Math.max(minY, 100 - p.floorH / ROOM_H * 100 + 8), maxY: layout ? 96 : WALK_BOUNDS.maxY }}
             // 동물 키는 그 자리에 선 아바타 키의 2/3(아바타 크기가 방·깊이마다 바뀌면 같이 바뀐다). 아바타보다 아래(앞)에 있으면 아바타 앞에 그린다
-            size={(y) => GUEST_PER_AVATAR_W * (layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * depthScale(y))}
+            size={(y) => GUEST_PER_AVATAR_W * PARTY_GUEST_SCALE * (layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * depthScale(y))}
             z={(y) => avatarLayer + (y >= posRef.current.y ? 1 : -1)}
             onGone={endParty}
             settled={settled}
@@ -297,8 +300,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             <div className={`h-full w-full ${walking ? 'walk-bob' : ''}`}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             </div>
-            {/* 같이 먹는 동안 아바타도 음식을 하나 들고 있다(카페에서 서빙할 때 드는 자리) */}
-            {eating && Object.values(eating)[0] && <span aria-hidden className="party-yum absolute block" style={{ left: '76%', top: '42%', width: '41%' }}><Ico id={Object.values(eating)[0]} className="h-auto w-full" /></span>}
+            {/* 같이 먹는 동안 아바타도 음식을 하나 들고 있다(카페에서 서빙할 때 드는 자리). 옷·머리 층보다 위에 그려 손 앞에 오게 */}
+            {eating && Object.values(eating)[0] && <span aria-hidden className="party-yum absolute block" style={{ left: '76%', top: '42%', width: '41%', zIndex: 1000 }}><Ico id={Object.values(eating)[0]} className="h-auto w-full" /></span>}
           </div>
         </div>
       </div>

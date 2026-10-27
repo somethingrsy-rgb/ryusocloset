@@ -59,7 +59,7 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
   const { lang } = useI18n()
   const ko = lang === 'ko'
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
-  const [selected, setSelected] = useState<CropId>('carrot')
+  const [selected, setSelected] = useState<CropId>('strawberry')
   const [tool, setTool] = useState<Tool | null>(null)
   const [picker, setPicker] = useState(false)
   const [now, setNow] = useState(Date.now)
