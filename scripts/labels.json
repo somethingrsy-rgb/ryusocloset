@@ -1572,5 +1572,53 @@
     "category": "shoes",
     "color": "purple",
     "native": true
+  },
+  "costume_rainbow_petal_lolita": {
+    "ko": "무지개 꽃잎 로리타 드레스",
+    "en": "Rainbow Petal Lolita Dress",
+    "color": "pink",
+    "native": true
+  },
+  "costume_lilac_daisy_tier": {
+    "ko": "라일락 데이지 프릴 원피스",
+    "en": "Lilac Daisy Tiered Dress",
+    "color": "purple",
+    "native": true
+  },
+  "costume_sky_cloud_tier": {
+    "ko": "하늘 구름 프릴 원피스",
+    "en": "Sky Cloud Tiered Dress",
+    "color": "skyblue",
+    "native": true
+  },
+  "costume_sakura_pink_tier": {
+    "ko": "벚꽃 핑크 프릴 원피스",
+    "en": "Sakura Pink Tiered Dress",
+    "color": "pink",
+    "native": true
+  },
+  "costume_lilac_lemon_lolita": {
+    "ko": "라일락 레몬 로리타 원피스",
+    "en": "Lilac Lemon Lolita Dress",
+    "color": "purple",
+    "native": true
+  },
+  "costume_green_gingham_daisy": {
+    "ko": "초록 체크 데이지 원피스",
+    "en": "Green Gingham Daisy Dress",
+    "color": "green",
+    "native": true
+  },
+  "costume_seashell_mint": {
+    "ko": "민트 조개 진주 원피스",
+    "en": "Mint Seashell Pearl Dress",
+    "color": "mint",
+    "native": true
+  },
+  "costume_strawberry_lemon_tier": {
+    "ko": "딸기 레몬 프릴 원피스",
+    "en": "Strawberry Lemon Tiered Dress",
+    "color": "ivory",
+    "native": true
   }
 }
