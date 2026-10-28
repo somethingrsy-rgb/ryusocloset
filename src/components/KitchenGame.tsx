@@ -223,13 +223,19 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       {/* 폰 가로(낮고 넓은 화면): 그림을 잘라 키우면 아일랜드가 잘리고 아래 칸이 아바타를 가려서, 그림은 왼쪽에 다 보이게 놓고 주문서·버튼은 오른쪽 칸으로 */}
       <div className={`absolute top-1/2 -translate-y-1/2 ${phoneL ? 'left-0' : 'left-1/2 -translate-x-1/2'}`} style={{ width: phoneL ? `min(calc(100cqw - ${SIDE}), calc(100cqh * ${L.ratio}))` : `max(100cqw, calc(100cqh * ${L.ratio}))`, aspectRatio: `${L.ratio}` }}>
         <img src={assetUrl(L.img)} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
+        {/* 지금 누를 곳 네모 테두리: 도마 말고는(오븐·냄비·싱크대·냉장고) 그림 바로 위, 같이 요리하는 친구·아바타보다 뒤에 그린다(친구 얼굴을 가리지 않게).
+            누르는 칸(버튼)은 그대로 위에 있어서 친구 그림 위를 눌러도 눌린다 */}
+        {step && step.station !== 'board' && (() => {
+          const b = L.at[step.station]
+          return <div aria-hidden className={`kitchen-here pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-3xl ${shake === step.station ? 'call-shake' : ''}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 0 }} />
+        })()}
 
         {(Object.keys(L.at) as Station[]).map((s) => {
           const b = L.at[s]
           const here = step?.station === s
           return (
             <button key={s} aria-label={s} onClick={() => tapStation(s)}
-              className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0 ${here ? 'kitchen-here' : ''} ${shake === s ? 'call-shake' : ''}`}
+              className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0 ${here && s === 'board' ? 'kitchen-here' : ''} ${shake === s ? 'call-shake' : ''}`}
               style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 3 }}>
               {/* 가리키는 손: 보통은 위에서 아래로. 도마 위 도구나 수도꼭지 물방울과 겹치지 않게 그때는 오른쪽 옆에서 왼쪽으로 가리킨다 */}
               {here && ((kneading && s === 'board') || s === 'sink'
