@@ -225,9 +225,11 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         <img src={assetUrl(L.img)} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
         {/* 지금 누를 곳 네모 테두리: 도마 말고는(오븐·냄비·싱크대·냉장고) 그림 바로 위, 같이 요리하는 친구·아바타보다 뒤에 그린다(친구 얼굴을 가리지 않게).
             누르는 칸(버튼)은 그대로 위에 있어서 친구 그림 위를 눌러도 눌린다 */}
-        {step && step.station !== 'board' && (() => {
+        {/* 다른 곳을 누르면 이 테두리만 흔들어 알려 준다(가리키는 손은 위에서 콕콕 그대로: 손이 든 누르는 칸을 흔들면 손이 양옆으로 크게 휘둘렸다).
+            도마 테두리는 아일랜드 위라서 아일랜드보다 위(3)에 */}
+        {step && (() => {
           const b = L.at[step.station]
-          return <div aria-hidden className={`kitchen-here pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-3xl ${shake === step.station ? 'call-shake' : ''}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 0 }} />
+          return <div aria-hidden className={`kitchen-here pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-3xl ${shake === step.station ? 'call-shake' : ''}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: step.station === 'board' ? 3 : 0 }} />
         })()}
 
         {(Object.keys(L.at) as Station[]).map((s) => {
@@ -235,7 +237,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
           const here = step?.station === s
           return (
             <button key={s} aria-label={s} onClick={() => tapStation(s)}
-              className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0 ${here && s === 'board' ? 'kitchen-here' : ''} ${shake === s ? 'call-shake' : ''}`}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0"
               style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 3 }}>
               {/* 가리키는 손: 보통은 위에서 아래로. 도마 위 도구나 수도꼭지 물방울과 겹치지 않게 그때는 오른쪽 옆에서 왼쪽으로 가리킨다 */}
               {here && ((kneading && s === 'board') || s === 'sink'
