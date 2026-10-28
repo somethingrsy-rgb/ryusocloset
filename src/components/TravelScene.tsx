@@ -65,6 +65,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   const roomVersion = useSyncExternalStore(subscribeTravelRooms, travelRoomsVersion)
   const itemVersion = useItemsVersion()
   // 내 방은 아직 게임으로 보낸 방이 없어도 빈 방 무대로 보여 준다(꽉 채운 화면으로 그리면 가로 화면에서 너무 크게 확대된다)
+  // roomVersion·itemVersion 은 보낸 방·소품이 바뀌면 다시 읽으라는 신호(값은 안 쓴다)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const layout = useMemo(() => getTravelRoom(placeId) ?? (placeId === MY_ROOM_ID ? { scene: 'room' as const, room: { ...defaultRoom(), items: [] } } : null), [placeId, roomVersion, itemVersion])
   const assets = layout ? sceneAssets(layout.scene, (layout.scene === 'camp' || layout.room.wallId === 'camp') ? night : layout.room.night, layout.room.wallId, layout.room.floorId) : null
   const minY = assets ? Math.min(88, 100 - assets.floorH / ROOM_H * 100 + 2) : WALK_BOUNDS.minY

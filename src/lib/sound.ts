@@ -106,7 +106,7 @@ let bgmWant: string | null = null
 // 곡마다 따로 튼다: 'birds+cafe' → 'cafe' 처럼 바뀌면 둘 다에 있는 카페 노래는 끊지 않고 이어서 나오고, 새소리만 멈춘다
 const bgmNodes = new Map<string, AudioBufferSourceNode>()
 const bgmLoading = new Set<string>()
-const BGM_GAIN: Record<string, number> = { walk: 0.08, birds: 0.18, cafe: 0.1, room: 0.2, run: 0.1, shop: 0.12, rain: 0.1 }
+const BGM_GAIN: Record<string, number> = { birds: 0.18, cafe: 0.1, room: 0.2, run: 0.1, shop: 0.12, rain: 0.1 }
 const wanted = () => (bgmWant && enabled && !hiddenNow() ? bgmWant.split('+') : [])
 function stopBgmNode() {
   for (const src of bgmNodes.values()) { try { src.stop() } catch { /* 이미 멈춤 */ } }

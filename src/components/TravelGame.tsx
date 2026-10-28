@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { startBgm, stopBgm } from '../lib/sound'
 import { currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from '../lib/game'
 import type { Outfit, Tweaks } from '../lib/types'
 import { useItemsVersion } from '../lib/useItemsVersion'
-import { StarRainWalk } from './StarRainWalk'
-import { RunnerGame } from './RunnerGame'
-import { JumpPuzzle } from './JumpPuzzle'
-import { SoccerGame } from './SoccerGame'
-import { MathGame } from './MathGame'
-import { SpeakingGame } from './SpeakingGame'
 import { useI18n } from '../i18n'
 import { OverWorld } from './OverWorld'
 import { PILL, PillText } from './pill'
 import { TravelScene } from './TravelScene'
+
+// 놀이 화면(축구·달리기·별비·점프·수학·영어)은 처음 열 때 받는다
+const StarRainWalk = lazy(() => import('./StarRainWalk').then((m) => ({ default: m.StarRainWalk })))
+const RunnerGame = lazy(() => import('./RunnerGame').then((m) => ({ default: m.RunnerGame })))
+const JumpPuzzle = lazy(() => import('./JumpPuzzle').then((m) => ({ default: m.JumpPuzzle })))
+const SoccerGame = lazy(() => import('./SoccerGame').then((m) => ({ default: m.SoccerGame })))
+const MathGame = lazy(() => import('./MathGame').then((m) => ({ default: m.MathGame })))
+const SpeakingGame = lazy(() => import('./SpeakingGame').then((m) => ({ default: m.SpeakingGame })))
 
 export const useGame = () => {
   useSyncExternalStore(subscribeGame, gameVersion)
@@ -60,9 +62,9 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   const walking = !starRain && !runner && !math && !jump && !speaking && !soccer
   useEffect(() => { if (!walking) return; startBgm('room'); return stopBgm }, [walking])
 
-  if (soccer) return <SoccerGame onExit={() => setSoccer(false)} />
-  if (runner) return <RunnerGame outfit={outfit} tweaks={tweaks} onExit={() => setRunner(false)} />
-  if (starRain) return <StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} />
+  if (soccer) return <Suspense fallback={null}><SoccerGame onExit={() => setSoccer(false)} /></Suspense>
+  if (runner) return <Suspense fallback={null}><RunnerGame outfit={outfit} tweaks={tweaks} onExit={() => setRunner(false)} /></Suspense>
+  if (starRain) return <Suspense fallback={null}><StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} /></Suspense>
 
   const actionButton = PILL
   const label = (text: string) => <PillText>{text}</PillText>
@@ -79,9 +81,11 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
       </>}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
     />}
+    <Suspense fallback={null}>
     {speaking && <SpeakingGame onClose={() => setSpeaking(false)} />}
     {math && <MathGame onClose={() => setMath(false)} />}
     {jump && <JumpPuzzle onClose={() => setJump(false)} />}
+    </Suspense>
   </div>
 }
 
