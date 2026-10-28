@@ -226,8 +226,12 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
     const box = plotBox(i, L)
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
     if (claimed(i)) return // 친구가 지금 그 밭에서 일하는 중
-    // 친구가 있으면 물 주기는 친구들이 저절로 한다(누르지 않아도 된다)
-    if (need === 'water' && (friends.length || claimed(i))) { pending.current.delete(i); setNotice(ko ? '친구가 곧 물을 줄 거예요 💧' : 'A friend will water it soon 💧'); return }
+    // 친구가 있으면 물 주기·수확은 친구들이 저절로 한다(누르지 않아도 된다)
+    if ((need === 'water' || need === 'harvest') && friends.length) {
+      pending.current.delete(i)
+      setNotice(need === 'water' ? (ko ? '친구가 곧 물을 줄 거예요 💧' : 'A friend will water it soon 💧') : (ko ? '친구가 곧 수확할 거예요 🧺' : 'A friend will harvest it soon 🧺'))
+      return
+    }
     const token = ++walkToken.current
     setHold(need === 'harvest' ? 'basket' : need === 'seed' ? 'seed' : 'can')
     setWalking(true)

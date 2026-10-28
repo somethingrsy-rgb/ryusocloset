@@ -30,7 +30,7 @@ describe('농장 친구', () => {
     expect(farm.getFarm().plots.slice(0, 3).every((p) => p?.wateredAt !== null)).toBe(true)
     expect(ff.getFriendJobs()).toEqual({})
   })
-  it('수확 버튼을 누르면 친구들이 다 자란 밭을 모두 수확한다', async () => {
+  it('다 자란 밭은 버튼을 누르지 않아도 친구들이 저절로 수확한다(물 주기와 같은 방식)', async () => {
     vi.useFakeTimers()
     const values = new Map<string, string>()
     vi.stubGlobal('localStorage', { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v) } })
@@ -42,9 +42,8 @@ describe('농장 친구', () => {
     ff.setFarmFriends([2, 6])
     for (const i of [0, 1, 2]) farm.actFarm({ type: 'plant', plot: i, crop: 'carrot' })
     vi.advanceTimersByTime(8000) // 친구들이 물을 다 준다
-    vi.advanceTimersByTime(31000) // 당근이 다 자란다(30초)
-    expect(farm.getFarm().plots.slice(0, 3).every((p) => p !== null)).toBe(true) // 버튼을 누르기 전에는 수확하지 않는다
-    expect(ff.harvestAll()).toBe(true)
+    expect(farm.getFarm().plots.slice(0, 3).every((p) => p !== null && p.wateredAt !== null)).toBe(true)
+    vi.advanceTimersByTime(30000) // 당근이 다 자란다(30초): 아무것도 누르지 않는다
     vi.advanceTimersByTime(8000)
     expect(farm.getFarm().plots.slice(0, 3)).toEqual([null, null, null])
     expect(farm.getFarm().inventory.carrot).toBe(3)
