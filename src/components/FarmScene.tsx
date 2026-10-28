@@ -13,7 +13,7 @@ import { CoinIcon } from './Icons'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { GUEST_PER_AVATAR_W, PartyInvite } from './PartyGuests'
 import { getMeet, notCollected, subscribeMeet } from '../lib/meet'
-import { MAX_FARM_FRIENDS, WALK_MS, claimed, setFarmCols, getFarmFriends, getFriendJobs, harvestAll, setFarmFriends, setOnWatered, subscribeFarmFriends, waterNow } from '../lib/farmFriends'
+import { MAX_FARM_FRIENDS, WALK_MS, claimed, setFarmCols, type Side, getFarmFriends, getFriendJobs, harvestAll, setFarmFriends, setOnWatered, subscribeFarmFriends, waterNow } from '../lib/farmFriends'
 
 type Tool = 'seed' | 'water' | 'harvest'
 
@@ -74,7 +74,12 @@ function wanderArea(L: Layout) {
   }
 }
 /** 친구가 밭에서 일할 때 서는 자리(발): 밭 바로 앞(아래) 줄 사이 길목. 줄을 따라 옆으로 다니면 작물 위를 밟지 않는다 */
-const workSpot = (i: number, L: Layout) => { const b = plotBox(i, L); return { x: b.x, y: b.y + b.h * 0.62 } }
+const workSpot = (i: number, L: Layout, side: Side = 'front') => {
+  const b = plotBox(i, L)
+  // 수확 길: 세로 줄 사이 길목(밭 왼쪽·오른쪽 옆)에 선다
+  if (side !== 'front') return { x: b.x + (side === 'left' ? -0.56 : 0.56) * b.w, y: b.y + b.h * 0.4 }
+  return { x: b.x, y: b.y + b.h * 0.62 }
+}
 /** 쉬는 친구 한 명이 지금 가고 있는 곳(발 위치)과 걷는 시간. until 은 걷기가 끝나는 때(0 이면 멈춰 서 있다) */
 interface Stroll { x: number; y: number; ms: number; dir: 1 | -1; until: number }
 
@@ -162,7 +167,7 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
   useEffect(() => {
     for (const f of friends) {
       const j = jobs[f]
-      if (j) { lastSpot.current[f] = workSpot(j.plot, L); continue }
+      if (j) { lastSpot.current[f] = workSpot(j.plot, L, j.side); continue }
       const s0 = lastSpot.current[f]
       if (s0) { delete lastSpot.current[f]; setStrolls((st) => ({ ...st, [f]: { ...s0, ms: 0, dir: st[f]?.dir ?? 1, until: 0 } })) }
     }
@@ -228,10 +233,10 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
     const box = plotBox(i, L)
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
     if (claimed(i)) return // 친구가 지금 그 밭에서 일하는 중
-    // 친구가 있으면 물 주기·수확은 친구들이 저절로 한다(누르지 않아도 된다)
-    if ((need === 'water' || need === 'harvest') && friends.length) {
+    // 친구가 있으면 물 주기는 친구들이 저절로 한다(누르지 않아도 된다). 수확은 수확 버튼을 누르면 친구들이, 밭을 누르면 내가 한다
+    if (need === 'water' && friends.length) {
       pending.current.delete(i)
-      setNotice(need === 'water' ? (ko ? '친구가 곧 물을 줄 거예요 💧' : 'A friend will water it soon 💧') : (ko ? '친구가 곧 수확할 거예요 🧺' : 'A friend will harvest it soon 🧺'))
+      setNotice(ko ? '친구가 곧 물을 줄 거예요 💧' : 'A friend will water it soon 💧')
       return
     }
     const token = ++walkToken.current
@@ -356,7 +361,7 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
           const job = jobs[f]
           const stroll = strolls[f]
           // 발 위치(가운데 x, 발 y): 일할 때는 밭 옆, 쉴 때는 밭 둘레를 거닐며 가는 곳(아바타를 따라다니지 않는다)
-          const feet = job ? workSpot(job.plot, L) : stroll ?? { x: L.home.x + aw / 2 + (k === 0 ? -1 : 1) * (aw * 0.55 + fw * 0.45), y: L.home.y + L.avatarH }
+          const feet = job ? workSpot(job.plot, L, job.side) : stroll ?? { x: L.home.x + aw / 2 + (k === 0 ? -1 : 1) * (aw * 0.55 + fw * 0.45), y: L.home.y + L.avatarH }
           const strolling = !job && !!stroll && stroll.until > 0 // 걷는 중
           const moving = (!!job && !job.watering) || strolling
           const walkMs = job ? job.walkMs : stroll?.ms ?? WALK_MS
