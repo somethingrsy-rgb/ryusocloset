@@ -359,9 +359,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         </div>
       </div>
 
-      {/* 주문서 보드 */}
+      {/* 주문서 보드(주문서가 없을 때 안내는 아래 칸에만: 위아래에 같은 글이 두 번 보였다) */}
       <div className={`absolute top-12 z-20 flex gap-2 overflow-x-auto px-1 pt-2.5 pb-2 ${phoneL ? 'right-1' : 'inset-x-1'}`} style={phoneL ? { width: `calc(${SIDE} - 0.5rem)` } : undefined}>
-        {tickets.length === 0 && <p className="m-0 rounded-2xl bg-white/90 px-3 py-2 text-sm font-bold text-[#8a4b2a] shadow">📝 {tx.noTickets}</p>}
         {tickets.map((t) => {
           const m = menuById(t.menu)!
           const on = sel === t.seat
@@ -447,7 +446,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         ) : (
           <div className="flex items-center justify-between gap-2">
             <p className="m-0 text-sm font-bold text-[#8a4b2a]">{tickets.length ? tx.pick : `📝 ${tx.noTickets}`}</p>
-            {!tickets.length && <button onClick={() => { playTap(); onGo('cafe') }} className={`${btn} bg-[#ef8d99] text-white`}>{tx.cafe}</button>}
+            {!tickets.length && <button onClick={() => { playTap(); onGo('cafe') }} className={`${btn} shrink-0 whitespace-nowrap bg-[#ef8d99] text-white`}>{tx.cafe}</button>}
           </div>
         )}
       </div>

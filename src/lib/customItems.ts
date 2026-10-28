@@ -159,8 +159,8 @@ export function removeBackground(data: Uint8ClampedArray, w: number, h: number, 
       stack.push(p)
     }
   }
-  for (let x = 0; x < w; x++) (push(x), push((h - 1) * w + x))
-  for (let y = 0; y < h; y++) (push(y * w), push(y * w + w - 1))
+  for (let x = 0; x < w; x++) { push(x); push((h - 1) * w + x) }
+  for (let y = 0; y < h; y++) { push(y * w); push(y * w + w - 1) }
   while (stack.length) {
     const p = stack.pop()!
     const x = p % w

@@ -60,9 +60,9 @@ function FarmImg({ name, emoji, className, style, alt = '' }: { name: string; em
 /** 친구 그림 칸 너비 ÷ 아바타 너비(파티·주방과 같은 크기) */
 const FRIEND_PER_AVATAR_W = GUEST_PER_AVATAR_W * 0.8
 /** 쉬는 친구가 밭 둘레를 거니는 빠르기(그림 너비 %/초)와 멈춰 서 있는 시간(초) */
-const WANDER_SPEED = 7, WANDER_REST: [number, number] = [2, 5.5]
+const WANDER_SPEED = 7, WANDER_REST: [number, number] = [0.8, 2.6]
 /** 한 번에 걷는 거리(그림 너비 %): 가까운 곳으로 조금씩 거닌다 */
-const WANDER_HOP: [number, number] = [8, 20]
+const WANDER_HOP: [number, number] = [10, 24]
 /** 친구마다 걷는 빠르기를 조금씩 다르게(같은 박자로 움직이면 같이 다니는 것처럼 어색했다) */
 const PACE = [0.8, 1.15]
 /** 쉬는 친구가 걸어 다니는 곳: 밭 덩어리 둘레(조금 넓게), 그림 % */
@@ -169,12 +169,14 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
       const j = jobs[f]
       if (j) { lastSpot.current[f] = workSpot(j.plot, L, j.side); continue }
       const s0 = lastSpot.current[f]
-      if (s0) { delete lastSpot.current[f]; setStrolls((st) => ({ ...st, [f]: { ...s0, ms: 0, dir: st[f]?.dir ?? 1, until: 0 } })) }
+      if (s0) { delete lastSpot.current[f]; setStrolls((st) => ({ ...st, [f]: { ...s0, ms: 0, dir: st[f]?.dir ?? 1, until: 0 } })); wake.current(f) }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobs])
   const strollRef = useRef(strolls)
   strollRef.current = strolls
+  /** 일을 마친 친구를 곧바로(0.4~1초 뒤) 다시 거닐게 깨운다: 오래 서 있으면 멈춘 것처럼 보였다 */
+  const wake = useRef<(f: number) => void>(() => {})
 
   useEffect(() => {
     const area = wanderArea(L)
@@ -196,9 +198,12 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
       }
       return best
     }
+    // 친구마다 다음 걸음 타이머 하나(깨우면 그 타이머를 당겨 쓴다)
+    const next: Record<number, number> = {}
+    const later = (f: number, fn: () => void, ms: number) => { clearTimeout(next[f]); next[f] = window.setTimeout(fn, ms); ids.push(next[f]) }
     const step = (f: number, k: number, from0?: { x: number; y: number }) => {
-      // 일하는 중이면 거닐지 않고 조금 뒤에 다시 본다. 아니면 지금 서 있는 곳(일을 마친 밭 앞일 수도 있다)에서 출발
-      if (jobsRef.current[f]) { ids.push(window.setTimeout(() => step(f, k, from0), 1000)); return }
+      // 일하는 중이면 거닐지 않고 조금 뒤에 다시 본다(일을 마치면 wake 가 바로 깨운다). 아니면 지금 서 있는 곳(일을 마친 밭 앞일 수도 있다)에서 출발
+      if (jobsRef.current[f]) { later(f, () => step(f, k, from0), 1500); return }
       const cur = strollRef.current[f]
       const from = from0 && cur ? { x: cur.x, y: cur.y } : from0
       const { x, y } = from ? far(f, from) : rand()
@@ -207,16 +212,17 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
       const ms = from ? Math.max(700, (d / (WANDER_SPEED * PACE[k % PACE.length])) * 1000) : 0
       setStrolls((st) => ({ ...st, [f]: { x, y, ms, dir: from && x < from.x ? -1 : 1, until: Date.now() + ms } }))
       if (ms) ids.push(window.setTimeout(() => setStrolls((st) => (st[f] ? { ...st, [f]: { ...st[f], until: 0 } } : st)), ms)) // 도착: 걷는 몸짓을 멈춘다
-      ids.push(window.setTimeout(() => step(f, k, { x, y }), ms + (WANDER_REST[0] + Math.random() * (WANDER_REST[1] - WANDER_REST[0])) * 1000))
+      later(f, () => step(f, k, { x, y }), ms + (WANDER_REST[0] + Math.random() * (WANDER_REST[1] - WANDER_REST[0])) * 1000)
     }
+    wake.current = (f) => { const k = friends.indexOf(f); if (k >= 0) later(f, () => step(f, k, goal[f] ?? strollRef.current[f]), 400 + Math.random() * 600) }
     // 처음 자리는 바로 정하고, 첫걸음은 친구마다 다른 때(뒤 친구일수록 늦게) 뗀다
     friends.forEach((f, k) => {
       const at = far(f)
       goal[f] = at
       setStrolls((st) => ({ ...st, [f]: { ...at, ms: 0, dir: 1, until: 0 } }))
-      ids.push(window.setTimeout(() => step(f, k, at), 600 + k * 1900 + Math.random() * 1200))
+      later(f, () => step(f, k, at), 600 + k * 1900 + Math.random() * 1200)
     })
-    return () => ids.forEach(clearTimeout)
+    return () => { ids.forEach(clearTimeout); wake.current = () => {} }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [friends, wide])
 

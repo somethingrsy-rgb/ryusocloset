@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { HairSalon } from './components/HairSalon'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
@@ -15,11 +15,6 @@ import { Stage } from './components/Stage'
 import { TravelBook } from './components/TravelBook'
 import { SendToGameSheet } from './components/SendToGameSheet'
 import { PLACE_BY_ID, travelTo } from './lib/game'
-import { CafeGame } from './components/CafeGame'
-import { KitchenGame } from './components/KitchenGame'
-import { FarmScene } from './components/FarmScene'
-import { ShopModal } from './components/ShopModal'
-import { TravelGame } from './components/TravelGame'
 import { getParty } from './lib/party'
 import { Toast } from './components/Toast'
 import { I18nContext, detectLang, makeT, type Lang } from './i18n'
@@ -51,6 +46,14 @@ import {
 } from './lib/storage'
 import { pruneTweaks, sanitizeTweaks, stripZ } from './lib/tweaks'
 import type { Item, Outfit, SavedOutfit, Tweaks } from './lib/types'
+// 농장 친구(물 주기)는 농장 탭을 열지 않아도 앱이 켜져 있는 동안 일한다
+import './lib/farmFriends'
+// 탭 화면은 그 탭을 처음 열 때 받는다(앱 코드를 한 번에 다 받으면 첫 실행이 느렸다). 앱이 설치돼 있으면 미리 저장돼 있어 바로 열린다
+const CafeGame = lazy(() => import('./components/CafeGame').then((m) => ({ default: m.CafeGame })))
+const KitchenGame = lazy(() => import('./components/KitchenGame').then((m) => ({ default: m.KitchenGame })))
+const FarmScene = lazy(() => import('./components/FarmScene').then((m) => ({ default: m.FarmScene })))
+const ShopModal = lazy(() => import('./components/ShopModal').then((m) => ({ default: m.ShopModal })))
+const TravelGame = lazy(() => import('./components/TravelGame').then((m) => ({ default: m.TravelGame })))
 
 /** 되돌리기: 이 시간(ms) 안에 이어지는 조절은 한 번으로 묶고, 최대 이만큼 기억한다 */
 const UNDO_GAP_MS = 500
@@ -68,10 +71,10 @@ const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).sli
 
 /** 탭 아이콘(public/assets/tabs2/<icon>.webp). 그림이 아직 없는 탭(주방)은 이모지로 보여 준다 */
 const TAB_EMOJI: Record<string, string> = { kitchen: '🍳' }
-function TabIcon({ icon }: { icon: string }) {
+function TabIcon({ icon, active = false }: { icon: string; active?: boolean }) {
   const [failed, setFailed] = useState(false)
   if (failed) return <span aria-hidden className="flex h-10 w-10 items-center justify-center leading-none" style={{ fontSize: '1.9rem' }}>{TAB_EMOJI[icon] ?? '⭐'}</span>
-  return <img src={assetUrl(`assets/tabs2/${icon}.webp`)} alt="" draggable={false} onError={() => setFailed(true)} className="h-10 w-10 object-contain" />
+  return <img src={assetUrl(`assets/tabs2/${icon}.webp`)} alt="" draggable={false} onError={() => setFailed(true)} className={`h-10 w-10 object-contain ${active ? 'shrink-0' : 'min-w-0 shrink'}`} />
 }
 
 function useWideScreen() {
@@ -388,12 +391,13 @@ export default function App() {
         setSelection(null)
         setSelCat(null)
       }}
-      className={`flex shrink-0 min-h-11 flex-1 items-center justify-center gap-0 rounded-full px-0.5 text-[10px] font-bold whitespace-nowrap transition ${
-        mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
+      className={`flex min-h-11 min-w-0 items-center justify-center gap-0.5 rounded-full px-0.5 font-bold whitespace-nowrap transition ${
+        mode === m ? (icon === 'kitchen' ? 'flex-1 shrink-0' : 'flex-none pr-2') + ' bg-blush text-white shadow' : 'flex-1 shrink text-cocoa-soft'
       }`}
     >
-      <TabIcon icon={icon} />
-      <span className="sr-only">{label}</span>
+      <TabIcon icon={icon} active={mode === m} />
+      {/* 탭 이름: 아이콘 그림 속 글자가 너무 작아서, 지금 고른 탭만 이름을 읽을 수 있게 옆에 쓴다(주방 아이콘은 그림에 이름이 크게 있다) */}
+      <span className={mode === m && icon !== 'kitchen' ? 'text-[13px]' : 'sr-only'}>{label}</span>
     </button>
   )
 
@@ -433,6 +437,7 @@ export default function App() {
                 className="absolute top-1 right-1 z-20 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-transparent active:scale-95"
               ><img src={assetUrl('assets/tabs/hairshop.webp')} alt="" draggable={false} className="h-full w-full object-contain drop-shadow-md" /></button>
             )}
+            <Suspense fallback={null}>
             {mode === 'shop' ? (
               <ShopModal onClose={() => setMode(shopFrom.current)} onWear={wearFound} outfit={outfit} tweaks={tweaks} />
             ) : mode === 'cafe' ? (
@@ -480,6 +485,7 @@ export default function App() {
               <button onClick={() => setModal('sendToGame')} className="absolute bottom-3 left-3 z-20 min-h-12 rounded-full bg-blush px-4 font-bold text-white shadow-md">🎮 {lang === 'ko' ? '게임에 보내기' : 'Send to game'}</button>
               </RoomView>
             )}
+            </Suspense>
           </div>
 
         <aside hidden={mode === 'farm' || mode === 'cafe' || mode === 'kitchen' || mode === 'shop' || full} className={`flex ${split ? 'min-w-0 flex-1' : 'h-[40dvh] shrink-0'} flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
