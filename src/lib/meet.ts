@@ -2,25 +2,22 @@ import { CALL_ANIMALS, kidWords } from './animalCalls'
 
 /**
  * 동물 친구 모으기와 산책길 만남.
- * - 친구 모으기: 수학 문제를 10개 풀 때마다 친구를 한 명씩 만난다(met). 모은 친구만 파티 초대·농장·주방에 같이 할 수 있다.
+ * - 친구 모으기: 수학 단계를 하나 다 풀 때마다(처음 끝낼 때) 친구를 한 명씩 만난다(met). 모은 친구만 파티 초대·농장·주방에 같이 할 수 있다.
  * - 산책길 만남: 길을 걷다 보면 30초 간격으로 동물 친구가 나타나 짧게 이야기만 나눈다(모으기와는 상관없다).
  */
-export interface MeetState { met: number[]; last: number; /** 다음 친구까지 푼 수학 문제 수 */ solved: number }
+export interface MeetState { met: number[]; last: number }
 const KEY = 'ryuso.meet.v1'
 
 /** 이만큼(논리 px, 화면 몇 개 정도) 걸어야 다음 친구가 나타날 수 있다 */
 export const MEET_WALK = 3000
 /** 산책길에서 지난번에 만난 뒤 이만큼(ms) 지나야 다음 친구가 나타난다 */
 export const MEET_GAP = 30_000
-/** 수학 문제를 이만큼 풀면 친구를 한 명 모은다 */
-export const SOLVE_PER_FRIEND = 10
 
 export function sanitizeMeet(v: unknown): MeetState {
   const r = (v && typeof v === 'object' ? v : {}) as Partial<MeetState>
   const met = Array.isArray(r.met) ? [...new Set(r.met.filter((a): a is number => Number.isInteger(a) && a >= 0 && a < CALL_ANIMALS.length))] : []
   const last = typeof r.last === 'number' && Number.isFinite(r.last) ? r.last : 0
-  const solved = typeof r.solved === 'number' && Number.isFinite(r.solved) ? Math.max(0, Math.min(SOLVE_PER_FRIEND - 1, Math.floor(r.solved))) : 0
-  return { met, last, solved }
+  return { met, last }
 }
 let state: MeetState = (() => { try { return sanitizeMeet(JSON.parse(localStorage.getItem(KEY) ?? 'null')) } catch { return sanitizeMeet(null) } })()
 const listeners = new Set<() => void>()
@@ -36,17 +33,15 @@ export const collected = (animal: number) => state.met.includes(animal)
 /** 아직 못 모은 친구들(친구 고르기 창에서 ??? 로 가린다) */
 export const notCollected = (s: MeetState = state) => CALL_ANIMALS.map((_, i) => i).filter((i) => !s.met.includes(i))
 
-/** 수학 문제를 하나 풀었다: 10개가 차면 아직 못 모은 친구 한 명을 모은다(모은 친구 번호, 아니면 null) */
-export function solveOne(s: MeetState, rnd: () => number = Math.random): { next: MeetState; got: number | null } {
+/** 수학 단계를 하나 처음으로 다 풀었다: 아직 못 모은 친구 한 명을 모은다(모은 친구 번호, 다 모았으면 null) */
+export function collectOne(s: MeetState, rnd: () => number = Math.random): { next: MeetState; got: number | null } {
   const left = notCollected(s)
-  if (!left.length) return { next: s, got: null } // 다 모았다
-  const solved = s.solved + 1
-  if (solved < SOLVE_PER_FRIEND) return { next: { ...s, solved }, got: null }
+  if (!left.length) return { next: s, got: null }
   const got = left[Math.floor(rnd() * left.length)]
-  return { next: { ...s, met: [...s.met, got], solved: 0 }, got }
+  return { next: { ...s, met: [...s.met, got] }, got }
 }
-export function addSolved(): number | null {
-  const r = solveOne(state)
+export function collectFriend(): number | null {
+  const r = collectOne(state)
   if (r.next !== state) save(r.next)
   return r.got
 }

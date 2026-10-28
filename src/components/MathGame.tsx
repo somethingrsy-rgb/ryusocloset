@@ -8,7 +8,7 @@ import { playCorrect, playLevelDone, playServe } from '../lib/sound'
 import { StarIcon } from './Icons'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { assetUrl } from '../lib/items'
-import { SOLVE_PER_FRIEND, addSolved, getMeet, subscribeMeet } from '../lib/meet'
+import { collectFriend, getMeet, subscribeMeet } from '../lib/meet'
 
 const T = {
   ko: {
@@ -200,9 +200,6 @@ export function MathGame({ onClose }: { onClose: () => void }) {
   /** 문제를 맞혔을 때: 소리·칭찬·기록 */
   const solved = () => {
     if (!q || !lv || !profile) return
-    // 친구 모으기: 문제를 10개 풀 때마다 새 동물 친구를 한 명 만난다
-    const got = addSolved()
-    if (got !== null) { setNewFriend(got); window.setTimeout(playServe, 500) }
     setWrong(false)
     setRight(tx.right[Math.floor(Math.random() * tx.right.length)])
     const { next, justCleared } = addCorrect(profile, lv.id, idx + 1)
@@ -210,6 +207,9 @@ export function MathGame({ onClose }: { onClose: () => void }) {
     if (justCleared) playLevelDone() // 한 단원을 끝낸 문제는 정답 소리 대신 단원 완료 소리
     else playCorrect()
     if (justCleared) {
+      // 친구 모으기: 단계를 처음 다 풀면 새 동물 친구를 한 명 만난다
+      const got = collectFriend()
+      if (got !== null) { setNewFriend(got); window.setTimeout(playServe, 500) }
       const c = claimStars(next, lv.id)
       saved = c.next
       setGift({ stars: c.stars })
@@ -272,7 +272,7 @@ export function MathGame({ onClose }: { onClose: () => void }) {
           <h2 className="m-0 flex items-center gap-2 text-xl font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]"><span className="rounded-2xl bg-[#e2eddb] px-2 py-1 text-2xl">🌱</span>{tx.title}</h2>
           {/* 친구 모으기: 다음 친구까지 푼 문제 수와 모은 친구 수 */}
           <span aria-label="친구 모으기" className="mt-1 rounded-full bg-[#fff0f4] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#b5566c]">
-            🐾 {meet.met.length >= CALL_ANIMALS.length ? `친구를 다 모았어요! ${CALL_ANIMALS.length}/${CALL_ANIMALS.length}` : `다음 친구까지 ${meet.solved}/${SOLVE_PER_FRIEND} · 모은 친구 ${meet.met.length}/${CALL_ANIMALS.length}`}
+            🐾 {meet.met.length >= CALL_ANIMALS.length ? `친구를 다 모았어요! ${CALL_ANIMALS.length}/${CALL_ANIMALS.length}` : `단계를 다 풀면 새 친구! · 모은 친구 ${meet.met.length}/${CALL_ANIMALS.length}`}
           </span>
         </div>
         <button onClick={onClose} aria-label={tx.close} className="flex h-12 w-12 items-center justify-center rounded-full border border-[#dce4d7] bg-white text-xl text-[#246f55]">✕</button>
