@@ -3,9 +3,9 @@ import { useI18n } from '../i18n'
 import { extendReach, findItem, travelItem } from '../lib/game'
 import { roadSpot } from '../lib/roadItems'
 import { playOrder, playServe, playTap } from '../lib/sound'
-import { CALL_ANIMALS, hasBatchim } from '../lib/animalCalls'
+import { CALL_ANIMALS } from '../lib/animalCalls'
 import { getAvatar } from '../lib/avatars'
-import { canMeet, getMeet, meetFriend, pickVisitor, talkFor, type Talk } from '../lib/meet'
+import { canMeet, getMeet, pickVisitor, talkFor, talkedOnRoad, type Talk } from '../lib/meet'
 import { GUEST_PER_AVATAR_W } from './PartyGuests'
 import type { Outfit, Tweaks } from '../lib/types'
 import {
@@ -107,7 +107,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
     return () => clearTimeout(t)
   }, [visitor, talk])
   const startTalk = (v: Visitor) => {
-    const first = !getMeet().met.includes(v.animal)
+    const first = !getMeet().met.includes(v.animal) // 수학으로 모은 친구면 '또 만났네', 아니면 자기소개
     playOrder()
     setTalk({ animal: v.animal, first, t: talkFor(v.animal, getAvatar().name.ko, first), step: 0, said: null, done: false })
     setVisitor({ ...v, dir: posRef.current.x < v.x ? -1 : 1, moveMs: 0 })
@@ -155,7 +155,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
         const ahead = r.pos.x >= posRef.current.x ? 1 : -1
         // 화면 안 가는 쪽 앞(보이는 너비의 38%쯤)에 나타나 아이가 볼 수 있게
         const x = Math.max(200, r.pos.x + ahead * Math.min(900, visibleRef.current * 0.38))
-        const nv: Visitor = { animal: pickVisitor(getMeet()), x, y: GROUND.minY + 40 + Math.random() * 80, home: x, moveMs: 0, dir: ahead === 1 ? -1 : 1, leaving: false }
+        const nv: Visitor = { animal: pickVisitor(), x, y: GROUND.minY + 40 + Math.random() * 80, home: x, moveMs: 0, dir: ahead === 1 ? -1 : 1, leaving: false }
         visitorRef.current = nv
         setVisitor(nv)
         walked.current = 0
@@ -308,7 +308,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
           <span className="text-sm font-bold">{lang === 'ko' ? '찾았어요!' : 'Found it!'} {travelItem(gotId)!.name[lang]}</span>
         </div>
       )}
-      {/* 친구와 짧은 이야기: 첫인사 → 묻는 말 → 대답 고르기 → 친구의 답(처음 만났으면 '친구가 됐어요') */}
+      {/* 친구와 짧은 이야기: 첫인사 → 묻는 말 → 대답 고르기 → 친구의 답(친구 모으기는 수학에서: 여기서는 이야기만) */}
       {talk && (() => {
         const a = CALL_ANIMALS[talk.animal]
         return (
@@ -324,13 +324,12 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
               <div className="flex flex-wrap justify-end gap-2">
                 {talk.t.asks[talk.step].replies.map((rp) => <button key={rp.label} onClick={() => {
                   playTap()
-                  if (talk.step === 0) { meetFriend(talk.animal); setTalk({ ...talk, step: 1, said: rp.answer }) } // 답하고 두 번째 질문
+                  if (talk.step === 0) { talkedOnRoad(); setTalk({ ...talk, step: 1, said: rp.answer }) } // 답하고 두 번째 질문
                   else setTalk({ ...talk, said: rp.answer, done: true })
                 }} className="min-h-11 rounded-full bg-[#ffe1ea] px-4 text-sm font-bold text-[#8a4b55] shadow-sm">{rp.label}</button>)}
               </div>
             ) : (
               <>
-                {talk.first && <p className="m-0 rounded-2xl bg-[#fff4d6] px-3 py-1.5 text-center text-sm font-bold text-[#8a5a12]">🎉 {lang === 'ko' ? `${a.name}${hasBatchim(a.name) ? '과' : '와'} 친구가 됐어요! 이제 집 파티에 초대할 수 있어요` : `${a.name} is your friend now! You can invite them to parties`} · {getMeet().met.length}/{CALL_ANIMALS.length}</p>}
                 <button onClick={() => { playServe(); endTalk() }} className="min-h-11 self-end rounded-full bg-[#ff8fab] px-5 text-sm font-bold text-white shadow">👋 {lang === 'ko' ? '안녕~ 또 만나!' : 'Bye~ see you!'}</button>
               </>
             )}
