@@ -3192,6 +3192,54 @@
     "native": true
   },
   {
+    "id": "shoes_cherry_maryjane",
+    "category": "shoes",
+    "name": {
+      "ko": "체리 메리제인",
+      "en": "Cherry Mary Janes"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 384,
+      "y": 1337,
+      "w": 253,
+      "h": 188
+    },
+    "image": "assets/clothes/shoes/shoes_cherry_maryjane.webp",
+    "thumb": "assets/thumbs/shoes_cherry_maryjane.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_daisy_maryjane",
+    "category": "shoes",
+    "name": {
+      "ko": "데이지 메리제인",
+      "en": "Daisy Mary Janes"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 384,
+      "y": 1337,
+      "w": 255,
+      "h": 188
+    },
+    "image": "assets/clothes/shoes/shoes_daisy_maryjane.webp",
+    "thumb": "assets/thumbs/shoes_daisy_maryjane.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_flats_beige",
     "category": "shoes",
     "name": {
@@ -3216,6 +3264,30 @@
     "native": true
   },
   {
+    "id": "shoes_flower_ivory",
+    "category": "shoes",
+    "name": {
+      "ko": "꽃 장식 아이보리 구두",
+      "en": "Ivory Flower Shoes"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "box": {
+      "x": 383,
+      "y": 1337,
+      "w": 254,
+      "h": 188
+    },
+    "image": "assets/clothes/shoes/shoes_flower_ivory.webp",
+    "thumb": "assets/thumbs/shoes_flower_ivory.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_gothic_chain",
     "category": "shoes",
     "name": {
@@ -3236,6 +3308,54 @@
     },
     "image": "assets/clothes/shoes/shoes_gothic_chain.webp",
     "thumb": "assets/thumbs/shoes_gothic_chain.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_heart_tstrap",
+    "category": "shoes",
+    "name": {
+      "ko": "노랑 하트 메리제인",
+      "en": "Yellow Heart Mary Janes"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 384,
+      "y": 1337,
+      "w": 254,
+      "h": 188
+    },
+    "image": "assets/clothes/shoes/shoes_heart_tstrap.webp",
+    "thumb": "assets/thumbs/shoes_heart_tstrap.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_lavender_butterfly",
+    "category": "shoes",
+    "name": {
+      "ko": "라벤더 나비 리본 구두",
+      "en": "Lavender Butterfly Shoes"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 386,
+      "y": 1337,
+      "w": 249,
+      "h": 188
+    },
+    "image": "assets/clothes/shoes/shoes_lavender_butterfly.webp",
+    "thumb": "assets/thumbs/shoes_lavender_butterfly.webp",
     "zIndex": 10,
     "native": true
   },
@@ -3408,6 +3528,30 @@
     "native": true
   },
   {
+    "id": "shoes_pink_bow_cross",
+    "category": "shoes",
+    "name": {
+      "ko": "핑크 리본 크로스 구두",
+      "en": "Pink Bow Cross Shoes"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 380,
+      "y": 1337,
+      "w": 261,
+      "h": 188
+    },
+    "image": "assets/clothes/shoes/shoes_pink_bow_cross.webp",
+    "thumb": "assets/thumbs/shoes_pink_bow_cross.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_pink_hanfu",
     "category": "shoes",
     "name": {
@@ -3504,6 +3648,30 @@
     "native": true
   },
   {
+    "id": "shoes_purple_bow_maryjane",
+    "category": "shoes",
+    "name": {
+      "ko": "보라 리본 메리제인",
+      "en": "Purple Bow Mary Janes"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 380,
+      "y": 1337,
+      "w": 261,
+      "h": 188
+    },
+    "image": "assets/clothes/shoes/shoes_purple_bow_maryjane.webp",
+    "thumb": "assets/thumbs/shoes_purple_bow_maryjane.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
     "id": "shoes_qipao_mint",
     "category": "shoes",
     "name": {
@@ -3572,6 +3740,30 @@
     },
     "image": "assets/clothes/shoes/shoes_sneakers_mule_navy.webp",
     "thumb": "assets/thumbs/shoes_sneakers_mule_navy.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_snowflake_boots",
+    "category": "shoes",
+    "name": {
+      "ko": "눈꽃 부츠",
+      "en": "Snowflake Boots"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 384,
+      "y": 1337,
+      "w": 254,
+      "h": 188
+    },
+    "image": "assets/clothes/shoes/shoes_snowflake_boots.webp",
+    "thumb": "assets/thumbs/shoes_snowflake_boots.webp",
     "zIndex": 10,
     "native": true
   },
@@ -3716,6 +3908,30 @@
     },
     "image": "assets/clothes/shoes/shoes_socks_mj_mint.webp",
     "thumb": "assets/thumbs/shoes_socks_mj_mint.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_star_maryjane",
+    "category": "shoes",
+    "name": {
+      "ko": "별 메리제인",
+      "en": "Star Mary Janes"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 384,
+      "y": 1337,
+      "w": 253,
+      "h": 188
+    },
+    "image": "assets/clothes/shoes/shoes_star_maryjane.webp",
+    "thumb": "assets/thumbs/shoes_star_maryjane.webp",
     "zIndex": 10,
     "native": true
   },
@@ -3884,6 +4100,30 @@
     },
     "image": "assets/clothes/shoes/shoes_strap_navy_star.webp",
     "thumb": "assets/thumbs/shoes_strap_navy_star.webp",
+    "zIndex": 10,
+    "native": true
+  },
+  {
+    "id": "shoes_strawberry_gingham",
+    "category": "shoes",
+    "name": {
+      "ko": "딸기 체크 메리제인",
+      "en": "Strawberry Gingham Mary Janes"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 384,
+      "y": 1337,
+      "w": 253,
+      "h": 188
+    },
+    "image": "assets/clothes/shoes/shoes_strawberry_gingham.webp",
+    "thumb": "assets/thumbs/shoes_strawberry_gingham.webp",
     "zIndex": 10,
     "native": true
   },
