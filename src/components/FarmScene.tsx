@@ -58,6 +58,18 @@ function FarmImg({ name, emoji, className, style, alt = '' }: { name: string; em
 
 /** 친구 그림 칸 너비 ÷ 아바타 너비(파티·주방과 같은 크기) */
 const FRIEND_PER_AVATAR_W = GUEST_PER_AVATAR_W * 0.8
+/** 쉬는 친구가 밭 둘레를 거니는 빠르기(그림 너비 %/초)와 멈춰 서 있는 시간(초) */
+const WANDER_SPEED = 7, WANDER_REST: [number, number] = [1.2, 3.2]
+/** 쉬는 친구가 걸어 다니는 곳: 밭 덩어리 둘레(조금 넓게), 그림 % */
+function wanderArea(L: Layout) {
+  const boxes = Array.from({ length: PLOT_COUNT }, (_, i) => plotBox(i, L))
+  return {
+    minX: Math.max(4, Math.min(...boxes.map((b) => b.x - b.w / 2)) - 2), maxX: Math.min(96, Math.max(...boxes.map((b) => b.x + b.w / 2)) + 2),
+    minY: Math.min(...boxes.map((b) => b.y - b.h / 2)) - 4, maxY: Math.max(...boxes.map((b) => b.y + b.h / 2)) + 2,
+  }
+}
+/** 쉬는 친구 한 명이 지금 가고 있는 곳(발 위치)과 걷는 시간. until 은 걷기가 끝나는 때(0 이면 멈춰 서 있다) */
+interface Stroll { x: number; y: number; ms: number; dir: 1 | -1; until: number }
 
 const stageOf = (wateredAt: number | null, progress: number) => (wateredAt === null ? 1 : progress >= 1 ? 4 : progress < 0.4 ? 2 : 3)
 
@@ -81,6 +93,8 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
   const friends = useSyncExternalStore(subscribeFarmFriends, getFarmFriends)
   const jobs = useSyncExternalStore(subscribeFarmFriends, getFriendJobs)
   const [picking, setPicking] = useState(false)
+  // 쉬는 친구는 멀뚱히 서 있지 않고 밭 둘레를 천천히 거닐다 멈췄다 한다(친구마다 따로)
+  const [strolls, setStrolls] = useState<Record<number, Stroll>>({})
   useEffect(() => { setOnWatered(() => { playWater(); setNow(Date.now()) }); return () => setOnWatered(null) }, [])
   const pending = useRef(new Set<number>()) // 지금 처리 중인 밭 (같은 밭을 두 번 누르는 것만 막는다. 걷는 중에 다른 밭은 바로 누를 수 있다)
   const walkToken = useRef(0)
@@ -130,6 +144,22 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
   /** 아바타는 처음에는 건물 사이 빈 자리에 서 있고, 화면 방향(가로/세로)이 바뀌면 그 그림의 처음 자리로 돌아간다 */
   const here = pos && homeKey === (wide ? 'wide' : 'portrait') ? pos : { x: L.home.x, y: L.home.y, z: 3 }
   useEffect(() => { const k = wide ? 'wide' : 'portrait'; if (k !== homeKey) { setHomeKey(k); setPos(null) } }, [wide, homeKey])
+
+  useEffect(() => {
+    const area = wanderArea(L)
+    const ids: number[] = []
+    const step = (f: number, from?: { x: number; y: number }) => {
+      const x = area.minX + Math.random() * (area.maxX - area.minX), y = area.minY + Math.random() * (area.maxY - area.minY)
+      const d = from ? Math.hypot(x - from.x, (y - from.y) * (L.h / L.w)) : 0
+      const ms = from ? Math.max(600, (d / WANDER_SPEED) * 1000) : 0
+      setStrolls((st) => ({ ...st, [f]: { x, y, ms, dir: from && x < from.x ? -1 : 1, until: Date.now() + ms } }))
+      if (ms) ids.push(window.setTimeout(() => setStrolls((st) => (st[f] ? { ...st, [f]: { ...st[f], until: 0 } } : st)), ms)) // 도착: 걷는 몸짓을 멈춘다
+      ids.push(window.setTimeout(() => step(f, { x, y }), ms + (WANDER_REST[0] + Math.random() * (WANDER_REST[1] - WANDER_REST[0])) * 1000))
+    }
+    friends.forEach((f) => step(f))
+    return () => ids.forEach(clearTimeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [friends, wide])
 
   const tapPlot = (i: number) => {
     if (!farm.owned[i]) { setBuying(i); setTool(null); setPicker(false); return }
@@ -203,8 +233,8 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
           const wait = animalWait(farm, g, now)
           return (
             <button key={`t-${g}`} aria-hidden tabIndex={-1} onClick={() => collect(g)} className="absolute flex -translate-x-1/2 -translate-y-full flex-col items-center border-0 bg-transparent p-0" style={{ left: `${t.x}%`, top: `${t.y}%`, zIndex: 7 }}>
-              <img src={assetUrl(`kitchen/ing/${g}.webp`)} alt="" draggable={false} className={`h-7 w-7 object-contain ${wait === 0 ? 'animate-bounce drop-shadow-[0_0_6px_#fff6b0]' : 'drop-shadow-[0_1px_2px_rgba(80,50,30,0.6)]'}`} />
-              {wait > 0 && <span className="mt-0.5 block h-1.5 w-8 overflow-hidden rounded-full bg-[#eee4d3] shadow-sm"><i className="block h-full bg-[#ef8d99]" style={{ width: `${(1 - wait / ANIMAL_SECONDS) * 100}%` }} /></span>}
+              <img src={assetUrl(`kitchen/ing/${g}.webp`)} alt="" draggable={false} className={`h-11 w-11 object-contain ${wait === 0 ? 'animate-bounce drop-shadow-[0_0_6px_#fff6b0]' : 'drop-shadow-[0_1px_2px_rgba(80,50,30,0.6)]'}`} />
+              {wait > 0 && <span className="mt-0.5 block h-2 w-11 overflow-hidden rounded-full bg-[#eee4d3] shadow-sm"><i className="block h-full bg-[#ef8d99]" style={{ width: `${(1 - wait / ANIMAL_SECONDS) * 100}%` }} /></span>}
             </button>
           )
         })}
@@ -253,13 +283,16 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
           const fh = fw * (L.w / L.h) // 같은 칸의 높이(그림 높이에 대한 %)
           const job = jobs[f]
           const box = job ? plotBox(job.plot, L) : null
-          // 발 위치(가운데 x, 발 y): 일할 때는 밭 옆, 쉴 때는 아바타가 처음 서 있는 곳 양옆 제자리(아바타를 따라다니지 않는다)
-          const feet = box ? { x: box.x - box.w * 0.18, y: box.y + box.h * 0.35 } : { x: L.home.x + aw / 2 + (k === 0 ? -1 : 1) * (aw * 0.55 + fw * 0.45), y: L.home.y + L.avatarH }
-          const moving = !!job && !job.watering
+          const stroll = strolls[f]
+          // 발 위치(가운데 x, 발 y): 일할 때는 밭 옆, 쉴 때는 밭 둘레를 거닐며 가는 곳(아바타를 따라다니지 않는다)
+          const feet = box ? { x: box.x - box.w * 0.18, y: box.y + box.h * 0.35 } : stroll ?? { x: L.home.x + aw / 2 + (k === 0 ? -1 : 1) * (aw * 0.55 + fw * 0.45), y: L.home.y + L.avatarH }
+          const strolling = !job && !!stroll && stroll.until > 0 // 걷는 중
+          const moving = (!!job && !job.watering) || strolling
+          const walkMs = job ? WALK_MS : stroll?.ms ?? WALK_MS
           return (
-            <div key={a.img} aria-hidden className="pointer-events-none absolute" style={{ left: `${feet.x - fw / 2}%`, top: `${feet.y - fh}%`, width: `${fw}%`, aspectRatio: '1 / 1', zIndex: job ? 11 : 9, transition: `left ${WALK_MS}ms ease-in-out, top ${WALK_MS}ms ease-in-out` }}>
+            <div key={a.img} aria-hidden className="pointer-events-none absolute" style={{ left: `${feet.x - fw / 2}%`, top: `${feet.y - fh}%`, width: `${fw}%`, aspectRatio: '1 / 1', zIndex: job ? 11 : 9, transition: `left ${walkMs}ms ${job ? 'ease-in-out' : 'linear'}, top ${walkMs}ms ${job ? 'ease-in-out' : 'linear'}` }}>
               <div className={`relative h-full w-full ${moving ? 'farm-walk' : ''}`}>
-                <img src={assetUrl(`cafe/stand/${a.img}_stand.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain" style={{ transform: k === 1 && !job ? 'scaleX(-1)' : undefined }} />
+                <img src={assetUrl(`cafe/stand/${a.img}_stand.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain" style={{ transform: !job && stroll?.dir === -1 ? 'scaleX(-1)' : undefined }} />
                 {job && <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '62%', top: '42%', width: '46%', transformOrigin: '15% 60%', transform: job.watering ? 'rotate(32deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />}
                 {job?.watering && <span className="absolute text-sm" style={{ left: '102%', top: '56%' }}>💧</span>}
               </div>
