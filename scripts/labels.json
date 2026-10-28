@@ -1573,66 +1573,6 @@
     "color": "purple",
     "native": true
   },
-  "shoes_heart_tstrap": {
-    "ko": "노랑 하트 메리제인",
-    "en": "Yellow Heart Mary Janes",
-    "color": "beige",
-    "native": true
-  },
-  "shoes_purple_bow_maryjane": {
-    "ko": "보라 리본 메리제인",
-    "en": "Purple Bow Mary Janes",
-    "color": "purple",
-    "native": true
-  },
-  "shoes_flower_ivory": {
-    "ko": "꽃 장식 아이보리 구두",
-    "en": "Ivory Flower Shoes",
-    "color": "ivory",
-    "native": true
-  },
-  "shoes_pink_bow_cross": {
-    "ko": "핑크 리본 크로스 구두",
-    "en": "Pink Bow Cross Shoes",
-    "color": "pink",
-    "native": true
-  },
-  "shoes_lavender_butterfly": {
-    "ko": "라벤더 나비 리본 구두",
-    "en": "Lavender Butterfly Shoes",
-    "color": "purple",
-    "native": true
-  },
-  "shoes_daisy_maryjane": {
-    "ko": "데이지 메리제인",
-    "en": "Daisy Mary Janes",
-    "color": "beige",
-    "native": true
-  },
-  "shoes_cherry_maryjane": {
-    "ko": "체리 메리제인",
-    "en": "Cherry Mary Janes",
-    "color": "pink",
-    "native": true
-  },
-  "shoes_snowflake_boots": {
-    "ko": "눈꽃 부츠",
-    "en": "Snowflake Boots",
-    "color": "skyblue",
-    "native": true
-  },
-  "shoes_star_maryjane": {
-    "ko": "별 메리제인",
-    "en": "Star Mary Janes",
-    "color": "navy",
-    "native": true
-  },
-  "shoes_strawberry_gingham": {
-    "ko": "딸기 체크 메리제인",
-    "en": "Strawberry Gingham Mary Janes",
-    "color": "red",
-    "native": true
-  },
   "costume_rainbow_petal_lolita": {
     "ko": "무지개 꽃잎 로리타 드레스",
     "en": "Rainbow Petal Lolita Dress",
@@ -1679,48 +1619,6 @@
     "ko": "딸기 레몬 프릴 원피스",
     "en": "Strawberry Lemon Tiered Dress",
     "color": "ivory",
-    "native": true
-  },
-  "costume_blueberry_gingham_lolita": {
-    "ko": "블루베리 체크 로리타 드레스",
-    "en": "Blueberry Gingham Lolita Dress",
-    "color": "purple",
-    "native": true
-  },
-  "costume_mint_shell_lolita": {
-    "ko": "민트 조개 리본 로리타 드레스",
-    "en": "Mint Shell Ribbon Lolita Dress",
-    "color": "mint",
-    "native": true
-  },
-  "costume_lilac_ribbon_lolita": {
-    "ko": "라일락 핑크 리본 로리타 드레스",
-    "en": "Lilac Pink Ribbon Lolita Dress",
-    "color": "purple",
-    "native": true
-  },
-  "costume_star_candy_lolita": {
-    "ko": "별사탕 핑크 블루 로리타 드레스",
-    "en": "Star Candy Lolita Dress",
-    "color": "pink",
-    "native": true
-  },
-  "costume_cloud_heart_lolita": {
-    "ko": "구름 하트 로리타 드레스",
-    "en": "Cloud Heart Lolita Dress",
-    "color": "skyblue",
-    "native": true
-  },
-  "costume_mint_apron_lolita": {
-    "ko": "민트 장미 앞치마 로리타 드레스",
-    "en": "Mint Rose Apron Lolita Dress",
-    "color": "mint",
-    "native": true
-  },
-  "costume_rose_gothic_lolita": {
-    "ko": "보라 장미 고딕 로리타 드레스",
-    "en": "Purple Rose Gothic Lolita Dress",
-    "color": "black",
     "native": true
   }
 }
