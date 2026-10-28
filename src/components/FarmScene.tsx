@@ -12,7 +12,7 @@ import { PILL, PillText } from './pill'
 import { CoinIcon } from './Icons'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { GUEST_PER_AVATAR_W, PartyInvite } from './PartyGuests'
-import { MAX_FARM_FRIENDS, WALK_MS, claimed, getFarmFriends, getFriendJobs, harvestAll, setFarmFriends, setOnWatered, subscribeFarmFriends, waterNow } from '../lib/farmFriends'
+import { MAX_FARM_FRIENDS, WALK_MS, claimed, setFarmCols, getFarmFriends, getFriendJobs, harvestAll, setFarmFriends, setOnWatered, subscribeFarmFriends, waterNow } from '../lib/farmFriends'
 
 type Tool = 'seed' | 'water' | 'harvest'
 
@@ -72,6 +72,8 @@ function wanderArea(L: Layout) {
     minY: Math.min(...boxes.map((b) => b.y - b.h / 2)) - 4, maxY: Math.max(...boxes.map((b) => b.y + b.h / 2)) + 2,
   }
 }
+/** 친구가 밭에서 일할 때 서는 자리(발): 밭 바로 앞(아래) 줄 사이 길목. 줄을 따라 옆으로 다니면 작물 위를 밟지 않는다 */
+const workSpot = (i: number, L: Layout) => { const b = plotBox(i, L); return { x: b.x, y: b.y + b.h * 0.62 } }
 /** 쉬는 친구 한 명이 지금 가고 있는 곳(발 위치)과 걷는 시간. until 은 걷기가 끝나는 때(0 이면 멈춰 서 있다) */
 interface Stroll { x: number; y: number; ms: number; dir: 1 | -1; until: number }
 
@@ -149,6 +151,24 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
   const here = pos && homeKey === (wide ? 'wide' : 'portrait') ? pos : { x: L.home.x, y: L.home.y, z: 3 }
   useEffect(() => { const k = wide ? 'wide' : 'portrait'; if (k !== homeKey) { setHomeKey(k); setPos(null) } }, [wide, homeKey])
 
+  // 밭 한 줄 칸 수를 알려 준다: 친구 둘이 왼쪽 반·오른쪽 반을 나눠 맡는다
+  useEffect(() => { setFarmCols(L.cols) }, [L.cols])
+  // 일하는 친구는 거닐지 않고, 일을 마치면 마지막 밭 앞에서부터 다시 거닌다
+  const jobsRef = useRef(jobs)
+  jobsRef.current = jobs
+  const lastSpot = useRef<Record<number, { x: number; y: number }>>({})
+  useEffect(() => {
+    for (const f of friends) {
+      const j = jobs[f]
+      if (j) { lastSpot.current[f] = workSpot(j.plot, L); continue }
+      const s0 = lastSpot.current[f]
+      if (s0) { delete lastSpot.current[f]; setStrolls((st) => ({ ...st, [f]: { ...s0, ms: 0, dir: st[f]?.dir ?? 1, until: 0 } })) }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobs])
+  const strollRef = useRef(strolls)
+  strollRef.current = strolls
+
   useEffect(() => {
     const area = wanderArea(L)
     const ids: number[] = []
@@ -169,7 +189,11 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
       }
       return best
     }
-    const step = (f: number, k: number, from?: { x: number; y: number }) => {
+    const step = (f: number, k: number, from0?: { x: number; y: number }) => {
+      // 일하는 중이면 거닐지 않고 조금 뒤에 다시 본다. 아니면 지금 서 있는 곳(일을 마친 밭 앞일 수도 있다)에서 출발
+      if (jobsRef.current[f]) { ids.push(window.setTimeout(() => step(f, k, from0), 1000)); return }
+      const cur = strollRef.current[f]
+      const from = from0 && cur ? { x: cur.x, y: cur.y } : from0
       const { x, y } = from ? far(f, from) : rand()
       goal[f] = { x, y }
       const d = from ? Math.hypot(x - from.x, (y - from.y) * (L.h / L.w)) : 0
@@ -318,21 +342,20 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
           </div>
         </div>
 
-        {/* 같이 농사짓는 친구들: 평소에는 아바타 양옆을 따라다니고, 물 줄 밭이 생기면 물뿌리개를 들고 그 밭으로 걸어가 물을 준다 */}
+        {/* 같이 농사짓는 친구들: 평소에는 밭 둘레를 따로따로 거닐고, 일이 생기면 자기 구역(둘이면 왼쪽 반·오른쪽 반)의 가까운 밭부터 줄을 따라 차례로 물을 주거나 수확한다 */}
         {friends.map((f, k) => {
           const a = CALL_ANIMALS[f]
           const fw = aw * FRIEND_PER_AVATAR_W // 친구 그림 칸 너비(%, 정사각형)
           const fh = fw * (L.w / L.h) // 같은 칸의 높이(그림 높이에 대한 %)
           const job = jobs[f]
-          const box = job ? plotBox(job.plot, L) : null
           const stroll = strolls[f]
           // 발 위치(가운데 x, 발 y): 일할 때는 밭 옆, 쉴 때는 밭 둘레를 거닐며 가는 곳(아바타를 따라다니지 않는다)
-          const feet = box ? { x: box.x - box.w * 0.18, y: box.y + box.h * 0.35 } : stroll ?? { x: L.home.x + aw / 2 + (k === 0 ? -1 : 1) * (aw * 0.55 + fw * 0.45), y: L.home.y + L.avatarH }
+          const feet = job ? workSpot(job.plot, L) : stroll ?? { x: L.home.x + aw / 2 + (k === 0 ? -1 : 1) * (aw * 0.55 + fw * 0.45), y: L.home.y + L.avatarH }
           const strolling = !job && !!stroll && stroll.until > 0 // 걷는 중
           const moving = (!!job && !job.watering) || strolling
-          const walkMs = job ? WALK_MS : stroll?.ms ?? WALK_MS
+          const walkMs = job ? job.walkMs : stroll?.ms ?? WALK_MS
           return (
-            <div key={a.img} aria-hidden className="pointer-events-none absolute" style={{ left: `${feet.x - fw / 2}%`, top: `${feet.y - fh}%`, width: `${fw}%`, aspectRatio: '1 / 1', zIndex: job ? 11 : 9, transition: `left ${walkMs}ms ${job ? 'ease-in-out' : 'linear'}, top ${walkMs}ms ${job ? 'ease-in-out' : 'linear'}` }}>
+            <div key={a.img} aria-hidden className="pointer-events-none absolute" style={{ left: `${feet.x - fw / 2}%`, top: `${feet.y - fh}%`, width: `${fw}%`, aspectRatio: '1 / 1', zIndex: job ? 11 : 9, transition: `left ${walkMs}ms linear, top ${walkMs}ms linear` }}>
               <div className={`relative h-full w-full ${moving ? 'farm-walk' : ''}`}>
                 <img src={assetUrl(`cafe/stand/${a.img}_stand.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain" style={{ transform: !job && stroll?.dir === -1 ? 'scaleX(-1)' : undefined }} />
                 {job?.kind === 'water' && <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '62%', top: '42%', width: '46%', transformOrigin: '15% 60%', transform: job.watering ? 'rotate(32deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />}
