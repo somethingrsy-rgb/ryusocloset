@@ -7,7 +7,7 @@ const seeded = (seed: number) => () => { seed = (seed * 16807) % 2147483647; ret
 describe('산책길 친구 만나기', () => {
   it('충분히 걷고, 지난번 만남에서 시간이 지나야 나타난다(너무 자주 만나지 않게)', () => {
     const now = 1_000_000_000
-    const s = { met: [0], last: now - MEET_GAP + 1000 }
+    const s = { met: [0], last: now - MEET_GAP + 1000 } // 30초에서 1초 모자람
     expect(canMeet(s, MEET_WALK, now)).toBe(false) // 아직 시간이 덜 지남
     expect(canMeet({ ...s, last: now - MEET_GAP }, MEET_WALK - 1, now)).toBe(false) // 덜 걸음
     expect(canMeet({ ...s, last: now - MEET_GAP }, MEET_WALK, now)).toBe(true)
@@ -24,7 +24,11 @@ describe('산책길 친구 만나기', () => {
   it('아바타 이름을 불러 인사하고(처음엔 자기소개), 대답 셋 중에서 고른다', () => {
     const t = talkFor(0, '유하', true, seeded(1))
     expect(t.hello).toBe('유하야, 안녕? 나는 곰이야! 만나서 반가워!')
-    expect(t.replies).toHaveLength(3)
+    // 질문은 서로 다른 두 개, 질문마다 대답 셋
+    expect(t.asks).toHaveLength(2)
+    expect(t.asks[0].ask).not.toBe(t.asks[1].ask)
+    for (const a of t.asks) expect(a.replies).toHaveLength(3)
+    for (let k = 1; k < 40; k++) { const u = talkFor(k % 8, '유하', false, seeded(k)); expect(u.asks[0].ask).not.toBe(u.asks[1].ask) }
     expect(talkFor(2, '유엘', false, seeded(2)).hello).toBe('유엘아, 안녕? 또 만났네!')
   })
   it('저장된 값이 이상해도 안전하게 읽는다', () => {

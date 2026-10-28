@@ -90,7 +90,8 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   const [visitor, setVisitor] = useState<Visitor | null>(null)
   const visitorRef = useRef(visitor)
   visitorRef.current = visitor
-  const [talk, setTalk] = useState<{ animal: number; first: boolean; t: Talk; answer: string | null } | null>(null)
+  /** 이야기: step 은 지금 묻는 질문(0·1), said 는 친구가 방금 한 답(첫 질문에 답하면 그 답과 함께 두 번째 질문을 한다), done 이면 끝 */
+  const [talk, setTalk] = useState<{ animal: number; first: boolean; t: Talk; step: 0 | 1; said: string | null; done: boolean } | null>(null)
   const talkRef = useRef(talk)
   talkRef.current = talk
   // 친구는 자기 자리 근처를 천천히 거닌다(2~3.5초마다 옆으로 조금)
@@ -108,7 +109,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   const startTalk = (v: Visitor) => {
     const first = !getMeet().met.includes(v.animal)
     playOrder()
-    setTalk({ animal: v.animal, first, t: talkFor(v.animal, getAvatar().name.ko, first), answer: null })
+    setTalk({ animal: v.animal, first, t: talkFor(v.animal, getAvatar().name.ko, first), step: 0, said: null, done: false })
     setVisitor({ ...v, dir: posRef.current.x < v.x ? -1 : 1, moveMs: 0 })
   }
   const endTalk = () => {
@@ -235,12 +236,15 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   )
 
   const figW = 145 * 1.5 * (0.8 + 0.2 * ((pos.y - 585) / 150))
+  /** 화면 픽셀 한 칸 단위로 맞춘 값: 아바타 자리·크기가 소수점 픽셀로 조금씩 바뀌면 그림이 떨려 보였다 */
+  const px = (v: number) => Math.round(v * scale) / scale
   const bgTiles = Array.from({ length: Math.floor((cam + visibleW) / BG_W) - Math.floor(cam / BG_W) + 1 }, (_, k) => Math.floor(cam / BG_W) + k)
   const range = Array.from({ length: lastChunk - first + 1 }, (_, k) => first + k)
 
   return (
     <div ref={hostRef} tabIndex={0} aria-label={lang === 'ko' ? '여행 마을, 방향키로 이동' : 'Village, move with arrow keys'} {...keys} className="travel-world relative h-full touch-none overflow-hidden rounded-3xl shadow-inner ring-1 ring-black/5 select-none" style={{ background: 'linear-gradient(#8fc3ee 0%, #bcd9a2 40%, #8fba5c 62%, #e5c98e 80%, #8fba5c 100%)' }} onPointerUp={onTap}>
-      <div className="absolute top-0 left-0 origin-top-left" style={{ width: worldWidth(chunks), height: WORLD_H, transform: `scale(${scale}) translateX(${-cam}px)` }}>
+      {/* 카메라는 화면 픽셀 단위로 맞춰 옮긴다(소수점 픽셀로 옮기면 큰 배경 그림이 프레임마다 다시 그려져 지지직거렸다) */}
+      <div className="absolute top-0 left-0 origin-top-left" style={{ width: worldWidth(chunks), height: WORLD_H, transform: `scale(${scale}) translate3d(${-Math.round(cam * scale) / scale}px, 0, 0)`, willChange: 'transform' }}>
         {bgTiles.map((t) => Array.from({ length: ROAD_PARTS }, (_, k) => {
           const x0 = Math.round(k * ROAD_PART * 1.3)
           const x1 = k === ROAD_PARTS - 1 ? BG_W : Math.round((k + 1) * ROAD_PART * 1.3)
@@ -287,10 +291,11 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
         })()}
         <div
           className="pointer-events-none absolute"
-          style={{ left: pos.x, top: pos.y, width: figW, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -100%)', zIndex: 1000 }}
+          style={{ left: px(pos.x), top: px(pos.y), width: px(figW), aspectRatio: '1024 / 1536', transform: 'translate(-50%, -100%)', zIndex: 1000 }}
         >
           <div className="relative h-full w-full" style={{ transform: `scaleX(${dir})` }}>
-            <div className={`h-full w-full ${walking ? 'walk-bob' : ''}`}>
+            {/* 옷·머리 여러 장을 한 장으로 합쳐 움직인다(장마다 따로 기울이면 테두리가 반짝반짝 지지직거렸다) */}
+            <div className={`h-full w-full ${walking ? 'walk-bob' : ''}`} style={{ willChange: 'transform' }}>
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             </div>
           </div>
@@ -312,12 +317,16 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
               <img src={assetUrl(`cafe/face/${a.img}.webp`)} alt="" draggable={false} className="h-14 w-14 shrink-0 object-contain" />
               <div className="min-w-0">
                 <p className="m-0 text-xs font-bold text-[#c06a7d]">{a.name}</p>
-                <p className="m-0 text-base leading-snug font-bold text-[#6b4b52]">{talk.answer ?? `${talk.t.hello} ${talk.t.ask}`}</p>
+                <p className="m-0 text-base leading-snug font-bold text-[#6b4b52]">{talk.done ? talk.said : `${talk.said ?? talk.t.hello} ${talk.t.asks[talk.step].ask}`}</p>
               </div>
             </div>
-            {talk.answer === null ? (
+            {!talk.done ? (
               <div className="flex flex-wrap justify-end gap-2">
-                {talk.t.replies.map((rp) => <button key={rp.label} onClick={() => { playTap(); meetFriend(talk.animal); setTalk({ ...talk, answer: rp.answer }) }} className="min-h-11 rounded-full bg-[#ffe1ea] px-4 text-sm font-bold text-[#8a4b55] shadow-sm">{rp.label}</button>)}
+                {talk.t.asks[talk.step].replies.map((rp) => <button key={rp.label} onClick={() => {
+                  playTap()
+                  if (talk.step === 0) { meetFriend(talk.animal); setTalk({ ...talk, step: 1, said: rp.answer }) } // 답하고 두 번째 질문
+                  else setTalk({ ...talk, said: rp.answer, done: true })
+                }} className="min-h-11 rounded-full bg-[#ffe1ea] px-4 text-sm font-bold text-[#8a4b55] shadow-sm">{rp.label}</button>)}
               </div>
             ) : (
               <>
