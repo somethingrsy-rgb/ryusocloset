@@ -59,7 +59,11 @@ function FarmImg({ name, emoji, className, style, alt = '' }: { name: string; em
 /** 친구 그림 칸 너비 ÷ 아바타 너비(파티·주방과 같은 크기) */
 const FRIEND_PER_AVATAR_W = GUEST_PER_AVATAR_W * 0.8
 /** 쉬는 친구가 밭 둘레를 거니는 빠르기(그림 너비 %/초)와 멈춰 서 있는 시간(초) */
-const WANDER_SPEED = 7, WANDER_REST: [number, number] = [1.2, 3.2]
+const WANDER_SPEED = 7, WANDER_REST: [number, number] = [2, 5.5]
+/** 한 번에 걷는 거리(그림 너비 %): 가까운 곳으로 조금씩 거닌다 */
+const WANDER_HOP: [number, number] = [8, 20]
+/** 친구마다 걷는 빠르기를 조금씩 다르게(같은 박자로 움직이면 같이 다니는 것처럼 어색했다) */
+const PACE = [0.8, 1.15]
 /** 쉬는 친구가 걸어 다니는 곳: 밭 덩어리 둘레(조금 넓게), 그림 % */
 function wanderArea(L: Layout) {
   const boxes = Array.from({ length: PLOT_COUNT }, (_, i) => plotBox(i, L))
@@ -148,15 +152,39 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
   useEffect(() => {
     const area = wanderArea(L)
     const ids: number[] = []
-    const step = (f: number, from?: { x: number; y: number }) => {
-      const x = area.minX + Math.random() * (area.maxX - area.minX), y = area.minY + Math.random() * (area.maxY - area.minY)
+    // 친구마다 따로 다닌다: 서로 다른 때 출발하고, 빠르기·쉬는 시간도 다르고, 다른 친구가 가는 곳과 멀리 떨어진 곳을 고른다
+    const goal: Record<number, { x: number; y: number }> = {}
+    const rand = () => ({ x: area.minX + Math.random() * (area.maxX - area.minX), y: area.minY + Math.random() * (area.maxY - area.minY) })
+    const near = (from: { x: number; y: number }) => {
+      const a = Math.random() * Math.PI * 2, r = WANDER_HOP[0] + Math.random() * (WANDER_HOP[1] - WANDER_HOP[0])
+      return { x: Math.min(area.maxX, Math.max(area.minX, from.x + Math.cos(a) * r)), y: Math.min(area.maxY, Math.max(area.minY, from.y + Math.sin(a) * r * (L.w / L.h) * 0.6)) }
+    }
+    const far = (f: number, from?: { x: number; y: number }) => {
+      const others = Object.entries(goal).filter(([k]) => +k !== f).map(([, v]) => v)
+      let best = from ? near(from) : rand(), bestD = -1
+      for (let c = 0; c < 5; c++) {
+        const p = from ? near(from) : rand()
+        const d = others.length ? Math.min(...others.map((o) => Math.hypot(p.x - o.x, (p.y - o.y) * (L.h / L.w)))) : 0
+        if (d > bestD) { best = p; bestD = d }
+      }
+      return best
+    }
+    const step = (f: number, k: number, from?: { x: number; y: number }) => {
+      const { x, y } = from ? far(f, from) : rand()
+      goal[f] = { x, y }
       const d = from ? Math.hypot(x - from.x, (y - from.y) * (L.h / L.w)) : 0
-      const ms = from ? Math.max(600, (d / WANDER_SPEED) * 1000) : 0
+      const ms = from ? Math.max(700, (d / (WANDER_SPEED * PACE[k % PACE.length])) * 1000) : 0
       setStrolls((st) => ({ ...st, [f]: { x, y, ms, dir: from && x < from.x ? -1 : 1, until: Date.now() + ms } }))
       if (ms) ids.push(window.setTimeout(() => setStrolls((st) => (st[f] ? { ...st, [f]: { ...st[f], until: 0 } } : st)), ms)) // 도착: 걷는 몸짓을 멈춘다
-      ids.push(window.setTimeout(() => step(f, { x, y }), ms + (WANDER_REST[0] + Math.random() * (WANDER_REST[1] - WANDER_REST[0])) * 1000))
+      ids.push(window.setTimeout(() => step(f, k, { x, y }), ms + (WANDER_REST[0] + Math.random() * (WANDER_REST[1] - WANDER_REST[0])) * 1000))
     }
-    friends.forEach((f) => step(f))
+    // 처음 자리는 바로 정하고, 첫걸음은 친구마다 다른 때(뒤 친구일수록 늦게) 뗀다
+    friends.forEach((f, k) => {
+      const at = far(f)
+      goal[f] = at
+      setStrolls((st) => ({ ...st, [f]: { ...at, ms: 0, dir: 1, until: 0 } }))
+      ids.push(window.setTimeout(() => step(f, k, at), 600 + k * 1900 + Math.random() * 1200))
+    })
     return () => ids.forEach(clearTimeout)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [friends, wide])
