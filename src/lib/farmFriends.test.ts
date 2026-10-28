@@ -11,6 +11,7 @@ describe('농장 친구', () => {
   it('친구가 있으면 물이 필요한 밭에 저절로 가서 물을 준다(화면이 없어도: 다른 탭에 가 있어도 끝까지)', async () => {
     vi.useFakeTimers()
     const values = new Map<string, string>()
+    values.set('ryuso.meet.v1', JSON.stringify({ met: [0, 1, 2, 3, 4, 5, 6, 7], last: 0, solved: 0 })) // 친구를 다 모은 상태(모은 친구만 같이 한다)
     vi.stubGlobal('localStorage', { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v) } })
     vi.stubGlobal('window', globalThis)
     vi.resetModules()
@@ -33,6 +34,7 @@ describe('농장 친구', () => {
   it('다 자란 밭은 버튼을 누르지 않아도 친구들이 저절로 수확한다(물 주기와 같은 방식)', async () => {
     vi.useFakeTimers()
     const values = new Map<string, string>()
+    values.set('ryuso.meet.v1', JSON.stringify({ met: [0, 1, 2, 3, 4, 5, 6, 7], last: 0, solved: 0 })) // 친구를 다 모은 상태(모은 친구만 같이 한다)
     vi.stubGlobal('localStorage', { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v) } })
     vi.stubGlobal('window', globalThis)
     vi.resetModules()
@@ -52,6 +54,7 @@ describe('농장 친구', () => {
   it('다른 줄로 갈 때는 지금 줄을 따라 옆으로 먼저 가고(작물 위를 가로지르지 않게), 걷는 시간은 거리만큼', async () => {
     vi.useFakeTimers()
     const values = new Map<string, string>()
+    values.set('ryuso.meet.v1', JSON.stringify({ met: [0, 1, 2, 3, 4, 5, 6, 7], last: 0, solved: 0 })) // 친구를 다 모은 상태(모은 친구만 같이 한다)
     vi.stubGlobal('localStorage', { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v) } })
     vi.stubGlobal('window', globalThis)
     vi.resetModules()
@@ -71,5 +74,16 @@ describe('농장 친구', () => {
     expect(ff.getFriendJobs()[5].plot).toBe(7) // 그다음 아래 줄로
     vi.advanceTimersByTime(3000)
     expect(farm.getFarm().plots[7]?.wateredAt).not.toBe(null)
+  })
+  it('수학으로 모으지 않은 친구는 골라 두어도 같이 하지 않는다', async () => {
+    vi.useFakeTimers()
+    const values = new Map<string, string>()
+    values.set('ryuso.meet.v1', JSON.stringify({ met: [4], last: 0, solved: 0 }))
+    vi.stubGlobal('localStorage', { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v) } })
+    vi.stubGlobal('window', globalThis)
+    vi.resetModules()
+    const ff = await import('./farmFriends')
+    ff.setFarmFriends([1, 4])
+    expect(ff.getFarmFriends()).toEqual([4])
   })
 })

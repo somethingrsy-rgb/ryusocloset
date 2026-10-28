@@ -1,4 +1,5 @@
 import { CALL_ANIMALS } from './animalCalls'
+import { getMeet, subscribeMeet } from './meet'
 import { CROPS, actFarm, getFarm, growth, subscribeFarm, type CropId } from './farm'
 
 const cropMs = (id: CropId) => (CROPS.find((c) => c.id === id)?.seconds ?? 60) * 1000
@@ -37,7 +38,10 @@ const LINES: Record<JobKind, string[]> = {
 export function sanitizeFriends(v: unknown): number[] {
   return Array.isArray(v) ? [...new Set(v.filter((a): a is number => Number.isInteger(a) && a >= 0 && a < CALL_ANIMALS.length))].slice(0, MAX_FARM_FRIENDS) : []
 }
-let friends: number[] = (() => { try { return sanitizeFriends(JSON.parse(localStorage.getItem(KEY) ?? '[]')) } catch { return [] } })()
+/** 고른 친구(저장) 중 수학으로 모은 친구만 같이 한다(모으지 않은 친구는 같이 못 한다) */
+let chosen: number[] = (() => { try { return sanitizeFriends(JSON.parse(localStorage.getItem(KEY) ?? '[]')) } catch { return [] } })()
+const onlyCollected = () => chosen.filter((a) => getMeet().met.includes(a))
+let friends: number[] = onlyCollected()
 let jobs: Record<number, FriendJob> = {}
 let jobNo = 0
 const listeners = new Set<() => void>()
@@ -61,11 +65,14 @@ export function harvestAll(now = Date.now()): boolean {
 }
 
 export function setFarmFriends(a: number[]) {
-  friends = sanitizeFriends(a)
-  try { localStorage.setItem(KEY, JSON.stringify(friends)) } catch { /* 저장 못 해도 지금은 같이 한다 */ }
+  chosen = sanitizeFriends(a)
+  try { localStorage.setItem(KEY, JSON.stringify(chosen)) } catch { /* 저장 못 해도 지금은 같이 한다 */ }
+  friends = onlyCollected()
   emit()
   schedule()
 }
+// 친구를 새로 모으면(수학) 같이 할 수 있는 친구가 바뀐다
+subscribeMeet(() => { const next = onlyCollected(); if (next.join() !== friends.join()) { friends = next; emit(); schedule() } })
 
 /** 지금 친구가 맡고 있는 밭인지(아바타가 같은 밭에 가지 않게) */
 export const claimed = (plot: number) => Object.values(jobs).some((j) => j.target === plot)

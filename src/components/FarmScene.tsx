@@ -12,6 +12,7 @@ import { PILL, PillText } from './pill'
 import { CoinIcon } from './Icons'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { GUEST_PER_AVATAR_W, PartyInvite } from './PartyGuests'
+import { getMeet, notCollected, subscribeMeet } from '../lib/meet'
 import { MAX_FARM_FRIENDS, WALK_MS, claimed, setFarmCols, getFarmFriends, getFriendJobs, harvestAll, setFarmFriends, setOnWatered, subscribeFarmFriends, waterNow } from '../lib/farmFriends'
 
 type Tool = 'seed' | 'water' | 'harvest'
@@ -99,6 +100,7 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
   const friends = useSyncExternalStore(subscribeFarmFriends, getFarmFriends)
   const jobs = useSyncExternalStore(subscribeFarmFriends, getFriendJobs)
   const [picking, setPicking] = useState(false)
+  const meet = useSyncExternalStore(subscribeMeet, getMeet) // 친구 고르기: 수학으로 모은 친구만
   // 쉬는 친구는 멀뚱히 서 있지 않고 밭 둘레를 천천히 거닐다 멈췄다 한다(친구마다 따로)
   const [strolls, setStrolls] = useState<Record<number, Stroll>>({})
   useEffect(() => { setOnWatered((kind) => { if (kind === 'water') playWater(); else playHarvest(); setNow(Date.now()) }); return () => setOnWatered(null) }, [])
@@ -459,7 +461,7 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
         </Modal>
       )}
       {picking && (
-        <PartyInvite here={[]} initial={friends} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" note={`${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물을 줘요 · 아무도 안 고르면 혼자 해요`}
+        <PartyInvite here={[]} initial={friends} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} note={`수학으로 모은 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
           cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a) => { setPicking(false); setFarmFriends(a) }} />
       )}
     </section>

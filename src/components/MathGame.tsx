@@ -1,11 +1,14 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
 import {
   AGES, MAX_PROFILES, addCorrect, addProfile, claimStars, countOf, isCleared, isUnlocked, levelsFor, readMath, removeProfile, totalOf, updateProfile, writeMath,
   type Age, type Choice, type MathState, type Pic, type Profile, type Question, type Shape, type Visual,
 } from '../lib/mathGame'
-import { playCorrect, playLevelDone } from '../lib/sound'
+import { playCorrect, playLevelDone, playServe } from '../lib/sound'
 import { StarIcon } from './Icons'
+import { CALL_ANIMALS } from '../lib/animalCalls'
+import { assetUrl } from '../lib/items'
+import { SOLVE_PER_FRIEND, addSolved, getMeet, subscribeMeet } from '../lib/meet'
 
 const T = {
   ko: {
@@ -183,6 +186,8 @@ export function MathGame({ onClose }: { onClose: () => void }) {
   const profile: Profile | undefined = state.profiles.find((p) => p.id === pid)
   const lv = levelsFor(profile?.age ?? 6).find((l) => l.id === level)
   const save = (s: MathState) => { setState(s); writeMath(s) }
+  const meet = useSyncExternalStore(subscribeMeet, getMeet)
+  const [newFriend, setNewFriend] = useState<number | null>(null)
 
   const q: Question | null = lv ? lv.questions[idx] ?? null : null
   const reset = () => { setPicked([]); setTyped(''); setPlaced([]); setWrong(false); setRight(null) }
@@ -195,6 +200,9 @@ export function MathGame({ onClose }: { onClose: () => void }) {
   /** 문제를 맞혔을 때: 소리·칭찬·기록 */
   const solved = () => {
     if (!q || !lv || !profile) return
+    // 친구 모으기: 문제를 10개 풀 때마다 새 동물 친구를 한 명 만난다
+    const got = addSolved()
+    if (got !== null) { setNewFriend(got); window.setTimeout(playServe, 500) }
     setWrong(false)
     setRight(tx.right[Math.floor(Math.random() * tx.right.length)])
     const { next, justCleared } = addCorrect(profile, lv.id, idx + 1)
@@ -260,7 +268,13 @@ export function MathGame({ onClose }: { onClose: () => void }) {
     <div className="absolute inset-0 z-30 flex flex-col overflow-hidden rounded-3xl bg-[#faf9f2] text-[#213f35] ring-1 ring-black/5">
       <div className="flex items-center justify-between gap-2 border-b border-[#e2e7dc] px-4 py-3">
         <button onClick={goBack} aria-label={tx.back} className="flex h-12 w-12 items-center justify-center rounded-full border border-[#dce4d7] bg-white text-xl text-[#246f55]">←</button>
-        <h2 className="m-0 flex items-center gap-2 text-xl font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]"><span className="rounded-2xl bg-[#e2eddb] px-2 py-1 text-2xl">🌱</span>{tx.title}</h2>
+        <div className="flex min-w-0 flex-col items-center">
+          <h2 className="m-0 flex items-center gap-2 text-xl font-normal [font-family:Jua,'Noto_Sans_KR',sans-serif]"><span className="rounded-2xl bg-[#e2eddb] px-2 py-1 text-2xl">🌱</span>{tx.title}</h2>
+          {/* 친구 모으기: 다음 친구까지 푼 문제 수와 모은 친구 수 */}
+          <span aria-label="친구 모으기" className="mt-1 rounded-full bg-[#fff0f4] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#b5566c]">
+            🐾 {meet.met.length >= CALL_ANIMALS.length ? `친구를 다 모았어요! ${CALL_ANIMALS.length}/${CALL_ANIMALS.length}` : `다음 친구까지 ${meet.solved}/${SOLVE_PER_FRIEND} · 모은 친구 ${meet.met.length}/${CALL_ANIMALS.length}`}
+          </span>
+        </div>
         <button onClick={onClose} aria-label={tx.close} className="flex h-12 w-12 items-center justify-center rounded-full border border-[#dce4d7] bg-white text-xl text-[#246f55]">✕</button>
       </div>
       <div ref={setBoxEl} className={`min-h-0 flex-1 px-4 pt-4 pb-4 ${fit < 1 && fit > 0.6 ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
@@ -419,6 +433,18 @@ export function MathGame({ onClose }: { onClose: () => void }) {
           </>
         )}
       </div>
+      {/* 새 친구를 만났어요: 10문제를 풀 때마다 */}
+      {newFriend !== null && (
+        <div role="dialog" aria-label="새 친구" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-4" onClick={() => setNewFriend(null)}>
+          <div className="sheet-in flex w-full max-w-xs flex-col items-center gap-2 rounded-3xl bg-[#fff8fb] p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <p className="m-0 text-lg font-black text-[#c04a6a]">🎉 새 친구를 만났어요!</p>
+            <img src={assetUrl(`cafe/stand/${CALL_ANIMALS[newFriend].img}_wave.webp`)} alt="" draggable={false} className="mt-8 h-32 w-32 animate-bounce object-contain" />
+            <p className="m-0 text-2xl font-black text-[#6b4b52]">{CALL_ANIMALS[newFriend].name}</p>
+            <p className="m-0 text-sm font-bold text-[#8a6a72]">이제 파티·농장·주방에서 같이 놀 수 있어요 · {meet.met.length}/{CALL_ANIMALS.length}</p>
+            <button onClick={() => setNewFriend(null)} className="mt-1 min-h-11 w-full rounded-full bg-[#ff8fab] font-bold text-white shadow">좋아!</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

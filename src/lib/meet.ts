@@ -1,22 +1,26 @@
 import { CALL_ANIMALS, kidWords } from './animalCalls'
 
 /**
- * 산책길에서 동물 친구 만나기: 길을 걷다 보면 가끔 동물 친구가 나타나 돌아다니고, 다가가면 짧게 이야기를 나눈다.
- * 한 번 만난 친구는 '만난 친구'가 되어 집 파티에 초대할 수 있다(친구를 모으는 느낌). 너무 자주 만나지 않게 간격을 둔다.
+ * 동물 친구 모으기와 산책길 만남.
+ * - 친구 모으기: 수학 문제를 10개 풀 때마다 친구를 한 명씩 만난다(met). 모은 친구만 파티 초대·농장·주방에 같이 할 수 있다.
+ * - 산책길 만남: 길을 걷다 보면 30초 간격으로 동물 친구가 나타나 짧게 이야기만 나눈다(모으기와는 상관없다).
  */
-export interface MeetState { met: number[]; last: number }
+export interface MeetState { met: number[]; last: number; /** 다음 친구까지 푼 수학 문제 수 */ solved: number }
 const KEY = 'ryuso.meet.v1'
 
 /** 이만큼(논리 px, 화면 몇 개 정도) 걸어야 다음 친구가 나타날 수 있다 */
 export const MEET_WALK = 3000
-/** 지난번에 만난 뒤 이만큼(ms) 지나야 다음 친구가 나타난다: 아직 못 만난 친구가 있으면 30초, 다 만났으면 4분 */
-export const MEET_GAP = 30_000, MEET_GAP_ALL = 240_000
+/** 산책길에서 지난번에 만난 뒤 이만큼(ms) 지나야 다음 친구가 나타난다 */
+export const MEET_GAP = 30_000
+/** 수학 문제를 이만큼 풀면 친구를 한 명 모은다 */
+export const SOLVE_PER_FRIEND = 10
 
 export function sanitizeMeet(v: unknown): MeetState {
   const r = (v && typeof v === 'object' ? v : {}) as Partial<MeetState>
   const met = Array.isArray(r.met) ? [...new Set(r.met.filter((a): a is number => Number.isInteger(a) && a >= 0 && a < CALL_ANIMALS.length))] : []
   const last = typeof r.last === 'number' && Number.isFinite(r.last) ? r.last : 0
-  return { met, last }
+  const solved = typeof r.solved === 'number' && Number.isFinite(r.solved) ? Math.max(0, Math.min(SOLVE_PER_FRIEND - 1, Math.floor(r.solved))) : 0
+  return { met, last, solved }
 }
 let state: MeetState = (() => { try { return sanitizeMeet(JSON.parse(localStorage.getItem(KEY) ?? 'null')) } catch { return sanitizeMeet(null) } })()
 const listeners = new Set<() => void>()
@@ -27,23 +31,32 @@ function save(next: MeetState) {
   try { localStorage.setItem(KEY, JSON.stringify(state)) } catch { /* 저장 못 해도 지금은 만난 것으로 */ }
   listeners.forEach((fn) => fn())
 }
+/** 모은 친구인지 */
+export const collected = (animal: number) => state.met.includes(animal)
+/** 아직 못 모은 친구들(친구 고르기 창에서 ??? 로 가린다) */
+export const notCollected = (s: MeetState = state) => CALL_ANIMALS.map((_, i) => i).filter((i) => !s.met.includes(i))
 
-/** 지금 새 친구가 나타나도 되는지: 충분히 걸었고, 지난번 만남에서 시간이 넉넉히 지났는지 */
-export function canMeet(s: MeetState, walked: number, now: number) {
-  const gap = s.met.length >= CALL_ANIMALS.length ? MEET_GAP_ALL : MEET_GAP
-  return walked >= MEET_WALK && now - s.last >= gap
+/** 수학 문제를 하나 풀었다: 10개가 차면 아직 못 모은 친구 한 명을 모은다(모은 친구 번호, 아니면 null) */
+export function solveOne(s: MeetState, rnd: () => number = Math.random): { next: MeetState; got: number | null } {
+  const left = notCollected(s)
+  if (!left.length) return { next: s, got: null } // 다 모았다
+  const solved = s.solved + 1
+  if (solved < SOLVE_PER_FRIEND) return { next: { ...s, solved }, got: null }
+  const got = left[Math.floor(rnd() * left.length)]
+  return { next: { ...s, met: [...s.met, got], solved: 0 }, got }
 }
-/** 나타날 친구: 아직 못 만난 친구 먼저(모으는 재미), 다 만났으면 아무나 */
-export function pickVisitor(s: MeetState, rnd: () => number = Math.random) {
-  const all = CALL_ANIMALS.map((_, i) => i)
-  const fresh = all.filter((a) => !s.met.includes(a))
-  const pool = fresh.length ? fresh : all
-  return pool[Math.floor(rnd() * pool.length)]
+export function addSolved(): number | null {
+  const r = solveOne(state)
+  if (r.next !== state) save(r.next)
+  return r.got
 }
-/** 이야기를 나눴다: 만난 친구에 넣고, 다음 만남까지 시간을 잰다 */
-export function meetFriend(animal: number, now = Date.now()) {
-  save({ met: state.met.includes(animal) ? state.met : [...state.met, animal], last: now })
-}
+
+/** 산책길에 지금 친구가 나타나도 되는지: 충분히 걸었고, 지난번 만남에서 30초가 지났는지 */
+export const canMeet = (s: MeetState, walked: number, now: number) => walked >= MEET_WALK && now - s.last >= MEET_GAP
+/** 산책길에 나타날 친구: 아무나 */
+export const pickVisitor = (rnd: () => number = Math.random) => Math.floor(rnd() * CALL_ANIMALS.length)
+/** 산책길에서 이야기를 나눴다: 다음 만남까지 시간을 잰다(친구를 모으지는 않는다) */
+export const talkedOnRoad = (now = Date.now()) => save({ ...state, last: now })
 
 /** 짧은 이야기: 첫인사(처음 만나면 자기소개)와 서로 다른 질문 두 개. 질문마다 아이가 고르는 대답 셋과 친구의 답 */
 export interface Ask { ask: string; replies: { label: string; answer: string }[] }

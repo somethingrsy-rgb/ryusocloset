@@ -10,6 +10,7 @@ import type { Outfit, Tweaks } from '../lib/types'
 import { Ico } from './CafeGame'
 import { FigureLayers } from './FigureLayers'
 import { GUEST_PER_AVATAR_W, PartyInvite } from './PartyGuests'
+import { getMeet, notCollected, subscribeMeet } from '../lib/meet'
 import { CoinIcon } from './Icons'
 
 /**
@@ -106,7 +107,10 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const [sel, setSel] = useState<number | null>(null)
   const [cooking, setCooking] = useState<Cooking | null>(null)
   const [bring, setBring] = useState(false)
-  const [friends, setFriends] = useState<number[]>(readFriends)
+  const [chosen, setFriends] = useState<number[]>(readFriends)
+  // 고른 친구 중 수학으로 모은 친구만 같이 요리한다(모으지 않은 친구는 같이 못 한다)
+  const meet = useSyncExternalStore(subscribeMeet, getMeet)
+  const friends = chosen.filter((a) => meet.met.includes(a))
   const [picking, setPicking] = useState(false)
   const chooseFriends = (a: number[]) => { setFriends(a); try { localStorage.setItem(FRIENDS_KEY, JSON.stringify(a)) } catch { /* 저장 못 해도 지금은 같이 한다 */ } }
   const [done, setDone] = useState<number | null>(null) // 방금 다 만든 자리
@@ -479,7 +483,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       )}
       {toast && <div role="status" className="absolute bottom-40 left-1/2 z-50 max-w-[90%] -translate-x-1/2 rounded-full bg-[#8a4b55] px-5 py-3 text-center text-sm text-[#fff9e9] shadow-lg">{toast}</div>}
       {picking && (
-        <PartyInvite here={[]} initial={friends} max={MAX_FRIENDS} allowNone title="👩‍🍳 누구랑 같이 요리할까요?" note={`${MAX_FRIENDS}명까지 골라요 · 아무도 안 고르면 혼자 요리해요`}
+        <PartyInvite here={[]} initial={friends} max={MAX_FRIENDS} allowNone title="👩‍🍳 누구랑 같이 요리할까요?" locked={notCollected(meet)} note={`수학으로 모은 친구 중 ${MAX_FRIENDS}명까지 골라요 · 아무도 안 고르면 혼자 요리해요`}
           cta="👩‍🍳 같이 요리하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a) => { playTap(); setPicking(false); chooseFriends(a) }} />
       )}
     </section>
