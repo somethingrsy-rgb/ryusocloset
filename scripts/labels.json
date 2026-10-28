@@ -1573,6 +1573,66 @@
     "color": "purple",
     "native": true
   },
+  "shoes_heart_tstrap": {
+    "ko": "노랑 하트 메리제인",
+    "en": "Yellow Heart Mary Janes",
+    "color": "beige",
+    "native": true
+  },
+  "shoes_purple_bow_maryjane": {
+    "ko": "보라 리본 메리제인",
+    "en": "Purple Bow Mary Janes",
+    "color": "purple",
+    "native": true
+  },
+  "shoes_flower_ivory": {
+    "ko": "꽃 장식 아이보리 구두",
+    "en": "Ivory Flower Shoes",
+    "color": "ivory",
+    "native": true
+  },
+  "shoes_pink_bow_cross": {
+    "ko": "핑크 리본 크로스 구두",
+    "en": "Pink Bow Cross Shoes",
+    "color": "pink",
+    "native": true
+  },
+  "shoes_lavender_butterfly": {
+    "ko": "라벤더 나비 리본 구두",
+    "en": "Lavender Butterfly Shoes",
+    "color": "purple",
+    "native": true
+  },
+  "shoes_daisy_maryjane": {
+    "ko": "데이지 메리제인",
+    "en": "Daisy Mary Janes",
+    "color": "beige",
+    "native": true
+  },
+  "shoes_cherry_maryjane": {
+    "ko": "체리 메리제인",
+    "en": "Cherry Mary Janes",
+    "color": "pink",
+    "native": true
+  },
+  "shoes_snowflake_boots": {
+    "ko": "눈꽃 부츠",
+    "en": "Snowflake Boots",
+    "color": "skyblue",
+    "native": true
+  },
+  "shoes_star_maryjane": {
+    "ko": "별 메리제인",
+    "en": "Star Mary Janes",
+    "color": "navy",
+    "native": true
+  },
+  "shoes_strawberry_gingham": {
+    "ko": "딸기 체크 메리제인",
+    "en": "Strawberry Gingham Mary Janes",
+    "color": "red",
+    "native": true
+  },
   "costume_rainbow_petal_lolita": {
     "ko": "무지개 꽃잎 로리타 드레스",
     "en": "Rainbow Petal Lolita Dress",
