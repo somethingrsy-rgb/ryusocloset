@@ -109,7 +109,7 @@ export const BYES = [
 ]
 
 /** 받침이 있는 이름인지(유엘 → 있음, 유하 → 없음) */
-const hasBatchim = (word: string) => {
+export const hasBatchim = (word: string) => {
   const c = word.charCodeAt(word.length - 1) - 0xac00
   return c >= 0 && c <= 11171 && c % 28 !== 0
 }
