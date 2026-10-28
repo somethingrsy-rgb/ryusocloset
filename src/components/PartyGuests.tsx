@@ -160,10 +160,10 @@ export function PartyGuests({ invite, leave, kid, floor, me, size, z, onGone, se
  * 파티 초대 창: 카페 동물 친구 얼굴을 여러 명 골라서 초대한다(이미 온 친구는 표시).
  * 달리기 친구 고르기도 같은 창을 쓴다(title·cta 로 글자를 바꾸고, initial 로 지난번에 고른 친구를 미리 골라 둔다. 아무도 안 골라도 된다. single 이면 한 명만 고른다)
  */
-export function PartyInvite({ here, onInvite, onClose, initial = [], title = '🎉 파티에 누구를 초대할까요?', cta = '💌 초대하기', allowNone = false, single = false, max, ctaNone, note }: { here: number[]; onInvite: (animals: number[]) => void; onClose: () => void; initial?: number[]; title?: string; cta?: string; allowNone?: boolean; single?: boolean; /** 이만큼까지만 고른다(더 고르면 먼저 고른 친구가 빠진다) */ max?: number; /** 아무도 안 골랐을 때 버튼 글자 */ ctaNone?: string; /** 제목 아래 안내 글자 */ note?: string }) {
+export function PartyInvite({ here, onInvite, onClose, initial = [], title = '🎉 파티에 누구를 초대할까요?', cta = '💌 초대하기', allowNone = false, single = false, max, ctaNone, note, locked = [] }: { here: number[]; onInvite: (animals: number[]) => void; onClose: () => void; initial?: number[]; title?: string; cta?: string; allowNone?: boolean; single?: boolean; /** 이만큼까지만 고른다(더 고르면 먼저 고른 친구가 빠진다) */ max?: number; /** 아무도 안 골랐을 때 버튼 글자 */ ctaNone?: string; /** 제목 아래 안내 글자 */ note?: string; /** 아직 못 만난 친구: 얼굴을 가리고(???) 고를 수 없다 */ locked?: number[] }) {
   const [picked, setPicked] = useState<number[]>(initial)
   const toggle = (i: number) => { playTap(); setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : single ? [i] : max && p.length >= max ? [...p.slice(p.length - max + 1), i] : [...p, i])) }
-  const free = CALL_ANIMALS.map((_, i) => i).filter((i) => !here.includes(i))
+  const free = CALL_ANIMALS.map((_, i) => i).filter((i) => !here.includes(i) && !locked.includes(i))
   return (
     <div role="dialog" aria-modal aria-label="파티 초대" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="sheet-in flex max-h-full w-full max-w-sm flex-col rounded-3xl bg-[#fff8fb] p-4 shadow-2xl">
@@ -174,7 +174,13 @@ export function PartyInvite({ here, onInvite, onClose, initial = [], title = '�
         <p className="mt-1 mb-2 text-xs text-black/45">{note ?? (single ? '한 친구를 골라요' : '여러 친구를 골라도 돼요')}</p>
         <div className="grid min-h-0 grid-cols-4 gap-2 overflow-y-auto p-1.5">
           {CALL_ANIMALS.map((a, i) => {
-            const on = picked.includes(i), came = here.includes(i)
+            const on = picked.includes(i), came = here.includes(i), hidden = locked.includes(i) && !came
+            if (hidden) return (
+              <div key={a.img} aria-label="아직 못 만난 친구" className="relative flex flex-col items-center rounded-2xl bg-white/60 p-1.5 ring-1 ring-black/5">
+                <img src={assetUrl(`cafe/face/${a.img}.webp`)} alt="" draggable={false} className="aspect-square w-full object-contain opacity-25 brightness-0" />
+                <span className="text-xs font-bold text-black/35">???</span>
+              </div>
+            )
             return (
               <button key={a.img} aria-pressed={on} aria-label={came ? `${a.name} (이미 왔어요)` : a.name} disabled={came} onClick={() => toggle(i)}
                 className={`relative flex flex-col items-center rounded-2xl p-1.5 transition active:scale-95 disabled:opacity-45 ${on ? 'bg-[#ffd6e3] ring-2 ring-[#ff8fab]' : 'bg-white ring-1 ring-black/5'}`}>

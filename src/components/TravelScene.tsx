@@ -12,6 +12,8 @@ import { TravelDecor } from './TravelDecor'
 import { GUEST_PER_AVATAR_W, PartyGuests, PartyInvite } from './PartyGuests'
 import { avatarVersion, getAvatar, subscribeAvatar } from '../lib/avatars'
 import { PARTY_SEAT, actKitchen, getKitchen, isPartySeat, subscribeKitchen, ticketAnimal } from '../lib/kitchen'
+import { getMeet, subscribeMeet } from '../lib/meet'
+import { CALL_ANIMALS } from '../lib/animalCalls'
 import { eatLine, getParty, orderLine, partyWish, setPartyState, subscribeParty } from '../lib/party'
 import { menuById } from '../lib/recipes'
 import { Ico } from './CafeGame'
@@ -100,6 +102,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   // 누가 와 있는지는 저장해 두어서, 주방에 다녀오거나 집을 나갔다 와도 친구들이 그대로 기다린다
   const [inviting, setInviting] = useState(false)
   const partyNow = useSyncExternalStore(subscribeParty, getParty)
+  // 파티에는 산책길에서 만난 친구만 초대할 수 있다(친구 모으기)
+  const meet = useSyncExternalStore(subscribeMeet, getMeet)
   const party = useMemo(() => (partyNow.place === placeId ? partyNow.guests : []), [partyNow, placeId])
   const [settled] = useState(party) // 이 화면을 열 때 이미 와 있던 친구들
   const [partyEnd, setPartyEnd] = useState(false)
@@ -382,7 +386,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           </div>
         </div>
       )}
-      {inviting && <PartyInvite here={party} onClose={() => setInviting(false)} onInvite={(animals) => {
+      {inviting && <PartyInvite here={party} locked={CALL_ANIMALS.map((_, i) => i).filter((i) => !meet.met.includes(i))}
+        note={meet.met.length ? `산책길에서 만난 친구만 초대할 수 있어요 · 만난 친구 ${meet.met.length}/${CALL_ANIMALS.length}` : '아직 만난 친구가 없어요. 산책길을 걷다 보면 동물 친구를 만날 수 있어요!'} onClose={() => setInviting(false)} onInvite={(animals) => {
         setInviting(false)
         // 다른 장소에서 하던 파티는 끝낸다(그 친구들 주문서도 지운다)
         if (partyNow.place && partyNow.place !== placeId) for (const t of getKitchen().tickets) if (isPartySeat(t.seat)) actKitchen({ type: 'cancel', seat: t.seat })

@@ -2,11 +2,16 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent, type React
 import { useI18n } from '../i18n'
 import { extendReach, findItem, travelItem } from '../lib/game'
 import { roadSpot } from '../lib/roadItems'
-import { playTap } from '../lib/sound'
+import { playOrder, playServe, playTap } from '../lib/sound'
+import { CALL_ANIMALS, hasBatchim } from '../lib/animalCalls'
+import { getAvatar } from '../lib/avatars'
+import { canMeet, getMeet, meetFriend, pickVisitor, talkFor, type Talk } from '../lib/meet'
+import { GUEST_PER_AVATAR_W } from './PartyGuests'
 import type { Outfit, Tweaks } from '../lib/types'
 import {
   CHUNK_W,
   DOOR_Y,
+  GROUND,
   MIN_CHUNKS,
   ROAD_PART,
   ROAD_PARTS,
@@ -30,6 +35,11 @@ import { assetUrl } from '../lib/items'
 const BG_W = TILE_W
 const BG_H = 867
 const BG_TOP = -26
+/** 이만큼(논리 px) 가까이 가면 친구가 말을 건다 */
+const TALK_R = 170
+
+/** 산책길에서 만난 동물 친구: 아바타 앞쪽에 나타나 그 근처를 천천히 돌아다닌다 */
+interface Visitor { animal: number; x: number; y: number; home: number; moveMs: number; dir: 1 | -1; leaving: boolean }
 
 interface Props {
   actions?: ReactNode
@@ -75,6 +85,43 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   /** 집을 눌러서 걸어가는 중이면 그 구간 번호 (지나가다 우연히 들어가지 않게) */
   const intent = useRef<number | null>(null)
 
+  // 산책길 친구: 많이 걸었고 지난번 만남에서 시간이 넉넉히 지났으면 가끔 한 명이 앞쪽에 나타난다(lib/meet)
+  const walked = useRef(0)
+  const [visitor, setVisitor] = useState<Visitor | null>(null)
+  const visitorRef = useRef(visitor)
+  visitorRef.current = visitor
+  const [talk, setTalk] = useState<{ animal: number; first: boolean; t: Talk; answer: string | null } | null>(null)
+  const talkRef = useRef(talk)
+  talkRef.current = talk
+  // 친구는 자기 자리 근처를 천천히 거닌다(2~3.5초마다 옆으로 조금)
+  useEffect(() => {
+    if (!visitor || visitor.leaving || talk) return
+    const t = window.setTimeout(() => {
+      setVisitor((v) => {
+        if (!v || v.leaving) return v
+        const x = v.home + (Math.random() - 0.5) * 420, y = GROUND.minY + 20 + Math.random() * (GROUND.maxY - GROUND.minY - 30)
+        return { ...v, x, y, moveMs: Math.max(600, Math.hypot(x - v.x, y - v.y) / 120 * 1000), dir: x < v.x ? -1 : 1 }
+      })
+    }, 2000 + Math.random() * 1500)
+    return () => clearTimeout(t)
+  }, [visitor, talk])
+  const startTalk = (v: Visitor) => {
+    const first = !getMeet().met.includes(v.animal)
+    playOrder()
+    setTalk({ animal: v.animal, first, t: talkFor(v.animal, getAvatar().name.ko, first), answer: null })
+    setVisitor({ ...v, dir: posRef.current.x < v.x ? -1 : 1, moveMs: 0 })
+  }
+  const endTalk = () => {
+    const v = visitorRef.current
+    setTalk(null)
+    // 손 흔들며 아바타 반대쪽으로 걸어 나간다
+    if (v) {
+      const away = v.x >= posRef.current.x ? 1 : -1
+      setVisitor({ ...v, leaving: true, x: v.x + away * 900, moveMs: 2600, dir: away })
+      window.setTimeout(() => setVisitor(null), 2600)
+    }
+  }
+
   useEffect(() => {
     const el = hostRef.current
     if (!el) return
@@ -87,6 +134,8 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
 
   const scale = size.h / WORLD_H
   const visibleW = size.w / scale
+  const visibleRef = useRef(visibleW)
+  visibleRef.current = visibleW
   const cam = cameraX(pos.x, visibleW, chunks)
   const first = Math.max(0, Math.floor(cam / CHUNK_W) - 1)
   const lastChunk = Math.min(chunks - 1, Math.floor((cam + visibleW) / CHUNK_W) + 1)
@@ -98,6 +147,30 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
       const t = target.current
       if (!t) return
       const r = stepWorld(posRef.current, t, dt)
+      walked.current += Math.abs(r.pos.x - posRef.current.x)
+      // 친구가 없으면, 충분히 걸었고 시간이 지났을 때 가는 쪽 앞에 한 명 나타난다
+      const v = visitorRef.current
+      if (!v && canMeet(getMeet(), walked.current, Date.now())) {
+        const ahead = r.pos.x >= posRef.current.x ? 1 : -1
+        // 화면 안 가는 쪽 앞(보이는 너비의 38%쯤)에 나타나 아이가 볼 수 있게
+        const x = Math.max(200, r.pos.x + ahead * Math.min(900, visibleRef.current * 0.38))
+        const nv: Visitor = { animal: pickVisitor(getMeet()), x, y: GROUND.minY + 40 + Math.random() * 80, home: x, moveMs: 0, dir: ahead === 1 ? -1 : 1, leaving: false }
+        visitorRef.current = nv
+        setVisitor(nv)
+        walked.current = 0
+      } else if (v && !v.leaving && !talkRef.current) {
+        // 가까이 가면 말을 건다(걷기를 멈춘다). 멀리 지나쳐 가면 친구는 사라진다(다음에 다시)
+        if (Math.hypot(r.pos.x - v.x, r.pos.y - v.y) < TALK_R) {
+          posRef.current = r.pos
+          setPos(r.pos)
+          target.current = null
+          setWalking(false)
+          setDestination(null)
+          startTalk(v)
+          return
+        }
+        if (Math.abs(r.pos.x - v.x) > 2600) { visitorRef.current = null; setVisitor(null); walked.current = 0 }
+      }
       if (r.pos.x !== posRef.current.x) setDir(r.pos.x < posRef.current.x ? -1 : 1)
       posRef.current = r.pos
       setPos(r.pos)
@@ -141,7 +214,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   }
 
   const onTap = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return
+    if (e.button !== 0 || (e.target as HTMLElement).closest('button') || talkRef.current) return
     hostRef.current?.focus({ preventScroll: true })
     const r = hostRef.current!.getBoundingClientRect()
     walkTo((e.clientX - r.left) / scale + cam, (e.clientY - r.top) / scale)
@@ -158,7 +231,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   const keys = useWalkKeys(
     (x, y) => walkTo(posRef.current.x + x * 120, posRef.current.y + y * 120),
     stop,
-    !paused,
+    !paused && !talk,
   )
 
   const figW = 145 * 1.5 * (0.8 + 0.2 * ((pos.y - 585) / 150))
@@ -198,6 +271,20 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
         })}
 
         {destination && <div aria-hidden className="walk-destination pointer-events-none absolute" style={{ left: destination.x, top: destination.y, zIndex: 3 }} />}
+        {/* 산책길 친구: 아바타 키의 2/3×0.8 크기(파티와 같게). 이야기할 때·떠날 때는 손 흔드는 그림 */}
+        {visitor && (() => {
+          const w = 145 * 1.5 * (0.8 + 0.2 * ((visitor.y - 585) / 150)) * GUEST_PER_AVATAR_W * 0.8
+          const a = CALL_ANIMALS[visitor.animal]
+          const wave = !!talk || visitor.leaving
+          return (
+            <div aria-hidden className="pointer-events-none absolute" style={{ left: visitor.x, top: visitor.y, width: w, aspectRatio: '1 / 1', transform: 'translate(-50%, -99%)', zIndex: visitor.y > pos.y ? 1001 : 999, transition: `left ${visitor.moveMs}ms linear, top ${visitor.moveMs}ms linear, opacity 0.6s`, opacity: visitor.leaving ? 0.85 : 1 }}>
+              <div className={`relative h-full w-full ${visitor.moveMs && !talk ? 'walk-bob' : ''}`} style={{ transform: `scaleX(${visitor.dir})` }}>
+                {(['stand', 'wave'] as const).map((pose) => <img key={pose} src={assetUrl(`cafe/stand/${a.img}_${pose}.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_6px_4px_rgba(80,50,40,0.25)]" style={{ visibility: (pose === 'wave') === wave ? 'visible' : 'hidden' }} />)}
+              </div>
+              {!talk && !visitor.leaving && <span className="absolute -top-2 left-1/2 -translate-x-1/2 animate-bounce text-4xl">💬</span>}
+            </div>
+          )
+        })()}
         <div
           className="pointer-events-none absolute"
           style={{ left: pos.x, top: pos.y, width: figW, aspectRatio: '1024 / 1536', transform: 'translate(-50%, -100%)', zIndex: 1000 }}
@@ -216,6 +303,31 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
           <span className="text-sm font-bold">{lang === 'ko' ? '찾았어요!' : 'Found it!'} {travelItem(gotId)!.name[lang]}</span>
         </div>
       )}
+      {/* 친구와 짧은 이야기: 첫인사 → 묻는 말 → 대답 고르기 → 친구의 답(처음 만났으면 '친구가 됐어요') */}
+      {talk && (() => {
+        const a = CALL_ANIMALS[talk.animal]
+        return (
+          <div role="dialog" aria-label={`${a.name}랑 이야기`} onPointerUp={(e) => e.stopPropagation()} className="absolute inset-x-2 top-14 z-30 mx-auto flex max-w-md flex-col gap-2 rounded-3xl bg-white/95 p-3 shadow-xl">
+            <div className="flex items-start gap-2">
+              <img src={assetUrl(`cafe/face/${a.img}.webp`)} alt="" draggable={false} className="h-14 w-14 shrink-0 object-contain" />
+              <div className="min-w-0">
+                <p className="m-0 text-xs font-bold text-[#c06a7d]">{a.name}</p>
+                <p className="m-0 text-base leading-snug font-bold text-[#6b4b52]">{talk.answer ?? `${talk.t.hello} ${talk.t.ask}`}</p>
+              </div>
+            </div>
+            {talk.answer === null ? (
+              <div className="flex flex-wrap justify-end gap-2">
+                {talk.t.replies.map((rp) => <button key={rp.label} onClick={() => { playTap(); meetFriend(talk.animal); setTalk({ ...talk, answer: rp.answer }) }} className="min-h-11 rounded-full bg-[#ffe1ea] px-4 text-sm font-bold text-[#8a4b55] shadow-sm">{rp.label}</button>)}
+              </div>
+            ) : (
+              <>
+                {talk.first && <p className="m-0 rounded-2xl bg-[#fff4d6] px-3 py-1.5 text-center text-sm font-bold text-[#8a5a12]">🎉 {lang === 'ko' ? `${a.name}${hasBatchim(a.name) ? '과' : '와'} 친구가 됐어요! 이제 집 파티에 초대할 수 있어요` : `${a.name} is your friend now! You can invite them to parties`} · {getMeet().met.length}/{CALL_ANIMALS.length}</p>}
+                <button onClick={() => { playServe(); endTalk() }} className="min-h-11 self-end rounded-full bg-[#ff8fab] px-5 text-sm font-bold text-white shadow">👋 {lang === 'ko' ? '안녕~ 또 만나!' : 'Bye~ see you!'}</button>
+              </>
+            )}
+          </div>
+        )
+      })()}
       <div className="absolute top-2 left-2 right-2 z-10 flex min-w-0 flex-wrap items-center gap-1">
         <div className="flex min-w-0 flex-wrap items-center gap-1" onPointerUp={e => e.stopPropagation()}>{actions}</div>
       </div>
