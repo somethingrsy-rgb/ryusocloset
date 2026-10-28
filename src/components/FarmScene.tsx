@@ -12,7 +12,7 @@ import { PILL, PillText } from './pill'
 import { CoinIcon } from './Icons'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { GUEST_PER_AVATAR_W, PartyInvite } from './PartyGuests'
-import { MAX_FARM_FRIENDS, WALK_MS, claimed, getFarmFriends, getFriendJobs, setFarmFriends, setOnWatered, subscribeFarmFriends } from '../lib/farmFriends'
+import { MAX_FARM_FRIENDS, WALK_MS, claimed, getFarmFriends, getFriendJobs, harvestAll, setFarmFriends, setOnWatered, subscribeFarmFriends, waterNow } from '../lib/farmFriends'
 
 type Tool = 'seed' | 'water' | 'harvest'
 
@@ -95,7 +95,7 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
   const [picking, setPicking] = useState(false)
   // 쉬는 친구는 멀뚱히 서 있지 않고 밭 둘레를 천천히 거닐다 멈췄다 한다(친구마다 따로)
   const [strolls, setStrolls] = useState<Record<number, Stroll>>({})
-  useEffect(() => { setOnWatered(() => { playWater(); setNow(Date.now()) }); return () => setOnWatered(null) }, [])
+  useEffect(() => { setOnWatered((kind) => { if (kind === 'water') playWater(); else playHarvest(); setNow(Date.now()) }); return () => setOnWatered(null) }, [])
   const pending = useRef(new Set<number>()) // 지금 처리 중인 밭 (같은 밭을 두 번 누르는 것만 막는다. 걷는 중에 다른 밭은 바로 누를 수 있다)
   const walkToken = useRef(0)
   const secRef = useRef<HTMLElement>(null)
@@ -173,6 +173,7 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
     pending.current.add(i)
     const box = plotBox(i, L)
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
+    if (claimed(i)) return // 친구가 지금 그 밭에서 일하는 중
     // 친구가 있으면 물 주기는 친구들이 저절로 한다(누르지 않아도 된다)
     if (need === 'water' && (friends.length || claimed(i))) { pending.current.delete(i); setNotice(ko ? '친구가 곧 물을 줄 거예요 💧' : 'A friend will water it soon 💧'); return }
     const token = ++walkToken.current
@@ -194,6 +195,19 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
 
   const pick = (t: Tool) => {
     if (t === 'seed') { setPicker((p) => (tool === 'seed' ? !p : true)); setTool('seed'); return }
+    // 친구가 있으면 물주기·수확 버튼 한 번에 친구들이 밭을 돌며 알아서 한다
+    if (friends.length && t === 'water') {
+      setPicker(false)
+      const need = farm.plots.some((p, i) => farm.owned[i] && p && p.wateredAt === null)
+      if (need) waterNow()
+      setNotice(need ? (ko ? '친구들이 물을 주러 가요 💧' : 'Friends are off to water 💧') : (ko ? '물 줄 밭이 없어요' : 'Nothing to water'))
+      return
+    }
+    if (friends.length && t === 'harvest') {
+      setPicker(false)
+      setNotice(harvestAll(now) ? (ko ? '친구들이 수확하러 가요 🧺' : 'Friends are off to harvest 🧺') : (ko ? '아직 다 자란 작물이 없어요' : 'Nothing is ready yet'))
+      return
+    }
     setPicker(false)
     setTool((cur) => (cur === t ? null : t))
   }
@@ -293,8 +307,11 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
             <div key={a.img} aria-hidden className="pointer-events-none absolute" style={{ left: `${feet.x - fw / 2}%`, top: `${feet.y - fh}%`, width: `${fw}%`, aspectRatio: '1 / 1', zIndex: job ? 11 : 9, transition: `left ${walkMs}ms ${job ? 'ease-in-out' : 'linear'}, top ${walkMs}ms ${job ? 'ease-in-out' : 'linear'}` }}>
               <div className={`relative h-full w-full ${moving ? 'farm-walk' : ''}`}>
                 <img src={assetUrl(`cafe/stand/${a.img}_stand.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain" style={{ transform: !job && stroll?.dir === -1 ? 'scaleX(-1)' : undefined }} />
-                {job && <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '62%', top: '42%', width: '46%', transformOrigin: '15% 60%', transform: job.watering ? 'rotate(32deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />}
-                {job?.watering && <span className="absolute text-sm" style={{ left: '102%', top: '56%' }}>💧</span>}
+                {job?.kind === 'water' && <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '62%', top: '42%', width: '46%', transformOrigin: '15% 60%', transform: job.watering ? 'rotate(32deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />}
+                {job?.kind === 'water' && job.watering && <span className="absolute text-sm" style={{ left: '102%', top: '56%' }}>💧</span>}
+                {/* 수확: 바구니를 들고 가서, 밭에서 바구니를 살짝 내렸다 들며 담는다 */}
+                {job?.kind === 'harvest' && <img src={assetUrl('assets/farm/icon_basket.webp')} alt="" draggable={false} className="absolute" style={{ left: '58%', top: '44%', width: '50%', transform: job.watering ? 'translateY(12%) rotate(-8deg)' : 'none', transition: 'transform 0.2s' }} />}
+                {job?.kind === 'harvest' && job.watering && <span className="absolute text-sm" style={{ left: '96%', top: '30%' }}>✨</span>}
               </div>
               {job && job.n === Math.max(...Object.values(jobs).map((j) => j.n)) && <p className="absolute bottom-[98%] left-1/2 m-0 w-max -translate-x-1/2 rounded-2xl bg-white px-2 py-0.5 text-[11px] font-bold text-[#6b4b52] shadow">{job.line}</p>}
             </div>
