@@ -71,10 +71,10 @@ const newUid = () => `${Date.now().toString(36)}${Math.random().toString(36).sli
 
 /** 탭 아이콘(public/assets/tabs2/<icon>.webp). 그림이 아직 없는 탭(주방)은 이모지로 보여 준다 */
 const TAB_EMOJI: Record<string, string> = { kitchen: '🍳' }
-function TabIcon({ icon, active = false }: { icon: string; active?: boolean }) {
+function TabIcon({ icon }: { icon: string }) {
   const [failed, setFailed] = useState(false)
   if (failed) return <span aria-hidden className="flex h-10 w-10 items-center justify-center leading-none" style={{ fontSize: '1.9rem' }}>{TAB_EMOJI[icon] ?? '⭐'}</span>
-  return <img src={assetUrl(`assets/tabs2/${icon}.webp`)} alt="" draggable={false} onError={() => setFailed(true)} className={`h-10 w-10 object-contain ${active ? 'shrink-0' : 'min-w-0 shrink'}`} />
+  return <img src={assetUrl(`assets/tabs2/${icon}.webp`)} alt="" draggable={false} onError={() => setFailed(true)} className="h-10 w-10 object-contain" />
 }
 
 function useWideScreen() {
@@ -391,13 +391,13 @@ export default function App() {
         setSelection(null)
         setSelCat(null)
       }}
-      className={`flex min-h-11 min-w-0 items-center justify-center gap-0.5 rounded-full px-0.5 font-bold whitespace-nowrap transition ${
-        mode === m ? (icon === 'kitchen' ? 'flex-1 shrink-0' : 'flex-none pr-2') + ' bg-blush text-white shadow' : 'flex-1 shrink text-cocoa-soft'
+      className={`flex shrink-0 min-h-11 flex-1 items-center justify-center gap-0 rounded-full px-0.5 font-bold whitespace-nowrap transition ${
+        mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
       }`}
     >
-      <TabIcon icon={icon} active={mode === m} />
-      {/* 탭 이름: 아이콘 그림 속 글자가 너무 작아서, 지금 고른 탭만 이름을 읽을 수 있게 옆에 쓴다(주방 아이콘은 그림에 이름이 크게 있다) */}
-      <span className={mode === m && icon !== 'kitchen' ? 'text-[13px]' : 'sr-only'}>{label}</span>
+      {/* 탭 이름은 아이콘 그림에 크게 들어 있다(화면 읽기용 이름만 따로) */}
+      <TabIcon icon={icon} />
+      <span className="sr-only">{label}</span>
     </button>
   )
 
