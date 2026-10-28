@@ -816,6 +816,30 @@
     "native": true
   },
   {
+    "id": "costume_blueberry_gingham_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "블루베리 체크 로리타 드레스",
+      "en": "Blueberry Gingham Lolita Dress"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 102,
+      "y": 626,
+      "w": 818,
+      "h": 690
+    },
+    "image": "assets/clothes/costume/costume_blueberry_gingham_lolita.webp",
+    "thumb": "assets/thumbs/costume_blueberry_gingham_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_boy_black_vest2",
     "category": "costume",
     "name": {
@@ -1320,6 +1344,30 @@
     "native": true
   },
   {
+    "id": "costume_cloud_heart_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "구름 하트 로리타 드레스",
+      "en": "Cloud Heart Lolita Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 102,
+      "y": 626,
+      "w": 818,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/costume_cloud_heart_lolita.webp",
+    "thumb": "assets/thumbs/costume_cloud_heart_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_clover_flower_lolita",
     "category": "costume",
     "name": {
@@ -1429,10 +1477,10 @@
     },
     "colorHex": "#6f9a72",
     "box": {
-      "x": 86,
-      "y": 604,
-      "w": 852,
-      "h": 760
+      "x": 125,
+      "y": 626,
+      "w": 775,
+      "h": 691
     },
     "image": "assets/clothes/costume/costume_green_gingham_daisy.webp",
     "thumb": "assets/thumbs/costume_green_gingham_daisy.webp",
@@ -1549,10 +1597,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 86,
-      "y": 604,
-      "w": 853,
-      "h": 760
+      "x": 125,
+      "y": 626,
+      "w": 776,
+      "h": 691
     },
     "image": "assets/clothes/costume/costume_lilac_daisy_tier.webp",
     "thumb": "assets/thumbs/costume_lilac_daisy_tier.webp",
@@ -1573,13 +1621,37 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 75,
-      "y": 604,
-      "w": 874,
-      "h": 760
+      "x": 115,
+      "y": 626,
+      "w": 795,
+      "h": 691
     },
     "image": "assets/clothes/costume/costume_lilac_lemon_lolita.webp",
     "thumb": "assets/thumbs/costume_lilac_lemon_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_lilac_ribbon_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "라일락 핑크 리본 로리타 드레스",
+      "en": "Lilac Pink Ribbon Lolita Dress"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 102,
+      "y": 626,
+      "w": 818,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/costume_lilac_ribbon_lolita.webp",
+    "thumb": "assets/thumbs/costume_lilac_ribbon_lolita.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1656,6 +1728,30 @@
     "native": true
   },
   {
+    "id": "costume_mint_apron_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "민트 장미 앞치마 로리타 드레스",
+      "en": "Mint Rose Apron Lolita Dress"
+    },
+    "color": "mint",
+    "colorName": {
+      "ko": "민트",
+      "en": "Mint"
+    },
+    "colorHex": "#a9dcc8",
+    "box": {
+      "x": 104,
+      "y": 626,
+      "w": 817,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/costume_mint_apron_lolita.webp",
+    "thumb": "assets/thumbs/costume_mint_apron_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_mint_cape",
     "category": "costume",
     "name": {
@@ -1676,6 +1772,30 @@
     },
     "image": "assets/clothes/costume/costume_mint_cape.webp",
     "thumb": "assets/thumbs/costume_mint_cape.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_mint_shell_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "민트 조개 리본 로리타 드레스",
+      "en": "Mint Shell Ribbon Lolita Dress"
+    },
+    "color": "mint",
+    "colorName": {
+      "ko": "민트",
+      "en": "Mint"
+    },
+    "colorHex": "#a9dcc8",
+    "box": {
+      "x": 102,
+      "y": 626,
+      "w": 818,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/costume_mint_shell_lolita.webp",
+    "thumb": "assets/thumbs/costume_mint_shell_lolita.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1885,13 +2005,37 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 75,
-      "y": 604,
-      "w": 874,
-      "h": 760
+      "x": 115,
+      "y": 626,
+      "w": 795,
+      "h": 691
     },
     "image": "assets/clothes/costume/costume_rainbow_petal_lolita.webp",
     "thumb": "assets/thumbs/costume_rainbow_petal_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_rose_gothic_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "보라 장미 고딕 로리타 드레스",
+      "en": "Purple Rose Gothic Lolita Dress"
+    },
+    "color": "black",
+    "colorName": {
+      "ko": "블랙",
+      "en": "Black"
+    },
+    "colorHex": "#2b2b2f",
+    "box": {
+      "x": 102,
+      "y": 626,
+      "w": 818,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/costume_rose_gothic_lolita.webp",
+    "thumb": "assets/thumbs/costume_rose_gothic_lolita.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1957,10 +2101,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 91,
-      "y": 604,
-      "w": 842,
-      "h": 760
+      "x": 129,
+      "y": 626,
+      "w": 767,
+      "h": 691
     },
     "image": "assets/clothes/costume/costume_sakura_pink_tier.webp",
     "thumb": "assets/thumbs/costume_sakura_pink_tier.webp",
@@ -1981,10 +2125,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 83,
-      "y": 604,
-      "w": 858,
-      "h": 760
+      "x": 122,
+      "y": 626,
+      "w": 781,
+      "h": 691
     },
     "image": "assets/clothes/costume/costume_seashell_mint.webp",
     "thumb": "assets/thumbs/costume_seashell_mint.webp",
@@ -2005,10 +2149,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 62,
-      "y": 604,
-      "w": 900,
-      "h": 758
+      "x": 103,
+      "y": 626,
+      "w": 819,
+      "h": 689
     },
     "image": "assets/clothes/costume/costume_sky_cloud_tier.webp",
     "thumb": "assets/thumbs/costume_sky_cloud_tier.webp",
@@ -2088,6 +2232,30 @@
     "native": true
   },
   {
+    "id": "costume_star_candy_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "별사탕 핑크 블루 로리타 드레스",
+      "en": "Star Candy Lolita Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 102,
+      "y": 626,
+      "w": 818,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/costume_star_candy_lolita.webp",
+    "thumb": "assets/thumbs/costume_star_candy_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_starry_cross",
     "category": "costume",
     "name": {
@@ -2149,10 +2317,10 @@
     },
     "colorHex": "#f6ecd6",
     "box": {
-      "x": 62,
-      "y": 604,
-      "w": 900,
-      "h": 759
+      "x": 104,
+      "y": 626,
+      "w": 818,
+      "h": 690
     },
     "image": "assets/clothes/costume/costume_strawberry_lemon_tier.webp",
     "thumb": "assets/thumbs/costume_strawberry_lemon_tier.webp",
