@@ -1,9 +1,11 @@
 import { CALL_ANIMALS } from './animalCalls'
-import { actFarm, getFarm, growth, subscribeFarm } from './farm'
+import { CROPS, actFarm, getFarm, growth, subscribeFarm, type CropId } from './farm'
+
+const cropMs = (id: CropId) => (CROPS.find((c) => c.id === id)?.seconds ?? 60) * 1000
 
 /**
  * 농장 친구들: 고른 동물 친구(최대 2명)가 물이 필요한 밭에 저절로 가서 물을 주고,
- * 수확 버튼을 누르면 다 자란 밭을 모두 돌며 수확한다.
+ * 다 자란 밭도 저절로 가서 수확한다(물 주기와 같은 방식: 누르지 않아도 된다).
  * 농장 화면 밖(다른 탭)에 있어도 앱이 열려 있는 동안 계속 일해서, 시작한 물 주기는 끝까지 마친다.
  * 화면은 jobs(누가 몇 번 밭에서 무엇을 하는지)만 받아서 그린다.
  */
@@ -42,8 +44,6 @@ const listeners = new Set<() => void>()
 const emit = () => listeners.forEach((fn) => fn())
 /** 물을 주거나 수확한 순간 알려 준다(농장 화면이 열려 있으면 소리를 낸다) */
 let onWatered: ((kind: JobKind) => void) | null = null
-/** 수확 버튼을 눌렀다: 다 자란 밭이 남아 있는 동안 친구들이 계속 수확한다 */
-let harvesting = false
 
 export const getFarmFriends = () => friends
 export const getFriendJobs = () => jobs
@@ -51,11 +51,10 @@ export const subscribeFarmFriends = (fn: () => void) => { listeners.add(fn); ret
 export const setOnWatered = (fn: ((kind: JobKind) => void) | null) => { onWatered = fn }
 /** 물주기 버튼: 물이 필요한 밭으로 바로 보낸다 */
 export const waterNow = () => { clearTimeout(pendingTimer); dispatch() }
-/** 수확 버튼: 다 자란 밭을 친구들이 모두 수확한다(지금 다 자란 밭이 하나도 없으면 false) */
+/** 수확 버튼: 다 자란 밭으로 바로 보낸다(지금 다 자란 밭이 하나도 없으면 false). 누르지 않아도 다 자라면 친구들이 저절로 수확한다 */
 export function harvestAll(now = Date.now()): boolean {
   const st = getFarm()
   if (!st.plots.some((p, i) => st.owned[i] && growth(p, now) === 1)) return false
-  harvesting = true
   clearTimeout(pendingTimer)
   dispatch()
   return true
@@ -87,14 +86,15 @@ const rc = (i: number) => ({ r: Math.floor(i / cols), c: i % cols })
 /** k 번째 친구가 맡는 칸인지: 혼자면 전부, 둘이면 왼쪽(가운데 줄 포함)·오른쪽 */
 const mine = (k: number, i: number) => friends.length < 2 || (k === 0 ? rc(i).c < Math.ceil(cols / 2) : rc(i).c >= Math.ceil(cols / 2))
 
-/** 할 일 목록: 물이 필요한 밭, 수확 버튼을 눌렀으면 다 자란 밭도 */
+/** 할 일 목록: 물이 필요한 밭과 다 자란 밭 */
 function workList() {
   const st = getFarm(), now = Date.now()
   const work: { plot: number; kind: JobKind }[] = []
-  st.plots.forEach((p, i) => { if (p && p.wateredAt === null && st.owned[i]) work.push({ plot: i, kind: 'water' }) })
-  const ripe = st.plots.map((_, i) => i).filter((i) => st.owned[i] && growth(st.plots[i], now) === 1)
-  if (harvesting) ripe.forEach((i) => work.push({ plot: i, kind: 'harvest' }))
-  if (harvesting && !ripe.length) harvesting = false // 다 수확하면 수확 일은 끝
+  st.plots.forEach((p, i) => {
+    if (!p || !st.owned[i]) return
+    if (p.wateredAt === null) work.push({ plot: i, kind: 'water' })
+    else if (growth(p, now) === 1) work.push({ plot: i, kind: 'harvest' })
+  })
   return work
 }
 
@@ -144,5 +144,13 @@ function schedule() {
   if (!friends.length || typeof window === 'undefined') return
   clearTimeout(pendingTimer)
   pendingTimer = window.setTimeout(dispatch, 500)
+  // 자라는 중인 밭이 있으면 가장 먼저 다 자라는 때에 다시 본다(작물이 익으면 저절로 수확하러 간다)
+  const st = getFarm(), now = Date.now()
+  const ripeAt = st.plots.flatMap((p) => (p && p.wateredAt !== null && growth(p, now) < 1 ? [p.wateredAt + cropMs(p.crop)] : []))
+  if (ripeAt.length) {
+    clearTimeout(ripeTimer)
+    ripeTimer = window.setTimeout(schedule, Math.max(0, Math.min(...ripeAt) - now) + 100)
+  }
 }
+let ripeTimer = 0
 if (typeof window !== 'undefined') { subscribeFarm(schedule); schedule() }
