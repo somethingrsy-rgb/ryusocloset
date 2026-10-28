@@ -1416,6 +1416,30 @@
     "native": true
   },
   {
+    "id": "costume_green_gingham_daisy",
+    "category": "costume",
+    "name": {
+      "ko": "초록 체크 데이지 원피스",
+      "en": "Green Gingham Daisy Dress"
+    },
+    "color": "green",
+    "colorName": {
+      "ko": "그린",
+      "en": "Green"
+    },
+    "colorHex": "#6f9a72",
+    "box": {
+      "x": 86,
+      "y": 604,
+      "w": 852,
+      "h": 760
+    },
+    "image": "assets/clothes/costume/costume_green_gingham_daisy.webp",
+    "thumb": "assets/thumbs/costume_green_gingham_daisy.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_hanbok_pink_flower",
     "category": "costume",
     "name": {
@@ -1508,6 +1532,54 @@
     },
     "image": "assets/clothes/costume/costume_lemon_sailor.webp",
     "thumb": "assets/thumbs/costume_lemon_sailor.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_lilac_daisy_tier",
+    "category": "costume",
+    "name": {
+      "ko": "라일락 데이지 프릴 원피스",
+      "en": "Lilac Daisy Tiered Dress"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 86,
+      "y": 604,
+      "w": 853,
+      "h": 760
+    },
+    "image": "assets/clothes/costume/costume_lilac_daisy_tier.webp",
+    "thumb": "assets/thumbs/costume_lilac_daisy_tier.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_lilac_lemon_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "라일락 레몬 로리타 원피스",
+      "en": "Lilac Lemon Lolita Dress"
+    },
+    "color": "purple",
+    "colorName": {
+      "ko": "퍼플",
+      "en": "Purple"
+    },
+    "colorHex": "#b9a4e8",
+    "box": {
+      "x": 75,
+      "y": 604,
+      "w": 874,
+      "h": 760
+    },
+    "image": "assets/clothes/costume/costume_lilac_lemon_lolita.webp",
+    "thumb": "assets/thumbs/costume_lilac_lemon_lolita.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1800,6 +1872,30 @@
     "native": true
   },
   {
+    "id": "costume_rainbow_petal_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "무지개 꽃잎 로리타 드레스",
+      "en": "Rainbow Petal Lolita Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 75,
+      "y": 604,
+      "w": 874,
+      "h": 760
+    },
+    "image": "assets/clothes/costume/costume_rainbow_petal_lolita.webp",
+    "thumb": "assets/thumbs/costume_rainbow_petal_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "costume_sakura_blue",
     "category": "costume",
     "name": {
@@ -1844,6 +1940,78 @@
     },
     "image": "assets/clothes/costume/costume_sakura_kimono.webp",
     "thumb": "assets/thumbs/costume_sakura_kimono.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_sakura_pink_tier",
+    "category": "costume",
+    "name": {
+      "ko": "벚꽃 핑크 프릴 원피스",
+      "en": "Sakura Pink Tiered Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 91,
+      "y": 604,
+      "w": 842,
+      "h": 760
+    },
+    "image": "assets/clothes/costume/costume_sakura_pink_tier.webp",
+    "thumb": "assets/thumbs/costume_sakura_pink_tier.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_seashell_mint",
+    "category": "costume",
+    "name": {
+      "ko": "민트 조개 진주 원피스",
+      "en": "Mint Seashell Pearl Dress"
+    },
+    "color": "mint",
+    "colorName": {
+      "ko": "민트",
+      "en": "Mint"
+    },
+    "colorHex": "#a9dcc8",
+    "box": {
+      "x": 83,
+      "y": 604,
+      "w": 858,
+      "h": 760
+    },
+    "image": "assets/clothes/costume/costume_seashell_mint.webp",
+    "thumb": "assets/thumbs/costume_seashell_mint.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_sky_cloud_tier",
+    "category": "costume",
+    "name": {
+      "ko": "하늘 구름 프릴 원피스",
+      "en": "Sky Cloud Tiered Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 62,
+      "y": 604,
+      "w": 900,
+      "h": 758
+    },
+    "image": "assets/clothes/costume/costume_sky_cloud_tier.webp",
+    "thumb": "assets/thumbs/costume_sky_cloud_tier.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1964,6 +2132,30 @@
     },
     "image": "assets/clothes/costume/costume_strawberry_cardigan_pink.webp",
     "thumb": "assets/thumbs/costume_strawberry_cardigan_pink.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "costume_strawberry_lemon_tier",
+    "category": "costume",
+    "name": {
+      "ko": "딸기 레몬 프릴 원피스",
+      "en": "Strawberry Lemon Tiered Dress"
+    },
+    "color": "ivory",
+    "colorName": {
+      "ko": "아이보리",
+      "en": "Ivory"
+    },
+    "colorHex": "#f6ecd6",
+    "box": {
+      "x": 62,
+      "y": 604,
+      "w": 900,
+      "h": 759
+    },
+    "image": "assets/clothes/costume/costume_strawberry_lemon_tier.webp",
+    "thumb": "assets/thumbs/costume_strawberry_lemon_tier.webp",
     "zIndex": 41,
     "native": true
   },
