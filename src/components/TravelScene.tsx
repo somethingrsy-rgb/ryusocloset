@@ -70,12 +70,18 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   // 가로로 넓은 화면: 장소 그림(세로 그림)을 늘려 꽉 채우면 너무 크게 확대돼 보이므로, 방처럼 세로 무대에 그리고 양옆은 그림을 이어 붙여 채운다
   const rootRef = useRef<HTMLDivElement>(null)
   const [wide, setWide] = useState(false)
+  // 무대 양옆으로 이어 붙인 그림이 보이는 만큼(무대 너비에 대한 %): 그 자리까지 걸어 다닐 수 있다
+  const [sideX, setSideX] = useState(0)
   useEffect(() => {
     const el = rootRef.current
     if (!el) return
-    const measure = () => setWide(el.clientWidth > el.clientHeight)
+    const measure = () => {
+      setWide(el.clientWidth > el.clientHeight)
+      const box = boxRef.current
+      setSideX(box && box.clientWidth ? Math.max(0, (el.clientWidth / box.clientWidth - 1) * 50) : 0)
+    }
     const ro = new ResizeObserver(measure)
-    ro.observe(el); measure()
+    ro.observe(el); if (boxRef.current) ro.observe(boxRef.current); measure()
     return () => ro.disconnect()
   }, [])
   const stage = !!layout || wide
@@ -192,7 +198,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
 
   const walkTo = (v: Vec) => {
     if (blocked) return
-    target.current = { ...clampToBounds(v), y: Math.min(layout ? 100 : WALK_BOUNDS.maxY, Math.max(minY, v.y)) }
+    // 가로 화면에서는 무대 양옆(이어 붙인 그림)까지 화면 끝 가까이 걸어갈 수 있다
+    target.current = { x: Math.min(WALK_BOUNDS.maxX + sideX, Math.max(WALK_BOUNDS.minX - sideX, v.x)), y: Math.min(layout ? 100 : WALK_BOUNDS.maxY, Math.max(minY, v.y)) }
     setDestination(target.current)
     setWalking(true)
     cancelAnimationFrame(frame.current)
@@ -202,7 +209,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   useEffect(() => () => cancelAnimationFrame(frame.current), [])
 
   const onTap = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return
+    if (e.button !== 0 || (e.target as HTMLElement).closest('button, [role=dialog]')) return
     boxRef.current?.focus({ preventScroll: true })
     const r = boxRef.current!.getBoundingClientRect()
     walkTo({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 })
@@ -227,7 +234,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   const collected = popup ? travelItem(popup) : undefined
 
   return (
-    <div ref={rootRef} className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5" style={{ containerType: 'size' }}>
+    <div ref={rootRef} className="relative flex h-full items-center justify-center overflow-hidden rounded-3xl bg-white/60 shadow-inner ring-1 ring-black/5" style={{ containerType: 'size' }} onPointerUp={onTap}>
       {stage && <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <div className="relative" style={{ width: `min(100cqw, calc((100cqh - ${ROOM_STAGE_DIFF}dvh) * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` }}>
           {[-1, 0, 1].flatMap(ky => [-2, -1, 0, 1, 2].map(k => ({ k, ky }))).filter(({ k, ky }) => k || ky).map(({ k, ky }) => <div key={`${k}_${ky}`} className="absolute" style={{ left: `calc(${k * 100}% - 1px)`, top: `calc(${ky * 100}% - 1px)`, width: 'calc(100% + 2px)', height: 'calc(100% + 2px)', transform: `scale(${Math.abs(k) % 2 ? -1 : 1}, ${ky ? -1 : 1})` }}>
@@ -238,7 +245,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           </div>)}
         </div>
       </div>}
-      <div ref={boxRef} tabIndex={0} aria-label={lang === 'ko' ? p.ko : p.en} {...keys} className={`relative isolate touch-none select-none ${stage ? '' : 'h-full w-full'}`} style={stage ? { width: `min(100cqw, calc((100cqh - ${ROOM_STAGE_DIFF}dvh) * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` } : undefined} onPointerUp={onTap}>
+      <div ref={boxRef} tabIndex={0} aria-label={lang === 'ko' ? p.ko : p.en} {...keys} className={`relative isolate touch-none select-none ${stage ? '' : 'h-full w-full'}`} style={stage ? { width: `min(100cqw, calc((100cqh - ${ROOM_STAGE_DIFF}dvh) * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` } : undefined}>
         {assets ? <>
           <img src={assets.floor} alt="" className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${assets.floorH / ROOM_H * 100}%` }} draggable={false} />
           <img src={assets.wall} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
@@ -279,7 +286,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             kid={kidName}
             me={pos}
             // 장소 그림은 바닥(풀밭 등) 그림이 시작하는 곳보다 조금 아래부터: 하늘에 떠 보이지 않게
-            floor={{ minX: 8, maxX: 92, minY: layout ? minY + 2 : Math.max(minY, 100 - p.floorH / ROOM_H * 100 + 8), maxY: layout ? 96 : WALK_BOUNDS.maxY }}
+            floor={{ minX: 8 - sideX, maxX: 92 + sideX, minY: layout ? minY + 2 : Math.max(minY, 100 - p.floorH / ROOM_H * 100 + 8), maxY: layout ? 96 : WALK_BOUNDS.maxY }}
             // 동물 키는 그 자리에 선 아바타 키의 2/3(아바타 크기가 방·깊이마다 바뀌면 같이 바뀐다). 아바타보다 아래(앞)에 있으면 아바타 앞에 그린다
             size={(y) => GUEST_PER_AVATAR_W * PARTY_GUEST_SCALE * (layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * depthScale(y))}
             z={(y) => avatarLayer + (y >= posRef.current.y ? 1 : -1)}
