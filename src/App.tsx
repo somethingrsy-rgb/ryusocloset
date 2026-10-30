@@ -21,7 +21,7 @@ import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
 import { loadImage, renderOutfitCanvas, renderThumb } from './lib/exportPng'
 import type { RoomExportViewport } from './lib/roomExportBounds'
 import { CAMP_ASSETS, ROOM_ASSETS, renderRoomCanvas, sceneAssets } from './lib/exportRoom'
-import { AVATARS, baseFiles } from './lib/avatars'
+import { AVATARS, baseFiles, getAvatar, subscribeAvatar } from './lib/avatars'
 import { ITEMS, ITEM_BY_ID, assetUrl, isCustomItem } from './lib/items'
 import { CATEGORIES, type Category } from './lib/layers'
 import { toggleItem } from './lib/outfit'
@@ -147,6 +147,18 @@ export default function App() {
     tweakHistory.current = []
     setCanUndo(false)
   }, [outfit])
+  // 아바타를 바꾸면 옷과 머리는 기본으로: 입은 옷·가발·위치 조절을 모두 벗긴다(머리는 늘 그 아바타의 기본 머리)
+  useEffect(() => {
+    let id = getAvatar().id
+    return subscribeAvatar(() => {
+      const now = getAvatar().id
+      if (now === id) return // 이름만 바꾼 경우
+      id = now
+      setOutfit({})
+      setTweaks({})
+      setSelCat(null)
+    })
+  }, [])
 
   /** 조절값을 바꾼다. 끌기·핀치처럼 0.5초 안에 이어지는 변경은 하나로 묶어 한 번에 되돌린다 */
   const editTweaks = (next: Tweaks) => {
