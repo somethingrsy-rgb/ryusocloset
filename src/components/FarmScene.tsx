@@ -10,7 +10,10 @@ import { FigureLayers } from './FigureLayers'
 import { Modal } from './Modal'
 import { PILL, PillText } from './pill'
 import { CoinIcon } from './Icons'
-import { CALL_ANIMALS } from '../lib/animalCalls'
+import { guestFace, isAvatarGuest } from '../lib/party'
+import { setGuestLooks } from '../lib/guestLooks'
+import { getAvatar } from '../lib/avatars'
+import { FriendFigure } from './FriendFigure'
 import { GUEST_PER_AVATAR_W, PartyInvite } from './PartyGuests'
 import { getMeet, notCollected, subscribeMeet } from '../lib/meet'
 import { MAX_FARM_FRIENDS, WALK_MS, claimed, setFarmCols, type Side, getFarmFriends, getFriendJobs, harvestAll, setFarmFriends, setOnWatered, subscribeFarmFriends, waterNow } from '../lib/farmFriends'
@@ -361,7 +364,6 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
 
         {/* 같이 농사짓는 친구들: 평소에는 밭 둘레를 따로따로 거닐고, 일이 생기면 자기 구역(둘이면 왼쪽 반·오른쪽 반)의 가까운 밭부터 줄을 따라 차례로 물을 주거나 수확한다 */}
         {friends.map((f, k) => {
-          const a = CALL_ANIMALS[f]
           const fw = aw * FRIEND_PER_AVATAR_W // 친구 그림 칸 너비(%, 정사각형)
           const fh = fw * (L.w / L.h) // 같은 칸의 높이(그림 높이에 대한 %)
           const job = jobs[f]
@@ -372,16 +374,20 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
           const moving = (!!job && !job.watering) || strolling
           const walkMs = job ? job.walkMs : stroll?.ms ?? WALK_MS
           return (
-            <div key={a.img} aria-hidden className="pointer-events-none absolute" style={{ left: `${feet.x - fw / 2}%`, top: `${feet.y - fh}%`, width: `${fw}%`, aspectRatio: '1 / 1', zIndex: job ? 11 : 9, transition: `left ${walkMs}ms linear, top ${walkMs}ms linear` }}>
+            <div key={f} aria-hidden className="pointer-events-none absolute" style={{ left: `${feet.x - fw / 2}%`, top: `${feet.y - fh}%`, width: `${fw}%`, aspectRatio: '1 / 1', zIndex: job ? 11 : 9, transition: `left ${walkMs}ms linear, top ${walkMs}ms linear` }}>
               <div className={`relative h-full w-full ${moving ? 'farm-walk' : ''}`}>
-                <img src={assetUrl(`cafe/stand/${a.img}_stand.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain" style={{ transform: !job && stroll?.dir === -1 ? 'scaleX(-1)' : undefined }} />
+                {/* 동물 친구는 서 있는 그림, 아바타 친구는 고른 옷을 입은 아바타(내 아바타와 같은 크기) */}
+                <FriendFigure g={f} flip={!job && stroll?.dir === -1} avatarW={1 / FRIEND_PER_AVATAR_W} />
+                {/* 물뿌리개·바구니는 손 높이에: 아바타 친구는 키가 커서 손이 칸 위쪽에 있다 */}
+                <span className="absolute inset-0 block" style={{ transform: isAvatarGuest(f) ? 'translate(18%, -50%)' : undefined }}>
                 {job?.kind === 'water' && <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '62%', top: '42%', width: '46%', transformOrigin: '15% 60%', transform: job.watering ? 'rotate(32deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />}
                 {job?.kind === 'water' && job.watering && <span className="absolute text-sm" style={{ left: '102%', top: '56%' }}>💧</span>}
                 {/* 수확: 바구니를 들고 가서, 밭에서 바구니를 살짝 내렸다 들며 담는다 */}
                 {job?.kind === 'harvest' && <img src={assetUrl('assets/farm/icon_basket.webp')} alt="" draggable={false} className="absolute" style={{ left: '58%', top: '44%', width: '50%', transform: job.watering ? 'translateY(12%) rotate(-8deg)' : 'none', transition: 'transform 0.2s' }} />}
                 {job?.kind === 'harvest' && job.watering && <span className="absolute text-sm" style={{ left: '96%', top: '30%' }}>✨</span>}
+                </span>
               </div>
-              {job && job.n === Math.max(...Object.values(jobs).map((j) => j.n)) && <p className="absolute bottom-[98%] left-1/2 m-0 w-max -translate-x-1/2 rounded-2xl bg-white px-2 py-0.5 text-[11px] font-bold text-[#6b4b52] shadow">{job.line}</p>}
+              {job && job.n === Math.max(...Object.values(jobs).map((j) => j.n)) && <p className={`absolute ${isAvatarGuest(f) ? 'bottom-[196%]' : 'bottom-[98%]'} left-1/2 m-0 w-max -translate-x-1/2 rounded-2xl bg-white px-2 py-0.5 text-[11px] font-bold text-[#6b4b52] shadow`}>{job.line}</p>}
             </div>
           )
         })}
@@ -399,7 +405,7 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
         <div className="absolute flex items-center gap-1" style={{ right: '2.5%', top: '1.8%', zIndex: 12 }}>
           {/* 같이 농사지을 친구 고르기: 고른 친구 얼굴(혼자면 🐾) */}
           <button aria-label={ko ? '같이 농사지을 친구' : 'Farm friends'} onClick={() => setPicking(true)} className={PILL}>
-            <PillText>{friends.length ? friends.map((f) => <img key={f} src={assetUrl(`cafe/face/${CALL_ANIMALS[f].img}.webp`)} alt="" draggable={false} className="-mx-0.5 inline-block h-6 w-6 object-contain align-middle" />) : '🐾'}</PillText>
+            <PillText>{friends.length ? friends.map((f) => <img key={f} src={assetUrl(guestFace(f))} alt="" draggable={false} className="-mx-0.5 inline-block h-6 w-6 object-contain align-middle" />) : '🐾'}</PillText>
           </button>
           <span className={PILL}><PillText><CoinIcon /> {farm.coins}</PillText></span>
         </div>
@@ -472,8 +478,8 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
         </Modal>
       )}
       {picking && (
-        <PartyInvite here={[]} initial={friends} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} note={`수학으로 모은 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
-          cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a) => { setPicking(false); setFarmFriends(a) }} />
+        <PartyInvite here={[]} initial={friends} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`아바타 친구와 수학으로 모은 동물 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
+          cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
       )}
     </section>
   )

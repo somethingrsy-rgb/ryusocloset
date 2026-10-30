@@ -395,11 +395,10 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
         </div>
       )}
       {inviting && <PartyInvite here={party} avatars={{ me: getAvatar().id }} locked={CALL_ANIMALS.map((_, i) => i).filter((i) => !meet.met.includes(i))}
-        note={meet.met.length ? `수학으로 모은 친구만 초대할 수 있어요 · 모은 친구 ${meet.met.length}/${CALL_ANIMALS.length}` : '아직 모은 친구가 없어요. 수학 문제를 10개 풀 때마다 친구를 한 명씩 만나요!'} onClose={() => setInviting(false)} onInvite={(animals, looks = {}) => {
+        note={meet.met.length ? `수학으로 모은 친구만 초대할 수 있어요 · 모은 친구 ${meet.met.length}/${CALL_ANIMALS.length}` : '아직 모은 친구가 없어요. 수학 문제를 10개 풀 때마다 친구를 한 명씩 만나요!'} onClose={() => setInviting(false)} onInvite={(animals, looks) => {
         setInviting(false)
         // 아바타 친구는 고른 옷을 입고 온다(다음에 초대할 때도 그 옷이 먼저 골라져 있다)
         setGuestLooks(looks)
-        animals = [...animals, ...Object.keys(looks).map(avatarGuest)]
         // 다른 장소에서 하던 파티는 끝낸다(그 친구들 주문서도 지운다)
         if (partyNow.place && partyNow.place !== placeId) for (const t of getKitchen().tickets) if (isPartySeat(t.seat)) actKitchen({ type: 'cancel', seat: t.seat })
         setPartyState({ place: placeId, guests: [...party, ...animals.filter((a) => !party.includes(a))] })

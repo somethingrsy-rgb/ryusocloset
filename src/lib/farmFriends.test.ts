@@ -7,6 +7,8 @@ describe('농장 친구', () => {
   it('친구 번호는 겹치거나 없는 친구를 빼고 2명까지', () => {
     expect(sanitizeFriends([3, 3, 9, -1, 1.5, 0, 5])).toEqual([3, 0])
     expect(sanitizeFriends('x')).toEqual([])
+    // 아바타 친구(AVATAR_GUEST + 아바타 순서)도 고를 수 있다
+    expect(sanitizeFriends([22, 2, 99])).toEqual([22, 2])
   })
   it('친구가 있으면 물이 필요한 밭에 저절로 가서 물을 준다(화면이 없어도: 다른 탭에 가 있어도 끝까지)', async () => {
     vi.useFakeTimers()

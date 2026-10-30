@@ -1,4 +1,5 @@
-import { CALL_ANIMALS } from './animalCalls'
+import { getAvatar, subscribeAvatar } from './avatars'
+import { avatarGuest, canJoin, validGuest } from './party'
 import { getMeet, subscribeMeet } from './meet'
 import { actFarm, getFarm, growth, subscribeFarm } from './farm'
 
@@ -37,11 +38,11 @@ const LINES: Record<JobKind, string[]> = {
 }
 
 export function sanitizeFriends(v: unknown): number[] {
-  return Array.isArray(v) ? [...new Set(v.filter((a): a is number => Number.isInteger(a) && a >= 0 && a < CALL_ANIMALS.length))].slice(0, MAX_FARM_FRIENDS) : []
+  return Array.isArray(v) ? [...new Set(v.filter(validGuest))].slice(0, MAX_FARM_FRIENDS) : []
 }
-/** 고른 친구(저장) 중 수학으로 모은 친구만 같이 한다(모으지 않은 친구는 같이 못 한다) */
+/** 고른 친구(저장) 중 같이 할 수 있는 친구만: 동물 친구는 수학으로 모은 친구만, 아바타 친구는 지금 내 아바타가 아니면 */
 let chosen: number[] = (() => { try { return sanitizeFriends(JSON.parse(localStorage.getItem(KEY) ?? '[]')) } catch { return [] } })()
-const onlyCollected = () => chosen.filter((a) => getMeet().met.includes(a))
+const onlyCollected = () => chosen.filter((a) => canJoin(a, getMeet().met) && a !== avatarGuest(getAvatar().id))
 let friends: number[] = onlyCollected()
 let jobs: Record<number, FriendJob> = {}
 let jobNo = 0
@@ -82,7 +83,10 @@ export function setFarmFriends(a: number[]) {
   schedule()
 }
 // 친구를 새로 모으면(수학) 같이 할 수 있는 친구가 바뀐다
-subscribeMeet(() => { const next = onlyCollected(); if (next.join() !== friends.join()) { friends = next; emit(); schedule() } })
+const refresh = () => { const next = onlyCollected(); if (next.join() !== friends.join()) { friends = next; emit(); schedule() } }
+subscribeMeet(refresh)
+// 내 아바타를 바꾸면 그 아바타는 친구에서 빠진다
+subscribeAvatar(refresh)
 
 /** 지금 친구가 맡고 있는 밭인지(아바타가 같은 밭에 가지 않게) */
 export const claimed = (plot: number) => Object.values(jobs).some((j) => j.target === plot)
