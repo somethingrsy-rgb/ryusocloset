@@ -113,7 +113,8 @@ export default function App() {
   const [selCat, setSelCat] = useState<Category | null>(null)
   const [dragOver, setDragOver] = useState(false)
   useItemsVersion()
-  const [category, setCategory] = useState<Category>('top')
+  // 코디 탭을 열면 테마옷부터 보여 준다
+  const [category, setCategory] = useState<Category>('costume')
   const [propGroup, setPropGroup] = useState<RoomGroup>('furniture')
   const [saved, setSaved] = useState<SavedOutfit[]>(loadSaved)
   const [room, setRoom] = useState<RoomState>(loadRoom)
@@ -389,6 +390,8 @@ export default function App() {
         setMode(m)
         setSelection(null)
         setSelCat(null)
+        // 다른 탭에서 코디 탭으로 오면 테마옷 칸부터
+        if (m === 'closet' && mode !== 'closet') setCategory('costume')
       }}
       className={`flex shrink-0 min-h-11 flex-1 items-center justify-center gap-0 rounded-full px-0.5 font-bold whitespace-nowrap transition ${
         mode === m ? 'bg-blush text-white shadow' : 'text-cocoa-soft'
