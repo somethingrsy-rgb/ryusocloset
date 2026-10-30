@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CALL_ANIMALS } from './animalCalls'
-import { PERSONAL, arrive, byeLine, eatLine, helloLine, leaveAll, orderLine, partyLine, partyWish, sanitizeParty, stepGuests } from './party'
+import { AVATAR_GUEST, PERSONAL, arrive, avatarGuest, guestAvatar, guestName, isAvatarGuest, byeLine, eatLine, helloLine, leaveAll, orderLine, partyLine, partyWish, sanitizeParty, stepGuests } from './party'
 import { menuById } from './recipes'
 
 const floor = { minX: 10, maxX: 90, minY: 70, maxY: 95 }
@@ -66,6 +66,19 @@ describe('파티 음식', () => {
     expect(sanitizeParty({ place: 'home', guests: [1, 1, 3, 99, -1, 2.5] })).toEqual({ place: 'home', guests: [1, 3] })
     expect(sanitizeParty({ place: 'home', guests: [] })).toEqual({ place: null, guests: [] })
     expect(sanitizeParty('x')).toEqual({ place: null, guests: [] })
+  })
+  it('아바타 친구도 손님 번호(AVATAR_GUEST + 아바타 순서)로 초대할 수 있고, 이름·말이 아바타에 맞다', () => {
+    const yuha = avatarGuest('yuha')
+    expect(isAvatarGuest(yuha)).toBe(true)
+    expect(guestAvatar(yuha)?.id).toBe('yuha')
+    expect(guestName(yuha)).toBe('유하')
+    expect(sanitizeParty({ place: 'home', guests: [yuha, 2, AVATAR_GUEST + 99] })).toEqual({ place: 'home', guests: [yuha, 2] })
+    const rnd = seeded(5)
+    for (let i = 0; i < 40; i++) {
+      const line = partyLine(yuha, [1], '유엘', rnd)
+      expect(line).not.toMatch(/[{}]|undefined/)
+    }
+    for (let i = 0; i < 40; i++) expect(partyLine(1, [yuha], '유엘', rnd)).not.toContain('undefined')
   })
   it('친구는 카페 메뉴 중 하나를 주문하고, 주문·먹을 때 말을 한다', () => {
     const rnd = seeded(3)

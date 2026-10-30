@@ -1,6 +1,6 @@
 import raw from '../data/items.json'
 import { CATEGORIES, type Category } from './layers'
-import { baseFiles, getAvatar, getHairstyle, hairZ } from './avatars'
+import { baseFiles, getAvatar, getHairstyle, hairZ, type Avatar } from './avatars'
 import type { Item } from './types'
 
 export const ITEMS: Item[] = [...(raw as Item[])]
@@ -23,8 +23,7 @@ export const BASE_LAYERS = {
  * 지금 입은 것에 맞는 몸·머리 그림. 가발(wig)을 쓰면 기본 머리는 숨기고(머리 레이어 없음),
  * 머리가 몸에 그려져 있는 아바타는 머리 없는 몸으로 바꾼다. 신발을 신으면 맨발 몸.
  */
-export function baseFor(outfit: { wig?: string; shoes?: string }) {
-  const a = getAvatar()
+export function baseFor(outfit: { wig?: string; shoes?: string }, a: Avatar = getAvatar()) {
   const style = getHairstyle(a)
   const wigged = !!outfit.wig
   const bodyName = wigged && a.baldBody ? a.baldBody : (style.body ?? 'body')
