@@ -77,6 +77,12 @@ MANUAL: dict[str, dict] = {
     'costume_green_gingham_daisy': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
     'costume_seashell_mint': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
     'costume_strawberry_lemon_tier': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
+    'dress_starry_navy_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
+    'dress_cherry_pink_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
+    'dress_strawberry_red_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
+    'dress_snow_blue_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
+    'dress_tulip_pink_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
+    'dress_honeybee_yellow_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
 }
 OVERRIDES: dict[str, tuple[int, int]] = {
     'dress_card_red': (760, 165),  # 목 장식이 따로 떨어져 있어서 자동 감지가 안 됨 (소매 사이 몸통 폭)
