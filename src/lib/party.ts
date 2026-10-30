@@ -1,3 +1,4 @@
+import { AVATARS, avatarName, type Avatar } from './avatars'
 import { CALL_ANIMALS, kidWords } from './animalCalls'
 import { MENU } from './recipes'
 
@@ -5,7 +6,21 @@ import { MENU } from './recipes'
  * 집 파티: 초대한 카페 동물 친구들이 집에 들어와 인사하고, 돌아다니며 이야기한다.
  * 위치는 집 무대의 % 좌표(x 0~100, y 는 발 높이). 움직임은 순수 함수라 테스트할 수 있다.
  */
+/**
+ * 손님 번호: 카페 동물 친구는 동물 번호(0~7), 다른 아바타는 AVATAR_GUEST + 아바타 순서.
+ * 주방 주문서 자리(PARTY_SEAT + 손님 번호)·말풍선·걷기는 모두 이 번호 하나로 다룬다.
+ */
+export const AVATAR_GUEST = 20
+export const avatarGuest = (avatarId: string) => AVATAR_GUEST + AVATARS.findIndex((a) => a.id === avatarId)
+export const isAvatarGuest = (g: number) => g >= AVATAR_GUEST
+/** 아바타 손님이면 그 아바타 */
+export const guestAvatar = (g: number): Avatar | undefined => (isAvatarGuest(g) ? AVATARS[g - AVATAR_GUEST] : undefined)
+export const validGuest = (g: unknown): g is number => Number.isInteger(g) && (((g as number) >= 0 && (g as number) < CALL_ANIMALS.length) || ((g as number) >= AVATAR_GUEST && (g as number) < AVATAR_GUEST + AVATARS.length))
+/** 손님 이름(동물 친구 이름 또는 아바타 이름) */
+export const guestName = (g: number) => { const a = guestAvatar(g); return a ? avatarName(a) : CALL_ANIMALS[g]?.name ?? '' }
+
 export interface Guest {
+  /** 손님 번호(동물 번호 또는 AVATAR_GUEST + 아바타 순서) */
   animal: number
   x: number
   y: number
@@ -101,11 +116,13 @@ const SOLO = [
   '{call}, 다음엔 우리 집에도 놀러 와!',
 ]
 const TO_FRIEND = ['{friend}, 같이 놀자!', '{friend}, 너도 왔구나! 반가워!', '{friend}, 우리 숨바꼭질 할래?', '{friend}, 노래 불러 줄래?']
+/** 아바타 친구가 하는 말 */
+const AVATAR_OWN = ['내 옷 예쁘지? 헤헤', '{call}, 우리 같이 춤추자!', '여기 진짜 예쁘다!', '{call}, 다음엔 내가 초대할게!', '우리 옷 바꿔 입어 볼래?']
 /** 동물마다 좋아하는 것 */
 const OWN = ['꿀 케이크 먹고 싶다~', '깡충깡충! 여기서 뛰어도 돼?', '이 쿠션 위에서 식빵 구워도 돼?', '공 있어? 공놀이 하자!', '삐약삐약~ 노래 들려줄게!', '꽥꽥! 여기 연못은 없어?', '도토리 숨길 곳이 많네!', '데굴데굴~ 바닥이 푹신해!']
 
 /** 친구 이름 부르기: 받침이 있으면 아, 없으면 야 (곰이야, 몽실아) */
-const callFriend = (animal: number) => kidWords(CALL_ANIMALS[animal].name).call
+const callFriend = (g: number) => kidWords(guestName(g)).call
 
 export function partyLine(animal: number, others: number[], kidName?: string, rnd: () => number = Math.random): string {
   const r = rnd()
@@ -113,7 +130,7 @@ export function partyLine(animal: number, others: number[], kidName?: string, rn
     const f = others[Math.floor(rnd() * others.length)]
     return TO_FRIEND[Math.floor(rnd() * TO_FRIEND.length)].replace('{friend}', callFriend(f))
   }
-  if (r < 0.55) return OWN[animal]
+  if (r < 0.55) return isAvatarGuest(animal) ? AVATAR_OWN[Math.floor(rnd() * AVATAR_OWN.length)].replace('{call}', kidWords(kidName).call) : OWN[animal]
   return SOLO[Math.floor(rnd() * SOLO.length)].replace('{call}', kidWords(kidName).call)
 }
 
@@ -122,7 +139,7 @@ export interface PartyState { place: string | null; guests: number[] }
 const KEY = 'ryuso.party.v1'
 export function sanitizeParty(v: unknown): PartyState {
   const r = (v && typeof v === 'object' ? v : {}) as Partial<PartyState>
-  const guests = Array.isArray(r.guests) ? [...new Set(r.guests.filter((a) => Number.isInteger(a) && a >= 0 && a < CALL_ANIMALS.length))] : []
+  const guests = Array.isArray(r.guests) ? [...new Set(r.guests.filter(validGuest))] : []
   return typeof r.place === 'string' && guests.length ? { place: r.place, guests } : { place: null, guests: [] }
 }
 let party: PartyState = (() => { try { return sanitizeParty(JSON.parse(localStorage.getItem(KEY) ?? 'null')) } catch { return sanitizeParty(null) } })()

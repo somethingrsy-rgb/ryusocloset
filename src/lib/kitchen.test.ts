@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CROPS, defaultFarm, reduceFarm } from './farm'
 import { PARTY_SEAT, defaultKitchen, isPartySeat, missing, reduceKitchen, sanitizeKitchen, ticketAnimal } from './kitchen'
 import { MENU, PACK, PANTRY, STEPS, ingredient, needList } from './recipes'
+import { AVATAR_GUEST, avatarGuest } from './party'
 
 describe('레시피', () => {
   it('모든 메뉴의 재료·단계가 실제로 있고, 요리해서 팔면 재료를 그냥 파는 것보다 더 번다', () => {
@@ -84,5 +85,13 @@ describe('파티 주문서', () => {
     expect(k.tickets.map((t) => t.seat)).toEqual([3])
     expect(reduceKitchen(k, { type: 'cancel', seat: PARTY_SEAT + 5 })).toBe(k)
     expect(reduceKitchen(k, { type: 'order', seat: PARTY_SEAT + 8, menu: 'latte' })).toBe(k)
+    // 아바타 친구 주문서: PARTY_SEAT + 아바타 손님 번호
+    const av = PARTY_SEAT + avatarGuest('yuel')
+    const k2 = reduceKitchen(k, { type: 'order', seat: av, menu: 'latte' })
+    expect(k2.tickets.some((t) => t.seat === av)).toBe(true)
+    expect(isPartySeat(av)).toBe(true)
+    expect(ticketAnimal(av)).toBe(avatarGuest('yuel'))
+    expect(sanitizeKitchen(k2).tickets.some((t) => t.seat === av)).toBe(true)
+    expect(reduceKitchen(k, { type: 'order', seat: PARTY_SEAT + AVATAR_GUEST + 99, menu: 'latte' })).toBe(k)
   })
 })

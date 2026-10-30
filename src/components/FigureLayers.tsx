@@ -2,6 +2,7 @@ import { memo } from 'react'
 import { ITEM_BY_ID, assetUrl, baseFor } from '../lib/items'
 import { wornItems } from '../lib/outfit'
 import { cssTransform, effectiveZ } from '../lib/tweaks'
+import type { Avatar } from '../lib/avatars'
 import type { Outfit, Tweaks } from '../lib/types'
 import { useAvatar } from '../lib/useAvatar'
 
@@ -15,14 +16,17 @@ export const FigureLayers = memo(function FigureLayers({
   outfit,
   tweaks = {},
   animate = true,
+  avatar,
 }: {
   outfit: Outfit
   tweaks?: Tweaks
   animate?: boolean
+  /** 다른 아바타(파티에 초대한 친구)를 그릴 때. 없으면 지금 고른 아바타 */
+  avatar?: Avatar
 }) {
   useAvatar() // 아바타를 바꾸면 다시 그린다
   const items = wornItems(outfit, ITEM_BY_ID, tweaks)
-  const bl = baseFor(outfit)
+  const bl = baseFor(outfit, avatar)
   const body = bl.body
   return (
     <>

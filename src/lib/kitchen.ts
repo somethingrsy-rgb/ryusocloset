@@ -1,6 +1,7 @@
 import { actFarm, getFarm, type FarmState } from './farm'
 import { PACK, PACK_PRICE, PANTRY, isCrop, menuById, needList, type PantryId } from './recipes'
 import { isRestoring } from './restoreGuard'
+import { validGuest } from './party'
 
 /**
  * 주방: 카페에서 받은 주문서와 냉장고 속 기본 재료.
@@ -25,10 +26,10 @@ const count = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Mat
 /** 파티 친구 주문서 자리: PARTY_SEAT + 동물 번호(0~7). 카페 손님 자리는 0~7 */
 export const PARTY_SEAT = 10
 const SEATS = 8
-/** 쓸 수 있는 자리: 카페 0~7, 파티 PARTY_SEAT~PARTY_SEAT+7 */
-const validSeat = (seat: unknown): seat is number => Number.isInteger(seat) && (((seat as number) >= 0 && (seat as number) < SEATS) || ((seat as number) >= PARTY_SEAT && (seat as number) < PARTY_SEAT + SEATS))
+/** 쓸 수 있는 자리: 카페 0~7, 파티 PARTY_SEAT + 손님 번호(동물 친구 0~7, 아바타 친구 AVATAR_GUEST~) */
+const validSeat = (seat: unknown): seat is number => Number.isInteger(seat) && (((seat as number) >= 0 && (seat as number) < SEATS) || ((seat as number) >= PARTY_SEAT && validGuest((seat as number) - PARTY_SEAT)))
 export const isPartySeat = (seat: number) => seat >= PARTY_SEAT
-/** 주문서 자리의 동물 번호(카페 자리 i 의 손님은 동물 i) */
+/** 주문서 자리의 손님 번호(카페 자리 i 의 손님은 동물 i, 파티 자리는 동물 번호 또는 아바타 손님 번호) */
 export const ticketAnimal = (seat: number) => (seat >= PARTY_SEAT ? seat - PARTY_SEAT : seat)
 
 export function sanitizeKitchen(value: unknown): KitchenState {

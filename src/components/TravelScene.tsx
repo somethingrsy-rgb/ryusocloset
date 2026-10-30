@@ -14,7 +14,8 @@ import { avatarName, avatarVersion, getAvatar, subscribeAvatar } from '../lib/av
 import { PARTY_SEAT, actKitchen, getKitchen, isPartySeat, subscribeKitchen, ticketAnimal } from '../lib/kitchen'
 import { getMeet, subscribeMeet } from '../lib/meet'
 import { CALL_ANIMALS } from '../lib/animalCalls'
-import { eatLine, getParty, orderLine, partyWish, setPartyState, subscribeParty } from '../lib/party'
+import { avatarGuest, eatLine, getParty, orderLine, partyWish, setPartyState, subscribeParty } from '../lib/party'
+import { setGuestLooks } from '../lib/guestLooks'
 import { menuById } from '../lib/recipes'
 import { Ico } from './CafeGame'
 
@@ -106,7 +107,9 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   const partyNow = useSyncExternalStore(subscribeParty, getParty)
   // 파티에는 수학으로 모은 친구만 초대할 수 있다(친구 모으기)
   const meet = useSyncExternalStore(subscribeMeet, getMeet)
-  const party = useMemo(() => (partyNow.place === placeId ? partyNow.guests : []), [partyNow, placeId])
+  // 내 아바타를 그 아바타로 바꾸면, 손님으로 와 있던 같은 아바타는 보이지 않게 한다(두 명이 되지 않게)
+  const meGuest = avatarGuest(getAvatar().id)
+  const party = useMemo(() => (partyNow.place === placeId ? partyNow.guests.filter((g) => g !== meGuest) : []), [partyNow, placeId, meGuest])
   const [settled] = useState(party) // 이 화면을 열 때 이미 와 있던 친구들
   const [partyEnd, setPartyEnd] = useState(false)
   // 파티 친구 주문(주방 주문서): 주문받기 → 주방에서 만들기 → 같이 먹기
@@ -295,6 +298,9 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             floor={{ minX: 8 - sideX, maxX: 92 + sideX, minY: layout ? minY + 2 : Math.max(minY, 100 - p.floorH / ROOM_H * 100 + 8), maxY: layout ? 96 : WALK_BOUNDS.maxY }}
             // 동물 키는 그 자리에 선 아바타 키의 2/3(아바타 크기가 방·깊이마다 바뀌면 같이 바뀐다). 아바타보다 아래(앞)에 있으면 아바타 앞에 그린다
             size={(y) => GUEST_PER_AVATAR_W * PARTY_GUEST_SCALE * (layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * depthScale(y))}
+            // 아바타 친구는 그 자리에 선 내 아바타와 같은 크기
+            avatarW={(y) => (layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * depthScale(y))}
+            feet={layout ? AVATAR_FEET_RATIO : 1}
             z={(y) => avatarLayer + (y >= posRef.current.y ? 1 : -1)}
             onGone={endParty}
             settled={settled}
@@ -388,9 +394,12 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           </div>
         </div>
       )}
-      {inviting && <PartyInvite here={party} locked={CALL_ANIMALS.map((_, i) => i).filter((i) => !meet.met.includes(i))}
-        note={meet.met.length ? `수학으로 모은 친구만 초대할 수 있어요 · 모은 친구 ${meet.met.length}/${CALL_ANIMALS.length}` : '아직 모은 친구가 없어요. 수학 문제를 10개 풀 때마다 친구를 한 명씩 만나요!'} onClose={() => setInviting(false)} onInvite={(animals) => {
+      {inviting && <PartyInvite here={party} avatars={{ me: getAvatar().id }} locked={CALL_ANIMALS.map((_, i) => i).filter((i) => !meet.met.includes(i))}
+        note={meet.met.length ? `수학으로 모은 친구만 초대할 수 있어요 · 모은 친구 ${meet.met.length}/${CALL_ANIMALS.length}` : '아직 모은 친구가 없어요. 수학 문제를 10개 풀 때마다 친구를 한 명씩 만나요!'} onClose={() => setInviting(false)} onInvite={(animals, looks = {}) => {
         setInviting(false)
+        // 아바타 친구는 고른 옷을 입고 온다(다음에 초대할 때도 그 옷이 먼저 골라져 있다)
+        setGuestLooks(looks)
+        animals = [...animals, ...Object.keys(looks).map(avatarGuest)]
         // 다른 장소에서 하던 파티는 끝낸다(그 친구들 주문서도 지운다)
         if (partyNow.place && partyNow.place !== placeId) for (const t of getKitchen().tickets) if (isPartySeat(t.seat)) actKitchen({ type: 'cancel', seat: t.seat })
         setPartyState({ place: placeId, guests: [...party, ...animals.filter((a) => !party.includes(a))] })

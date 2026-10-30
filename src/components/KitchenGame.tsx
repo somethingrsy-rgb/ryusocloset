@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
 import { CALL_ANIMALS } from '../lib/animalCalls'
+import { guestAvatar, guestName, isAvatarGuest } from '../lib/party'
 import { CROPS, getFarm, subscribeFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import { buyPantry, cookTicket, getKitchen, isPartySeat, missing, subscribeKitchen, ticketAnimal } from '../lib/kitchen'
@@ -182,7 +183,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
     bounce()
   }
 
-  const face = (seat: number) => assetUrl(`cafe/face/${CALL_ANIMALS[ticketAnimal(seat)].img}.webp`)
+  // 주문서 얼굴: 동물 친구는 카페 얼굴, 아바타 친구는 점프 퍼즐 얼굴 그림
+  const face = (seat: number) => { const av = guestAvatar(ticketAnimal(seat)); return assetUrl(av ? `assets/jump/face_${av.id}.webp` : `cafe/face/${CALL_ANIMALS[ticketAnimal(seat)].img}.webp`) }
   /** 다 만든 음식 가져가기: 카페 손님 것은 카페로, 파티 친구 것은 파티로 */
   const serveBtn = (seat: number, cls: string, inner: (t: string) => React.ReactNode = (t) => t) => <button onClick={() => { playTap(); onGo(isPartySeat(seat) ? 'party' : 'cafe') }} className={cls}>{inner(isPartySeat(seat) ? tx.toParty : tx.serve)}</button>
   const btn = 'min-h-11 rounded-full px-3 font-bold shadow active:scale-95 disabled:opacity-40'
@@ -192,7 +194,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const aw = L.avatarH * (1024 / 1536) / L.ratio // 아바타 너비(그림 너비에 대한 %)
   // 파티 친구 주문을 고르거나 만드는 동안: 그 친구가 주방에 와서 옆에서 같이 요리한다
   const helpSeat = cooking?.seat ?? done ?? selTicket?.seat
-  const partyA = helpSeat !== undefined && helpSeat !== null && isPartySeat(helpSeat) ? ticketAnimal(helpSeat) : null
+  // (아바타 친구 주문은 주방에 같이 오지 않는다: 같이 요리하는 그림은 동물 친구만 있다)
+  const partyA = helpSeat !== undefined && helpSeat !== null && isPartySeat(helpSeat) && !isAvatarGuest(ticketAnimal(helpSeat)) ? ticketAnimal(helpSeat) : null
   // 같이 요리하는 친구들: 파티 주문이면 그 친구가 먼저, 그다음 고른 친구(모두 2명까지)
   const crew = [...new Set([...(partyA !== null ? [partyA] : []), ...friends])].slice(0, MAX_FRIENDS)
   // 말은 한 번에 한 친구만: 단계마다 번갈아 말한다
@@ -365,7 +368,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
           const m = menuById(t.menu)!
           const on = sel === t.seat
           return (
-            <button key={t.seat} aria-pressed={on} aria-label={`${CALL_ANIMALS[ticketAnimal(t.seat)].name} ${m[lang]}`} disabled={!!cooking}
+            <button key={t.seat} aria-pressed={on} aria-label={`${guestName(ticketAnimal(t.seat))} ${m[lang]}`} disabled={!!cooking}
               onClick={() => { playTap(); setDone(null); setSel(t.seat) }}
               className={`relative flex w-[4.6rem] shrink-0 flex-col items-center rounded-2xl bg-[#fffaf0] px-1 pt-1 pb-1.5 shadow-md ring-2 transition active:scale-95 ${on ? 'ring-[#ef8d99]' : 'ring-transparent'} ${cooking && !on ? 'opacity-50' : ''}`}>
               <span aria-hidden className="absolute top-0 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ef6f86] shadow" />
@@ -414,7 +417,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
               <img src={face(selTicket.seat)} alt="" draggable={false} className={`object-contain ${phoneL ? 'h-7 w-7' : 'h-9 w-9'}`} />
               <Ico id={menu.id} className={phoneL ? 'h-8 w-8' : 'h-10 w-10'} />
               <div className="min-w-0 flex-1">
-                <p className={`m-0 text-xs font-bold text-black/45 ${phoneL ? 'hidden' : ''}`}>{tx.order(CALL_ANIMALS[ticketAnimal(selTicket.seat)].name)}</p>
+                <p className={`m-0 text-xs font-bold text-black/45 ${phoneL ? 'hidden' : ''}`}>{tx.order(guestName(ticketAnimal(selTicket.seat)))}</p>
                 <p className="m-0 truncate text-base font-black text-[#8a4b2a]">{menu[lang]} {!isPartySeat(selTicket.seat) && <span className="text-sm font-bold text-[#c9751f]">+{menu.price}<CoinIcon /></span>}</p>
               </div>
             </div>
