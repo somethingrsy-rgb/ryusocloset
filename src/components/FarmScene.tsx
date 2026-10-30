@@ -443,15 +443,6 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
               )
             })}
           </div>
-          {/* 수확량: 바구니에 든 작물 */}
-          <div className={`flex justify-center rounded-2xl bg-white/80 px-2 py-1.5 ${wide ? 'gap-1.5' : 'gap-4'}`} aria-label={ko ? '수확량' : 'Harvest count'}>
-            {CROPS.map((c) => (
-              <span key={c.id} className="flex items-center gap-0.5 text-sm font-extrabold whitespace-nowrap text-[#6b4a2b]">
-                <FarmImg name={`harvest_${c.id}`} emoji={c.emoji} className={wide ? 'h-6 w-6 object-contain' : 'h-8 w-8 object-contain'} />
-                ×{farm.inventory[c.id]}
-              </span>
-            ))}
-          </div>
         </div>
       </div>
 
