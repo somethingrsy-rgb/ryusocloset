@@ -1574,7 +1574,7 @@
     "colorHex": "#b9a4e8",
     "box": {
       "x": 115,
-      "y": 626,
+      "y": 618,
       "w": 795,
       "h": 691
     },
@@ -1652,30 +1652,6 @@
     },
     "image": "assets/clothes/costume/costume_maid_pink_heart.webp",
     "thumb": "assets/thumbs/costume_maid_pink_heart.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
-    "id": "costume_mint_cape",
-    "category": "costume",
-    "name": {
-      "ko": "민트 망토 의상",
-      "en": "Mint Cape Outfit"
-    },
-    "color": "mint",
-    "colorName": {
-      "ko": "민트",
-      "en": "Mint"
-    },
-    "colorHex": "#a9dcc8",
-    "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 636
-    },
-    "image": "assets/clothes/costume/costume_mint_cape.webp",
-    "thumb": "assets/thumbs/costume_mint_cape.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1872,30 +1848,6 @@
     "native": true
   },
   {
-    "id": "costume_rainbow_petal_lolita",
-    "category": "costume",
-    "name": {
-      "ko": "무지개 꽃잎 로리타 드레스",
-      "en": "Rainbow Petal Lolita Dress"
-    },
-    "color": "pink",
-    "colorName": {
-      "ko": "핑크",
-      "en": "Pink"
-    },
-    "colorHex": "#f4a9bd",
-    "box": {
-      "x": 115,
-      "y": 626,
-      "w": 795,
-      "h": 691
-    },
-    "image": "assets/clothes/costume/costume_rainbow_petal_lolita.webp",
-    "thumb": "assets/thumbs/costume_rainbow_petal_lolita.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
     "id": "costume_sakura_blue",
     "category": "costume",
     "name": {
@@ -1958,7 +1910,7 @@
     "colorHex": "#f4a9bd",
     "box": {
       "x": 129,
-      "y": 626,
+      "y": 634,
       "w": 767,
       "h": 691
     },
@@ -1982,7 +1934,7 @@
     "colorHex": "#a9dcc8",
     "box": {
       "x": 122,
-      "y": 626,
+      "y": 634,
       "w": 781,
       "h": 691
     },
@@ -2389,10 +2341,10 @@
     },
     "colorHex": "#f4a9bd",
     "box": {
-      "x": 111,
-      "y": 626,
-      "w": 800,
-      "h": 691
+      "x": 147,
+      "y": 633,
+      "w": 727,
+      "h": 628
     },
     "image": "assets/clothes/costume/dress_cherry_pink_lolita.webp",
     "thumb": "assets/thumbs/dress_cherry_pink_lolita.webp",
@@ -2437,10 +2389,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 130,
-      "y": 626,
-      "w": 765,
-      "h": 691
+      "x": 165,
+      "y": 625,
+      "w": 696,
+      "h": 628
     },
     "image": "assets/clothes/costume/dress_honeybee_yellow_lolita.webp",
     "thumb": "assets/thumbs/dress_honeybee_yellow_lolita.webp",
@@ -2630,7 +2582,7 @@
     "colorHex": "#27355b",
     "box": {
       "x": 114,
-      "y": 626,
+      "y": 618,
       "w": 798,
       "h": 691
     },
@@ -2653,10 +2605,10 @@
     },
     "colorHex": "#c8283c",
     "box": {
-      "x": 103,
-      "y": 626,
-      "w": 819,
-      "h": 689
+      "x": 174,
+      "y": 645,
+      "w": 677,
+      "h": 570
     },
     "image": "assets/clothes/costume/dress_strawberry_red_lolita.webp",
     "thumb": "assets/thumbs/dress_strawberry_red_lolita.webp",
@@ -2678,7 +2630,7 @@
     "colorHex": "#f4a9bd",
     "box": {
       "x": 115,
-      "y": 626,
+      "y": 618,
       "w": 795,
       "h": 691
     },
@@ -3072,30 +3024,6 @@
     "native": true
   },
   {
-    "id": "shoes_boy_coat_whiteblue",
-    "category": "shoes",
-    "name": {
-      "ko": "네이비 슈즈",
-      "en": "Navy Shoes"
-    },
-    "color": "navy",
-    "colorName": {
-      "ko": "네이비",
-      "en": "Navy"
-    },
-    "colorHex": "#27355b",
-    "box": {
-      "x": 399,
-      "y": 1398,
-      "w": 226,
-      "h": 107
-    },
-    "image": "assets/clothes/shoes/shoes_boy_coat_whiteblue.webp",
-    "thumb": "assets/thumbs/shoes_boy_coat_whiteblue.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
     "id": "shoes_boy_feather_blue",
     "category": "shoes",
     "name": {
@@ -3216,30 +3144,6 @@
     "native": true
   },
   {
-    "id": "shoes_boy_navy_crane",
-    "category": "shoes",
-    "name": {
-      "ko": "검정 꽃신",
-      "en": "Black Flat Shoes"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 400,
-      "y": 1382,
-      "w": 225,
-      "h": 123
-    },
-    "image": "assets/clothes/shoes/shoes_boy_navy_crane.webp",
-    "thumb": "assets/thumbs/shoes_boy_navy_crane.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
     "id": "shoes_boy_navy_rose",
     "category": "shoes",
     "name": {
@@ -3349,10 +3253,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 412,
-      "y": 1402,
-      "w": 199,
-      "h": 101
+      "x": 402,
+      "y": 1397,
+      "w": 219,
+      "h": 112
     },
     "image": "assets/clothes/shoes/shoes_boy_purple_cape.webp",
     "thumb": "assets/thumbs/shoes_boy_purple_cape.webp",
@@ -3469,10 +3373,10 @@
     },
     "colorHex": "#fbfbfb",
     "box": {
-      "x": 412,
-      "y": 1407,
-      "w": 200,
-      "h": 98
+      "x": 402,
+      "y": 1402,
+      "w": 220,
+      "h": 108
     },
     "image": "assets/clothes/shoes/shoes_boy_white_gold.webp",
     "thumb": "assets/thumbs/shoes_boy_white_gold.webp",
@@ -3517,10 +3421,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 412,
-      "y": 1387,
-      "w": 201,
-      "h": 118
+      "x": 402,
+      "y": 1381,
+      "w": 221,
+      "h": 130
     },
     "image": "assets/clothes/shoes/shoes_brown_gold_qipao.webp",
     "thumb": "assets/thumbs/shoes_brown_gold_qipao.webp",
@@ -3565,10 +3469,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 414,
-      "y": 1366,
-      "w": 194,
-      "h": 138
+      "x": 405,
+      "y": 1374,
+      "w": 213,
+      "h": 153
     },
     "image": "assets/clothes/shoes/shoes_gothic_chain.webp",
     "thumb": "assets/thumbs/shoes_gothic_chain.webp",
@@ -3668,30 +3572,6 @@
     },
     "image": "assets/clothes/shoes/shoes_magnolia_hanfu.webp",
     "thumb": "assets/thumbs/shoes_magnolia_hanfu.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_mint_cape",
-    "category": "shoes",
-    "name": {
-      "ko": "블랙 리본 로퍼",
-      "en": "Black Ribbon Loafers"
-    },
-    "color": "black",
-    "colorName": {
-      "ko": "블랙",
-      "en": "Black"
-    },
-    "colorHex": "#2b2b2f",
-    "box": {
-      "x": 411,
-      "y": 1360,
-      "w": 201,
-      "h": 144
-    },
-    "image": "assets/clothes/shoes/shoes_mint_cape.webp",
-    "thumb": "assets/thumbs/shoes_mint_cape.webp",
     "zIndex": 10,
     "native": true
   },
@@ -3840,54 +3720,6 @@
     "native": true
   },
   {
-    "id": "shoes_qipao_mint",
-    "category": "shoes",
-    "name": {
-      "ko": "민트 리본 구두",
-      "en": "Mint Ribbon Shoes"
-    },
-    "color": "mint",
-    "colorName": {
-      "ko": "민트",
-      "en": "Mint"
-    },
-    "colorHex": "#a9dcc8",
-    "box": {
-      "x": 412,
-      "y": 1361,
-      "w": 198,
-      "h": 143
-    },
-    "image": "assets/clothes/shoes/shoes_qipao_mint.webp",
-    "thumb": "assets/thumbs/shoes_qipao_mint.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_sakura_kimono",
-    "category": "shoes",
-    "name": {
-      "ko": "벚꽃 게타",
-      "en": "Sakura Geta"
-    },
-    "color": "pink",
-    "colorName": {
-      "ko": "핑크",
-      "en": "Pink"
-    },
-    "colorHex": "#f4a9bd",
-    "box": {
-      "x": 410,
-      "y": 1371,
-      "w": 204,
-      "h": 133
-    },
-    "image": "assets/clothes/shoes/shoes_sakura_kimono.webp",
-    "thumb": "assets/thumbs/shoes_sakura_kimono.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
     "id": "shoes_sneakers_mule_navy",
     "category": "shoes",
     "name": {
@@ -3901,10 +3733,10 @@
     },
     "colorHex": "#27355b",
     "box": {
-      "x": 413,
-      "y": 1386,
-      "w": 198,
-      "h": 118
+      "x": 403,
+      "y": 1380,
+      "w": 218,
+      "h": 130
     },
     "image": "assets/clothes/shoes/shoes_sneakers_mule_navy.webp",
     "thumb": "assets/thumbs/shoes_sneakers_mule_navy.webp",
@@ -3960,54 +3792,6 @@
     "native": true
   },
   {
-    "id": "shoes_socks_heel_blue",
-    "category": "shoes",
-    "name": {
-      "ko": "양말 굽 구두",
-      "en": "Heels & Socks"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 397,
-      "y": 1344,
-      "w": 222,
-      "h": 159
-    },
-    "image": "assets/clothes/shoes/shoes_socks_heel_blue.webp",
-    "thumb": "assets/thumbs/shoes_socks_heel_blue.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_socks_heel_purple",
-    "category": "shoes",
-    "name": {
-      "ko": "양말 굽 구두",
-      "en": "Heels & Socks"
-    },
-    "color": "purple",
-    "colorName": {
-      "ko": "퍼플",
-      "en": "Purple"
-    },
-    "colorHex": "#b9a4e8",
-    "box": {
-      "x": 392,
-      "y": 1359,
-      "w": 233,
-      "h": 145
-    },
-    "image": "assets/clothes/shoes/shoes_socks_heel_purple.webp",
-    "thumb": "assets/thumbs/shoes_socks_heel_purple.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
     "id": "shoes_socks_mj_black",
     "category": "shoes",
     "name": {
@@ -4028,30 +3812,6 @@
     },
     "image": "assets/clothes/shoes/shoes_socks_mj_black.webp",
     "thumb": "assets/thumbs/shoes_socks_mj_black.webp",
-    "zIndex": 10,
-    "native": true
-  },
-  {
-    "id": "shoes_socks_mj_mint",
-    "category": "shoes",
-    "name": {
-      "ko": "양말 메리제인",
-      "en": "Mary Janes & Socks"
-    },
-    "color": "mint",
-    "colorName": {
-      "ko": "민트",
-      "en": "Mint"
-    },
-    "colorHex": "#a9dcc8",
-    "box": {
-      "x": 398,
-      "y": 1373,
-      "w": 226,
-      "h": 131
-    },
-    "image": "assets/clothes/shoes/shoes_socks_mj_mint.webp",
-    "thumb": "assets/thumbs/shoes_socks_mj_mint.webp",
     "zIndex": 10,
     "native": true
   },

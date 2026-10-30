@@ -260,24 +260,6 @@
     "color": "black",
     "native": true
   },
-  "shoes_socks_mj_mint": {
-    "ko": "양말 메리제인",
-    "en": "Mary Janes & Socks",
-    "color": "mint",
-    "native": true
-  },
-  "shoes_socks_heel_purple": {
-    "ko": "양말 굽 구두",
-    "en": "Heels & Socks",
-    "color": "purple",
-    "native": true
-  },
-  "shoes_socks_heel_blue": {
-    "ko": "양말 굽 구두",
-    "en": "Heels & Socks",
-    "color": "skyblue",
-    "native": true
-  },
   "dress_fairy_blue": {
     "ko": "요정 원피스",
     "en": "Fairy Dress",
@@ -1041,12 +1023,6 @@
     "color": "mint",
     "native": true
   },
-  "shoes_qipao_mint": {
-    "ko": "민트 리본 구두",
-    "en": "Mint Ribbon Shoes",
-    "color": "mint",
-    "native": true
-  },
   "costume_lemon_sailor": {
     "ko": "레몬 세일러 세트",
     "en": "Lemon Sailor Set",
@@ -1091,12 +1067,6 @@
     "en": "Navy Crane Hanbok",
     "category": "costume",
     "color": "navy",
-    "native": true
-  },
-  "shoes_boy_navy_crane": {
-    "ko": "검정 꽃신",
-    "en": "Black Flat Shoes",
-    "color": "black",
     "native": true
   },
   "costume_magnolia_hanfu": {
@@ -1223,12 +1193,6 @@
     "color": "pink",
     "native": true
   },
-  "shoes_sakura_kimono": {
-    "ko": "벚꽃 게타",
-    "en": "Sakura Geta",
-    "color": "pink",
-    "native": true
-  },
   "costume_bat_gothic": {
     "ko": "박쥐 고딕 원피스",
     "en": "Bat Gothic Dress",
@@ -1284,19 +1248,6 @@
     "ko": "박쥐 초커",
     "en": "Bat Choker",
     "category": "accessory",
-    "color": "black",
-    "native": true
-  },
-  "costume_mint_cape": {
-    "ko": "민트 망토 의상",
-    "en": "Mint Cape Outfit",
-    "category": "costume",
-    "color": "mint",
-    "native": true
-  },
-  "shoes_mint_cape": {
-    "ko": "블랙 리본 로퍼",
-    "en": "Black Ribbon Loafers",
     "color": "black",
     "native": true
   },
@@ -1418,12 +1369,6 @@
     "en": "White Blue Coat Outfit",
     "category": "costume",
     "color": "white",
-    "native": true
-  },
-  "shoes_boy_coat_whiteblue": {
-    "ko": "네이비 슈즈",
-    "en": "Navy Shoes",
-    "color": "navy",
     "native": true
   },
   "wig_layered": {
@@ -1571,12 +1516,6 @@
     "en": "Soccer Socks & Cleats (Purple)",
     "category": "shoes",
     "color": "purple",
-    "native": true
-  },
-  "costume_rainbow_petal_lolita": {
-    "ko": "무지개 꽃잎 로리타 드레스",
-    "en": "Rainbow Petal Lolita Dress",
-    "color": "pink",
     "native": true
   },
   "costume_lilac_daisy_tier": {
