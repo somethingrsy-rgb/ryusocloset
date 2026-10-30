@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
-import { CALL_ANIMALS } from '../lib/animalCalls'
-import { guestAvatar, guestName, isAvatarGuest } from '../lib/party'
+import { avatarGuest, canJoin, guestFace, guestName, isAvatarGuest, validGuest } from '../lib/party'
+import { setGuestLooks } from '../lib/guestLooks'
+import { getAvatar } from '../lib/avatars'
+import { FriendFigure } from './FriendFigure'
 import { CROPS, getFarm, subscribeFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import { buyPantry, cookTicket, getKitchen, isPartySeat, missing, subscribeKitchen, ticketAnimal } from '../lib/kitchen'
@@ -71,7 +73,7 @@ const MAX_FRIENDS = 2
 function readFriends(): number[] {
   try {
     const v = JSON.parse(localStorage.getItem(FRIENDS_KEY) ?? '[]')
-    return Array.isArray(v) ? [...new Set(v.filter((a) => Number.isInteger(a) && a >= 0 && a < CALL_ANIMALS.length))].slice(0, MAX_FRIENDS) : []
+    return Array.isArray(v) ? [...new Set(v.filter(validGuest))].slice(0, MAX_FRIENDS) : []
   } catch { return [] }
 }
 /** 파티 친구 그림 칸 너비 ÷ 아바타 너비(파티 화면과 같은 크기) */
@@ -111,7 +113,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const [chosen, setFriends] = useState<number[]>(readFriends)
   // 고른 친구 중 수학으로 모은 친구만 같이 요리한다(모으지 않은 친구는 같이 못 한다)
   const meet = useSyncExternalStore(subscribeMeet, getMeet)
-  const friends = chosen.filter((a) => meet.met.includes(a))
+  // (내 아바타로 바꾼 아바타는 친구에서 빠진다)
+  const friends = chosen.filter((a) => canJoin(a, meet.met) && a !== avatarGuest(getAvatar().id))
   const [picking, setPicking] = useState(false)
   const chooseFriends = (a: number[]) => { setFriends(a); try { localStorage.setItem(FRIENDS_KEY, JSON.stringify(a)) } catch { /* 저장 못 해도 지금은 같이 한다 */ } }
   const [done, setDone] = useState<number | null>(null) // 방금 다 만든 자리
@@ -184,7 +187,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   }
 
   // 주문서 얼굴: 동물 친구는 카페 얼굴, 아바타 친구는 점프 퍼즐 얼굴 그림
-  const face = (seat: number) => { const av = guestAvatar(ticketAnimal(seat)); return assetUrl(av ? `assets/jump/face_${av.id}.webp` : `cafe/face/${CALL_ANIMALS[ticketAnimal(seat)].img}.webp`) }
+  const face = (seat: number) => assetUrl(guestFace(ticketAnimal(seat)))
   /** 다 만든 음식 가져가기: 카페 손님 것은 카페로, 파티 친구 것은 파티로 */
   const serveBtn = (seat: number, cls: string, inner: (t: string) => React.ReactNode = (t) => t) => <button onClick={() => { playTap(); onGo(isPartySeat(seat) ? 'party' : 'cafe') }} className={cls}>{inner(isPartySeat(seat) ? tx.toParty : tx.serve)}</button>
   const btn = 'min-h-11 rounded-full px-3 font-bold shadow active:scale-95 disabled:opacity-40'
@@ -194,8 +197,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const aw = L.avatarH * (1024 / 1536) / L.ratio // 아바타 너비(그림 너비에 대한 %)
   // 파티 친구 주문을 고르거나 만드는 동안: 그 친구가 주방에 와서 옆에서 같이 요리한다
   const helpSeat = cooking?.seat ?? done ?? selTicket?.seat
-  // (아바타 친구 주문은 주방에 같이 오지 않는다: 같이 요리하는 그림은 동물 친구만 있다)
-  const partyA = helpSeat !== undefined && helpSeat !== null && isPartySeat(helpSeat) && !isAvatarGuest(ticketAnimal(helpSeat)) ? ticketAnimal(helpSeat) : null
+    const partyA = helpSeat !== undefined && helpSeat !== null && isPartySeat(helpSeat) ? ticketAnimal(helpSeat) : null
   // 같이 요리하는 친구들: 파티 주문이면 그 친구가 먼저, 그다음 고른 친구(모두 2명까지)
   const crew = [...new Set([...(partyA !== null ? [partyA] : []), ...friends])].slice(0, MAX_FRIENDS)
   // 말은 한 번에 한 친구만: 단계마다 번갈아 말한다
@@ -310,19 +312,15 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         {/* 같이 요리하는 친구(파티 주문한 친구·고른 친구): 아바타 양옆 아일랜드 뒤에 서서 살랑살랑 흔들며 같이 요리한다.
             처음에는 재료를 하나씩 도마로 가져다주고, 누를 때마다 끄덕, 다 되면 신나게 흔든다. 아바타보다 뒤(zIndex 0)에 그려 씻을 때 비켜 선 아바타를 가리지 않는다 */}
         {crew.map((animal, k) => {
-          const a = CALL_ANIMALS[animal]
           const [hx, hy] = L.helper[k]
           const happy = done !== null || (bring && k === 0)
           return (
-            <div key={a.img} aria-hidden className="pointer-events-none absolute" style={{ left: `${hx}%`, top: `${hy}%`, width: `${hw}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -99%)', zIndex: 0 }}>
+            <div key={animal} aria-hidden className="pointer-events-none absolute" style={{ left: `${hx}%`, top: `${hy}%`, width: `${hw}%`, aspectRatio: '1 / 1', transform: 'translate(-50%, -99%)', zIndex: 0 }}>
               {/* 자리(바깥) · 살랑살랑(가운데) · 끄덕(안쪽) 움직임을 칸마다 따로 준다: 한 칸에 겹치면 서로 덮어써서 튀어 보였다 */}
               <div className={`h-full w-full ${done !== null ? 'kitchen-helper-cheer' : 'kitchen-helper-sway'}`} style={{ animationDelay: `${-k * 0.9}s` }}>
                 <div ref={(el) => { helpRefs.current[k] = el }} className="relative h-full w-full" style={{ transformOrigin: '50% 100%' }}>
-                  {/* 서 있는 그림·손 흔드는 그림을 겹쳐 두고 보이기만 바꾼다(그림을 바꿔 끼우면 새로 읽는 동안 잠깐 비었다) */}
-                  {(['stand', 'wave'] as const).map((pose) => (
-                    <img key={pose} src={assetUrl(`cafe/stand/${a.img}_${pose}.webp`)} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain"
-                      style={{ visibility: (pose === 'wave') === happy ? 'visible' : 'hidden', transform: k === 1 ? 'scaleX(-1)' : undefined }} />
-                  ))}
+                  {/* 동물 친구는 서 있는·손 흔드는 그림, 아바타 친구는 고른 옷을 입은 아바타(내 아바타와 같은 크기) */}
+                  <FriendFigure g={animal} wave={happy} flip={k === 1} avatarW={1 / HELPER_PER_AVATAR_W} />
                 </div>
               </div>
             </div>
@@ -334,7 +332,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
           const line = done !== null ? (partyA !== null ? '와, 다 됐다! 파티에 가져가자!' : '와, 다 됐다! 맛있겠다!') : bring ? '재료 가져왔어!' : nowStep ? HELP_LINE[nowStep] : menu ? (partyA === speaker ? `내 ${menu.ko} 같이 만들자!` : `${menu.ko} 같이 만들자!`) : null
           const [fx, fy] = L.helper[0]
           return <>
-            {line && <p aria-live="polite" className="pointer-events-none absolute m-0 w-max max-w-[10rem] -translate-x-1/2 -translate-y-full rounded-2xl bg-white px-2 py-1 text-center text-[12px] leading-snug font-bold text-[#6b4b52] shadow-md" style={{ left: `${hx}%`, top: `calc(${hy}% - ${hw * L.ratio}% )`, zIndex: 6 }}>{line}</p>}
+            {line && <p aria-live="polite" className="pointer-events-none absolute m-0 w-max max-w-[10rem] -translate-x-1/2 -translate-y-full rounded-2xl bg-white px-2 py-1 text-center text-[12px] leading-snug font-bold text-[#6b4b52] shadow-md" style={{ left: `${hx}%`, top: `calc(${hy}% - ${hw * L.ratio * (isAvatarGuest(speaker) ? 1.45 / HELPER_PER_AVATAR_W : 1)}% )`, zIndex: 6 }}>{line}</p>}
             {/* 가져다주는 재료: 첫 친구 손에서 도마로 하나씩 날아간다 */}
             {bring && boardIngs.map((id, n) => (
               <span key={id} aria-hidden className="pointer-events-none absolute block aspect-square" style={{ width: `${L.at.board.w * 0.19}%`, zIndex: 5, animation: `kitchen-bring ${BRING_MS}ms ease-in-out ${n * BRING_GAP}ms both`, ['--fx' as string]: `${fx}%`, ['--fy' as string]: `${fy - hw * L.ratio * 0.45}%`, ['--tx' as string]: `${L.at.board.x}%`, ['--ty' as string]: `${L.at.board.y - 1}%` }}>
@@ -355,7 +353,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
           <span className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-white/90 px-3 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
           {/* 같이 요리할 친구 고르기: 고른 친구 얼굴(혼자면 🐾) */}
           <button aria-label={tx.friends} disabled={!!cooking} onClick={() => { playTap(); setPicking(true) }} className="flex h-9 shrink-0 items-center rounded-full bg-white/90 px-2 shadow disabled:opacity-50">
-            {friends.length ? friends.map((f) => <img key={f} src={assetUrl(`cafe/face/${CALL_ANIMALS[f].img}.webp`)} alt="" draggable={false} className="-mx-0.5 h-7 w-7 object-contain" />) : <span style={{ fontSize: 20 }}>🐾</span>}
+            {friends.length ? friends.map((f) => <img key={f} src={assetUrl(guestFace(f))} alt="" draggable={false} className="-mx-0.5 h-7 w-7 object-contain" />) : <span style={{ fontSize: 20 }}>🐾</span>}
           </button>
           <button aria-label={tx.pantry} onClick={() => { playTap(); setPantry(true) }} className={`h-9 shrink-0 rounded-full bg-white/90 text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'}`}>{phoneL ? <span style={{ fontSize: 20 }}>🛒</span> : tx.pantry}</button>
           <button aria-label={tx.cafe} onClick={() => { playTap(); onGo('cafe') }} className={`h-9 shrink-0 rounded-full bg-white/90 text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'}`}>{phoneL ? <span style={{ fontSize: 20 }}>☕</span> : tx.cafe}</button>
@@ -485,8 +483,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       )}
       {toast && <div role="status" className="absolute bottom-40 left-1/2 z-50 max-w-[90%] -translate-x-1/2 rounded-full bg-[#8a4b55] px-5 py-3 text-center text-sm text-[#fff9e9] shadow-lg">{toast}</div>}
       {picking && (
-        <PartyInvite here={[]} initial={friends} max={MAX_FRIENDS} allowNone title="👩‍🍳 누구랑 같이 요리할까요?" locked={notCollected(meet)} note={`수학으로 모은 친구 중 ${MAX_FRIENDS}명까지 골라요 · 아무도 안 고르면 혼자 요리해요`}
-          cta="👩‍🍳 같이 요리하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a) => { playTap(); setPicking(false); chooseFriends(a) }} />
+        <PartyInvite here={[]} initial={friends} max={MAX_FRIENDS} allowNone title="👩‍🍳 누구랑 같이 요리할까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`아바타 친구와 수학으로 모은 동물 친구 중 ${MAX_FRIENDS}명까지 골라요 · 아무도 안 고르면 혼자 요리해요`}
+          cta="👩‍🍳 같이 요리하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { playTap(); setPicking(false); setGuestLooks(looks); chooseFriends(a) }} />
       )}
     </section>
   )

@@ -7,7 +7,10 @@ import { playCloud, playGold, playHop, playStar, playWin, startBgm, stopBgm } fr
 import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
 import { PartyInvite } from './PartyGuests'
-import { CALL_ANIMALS } from '../lib/animalCalls'
+import { FriendFigure } from './FriendFigure'
+import { avatarGuest, guestFace, guestName, isAvatarGuest, validGuest } from '../lib/party'
+import { setGuestLooks } from '../lib/guestLooks'
+import { getAvatar } from '../lib/avatars'
 import { StarIcon } from './Icons'
 import { assetUrl } from '../lib/items'
 import { ROAD_PART, ROAD_PARTS, TILE_W } from '../lib/world'
@@ -17,10 +20,10 @@ const BG_UNITS = 800
 const BG_ROAD_Y = 650
 /** 장애물 그림 크기(부딪히는 크기는 그대로): 커진 아바타에 맞춰 1.25배 */
 const OB_GROW = 1.25
-/** 같이 달리는 동물 친구(카페 동물 번호, 한 명). 고른 친구는 다음에도 그대로 */
+/** 같이 달리는 친구 한 명(동물 번호 또는 아바타 손님 번호). 고른 친구는 다음에도 그대로 */
 const FRIENDS_KEY = 'ryuso.run.friends.v1'
 const readFriends = (): number[] => {
-  try { const v = JSON.parse(localStorage.getItem(FRIENDS_KEY) ?? '[]'); return Array.isArray(v) ? v.filter((n) => Number.isInteger(n) && n >= 0 && n < CALL_ANIMALS.length).slice(0, 1) : [] } catch { return [] }
+  try { const v = JSON.parse(localStorage.getItem(FRIENDS_KEY) ?? '[]'); return Array.isArray(v) ? v.filter(validGuest).slice(0, 1) : [] } catch { return [] }
 }
 /** 친구는 아바타보다 조금 뒤쪽 길(화면에서 위쪽)에서 달린다: 아바타·장애물과 겹쳐 보여도 앞뒤가 분명하게 */
 const LANE_UP = 30
@@ -39,7 +42,9 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   /** 선물 상자로 받은 아이템(없으면 null) */
   const [giftItem, setGiftItem] = useState<string | null>(null)
   const [giftStars, setGiftStars] = useState(0)
-  const [friends, setFriends] = useState<number[]>(readFriends)
+  const [chosen, setFriends] = useState<number[]>(readFriends)
+  // 내 아바타로 바꾼 아바타는 친구에서 빠진다
+  const friends = chosen.filter((g) => g !== avatarGuest(getAvatar().id))
   const [picking, setPicking] = useState(false)
   // 달리는 동안 노래(일시정지·시작 전·끝난 뒤에는 멈춘다)
   useEffect(() => { if (phase !== 'playing' || paused) return; startBgm('run'); return stopBgm }, [phase, paused])
@@ -129,7 +134,9 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   // 친구가 있으면 친구가 아바타 뒤(왼쪽)에 겹치지 않고 들어갈 만큼 화면 전체(아바타·길·장애물)를 오른쪽으로 민다(부딪힘 계산은 그대로)
   const fh = PLAYER_H * grow * 0.5
   const avatarHalf = PLAYER_W * grow * 0.4 // 아바타 그림에서 팔 끝까지의 반쪽 폭
-  const lead = friends.length ? Math.max(0, fh * 0.95 + avatarHalf + 4 - PLAYER_SCREEN_X) : 0
+  // 친구 그림의 반쪽 폭: 아바타 친구는 내 아바타와 같은 크기
+  const friendHalf = friends.some(isAvatarGuest) ? avatarHalf : fh * 0.47
+  const lead = friends.length ? Math.max(0, friendHalf * 2 + avatarHalf + 4 - PLAYER_SCREEN_X) : 0
   const cam = run.x - lead
   const { obstacles, coins, gifts } = visible(run.seed, cam, cam + viewW, run.level, run.k)
   // 배경은 달린 거리에 맞춰 흐른다(장애물 그림 구간과 배경 구간이 기기 크기와 상관없이 맞도록)
@@ -141,7 +148,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   const btn = `${short ? 'min-h-9 px-2.5 text-xs' : 'min-h-11 px-3 text-sm'} rounded-full bg-white/95 font-bold shadow-sm`
   const progress = Math.min(1, run.elapsed / runDuration(run.level))
   // 친구 자리: 아바타 바로 뒤(왼쪽)에 붙되 아바타 그림과 겹치지 않게
-  const slots = friends.map(() => px - avatarHalf - 4 - fh * 0.47)
+  const slots = friends.map(() => px - avatarHalf - 4 - friendHalf)
 
   return <section ref={host} tabIndex={0} aria-label="달려라 아바타" className={`relative h-full touch-none select-none overflow-hidden bg-[#82c6fd] outline-none ${short ? '' : 'rounded-3xl ring-1 ring-black/5'}`}
     onPointerDown={(e) => { if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return; e.currentTarget.focus({ preventScroll: true }); tapJump() }}
@@ -163,7 +170,9 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
         const hop = friendHop(cam + fx, obstacles)
         return (
           <div key={a} className="absolute will-change-transform" style={{ left: fx - fh / 2, top: GROUND_Y - LANE_UP - fh + 4, width: fh, height: fh, transform: `translate3d(0,${-hop}px,0)` }}>
-            <img src={assetUrl(`cafe/stand/${CALL_ANIMALS[a].img}_stand.webp`)} alt="" draggable={false} className="walk-bob h-full w-full max-w-none object-contain drop-shadow-[0_3px_2px_rgba(60,40,30,0.25)]" style={{ animationPlayState: phase === 'playing' && !paused && hop === 0 ? 'running' : 'paused' }} />
+            <div className="walk-bob relative h-full w-full drop-shadow-[0_3px_2px_rgba(60,40,30,0.25)]" style={{ animationPlayState: phase === 'playing' && !paused && hop === 0 ? 'running' : 'paused' }}>
+              <FriendFigure g={a} avatarW={(PLAYER_W * grow) / fh} className="max-w-none" />
+            </div>
           </div>
         )
       })}
@@ -204,15 +213,15 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
           {LEVEL_IDS.map((l) => <button key={l} role="radio" aria-checked={level === l} onClick={() => { setLevel(l); writeRunLevel(l); if (phase === 'intro') { const fresh = newRun(undefined, l, speedKRef.current); live.current = fresh; setRun(fresh) } }} className={`min-h-10 rounded-full border px-0.5 font-bold whitespace-nowrap ${short ? 'text-xs' : 'text-sm'} ${level === l ? 'border-blush bg-blush text-white' : 'border-black/10 bg-white'}`}>{levelName(l)}</button>)}
         </div>}
         {phase !== 'playing' && <button className="my-1 flex min-h-11 w-full items-center justify-center gap-1 rounded-full bg-[#fff1f5] px-3 font-bold text-[#8a4b55] ring-1 ring-[#ffc2d4]" onClick={() => setPicking(true)}>
-          🐾 같이 달릴 친구{friends.length ? <span className="flex -space-x-2">{friends.map((a) => <img key={a} src={assetUrl(`cafe/face/${CALL_ANIMALS[a].img}.webp`)} alt={CALL_ANIMALS[a].name} className="h-7 w-7 rounded-full bg-white object-contain ring-1 ring-white" />)}</span> : ' 고르기'}
+          🐾 같이 달릴 친구{friends.length ? <span className="flex -space-x-2">{friends.map((a) => <img key={a} src={assetUrl(guestFace(a))} alt={guestName(a)} className="h-7 w-7 rounded-full bg-white object-contain ring-1 ring-white" />)}</span> : ' 고르기'}
         </button>}
         {phase !== 'intro' && <p className="text-xs text-black/50">최고 기록 별 {record.best[level]}개</p>}
         <button className="mt-2 min-h-12 w-full rounded-full bg-blush px-4 font-bold text-white" onClick={() => phase === 'playing' ? (setPaused(false), host.current?.focus({ preventScroll: true })) : start()}>{phase === 'intro' ? '달리기 시작' : phase === 'done' ? '한 번 더' : '계속하기'}</button>
         <button className="mt-2 min-h-11 w-full rounded-full bg-petal font-bold" onClick={onExit}>산책으로 돌아가기</button>
       </div>
     </div>}
-    {picking && <PartyInvite here={[]} initial={friends} single title="🏃 누구랑 같이 달릴까요?" cta="🐾 같이 달리기" allowNone
+    {picking && <PartyInvite here={[]} initial={friends} single title="🏃 누구랑 같이 달릴까요?" cta="🐾 같이 달리기" allowNone avatars={{ me: getAvatar().id }}
       onClose={() => setPicking(false)}
-      onInvite={(list) => { setFriends(list); try { localStorage.setItem(FRIENDS_KEY, JSON.stringify(list)) } catch { /* 저장 못 해도 이번에는 같이 달린다 */ } setPicking(false) }} />}
+      onInvite={(list, looks) => { setGuestLooks(looks); setFriends(list); try { localStorage.setItem(FRIENDS_KEY, JSON.stringify(list)) } catch { /* 저장 못 해도 이번에는 같이 달린다 */ } setPicking(false) }} />}
   </section>
 }

@@ -16,6 +16,10 @@ export const isAvatarGuest = (g: number) => g >= AVATAR_GUEST
 /** 아바타 손님이면 그 아바타 */
 export const guestAvatar = (g: number): Avatar | undefined => (isAvatarGuest(g) ? AVATARS[g - AVATAR_GUEST] : undefined)
 export const validGuest = (g: unknown): g is number => Number.isInteger(g) && (((g as number) >= 0 && (g as number) < CALL_ANIMALS.length) || ((g as number) >= AVATAR_GUEST && (g as number) < AVATAR_GUEST + AVATARS.length))
+/** 손님 얼굴 그림 경로(assetUrl 전): 동물 친구는 카페 얼굴, 아바타 친구는 점프 퍼즐 얼굴 */
+export const guestFace = (g: number) => { const a = guestAvatar(g); return a ? `assets/jump/face_${a.id}.webp` : `cafe/face/${CALL_ANIMALS[g]?.img}.webp` }
+/** 같이 하는 친구로 고를 수 있는지: 아바타 친구는 늘, 동물 친구는 수학으로 모은 친구만 */
+export const canJoin = (g: number, met: number[]) => isAvatarGuest(g) || met.includes(g)
 /** 손님 이름(동물 친구 이름 또는 아바타 이름) */
 export const guestName = (g: number) => { const a = guestAvatar(g); return a ? avatarName(a) : CALL_ANIMALS[g]?.name ?? '' }
 

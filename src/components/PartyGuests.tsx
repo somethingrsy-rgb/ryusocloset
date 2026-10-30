@@ -3,7 +3,7 @@ import { CALL_ANIMALS } from '../lib/animalCalls'
 import { AVATARS, avatarName } from '../lib/avatars'
 import { guestLook } from '../lib/guestLooks'
 import { assetUrl } from '../lib/items'
-import { arrive, avatarGuest, byeLine, guestAvatar, guestName, helloLine, leaveAll, partyLine, roomySpot, stepGuests, type Floor, type Guest } from '../lib/party'
+import { arrive, avatarGuest, byeLine, guestAvatar, guestName, helloLine, isAvatarGuest, leaveAll, partyLine, roomySpot, stepGuests, type Floor, type Guest } from '../lib/party'
 import type { Outfit } from '../lib/types'
 import { AvatarHead } from './AvatarHead'
 import { FigureLayers } from './FigureLayers'
@@ -194,26 +194,29 @@ export function PartyGuests({ invite, leave, kid, floor, me, size, avatarW, feet
  * 파티 초대 창: 카페 동물 친구 얼굴을 여러 명 골라서 초대한다(이미 온 친구는 표시).
  * 달리기 친구 고르기도 같은 창을 쓴다(title·cta 로 글자를 바꾸고, initial 로 지난번에 고른 친구를 미리 골라 둔다. 아무도 안 골라도 된다. single 이면 한 명만 고른다)
  */
-export function PartyInvite({ here, onInvite, onClose, initial = [], title = '🎉 파티에 누구를 초대할까요?', cta = '💌 초대하기', allowNone = false, single = false, max, ctaNone, note, locked = [], avatars }: { here: number[]; onInvite: (animals: number[], looks?: Record<string, Outfit>) => void; onClose: () => void; initial?: number[]; title?: string; cta?: string; allowNone?: boolean; single?: boolean; /** 이만큼까지만 고른다(더 고르면 먼저 고른 친구가 빠진다) */ max?: number; /** 아무도 안 골랐을 때 버튼 글자 */ ctaNone?: string; /** 제목 아래 안내 글자 */ note?: string; /** 아직 못 만난 친구: 얼굴을 가리고(???) 고를 수 없다 */ locked?: number[]
+export function PartyInvite({ here, onInvite, onClose, initial = [], title = '🎉 파티에 누구를 초대할까요?', cta = '💌 초대하기', allowNone = false, single = false, max, ctaNone, note, locked = [], avatars }: { here: number[]; /** 고른 친구(동물 번호·아바타 손님 번호)와, 고른 아바타 친구가 입을 옷 */ onInvite: (friends: number[], looks: Record<string, Outfit>) => void; onClose: () => void; initial?: number[]; title?: string; cta?: string; allowNone?: boolean; single?: boolean; /** 이만큼까지만 고른다(더 고르면 먼저 고른 친구가 빠진다) */ max?: number; /** 아무도 안 골랐을 때 버튼 글자 */ ctaNone?: string; /** 제목 아래 안내 글자 */ note?: string; /** 아직 못 만난 친구: 얼굴을 가리고(???) 고를 수 없다 */ locked?: number[]
   /** 파티 초대: 다른 아바타도 옷을 골라 입혀서 초대할 수 있다(me 는 지금 내 아바타라서 빠진다) */
   avatars?: { me: string } }) {
   const [picked, setPicked] = useState<number[]>(initial)
-  // 고른 아바타 친구와 입힐 옷, 지금 옷을 고르고 있는 아바타
-  const [pickedAv, setPickedAv] = useState<Record<string, Outfit>>({})
+  // 고른 친구는 동물 번호와 아바타 손님 번호(AVATAR_GUEST + 순서)를 한 줄로 고른다(max·single 도 같이 센다).
+  // 아바타 친구는 누르면 옷 입히기 화면이 열리고, 입힌 옷(looks)과 함께 초대한다
+  const [looks, setLooks] = useState<Record<string, Outfit>>({})
   const [dressing, setDressing] = useState<string | null>(null)
   const others = avatars ? AVATARS.filter((a) => a.id !== avatars.me) : []
-  const nPicked = picked.length + Object.keys(pickedAv).length
+  const nPicked = picked.length
   const dressAv = others.find((a) => a.id === dressing)
-  const toggle = (i: number) => { playTap(); setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : single ? [i] : max && p.length >= max ? [...p.slice(p.length - max + 1), i] : [...p, i])) }
+  const add = (p: number[], i: number) => (p.includes(i) ? p : single ? [i] : max && p.length >= max ? [...p.slice(p.length - max + 1), i] : [...p, i])
+  const toggle = (i: number) => { playTap(); setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : add(p, i))) }
   const free = CALL_ANIMALS.map((_, i) => i).filter((i) => !here.includes(i) && !locked.includes(i))
+  const pickedAnimals = picked.filter((i) => !isAvatarGuest(i))
   return (
     <div role="dialog" aria-modal aria-label="파티 초대" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="sheet-in flex max-h-full w-full max-w-sm flex-col rounded-3xl bg-[#fff8fb] p-4 shadow-2xl">
         {dressAv ? (
-          <GuestDresser avatar={dressAv} initial={pickedAv[dressAv.id] ?? guestLook(dressAv.id)} invited={dressAv.id in pickedAv}
+          <GuestDresser avatar={dressAv} initial={looks[dressAv.id] ?? guestLook(dressAv.id)} invited={picked.includes(avatarGuest(dressAv.id))}
             onBack={() => setDressing(null)}
-            onDone={(o) => { setPickedAv((p) => ({ ...p, [dressAv.id]: o })); setDressing(null) }}
-            onUninvite={() => { setPickedAv((p) => Object.fromEntries(Object.entries(p).filter(([id]) => id !== dressAv.id))); setDressing(null) }} />
+            onDone={(o) => { setLooks((l) => ({ ...l, [dressAv.id]: o })); setPicked((p) => add(p, avatarGuest(dressAv.id))); setDressing(null) }}
+            onUninvite={() => { setPicked((p) => p.filter((x) => x !== avatarGuest(dressAv.id))); setDressing(null) }} />
         ) : <>
         <div className="flex items-center justify-between">
           <p className="m-0 text-lg font-black text-[#8a4b55]">{title}</p>
@@ -225,7 +228,7 @@ export function PartyInvite({ here, onInvite, onClose, initial = [], title = '�
           <p className="m-0 px-1.5 pt-0.5 text-xs font-bold text-[#8a4b55]">👧 아바타 친구 · 눌러서 옷을 입혀요</p>
           <div className="grid grid-cols-4 gap-2 p-1.5">
             {others.map((a) => {
-              const came = here.includes(avatarGuest(a.id)), on = a.id in pickedAv
+              const came = here.includes(avatarGuest(a.id)), on = picked.includes(avatarGuest(a.id))
               return (
                 <button key={a.id} aria-pressed={on} aria-label={came ? `${avatarName(a)} (이미 왔어요)` : `${avatarName(a)} 옷 입히고 초대하기`} disabled={came} onClick={() => { playTap(); setDressing(a.id) }}
                   className={`relative flex flex-col items-center rounded-2xl p-1.5 transition active:scale-95 disabled:opacity-45 ${on ? 'bg-[#ffd6e3] ring-2 ring-[#ff8fab]' : 'bg-white ring-1 ring-black/5'}`}>
@@ -259,8 +262,8 @@ export function PartyInvite({ here, onInvite, onClose, initial = [], title = '�
         </div>
         </div>
         <div className="mt-3 flex gap-2">
-          {!single && !max && <button disabled={!free.length} onClick={() => { playTap(); setPicked(picked.length === free.length ? [] : free) }} className="min-h-11 flex-1 rounded-full bg-white font-bold text-[#8a4b55] shadow-sm disabled:opacity-40">{picked.length === free.length && free.length ? '모두 빼기' : '모두 고르기'}</button>}
-          <button disabled={!nPicked && !allowNone} onClick={() => onInvite(picked, avatars ? pickedAv : undefined)} className="min-h-11 flex-[1.4] rounded-full bg-[#ff8fab] font-bold text-white shadow disabled:opacity-40">{!nPicked && ctaNone ? ctaNone : <>{cta}{nPicked ? ` (${nPicked})` : ''}</>}</button>
+          {!single && !max && <button disabled={!free.length} onClick={() => { playTap(); setPicked(pickedAnimals.length === free.length ? picked.filter(isAvatarGuest) : [...picked.filter(isAvatarGuest), ...free]) }} className="min-h-11 flex-1 rounded-full bg-white font-bold text-[#8a4b55] shadow-sm disabled:opacity-40">{pickedAnimals.length === free.length && free.length ? '모두 빼기' : '모두 고르기'}</button>}
+          <button disabled={!nPicked && !allowNone} onClick={() => onInvite(picked, Object.fromEntries(picked.map(guestAvatar).filter((a) => !!a).map((a) => [a.id, looks[a.id] ?? guestLook(a.id)])))} className="min-h-11 flex-[1.4] rounded-full bg-[#ff8fab] font-bold text-white shadow disabled:opacity-40">{!nPicked && ctaNone ? ctaNone : <>{cta}{nPicked ? ` (${nPicked})` : ''}</>}</button>
         </div>
         </>}
       </div>
