@@ -17,7 +17,7 @@ export interface Avatar {
   name: { ko: string; en: string }
   /** public/assets 아래 베이스 레이어(body·body_barefoot·머리 레이어) 폴더 */
   dir: string
-  /** 헤어숍에서 고를 수 있는 머리. 첫 번째가 기본 */
+  /** 이 아바타의 머리 모양. 첫 번째가 기본(예전에 고른 머리가 있으면 그 머리) */
   hairstyles: Hairstyle[]
   /** 기본 단발이 몸 그림에 같이 그려진 아바타가 가발을 쓸 때 쓰는 머리 없는 몸(dir 안, 확장자·_barefoot 뺀 것) */
   baldBody?: string

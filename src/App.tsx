@@ -1,5 +1,4 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { HairSalon } from './components/HairSalon'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
 import { SettingsSheet } from './components/SettingsSheet'
@@ -63,7 +62,7 @@ const UNDO_LIMIT = 50
 const ROOM_UNDO_GAP_MS = 500
 const ROOM_UNDO_LIMIT = 50
 
-type ModalKind = null | 'settings' | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport' | 'sendToGame' | 'hair'
+type ModalKind = null | 'settings' | 'addItem' | 'addProp' | 'bg' | 'saved' | 'export' | 'roomExport' | 'sendToGame'
 type Mode = 'closet' | 'farm' | 'cafe' | 'kitchen' | 'room' | 'travel' | 'shop'
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -429,14 +428,6 @@ export default function App() {
 
         <div className={`flex min-h-0 flex-1 gap-2 ${split ? 'flex-row' : 'flex-col'}`}>
           <div className={split ? `relative h-full flex-none ${full ? 'w-full' : mode === 'room' || mode === 'travel' ? 'w-[65%]' : 'w-[58%]'}` : 'relative min-h-0 flex-1'}>
-            {mode === 'closet' && (
-              <button
-                onClick={() => setModal('hair')}
-                aria-label={lang === 'ko' ? '헤어숍' : 'Hair salon'}
-                title={lang === 'ko' ? '헤어숍' : 'Hair salon'}
-                className="absolute top-1 right-1 z-20 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-transparent active:scale-95"
-              ><img src={assetUrl('assets/tabs/hairshop.webp')} alt="" draggable={false} className="h-full w-full object-contain drop-shadow-md" /></button>
-            )}
             <Suspense fallback={null}>
             {mode === 'shop' ? (
               <ShopModal onClose={() => setMode(shopFrom.current)} onWear={wearFound} outfit={outfit} tweaks={tweaks} />
@@ -555,7 +546,6 @@ export default function App() {
           }}
         />
       )}
-      {modal === 'hair' && <HairSalon onClose={() => setModal(null)} />}
       {modal === 'bg' && <BackgroundPicker value={bgId} onPick={setBgId} onClose={() => setModal(null)} />}
       {modal === 'saved' && (
         <SavedSheet
