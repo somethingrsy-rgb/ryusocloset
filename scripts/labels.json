@@ -1641,5 +1641,47 @@
     "category": "wig",
     "color": "brown",
     "native": true
+  },
+  "dress_starry_navy_lolita": {
+    "ko": "별자리 네이비 로리타 원피스",
+    "en": "Starry Navy Lolita Dress",
+    "color": "navy",
+    "native": true,
+    "category": "dress"
+  },
+  "dress_cherry_pink_lolita": {
+    "ko": "체리 핑크 로리타 원피스",
+    "en": "Cherry Pink Lolita Dress",
+    "color": "pink",
+    "native": true,
+    "category": "dress"
+  },
+  "dress_strawberry_red_lolita": {
+    "ko": "딸기 빨강 로리타 원피스",
+    "en": "Strawberry Red Lolita Dress",
+    "color": "red",
+    "native": true,
+    "category": "dress"
+  },
+  "dress_snow_blue_lolita": {
+    "ko": "눈꽃 하늘 로리타 원피스",
+    "en": "Snowflake Blue Lolita Dress",
+    "color": "skyblue",
+    "native": true,
+    "category": "dress"
+  },
+  "dress_tulip_pink_lolita": {
+    "ko": "튤립 핑크 로리타 원피스",
+    "en": "Tulip Pink Lolita Dress",
+    "color": "pink",
+    "native": true,
+    "category": "dress"
+  },
+  "dress_honeybee_yellow_lolita": {
+    "ko": "꿀벌 노랑 로리타 원피스",
+    "en": "Honeybee Yellow Lolita Dress",
+    "color": "beige",
+    "native": true,
+    "category": "dress"
   }
 }
