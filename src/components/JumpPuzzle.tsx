@@ -26,8 +26,8 @@ const CPU_FLY_MS = 600
 const MY_POP_MS = 500
 const ME_FLY_MS = 600 // 내 말이 뛰어넘는 시간(동물보다 조금 빠르게)
 
-/** 점프 퍼즐에서 내 얼굴 그림: 류소·유하·유엘만 있고, 소영은 뺐다(소영이면 유하 얼굴) */
-const FACES: Record<string, string> = { ryuso: 'face_ryuso', yuha: 'face_yuha', yuel: 'face_yuel' }
+/** 점프 퍼즐에서 내 얼굴 그림 (없는 아바타면 유하 얼굴) */
+const FACES: Record<string, string> = { ryuso: 'face_ryuso', yuha: 'face_yuha', yuel: 'face_yuel', yongju: 'face_yongju' }
 const faceSrc = () => assetUrl(`assets/jump/${FACES[getAvatar().id] ?? 'face_yuha'}.webp`)
 
 /** 내 얼굴(작은 표시용). className 으로 크기·자리를 정한다 */
