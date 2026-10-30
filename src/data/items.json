@@ -528,30 +528,6 @@
     "native": true
   },
   {
-    "id": "dress_cherry_pink_lolita",
-    "category": "dress",
-    "name": {
-      "ko": "체리 핑크 로리타 원피스",
-      "en": "Cherry Pink Lolita Dress"
-    },
-    "color": "pink",
-    "colorName": {
-      "ko": "핑크",
-      "en": "Pink"
-    },
-    "colorHex": "#f4a9bd",
-    "box": {
-      "x": 111,
-      "y": 626,
-      "w": 800,
-      "h": 691
-    },
-    "image": "assets/clothes/dress/dress_cherry_pink_lolita.webp",
-    "thumb": "assets/thumbs/dress_cherry_pink_lolita.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
     "id": "dress_deco_tweed_black",
     "category": "dress",
     "name": {
@@ -572,30 +548,6 @@
     },
     "image": "assets/clothes/dress/dress_deco_tweed_black.webp",
     "thumb": "assets/thumbs/dress_deco_tweed_black.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "dress_honeybee_yellow_lolita",
-    "category": "dress",
-    "name": {
-      "ko": "꿀벌 노랑 로리타 원피스",
-      "en": "Honeybee Yellow Lolita Dress"
-    },
-    "color": "beige",
-    "colorName": {
-      "ko": "베이지",
-      "en": "Beige"
-    },
-    "colorHex": "#dcc5a2",
-    "box": {
-      "x": 130,
-      "y": 626,
-      "w": 765,
-      "h": 691
-    },
-    "image": "assets/clothes/dress/dress_honeybee_yellow_lolita.webp",
-    "thumb": "assets/thumbs/dress_honeybee_yellow_lolita.webp",
     "zIndex": 40,
     "native": true
   },
@@ -740,102 +692,6 @@
     },
     "image": "assets/clothes/dress/dress_shesmiss_gray.webp",
     "thumb": "assets/thumbs/dress_shesmiss_gray.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "dress_snow_blue_lolita",
-    "category": "dress",
-    "name": {
-      "ko": "눈꽃 하늘 로리타 원피스",
-      "en": "Snowflake Blue Lolita Dress"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 110,
-      "y": 626,
-      "w": 805,
-      "h": 691
-    },
-    "image": "assets/clothes/dress/dress_snow_blue_lolita.webp",
-    "thumb": "assets/thumbs/dress_snow_blue_lolita.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "dress_starry_navy_lolita",
-    "category": "dress",
-    "name": {
-      "ko": "별자리 네이비 로리타 원피스",
-      "en": "Starry Navy Lolita Dress"
-    },
-    "color": "navy",
-    "colorName": {
-      "ko": "네이비",
-      "en": "Navy"
-    },
-    "colorHex": "#27355b",
-    "box": {
-      "x": 114,
-      "y": 626,
-      "w": 798,
-      "h": 691
-    },
-    "image": "assets/clothes/dress/dress_starry_navy_lolita.webp",
-    "thumb": "assets/thumbs/dress_starry_navy_lolita.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "dress_strawberry_red_lolita",
-    "category": "dress",
-    "name": {
-      "ko": "딸기 빨강 로리타 원피스",
-      "en": "Strawberry Red Lolita Dress"
-    },
-    "color": "red",
-    "colorName": {
-      "ko": "레드",
-      "en": "Red"
-    },
-    "colorHex": "#c8283c",
-    "box": {
-      "x": 103,
-      "y": 626,
-      "w": 819,
-      "h": 689
-    },
-    "image": "assets/clothes/dress/dress_strawberry_red_lolita.webp",
-    "thumb": "assets/thumbs/dress_strawberry_red_lolita.webp",
-    "zIndex": 40,
-    "native": true
-  },
-  {
-    "id": "dress_tulip_pink_lolita",
-    "category": "dress",
-    "name": {
-      "ko": "튤립 핑크 로리타 원피스",
-      "en": "Tulip Pink Lolita Dress"
-    },
-    "color": "pink",
-    "colorName": {
-      "ko": "핑크",
-      "en": "Pink"
-    },
-    "colorHex": "#f4a9bd",
-    "box": {
-      "x": 115,
-      "y": 626,
-      "w": 795,
-      "h": 691
-    },
-    "image": "assets/clothes/dress/dress_tulip_pink_lolita.webp",
-    "thumb": "assets/thumbs/dress_tulip_pink_lolita.webp",
     "zIndex": 40,
     "native": true
   },
@@ -2520,6 +2376,30 @@
     "native": true
   },
   {
+    "id": "dress_cherry_pink_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "체리 핑크 로리타 원피스",
+      "en": "Cherry Pink Lolita Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 111,
+      "y": 626,
+      "w": 800,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/dress_cherry_pink_lolita.webp",
+    "thumb": "assets/thumbs/dress_cherry_pink_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "dress_fairy_blue",
     "category": "costume",
     "name": {
@@ -2540,6 +2420,30 @@
     },
     "image": "assets/clothes/costume/dress_fairy_blue.webp",
     "thumb": "assets/thumbs/dress_fairy_blue.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_honeybee_yellow_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "꿀벌 노랑 로리타 원피스",
+      "en": "Honeybee Yellow Lolita Dress"
+    },
+    "color": "beige",
+    "colorName": {
+      "ko": "베이지",
+      "en": "Beige"
+    },
+    "colorHex": "#dcc5a2",
+    "box": {
+      "x": 130,
+      "y": 626,
+      "w": 765,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/dress_honeybee_yellow_lolita.webp",
+    "thumb": "assets/thumbs/dress_honeybee_yellow_lolita.webp",
     "zIndex": 41,
     "native": true
   },
@@ -2664,6 +2568,30 @@
     "native": true
   },
   {
+    "id": "dress_snow_blue_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "눈꽃 하늘 로리타 원피스",
+      "en": "Snowflake Blue Lolita Dress"
+    },
+    "color": "skyblue",
+    "colorName": {
+      "ko": "스카이블루",
+      "en": "Sky Blue"
+    },
+    "colorHex": "#8fb8e0",
+    "box": {
+      "x": 110,
+      "y": 626,
+      "w": 805,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/dress_snow_blue_lolita.webp",
+    "thumb": "assets/thumbs/dress_snow_blue_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
     "id": "dress_starry_navy",
     "category": "costume",
     "name": {
@@ -2684,6 +2612,78 @@
     },
     "image": "assets/clothes/costume/dress_starry_navy.webp",
     "thumb": "assets/thumbs/dress_starry_navy.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_starry_navy_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "별자리 네이비 로리타 원피스",
+      "en": "Starry Navy Lolita Dress"
+    },
+    "color": "navy",
+    "colorName": {
+      "ko": "네이비",
+      "en": "Navy"
+    },
+    "colorHex": "#27355b",
+    "box": {
+      "x": 114,
+      "y": 626,
+      "w": 798,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/dress_starry_navy_lolita.webp",
+    "thumb": "assets/thumbs/dress_starry_navy_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_strawberry_red_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "딸기 빨강 로리타 원피스",
+      "en": "Strawberry Red Lolita Dress"
+    },
+    "color": "red",
+    "colorName": {
+      "ko": "레드",
+      "en": "Red"
+    },
+    "colorHex": "#c8283c",
+    "box": {
+      "x": 103,
+      "y": 626,
+      "w": 819,
+      "h": 689
+    },
+    "image": "assets/clothes/costume/dress_strawberry_red_lolita.webp",
+    "thumb": "assets/thumbs/dress_strawberry_red_lolita.webp",
+    "zIndex": 41,
+    "native": true
+  },
+  {
+    "id": "dress_tulip_pink_lolita",
+    "category": "costume",
+    "name": {
+      "ko": "튤립 핑크 로리타 원피스",
+      "en": "Tulip Pink Lolita Dress"
+    },
+    "color": "pink",
+    "colorName": {
+      "ko": "핑크",
+      "en": "Pink"
+    },
+    "colorHex": "#f4a9bd",
+    "box": {
+      "x": 115,
+      "y": 626,
+      "w": 795,
+      "h": 691
+    },
+    "image": "assets/clothes/costume/dress_tulip_pink_lolita.webp",
+    "thumb": "assets/thumbs/dress_tulip_pink_lolita.webp",
     "zIndex": 41,
     "native": true
   },
