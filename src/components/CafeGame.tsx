@@ -4,7 +4,7 @@ import { actKitchen, getKitchen, subscribeKitchen } from '../lib/kitchen'
 import { unlockSpeech } from './AnimalCall'
 import { PhoneSheet } from './PhoneSheet'
 import { phoneThemeFor } from './phoneTheme'
-import { avatarVersion, getAvatar, subscribeAvatar } from '../lib/avatars'
+import { avatarName, avatarVersion, getAvatar, subscribeAvatar } from '../lib/avatars'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { FarmFx } from './FarmFx'
 import { useI18n } from '../i18n'
@@ -118,7 +118,7 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
   const [phone, setPhone] = useState<{ dial: number | null } | null>(null)
   // 지금 고른 아바타 이름으로 동물이 불러 주고(유하야·유엘아), 휴대폰 색도 아바타에 맞춘다(유엘 파랑, 유하 분홍)
   useSyncExternalStore(subscribeAvatar, avatarVersion)
-  const kidName = getAvatar().name.ko
+  const kidName = avatarName(getAvatar())
   const phoneTheme = phoneThemeFor(getAvatar().id)
   useEffect(() => { if (!sound || phone) return; startBgm('cafe'); return stopBgm }, [sound, phone])
   useEffect(() => { MENU.forEach((m) => { new Image().src = assetUrl(`cafe/menu2/${m.id}.webp`) }) }, [])

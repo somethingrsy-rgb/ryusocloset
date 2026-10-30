@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { CALL_ANIMALS } from '../lib/animalCalls'
-import { AVATARS, baseFiles, getHairstyle, hairZ } from '../lib/avatars'
+import { AVATARS, avatarName, baseFiles, getHairstyle, hairZ } from '../lib/avatars'
 import { assetUrl } from '../lib/items'
 import { ACT_REACH, FH, FW, GOAL_BOT, GOAL_TOP, MATCH_SECONDS, type Act, newMatch, splitAnimals, stepMatch, type Match, type Team, type Vec } from '../lib/soccer'
 import { playCheer, playKick, playLevelDone, playPass, playShoot, playTap, playWhistle, startBgm, stopBgm } from '../lib/sound'
@@ -236,7 +236,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
               <span className="absolute left-1/2 -translate-x-1/2 rounded-full px-1.5 text-[10px] font-black whitespace-nowrap text-white shadow" style={{ top: -14, background: KIT[p.team].color }}>🧤 골키퍼</span>
               {[-1, 1].map((sd) => <span key={sd} className="absolute leading-none" style={{ top: '48%', [sd < 0 ? 'left' : 'right']: '-6%', fontSize: w * 0.3, transform: `scaleX(${sd})` }}>🧤</span>)}
             </>}
-            {human && <span className="absolute left-1/2 -translate-x-1/2 rounded-full px-1.5 text-[11px] font-black whitespace-nowrap text-white shadow" style={{ top: -16, background: KIT[p.team].color }}>{avatarById(p.who as string).name.ko}</span>}
+            {human && <span className="absolute left-1/2 -translate-x-1/2 rounded-full px-1.5 text-[11px] font-black whitespace-nowrap text-white shadow" style={{ top: -16, background: KIT[p.team].color }}>{avatarName(avatarById(p.who as string))}</span>}
           </div>
         )
       })}
@@ -323,11 +323,11 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
                     {AVATARS.map((a) => {
                       const on = avatars[t] === a.id, taken = avatars[t === 0 ? 1 : 0] === a.id
                       return (
-                        <button key={a.id} aria-pressed={on} aria-label={`${KIT[t].name} 팀 ${a.name.ko}`} disabled={taken}
+                        <button key={a.id} aria-pressed={on} aria-label={`${KIT[t].name} 팀 ${avatarName(a)}`} disabled={taken}
                           onClick={() => { playTap(); setAvatars((v) => (t === 0 ? [a.id, v[1]] : [v[0], a.id])) }}
                           className={`flex flex-col items-center rounded-xl p-0.5 disabled:opacity-30 ${on ? 'bg-white' : ''}`} style={on ? { boxShadow: `0 0 0 2px ${KIT[t].color}` } : undefined}>
                           <AvatarHead avatar={a} className="aspect-square h-auto w-full" />
-                          <span className="text-[10px] font-bold">{a.name.ko}</span>
+                          <span className="text-[10px] font-bold">{avatarName(a)}</span>
                         </button>
                       )
                     })}

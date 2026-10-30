@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 import { backupName, makeBackup, parseBackup, restoreBackup } from '../lib/backup'
-import { AVATARS, setAvatar } from '../lib/avatars'
+import { AVATARS, MAX_NAME, avatarName, customName, setAvatar, setAvatarName, type Avatar } from '../lib/avatars'
 import { AvatarHead } from './AvatarHead'
 import { useAvatar } from '../lib/useAvatar'
 import { RefreshButton } from './RefreshButton'
@@ -18,6 +18,31 @@ interface Props {
   onLang: () => void
   onClose: () => void
   onToast: (message: string) => void
+}
+
+/** 지금 고른 아바타의 이름 바꾸기: 비우면 기본 이름으로 돌아간다 */
+function NameField({ avatar, lang }: { avatar: Avatar; lang: 'ko' | 'en' }) {
+  const [draft, setDraft] = useState(() => customName(avatar))
+  const ko = lang === 'ko'
+  return (
+    <label className="mb-3 flex items-center gap-2 rounded-2xl bg-petal/50 px-4 py-2 font-semibold">
+      <span className="shrink-0 text-sm">✏️ {ko ? '이름' : 'Name'}</span>
+      <input
+        value={draft}
+        maxLength={MAX_NAME}
+        placeholder={avatar.name[lang]}
+        aria-label={ko ? `${avatar.name.ko}의 이름 바꾸기` : `Rename ${avatar.name.en}`}
+        onChange={(e) => { setDraft(e.target.value); setAvatarName(avatar.id, e.target.value) }}
+        onBlur={() => setDraft(customName(avatar))}
+        className="min-h-10 min-w-0 flex-1 rounded-xl bg-white px-3 text-base font-bold outline-none focus:ring-2 focus:ring-blush"
+      />
+      {draft && (
+        <button type="button" onClick={() => { setDraft(''); setAvatarName(avatar.id, '') }} className="shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-cocoa-soft">
+          {ko ? '기본 이름' : 'Default'}
+        </button>
+      )}
+    </label>
+  )
 }
 
 const row = 'flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl bg-petal/50 px-4 text-left font-semibold'
@@ -85,10 +110,11 @@ export function SettingsSheet({ sound, onSound, onLang, onClose, onToast, onSave
             className={`flex flex-col items-center gap-1 rounded-2xl bg-petal/50 p-2 font-bold ${a.id === avatar.id ? 'ring-2 ring-blush' : ''}`}
           >
             <AvatarHead avatar={a} />
-            <span className="text-sm">{a.name[lang]}{a.id === avatar.id ? ' ✓' : ''}</span>
+            <span className="text-sm">{avatarName(a, lang)}{a.id === avatar.id ? ' ✓' : ''}</span>
           </button>
         ))}
       </div>
+      <NameField key={avatar.id} avatar={avatar} lang={lang} />
       <div className="space-y-2 pb-2">
         <RefreshButton />
         <button className={row} onClick={onBackground}><span>🖼️ {t('background')}</span></button>

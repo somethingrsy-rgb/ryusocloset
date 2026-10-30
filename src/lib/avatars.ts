@@ -85,6 +85,46 @@ export function setAvatar(id: string) {
   listeners.forEach((fn) => fn())
 }
 
+/** 아이가 직접 바꾼 아바타 이름 (아바타 id → 이름). 비어 있으면 기본 이름 */
+const NAMES_KEY = 'ryuso.avatarNames.v1'
+export const MAX_NAME = 10
+export const cleanName = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, MAX_NAME) : '')
+function readNames(): Record<string, string> {
+  try {
+    const raw: unknown = JSON.parse(localStorage.getItem(NAMES_KEY) ?? 'null')
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+    return Object.fromEntries(Object.entries(raw as Record<string, unknown>).map(([k, v]) => [k, cleanName(v)] as const).filter(([k, v]) => !!v && !!byId(k)))
+  } catch {
+    return {}
+  }
+}
+let names = readNames()
+
+/** 아바타를 부르는 이름: 아이가 바꾼 이름이 있으면 그 이름(한국어·영어 같음), 없으면 기본 이름 */
+export const avatarName = (a: Avatar, lang: 'ko' | 'en' = 'ko') => names[a.id] || a.name[lang]
+/** 아이가 바꾼 이름(없으면 '') */
+export const customName = (a: Avatar) => names[a.id] ?? ''
+
+/** 아바타 이름을 바꾼다. 빈 이름이면 기본 이름으로 돌아간다 */
+export function setAvatarName(id: string, name: string) {
+  if (!byId(id)) return
+  const v = cleanName(name)
+  if ((names[id] ?? '') === v) return
+  const next = { ...names }
+  if (v) next[id] = v
+  else delete next[id]
+  names = next
+  version++
+  if (!isRestoring()) {
+    try {
+      localStorage.setItem(NAMES_KEY, JSON.stringify(names))
+    } catch {
+      /* 저장 공간이 없으면 이번 접속에서만 유지된다 */
+    }
+  }
+  listeners.forEach((fn) => fn())
+}
+
 const HAIR_KEY = 'ryuso.hair.v1'
 function readHair(): Record<string, string> {
   try {

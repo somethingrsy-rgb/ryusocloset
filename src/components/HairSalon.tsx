@@ -1,5 +1,5 @@
 import { useI18n } from '../i18n'
-import { getHairstyle, setHairstyle } from '../lib/avatars'
+import { avatarName, getHairstyle, setHairstyle } from '../lib/avatars'
 import { useAvatar } from '../lib/useAvatar'
 import { AvatarHead } from './AvatarHead'
 import { Modal } from './Modal'
@@ -12,7 +12,7 @@ export function HairSalon({ onClose }: { onClose: () => void }) {
   const current = getHairstyle(avatar)
   return (
     <Modal title={`💇 ${ko ? '헤어숍' : 'Hair salon'}`} onClose={onClose}>
-      <p className="mb-3 text-sm">{ko ? `${avatar.name.ko}의 머리 모양을 골라요` : `Pick a hairstyle for ${avatar.name.en}`}</p>
+      <p className="mb-3 text-sm">{ko ? `${avatarName(avatar)}의 머리 모양을 골라요` : `Pick a hairstyle for ${avatarName(avatar, 'en')}`}</p>
       <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={ko ? '머리 모양' : 'Hairstyle'}>
         {avatar.hairstyles.map((h) => (
           <button
