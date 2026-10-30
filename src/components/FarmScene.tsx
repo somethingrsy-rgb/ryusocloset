@@ -414,7 +414,7 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
 
       {/* 도구 버튼: 폰은 그림 아래, 가로 화면은 그림 오른쪽 위에 세로 한 줄로 얹는다 */}
       <div className={`absolute flex flex-col items-center justify-center ${wide ? '' : 'inset-x-0 bottom-0 px-3 py-3'}`} style={wide && side ? { zIndex: 15, left: 'calc(min(100cqw, 160cqh) + 0.5rem)', right: '0.5rem', top: '50%', transform: 'translateY(-50%)' } : wide ? { zIndex: 15, left: 'calc(min(100cqw, 160cqh) * 0.715)', width: 'calc(min(100cqw, 160cqh) * 0.235)', top: 'calc((100cqh - min(100cqw, 160cqh) / 1.5988) / 2 + min(100cqw, 160cqh) / 1.5988 * 0.37)' } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
-        <div className={`flex w-full flex-col gap-3 ${wide ? '' : 'max-w-[560px]'}`}>
+        <div className={`flex w-full flex-col gap-3 ${wide ? '' : 'max-w-[440px]'}`}>
           {/* 씨앗 고르기 */}
           {picker && (
             <div className="flex justify-center gap-2 rounded-3xl bg-white/95 p-2 shadow-lg" role="radiogroup" aria-label={ko ? '씨앗 고르기' : 'Choose seeds'}>
@@ -436,7 +436,8 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
               const active = tool === t.id
               return (
                 <button key={t.id} aria-pressed={t.id === 'kitchen' ? undefined : active} className={`flex flex-1 items-center rounded-3xl border-2 shadow-md ${wide ? 'flex-col px-1 py-1.5' : 'flex-col px-1 pt-2 pb-2.5'} ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'kitchen' ? onKitchen() : pick(t.id))}>
-                  <FarmImg name={t.icon} emoji={t.emoji} className={wide ? 'h-12 w-12 shrink-0 object-contain' : 'aspect-square w-[85%] object-contain'} />
+                  {/* 아이패드처럼 넓은 세로 화면에서 버튼이 너무 커지지 않게 그림 크기에 상한(폰은 그대로) */}
+                  <FarmImg name={t.icon} emoji={t.emoji} className={wide ? 'h-12 w-12 shrink-0 object-contain' : 'aspect-square w-[85%] max-w-[4.5rem] object-contain'} />
                   <span className="text-sm font-extrabold text-[#6b4a2b]">{t[lang]}</span>
                 </button>
               )
