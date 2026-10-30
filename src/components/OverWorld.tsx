@@ -4,7 +4,7 @@ import { extendReach, findItem, travelItem } from '../lib/game'
 import { roadSpot } from '../lib/roadItems'
 import { playOrder, playServe, playTap } from '../lib/sound'
 import { CALL_ANIMALS } from '../lib/animalCalls'
-import { getAvatar } from '../lib/avatars'
+import { avatarName, getAvatar } from '../lib/avatars'
 import { canMeet, getMeet, pickVisitor, talkFor, talkedOnRoad, type Talk } from '../lib/meet'
 import { GUEST_PER_AVATAR_W } from './PartyGuests'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -109,7 +109,7 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
   const startTalk = (v: Visitor) => {
     const first = !getMeet().met.includes(v.animal) // 수학으로 모은 친구면 '또 만났네', 아니면 자기소개
     playOrder()
-    setTalk({ animal: v.animal, first, t: talkFor(v.animal, getAvatar().name.ko, first), step: 0, said: null, done: false })
+    setTalk({ animal: v.animal, first, t: talkFor(v.animal, avatarName(getAvatar()), first), step: 0, said: null, done: false })
     setVisitor({ ...v, dir: posRef.current.x < v.x ? -1 : 1, moveMs: 0 })
   }
   const endTalk = () => {

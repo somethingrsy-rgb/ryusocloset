@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { AVATARS, baseFiles, getAvatar, getHairstyle, hairZ, setAvatar, setHairstyle } from './avatars'
+import { AVATARS, avatarName, baseFiles, customName, getAvatar, getHairstyle, hairZ, setAvatar, setAvatarName, setHairstyle } from './avatars'
+import { kidWords } from './animalCalls'
 import { HAIR_BEHIND_Z, HAIR_FRONT_Z, LAYER_Z } from './layers'
 
 describe('avatars', () => {
@@ -22,6 +23,21 @@ describe('avatars', () => {
     expect(getHairstyle(yuha).id).toBe('twin')
     setHairstyle(yuha, 'crownbraid')
     expect(getHairstyle(yuha).id).toBe('crownbraid')
+  })
+  it('이름을 바꾸면 그 이름으로 부르고, 비우면 기본 이름으로 돌아간다', () => {
+    const yuha = AVATARS.find((a) => a.id === 'yuha')!
+    expect(avatarName(yuha)).toBe('유하')
+    setAvatarName('yuha', '  하늘   별  ')
+    expect(avatarName(yuha)).toBe('하늘 별')
+    expect(avatarName(yuha, 'en')).toBe('하늘 별')
+    expect(kidWords(avatarName(yuha)).call).toBe('하늘 별아')
+    setAvatarName('yuha', '열두글자가넘는아주긴이름이에요')
+    expect(customName(yuha)).toHaveLength(10)
+    setAvatarName('nobody', '누구')
+    expect(avatarName(yuha)).toHaveLength(10)
+    setAvatarName('yuha', '   ')
+    expect(customName(yuha)).toBe('')
+    expect(avatarName(yuha, 'en')).toBe('Yuha')
   })
   it('유하의 기본 머리는 양갈래', () => {
     const yuha = AVATARS.find((a) => a.id === 'yuha')!

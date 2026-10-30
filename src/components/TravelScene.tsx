@@ -10,7 +10,7 @@ import { useGame } from './TravelGame'
 import { useWalkKeys } from './useWalkKeys'
 import { TravelDecor } from './TravelDecor'
 import { GUEST_PER_AVATAR_W, PartyGuests, PartyInvite } from './PartyGuests'
-import { avatarVersion, getAvatar, subscribeAvatar } from '../lib/avatars'
+import { avatarName, avatarVersion, getAvatar, subscribeAvatar } from '../lib/avatars'
 import { PARTY_SEAT, actKitchen, getKitchen, isPartySeat, subscribeKitchen, ticketAnimal } from '../lib/kitchen'
 import { getMeet, subscribeMeet } from '../lib/meet'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -146,7 +146,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
     setEating(null)
   }
   useSyncExternalStore(subscribeAvatar, avatarVersion)
-  const kidName = getAvatar().name.ko
+  const kidName = avatarName(getAvatar())
 
   const posRef = useRef(pos)
   const target = useRef<Vec | null>(null)
