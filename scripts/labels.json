@@ -1620,5 +1620,26 @@
     "en": "Strawberry Lemon Tiered Dress",
     "color": "ivory",
     "native": true
+  },
+  "wig_twin_brown": {
+    "ko": "갈색 양갈래",
+    "en": "Brown pigtail wig",
+    "category": "wig",
+    "color": "brown",
+    "native": true
+  },
+  "wig_crownbraid_brown": {
+    "ko": "왕관 땋은머리",
+    "en": "Crown braid wig",
+    "category": "wig",
+    "color": "brown",
+    "native": true
+  },
+  "wig_crownbuns_brown": {
+    "ko": "왕관 땋은머리 + 양쪽 번",
+    "en": "Crown braid with buns wig",
+    "category": "wig",
+    "color": "brown",
+    "native": true
   }
 }

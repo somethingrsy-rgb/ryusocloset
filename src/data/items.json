@@ -4176,6 +4176,30 @@
     "native": true
   },
   {
+    "id": "wig_crownbraid_brown",
+    "category": "wig",
+    "name": {
+      "ko": "왕관 땋은머리",
+      "en": "Crown braid wig"
+    },
+    "color": "brown",
+    "colorName": {
+      "ko": "브라운",
+      "en": "Brown"
+    },
+    "colorHex": "#8a5a3b",
+    "box": {
+      "x": 222,
+      "y": 49,
+      "w": 583,
+      "h": 402
+    },
+    "image": "assets/clothes/wig/wig_crownbraid_brown.webp",
+    "thumb": "assets/thumbs/wig_crownbraid_brown.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
     "id": "wig_crownbraid2",
     "category": "wig",
     "name": {
@@ -4196,6 +4220,30 @@
     },
     "image": "assets/clothes/wig/wig_crownbraid2.webp",
     "thumb": "assets/thumbs/wig_crownbraid2.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
+    "id": "wig_crownbuns_brown",
+    "category": "wig",
+    "name": {
+      "ko": "왕관 땋은머리 + 양쪽 번",
+      "en": "Crown braid with buns wig"
+    },
+    "color": "brown",
+    "colorName": {
+      "ko": "브라운",
+      "en": "Brown"
+    },
+    "colorHex": "#8a5a3b",
+    "box": {
+      "x": 167,
+      "y": 57,
+      "w": 695,
+      "h": 524
+    },
+    "image": "assets/clothes/wig/wig_crownbuns_brown.webp",
+    "thumb": "assets/thumbs/wig_crownbuns_brown.webp",
     "zIndex": 5,
     "native": true
   },
@@ -4484,6 +4532,30 @@
     },
     "image": "assets/clothes/wig/wig_sidebraid3.webp",
     "thumb": "assets/thumbs/wig_sidebraid3.webp",
+    "zIndex": 5,
+    "native": true
+  },
+  {
+    "id": "wig_twin_brown",
+    "category": "wig",
+    "name": {
+      "ko": "갈색 양갈래",
+      "en": "Brown pigtail wig"
+    },
+    "color": "brown",
+    "colorName": {
+      "ko": "브라운",
+      "en": "Brown"
+    },
+    "colorHex": "#8a5a3b",
+    "box": {
+      "x": 85,
+      "y": 54,
+      "w": 859,
+      "h": 621
+    },
+    "image": "assets/clothes/wig/wig_twin_brown.webp",
+    "thumb": "assets/thumbs/wig_twin_brown.webp",
     "zIndex": 5,
     "native": true
   },
