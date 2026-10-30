@@ -374,18 +374,6 @@
     "color": "green",
     "native": true
   },
-  "costume_petal_blue": {
-    "ko": "꽃잎 하이로우 드레스",
-    "en": "Petal Hi-Lo Dress",
-    "color": "navy",
-    "native": true
-  },
-  "costume_princess_pink": {
-    "ko": "핑크 공주 드레스",
-    "en": "Pink Princess Dress",
-    "color": "pink",
-    "native": true
-  },
   "acc_hair_ribbon_green": {
     "ko": "초록 머리 리본",
     "en": "Green Hair Ribbon",
@@ -1069,13 +1057,6 @@
     "color": "navy",
     "native": true
   },
-  "costume_magnolia_hanfu": {
-    "ko": "목련 한푸 원피스",
-    "en": "Magnolia Hanfu Dress",
-    "category": "costume",
-    "color": "skyblue",
-    "native": true
-  },
   "shoes_magnolia_hanfu": {
     "ko": "블루 꽃신",
     "en": "Blue Flat Shoes",
@@ -1093,13 +1074,6 @@
     "ko": "블랙 버클 구두",
     "en": "Black Buckle Shoes",
     "color": "black",
-    "native": true
-  },
-  "costume_lotus_jade": {
-    "ko": "연꽃 옥빛 원피스",
-    "en": "Lotus Jade Dress",
-    "category": "costume",
-    "color": "mint",
     "native": true
   },
   "shoes_lotus_jade": {
@@ -1145,13 +1119,6 @@
     "ko": "브라운 리본 구두",
     "en": "Brown Ribbon Shoes",
     "color": "brown",
-    "native": true
-  },
-  "costume_pink_hanfu": {
-    "ko": "핑크 한푸 원피스",
-    "en": "Pink Hanfu Dress",
-    "category": "costume",
-    "color": "pink",
     "native": true
   },
   "shoes_pink_hanfu": {
@@ -1321,13 +1288,6 @@
     "ko": "브라운 레이스업 부츠",
     "en": "Brown Lace-up Boots",
     "color": "brown",
-    "native": true
-  },
-  "costume_panda_sailor_blue": {
-    "ko": "판다 세일러 가디건",
-    "en": "Panda Sailor Cardigan",
-    "category": "costume",
-    "color": "skyblue",
     "native": true
   },
   "costume_strawberry_cardigan_pink": {

@@ -26,14 +26,13 @@ MIN_SCALE, MAX_SCALE = 1.0, 1.25  # 작은 옷만 키우되 치마·리본이 �
 # 자동 맞추기는 이 옷을 건드리지 않고, 한 번만 적용한다(적용 여부는 costume_fit_applied.json 의 'manual' 목록).
 MANUAL: dict[str, dict] = {
     'costume_hanbok_starry': dict(scale=1.1 ** 2, dy=10 * 8, pivot=(512, 989)),  # +2, 아래로 10칸 (옷 영역 중심이 피벗)
-    'dress_fairy_blue': dict(scale=1.1, dx=1 * 8, dy=14 * 8, pivot=(512, 991)),  # +1, 오른쪽 1칸, 아래로 14칸
+    'dress_fairy_blue': dict(scale=1.1, dx=1 * 8, dy=14 * 8, pivot=(512, 991)),  # +1, 오른쪽 1칸, 아래로 14칸 → 이후 아래로 2칸, 왼쪽 1.5칸 (3차)
     'costume_checker_queen': dict(scale=1.1, dy=0, pivot=(513, 1088)),  # +1
-    'costume_floral_black': dict(scale=1.0, dx=1 * 8, dy=0, pivot=(512, 924)),  # 오른쪽 1칸
+    'costume_floral_black': dict(scale=1.0, dx=1 * 8, dy=0, pivot=(512, 924)),  # 오른쪽 1칸 → 이후 +1, 아래로 4칸, 왼쪽 1칸 (3차)
     'costume_forest_green': dict(scale=1 / 1.1, dy=-5 * 8, pivot=(512, 980)),  # -1, 위로 5칸
-    'costume_petal_blue': dict(scale=1.0, dy=1 * 8, pivot=(512, 1062)),  # (+2, 아래로 5칸 적용한 뒤) 아래로 1칸 더
     'costume_sakura_blue': dict(scale=1.1, dy=6 * 8, pivot=(512, 1022)),  # +1, 아래로 6칸
     'costume_tassel_pink': dict(scale=1 / 1.1, dy=0, pivot=(512, 998)),  # -1
-    'dress_card_red': dict(scale=1.0, dy=-1 * 8, pivot=(512, 1012)),  # 위로 1칸
+    'dress_card_red': dict(scale=1.0, dy=-1 * 8, pivot=(512, 1012)),  # 위로 1칸 → 이후 +1, 아래로 5칸 (3차)
     'dress_lolita_black': dict(scale=1.1, dy=4 * 8, pivot=(512, 920)),  # +1, 아래로 4칸
     'dress_lolita_purple': dict(scale=1.1, dy=4 * 8, pivot=(512, 944)),  # +1, 아래로 4칸
     'dress_maid_blue': dict(scale=1.1 ** 2, dy=10 * 8, pivot=(512, 913)),  # +2, 아래로 10칸
@@ -41,9 +40,9 @@ MANUAL: dict[str, dict] = {
     'shoes_pink_maryjane_socks': dict(scale=1.1 ** 2, dy=0, pivot=(510, 1431)),  # 신발 +2 (옷 영역 중심 기준)
     'shoes_platform_cream_heart': dict(scale=1.1 ** 3, dy=0, pivot=(517, 1436)),  # 신발 +3 (신발 영역 중심 기준)
     'dress_starry_navy': dict(scale=1.1, dy=6 * 8, pivot=(512, 1070)),  # +1, 아래로 6칸 (아래 자락은 캔버스 밖으로 잘림)
-    'costume_clover_flower_lolita': dict(scale=1.1 ** 2, dx=2 * 8, dy=8 * 8, pivot=(512, 977)),  # +2, 오른쪽 2칸, 아래로 8칸
+    'costume_clover_flower_lolita': dict(scale=1.1 ** 2, dx=2 * 8, dy=8 * 8, pivot=(512, 977)),  # +2, 오른쪽 2칸, 아래로 8칸 → 이후 -1, 아래로 2칸 (3차)
     'costume_yellow_ribbon_lolita': dict(scale=1 / 1.1 ** 2, dy=-10 * 8, pivot=(512, 1069)),  # -2, 위로 10칸
-    'costume_winged_lolita_puff': dict(scale=1.1, dy=5 * 8, pivot=(512, 1022)),  # +1, 아래로 5칸 (위로 6칸 적용한 뒤 한 번 더)
+    'costume_winged_lolita_puff': dict(scale=1.1, dy=5 * 8, pivot=(512, 1022)),  # +1, 아래로 5칸 (위로 6칸 적용한 뒤 한 번 더) → 이후 +1, 아래로 3칸 (3차)
     'shoes_yellow_ribbon_maryjane': dict(scale=1.1 ** 3, dy=0, pivot=(511, 1433)),  # 신발 +3
     'shoes_bow_flats_black': dict(scale=1.1, dy=0, pivot=(511, 1457)),  # 신발 +1
     'shoes_flats_beige': dict(scale=1.1, dy=0, pivot=(511, 1457)),  # 신발 +1
@@ -71,28 +70,30 @@ MANUAL: dict[str, dict] = {
     'costume_maid_pink_heart': dict(scale=1 / 1.1 ** 4, dy=-20 * 8, pivot=(511, 1070)),  # -4, 위로 20칸
     'costume_lilac_daisy_tier': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
     'costume_sky_cloud_tier': dict(scale=1 / 1.1, dy=-12, pivot=(512, 983)),  # -1, 위로 1.5칸
-    'costume_sakura_pink_tier': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 → 이후 아래로 1칸 더 (2차)
-    'costume_lilac_lemon_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 → 이후 위로 1칸 더 (2차)
-    'costume_green_gingham_daisy': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
-    'costume_seashell_mint': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 → 이후 아래로 1칸 더 (2차)
+    'costume_sakura_pink_tier': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 → 이후 아래로 1칸 더 (2차) → 이후 위로 1칸 (3차)
+    'costume_lilac_lemon_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 → 이후 위로 1칸 더 (2차) → 이후 +1, 아래로 4칸 (3차)
+    'costume_green_gingham_daisy': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 → 이후 아래로 2칸 (3차)
+    'costume_seashell_mint': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 → 이후 아래로 1칸 더 (2차) → 이후 +1, 아래로 1.5칸 (3차)
     'costume_strawberry_lemon_tier': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
     'dress_starry_navy_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용) → 이후 위로 1칸 더 (2차)
     'dress_cherry_pink_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용) → 이후 -1, 위로 3칸 더 (2차)
     'dress_strawberry_red_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용) → 이후 -2, 위로 5칸 더 (2차)
-    'dress_snow_blue_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
+    'dress_snow_blue_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용) → 이후 아래로 1칸, 왼쪽 0.5칸 (3차)
     'dress_tulip_pink_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용) → 이후 위로 1칸 더 (2차)
     'dress_honeybee_yellow_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용) → 이후 -1, 위로 4칸 더 (2차)
     'shoes_sneakers_mule_navy': dict(scale=1.1, dy=0, pivot=(512, 1445)),  # 신발 +1
-    'shoes_brown_gold_qipao': dict(scale=1.1, dy=0, pivot=(512, 1446)),  # 신발 +1
+    'shoes_brown_gold_qipao': dict(scale=1.1, dy=0, pivot=(512, 1446)),  # 신발 +1 → 이후 신발 +1 (3차)
     'shoes_gothic_chain': dict(scale=1.1, dy=16, pivot=(511, 1435)),  # 신발 +1, 아래로 2칸
     'shoes_boy_purple_cape': dict(scale=1.1, dy=0, pivot=(512, 1452)),  # 신발 +1
     'shoes_boy_white_gold': dict(scale=1.1, dy=0, pivot=(512, 1456)),  # 신발 +1
+    'costume_trump_blue': dict(scale=1.1, dx=0, dy=24, pivot=(512, 902)),  # +1, 아래로 3칸
+    'costume_yellow_qipao': dict(scale=1.1, dx=0, dy=32, pivot=(512, 946)),  # +1, 아래로 4칸
+    'dress_seashell_blue': dict(scale=1.0, dx=0, dy=16, pivot=(512, 1024)),  # 아래로 2칸
 }
 OVERRIDES: dict[str, tuple[int, int]] = {
     'dress_card_red': (760, 165),  # 목 장식이 따로 떨어져 있어서 자동 감지가 안 됨 (소매 사이 몸통 폭)
     # 몸통이 거의 안 보이는 옷은 눈으로 보고 정한 값 (허리 y, 몸통 폭)
     'costume_hanbok_starry': (700, 150),
-    'costume_petal_blue': (760, 175),
     'dress_seashell_blue': (790, 155),
 }
 

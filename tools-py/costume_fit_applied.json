@@ -3,10 +3,6 @@
     "scale": 1.15,
     "waist": 126
   },
-  "costume_princess_pink": {
-    "scale": 1.0,
-    "waist": 176
-  },
   "costume_trump_blue": {
     "scale": 1.062,
     "waist": 160
@@ -29,14 +25,15 @@
     "costume_lilac_daisy_tier",
     "costume_lilac_lemon_lolita",
     "costume_maid_pink_heart",
-    "costume_petal_blue",
     "costume_sakura_blue",
     "costume_sakura_pink_tier",
     "costume_seashell_mint",
     "costume_sky_cloud_tier",
     "costume_strawberry_lemon_tier",
     "costume_tassel_pink",
+    "costume_trump_blue",
     "costume_winged_lolita_puff",
+    "costume_yellow_qipao",
     "costume_yellow_ribbon_lolita",
     "dress_card_red",
     "dress_cherry_pink_lolita",
@@ -51,6 +48,7 @@
     "dress_maid_blue",
     "dress_midnight_navy",
     "dress_oxford_beige",
+    "dress_seashell_blue",
     "dress_shesmiss_gray",
     "dress_snow_blue_lolita",
     "dress_starry_navy",

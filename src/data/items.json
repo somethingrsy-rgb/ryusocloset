@@ -1333,10 +1333,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 104,
-      "y": 590,
-      "w": 847,
-      "h": 905
+      "x": 142,
+      "y": 647,
+      "w": 770,
+      "h": 822
     },
     "image": "assets/clothes/costume/costume_clover_flower_lolita.webp",
     "thumb": "assets/thumbs/costume_clover_flower_lolita.webp",
@@ -1357,10 +1357,10 @@
     },
     "colorHex": "#2b2b2f",
     "box": {
-      "x": 170,
-      "y": 603,
-      "w": 700,
-      "h": 643
+      "x": 127,
+      "y": 604,
+      "w": 770,
+      "h": 707
     },
     "image": "assets/clothes/costume/costume_floral_black.webp",
     "thumb": "assets/thumbs/costume_floral_black.webp",
@@ -1430,7 +1430,7 @@
     "colorHex": "#6f9a72",
     "box": {
       "x": 125,
-      "y": 626,
+      "y": 642,
       "w": 775,
       "h": 691
     },
@@ -1573,61 +1573,13 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 115,
-      "y": 618,
-      "w": 795,
-      "h": 691
+      "x": 76,
+      "y": 616,
+      "w": 874,
+      "h": 760
     },
     "image": "assets/clothes/costume/costume_lilac_lemon_lolita.webp",
     "thumb": "assets/thumbs/costume_lilac_lemon_lolita.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
-    "id": "costume_lotus_jade",
-    "category": "costume",
-    "name": {
-      "ko": "연꽃 옥빛 원피스",
-      "en": "Lotus Jade Dress"
-    },
-    "color": "mint",
-    "colorName": {
-      "ko": "민트",
-      "en": "Mint"
-    },
-    "colorHex": "#a9dcc8",
-    "box": {
-      "x": 111,
-      "y": 618,
-      "w": 770,
-      "h": 737
-    },
-    "image": "assets/clothes/costume/costume_lotus_jade.webp",
-    "thumb": "assets/thumbs/costume_lotus_jade.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
-    "id": "costume_magnolia_hanfu",
-    "category": "costume",
-    "name": {
-      "ko": "목련 한푸 원피스",
-      "en": "Magnolia Hanfu Dress"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 127,
-      "y": 616,
-      "w": 770,
-      "h": 780
-    },
-    "image": "assets/clothes/costume/costume_magnolia_hanfu.webp",
-    "thumb": "assets/thumbs/costume_magnolia_hanfu.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1680,30 +1632,6 @@
     "native": true
   },
   {
-    "id": "costume_panda_sailor_blue",
-    "category": "costume",
-    "name": {
-      "ko": "판다 세일러 가디건",
-      "en": "Panda Sailor Cardigan"
-    },
-    "color": "skyblue",
-    "colorName": {
-      "ko": "스카이블루",
-      "en": "Sky Blue"
-    },
-    "colorHex": "#8fb8e0",
-    "box": {
-      "x": 184,
-      "y": 621,
-      "w": 655,
-      "h": 496
-    },
-    "image": "assets/clothes/costume/costume_panda_sailor_blue.webp",
-    "thumb": "assets/thumbs/costume_panda_sailor_blue.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
     "id": "costume_pastel_star",
     "category": "costume",
     "name": {
@@ -1728,54 +1656,6 @@
     "native": true
   },
   {
-    "id": "costume_petal_blue",
-    "category": "costume",
-    "name": {
-      "ko": "꽃잎 하이로우 드레스",
-      "en": "Petal Hi-Lo Dress"
-    },
-    "color": "navy",
-    "colorName": {
-      "ko": "네이비",
-      "en": "Navy"
-    },
-    "colorHex": "#27355b",
-    "box": {
-      "x": 62,
-      "y": 596,
-      "w": 875,
-      "h": 940
-    },
-    "image": "assets/clothes/costume/costume_petal_blue.webp",
-    "thumb": "assets/thumbs/costume_petal_blue.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
-    "id": "costume_pink_hanfu",
-    "category": "costume",
-    "name": {
-      "ko": "핑크 한푸 원피스",
-      "en": "Pink Hanfu Dress"
-    },
-    "color": "pink",
-    "colorName": {
-      "ko": "핑크",
-      "en": "Pink"
-    },
-    "colorHex": "#f4a9bd",
-    "box": {
-      "x": 88,
-      "y": 597,
-      "w": 847,
-      "h": 816
-    },
-    "image": "assets/clothes/costume/costume_pink_hanfu.webp",
-    "thumb": "assets/thumbs/costume_pink_hanfu.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
     "id": "costume_pink_maid",
     "category": "costume",
     "name": {
@@ -1796,30 +1676,6 @@
     },
     "image": "assets/clothes/costume/costume_pink_maid.webp",
     "thumb": "assets/thumbs/costume_pink_maid.webp",
-    "zIndex": 41,
-    "native": true
-  },
-  {
-    "id": "costume_princess_pink",
-    "category": "costume",
-    "name": {
-      "ko": "핑크 공주 드레스",
-      "en": "Pink Princess Dress"
-    },
-    "color": "pink",
-    "colorName": {
-      "ko": "핑크",
-      "en": "Pink"
-    },
-    "colorHex": "#f4a9bd",
-    "box": {
-      "x": 65,
-      "y": 661,
-      "w": 895,
-      "h": 849
-    },
-    "image": "assets/clothes/costume/costume_princess_pink.webp",
-    "thumb": "assets/thumbs/costume_princess_pink.webp",
     "zIndex": 41,
     "native": true
   },
@@ -1910,7 +1766,7 @@
     "colorHex": "#f4a9bd",
     "box": {
       "x": 129,
-      "y": 634,
+      "y": 626,
       "w": 767,
       "h": 691
     },
@@ -1933,10 +1789,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 122,
-      "y": 634,
-      "w": 781,
-      "h": 691
+      "x": 83,
+      "y": 611,
+      "w": 859,
+      "h": 761
     },
     "image": "assets/clothes/costume/costume_seashell_mint.webp",
     "thumb": "assets/thumbs/costume_seashell_mint.webp",
@@ -2197,10 +2053,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 140,
-      "y": 604,
-      "w": 743,
-      "h": 595
+      "x": 103,
+      "y": 599,
+      "w": 817,
+      "h": 655
     },
     "image": "assets/clothes/costume/costume_trump_blue.webp",
     "thumb": "assets/thumbs/costume_trump_blue.webp",
@@ -2221,10 +2077,10 @@
     },
     "colorHex": "#b9a4e8",
     "box": {
-      "x": 57,
-      "y": 549,
-      "w": 910,
-      "h": 987
+      "x": 11,
+      "y": 524,
+      "w": 1002,
+      "h": 1012
     },
     "image": "assets/clothes/costume/costume_winged_lolita_puff.webp",
     "thumb": "assets/thumbs/costume_winged_lolita_puff.webp",
@@ -2245,10 +2101,10 @@
     },
     "colorHex": "#dcc5a2",
     "box": {
-      "x": 162,
-      "y": 604,
-      "w": 700,
-      "h": 685
+      "x": 127,
+      "y": 602,
+      "w": 770,
+      "h": 754
     },
     "image": "assets/clothes/costume/costume_yellow_qipao.webp",
     "thumb": "assets/thumbs/costume_yellow_qipao.webp",
@@ -2317,10 +2173,10 @@
     },
     "colorHex": "#c8283c",
     "box": {
-      "x": 152,
+      "x": 116,
       "y": 596,
-      "w": 721,
-      "h": 816
+      "w": 793,
+      "h": 897
     },
     "image": "assets/clothes/costume/dress_card_red.webp",
     "thumb": "assets/thumbs/dress_card_red.webp",
@@ -2365,10 +2221,10 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 108,
-      "y": 678,
+      "x": 96,
+      "y": 694,
       "w": 824,
-      "h": 851
+      "h": 842
     },
     "image": "assets/clothes/costume/dress_fairy_blue.webp",
     "thumb": "assets/thumbs/dress_fairy_blue.webp",
@@ -2510,7 +2366,7 @@
     "colorHex": "#8fb8e0",
     "box": {
       "x": 128,
-      "y": 605,
+      "y": 621,
       "w": 768,
       "h": 838
     },
@@ -2533,8 +2389,8 @@
     },
     "colorHex": "#8fb8e0",
     "box": {
-      "x": 110,
-      "y": 626,
+      "x": 106,
+      "y": 634,
       "w": 805,
       "h": 691
     },
@@ -3421,10 +3277,10 @@
     },
     "colorHex": "#8a5a3b",
     "box": {
-      "x": 402,
-      "y": 1381,
-      "w": 221,
-      "h": 130
+      "x": 391,
+      "y": 1374,
+      "w": 243,
+      "h": 143
     },
     "image": "assets/clothes/shoes/shoes_brown_gold_qipao.webp",
     "thumb": "assets/thumbs/shoes_brown_gold_qipao.webp",
