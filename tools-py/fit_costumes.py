@@ -69,20 +69,24 @@ MANUAL: dict[str, dict] = {
     'bottom_flare_skirt_gray': dict(scale=1.0, dy=-16, pivot=(511, 1123)),  # 위로 2칸
     'costume_alice_card_pink': dict(scale=1 / 1.1 ** 2, dy=-9 * 8, pivot=(512, 967)),  # -2, 위로 9칸
     'costume_maid_pink_heart': dict(scale=1 / 1.1 ** 4, dy=-20 * 8, pivot=(511, 1070)),  # -4, 위로 20칸
-    'costume_rainbow_petal_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
     'costume_lilac_daisy_tier': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
     'costume_sky_cloud_tier': dict(scale=1 / 1.1, dy=-12, pivot=(512, 983)),  # -1, 위로 1.5칸
-    'costume_sakura_pink_tier': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
-    'costume_lilac_lemon_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
+    'costume_sakura_pink_tier': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 → 이후 아래로 1칸 더 (2차)
+    'costume_lilac_lemon_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 → 이후 위로 1칸 더 (2차)
     'costume_green_gingham_daisy': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
-    'costume_seashell_mint': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
+    'costume_seashell_mint': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 → 이후 아래로 1칸 더 (2차)
     'costume_strawberry_lemon_tier': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸
-    'dress_starry_navy_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
-    'dress_cherry_pink_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
-    'dress_strawberry_red_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
+    'dress_starry_navy_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용) → 이후 위로 1칸 더 (2차)
+    'dress_cherry_pink_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용) → 이후 -1, 위로 3칸 더 (2차)
+    'dress_strawberry_red_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용) → 이후 -2, 위로 5칸 더 (2차)
     'dress_snow_blue_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
-    'dress_tulip_pink_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
-    'dress_honeybee_yellow_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용)
+    'dress_tulip_pink_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용) → 이후 위로 1칸 더 (2차)
+    'dress_honeybee_yellow_lolita': dict(scale=1 / 1.1, dy=-12, pivot=(512, 984)),  # -1, 위로 1.5칸 (처음 넣을 때 적용) → 이후 -1, 위로 4칸 더 (2차)
+    'shoes_sneakers_mule_navy': dict(scale=1.1, dy=0, pivot=(512, 1445)),  # 신발 +1
+    'shoes_brown_gold_qipao': dict(scale=1.1, dy=0, pivot=(512, 1446)),  # 신발 +1
+    'shoes_gothic_chain': dict(scale=1.1, dy=16, pivot=(511, 1435)),  # 신발 +1, 아래로 2칸
+    'shoes_boy_purple_cape': dict(scale=1.1, dy=0, pivot=(512, 1452)),  # 신발 +1
+    'shoes_boy_white_gold': dict(scale=1.1, dy=0, pivot=(512, 1456)),  # 신발 +1
 }
 OVERRIDES: dict[str, tuple[int, int]] = {
     'dress_card_red': (760, 165),  # 목 장식이 따로 떨어져 있어서 자동 감지가 안 됨 (소매 사이 몸통 폭)
