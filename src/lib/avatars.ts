@@ -125,17 +125,12 @@ export function setAvatarName(id: string, name: string) {
   listeners.forEach((fn) => fn())
 }
 
-const HAIR_KEY = 'ryuso.hair.v1'
-function readHair(): Record<string, string> {
-  try {
-    const raw: unknown = JSON.parse(localStorage.getItem(HAIR_KEY) ?? 'null')
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
-    return Object.fromEntries(Object.entries(raw as Record<string, unknown>).filter(([k, v]) => typeof v === 'string' && !!byId(k)?.hairstyles.some((h) => h.id === v))) as Record<string, string>
-  } catch {
-    return {}
-  }
-}
-let hair = readHair()
+/**
+ * 머리 모양: 헤어숍을 없애서 아바타마다 늘 기본 머리(hairstyles 의 첫 번째)를 쓴다. 다른 머리는 가발로 입는다.
+ * 예전에 헤어숍에서 고른 머리(ryuso.hair.v1)는 지운다. setHairstyle 은 이번 접속에서만 바꾸는 시험용이다.
+ */
+try { localStorage.removeItem('ryuso.hair.v1') } catch { /* 지우지 못해도 읽지 않는다 */ }
+let hair: Record<string, string> = {}
 
 /** 이 아바타가 지금 하고 있는 머리 (안 골랐거나 없어진 머리면 기본) */
 export const getHairstyle = (a: Avatar): Hairstyle => a.hairstyles.find((h) => h.id === hair[a.id]) ?? a.hairstyles[0]
@@ -144,13 +139,6 @@ export function setHairstyle(a: Avatar, styleId: string) {
   if (!a.hairstyles.some((h) => h.id === styleId) || getHairstyle(a).id === styleId) return
   hair = { ...hair, [a.id]: styleId }
   version++
-  if (!isRestoring()) {
-    try {
-      localStorage.setItem(HAIR_KEY, JSON.stringify(hair))
-    } catch {
-      /* 저장 공간이 없으면 이번 접속에서만 유지된다 */
-    }
-  }
   listeners.forEach((fn) => fn())
 }
 
