@@ -192,8 +192,6 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
     if (portrait) return { joystick: { right: 12, top: 60, transform: 'rotate(180deg)' }, buttons: { left: 12, top: 60, transform: 'rotate(180deg)' } }
     return t === 0 ? { joystick: { left: 12, bottom: 12 }, buttons: { left: 12, top: 60 } } : { joystick: { right: 12, bottom: 12 }, buttons: { right: 12, top: 60 } }
   }
-  /** 세로 화면 골대 이름은 버튼·조이스틱이 덜 겹치는 골대 바로 옆(아래 골대는 왼쪽, 위 골대는 오른쪽) */
-  const portraitLabelLeft = (t: Team) => t === 0
   /** 팀 이름: 시작 창에서 직접 쓴다(다음에도 기억). 비워 두면 빨강팀·보라팀 */
   const teamName = (t: Team) => names[t].trim() || `${KIT[t].name}팀`
   const left_ = Math.max(0, Math.ceil(MATCH_SECONDS - match.time))
@@ -209,22 +207,6 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
       <div aria-hidden className="absolute rounded-full border-[3px] border-white/90" style={{ ...rect(FW / 2 - 8, FH / 2 - 8, FW / 2 + 8, FH / 2 + 8) }} />
       {[0, 1].map((t) => <div key={`box${t}`} aria-hidden className="absolute border-[3px] border-white/90" style={rect(t ? FW - 14 : 0, 14, t ? FW : 14, FH - 14)} />)}
       {[0, 1].map((t) => <div key={`goal${t}`} aria-hidden className={`absolute rounded-sm border-[3px] border-white ${party && party.team !== t ? 'soccer-net' : ''}`} style={{ ...rect(t ? FW : -3.5, GOAL_TOP, t ? FW + 3.5 : 0, GOAL_BOT), background: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0 3px, transparent 3px 8px)', boxShadow: `0 0 0 2px ${KIT[t === 0 ? 0 : 1].color}` }} />)}
-      {/* 골대 옆 팀 이름: 이 골대를 지키는 팀(빨강 팀은 왼쪽/아래 골대). 가로 화면은 골대 바깥 옆에 세로 글씨로, 세로 화면은 골대 옆(슛 버튼이 없는 쪽, 골키퍼 표시를 가리지 않게) */}
-      {([0, 1] as Team[]).map((t) => {
-        const g = rect(t === 0 ? -3.5 : FW, GOAL_TOP, t === 0 ? 0 : FW + 3.5, GOAL_BOT)
-        const style: React.CSSProperties = portrait
-          ? (portraitLabelLeft(t) ? { left: g.left - 6, top: g.top + g.height / 2, transform: 'translate(-100%, -50%)' } : { left: g.left + g.width + 6, top: g.top + g.height / 2, transform: 'translateY(-50%)' })
-          : { left: t === 0 ? g.left - 3 : g.left + g.width + 3, top: g.top + g.height / 2, transform: `translate(${t === 0 ? '-100%' : '0'}, -50%)`, writingMode: 'vertical-rl' }
-        return <span key={`gl${t}`} aria-hidden className="pointer-events-none absolute z-[1600] rounded-full px-1.5 py-1 text-[11px] leading-none font-black whitespace-nowrap text-white shadow" style={{ ...style, background: KIT[t].color }}>{teamName(t)} 골대</span>
-      })}
-
-      {/* 공격 방향: 팀마다 자기 진영에 상대 골대 쪽을 가리키는 화살표(빨강 팀은 오른쪽/위로, 보라 팀은 왼쪽/아래로 공격) */}
-      {([0, 1] as Team[]).map((t) => {
-        const at = toScreen(t === 0 ? 30 : 70, portrait ? (t === 0 ? FH - 6 : 6) : 5)
-        const arrow = portrait ? (t === 0 ? '⬆' : '⬇') : t === 0 ? '➡' : '⬅'
-        return <span key={`atk${t}`} aria-hidden className="pointer-events-none absolute rounded-full bg-white/80 px-1.5 py-0.5 text-[11px] leading-none font-black whitespace-nowrap shadow" style={{ left: at.x, top: at.y, transform: 'translate(-50%, -50%)', color: KIT[t].color, zIndex: 1 }}>{t === 0 ? `${teamName(t)} 공격 ${arrow}` : `${arrow} ${teamName(t)} 공격`}</span>
-      })}
-
       {/* 선수들(아래쪽일수록 앞에) */}
       {match.players.map((p, i) => {
         const s = toScreen(p.x, p.y)
