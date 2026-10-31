@@ -7,18 +7,19 @@ const seeded = (seed: number) => () => { seed = (seed * 16807) % 2147483647; ret
  * 아이 흉내 선수(빨강 팀): 0.3초마다 손가락을 공 쪽으로 옮기고(조금 빗나가게), 공을 잡으면 상대 골대 쪽으로 몰다가
  * 골대에 가까워지면 슛 버튼을 누른다. skill 은 손가락을 대고 있는 비율·정확도
  */
-export function kidBot(skill: number) {
+export function kidBot(skill: number, team: 0 | 1 = 0) {
+  const fwd = team === 0 ? 1 : -1
   let tgt: Vec = { x: 50, y: 30 }, re = 0
   return (m: Match, dt: number, rnd: () => number): { target: Vec | null; act: Act | null } => {
-    const me = m.players.findIndex((p) => p.team === 0 && p.role === 'human')
+    const me = m.players.findIndex((p) => p.team === team && p.role === 'human')
     re -= dt
     if (m.hold === me) {
       const p = m.players[me]
-      if (re <= 0) { re = 0.3; tgt = { x: Math.min(FW - 2, p.x + 15), y: Math.max(5, Math.min(FH - 5, FH / 2 + (rnd() - 0.5) * 20)) } }
-      const act: Act | null = FW - p.x < 30 && rnd() < 0.08 * skill ? 'shoot' : rnd() < 0.004 ? 'pass' : null
+      if (re <= 0) { re = 0.3; tgt = { x: Math.max(2, Math.min(FW - 2, p.x + 15 * fwd)), y: Math.max(5, Math.min(FH - 5, FH / 2 + (rnd() - 0.5) * 20)) } }
+      const act: Act | null = (team === 0 ? FW - p.x : p.x) < 30 && rnd() < 0.08 * skill ? 'shoot' : rnd() < 0.004 ? 'pass' : null
       return { target: rnd() < skill ? tgt : null, act }
     }
-    if (re <= 0) { re = 0.25 + (1 - skill) * 0.5; tgt = { x: Math.max(1, Math.min(FW - 1, m.ball.x - 2 + (rnd() - 0.5) * 10 * (1 - skill))), y: Math.max(1, Math.min(FH - 1, m.ball.y + (rnd() - 0.5) * 10 * (1 - skill))) } }
+    if (re <= 0) { re = 0.25 + (1 - skill) * 0.5; tgt = { x: Math.max(1, Math.min(FW - 1, m.ball.x - 2 * fwd + (rnd() - 0.5) * 10 * (1 - skill))), y: Math.max(1, Math.min(FH - 1, m.ball.y + (rnd() - 0.5) * 10 * (1 - skill))) } }
     return { target: rnd() < skill ? tgt : null, act: null }
   }
 }
@@ -143,6 +144,22 @@ describe('축구: 혼자 하기 이길 확률', () => {
     const share = win / (win + lose)
     expect(share).toBeGreaterThan(0.5)
     expect(share).toBeLessThan(0.9) // 60판이라 ±0.06 쯤 흔들린다
+  })
+  it('보라 팀을 골라도(빨강 팀이 컴퓨터) 대체로 이긴다', { timeout: 30000 }, () => {
+    let win = 0, lose = 0
+    for (let s = 1; s <= 60; s++) {
+      const rnd = seeded(s * 7919)
+      let m: Match = newMatch(['yuha', 'yuel'], splitAnimals(rnd), [true, false])
+      const kid = kidBot(0.85, 1)
+      for (let t = 0; t < (MATCH_SECONDS + 45) * 30 && !m.over; t++) {
+        const k = kid(m, 1 / 30, rnd)
+        m = stepMatch(m, 1 / 30, [null, k.target], rnd, [null, k.act]).m
+      }
+      if (m.score[1] > m.score[0]) win++; else if (m.score[1] < m.score[0]) lose++
+    }
+    const share = win / (win + lose)
+    expect(share).toBeGreaterThan(0.5)
+    expect(share).toBeLessThan(0.9)
   })
 })
 

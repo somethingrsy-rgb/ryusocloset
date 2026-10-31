@@ -47,8 +47,13 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
     try { localStorage.setItem('ryuso.soccer.teams', JSON.stringify(next)) } catch { /* 저장 못 해도 이번 판은 그 이름으로 */ }
     return next
   })
-  /** 1인: 빨강 팀만 사람이 하고 보라 팀 아바타는 컴퓨터가, 2인: 두 사람이 한 팀씩 */
+  /** 1인: 고른 팀(mine)만 사람이 하고 다른 팀 아바타는 컴퓨터가, 2인: 두 사람이 한 팀씩 */
   const [players, setPlayers] = useState<1 | 2>(() => { try { return localStorage.getItem('ryuso.soccer.players') === '2' ? 2 : 1 } catch { return 1 } })
+  /** 혼자 할 때 내 팀(0 빨강, 1 보라). 다음에도 기억 */
+  const [mine, setMine] = useState<Team>(() => { try { return localStorage.getItem('ryuso.soccer.myTeam') === '1' ? 1 : 0 } catch { return 0 } })
+  const pickMine = (t: Team) => { setMine(t); try { localStorage.setItem('ryuso.soccer.myTeam', String(t)) } catch { /* 저장 못 해도 이번 판은 그 팀 */ } }
+  const soloRef = useRef<Team | null>(null)
+  soloRef.current = players === 1 ? mine : null
   const [animals, setAnimals] = useState<[number[], number[]]>([[0, 1, 2, 3], [4, 5, 6, 7]])
   const [match, setMatch] = useState<Match>(() => newMatch(avatars, animals))
   const [goal, setGoal] = useState<Team | null>(null)
@@ -116,6 +121,9 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
         return { x: p.x + d.x * 12, y: p.y + d.y * 12 }
       }
       const t: [Vec | null, Vec | null] = [joy(0) ?? targets.current[0] ?? kb(0, 'w', 's', 'a', 'd'), joy(1) ?? targets.current[1] ?? kb(1, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight')]
+      // 혼자 할 때는 WASD·방향키 모두 내 팀 아바타를 움직인다
+      const solo = soloRef.current
+      if (solo !== null) t[solo] = joy(solo) ?? targets.current[solo] ?? kb(solo, 'w', 's', 'a', 'd') ?? kb(solo, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight')
       const r = stepMatch(live.current, dt, t, Math.random, acts.current)
       acts.current = [null, null]
       live.current = r.m
@@ -145,12 +153,12 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
     const r = host.current!.getBoundingClientRect()
     const sx = e.clientX - r.left, sy = e.clientY - r.top
     // 아바타를 직접 만지면 그 아바타를 끌고 다닌다(둘이 하기에서 내 아바타가 상대 쪽 화면에 있어도). 아니면 1인 게임은 화면 어디든 내 아바타, 2인은 누른 쪽 팀
-    const touched = ([0, 1] as Team[]).filter((tm) => !(players === 1 && tm === 1)).find((tm) => {
+    const touched = ([0, 1] as Team[]).filter((tm) => !(players === 1 && tm !== mine)).find((tm) => {
       const a = live.current.players.find((q) => q.team === tm && q.role === 'human')!
       const c = toScreen(a.x, a.y)
       return Math.abs(sx - c.x) < 6 * scale && sy < c.y + 2 * scale && sy > c.y - 13 * scale
     })
-    const team: Team = touched ?? (players === 1 ? 0 : portrait ? (sy > fieldTop + fh / 2 ? 0 : 1) : (sx < left + fw / 2 ? 0 : 1))
+    const team: Team = touched ?? (players === 1 ? mine : portrait ? (sy > fieldTop + fh / 2 ? 0 : 1) : (sx < left + fw / 2 ? 0 : 1))
     pointers.current.set(e.pointerId, team)
     targets.current[team] = toField(sx, sy)
     e.currentTarget.setPointerCapture?.(e.pointerId)
@@ -169,7 +177,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
 
   const start = () => {
     playTap()
-    const m = newMatch(avatars, animals, [false, players === 1])
+    const m = newMatch(avatars, animals, players === 1 ? [mine === 1, mine === 0] : [false, false])
     live.current = m; setMatch(m); targets.current = [null, null]; acts.current = [null, null]; setGoal(null); setParty(null); setPhase('play')
     window.setTimeout(() => playWhistle(), 300)
   }
@@ -258,7 +266,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
       </div>}
 
       {/* 슛·패스 버튼: 내 아바타가 공을 몰고 있거나 공 가까이 있을 때만. 혼자 하기는 오른쪽 아래, 둘이 하기는 각자 쪽 구석 */}
-      {phase === 'play' && ([0, 1] as Team[]).filter((t) => !(players === 1 && t === 1)).map((t) => {
+      {phase === 'play' && ([0, 1] as Team[]).filter((t) => !(players === 1 && t !== mine)).map((t) => {
         const hi = match.players.findIndex((p) => p.team === t && p.role === 'human')
         const h = match.players[hi]
         const ready = match.hold === hi || Math.hypot(h.x - match.ball.x, h.y - match.ball.y) <= ACT_REACH
@@ -274,7 +282,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
       })}
 
       {/* 조이스틱: 슛·패스 버튼 반대쪽 구석. 기울이면 그쪽으로 달린다(손가락으로 끌기와 같이 쓸 수 있다) */}
-      {phase === 'play' && ([0, 1] as Team[]).filter((t) => !(players === 1 && t === 1)).map((t) => <Joystick key={`joy${t}`} color={KIT[t].color} style={corners(t).joystick} onMove={(v) => { joys.current[t] = v }} />)}
+      {phase === 'play' && ([0, 1] as Team[]).filter((t) => !(players === 1 && t !== mine)).map((t) => <Joystick key={`joy${t}`} color={KIT[t].color} style={corners(t).joystick} onMove={(v) => { joys.current[t] = v }} />)}
 
       {/* 점수판 */}
       <header className="absolute inset-x-2 top-2 z-[2000] flex items-center justify-between gap-2">
@@ -307,7 +315,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
                 <button key={n} role="radio" aria-checked={players === n} onClick={() => { playTap(); setPlayers(n); try { localStorage.setItem('ryuso.soccer.players', String(n)) } catch { /* 저장 못 해도 이번 판은 그대로 */ } }}
                   className={`min-h-14 rounded-2xl px-2 font-black ${players === n ? 'bg-[#4caf50] text-white shadow' : 'bg-white text-[#3d6b2f] ring-1 ring-black/10'}`}>
                   <span className="block text-base">{n === 1 ? '🙋 혼자 하기' : '👫 둘이 하기'}</span>
-                  <span className="block text-[11px] font-bold opacity-80">{n === 1 ? '보라 팀은 컴퓨터가 해요' : '한 화면에서 한 팀씩'}</span>
+                  <span className="block text-[11px] font-bold opacity-80">{n === 1 ? `${KIT[mine === 0 ? 1 : 0].name} 팀은 컴퓨터가 해요` : '한 화면에서 한 팀씩'}</span>
                 </button>
               ))}
             </div>
@@ -318,7 +326,14 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
                   {/* 팀 이름 쓰기(아이폰에서 확대되지 않게 글자 16px) */}
                   <input value={names[t]} onChange={(e) => setName(t, e.target.value)} maxLength={NAME_MAX} placeholder={`${KIT[t].name}팀`} aria-label={`${KIT[t].name} 팀 이름`}
                     className="mb-0.5 w-full rounded-full bg-white px-2 py-1 text-center font-black outline-none placeholder:opacity-50" style={{ fontSize: 16, color: KIT[t].color, boxShadow: `inset 0 0 0 2px ${KIT[t].color}66` }} />
-                  <p className="m-0 mb-1 text-[11px] font-bold" style={{ color: KIT[t].color }}>✏️ 팀 이름을 써요{players === 1 ? (t === 0 ? ' · 나' : ' · 컴퓨터') : ''}</p>
+                  <p className="m-0 mb-1 text-[11px] font-bold" style={{ color: KIT[t].color }}>✏️ 팀 이름을 써요{players === 1 ? (t === mine ? ' · 나' : ' · 컴퓨터') : ''}</p>
+                  {/* 혼자 할 때 내 팀 고르기 */}
+                  {players === 1 && (
+                    <button aria-pressed={t === mine} onClick={() => { playTap(); pickMine(t) }}
+                      className="mb-1 min-h-9 w-full rounded-full text-sm font-black" style={t === mine ? { background: KIT[t].color, color: '#fff' } : { background: '#fff', color: KIT[t].color, boxShadow: `inset 0 0 0 2px ${KIT[t].color}` }}>
+                      {t === mine ? '🙋 내 팀' : '이 팀 할래요'}
+                    </button>
+                  )}
                   <div className="grid grid-cols-4 gap-1">
                     {AVATARS.map((a) => {
                       const on = avatars[t] === a.id, taken = avatars[t === 0 ? 1 : 0] === a.id

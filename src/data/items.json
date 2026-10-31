@@ -1333,10 +1333,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 142,
-      "y": 647,
-      "w": 770,
-      "h": 822
+      "x": 103,
+      "y": 606,
+      "w": 847,
+      "h": 905
     },
     "image": "assets/clothes/costume/costume_clover_flower_lolita.webp",
     "thumb": "assets/thumbs/costume_clover_flower_lolita.webp",
@@ -1789,10 +1789,10 @@
     },
     "colorHex": "#a9dcc8",
     "box": {
-      "x": 83,
-      "y": 611,
-      "w": 859,
-      "h": 761
+      "x": 122,
+      "y": 645,
+      "w": 781,
+      "h": 692
     },
     "image": "assets/clothes/costume/costume_seashell_mint.webp",
     "thumb": "assets/thumbs/costume_seashell_mint.webp",
@@ -2246,7 +2246,7 @@
     "colorHex": "#dcc5a2",
     "box": {
       "x": 165,
-      "y": 625,
+      "y": 633,
       "w": 696,
       "h": 628
     },
@@ -2342,7 +2342,7 @@
     "colorHex": "#27355b",
     "box": {
       "x": 158,
-      "y": 596,
+      "y": 604,
       "w": 710,
       "h": 753
     },
