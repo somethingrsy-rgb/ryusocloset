@@ -16,7 +16,7 @@ import { SendToGameSheet } from './components/SendToGameSheet'
 import { PLACE_BY_ID, travelTo } from './lib/game'
 import { getParty } from './lib/party'
 import { Toast } from './components/Toast'
-import { I18nContext, detectLang, makeT, type Lang } from './i18n'
+import { I18nContext, makeT, type Lang } from './i18n'
 import { BACKGROUNDS, DEFAULT_BG_ID, bgById } from './lib/backgrounds'
 import { loadImage, renderOutfitCanvas, renderThumb } from './lib/exportPng'
 import type { RoomExportViewport } from './lib/roomExportBounds'
@@ -90,7 +90,7 @@ function useWideScreen() {
 
 export default function App() {
   const initial = useMemo(loadSettings, [])
-  const [lang, setLang] = useState<Lang>(initial.lang ?? detectLang())
+  const [lang, setLang] = useState<Lang>(initial.lang ?? 'ko')
   const [sound, setSound] = useState(initial.sound ?? true)
   setSoundEnabled(sound) // 놀이 효과음도 설정의 효과음 켜기/끄기를 따른다
   const [bgId, setBgId] = useState(
