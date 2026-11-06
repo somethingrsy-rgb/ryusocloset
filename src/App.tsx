@@ -439,13 +439,14 @@ export default function App() {
             ) : mode === 'kitchen' ? (
               <KitchenGame outfit={outfit} tweaks={tweaks} onGo={(to) => { if (to === 'party') { setTravelPreview(getParty().place); setMode('travel') } else setMode(to) }} />
             ) : mode === 'farm' ? (
-              <FarmScene outfit={outfit} tweaks={tweaks} onKitchen={() => setMode('kitchen')} />
+              <FarmScene outfit={outfit} tweaks={tweaks} onKitchen={() => setMode('kitchen')} onOutfit={(next) => applyOutfit(next)} />
             ) : mode === 'travel' ? (
               <TravelGame
                 initialPlaceId={travelPreview}
                 outfit={outfit}
                 tweaks={tweaks}
                 onWear={wearFound}
+                onOutfit={(next) => applyOutfit(next)}
                 onFull={handleFull}
                 onDecorate={decorateWith}
                 onKitchen={() => setMode('kitchen')}
