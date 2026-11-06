@@ -1,6 +1,6 @@
 import { playCoin, playHarvest, playPlant, playWater, startBgm, stopBgm } from '../lib/sound'
 import { actKitchen } from '../lib/kitchen'
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
 import { actFarm, CROPS, getFarm, growth, orderCrop, PLOT_COUNT, plotPrice, subscribeFarm, type CropId, type FarmAction, animalWait, ANIMAL_SECONDS, type AnimalGood } from '../lib/farm'
 import { assetUrl } from '../lib/items'
@@ -88,7 +88,11 @@ interface Stroll { x: number; y: number; ms: number; dir: 1 | -1; until: number 
 
 const stageOf = (wateredAt: number | null, progress: number) => (wateredAt === null ? 1 : progress >= 1 ? 4 : progress < 0.4 ? 2 : 3)
 
-export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void }) {
+// 3D 농장(시험판): three.js 가 커서 누를 때만 받는다
+const Farm3D = lazy(() => import('./Farm3D').then((m) => ({ default: m.Farm3D })))
+
+export function FarmScene({ outfit, tweaks, onKitchen, onOutfit }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void; onOutfit: (next: Outfit) => void }) {
+  const [farm3d, setFarm3d] = useState(false)
   const { lang } = useI18n()
   const ko = lang === 'ko'
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
@@ -404,6 +408,7 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
         {/* 위쪽: 코인 */}
         <div className="absolute flex items-center gap-1" style={{ right: '2.5%', top: '1.8%', zIndex: 12 }}>
           {/* 같이 농사지을 친구 고르기: 고른 친구 얼굴(혼자면 🐾) */}
+          <button aria-label="3D 농장 (시험판)" onClick={() => setFarm3d(true)} className={PILL}><PillText>3D</PillText></button>
           <button aria-label={ko ? '같이 농사지을 친구' : 'Farm friends'} onClick={() => setPicking(true)} className={PILL}>
             <PillText>{friends.length ? friends.map((f) => <img key={f} src={assetUrl(guestFace(f))} alt="" draggable={false} className="-mx-0.5 inline-block h-6 w-6 object-contain align-middle" />) : '🐾'}</PillText>
           </button>
@@ -473,6 +478,8 @@ export function FarmScene({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweak
         <PartyInvite here={[]} initial={friends} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`아바타 친구와 수학으로 모은 동물 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
           cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
       )}
+      {/* 3D 농장(시험판): 농장 화면 위를 덮는다(농장 노래는 그대로 이어진다) */}
+      {farm3d && <div className="absolute inset-0 z-50"><Suspense fallback={null}><Farm3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setFarm3d(false)} /></Suspense></div>}
     </section>
   )
 }

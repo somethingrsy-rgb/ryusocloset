@@ -18,12 +18,15 @@ const TABS: Category[] = ['costume', 'accessory', 'shoes', 'wig', 'wand', 'dress
  * 파티에 초대할 아바타 친구의 옷 고르기: 코디 탭처럼 카테고리를 골라 옷·머리·액세서리를 입히고 미리 본다.
  * 코디 탭에서 입을 수 있는 옷(잠기지 않고 숨기지 않은 옷)만 고를 수 있다.
  */
-export function GuestDresser({ avatar, initial, invited, onDone, onUninvite, onBack }: {
+export function GuestDresser({ avatar, initial, invited, onDone, onUninvite, onBack, title, doneLabel = '✓ 이 옷으로 초대' }: {
   avatar: Avatar; initial: Outfit; invited: boolean
   onDone: (outfit: Outfit) => void
   /** 이미 고른 친구를 초대 목록에서 뺀다 */
   onUninvite: () => void
   onBack: () => void
+  /** 위 제목(없으면 'OO 옷 입히기')·완료 버튼 글자: 3D 산책에서 내 옷 갈아입기에도 쓴다 */
+  title?: string
+  doneLabel?: string
 }) {
   useItemsVersion()
   useSyncExternalStore(subscribeGame, gameVersion)
@@ -36,7 +39,7 @@ export function GuestDresser({ avatar, initial, invited, onDone, onUninvite, onB
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between">
         <button aria-label="뒤로" onClick={() => { playTap(); onBack() }} className="h-9 rounded-full bg-white px-3 text-sm font-bold text-[#8a4b55] shadow-sm">← 뒤로</button>
-        <p className="m-0 text-base font-black text-[#8a4b55]">👗 {name} 옷 입히기</p>
+        <p className="m-0 text-base font-black text-[#8a4b55]">👗 {title ?? `${name} 옷 입히기`}</p>
         <span className="w-14" />
       </div>
       <div className="mt-2 flex min-h-0 flex-1 gap-2">
@@ -75,7 +78,7 @@ export function GuestDresser({ avatar, initial, invited, onDone, onUninvite, onB
         {invited
           ? <button onClick={() => { playTap(); onUninvite() }} className="min-h-11 flex-1 rounded-full bg-white font-bold text-[#8a4b55] shadow-sm">초대 안 하기</button>
           : <button onClick={() => { playTap(); setOutfit({}) }} className="min-h-11 flex-1 rounded-full bg-white font-bold text-[#8a4b55] shadow-sm">모두 벗기</button>}
-        <button onClick={() => { playTap(); onDone(outfit) }} className="min-h-11 flex-[1.4] rounded-full bg-[#ff8fab] font-bold text-white shadow">✓ 이 옷으로 초대</button>
+        <button onClick={() => { playTap(); onDone(outfit) }} className="min-h-11 flex-[1.4] rounded-full bg-[#ff8fab] font-bold text-white shadow">{doneLabel}</button>
       </div>
     </div>
   )

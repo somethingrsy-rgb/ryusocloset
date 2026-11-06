@@ -1,3 +1,4 @@
+import type { Avatar } from './avatars'
 import { drawBackground, type Background } from './backgrounds'
 import { ITEM_BY_ID, assetUrl, baseFor } from './items'
 import { CANVAS_H, CANVAS_W } from './layers'
@@ -31,9 +32,10 @@ function makeCanvas(w: number, h: number) {
 }
 
 /** 아바타 + 옷을 화면과 같은 레이어 순서로 1024x1536 캔버스에 합성 */
-export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}): Promise<HTMLCanvasElement> {
+/** avatar 를 주면 그 아바타(파티·농장의 아바타 친구)로, 없으면 지금 고른 아바타로 그린다 */
+export async function renderFigure(outfit: Outfit, tweaks: Tweaks = {}, avatar?: Avatar): Promise<HTMLCanvasElement> {
   const items = wornItems(outfit, ITEM_BY_ID, tweaks)
-  const bl = baseFor(outfit)
+  const bl = baseFor(outfit, avatar)
   const [body, hair, ...imgs] = await Promise.all([
     loadImage(bl.body),
     bl.hair ? loadImage(bl.hair) : Promise.resolve(null),

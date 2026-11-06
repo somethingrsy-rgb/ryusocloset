@@ -29,6 +29,8 @@ interface Props {
   tweaks: Tweaks
   /** 찾은 아이템을 옷장에서 입어보러 간다 */
   onWear: (id: string) => void
+  /** 3D 산책에서 옷을 갈아입을 때 */
+  onOutfit: (next: Outfit) => void
   /** 수학·영어 같은 전체 화면 놀이가 열려 있으면 true (아래 여행 도감을 숨긴다) */
   onFull?: (full: boolean) => void
   /** 장소 안에서 "방 꾸미기"를 누르면 그 테마로 내 방을 연다 */
@@ -38,7 +40,7 @@ interface Props {
 }
 
 /** 여행 탭: 넓은 맵(OverWorld)을 걸어다니다가 문에 들어가면 그 장소 장면(TravelScene)으로 */
-export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitchen, initialPlaceId = null }: Props) {
+export function TravelGame({ outfit, tweaks, onWear, onOutfit, onFull, onDecorate, onKitchen, initialPlaceId = null }: Props) {
   const { lang } = useI18n()
   const [starRain, setStarRain] = useState(false)
   const [runner, setRunner] = useState(false)
@@ -65,7 +67,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   const walking = !starRain && !runner && !math && !jump && !speaking && !soccer && !walk3d
   useEffect(() => { if (!walking) return; startBgm('room'); return stopBgm }, [walking])
 
-  if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onExit={() => setWalk3d(false)} /></Suspense>
+  if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setWalk3d(false)} /></Suspense>
   if (soccer) return <Suspense fallback={null}><SoccerGame onExit={() => setSoccer(false)} /></Suspense>
   if (runner) return <Suspense fallback={null}><RunnerGame outfit={outfit} tweaks={tweaks} onExit={() => setRunner(false)} /></Suspense>
   if (starRain) return <Suspense fallback={null}><StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} /></Suspense>
