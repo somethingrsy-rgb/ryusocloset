@@ -154,8 +154,23 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       props.push(d)
       return d
     }
-    prop('counter', 5.6, 997 / 1024, 0, -6.2)
-    w.obstacles.push({ x: 0, z: -6.2, r: 2.4 })
+    // 딸기 가게: 그림은 늘 앞(+z)을 보게 고정하고(돌지 않게), 뒤에 입체 가게 몸통을 붙여 옆·뒤에서 봐도 건물로 보이게
+    const shop = prop('counter', 5.6, 997 / 1024, 0, -6.2)
+    props.pop()
+    ;(shop.doll.material as THREE.MeshBasicMaterial).side = THREE.FrontSide
+    const shopMat = (c: number) => keep(new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: 0.25 }))
+    const body = new THREE.Mesh(keep(new THREE.BoxGeometry(4.3, 2.4, 2.6)), shopMat(0xfff1e2))
+    body.position.set(0, 1.2, -6.2 - 1.4)
+    const roof = new THREE.Mesh(keep(new THREE.CylinderGeometry(1, 1, 4.5, 3, 1)), shopMat(0xf4a3b8))
+    roof.rotation.z = Math.PI / 2
+    roof.rotation.x = Math.PI / 6
+    roof.scale.set(1, 1, 1.6)
+    roof.position.set(0, 2.4 + 0.5, -6.2 - 1.4) // 지붕 꼭대기가 그림의 차양보다 낮게(앞에서 보면 안 보인다)
+    const base = new THREE.Mesh(keep(new THREE.BoxGeometry(4.5, 0.3, 2.8)), shopMat(0xf7c9a6))
+    base.position.set(0, 0.15, -6.2 - 1.4)
+    for (const m of [body, roof, base]) { m.castShadow = true; m.receiveShadow = true; scene.add(m) }
+    const shopParts: THREE.Object3D[] = [shop.root, body, roof, base]
+    w.obstacles.push({ x: 0, z: -6.2, r: 2.4 }, { x: -1.6, z: -7.8, r: 1.4 }, { x: 1.6, z: -7.8, r: 1.4 })
     // 파라솔 테이블(입체): 잔디밭 여기저기 띄엄띄엄
     const tableKit = makeTableKit(w)
     for (let i = 0; i < 8; i++) {
@@ -268,6 +283,13 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         }
       }
       for (const d of props) w.face(d, 1)
+      // 가게가 카메라와 아바타 사이를 가리면 잠깐 숨긴다(나무처럼)
+      {
+        const cx = w.camera.position.x, cz = w.camera.position.z, sx = me.x - cx, sz = me.z - cz, len2 = sx * sx + sz * sz || 1
+        const u = Math.max(0, Math.min(1, ((0 - cx) * sx + (-7 - cz) * sz) / len2))
+        const hide = Math.hypot(cx + sx * u, cz + sz * u + 7) < 2.8 && u < 0.97
+        for (const o of shopParts) o.visible = !hide
+      }
       if (st.hold) {
         const tex = texFor(st.hold)
         if (holdSprite.material.map !== tex) { holdSprite.material.map = tex; holdSprite.material.needsUpdate = true }
