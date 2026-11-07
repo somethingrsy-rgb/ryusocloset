@@ -29,7 +29,7 @@ export interface Stage {
 }
 
 export function createStage(el: HTMLElement, opts: {
-  sky?: number; fog?: [number, number] | null; orbit?: boolean; pitchRange?: [number, number]
+  sky?: number; fog?: [number, number] | null; orbit?: boolean; pitchRange?: [number, number]; yawRange?: [number, number]
   view: { yaw: number; pitch: number; dist: number; target: [number, number, number] }
   /** 끌지 않고 누른 곳에 맞은 물체(pickables 안의 것) */
   pickables?: THREE.Object3D[]; onPick?: (o: THREE.Object3D, sx: number, sy: number) => void
@@ -127,6 +127,7 @@ export function createStage(el: HTMLElement, opts: {
     if (Math.abs(dx) > 8 || Math.abs(dy) > 8) press.dragged = true
     if (press.dragged && opts.orbit) {
       view.yaw = press.yaw - dx * 0.008
+      if (opts.yawRange) view.yaw = Math.max(opts.yawRange[0], Math.min(opts.yawRange[1], view.yaw))
       view.pitch = Math.max(pmin, Math.min(pmax, press.pitch + dy * 0.005))
     }
   }
@@ -136,7 +137,8 @@ export function createStage(el: HTMLElement, opts: {
       const { x, y } = local(e)
       ray.setFromCamera(toNdc(x, y), camera)
       const list = opts.pickables ?? []
-      const hit = list.length ? ray.intersectObjects(list, true).find((h) => (h.object as THREE.Mesh).visible !== false) : undefined
+      // 그림의 투명한 곳을 누른 것은 건너뛴다(판은 네모지만 그림은 아니다)
+      const hit = list.length ? ray.intersectObjects(list, true).find((h) => h.object.visible !== false && opaqueAt(h)) : undefined
       let o: THREE.Object3D | null = hit?.object ?? null
       while (o && !list.includes(o)) o = o.parent
       if (o && opts.onPick) opts.onPick(o, x, y)
@@ -150,6 +152,26 @@ export function createStage(el: HTMLElement, opts: {
   dom.addEventListener('pointercancel', onUp)
 
   const v = new THREE.Vector3()
+  /** 누른 자리의 그림이 불투명한지(그림을 한 번 작은 캔버스에 그려 두고 알파를 읽는다) */
+  const alphaCache = new WeakMap<object, { data: Uint8ClampedArray; w: number; h: number } | null>()
+  const opaqueAt = (h: THREE.Intersection) => {
+    const mat = (h.object as THREE.Mesh).material as THREE.MeshBasicMaterial | undefined
+    const img = mat?.map?.image as (CanvasImageSource & { width: number; height: number }) | undefined
+    if (!h.uv || !img || !img.width) return true
+    let a = alphaCache.get(img)
+    if (a === undefined) {
+      try {
+        const c = document.createElement('canvas'), w = (c.width = 128), hh = (c.height = 128)
+        const g = c.getContext('2d', { willReadFrequently: true })!
+        g.drawImage(img, 0, 0, w, hh)
+        a = { data: g.getImageData(0, 0, w, hh).data, w, h: hh }
+      } catch { a = null }
+      alphaCache.set(img, a)
+    }
+    if (!a) return true
+    const x = Math.min(a.w - 1, Math.max(0, Math.floor(h.uv.x * a.w))), y = Math.min(a.h - 1, Math.max(0, Math.floor((1 - h.uv.y) * a.h)))
+    return a.data[(y * a.w + x) * 4 + 3] > 40
+  }
   const project = (p: THREE.Vector3) => {
     v.copy(p).project(camera)
     return { x: ((v.x + 1) / 2) * W, y: ((1 - v.y) / 2) * H, front: v.z < 1 }
