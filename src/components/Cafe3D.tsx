@@ -10,11 +10,12 @@ import { createStage, type Doll, type Stage } from './stage3d'
 /** 기존 주문 저장을 공유하는 자유 산책 카페. 농장처럼 넓은 잔디밭을 걸어 다니고, 카메라가 아바타를 따라간다. */
 /** 걸을 수 있는 땅(가운데에서 ±WALK) */
 const WALK = 30
-/** 세로 화면(폰)은 테이블을 옆으로 좁혀 놓는다(양 끝 손님이 화면 밖으로 잘리지 않게) */
-let SX = 1, PORTRAIT = false
-/** 세로 화면은 옆으로는 조금 좁히고 앞뒤 줄 사이는 넓힌다(테이블끼리 붙어 보이지 않게) */
-const seatAt = (i: number) => new THREE.Vector3([-6, -2.6, 2.6, 6][i % 4] * SX, 0, i < 4 ? (PORTRAIT ? -2.2 : -1.5) : PORTRAIT ? 4.4 : 3.2)
-const tableAt = (i: number) => seatAt(i).clone().add(new THREE.Vector3((i % 4 < 2 ? 1.25 : -1.25) * SX, 0, 0))
+/** 파라솔 테이블 자리: 숲길을 걷다가 하나씩 만나도록 잔디밭 여기저기에 띄엄띄엄(가게는 (0, -6.2)) */
+const TABLES: [number, number][] = [[-6.5, 0.5], [6.5, -0.5], [-3, 9], [11, 9], [-15, -7], [16, -8], [3, 17], [-13, 15]]
+/** 손님은 테이블 옆(가게 쪽 바깥)에 선다 */
+const SIDE = (i: number) => (TABLES[i][0] < 0 ? -1.25 : 1.25)
+const tableAt = (i: number) => new THREE.Vector3(TABLES[i][0], 0, TABLES[i][1])
+const seatAt = (i: number) => tableAt(i).add(new THREE.Vector3(SIDE(i), 0, 0))
 
 /**
  * 파라솔 테이블 세트(입체): 하얀 동그란 테이블 + 꼬불 다리, 분홍·크림 줄무늬 파라솔(가장자리 물결 + 딸기·꽃 장식),
@@ -121,8 +122,6 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   useEffect(() => {
     const el = host.current
     if (!el) return
-    PORTRAIT = el.clientWidth < el.clientHeight
-    SX = PORTRAIT ? 0.8 : 1
     const guests: THREE.Object3D[] = [], guestDolls: Doll[] = []
     let target: CafePoint | null = null, following: number | null = null
     const approach = (i: number) => { if (!state.current.paused) { following = i; target = null } }
@@ -168,21 +167,23 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       scene.add(g)
     }
     // 꽃 덤불: 카페 둘레
-    for (const [x, z] of [[-9, -1], [9, -1], [-9.5, 3.5], [9.5, 3.5], [-4.2, -5.6], [4.2, -5.6], [-8, 7], [8, 7], [-3.5, 7.5], [3.5, 7.5]]) prop('bush', 1.15, 1024 / 616, x, z)
+    const nearTable = (x: number, z: number, r: number) => TABLES.some(([tx, tz]) => (tx - x) ** 2 + (tz - z) ** 2 < r * r)
+    for (const [x, z] of [[-4.2, -5.6], [4.2, -5.6], [-6, -4], [6, -4]]) prop('bush', 1.15, 1024 / 616, x, z)
     // 나무: 농장처럼 넓은 잔디밭에 듬성듬성(카페 자리는 비운다). 걸어가면 새 나무가 보인다
     let seed = 7
     const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296 }
     const trees: { d: Doll; x: number; z: number }[] = []
     for (let k = 0; k < 400 && trees.length < 70; k++) {
       const x = (rnd() - 0.5) * 2 * (WALK + 12), z = (rnd() - 0.5) * 2 * (WALK + 12)
-      if (Math.abs(x) < 12 && z > -10 && z < 10) continue
+      if (Math.abs(x) < 5 && z > -10 && z < -2) continue // 가게 둘레
+      if (nearTable(x, z, 4.5)) continue // 테이블 둘레는 비운다
       if (trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 30)) continue
       trees.push({ d: prop('tree', 4.2 * (0.8 + rnd() * 0.6), 951 / 1024, x, z), x, z })
     }
     // 들판 곳곳 꽃 덤불
     for (let k = 0; k < 24; k++) {
       const x = (rnd() - 0.5) * 2 * WALK, z = (rnd() - 0.5) * 2 * WALK
-      if (Math.abs(x) < 12 && z > -10 && z < 10) continue
+      if ((Math.abs(x) < 5 && z > -10 && z < -2) || nearTable(x, z, 3) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 4)) continue
       prop('bush', 1.15, 1024 / 616, x, z)
     }
     // 손님: 자리마다 동물 친구(누르면 전화)
@@ -235,7 +236,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
           if (!sits && r.wait <= 0 && Math.hypot(p.x - r.goal.x, p.z - r.goal.z) < 0.15) {
             // 다른 손님 자리·지금 있는 곳과 떨어진 빈 곳을 고른다
             for (let k = 0; k < 8; k++) {
-              const g = { x: (Math.random() - 0.5) * 15 * SX, z: -3.8 + Math.random() * 9.5 }
+              // 자기 테이블 둘레를 거닌다
+              const g = { x: seat.x + (Math.random() - 0.5) * 6, z: seat.z + (Math.random() - 0.5) * 6 }
               if (guestDolls.every((o, j) => j === i || Math.hypot(o.root.position.x - g.x, o.root.position.z - g.z) > 1.6)) { r.goal = g; break }
             }
             r.wait = 1.5 + Math.random() * 2.5
@@ -304,7 +306,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         if (sp.material.map !== holdTex.get(id)) { sp.material.map = holdTex.get(id)!; sp.material.needsUpdate = true }
         // 테이블 위, 손님 쪽으로 조금, 카메라 쪽으로 조금(파라솔에 가리지 않게)
         const tp = tableAt(i)
-        sp.position.set(tp.x + (i % 4 < 2 ? -0.18 : 0.18) * SX, 0.78 + 0.22, tp.z - 0.2 + 0.22)
+        sp.position.set(tp.x + Math.sign(SIDE(i)) * 0.18, 0.78 + 0.22, tp.z - 0.2 + 0.22)
       })
       // 말풍선·코인 표시를 손님 머리 위 화면 자리에(음식을 들고 있는 동안은 말풍선을 숨긴다)
       for (let i = 0; i < 8; i++) {
