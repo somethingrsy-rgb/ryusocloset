@@ -5,7 +5,7 @@ import { unlockSpeech } from './AnimalCall'
 import { PhoneSheet } from './PhoneSheet'
 import { phoneThemeFor } from './phoneTheme'
 import { avatarName, avatarVersion, getAvatar, subscribeAvatar } from '../lib/avatars'
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { FarmFx } from './FarmFx'
 import { useI18n } from '../i18n'
 import { actFarm, getFarm, subscribeFarm } from '../lib/farm'
@@ -13,6 +13,9 @@ import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
 import { CoinIcon } from './Icons'
+
+// 3D 카페(시험판): three.js 가 커서 3D 를 켤 때만 받는다
+const Cafe3D = lazy(() => import('./Cafe3D').then((m) => ({ default: m.Cafe3D })))
 
 /** 메뉴 그림(public/cafe/menu2/<id>.webp). 그림이 아직 없는 메뉴는 이모지로 */
 export function Ico({ id, className }: { id: string; className: string }) {
@@ -116,6 +119,10 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
   // 카페에 있는 동안 배경 음악(카페의 🔊 를 끄면 음악도 꺼진다)
   // 휴대폰(📞 버튼, 또는 동물을 누르면 그 동물에게 바로 건다). 휴대폰이 열려 있는 동안은 동물 목소리가 잘 들리게 음악을 멈춘다
   const [phone, setPhone] = useState<{ dial: number | null } | null>(null)
+  /** 3D 로 보기(시험판): 주문·서빙·전화·주방은 그대로, 정원과 손님·아바타만 3D. 고른 것은 기억한다 */
+  const [view3d, setView3d] = useState(() => { try { return localStorage.getItem('ryuso.cafe.3d') === '1' } catch { return false } })
+  /** 3D 에서 아바타가 서는 줄(0 카운터 앞, 1 윗줄, 2 아랫줄) */
+  const [row, setRow] = useState<0 | 1 | 2>(0)
   // 지금 고른 아바타 이름으로 동물이 불러 주고(유하야·유엘아), 휴대폰 색도 아바타에 맞춘다(유엘 파랑, 유하 분홍)
   useSyncExternalStore(subscribeAvatar, avatarVersion)
   const kidName = avatarName(getAvatar())
@@ -167,6 +174,7 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
     // 아바타가 걸어가는 도중(0.4초 뒤)에 결과(주문 받기·서빙)가 나타난다
     setWalking(true)
     setPos(lane(i < 4 ? 1 : 2))
+    setRow(i < 4 ? 1 : 2)
     later(() => setWalking(false), 800)
     if (ready) setHold(m.id)
     later(() => {
@@ -189,8 +197,34 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
     }, 400)
   }
 
+  /** 손님 머리 위 말풍선(주문받기·만드는 중·완성): 2D 그림 위에도, 3D 손님 머리 위에도 같은 단추 */
+  const bubbleFor = (i: number) => {
+    const x = guests[i]
+    const m = MENU[x.wish]
+    const ready = isReady(i)
+    const label = x.stage === 'new' ? tx.askOrder : ready ? tx.ready : tx.toKitchen
+    return (
+      <button
+        aria-label={`${x.name} · ${label}`}
+        onClick={() => tap(i)}
+        className="block rounded-[20px] border-0 bg-[#fffdf8] p-1 shadow-[0_3px_0_#f0c6cd] active:scale-95"
+      >
+        {x.stage === 'new'
+          ? <span className="block h-11 w-11 animate-pulse text-center text-4xl leading-[2.75rem]">💬</span>
+          : <span className="relative block h-11 w-11">
+              <Ico id={m.id} className={`h-11 w-11 ${ready ? 'animate-bounce' : 'opacity-60'}`} />
+              {!ready && <span aria-hidden className="absolute -right-2 -bottom-2 text-lg leading-none">🍳</span>}
+              {ready && <span aria-hidden className="absolute -top-2 -right-2 text-lg">✨</span>}
+            </span>}
+        {ready && <span className="block text-center text-[10px] leading-tight font-bold text-[#c04a5a]">{tx.ready}</span>}
+      </button>
+    )
+  }
+  const floatFor = (i: number) => floats.filter((f) => f.seat === i).map((f) => <span key={f.id} aria-hidden className="cafe-float pointer-events-none block text-lg font-extrabold whitespace-nowrap text-[#c9751f] drop-shadow-[0_1px_0_#fff]">+{f.amount} <CoinIcon /></span>)
+
   return (
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-hidden rounded-3xl bg-[#b9c97a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
+      {view3d ? <Suspense fallback={null}><Cafe3D outfit={outfit} tweaks={tweaks} lane={row} walking={walking} hold={hold} onCall={(i) => { unlockSpeech(); setPhone({ dial: i }) }} bubble={bubbleFor} float={floatFor} /></Suspense> : <>
       {/* 그림 아래 남는 자리(폰 세로): 그림 맨 아래 덤불·풀밭 부분을 위아래로 뒤집고 늘려 이어 붙여서 정원이 끝까지 이어져 보이게 한다 */}
       {!wide && !pad && (
         <div aria-hidden className="absolute left-1/2 -translate-x-1/2 overflow-hidden" style={{ width: 'min(100cqw, calc(100cqh / 1.7787))', top: 'calc(min(100cqw, 100cqh / 1.7787) * 1.7787 - 1px)', bottom: 0 }}>
@@ -205,29 +239,12 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
         <FarmFx roam />
         {guests.map((x, i) => {
           const [cx, cy] = SEATS[i][wide ? 'wide' : 'portrait']
-          const m = MENU[x.wish]
-          const ready = isReady(i)
-          const label = x.stage === 'new' ? tx.askOrder : ready ? tx.ready : tx.toKitchen
           return (
             <div key={i}>
               {/* 동물을 누르면 그 동물에게 전화를 건다(주문은 말풍선으로) */}
               <button aria-label={`${x.name}에게 전화하기`} onClick={() => { unlockSpeech(); setPhone({ dial: i }) }} className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0" style={{ left: `${cx}%`, top: `${cy + 2}%`, width: wide ? '9%' : '14%', height: wide ? '16%' : '11%' }}>
               </button>
-              <button
-                aria-label={`${x.name} · ${label}`}
-                onClick={() => tap(i)}
-                className="absolute z-[5] -translate-x-1/2 -translate-y-full rounded-[20px] border-0 bg-[#fffdf8] p-1 shadow-[0_3px_0_#f0c6cd] active:scale-95"
-                style={{ left: `${cx}%`, top: `${cy - 3.5}%` }}
-              >
-                {x.stage === 'new'
-                  ? <span className="block h-11 w-11 animate-pulse text-center text-4xl leading-[2.75rem]">💬</span>
-                  : <span className="relative block h-11 w-11">
-                      <Ico id={m.id} className={`h-11 w-11 ${ready ? 'animate-bounce' : 'opacity-60'}`} />
-                      {!ready && <span aria-hidden className="absolute -right-2 -bottom-2 text-lg leading-none">🍳</span>}
-                      {ready && <span aria-hidden className="absolute -top-2 -right-2 text-lg">✨</span>}
-                    </span>}
-                {ready && <span className="block text-center text-[10px] leading-tight font-bold text-[#c04a5a]">{tx.ready}</span>}
-              </button>
+              <div className="absolute z-[5] -translate-x-1/2 -translate-y-full" style={{ left: `${cx}%`, top: `${cy - 3.5}%` }}>{bubbleFor(i)}</div>
             </div>
           )
         })}
@@ -244,11 +261,13 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
         })}
       </div>
 
+      </>}
       {/* 위 버튼 줄: 글자가 두 줄로 꺾이지 않게 한 줄로(첫 단골 만들기 표시는 없앴다) */}
       <div className="absolute inset-x-2 top-2 z-20 flex items-center justify-end gap-2 whitespace-nowrap">
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
           <button aria-label={tx.kitchen} onClick={() => { playTap(); onKitchen() }} className="relative h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">{tx.kitchen}{waiting > 0 && <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef6f86] px-1 text-[11px] text-white">{waiting}</span>}</button>
+          <button aria-label="3D 카페 (시험판)" aria-pressed={view3d} onClick={() => { playTap(); const v = !view3d; setView3d(v); try { localStorage.setItem('ryuso.cafe.3d', v ? '1' : '0') } catch { /* 이번만 */ } }} className={`h-9 rounded-full px-3 text-sm font-bold shadow ${view3d ? 'bg-[#8a4b55] text-white' : 'bg-white/90'}`}>3D</button>
           <button aria-label="휴대폰 열기" onClick={() => { playTap(); setPhone({ dial: null }) }} className="h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">📱 전화</button>
           <button aria-label={tx.sound[sound ? 1 : 0]} aria-pressed={sound} onClick={() => { const v = !sound; setSound(v); if (v) playOrder() }} className="h-9 w-9 rounded-full bg-white/90 shadow">{sound ? '🔊' : '🔇'}</button>
         </div>
