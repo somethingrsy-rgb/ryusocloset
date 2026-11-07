@@ -274,14 +274,20 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     // 우유·달걀 표시: 젖소와 첫 닭 머리 위. 받을 수 있으면 통통 뛰고, 기다리는 동안은 흐리게
     const goodTag = (g: AnimalGood) => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: w.texOf(assetUrl(`kitchen/ing/${g}.webp`)), transparent: true, depthWrite: false }))); sp.scale.setScalar(0.8); scene.add(sp); return sp }
     const tags = [{ a: animals[0], sp: goodTag('milk'), g: 'milk' as AnimalGood, top: 2.1 }, { a: animals[2], sp: goodTag('egg'), g: 'egg' as AnimalGood, top: 1.4 }]
-    // 노점: 길가 오른쪽. 나무 판매대 + 줄무늬 차양 + 작물 상자, 위에 지금 부탁받은 작물
+    // 노점: 길가 오른쪽. 받은 노점 그림 앞면(작물 상자·칠판, +z)과 뒷면(빈 상자·통, -z)을 앞뒤로 세우고 사이에 나무 판매대·차양
     const sg = new THREE.Group()
-    const wood = lambert(0xc98d55), cream = lambert(0xfff3e0), red = lambert(0xf06f6f)
-    const counter = new THREE.Mesh(keep(new THREE.BoxGeometry(3, 1, 1.2)), wood); counter.position.y = 0.5; counter.castShadow = true
-    sg.add(counter)
-    for (const x of [-1.4, 1.4]) { const post = new THREE.Mesh(keep(new THREE.BoxGeometry(0.14, 2.4, 0.14)), wood); post.position.set(x, 1.2, -0.5); sg.add(post) }
-    for (let k = 0; k < 6; k++) { const strip = new THREE.Mesh(keep(new THREE.BoxGeometry(0.52, 0.08, 1.5)), k % 2 ? cream : red); strip.position.set(-1.3 + k * 0.52, 2.45, 0); strip.rotation.x = 0.25; sg.add(strip) }
-    for (const [x, c] of [[-0.9, 0xff5b6b], [0, 0xff9a3c], [0.9, 0xffd23f]] as const) { const crate = new THREE.Mesh(keep(new THREE.BoxGeometry(0.7, 0.3, 0.6)), lambert(c)); crate.position.set(x, 1.15, 0.1); sg.add(crate) }
+    const face = (img: string, h: number, aspect: number, z: number, back: boolean) => {
+      const m = new THREE.Mesh(keep(new THREE.PlaneGeometry(h * aspect, h).translate(0, h / 2, 0)), keep(new THREE.MeshBasicMaterial({ map: w.texOf(assetUrl(`farm/3d/${img}.webp`)), transparent: true, alphaTest: 0.35, side: THREE.FrontSide })))
+      m.position.z = z
+      if (back) m.rotation.y = Math.PI
+      sg.add(m)
+    }
+    face('stall_front', 3.2, 709 / 662, 0.55, false)
+    face('stall_back', 3.2, 685 / 649, -0.55, true)
+    const wood = keep(new THREE.MeshLambertMaterial({ color: 0xe0a35c, emissive: 0xe0a35c, emissiveIntensity: 0.25 }))
+    const desk = new THREE.Mesh(keep(new THREE.BoxGeometry(2.4, 1.1, 1.05)), wood); desk.position.y = 0.55; desk.castShadow = true
+    const awning = new THREE.Mesh(keep(new THREE.BoxGeometry(2.8, 0.12, 1.1)), keep(new THREE.MeshLambertMaterial({ color: 0xf6a08f, emissive: 0xf6a08f, emissiveIntensity: 0.3 }))); awning.position.y = 2.75
+    sg.add(desk, awning)
     sg.position.set(7, 0, fz1 + 5)
     scene.add(sg)
     w.pickables.push(sg)
@@ -413,7 +419,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       const oc = orderCrop(fst).id
       if (!orderTex.has(oc)) orderTex.set(oc, w.texOf(assetUrl(`assets/farm/harvest_${oc}.webp`)))
       if (orderSp.material.map !== orderTex.get(oc)) { orderSp.material.map = orderTex.get(oc)!; orderSp.material.needsUpdate = true }
-      orderSp.position.set(7, 3.3 + Math.sin(nowMs / 400) * 0.1, fz1 + 5)
+      orderSp.position.set(7, 3.7 + Math.sin(nowMs / 400) * 0.1, fz1 + 5)
       for (const p of plots) for (const c of p.crops) if (c.root.visible) w.face(c, 1)
       for (const d of buildings) w.face(d, 1)
       // 우리 동물: 우리 안 아무 데나 천천히 걸어갔다가 쉬었다가

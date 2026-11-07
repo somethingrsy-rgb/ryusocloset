@@ -169,7 +169,12 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     const base = new THREE.Mesh(keep(new THREE.BoxGeometry(4.5, 0.3, 2.8)), shopMat(0xf7c9a6))
     base.position.set(0, 0.15, -6.2 - 1.4)
     for (const m of [body, roof, base]) { m.castShadow = true; m.receiveShadow = true; scene.add(m) }
-    const shopParts: THREE.Object3D[] = [shop.root, body, roof, base]
+    // 가게 뒷면 그림(문이 있는 뒤쪽): 몸통 뒤에 뒤(-z)를 보게 붙인다
+    const back = new THREE.Mesh(keep(new THREE.PlaneGeometry(5.6 * (1155 / 1186), 5.6).translate(0, 2.8, 0)), keep(new THREE.MeshBasicMaterial({ map: w.texOf(assetUrl('cafe/3d/counter_back.webp')), transparent: true, alphaTest: 0.35, side: THREE.FrontSide })))
+    back.position.set(0, 0, -6.2 - 2.8)
+    back.rotation.y = Math.PI
+    scene.add(back)
+    const shopParts: THREE.Object3D[] = [shop.root, body, roof, base, back]
     w.obstacles.push({ x: 0, z: -6.2, r: 2.4 }, { x: -1.6, z: -7.8, r: 1.4 }, { x: 1.6, z: -7.8, r: 1.4 })
     // 파라솔 테이블(입체): 잔디밭 여기저기 띄엄띄엄
     const tableKit = makeTableKit(w)
