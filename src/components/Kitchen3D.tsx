@@ -19,15 +19,24 @@ export interface KitchenView {
   board: string[]; sink: string[]; done: string | null; tool: string | null
   crew: number[]; cheer: boolean; busy: boolean; speaker: number
 }
-// 자리(바닥 위 가운데 x·z, 크기 w·h·d)
-const AT: Record<Station, { x: number; z: number; w: number; h: number; d: number; color: number }> = {
-  fridge: { x: -4.4, z: -2.2, w: 1.8, h: 3.4, d: 1.4, color: 0xf6f3ff },
-  sink: { x: -1.4, z: -2.2, w: 2.4, h: 1.5, d: 1.4, color: 0xfff1e3 },
-  stove: { x: 1.6, z: -2.2, w: 2.0, h: 1.5, d: 1.4, color: 0xfff1e3 },
-  oven: { x: 4.2, z: -2.2, w: 2.0, h: 1.5, d: 1.4, color: 0xffd6de },
-  board: { x: 0, z: 1.6, w: 4.6, h: 1.4, d: 1.6, color: 0xf7d9b5 },
+/**
+ * 자리마다 받은 주방 그림(public/kitchen/3d) 한 장을 세운다. x·z 는 그림 아래 가운데(앞면) 자리, w 는 그림 너비(높이는 그림 비율대로).
+ * fx 는 그림 속 자리(그림 높이에 대한 위에서부터 비율): top 은 물건 윗면(재료·도구를 올려놓는 높이), 그 밖은 효과 자리.
+ */
+const ART: Record<Station, { img: string; x: number; z: number; w: number; aspect: number; top: number }> = {
+  fridge: { img: 'fridge', x: -3.95, z: -2.0, w: 1.7, aspect: 714 / 1400, top: 0.25 },
+  sink: { img: 'sink', x: -1.6, z: -2.0, w: 2.6, aspect: 1308 / 1054, top: 0.25 },
+  stove: { img: 'stove', x: 0.9, z: -2.0, w: 2.0, aspect: 953 / 1052, top: 0.3 },
+  oven: { img: 'oven', x: 3.25, z: -2.0, w: 2.3, aspect: 1147 / 1055, top: 0.6 },
+  board: { img: 'island', x: 0, z: 1.8, w: 4.4, aspect: 1400 / 511, top: 0.15 },
 }
-const IN_FRONT = 1.0 // 아바타·친구가 서는 줄(아일랜드 뒤)
+const hOf = (k: Station) => ART[k].w / ART[k].aspect
+/** 그림 속 높이(위에서부터 비율) → 장면 높이 */
+const yAt = (k: Station, fy: number) => hOf(k) * (1 - fy)
+/** 아바타·친구가 다니는 곳(조리대 앞 ~ 아일랜드 뒤) */
+const WALK = { x0: -4.6, x1: 4.6, z0: -1.4, z1: 1.1 }
+/** 자리에서 요리할 때 아바타가 서는 곳 */
+const standAt = (k: Station) => (k === 'board' ? { x: 0, z: 0.95 } : { x: ART[k].x + (ART[k].x > 0 ? -1 : 1) * ART[k].w * 0.45, z: -1.2 })
 
 export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: Outfit; tweaks: Tweaks; view: KitchenView; onStation: (s: Station) => void; line: string | null }) {
   const host = useRef<HTMLDivElement>(null)
@@ -45,10 +54,13 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
     const el = host.current
     if (!el) return
     const picks: THREE.Object3D[] = []
+    const goTo = { x: 0, z: 0.95 }
     const s = createStage(el, {
-      sky: 0xffeef2, orbit: true, pitchRange: [0.2, 0.95], yawRange: [-0.6, 0.6],
+      sky: 0xffeef2, orbit: true, pitchRange: [0.3, 0.75], yawRange: [-0.3, 0.3],
       view: { yaw: 0, pitch: 0.42, dist: 12, target: [0, 1.2, 0] },
       pickables: picks, onPick: (o) => tapRef.current(o.userData.station as Station),
+      // 바닥을 누르면 아바타가 그곳으로 걸어간다(다니는 곳 안에서)
+      onTap: (sx, sy) => { const g = s.ground(sx, sy); if (g) { goTo.x = Math.max(WALK.x0, Math.min(WALK.x1, g.x)); goTo.z = Math.max(WALK.z0, Math.min(WALK.z1, g.z)) } },
       fov: (w, h) => (w < h ? 66 : 46),
     })
     stage.current = s
@@ -71,50 +83,29 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
     wall.position.set(0, 3.5, -3)
     wall.receiveShadow = true
     scene.add(floor, wall)
-    // 선반
-    const shelf = new THREE.Mesh(keep(new THREE.BoxGeometry(5, 0.15, 0.6)), lambert(0xd9a77c))
-    shelf.position.set(0.2, 3.4, -2.7)
-    scene.add(shelf)
-    // 자리마다 상자 + 꾸밈
-    const boxes: Partial<Record<Station, THREE.Group>> = {}
-    for (const [k, a] of Object.entries(AT) as [Station, (typeof AT)[Station]][]) {
-      const g = new THREE.Group()
-      const body = new THREE.Mesh(keep(new THREE.BoxGeometry(a.w, a.h, a.d)), keep(new THREE.MeshLambertMaterial({ color: a.color, emissive: 0xff7aa0, emissiveIntensity: 0 })))
-      body.position.y = a.h / 2
-      body.castShadow = true; body.receiveShadow = true
-      g.add(body)
-      const topY = a.h
-      if (k === 'fridge') {
-        const line = new THREE.Mesh(keep(new THREE.BoxGeometry(a.w, 0.05, 0.02)), lambert(0xc9c3e6)); line.position.set(0, a.h * 0.62, a.d / 2 + 0.01); g.add(line)
-        for (const y of [a.h * 0.8, a.h * 0.4]) { const hd = new THREE.Mesh(keep(new THREE.BoxGeometry(0.08, 0.5, 0.08)), lambert(0xb7aee0)); hd.position.set(a.w / 2 - 0.25, y, a.d / 2 + 0.06); g.add(hd) }
-      } else {
-        const top = new THREE.Mesh(keep(new THREE.BoxGeometry(a.w + 0.12, 0.12, a.d + 0.12)), lambert(k === 'board' ? 0xffffff : 0xf3e6da))
-        top.position.y = topY + 0.06; top.receiveShadow = true; g.add(top)
-      }
-      if (k === 'sink') {
-        const basin = new THREE.Mesh(keep(new THREE.BoxGeometry(1.4, 0.05, 0.8)), lambert(0x9fc6e0)); basin.position.set(0, topY + 0.13, 0.05); g.add(basin)
-        const tap = new THREE.Mesh(keep(new THREE.TorusGeometry(0.28, 0.05, 8, 16, Math.PI)), lambert(0xc0c6cf)); tap.position.set(0, topY + 0.4, -0.45); g.add(tap)
-      }
-      if (k === 'stove') {
-        const pot = new THREE.Mesh(keep(new THREE.CylinderGeometry(0.5, 0.42, 0.55, 20)), lambert(0xe46a7e)); pot.position.set(0, topY + 0.4, 0); pot.castShadow = true; g.add(pot)
-        const lid = new THREE.Mesh(keep(new THREE.SphereGeometry(0.5, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)), lambert(0xf28a9c)); lid.scale.y = 0.3; lid.position.set(0, topY + 0.68, 0); g.add(lid)
-      }
-      if (k === 'oven') {
-        const glass = new THREE.Mesh(keep(new THREE.PlaneGeometry(1.3, 0.6)), lambert(0x4a3a40)); glass.position.set(0, a.h * 0.48, a.d / 2 + 0.01); g.add(glass)
-      }
-      if (k === 'board') {
-        const board = new THREE.Mesh(keep(new THREE.BoxGeometry(2.4, 0.08, 1.0)), lambert(0xd9a066)); board.position.set(0, topY + 0.16, 0.1); board.receiveShadow = true; g.add(board)
-      }
-      g.position.set(a.x, 0, a.z)
-      g.userData.station = k
-      g.userData.body = body
-      scene.add(g)
-      picks.push(g)
-      boxes[k] = g
+    // 벽 선반(그림)
+    const shelf = s.paperDoll(s.texOf(assetUrl('kitchen/3d/shelf.webp')), 1.45, 1400 / 401, 1, false)
+    shelf.root.position.set(0.3, 2.9, -2.95)
+    // 자리마다 그림을 세운다. 뒤에는 같은 그림을 분홍으로 물들인 판을 조금 크게 두어, 지금 누를 곳이면 반짝이게 한다
+    const boxes: Partial<Record<Station, { doll: Doll; glow: THREE.Mesh; glowMat: THREE.MeshBasicMaterial }>> = {}
+    for (const k of Object.keys(ART) as Station[]) {
+      const a = ART[k], tex = s.texOf(assetUrl(`kitchen/3d/${a.img}.webp`))
+      const d = s.paperDoll(tex, hOf(k), a.aspect, 1, k !== 'board')
+      d.root.position.set(a.x, 0, a.z)
+      d.root.userData.station = k
+      const glowMat = keep(new THREE.MeshBasicMaterial({ map: tex, color: 0xff5f8f, transparent: true, opacity: 0, depthWrite: false }))
+      const glow = new THREE.Mesh(d.doll.geometry, glowMat)
+      glow.scale.set(d.doll.scale.x * 1.05, d.doll.scale.y * 1.04, 1)
+      glow.position.set(0, -hOf(k) * 0.02, -0.02)
+      d.body.add(glow)
+      picks.push(d.root)
+      boxes[k] = { doll: d, glow, glowMat }
     }
     // 아바타(아일랜드 뒤 가운데)와 같이 요리하는 친구(양옆)
     const me = s.paperDoll(null, 2.6, 1024 / 1536, 1504 / 1536, false)
-    me.root.position.set(0, 0, IN_FRONT - 0.3)
+    me.root.position.set(0, 0, 0.95)
+    const meGo = goTo
+    let meDir: 1 | -1 = 1, lastHere: Station | null = null
     meRef.current = me
     const helpers: Doll[] = []
     let crewKey = ''
@@ -125,7 +116,8 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
         const av = guestAvatar(g)
         const d = av ? s.paperDoll(null, 2.6, 1024 / 1536, 1504 / 1536, false) : s.paperDoll(s.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[g].img}_stand.webp`)), 1.7, 1, 1, false)
         if (av) renderFigure(guestLook(av.id), {}, av).then((cv) => s.setMap(d, s.texOf(cv))).catch(() => {})
-        d.root.position.set(k ? 2.6 : -2.6, 0, IN_FRONT - 0.3)
+        d.root.position.set(k ? 2.4 : -2.4, 0, 0.6)
+        d.root.userData.go = { x: k ? 2.4 : -2.4, z: 0.6, wait: 1 + k, dir: (k ? -1 : 1) as 1 | -1 }
         d.root.userData.wave = av ? null : s.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[g].img}_wave.webp`))
         d.root.userData.stand = d.mat.map
         helpers.push(d)
@@ -142,7 +134,7 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
     const pool: THREE.Sprite[] = []
     const tool = new THREE.Sprite(keep(new THREE.SpriteMaterial({ depthTest: false }))); tool.renderOrder = 6; tool.visible = false; scene.add(tool)
     const doneSp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ depthTest: false }))); doneSp.renderOrder = 6; doneSp.visible = false; doneSp.scale.setScalar(0.9); scene.add(doneSp)
-    const top = (k: Station) => new THREE.Vector3(AT[k].x, AT[k].h + 0.2, AT[k].z)
+    const top = (k: Station) => new THREE.Vector3(ART[k].x, hOf(k) + 0.15, ART[k].z)
 
     let t = 0
     const tmp = new THREE.Vector3()
@@ -156,10 +148,10 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
       press = Math.max(0, press - dt * 5)
       // 지금 누를 곳: 반짝이고 손가락이 위에서 콕콕. 틀린 곳을 누르면 그 자리가 흔들린다
       for (const k of Object.keys(boxes) as Station[]) {
-        const g = boxes[k]!, body = g.userData.body as THREE.Mesh
-        ;(body.material as THREE.MeshLambertMaterial).emissiveIntensity = st.here === k ? 0.18 + Math.sin(t * 6) * 0.12 : 0
-        g.position.x = AT[k].x + (st.shake === k ? Math.sin(t * 50) * 0.06 : 0)
-        g.scale.y = st.here === k ? 1 - press * 0.03 : 1
+        const b = boxes[k]!
+        b.glowMat.opacity = st.here === k ? 0.35 + Math.sin(t * 6) * 0.25 : 0
+        b.doll.root.position.x = ART[k].x + (st.shake === k ? Math.sin(t * 50) * 0.06 : 0)
+        b.doll.body.scale.y = st.here === k ? 1 - press * 0.03 : 1
       }
       point.visible = !!st.here
       if (st.here) point.position.copy(top(st.here)).add(tmp.set(0, 0.9 + Math.abs(Math.sin(t * 5)) * 0.25, 0))
@@ -168,18 +160,18 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
       flames.forEach((f, i) => {
         f.visible = !!fire
         if (!fire) return
-        const a = AT[fire]
-        f.position.set(a.x + (i - 1) * 0.4, fire === 'oven' ? a.h * 0.48 : a.h + 0.15, a.z + a.d / 2 + 0.05)
+        const a = ART[fire]
+        f.position.set(a.x + (i - 1) * (fire === 'oven' ? 0.35 : 0.3), fire === 'oven' ? yAt('oven', 0.66) : yAt('stove', 0.33), a.z + 0.05)
         f.scale.setScalar((fire === 'oven' ? 0.4 : 0.35) * (1 + 0.1 * Math.sin(t * 12 + i)) * (1 + st.taps * 0.05))
       })
       // 씻기: 물방울이 떨어진다, 굳히기: 냉장고에 얼음
       drops.forEach((d, i) => {
         d.visible = st.step === 'wash'
         const y = ((t * 1.6 + i * 0.5) % 1)
-        d.position.set(AT.sink.x, AT.sink.h + 0.55 - y * 0.4, AT.sink.z - 0.3)
+        d.position.set(ART.sink.x, yAt('sink', 0.1) - y * (yAt('sink', 0.1) - yAt('sink', 0.27)), ART.sink.z + 0.05)
       })
       ice.visible = st.step === 'chill'
-      ice.position.set(AT.fridge.x, AT.fridge.h * 0.8, AT.fridge.z + AT.fridge.d / 2 + 0.3)
+      ice.position.set(ART.fridge.x, yAt('fridge', 0.25), ART.fridge.z + 0.1)
       // 재료: 도마 위에 줄지어, 씻는 재료는 싱크대 안
       const items = [...st.board.map((src) => ({ src, at: 'board' as const })), ...st.sink.map((src) => ({ src, at: 'sink' as const }))]
       while (pool.length < items.length) { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ depthTest: false }))); sp.renderOrder = 5; scene.add(sp); pool.push(sp) }
@@ -189,34 +181,57 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
         if (!it) return
         if (sp.material.map !== texFor(it.src)) { sp.material.map = texFor(it.src); sp.material.needsUpdate = true }
         const row = items.filter((x) => x.at === it.at), n = row.length, k = row.indexOf(it)
-        const a = AT[it.at]
+        const a = ART[it.at]
         sp.scale.setScalar(0.55)
-        sp.position.set(a.x + (k - (n - 1) / 2) * 0.55, a.h + 0.45 + (st.here === it.at ? Math.sin(t * 30) * press * 0.04 : 0), a.z + 0.15)
+        sp.position.set(a.x + (k - (n - 1) / 2) * 0.5, yAt(it.at, a.top) + 0.25 + (st.here === it.at ? Math.sin(t * 30) * press * 0.04 : 0), a.z + 0.1)
       })
       // 도구(손·칼·믹서기…)는 재료 위에서 누를 때마다 꾹
       tool.visible = !!st.tool
       if (st.tool) {
         if (tool.material.map !== texFor(st.tool)) { tool.material.map = texFor(st.tool); tool.material.needsUpdate = true }
         tool.scale.set(1, 1 - press * 0.15, 1)
-        tool.position.set(AT.board.x + 0.9, AT.board.h + 0.75 - press * 0.1, AT.board.z + 0.5)
+        tool.position.set(ART.board.x + 0.9, yAt('board', ART.board.top) + 0.65 - press * 0.1, ART.board.z + 0.1)
       }
       // 다 만든 음식은 도마 위에서 통통
       doneSp.visible = !!st.done
       if (st.done) {
         const src = `cafe/menu2/${st.done}.webp`
         if (doneSp.material.map !== texFor(src)) { doneSp.material.map = texFor(src); doneSp.material.needsUpdate = true }
-        doneSp.position.set(AT.board.x, AT.board.h + 0.55 + Math.abs(Math.sin(t * 5)) * 0.2, AT.board.z + 0.7)
+        doneSp.position.set(ART.board.x, yAt('board', ART.board.top) + 0.45 + Math.abs(Math.sin(t * 5)) * 0.2, ART.board.z + 0.1)
       }
       // 아바타·친구
-      me.body.position.y = st.busy ? Math.abs(Math.sin(t * 12)) * 0.12 : 0
-      s.face(me)
+      // 아바타: 지금 할 자리로 걸어가서 선다(도마는 아일랜드 뒤). 바닥을 누르면 그곳으로 간다
+      if (st.here && st.here !== lastHere) Object.assign(meGo, standAt(st.here))
+      lastHere = st.here
+      const mp = me.root.position, mdx = meGo.x - mp.x, mdz = meGo.z - mp.z, md = Math.hypot(mdx, mdz)
+      const meWalk = md > 0.04
+      if (meWalk) { const k = Math.min(md, dt * 3.2); mp.x += (mdx / md) * k; mp.z += (mdz / md) * k; if (Math.abs(mdx) > 0.02) meDir = mdx > 0 ? 1 : -1 }
+      me.body.position.y = st.busy || meWalk ? Math.abs(Math.sin(t * (meWalk ? 9 : 12))) * (meWalk ? 0.1 : 0.12) : 0
+      s.face(me, meDir)
       helpers.forEach((d, k) => {
         const happy = st.cheer
         const wave = d.root.userData.wave as THREE.Texture | null
         if (wave) { const want = happy ? wave : (d.root.userData.stand as THREE.Texture); if (d.mat.map !== want) { d.mat.map = want; d.mat.needsUpdate = true } }
-        d.body.position.y = happy ? Math.abs(Math.sin(t * 8 + k)) * 0.25 : 0
-        s.face(d, k ? -1 : 1)
-        d.body.rotation.z = happy ? 0 : Math.sin(t * 2 + k * 1.3) * 0.05
+        // 친구: 조리대 앞을 거닐다 쉬었다 한다(아바타·다른 친구와 부딪히지 않게). 다 만들면 그 자리에서 폴짝
+        const go = d.root.userData.go as { x: number; z: number; wait: number; dir: 1 | -1 }, p = d.root.position
+        let walk = false
+        if (!happy) {
+          go.wait -= dt
+          const dx = go.x - p.x, dz = go.z - p.z, dd = Math.hypot(dx, dz)
+          if (dd > 0.05 && go.wait <= 0) { const sp = Math.min(dd, dt * 1.6); p.x += (dx / dd) * sp; p.z += (dz / dd) * sp; if (Math.abs(dx) > 0.02) go.dir = dx > 0 ? 1 : -1; walk = true }
+          else if (go.wait <= 0) {
+            go.wait = 1.5 + Math.random() * 3
+            go.x = WALK.x0 + Math.random() * (WALK.x1 - WALK.x0); go.z = WALK.z0 + Math.random() * (WALK.z1 - WALK.z0)
+          }
+        }
+        for (const o of [mp, ...helpers.filter((x) => x !== d).map((x) => x.root.position)]) {
+          const ax = p.x - o.x, az = p.z - o.z, ad = Math.hypot(ax, az)
+          if (ad < 1.1 && ad > 1e-3) { p.x = o.x + (ax / ad) * 1.1; p.z = o.z + (az / ad) * 1.1 }
+        }
+        p.x = Math.max(WALK.x0, Math.min(WALK.x1, p.x)); p.z = Math.max(WALK.z0, Math.min(WALK.z1, p.z))
+        d.body.position.y = happy ? Math.abs(Math.sin(t * 8 + k)) * 0.25 : walk ? Math.abs(Math.sin(t * 8 + k)) * 0.08 : 0
+        s.face(d, go.dir)
+        d.body.rotation.z = happy || walk ? 0 : Math.sin(t * 2 + k * 1.3) * 0.05
       })
       // 말풍선: 말하는 친구 머리 위
       const sp = helpers[st.speaker]
