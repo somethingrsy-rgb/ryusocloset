@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { assetUrl } from '../lib/items'
+import { BUILDINGS, makeBuilding, type BuildingArt } from './building3d'
 
 /**
  * 3D 시험판(산책·농장)이 같이 쓰는 바탕: 하늘·햇빛·잔디·구름, 종이 인형(지금 그림을 세운 판),
@@ -26,12 +27,7 @@ export const meadowTree = (r: number) =>
     : r < 0.4 ? { img: 'cafe/3d/tree_orange.webp', aspect: 827 / 865, h: 4.0 }
       : TREE_ART[0]
 /** 여행 3D 집 그림 */
-export const HOUSE_ART = [
-  { img: 'travel/3d/house_potion.webp', aspect: 1021 / 1206 },
-  { img: 'travel/3d/house_palace.webp', aspect: 1026 / 1166 },
-  { img: 'travel/3d/house_castle.webp', aspect: 1043 / 1249 },
-  { img: 'travel/3d/house_ginger.webp', aspect: 1038 / 1146 },
-] as const
+export const HOUSE_ART = [BUILDINGS.potion, BUILDINGS.palace, BUILDINGS.castle, BUILDINGS.ginger]
 const TAP_MOVE = 8
 
 /** 같은 값을 늘 같게 내는 난수(새로 열어도 마을 모양이 같게) */
@@ -60,6 +56,8 @@ export interface World {
   addPath: (x0: number, z0: number, x1: number, z1: number, width: number) => void
   /** 그림을 세운 판(집 같은 것): 늘 카메라를 보고, 부딪히는 자리(r)이며 아바타를 가리면 숨긴다 */
   addProp: (img: string, x: number, z: number, h: number, aspect: number, r: number) => Doll
+  /** 건물(그림 앞면 고정 + 입체 몸통, building3d): yaw 쪽을 보고 서고, 부딪히는 자리(r)이며 아바타를 가리면 숨긴다 */
+  addBuilding: (art: BuildingArt, x: number, z: number, h: number, yaw: number, r: number) => THREE.Group
   setAvatar: (canvas: HTMLCanvasElement) => void
   /** 그곳까지 걸어간다. 닿으면(dist 안쪽) arrive 를 부른다 */
   walkTo: (x: number, z: number, arrive?: () => void, dist?: number) => void
@@ -147,15 +145,24 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   }
   // 나무: 카페와 같은 3D 나무 그림을 세운 판. 카메라와 아바타 사이를 가리면 숨긴다
   const obstacles: World['obstacles'] = []
-  const fadeable: { x: number; z: number; doll: Doll }[] = []
+  const fadeable: { x: number; z: number; obj: THREE.Object3D; doll?: Doll }[] = []
   const propTex = new Map<string, THREE.Texture>()
   const addProp = (img: string, x: number, z: number, h: number, aspect: number, r: number) => {
     if (!propTex.has(img)) propTex.set(img, texOf(assetUrl(img)))
     const d = paperDoll(propTex.get(img)!, h, aspect)
     d.root.position.set(x, 0, z)
     obstacles.push({ x, z, r })
-    fadeable.push({ x, z, doll: d })
+    fadeable.push({ x, z, obj: d.root, doll: d })
     return d
+  }
+  const addBuilding = (art: BuildingArt, x: number, z: number, h: number, yaw: number, r: number) => {
+    const g = makeBuilding({ keep, texOf }, art, h)
+    g.position.set(x, 0, z)
+    g.rotation.y = yaw
+    scene.add(g)
+    obstacles.push({ x, z, r })
+    fadeable.push({ x, z, obj: g })
+    return g
   }
   let dirtTex: THREE.Texture | null = null
   const addPath = (x0: number, z0: number, x1: number, z1: number, width: number) => {
@@ -321,8 +328,8 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     const cx = camera.position.x, cz = camera.position.z, sx = me.x - cx, sz = me.z - cz, len2 = sx * sx + sz * sz || 1
     for (const t of fadeable) {
       const u = Math.max(0, Math.min(1, ((t.x - cx) * sx + (t.z - cz) * sz) / len2))
-      t.doll.root.visible = !(Math.hypot(cx + sx * u - t.x, cz + sz * u - t.z) < 2.4 && u < 0.97)
-      face(t.doll, 1)
+      t.obj.visible = !(Math.hypot(cx + sx * u - t.x, cz + sz * u - t.z) < 2.4 && u < 0.97)
+      if (t.doll) face(t.doll, 1)
     }
     for (const c of clouds) { c.position.x += dt * 0.6; if (c.position.x > 90) c.position.x = -90 }
     marker.scale.setScalar(1 + Math.sin(now / 200) * 0.08)
@@ -333,7 +340,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   frame = requestAnimationFrame(tick)
 
   return {
-    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addPath, setAvatar, walkTo, face, screenSide, pushOut, pickables,
+    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addBuilding, addPath, setAvatar, walkTo, face, screenSide, pushOut, pickables,
     onFrame: (fn) => { frameFns.push(fn) },
     dispose: () => {
       cancelAnimationFrame(frame)

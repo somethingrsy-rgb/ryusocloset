@@ -5,6 +5,7 @@ import { renderFigure } from '../lib/exportPng'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { stepCafe } from '../lib/cafeWalk'
+import { BUILDINGS, bushKit, makeBuilding } from './building3d'
 import { ANIMAL_H, createWorld, meadowTree, signCanvas, type Doll, type World } from './world3d'
 
 /** 기존 주문 저장을 공유하는 자유 산책 카페. 3D 농장과 같은 바탕(world3d): 같은 카메라 각도·따라가기·걷기·끌어서 둘러보기 */
@@ -147,29 +148,15 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     const stopFollow = () => { following = null }
     el.addEventListener('pointerdown', stopFollow)
     // 딸기 가게(카운터)·꽃 덤불: 그림을 세운 판(나무처럼 늘 카메라를 본다)
-    const props: Doll[] = []
-    const prop = (name: string, h: number, aspect: number, x: number, z: number) => {
-      const d = w.paperDoll(w.texOf(assetUrl(`cafe/3d/${name}.webp`)), h, aspect)
-      d.root.position.set(x, 0, z)
-      props.push(d)
-      return d
-    }
-    // 딸기 가게: 그림은 늘 앞(+z)을 보게 고정하고(돌지 않게), 뒤에 입체 가게 몸통을 붙여 옆·뒤에서 봐도 건물로 보이게
-    const shop = prop('counter', 5.6, 997 / 1024, 0, -6.2)
-    props.pop()
-    ;(shop.doll.material as THREE.MeshBasicMaterial).side = THREE.FrontSide
-    const shopMat = (c: number) => keep(new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: 0.25 }))
-    const body = new THREE.Mesh(keep(new THREE.BoxGeometry(4.3, 2.4, 2.6)), shopMat(0xfff1e2))
-    body.position.set(0, 1.2, -6.2 - 1.4)
-    const roof = new THREE.Mesh(keep(new THREE.CylinderGeometry(1, 1, 4.5, 3, 1)), shopMat(0xf4a3b8))
-    roof.rotation.z = Math.PI / 2
-    roof.rotation.x = Math.PI / 6
-    roof.scale.set(1, 1, 1.6)
-    roof.position.set(0, 2.4 + 0.5, -6.2 - 1.4) // 지붕 꼭대기가 그림의 차양보다 낮게(앞에서 보면 안 보인다)
-    const base = new THREE.Mesh(keep(new THREE.BoxGeometry(4.5, 0.3, 2.8)), shopMat(0xf7c9a6))
-    base.position.set(0, 0.15, -6.2 - 1.4)
-    for (const m of [body, roof, base]) { m.castShadow = true; m.receiveShadow = true; scene.add(m) }
-    const shopParts: THREE.Object3D[] = [shop.root, body, roof, base]
+    // 딸기 가게: 그림은 앞(+z)을 보게 고정(돌지 않게) + 뒤에 입체 몸통·지붕(building3d)
+    const shopGroup = makeBuilding(w, BUILDINGS.cafe, 5.6)
+    shopGroup.position.set(0, 0, -6.2)
+    scene.add(shopGroup)
+    const shopParts: THREE.Object3D[] = [shopGroup]
+    // 꽃 덤불: 진짜 입체(어느 쪽에서 봐도 덤불)
+    const bush = bushKit(w)
+    let bushN = 0
+    const addBush = (x: number, z: number) => { const b = bush(++bushN, 1.1); b.position.set(x, 0, z); scene.add(b); w.obstacles.push({ x, z, r: 0.55 }) }
     w.obstacles.push({ x: 0, z: -6.2, r: 2.4 }, { x: -1.6, z: -7.8, r: 1.4 }, { x: 1.6, z: -7.8, r: 1.4 })
     // 파라솔 테이블(입체): 잔디밭 여기저기 띄엄띄엄
     const tableKit = makeTableKit(w)
@@ -180,7 +167,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       w.obstacles.push({ x: p.x, z: p.z - 0.2, r: 0.7 })
     }
     const nearTable = (x: number, z: number, r: number) => TABLES.some(([tx, tz]) => (tx - x) ** 2 + (tz - z) ** 2 < r * r)
-    for (const [x, z] of [[-4.2, -5.6], [4.2, -5.6], [-6, -4], [6, -4]]) prop('bush', 1.15, 1024 / 616, x, z)
+    for (const [x, z] of [[-4.2, -5.6], [4.2, -5.6], [-6, -4], [6, -4]]) addBush(x, z)
     // 나무: 농장처럼 듬성듬성(가게·테이블 둘레는 비운다)
     const trees: { x: number; z: number }[] = []
     for (let k = 0; k < 400 && trees.length < 70; k++) {
@@ -194,7 +181,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     for (let k = 0; k < 24; k++) {
       const x = (rnd() - 0.5) * 2 * WALK, z = (rnd() - 0.5) * 2 * WALK
       if ((Math.abs(x) < 5 && z > -10 && z < 0) || (Math.abs(x) < 4 && z < -8) || nearTable(x, z, 3) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 4)) continue
-      prop('bush', 1.15, 1024 / 616, x, z)
+      addBush(x, z)
     }
     // 손님: 자리마다 동물 친구(누르면 그쪽으로 걸어간다)
     for (let i = 0; i < 8; i++) {
@@ -282,7 +269,6 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
           st.onMeet(i)
         }
       }
-      for (const d of props) w.face(d, 1)
       // 가게가 카메라와 아바타 사이를 가리면 잠깐 숨긴다(나무처럼)
       {
         const cx = w.camera.position.x, cz = w.camera.position.z, sx = me.x - cx, sz = me.z - cz, len2 = sx * sx + sz * sz || 1

@@ -106,7 +106,8 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       const p = curve.getPointAt(u), t = curve.getTangentAt(u)
       const n = new THREE.Vector3(-t.z, 0, t.x).normalize().multiplyScalar((k % 2 ? 1 : -1) * 6.5)
       const art = HOUSE_ART[k % HOUSE_ART.length]
-      w.addProp(art.img, p.x + n.x, p.z + n.z, 6, art.aspect, 2.5)
+      // 그림 앞면이 길 쪽을 보게(돌지 않는다) + 입체 몸통
+      w.addBuilding(art, p.x + n.x, p.z + n.z, 6, Math.atan2(-n.x, -n.z), 2.5)
     })
 
     // 나무: 절반은 길가에, 나머지는 들판에

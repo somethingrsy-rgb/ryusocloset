@@ -9,6 +9,7 @@ import { PLAYER_H, friendHop, visible, type RunState } from '../lib/runner'
 import type { Outfit, Tweaks } from '../lib/types'
 import { createStage, emojiCanvas, type Doll } from './stage3d'
 import { HOUSE_ART, TREE_ART } from './world3d'
+import { makeBuilding } from './building3d'
 
 /**
  * 달리기 3D 무대(시험판): 달리기·점프·장애물·별·선물 상자·하트는 원래 달리기 그대로(lib/runner), 그림만 3D 로 그린다.
@@ -89,10 +90,11 @@ export function Runner3D({ live, outfit, tweaks, friends }: { live: MutableRefOb
       // 구간 하나 걸러 길가 저 멀리 집 한 채
       if (c % 2 === 0) {
         const art = HOUSE_ART[((c / 2) % HOUSE_ART.length + HOUSE_ART.length) % HOUSE_ART.length]
-        const hs = s.paperDoll(artOf(art.img), 6, art.aspect)
-        hs.root.position.set(-(9 + r() * 4), 0, z0 - CHUNK / 2)
-        g.add(hs.root)
-        g.userData.trees = [...(g.userData.trees ?? []), hs]
+        // 그림 앞면은 카메라 쪽(옆에서 보는 각도)을 보게 고정 + 입체 몸통
+        const hs = makeBuilding(s, art, 6)
+        hs.position.set(-(9 + r() * 4), 0, z0 - CHUNK / 2)
+        hs.rotation.y = 1.05
+        g.add(hs)
       }
       chunks.set(c, g)
     }

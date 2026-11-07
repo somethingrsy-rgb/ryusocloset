@@ -17,6 +17,7 @@ import { CoinIcon } from './Icons'
 import { GuestDresser } from './GuestDresser'
 import { FarmStall } from './FarmStall'
 import { PartyInvite } from './PartyGuests'
+import { BUILDINGS } from './building3d'
 import { ANIMAL_H, AVATAR_H, FEET, createWorld, meadowTree, emojiCanvas, signCanvas, type Doll, type World } from './world3d'
 
 /**
@@ -251,14 +252,15 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     const sz0 = -4 - (PD + GAP) - 1.2, sz1 = -4 + (PD + GAP) + 1.2
     fenceLine(sx0, sz0, sx1, sz0); fenceLine(sx0, sz1, sx1, sz1, SIDE_X); fenceLine(sx0, sz0, sx0, sz1); fenceLine(sx1, sz0, sx1, sz1)
 
-    // 헛간·집·우리 동물: 받은 3D 그림(public/farm/3d)을 세운 판(늘 카메라를 본다)
+    // 헛간·집: 그림 앞면 고정 + 입체 몸통(building3d). 우리 동물은 받은 그림을 세운 판(늘 카메라를 본다)
     const art = (name: string, h: number, aspect: number, x: number, z: number) => {
       const d = w.paperDoll(w.texOf(assetUrl(`farm/3d/${name}.webp`)), h, aspect)
       d.root.position.set(x, 0, z)
       return d
     }
-    const buildings = [art('barn', 5, 1041 / 1085, -fx - 5, -6), art('house', 5.6, 1018 / 1188, -5, -fz1 - 14)]
-    for (const d of buildings) w.obstacles.push({ x: d.root.position.x, z: d.root.position.z, r: 2.4 })
+    const HOUSE_AT = { x: -5, z: -fz1 - 14 }
+    w.addBuilding(BUILDINGS.barn, -fx - 5, -6, 5, 0, 2.4)
+    w.addBuilding(BUILDINGS.farmhouse, HOUSE_AT.x, HOUSE_AT.z, 5.6, 0, 2.4)
     // 동물 우리: 헛간 앞 울타리 안에서 젖소·양·닭이 거닌다
     PEN = { x0: -fx - 11, x1: -fx - 2, z0: fz1 - 3, z1: fz1 + 5 }
     fenceLine(PEN.x0, PEN.z0, PEN.x1, PEN.z0); fenceLine(PEN.x0, PEN.z1, PEN.x1, PEN.z1); fenceLine(PEN.x0, PEN.z0, PEN.x0, PEN.z1); fenceLine(PEN.x1, PEN.z0, PEN.x1, PEN.z1)
@@ -298,7 +300,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       if (x > PEN.x0 - 3 && x < sx1 + 4 && z > fz0 - 4 && z < PEN.z1 + 4) continue
       if (Math.abs(x) < 4.5 && z > fz1) continue // 카페 가는 길
       if (Math.hypot(x - 7, z - fz1 - 5) < 4) continue // 노점
-      if (Math.hypot(x - buildings[1].root.position.x, z - buildings[1].root.position.z) < 5) continue
+      if (Math.hypot(x - HOUSE_AT.x, z - HOUSE_AT.z) < 5) continue
       if (w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 10)) continue
       w.addTree(x, z, 0.8 + rnd() * 0.7, meadowTree(rnd()))
       trees++
@@ -415,7 +417,6 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       if (orderSp.material.map !== orderTex.get(oc)) { orderSp.material.map = orderTex.get(oc)!; orderSp.material.needsUpdate = true }
       orderSp.position.set(7, 3.3 + Math.sin(nowMs / 400) * 0.1, fz1 + 5)
       for (const p of plots) for (const c of p.crops) if (c.root.visible) w.face(c, 1)
-      for (const d of buildings) w.face(d, 1)
       // 우리 동물: 우리 안 아무 데나 천천히 걸어갔다가 쉬었다가
       for (const a of animals) {
         a.t += dt
