@@ -57,12 +57,12 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     // 그림은 받은 카페 그림(public/cafe/3d): 잔디 무늬 바닥, 가게·파라솔 테이블·나무·꽃 덤불은 그림을 세운 판
     const grassTex = s.texOf(assetUrl('cafe/3d/grass.webp'))
     grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping
-    grassTex.repeat.set(24, 24)
+    grassTex.repeat.set(14, 14)
     const lawn = new THREE.Mesh(keep(new THREE.PlaneGeometry(120, 120)), keep(new THREE.MeshLambertMaterial({ map: grassTex })))
     lawn.rotation.x = -Math.PI / 2
     lawn.receiveShadow = true
     scene.add(lawn)
-    const dirtTex = s.texOf(assetUrl('cafe/3d/dirt.jpg'))
+    const dirtTex = s.texOf(assetUrl('cafe/3d/dirt.webp'))
     dirtTex.wrapS = dirtTex.wrapT = THREE.RepeatWrapping
     dirtTex.repeat.set(1, 5)
     const path = new THREE.Mesh(keep(new THREE.PlaneGeometry(2.4, 13)), keep(new THREE.MeshLambertMaterial({ map: dirtTex })))
@@ -78,15 +78,15 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       return d
     }
     // 딸기 가게(카운터): 뒤쪽 가운데
-    prop('counter', 5.6, 870 / 1024, 0, -6.2)
+    prop('counter', 5.6, 997 / 1024, 0, -6.2)
     // 파라솔 테이블: 손님 옆자리
-    for (let i = 0; i < 8; i++) { const p = tableAt(i); prop('table', 2.1, 1024 / 967, p.x, p.z - 0.2) }
+    for (let i = 0; i < 8; i++) { const p = tableAt(i); prop('table', 2.4, 939 / 1024, p.x, p.z - 0.2) }
     // 둘레 나무와 꽃 덤불
     for (let k = 0; k < 16; k++) {
       const a = Math.PI + (k / 15) * Math.PI // 뒤쪽 반원
-      prop('tree', 4.2 + (k % 3) * 0.5, 1024 / 1010, Math.cos(a) * 14, Math.sin(a) * 9 - 2.5)
+      prop('tree', 4.2 + (k % 3) * 0.5, 951 / 1024, Math.cos(a) * 14, Math.sin(a) * 9 - 2.5)
     }
-    for (const [x, z] of [[-9, -1], [9, -1], [-9.5, 3.5], [9.5, 3.5], [-4.2, -5.6], [4.2, -5.6], [-8, 7], [8, 7], [-3.5, 7.5], [3.5, 7.5]]) prop('bush', 1.25, 1024 / 755, x, z)
+    for (const [x, z] of [[-9, -1], [9, -1], [-9.5, 3.5], [9.5, 3.5], [-4.2, -5.6], [4.2, -5.6], [-8, 7], [8, 7], [-3.5, 7.5], [3.5, 7.5]]) prop('bush', 1.15, 1024 / 616, x, z)
     // 손님: 자리마다 동물 친구(누르면 전화)
     for (let i = 0; i < 8; i++) {
       const d = s.paperDoll(s.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[i].img}_stand.webp`)), 1.55, 1)
