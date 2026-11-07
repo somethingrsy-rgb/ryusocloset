@@ -311,12 +311,12 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         const side = w.screenSide(SIDE(i), 0) >= 0 ? 1 : -1
         sp.position.set(tp.x + v.z * 0.36 * side + v.x * 0.12, 1.0, tp.z - 0.2 - v.x * 0.36 * side + v.z * 0.12)
       })
-      // 말풍선·코인 표시를 손님 머리 위 화면 자리에(음식이 나온 동안은 말풍선을 숨긴다)
+      // 말풍선·코인 표시를 손님 머리 위 화면 자리에
       for (let i = 0; i < 8; i++) {
         const g = guestDolls[i].root.position
         const pos = project(g.x, ANIMAL_H + 0.1, g.z)
         const a = anchors.current[i], f = floats.current[i]
-        if (a) { a.style.transform = `translate(${pos.x}px, ${pos.y}px)`; a.style.visibility = pos.front && !st.eating[i] ? 'visible' : 'hidden' }
+        if (a) { a.style.transform = `translate(${pos.x}px, ${pos.y}px)`; a.style.visibility = pos.front ? 'visible' : 'hidden' } // 먹는 동안은 고마운 말 말풍선이 나온다
         if (f) { f.style.transform = `translate(${pos.x}px, ${pos.y}px)`; f.style.visibility = pos.front ? 'visible' : 'hidden' }
       }
     })
@@ -336,8 +336,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       <div aria-hidden className="pointer-events-none absolute inset-0 z-[30] bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
       {Array.from({ length: 8 }, (_, i) => (
         <div key={i} ref={(n) => { anchors.current[i] = n }} className="pointer-events-none absolute top-0 left-0 z-[5]">
-          {/* 말풍선은 2D 보다 작게(손님 머리를 가리지 않게) */}
-          <div className="pointer-events-auto absolute -translate-x-1/2 -translate-y-full"><div className="origin-bottom scale-[0.62]">{bubble(i, () => approachRef.current(i))}</div></div>
+          {/* 말풍선은 2D 보다 작게(손님 머리를 가리지 않게). 고마운 말은 읽기 좋게 조금 크게 */}
+          <div className="pointer-events-auto absolute -translate-x-1/2 -translate-y-full"><div className={`origin-bottom ${eating[i] ? 'scale-90' : 'scale-[0.62]'}`}>{bubble(i, () => approachRef.current(i))}</div></div>
         </div>
       ))}
       {Array.from({ length: 8 }, (_, i) => (

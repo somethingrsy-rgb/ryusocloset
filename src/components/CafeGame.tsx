@@ -37,6 +37,8 @@ const SEATS = [
 ] as const
 /** 서빙받은 손님이 음식을 들고 있는 시간 */
 const EAT_MS = 5000
+/** 음식을 받은 동물이 하는 고마운 말(존댓말) */
+const THANKS = ['맛있어요! 고마워요 💕', '잘 먹을게요! 😋', '와, 정말 맛있어 보여요!', '고마워요, 최고예요! ✨', '냠냠, 너무 맛있어요!', '덕분에 기분이 좋아졌어요 😊', '또 올게요! 고마워요', '정성이 가득하네요, 감사해요!']
 const BONUS = 15
 const GOAL = 5
 const KEY = 'ryuso.cafe.v1'
@@ -114,6 +116,8 @@ export function CafeGame({ outfit, tweaks, onKitchen, onFarm }: { outfit: Outfit
   const [floats, setFloats] = useState<{ id: number; seat: number; amount: number }[]>([])
   /** 서빙받은 손님이 5초 동안 들고 있는 음식(자리 → 메뉴) */
   const [eating, setEating] = useState<Record<number, string>>({})
+  /** 음식을 받은 동물이 먹는 동안 하는 말(자리 → 말) */
+  const [thanks, setThanks] = useState<Record<number, string>>({})
   const toastTimer = useRef<number>(0)
   const secRef = useRef<HTMLElement>(null)
   const [pos, setPos] = useState<{ x: number; y: number; wide: boolean } | null>(() => kept?.pos ?? null)
@@ -198,6 +202,9 @@ export function CafeGame({ outfit, tweaks, onKitchen, onFarm }: { outfit: Outfit
         // 받은 음식을 5초 동안 들고 있다가 다 먹는다(그동안은 다음 주문 말풍선을 숨긴다)
         setEating((e) => ({ ...e, [i]: m.id }))
         later(() => setEating((e) => { const n = { ...e }; if (n[i] === m.id) delete n[i]; return n }), EAT_MS)
+        const line = THANKS[Math.floor(Math.random() * THANKS.length)]
+        setThanks((t) => ({ ...t, [i]: line }))
+        later(() => setThanks((t) => { const n = { ...t }; if (n[i] === line) delete n[i]; return n }), EAT_MS)
         const id = ++floatId.current
         setFloats((f) => [...f, { id, seat: i, amount: m.price }])
         later(() => setFloats((f) => f.filter((x) => x.id !== id)), 1300)
@@ -207,6 +214,8 @@ export function CafeGame({ outfit, tweaks, onKitchen, onFarm }: { outfit: Outfit
 
   /** 손님 머리 위 말풍선(주문받기·만드는 중·완성): 2D 그림 위에도, 3D 손님 머리 위에도 같은 단추 */
   const bubbleFor = (i: number, approach?: () => void) => {
+    // 음식을 받아 먹는 동안은 고마운 말 말풍선
+    if (thanks[i]) return <span role="status" className="block w-max max-w-[14rem] rounded-2xl bg-white px-3 py-1.5 text-center text-sm leading-snug font-extrabold text-[#c04a5a] shadow-[0_3px_0_#f0c6cd]">{thanks[i]}</span>
     const x = guests[i]
     const m = MENU[x.wish]
     const ready = isReady(i)
@@ -254,7 +263,10 @@ export function CafeGame({ outfit, tweaks, onKitchen, onFarm }: { outfit: Outfit
               </button>
               {/* 서빙받은 손님은 5초 동안 음식을 들고 있고, 그동안은 다음 주문 말풍선을 숨긴다 */}
               {eating[i]
-                ? <span aria-hidden className="pointer-events-none absolute z-[5] block -translate-x-1/2" style={{ left: `${cx}%`, top: `${cy + 1}%`, width: wide ? '4.5%' : '9%' }}><Ico id={eating[i]} className="h-auto w-full animate-bounce drop-shadow" /></span>
+                ? <>
+                    <span aria-hidden className="pointer-events-none absolute z-[5] block -translate-x-1/2" style={{ left: `${cx}%`, top: `${cy + 1}%`, width: wide ? '4.5%' : '9%' }}><Ico id={eating[i]} className="h-auto w-full animate-bounce drop-shadow" /></span>
+                    {thanks[i] && <div className="pointer-events-none absolute z-[6] -translate-x-1/2 -translate-y-full" style={{ left: `${cx}%`, top: `${cy - 3.5}%` }}>{bubbleFor(i)}</div>}
+                  </>
                 : <div className="absolute z-[5] -translate-x-1/2 -translate-y-full" style={{ left: `${cx}%`, top: `${cy - 3.5}%` }}>{bubbleFor(i)}</div>}
             </div>
           )
