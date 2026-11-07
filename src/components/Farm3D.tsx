@@ -17,6 +17,7 @@ import { CoinIcon } from './Icons'
 import { GuestDresser } from './GuestDresser'
 import { FarmStall } from './FarmStall'
 import { PartyInvite } from './PartyGuests'
+import { viewSprite } from './viewSprite3d'
 import { ANIMAL_H, AVATAR_H, FEET, createWorld, meadowTree, emojiCanvas, signCanvas, type Doll, type World } from './world3d'
 
 /**
@@ -274,20 +275,13 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     // 우유·달걀 표시: 젖소와 첫 닭 머리 위. 받을 수 있으면 통통 뛰고, 기다리는 동안은 흐리게
     const goodTag = (g: AnimalGood) => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: w.texOf(assetUrl(`kitchen/ing/${g}.webp`)), transparent: true, depthWrite: false }))); sp.scale.setScalar(0.8); scene.add(sp); return sp }
     const tags = [{ a: animals[0], sp: goodTag('milk'), g: 'milk' as AnimalGood, top: 2.1 }, { a: animals[2], sp: goodTag('egg'), g: 'egg' as AnimalGood, top: 1.4 }]
-    // 노점: 길가 오른쪽. 받은 노점 그림 앞면(작물 상자·칠판, +z)과 뒷면(빈 상자·통, -z)을 앞뒤로 세우고 사이에 나무 판매대·차양
-    const sg = new THREE.Group()
-    const face = (img: string, h: number, aspect: number, z: number, back: boolean) => {
-      const m = new THREE.Mesh(keep(new THREE.PlaneGeometry(h * aspect, h).translate(0, h / 2, 0)), keep(new THREE.MeshBasicMaterial({ map: w.texOf(assetUrl(`farm/3d/${img}.webp`)), transparent: true, alphaTest: 0.35, side: THREE.FrontSide })))
-      m.position.z = z
-      if (back) m.rotation.y = Math.PI
-      sg.add(m)
-    }
-    face('stall_front', 3.2, 709 / 662, 0.55, false)
-    face('stall_back', 3.2, 685 / 649, -0.55, true)
-    const wood = keep(new THREE.MeshLambertMaterial({ color: 0xe0a35c, emissive: 0xe0a35c, emissiveIntensity: 0.25 }))
-    const desk = new THREE.Mesh(keep(new THREE.BoxGeometry(2.4, 1.1, 1.05)), wood); desk.position.y = 0.55; desk.castShadow = true
-    const awning = new THREE.Mesh(keep(new THREE.BoxGeometry(2.8, 0.12, 1.1)), keep(new THREE.MeshLambertMaterial({ color: 0xf6a08f, emissive: 0xf6a08f, emissiveIntensity: 0.3 }))); awning.position.y = 2.75
-    sg.add(desk, awning)
+    // 노점: 길가 오른쪽. 여덟 방향 그림 중 보는 방향에 맞는 한 장(viewSprite3d). 받은 그림 6장 + 비스듬한 두 방향은 뒤집어서
+    const sv = (n: string) => `farm/3d/stall/${n}.webp`
+    const stallView = viewSprite(w, [
+      [sv('v0'), 451 / 443, false], [sv('v1'), 709 / 662, false], [sv('v2'), 271 / 448, false], [sv('v5'), 685 / 649, true],
+      [sv('v4'), 418 / 440, false], [sv('v5'), 685 / 649, false], [sv('v6'), 295 / 448, false], [sv('v1'), 709 / 662, true],
+    ], 3.3, [1.8, 1.3])
+    const sg = stallView.root
     sg.position.set(7, 0, fz1 + 5)
     scene.add(sg)
     w.pickables.push(sg)
@@ -419,6 +413,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       const oc = orderCrop(fst).id
       if (!orderTex.has(oc)) orderTex.set(oc, w.texOf(assetUrl(`assets/farm/harvest_${oc}.webp`)))
       if (orderSp.material.map !== orderTex.get(oc)) { orderSp.material.map = orderTex.get(oc)!; orderSp.material.needsUpdate = true }
+      stallView.update(w.camera)
       orderSp.position.set(7, 3.7 + Math.sin(nowMs / 400) * 0.1, fz1 + 5)
       for (const p of plots) for (const c of p.crops) if (c.root.visible) w.face(c, 1)
       for (const d of buildings) w.face(d, 1)
