@@ -11,7 +11,7 @@ import { ANIMAL_H, createWorld, meadowTree, signCanvas, type Doll, type World } 
 /** 기존 주문 저장을 공유하는 자유 산책 카페. 3D 농장과 같은 바탕(world3d): 같은 카메라 각도·따라가기·걷기·끌어서 둘러보기 */
 /** 걸을 수 있는 땅(가운데에서 ±WALK) */
 const WALK = 30
-/** 농장 가는 길: 가게 뒤(-z)로 곧게 뻗고, 끝(z < -FARM_GATE)까지 가면 농장으로 넘어간다 */
+/** 농장 가는 길: 가게 뒤(-z)로 굽이굽이 뻗고, 길 끝 농장 노점 앞(z < -FARM_GATE)까지 가면 농장으로 넘어간다 */
 const FARM_GATE = 29
 /** 농장 가는 길이 지나는 x(z 에 따라 좌우로 굽이친다, 양 끝은 가운데) */
 const farmRoadX = (z: number) => { const u = Math.max(0, Math.min(1, (-z - 8.4) / (FARM_GATE - 8.4))); return Math.sin(u * Math.PI * 2) * 3.2 * Math.sin(u * Math.PI) }
@@ -141,7 +141,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     approachRef.current = approach
     // 3D 농장과 같은 바탕: 카메라가 아바타 뒤에서 따라가고, 땅을 누르면 걷고, 옆으로 끌면 둘러본다
     const w = createWorld(el, {
-      bounds: WALK, start: arrive ? { x: 0, z: -FARM_GATE + 3 } : { x: 0, z: -2.6 }, yaw: arrive ? Math.PI : 0, seed: 7, sky: 0xcdeeff, grass: assetUrl('cafe/3d/grass.webp'),
+      bounds: WALK, start: arrive ? { x: farmRoadX(-FARM_GATE + 7), z: -FARM_GATE + 7 } : { x: 0, z: -2.6 }, yaw: arrive ? Math.PI : 0, seed: 7, sky: 0xcdeeff, grass: assetUrl('cafe/3d/grass.webp'),
       onPick: (o) => approach(guests.indexOf(o)),
     })
     world.current = w
@@ -224,7 +224,16 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     // 굽이굽이 흙길(산책길처럼)
     const roadPts: [number, number][] = []
     // 가게 밑에서부터 시작(길이 가게와 이어지게)
-    for (let z = -6.2; z >= -FARM_GATE - 6; z -= 1.5) roadPts.push([farmRoadX(z), z])
+    for (let z = -6.2; z >= -FARM_GATE - 3.6; z -= 1.5) roadPts.push([farmRoadX(z), z])
+    // 길 끝: 농장 노점(여덟 방향 그림, 앞이 카페 쪽을 본다). 노점 바로 앞까지 가면 농장으로
+    const sv = (n: string) => `farm/3d/stall/${n}.webp`
+    const roadStall = viewSprite(w, [
+      [sv('v0'), 451 / 443, false], [sv('v1'), 709 / 662, false], [sv('v2'), 271 / 448, false], [sv('v5'), 685 / 649, true],
+      [sv('v4'), 418 / 440, false], [sv('v5'), 685 / 649, false], [sv('v6'), 295 / 448, false], [sv('v1'), 709 / 662, true],
+    ], 3.3, [0.01, 0.01], 1.25)
+    roadStall.root.position.set(0, 0, -FARM_GATE - 3.6)
+    scene.add(roadStall.root)
+    w.obstacles.push({ x: 0, z: -FARM_GATE - 3.6, r: 1.7 })
     w.addCurvePath(roadPts, 3)
     const sign = w.paperDoll(w.texOf(signCanvas('🌱 농장', '가게 뒤로 쭉')), 2.2, 1)
     sign.root.position.set(3.4, 0, -5.2)
@@ -285,6 +294,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       }
       for (const d of props) w.face(d, 1)
       shopView.update(w.camera)
+      roadStall.update(w.camera)
       // 가게가 카메라와 아바타 사이를 가리면 잠깐 숨긴다(나무처럼)
       {
         const cx = w.camera.position.x, cz = w.camera.position.z, sx = me.x - cx, sz = me.z - cz, len2 = sx * sx + sz * sz || 1
