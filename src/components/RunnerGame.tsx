@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
 import { isRestoring } from '../lib/restoreGuard'
 import { BG_PER_RUN, BG_START, GIFT_Y, MAX_RISE, GROUND_Y, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, LEVELS, LEVEL_IDS, levelName, RUN_H, runDuration, readRunLevel, writeRunLevel, type LevelId, startHearts, friendHop, jump, newRun, readRunRecord, rewardStars, stepRun, visible, writeRunRecord } from '../lib/runner'
 import { earnStars } from '../lib/shop'
@@ -12,6 +12,9 @@ import { avatarGuest, guestFace, guestName, isAvatarGuest, validGuest } from '..
 import { setGuestLooks } from '../lib/guestLooks'
 import { getAvatar } from '../lib/avatars'
 import { StarIcon } from './Icons'
+
+// 3D 달리기(시험판): three.js 가 커서 3D 를 켤 때만 받는다
+const Runner3D = lazy(() => import('./Runner3D').then((m) => ({ default: m.Runner3D })))
 import { assetUrl } from '../lib/items'
 import { ROAD_PART, ROAD_PARTS, TILE_W } from '../lib/world'
 
@@ -46,6 +49,8 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   // 내 아바타로 바꾼 아바타는 친구에서 빠진다
   const friends = chosen.filter((g) => g !== avatarGuest(getAvatar().id))
   const [picking, setPicking] = useState(false)
+  /** 3D 로 달리기(시험판): 규칙·점프·별·선물은 그대로, 그림만 3D. 고른 것은 기억한다 */
+  const [view3d, setView3d] = useState(() => { try { return localStorage.getItem('ryuso.run.3d') === '1' } catch { return false } })
   // 달리는 동안 노래(일시정지·시작 전·끝난 뒤에는 멈춘다)
   useEffect(() => { if (phase !== 'playing' || paused) return; startBgm('run'); return stopBgm }, [phase, paused])
   const host = useRef<HTMLElement>(null)
@@ -153,6 +158,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
   return <section ref={host} tabIndex={0} aria-label="달려라 아바타" className={`relative h-full touch-none select-none overflow-hidden bg-[#82c6fd] outline-none ${short ? '' : 'rounded-3xl ring-1 ring-black/5'}`}
     onPointerDown={(e) => { if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return; e.currentTarget.focus({ preventScroll: true }); tapJump() }}
     onKeyDown={(e) => { if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); tapJump() } }}>
+    {view3d ? <Suspense fallback={null}><Runner3D live={live} outfit={outfit} tweaks={tweaks} friends={friends} /></Suspense> : <>
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {/* 움직이는 건 묶음 하나의 transform 뿐: 그림마다 위치를 바꾸지 않아 폰에서도 부드럽다 */}
       <div className="absolute inset-0 will-change-transform" style={{ transform: `translate3d(${-scrollPx}px,0,0)` }}>
@@ -190,6 +196,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
         </div>
       </div>
     </div>
+    </>}
     <header className={`absolute ${short ? 'top-1.5 left-[max(0.5rem,env(safe-area-inset-left))] right-[max(0.5rem,env(safe-area-inset-right))]' : 'inset-x-2 top-2'} z-10 flex items-center justify-between gap-1`}>
       <span className={`rounded-full bg-white/95 font-bold ${short ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm'}`}>{'❤️'.repeat(Math.max(0, run.hearts))}{'🤍'.repeat(Math.max(0, startHearts(run.level) - run.hearts))} · <StarIcon /> {run.coins}{run.gifts > 0 && <> · 🎁 {run.gifts}</>}</span>
       <div className="flex gap-1">
@@ -215,6 +222,7 @@ export function RunnerGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks:
         {phase !== 'playing' && <button className="my-1 flex min-h-11 w-full items-center justify-center gap-1 rounded-full bg-[#fff1f5] px-3 font-bold text-[#8a4b55] ring-1 ring-[#ffc2d4]" onClick={() => setPicking(true)}>
           🐾 같이 달릴 친구{friends.length ? <span className="flex -space-x-2">{friends.map((a) => <img key={a} src={assetUrl(guestFace(a))} alt={guestName(a)} className="h-7 w-7 rounded-full bg-white object-contain ring-1 ring-white" />)}</span> : ' 고르기'}
         </button>}
+        {phase !== 'playing' && <button aria-pressed={view3d} className={`my-1 flex min-h-10 w-full items-center justify-center gap-1 rounded-full px-3 font-bold ring-1 ring-[#b9d7a8] ${view3d ? 'bg-[#3d6b2f] text-white' : 'bg-white text-[#3d6b2f]'}`} onClick={() => { const v = !view3d; setView3d(v); try { localStorage.setItem('ryuso.run.3d', v ? '1' : '0') } catch { /* 이번만 */ } }}>🧊 3D로 달리기 {view3d ? '켜짐' : '꺼짐'} <span className="text-xs opacity-70">시험판</span></button>}
         {phase !== 'intro' && <p className="text-xs text-black/50">최고 기록 별 {record.best[level]}개</p>}
         <button className="mt-2 min-h-12 w-full rounded-full bg-blush px-4 font-bold text-white" onClick={() => phase === 'playing' ? (setPaused(false), host.current?.focus({ preventScroll: true })) : start()}>{phase === 'intro' ? '달리기 시작' : phase === 'done' ? '한 번 더' : '계속하기'}</button>
         <button className="mt-2 min-h-11 w-full rounded-full bg-petal font-bold" onClick={onExit}>산책으로 돌아가기</button>

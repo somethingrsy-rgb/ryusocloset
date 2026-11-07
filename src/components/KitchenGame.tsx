@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
 import { avatarGuest, canJoin, guestFace, guestName, isAvatarGuest, validGuest } from '../lib/party'
 import { setGuestLooks } from '../lib/guestLooks'
@@ -15,6 +15,10 @@ import { FigureLayers } from './FigureLayers'
 import { GUEST_PER_AVATAR_W, PartyInvite } from './PartyGuests'
 import { getMeet, notCollected, subscribeMeet } from '../lib/meet'
 import { CoinIcon } from './Icons'
+import type { KitchenView } from './Kitchen3D'
+
+// 3D 주방(시험판): three.js 가 커서 3D 를 켤 때만 받는다
+const Kitchen3D = lazy(() => import('./Kitchen3D').then((m) => ({ default: m.Kitchen3D })))
 
 /**
  * 그림 속 자리(그림 크기에 대한 %, 가운데·너비·높이). 세로 그림(폰)과 가로 그림(패드·폰 가로)이 다르다.
@@ -122,6 +126,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const [toast, setToast] = useState('')
   const [shake, setShake] = useState<Station | null>(null)
   const [busy, setBusy] = useState(false) // 요리 단계가 바뀔 때 아바타가 통통
+  /** 3D 로 보기(시험판): 주문서·요리 단계·마트는 그대로, 주방과 아바타·친구만 3D. 고른 것은 기억한다 */
+  const [view3d, setView3d] = useState(() => { try { return localStorage.getItem('ryuso.kitchen.3d') === '1' } catch { return false } })
   const timers = useRef<number[]>([])
   const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
@@ -227,11 +233,20 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const [ax, ay] = nowStep === 'wash' && L.washAt ? L.washAt : L.cook
   const tool = nowStep ? (nowStep === 'pour' && COFFEE.has(menu!.id) ? { img: 'kitchen/kettle.webp', w: 0.3 } : BOARD_TOOL[nowStep]) : undefined
   const kneading = !!tool
+  // 말하는 친구의 말(2D 그림과 3D 가 같이 쓴다)
+  const helperLine = speaker === null ? null : done !== null ? (partyA !== null ? '와, 다 됐다! 파티에 가져가자!' : '와, 다 됐다! 맛있겠다!') : bring ? '재료 가져왔어!' : nowStep ? HELP_LINE[nowStep] : menu ? (partyA === speaker ? `내 ${menu.ko} 같이 만들자!` : `${menu.ko} 같이 만들자!`) : null
+  const ingSrc = (id: IngId) => (isCrop(id) ? `assets/farm/harvest_${id}.webp` : `kitchen/ing/${id}.webp`)
+  const view: KitchenView = {
+    here: step?.station ?? null, shake, step: nowStep, taps: cooking?.taps ?? 0,
+    board: boardIngs.map(ingSrc), sink: sinkIngs.map(ingSrc), done: doneMenu?.id ?? null, tool: tool?.img ?? null,
+    crew, cheer: done !== null || bring, busy, speaker: speaker === null ? -1 : crew.indexOf(speaker),
+  }
 
   return (
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-clip rounded-3xl bg-[#e9b06c] ring-1 ring-black/5 select-none" style={{ containerType: 'size' }}>
       {/* 주방 그림: 화면을 꽉 채우고(넘치는 쪽은 조금 잘림) 가운데에 둔다. 그림 속 자리는 그림 크기에 대한 % 라 그대로 맞는다 */}
       {/* 폰 가로(낮고 넓은 화면): 그림을 잘라 키우면 아일랜드가 잘리고 아래 칸이 아바타를 가려서, 그림은 왼쪽에 다 보이게 놓고 주문서·버튼은 오른쪽 칸으로 */}
+      {view3d ? <div className="absolute inset-y-0 left-0" style={{ width: phoneL ? `calc(100cqw - ${SIDE})` : '100%' }}><Suspense fallback={null}><Kitchen3D outfit={outfit} tweaks={tweaks} view={view} onStation={tapStation} line={helperLine} /></Suspense></div> : <>
       <div className={`absolute top-1/2 -translate-y-1/2 ${phoneL ? 'left-0' : 'left-1/2 -translate-x-1/2'}`} style={{ width: phoneL ? `min(calc(100cqw - ${SIDE}), calc(100cqh * ${L.ratio}))` : `max(100cqw, calc(100cqh * ${L.ratio}))`, aspectRatio: `${L.ratio}` }}>
         <img src={assetUrl(L.img)} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
         {/* 지금 누를 곳 네모 테두리: 도마 말고는(오븐·냄비·싱크대·냉장고) 그림 바로 위, 같이 요리하는 친구·아바타보다 뒤에 그린다(친구 얼굴을 가리지 않게).
@@ -332,7 +347,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         {speaker !== null && (() => {
           const k = crew.indexOf(speaker)
           const [hx, hy] = helperAt(k)
-          const line = done !== null ? (partyA !== null ? '와, 다 됐다! 파티에 가져가자!' : '와, 다 됐다! 맛있겠다!') : bring ? '재료 가져왔어!' : nowStep ? HELP_LINE[nowStep] : menu ? (partyA === speaker ? `내 ${menu.ko} 같이 만들자!` : `${menu.ko} 같이 만들자!`) : null
+          const line = helperLine
           const [fx, fy] = helperAt(0)
           // 재료를 꺼내는 손 높이: 아바타 친구는 키가 커서 더 위
           const handUp = hw * L.ratio * (isAvatarGuest(crew[0]) ? 0.55 * 1.5 / HELPER_PER_AVATAR_W : 0.45)
@@ -349,6 +364,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         <img aria-hidden src={assetUrl(L.island.img)} alt="" draggable={false} className="pointer-events-none absolute" style={{ left: `${L.island.l}%`, top: `${L.island.t}%`, width: `${L.island.w}%`, height: `${L.island.h}%`, zIndex: 2 }} />
       </div>
 
+      </>}
       {/* 위: 코인·마트·카페 */}
       <div className={`absolute top-2 z-20 flex items-center justify-between gap-1.5 ${phoneL ? 'right-2' : 'inset-x-2'}`} style={phoneL ? { width: `calc(${SIDE} - 1rem)` } : undefined}>
         {/* 좁은 폰 세로는 친구·마트·카페 버튼이 들어갈 자리가 모자라 '주방' 글자를 뺀다(위 탭에 이미 주방이라고 보인다) */}
@@ -361,6 +377,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             {friends.length ? friends.map((f) => <img key={f} src={assetUrl(guestFace(f))} alt="" draggable={false} className="-mx-0.5 h-7 w-7 object-contain" />) : <span style={{ fontSize: 20 }}>🐾</span>}
           </button>
           <button aria-label={tx.pantry} onClick={() => { playTap(); setPantry(true) }} className={`h-9 shrink-0 rounded-full bg-white/90 text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'}`}>{phoneL ? <span style={{ fontSize: 20 }}>🛒</span> : tx.pantry}</button>
+          <button aria-label="3D 주방 (시험판)" aria-pressed={view3d} onClick={() => { playTap(); const v = !view3d; setView3d(v); try { localStorage.setItem('ryuso.kitchen.3d', v ? '1' : '0') } catch { /* 이번만 */ } }} className={`h-9 shrink-0 rounded-full text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'} ${view3d ? 'bg-[#8a4b2a] text-white' : 'bg-white/90'}`}>3D</button>
           <button aria-label={tx.cafe} onClick={() => { playTap(); onGo('cafe') }} className={`h-9 shrink-0 rounded-full bg-white/90 text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'}`}>{phoneL ? <span style={{ fontSize: 20 }}>☕</span> : tx.cafe}</button>
         </div>
       </div>

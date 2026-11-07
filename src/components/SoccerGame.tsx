@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { AVATARS, avatarName, baseFiles, getHairstyle, hairZ } from '../lib/avatars'
 import { assetUrl } from '../lib/items'
@@ -6,6 +6,10 @@ import { ACT_REACH, FH, FW, GOAL_BOT, GOAL_TOP, MATCH_SECONDS, type Act, newMatc
 import { playCheer, playKick, playLevelDone, playPass, playShoot, playTap, playWhistle, startBgm, stopBgm } from '../lib/sound'
 import { AvatarHead } from './AvatarHead'
 import { haptic } from '../lib/haptic'
+import type { SoccerApi } from './Soccer3D'
+
+// 3D 경기장(시험판): three.js 가 커서 3D 를 켤 때만 받는다
+const Soccer3D = lazy(() => import('./Soccer3D').then((m) => ({ default: m.Soccer3D })))
 
 /** 팀 색: 빨강 팀 축구복(유하 몸에 맞춰 그림), 보라 팀 축구복(유엘 몸에 맞춰 그림) */
 /** 팀 이름 최대 글자 수(골대 옆·점수판에 들어가게) */
@@ -66,6 +70,11 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
   const joys = useRef<[Vec | null, Vec | null]>([null, null])
   /** 골 축하: 넣은 팀 동물들이 손을 흔들며 폴짝, 꽃가루, 먹힌 골대 그물이 흔들린다 */
   const [party, setParty] = useState<{ team: Team; id: number } | null>(null)
+  const partyRef = useRef(party)
+  partyRef.current = party
+  /** 3D 로 보기(시험판): 규칙·조작은 그대로, 경기장과 선수만 3D. 고른 것은 기억한다 */
+  const [view3d, setView3d] = useState(() => { try { return localStorage.getItem('ryuso.soccer.3d') === '1' } catch { return false } })
+  const api3d = useRef<SoccerApi | null>(null)
   const pointers = useRef(new Map<number, Team>())
   const keys = useRef(new Set<string>())
   const host = useRef<HTMLElement>(null)
@@ -80,7 +89,8 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
   useEffect(() => { if (phase !== 'play') return; startBgm('run'); return stopBgm }, [phase])
 
   // 경기장 자리: 세로 화면은 세워서(가로 60 × 세로 100), 가로 화면은 눕혀서. 위 점수판 자리(52px)를 비운다
-  const portrait = size.h > size.w
+  // 3D 는 늘 중계 화면처럼 옆에서 본다(경기장 +x = 화면 오른쪽): 세로 화면에서도 가로 배치로 조작한다
+  const portrait = !view3d && size.h > size.w
   const portraitRef = useRef(portrait)
   portraitRef.current = portrait
   // 세로 화면은 경기장 아래(둘이 하기는 위도)에 조이스틱·슛 버튼 자리를 비워 골대 이름·골키퍼를 가리지 않게 한다
@@ -148,6 +158,8 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
   }, [phase])
 
   // 손가락: 처음 누른 곳이 어느 편 쪽인지로 그 손가락이 움직일 아바타를 정한다(빨강은 왼쪽/아래, 보라는 오른쪽/위). 두 사람이 동시에 할 수 있다
+  /** 화면 자리 → 경기장 자리(3D 는 땅에 비춰서) */
+  const fieldAt = (sx: number, sy: number): Vec | null => (view3d ? api3d.current?.toField(sx, sy) ?? null : toField(sx, sy))
   const down = (e: React.PointerEvent) => {
     if (phase !== 'play' || (e.target as HTMLElement).closest('button')) return
     const r = host.current!.getBoundingClientRect()
@@ -155,19 +167,20 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
     // 아바타를 직접 만지면 그 아바타를 끌고 다닌다(둘이 하기에서 내 아바타가 상대 쪽 화면에 있어도). 아니면 1인 게임은 화면 어디든 내 아바타, 2인은 누른 쪽 팀
     const touched = ([0, 1] as Team[]).filter((tm) => !(players === 1 && tm !== mine)).find((tm) => {
       const a = live.current.players.find((q) => q.team === tm && q.role === 'human')!
+      if (view3d) { const c = api3d.current?.toScreen(a.x, a.y); return !!c && Math.abs(sx - c.x) < 28 && sy < c.y + 10 && sy > c.y - 70 }
       const c = toScreen(a.x, a.y)
       return Math.abs(sx - c.x) < 6 * scale && sy < c.y + 2 * scale && sy > c.y - 13 * scale
     })
-    const team: Team = touched ?? (players === 1 ? mine : portrait ? (sy > fieldTop + fh / 2 ? 0 : 1) : (sx < left + fw / 2 ? 0 : 1))
+    const team: Team = touched ?? (players === 1 ? mine : portrait ? (sy > fieldTop + fh / 2 ? 0 : 1) : (sx < (view3d ? r.width / 2 : left + fw / 2) ? 0 : 1))
     pointers.current.set(e.pointerId, team)
-    targets.current[team] = toField(sx, sy)
+    targets.current[team] = fieldAt(sx, sy)
     e.currentTarget.setPointerCapture?.(e.pointerId)
   }
   const move = (e: React.PointerEvent) => {
     const team = pointers.current.get(e.pointerId)
     if (team === undefined) return
     const r = host.current!.getBoundingClientRect()
-    targets.current[team] = toField(e.clientX - r.left, e.clientY - r.top)
+    targets.current[team] = fieldAt(e.clientX - r.left, e.clientY - r.top)
   }
   const up = (e: React.PointerEvent) => {
     const team = pointers.current.get(e.pointerId)
@@ -201,6 +214,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
       onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
       onKeyDown={(e) => { keys.current.add(e.key.length === 1 ? e.key.toLowerCase() : e.key); if (e.key.startsWith('Arrow')) e.preventDefault() }}
       onKeyUp={(e) => keys.current.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key)}>
+      {view3d ? <Suspense fallback={null}><Soccer3D live={live} party={partyRef} api={api3d} /></Suspense> : <>
       {/* 경기장: 줄무늬 잔디, 흰 선, 양쪽 골대 */}
       <div aria-hidden className="absolute rounded-lg" style={{ left, top: fieldTop, width: fw, height: fh, background: `repeating-linear-gradient(${portrait ? '0deg' : '90deg'}, #6fbf5f 0 ${scale * 10}px, #63b254 ${scale * 10}px ${scale * 20}px)`, boxShadow: 'inset 0 0 0 3px rgba(255,255,255,0.9)' }} />
       <div aria-hidden className="absolute bg-white/90" style={portrait ? { ...rect(FW / 2, 0, FW / 2, FH), height: 3 } : { ...rect(FW / 2, 0, FW / 2, FH), width: 3 }} />
@@ -242,6 +256,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
       })()}
       {(() => { const s = toScreen(match.ball.x, match.ball.y); const d = 3.6 * scale; return <span aria-hidden className="pointer-events-none absolute flex items-center justify-center leading-none drop-shadow" style={{ left: s.x - d / 2, top: s.y - d, width: d, height: d, fontSize: d, zIndex: 1500 }}>⚽</span> })()}
 
+      </>}
       {/* 골 꽃가루 */}
       {party && <div aria-hidden className="pointer-events-none absolute inset-0 z-[1700] overflow-hidden">
         {Array.from({ length: 28 }, (_, k) => <span key={`${party.id}-${k}`} className="soccer-confetti absolute block h-2.5 w-1.5 rounded-sm" style={{ left: `${(k * 37) % 100}%`, background: k % 3 === 0 ? KIT[party.team].color : k % 3 === 1 ? '#ffd54a' : '#ffffff', animationDelay: `${(k % 7) * 0.07}s` }} />)}
@@ -336,6 +351,9 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
               ))}
             </div>
             <button onClick={() => { playTap(); setAnimals(splitAnimals()) }} className="mt-2 min-h-10 w-full rounded-full bg-white font-bold text-[#6b4b52] shadow-sm">🔀 동물 친구 팀 섞기</button>
+            {/* 3D 로 보기(시험판) */}
+            <button aria-pressed={view3d} onClick={() => { playTap(); const v = !view3d; setView3d(v); try { localStorage.setItem('ryuso.soccer.3d', v ? '1' : '0') } catch { /* 이번만 */ } }}
+              className={`mt-2 min-h-10 w-full rounded-full font-bold shadow-sm ${view3d ? 'bg-[#3d6b2f] text-white' : 'bg-white text-[#3d6b2f]'}`}>🧊 3D 경기장 {view3d ? '켜짐' : '꺼짐'} <span className="text-xs opacity-70">시험판</span></button>
             <button onClick={start} className="mt-2 min-h-12 w-full rounded-full bg-[#4caf50] text-lg font-black text-white shadow">{phase === 'done' ? '⚽ 한 번 더' : '⚽ 경기 시작'}</button>
             <button onClick={onExit} className="mt-2 min-h-11 w-full rounded-full bg-white font-bold shadow-sm">나가기</button>
           </div>
