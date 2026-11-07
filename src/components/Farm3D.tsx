@@ -17,7 +17,7 @@ import { CoinIcon } from './Icons'
 import { GuestDresser } from './GuestDresser'
 import { FarmStall } from './FarmStall'
 import { PartyInvite } from './PartyGuests'
-import { viewSprite } from './viewSprite3d'
+import { cafeShopSprite, viewSprite } from './viewSprite3d'
 import { ANIMAL_H, AVATAR_H, FEET, createWorld, meadowTree, emojiCanvas, signCanvas, type Doll, type World } from './world3d'
 
 /**
@@ -362,11 +362,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     // 카페 가게 밑까지(길이 가게와 이어지게)
     for (let z = fz1 + 0.3; z <= CAFE_GATE + 3.6; z += 1.5) roadPts.push([cafeRoadX(z), z])
     w.addCurvePath(roadPts, 3)
-    const cv = (n: string) => `cafe/3d/shop/${n}.webp`
-    const cafeShop = viewSprite(w, [
-      [cv('v0'), 1155 / 1186, false], [cv('v1'), 1164 / 1198, false], [cv('v2'), 692 / 1183, false], [cv('v3'), 1110 / 1149, false],
-      [cv('v4'), 1155 / 1186, false], [cv('v3'), 1110 / 1149, true], [cv('v6'), 732 / 1189, false], [cv('v7'), 1148 / 1197, false],
-    ], 5.8, [2.1, 1.5], 1.5)
+    const cafeShop = cafeShopSprite(w)
     cafeShop.root.position.set(0, 0, CAFE_GATE + 3.6)
     cafeShop.root.rotation.y = Math.PI
     scene.add(cafeShop.root)

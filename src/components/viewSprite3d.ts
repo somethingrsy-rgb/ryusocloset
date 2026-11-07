@@ -41,3 +41,12 @@ export function viewSprite(k: { keep: <T extends { dispose: () => void }>(x: T) 
   }
   return { root, update }
 }
+
+/** 카페 가게 여덟 방향 그림(눈높이에서 똑바로 본 그림, public/cafe/3d/shop2). 왼쪽은 오른쪽을 뒤집어서 */
+const cs = (n: string) => `cafe/3d/shop2/${n}.webp`
+export const CAFE_SHOP_VIEWS: [string, number, boolean][] = [
+  [cs('v0'), 1133 / 1181, false], [cs('v1'), 1174 / 1184, false], [cs('v2'), 890 / 1179, false], [cs('v3'), 1150 / 1182, false],
+  [cs('v4'), 1155 / 1186, false], [cs('v5'), 1134 / 1176, false], [cs('v2'), 890 / 1179, true], [cs('v7'), 1201 / 1163, false],
+]
+/** 카페 가게 만들기: 눈높이 그림이라 눕히지 않고(lean 0), 판은 가운데에 두고(방향이 바뀌어도 자리가 움직이지 않게), 그림자 없이 */
+export const cafeShopSprite = (k: Parameters<typeof viewSprite>[0]) => viewSprite(k, CAFE_SHOP_VIEWS, 5.6, [0.01, 0.01], 0, 0)
