@@ -3,15 +3,20 @@ import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { getAvatar } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
-import { CROPS, MAIN_PLOTS, PLOT_COUNT, actFarm, getFarm, growth, subscribeFarm, type CropId, type FarmAction } from '../lib/farm'
-import { getFarmFriends } from '../lib/farmFriends'
+import { ANIMAL_SECONDS, CROPS, MAIN_PLOTS, PLOT_COUNT, actFarm, animalWait, getFarm, growth, orderCrop, plotPrice, subscribeFarm, type AnimalGood, type CropId, type FarmAction } from '../lib/farm'
+import { MAX_FARM_FRIENDS, getFarmFriends, getFriendJobs, harvestAll, setFarmFriends, subscribeFarmFriends, waterNow } from '../lib/farmFriends'
+import { actKitchen } from '../lib/kitchen'
+import { getMeet, notCollected, subscribeMeet } from '../lib/meet'
+import { setGuestLooks } from '../lib/guestLooks'
 import { assetUrl } from '../lib/items'
-import { guestAvatar } from '../lib/party'
+import { guestAvatar, guestFace } from '../lib/party'
 import { guestLook } from '../lib/guestLooks'
-import { playHarvest, playPlant, playTap, playWater } from '../lib/sound'
+import { playCoin, playHarvest, playPlant, playTap, playWater } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { CoinIcon } from './Icons'
 import { GuestDresser } from './GuestDresser'
+import { FarmStall } from './FarmStall'
+import { PartyInvite } from './PartyGuests'
 import { ANIMAL_H, AVATAR_H, FEET, createWorld, meadowTree, emojiCanvas, signCanvas, type Doll, type World } from './world3d'
 
 /**
@@ -36,8 +41,10 @@ const plotAt = (i: number) => {
 
 /** 카페 가는 길: 농장 문(앞쪽, +z)에서 곧게 뻗고, 끝(CAFE_GATE)까지 가면 카페로 넘어간다 */
 const CAFE_GATE = 34
-export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCafe }: {
+export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCafe, onKitchen }: {
   outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void
+  /** 주방 버튼 */
+  onKitchen?: () => void
   /** 카페에서 걸어왔으면 카페 가는 길 끝에서 시작 */
   arrive?: boolean
   /** 카페 가는 길 끝에 닿으면 */
@@ -58,26 +65,82 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
   const [notice, setNotice] = useState<string | null>(null)
   const [dressing, setDressing] = useState(false)
   useEffect(() => { if (!notice) return; const t = setTimeout(() => setNotice(null), 2200); return () => clearTimeout(t) }, [notice])
+  // 2D 농장과 같은 것들: 밭 사기, 노점, 우유·달걀, 같이 농사짓는 친구, 물주기·수확 버튼, 주방
+  const [buying, setBuying] = useState<number | null>(null)
+  const [stall, setStall] = useState(false)
+  const [picking, setPicking] = useState(false)
+  const friendsNow = useSyncExternalStore(subscribeFarmFriends, getFarmFriends)
+  const meet = useSyncExternalStore(subscribeMeet, getMeet)
+  /** 밭 일·사기·팔기 하나(소리와 실패 안내 포함) */
+  const apply = (a: FarmAction) => {
+    const r = actFarm(a)
+    if (r === 'saved') {
+      if (a.type === 'plant') playPlant()
+      else if (a.type === 'water') playWater()
+      else if (a.type === 'harvest') playHarvest()
+      else playCoin()
+    } else if (r === 'failed') setNotice('저장하지 못했어요. 저장 공간을 확인해주세요.')
+    else setNotice('아직 할 수 없는 동작이에요.')
+    return r === 'saved'
+  }
+  const applyRef = useRef(apply)
+  applyRef.current = apply
+  /** 젖소·닭에게서 우유·달걀 받기: 주방 냉장고에 하나 들어간다 */
+  const collect = (g: AnimalGood) => {
+    const wait = animalWait(getFarm(), g, Date.now())
+    if (wait > 0) { setNotice(`${wait}초 뒤에 다시 받을 수 있어요`); return }
+    if (actFarm({ type: 'collect', good: g }) !== 'saved') return
+    actKitchen({ type: 'add', id: g, n: 1 })
+    playHarvest()
+    setNotice(g === 'milk' ? '🥛 우유를 받았어요! 주방 냉장고에 넣었어요' : '🥚 달걀을 받았어요! 주방 냉장고에 넣었어요')
+  }
+  const collectRef = useRef(collect)
+  collectRef.current = collect
+  /** 물주기·수확 버튼: 아바타가 밭을 차례로 돈다(월드가 만들어지면 채운다) */
+  const choreRef = useRef<(kind: 'water' | 'harvest', plots: number[]) => void>(() => {})
+  const doChore = (kind: 'water' | 'harvest') => {
+    playTap()
+    const st = getFarm(), now = Date.now()
+    const need = (i: number) => st.owned[i] && !!st.plots[i] && (kind === 'water' ? st.plots[i]!.wateredAt === null : growth(st.plots[i], now) === 1)
+    const all = Array.from({ length: PLOT_COUNT }, (_, i) => i).filter(need)
+    if (!all.length) { setNotice(kind === 'water' ? '물 줄 밭이 없어요' : '아직 다 자란 작물이 없어요'); return }
+    // 친구가 있으면 큰 밭은 친구들이, 옆 밭은 내가
+    let mine = all
+    if (friendsNow.length && all.some((i) => i < MAIN_PLOTS)) {
+      if (kind === 'water') waterNow(); else harvestAll(now)
+      mine = all.filter((i) => i >= MAIN_PLOTS)
+      setNotice(kind === 'water' ? '친구들이 물을 주러 가요 💧' : '친구들이 수확하러 가요 🧺')
+    } else setNotice(kind === 'water' ? '물 주러 가요 💧' : '수확하러 가요 🧺')
+    if (mine.length) choreRef.current(kind, mine)
+  }
 
   useEffect(() => {
     const el = host.current
     if (!el) return
     const plotOf = new Map<THREE.Object3D, number>()
     const busy = new Set<number>()
-    const apply = (a: FarmAction) => {
-      if (actFarm(a) !== 'saved') return
-      if (a.type === 'plant') playPlant()
-      else if (a.type === 'water') playWater()
-      else if (a.type === 'harvest') playHarvest()
-    }
+    // onPick 이 아래에서 만드는 것들(노점·우리 동물)을 쓴다
+    let stallGroup: THREE.Group | null = null
+    let penned: { doll: Doll; good: AnimalGood | null }[] = []
+    let PEN = { x0: 0, x1: 0, z0: 0, z1: 0 }
     const w = createWorld(el, {
       bounds: BOUNDS, start: arrive ? { x: 0, z: CAFE_GATE - 3 } : { x: 0, z: 6 }, seed: 11, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 밭을 누르면 밭 앞까지 걸어가서 그 밭이 필요로 하는 일을 한다
       onPick: (o) => {
+        // 노점·우리 동물
+        if (o === stallGroup) { w.walkTo(stallGroup.position.x, stallGroup.position.z + 1.6, () => setStall(true), 0.4); return }
+        const an = penned.find((a) => a.doll.root === o)
+        if (an) {
+          if (!an.good) { setNotice('메에~ 🐑 털이 보송보송해요'); return }
+          const g = an.good
+          w.walkTo((PEN.x0 + PEN.x1) / 2, (PEN.z0 + PEN.z1) / 2, () => collectRef.current(g), 5.3)
+          return
+        }
         const i = plotOf.get(o)
         if (i === undefined || busy.has(i)) return
         const st = getFarm()
-        if (!st.owned[i]) { setNotice(i >= MAIN_PLOTS ? '옆 밭은 농장 탭의 「옆 밭」에서 코인으로 살 수 있어요' : '이 밭은 아직 내 밭이 아니에요 · 농장 탭에서 살 수 있어요'); return }
+        // 아직 못 산 밭: 밭 앞까지 가서 살지 묻는다
+        if (!st.owned[i]) { const p = plotAt(i); w.walkTo(p.x, p.z + PD / 2 + 0.6, () => setBuying(i), 0.3); return }
         const plot = st.plots[i]
         const need = !plot ? 'seed' : plot.wateredAt === null ? 'water' : growth(plot, Date.now()) === 1 ? 'harvest' : null
         if (!need) { setNotice('자라는 중이에요 🌱'); return }
@@ -86,9 +149,9 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         w.walkTo(p.x, p.z + PD / 2 + 0.6, () => {
           window.setTimeout(() => {
             busy.delete(i)
-            if (need === 'seed') apply({ type: 'plant', plot: i, crop: seedRef.current })
-            else if (need === 'water') apply({ type: 'water', plot: i })
-            else apply({ type: 'harvest', plot: i })
+            if (need === 'seed') applyRef.current({ type: 'plant', plot: i, crop: seedRef.current })
+            else if (need === 'water') applyRef.current({ type: 'water', plot: i })
+            else applyRef.current({ type: 'harvest', plot: i })
           }, 250)
         }, 0.3)
       },
@@ -197,39 +260,94 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     const buildings = [art('barn', 5, 1041 / 1085, -fx - 5, -6), art('house', 5.6, 1018 / 1188, -5, -fz1 - 14)]
     for (const d of buildings) w.obstacles.push({ x: d.root.position.x, z: d.root.position.z, r: 2.4 })
     // 동물 우리: 헛간 앞 울타리 안에서 젖소·양·닭이 거닌다
-    const PEN = { x0: -fx - 11, x1: -fx - 2, z0: fz1 - 3, z1: fz1 + 5 }
+    PEN = { x0: -fx - 11, x1: -fx - 2, z0: fz1 - 3, z1: fz1 + 5 }
     fenceLine(PEN.x0, PEN.z0, PEN.x1, PEN.z0); fenceLine(PEN.x0, PEN.z1, PEN.x1, PEN.z1); fenceLine(PEN.x0, PEN.z0, PEN.x0, PEN.z1); fenceLine(PEN.x1, PEN.z0, PEN.x1, PEN.z1)
     w.obstacles.push({ x: (PEN.x0 + PEN.x1) / 2, z: (PEN.z0 + PEN.z1) / 2, r: 4.4 })
     const inPen = () => ({ x: PEN.x0 + 1 + rnd() * (PEN.x1 - PEN.x0 - 2), z: PEN.z0 + 1 + rnd() * (PEN.z1 - PEN.z0 - 2) })
-    const penned = ([['cow', 1.7, 966 / 1150], ['sheep', 1.4, 989 / 1135], ['hen', 0.95, 895 / 1079], ['hen', 0.9, 895 / 1079]] as const).map(([n, h, a]) => {
+    const animals = ([['cow', 1.7, 966 / 1150], ['sheep', 1.4, 989 / 1135], ['hen', 0.95, 895 / 1079], ['hen', 0.9, 895 / 1079]] as const).map(([n, h, a]) => {
       const p = inPen()
-      return { doll: art(n, h, a, p.x, p.z), x: p.x, z: p.z, tx: p.x, tz: p.z, wait: rnd() * 3, dir: 1 as 1 | -1, t: rnd() * 5, speed: n === 'hen' ? 1.4 : 0.8 }
+      const doll = art(n, h, a, p.x, p.z)
+      w.pickables.push(doll.root)
+      return { doll, good: (n === 'cow' ? 'milk' : n === 'hen' ? 'egg' : null) as AnimalGood | null, x: p.x, z: p.z, tx: p.x, tz: p.z, wait: rnd() * 3, dir: 1 as 1 | -1, t: rnd() * 5, speed: n === 'hen' ? 1.4 : 0.8 }
     })
+    penned = animals
+    // 우유·달걀 표시: 젖소와 첫 닭 머리 위. 받을 수 있으면 통통 뛰고, 기다리는 동안은 흐리게
+    const goodTag = (g: AnimalGood) => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: w.texOf(assetUrl(`kitchen/ing/${g}.webp`)), transparent: true, depthWrite: false }))); sp.scale.setScalar(0.8); scene.add(sp); return sp }
+    const tags = [{ a: animals[0], sp: goodTag('milk'), g: 'milk' as AnimalGood, top: 2.1 }, { a: animals[2], sp: goodTag('egg'), g: 'egg' as AnimalGood, top: 1.4 }]
+    // 노점: 길가 오른쪽. 나무 판매대 + 줄무늬 차양 + 작물 상자, 위에 지금 부탁받은 작물
+    const sg = new THREE.Group()
+    const wood = lambert(0xc98d55), cream = lambert(0xfff3e0), red = lambert(0xf06f6f)
+    const counter = new THREE.Mesh(keep(new THREE.BoxGeometry(3, 1, 1.2)), wood); counter.position.y = 0.5; counter.castShadow = true
+    sg.add(counter)
+    for (const x of [-1.4, 1.4]) { const post = new THREE.Mesh(keep(new THREE.BoxGeometry(0.14, 2.4, 0.14)), wood); post.position.set(x, 1.2, -0.5); sg.add(post) }
+    for (let k = 0; k < 6; k++) { const strip = new THREE.Mesh(keep(new THREE.BoxGeometry(0.52, 0.08, 1.5)), k % 2 ? cream : red); strip.position.set(-1.3 + k * 0.52, 2.45, 0); strip.rotation.x = 0.25; sg.add(strip) }
+    for (const [x, c] of [[-0.9, 0xff5b6b], [0, 0xff9a3c], [0.9, 0xffd23f]] as const) { const crate = new THREE.Mesh(keep(new THREE.BoxGeometry(0.7, 0.3, 0.6)), lambert(c)); crate.position.set(x, 1.15, 0.1); sg.add(crate) }
+    sg.position.set(7, 0, fz1 + 5)
+    scene.add(sg)
+    w.pickables.push(sg)
+    w.obstacles.push({ x: 7, z: fz1 + 5, r: 1.7 })
+    stallGroup = sg
+    const orderTex = new Map<string, THREE.Texture>()
+    const orderSp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true, depthWrite: false })))
+    orderSp.scale.setScalar(1)
+    scene.add(orderSp)
     // 나무: 카페와 같은 3D 나무 그림(world3d.addTree)
     let trees = 0
     for (let i = 0; i < 300 && trees < 60; i++) {
       const x = (rnd() - 0.5) * BOUNDS * 1.9, z = (rnd() - 0.5) * BOUNDS * 1.9
       if (x > PEN.x0 - 3 && x < sx1 + 4 && z > fz0 - 4 && z < PEN.z1 + 4) continue
       if (Math.abs(x) < 4.5 && z > fz1) continue // 카페 가는 길
+      if (Math.hypot(x - 7, z - fz1 - 5) < 4) continue // 노점
       if (Math.hypot(x - buildings[1].root.position.x, z - buildings[1].root.position.z) < 5) continue
       if (w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 10)) continue
       w.addTree(x, z, 0.8 + rnd() * 0.7, meadowTree(rnd()))
       trees++
     }
 
-    // 같이 농사짓는 친구(농장 탭에서 고른 친구): 밭 둘레를 거닌다. 아바타 친구는 고른 옷을 입은 아바타
-    const friends: { doll: Doll; x: number; z: number; tx: number; tz: number; wait: number; dir: 1 | -1; t: number }[] = []
-    getFarmFriends().forEach((g, k) => {
-      const av = guestAvatar(g)
-      const x = k ? fx - 1 : -fx + 1, z = fz1 + 1.5
-      const f = { doll: null as unknown as Doll, x, z, tx: x, tz: z, wait: rnd() * 2, dir: 1 as 1 | -1, t: 0 }
-      if (av) {
-        // 아바타 친구 그림은 옷을 합쳐 그린 뒤에 붙인다(그 전에는 빈 판)
-        f.doll = w.paperDoll(w.texOf(document.createElement('canvas')), AVATAR_H, 1024 / 1536, FEET)
-        renderFigure(guestLook(av.id), {}, av).then((cv) => { const m = f.doll.doll.material as THREE.MeshBasicMaterial; m.map = w.texOf(cv); m.needsUpdate = true }).catch(() => {})
-      } else f.doll = w.paperDoll(w.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[g].img}_stand.webp`)), ANIMAL_H, 1)
-      friends.push(f)
-    })
+    // 같이 농사짓는 친구(🐾 로 고른 친구): 쉴 때는 밭 둘레를 거닐고, 일이 생기면(lib/farmFriends) 그 밭 옆으로 가서 물을 주거나 수확한다
+    type Friend = { g: number; doll: Doll; x: number; z: number; tx: number; tz: number; wait: number; dir: 1 | -1; t: number; tool: THREE.Sprite }
+    let friends: Friend[] = []
+    const toolMats = { water: keep(new THREE.SpriteMaterial({ map: w.texOf(assetUrl('assets/farm/can.webp')), transparent: true, depthWrite: false })), harvest: keep(new THREE.SpriteMaterial({ map: w.texOf(assetUrl('assets/farm/icon_basket.webp')), transparent: true, depthWrite: false })) }
+    const makeFriends = () => {
+      for (const f of friends) { scene.remove(f.doll.root); scene.remove(f.tool) }
+      friends = getFarmFriends().map((g, k) => {
+        const av = guestAvatar(g)
+        const x = k ? fx - 1 : -fx + 1, z = fz1 + 1.5
+        let doll: Doll
+        if (av) {
+          // 아바타 친구 그림은 옷을 합쳐 그린 뒤에 붙인다(그 전에는 빈 판)
+          doll = w.paperDoll(w.texOf(document.createElement('canvas')), AVATAR_H, 1024 / 1536, FEET)
+          renderFigure(guestLook(av.id), {}, av).then((cv) => { const m = doll.doll.material as THREE.MeshBasicMaterial; m.map = w.texOf(cv); m.needsUpdate = true }).catch(() => {})
+        } else doll = w.paperDoll(w.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[g].img}_stand.webp`)), ANIMAL_H, 1)
+        const tool = new THREE.Sprite(toolMats.water)
+        tool.scale.setScalar(0.6)
+        tool.visible = false
+        scene.add(tool)
+        return { g, doll, x, z, tx: x, tz: z, wait: rnd() * 2, dir: 1 as 1 | -1, t: 0, tool }
+      })
+    }
+    makeFriends()
+    let friendKey = getFarmFriends().join()
+    const unsubFriends = subscribeFarmFriends(() => { const k = getFarmFriends().join(); if (k !== friendKey) { friendKey = k; makeFriends() } })
+
+    // 물주기·수확 버튼(혼자 할 때, 또는 옆 밭): 아바타가 밭을 차례로 돌며 한다
+    let choreId = 0
+    choreRef.current = (kind, list) => {
+      const id = ++choreId
+      const next = (k: number) => {
+        if (id !== choreId || k >= list.length) return
+        const i = list[k], p = plotAt(i)
+        busy.add(i)
+        w.walkTo(p.x, p.z + PD / 2 + 0.6, () => window.setTimeout(() => {
+          busy.delete(i)
+          const plot = getFarm().plots[i]
+          if (plot && (kind === 'water' ? plot.wateredAt === null : growth(plot, Date.now()) === 1)) applyRef.current({ type: kind, plot: i })
+          next(k + 1)
+        }, 250), 0.3)
+      }
+      next(0)
+    }
+    el.addEventListener('pointerdown', () => { choreId++ }) // 땅·밭을 직접 누르면 돌던 일은 멈춘다
 
     let repaint = 0
     // 카페 가는 길: 농장 문에서 앞(+z)으로 곧게, 문 옆에 표지판
@@ -244,30 +362,62 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       repaint += dt
       if (repaint > 0.5) { repaint = 0; paint() } // 자라는 단계는 시간이 지나면 바뀐다
       for (const p of plots) if (p.mark.visible) p.mark.position.y = (p.mark.material === iconMats.lock ? 0.6 : 1.6) + Math.sin(performance.now() / 300 + p.box.position.x) * 0.12
+      const jobs = getFriendJobs()
       for (const f of friends) {
         f.t += dt
+        const job = jobs[f.g]
+        let moving = false
+        if (job) {
+          // 일하는 밭 옆(앞·왼쪽·오른쪽)으로 간다
+          const p = plotAt(job.plot)
+          f.tx = job.side === 'front' ? p.x : p.x + (job.side === 'left' ? -1 : 1) * (PW / 2 + 0.35)
+          f.tz = job.side === 'front' ? p.z + PD / 2 + 0.5 : p.z
+          f.wait = 0
+        }
         if (f.wait > 0) f.wait -= dt
         else {
           const dx = f.tx - f.x, dz = f.tz - f.z, d = Math.hypot(dx, dz)
           if (d < 0.1) {
-            f.wait = 1.5 + rnd() * 3
-            const side = Math.floor(rnd() * 4)
-            f.tx = side < 2 ? (rnd() - 0.5) * fx * 2 : (side === 2 ? -fx : fx) + (side === 2 ? 0.9 : -0.9)
-            f.tz = side < 2 ? (side ? fz1 - 0.9 : fz0 + 0.9) : fz0 + rnd() * (fz1 - fz0)
+            if (!job) {
+              f.wait = 1.5 + rnd() * 3
+              const side = Math.floor(rnd() * 4)
+              f.tx = side < 2 ? (rnd() - 0.5) * fx * 2 : (side === 2 ? -fx : fx) + (side === 2 ? 0.9 : -0.9)
+              f.tz = side < 2 ? (side ? fz1 - 0.9 : fz0 + 0.9) : fz0 + rnd() * (fz1 - fz0)
+            }
           } else {
-            f.x += (dx / d) * 2.2 * dt; f.z += (dz / d) * 2.2 * dt
-            const s = w.screenSide(dx, dz)
-            if (Math.abs(s) > 0.05) f.dir = s > 0 ? 1 : -1
+            const sp = job ? 4 : 2.2, step = Math.min(d, sp * dt)
+            f.x += (dx / d) * step; f.z += (dz / d) * step
+            moving = true
+            const s2 = w.screenSide(dx, dz)
+            if (Math.abs(s2) > 0.05) f.dir = s2 > 0 ? 1 : -1
           }
         }
         f.doll.root.position.set(f.x, 0, f.z)
-        f.doll.body.position.y = f.wait > 0 ? 0 : Math.abs(Math.sin(f.t * 8)) * 0.1
+        f.doll.body.position.y = moving ? Math.abs(Math.sin(f.t * 8)) * 0.1 : 0
         w.face(f.doll, f.dir)
+        // 들고 있는 물뿌리개·바구니(물 줄 때는 기울인다)
+        f.tool.visible = !!job
+        if (job) {
+          f.tool.material = toolMats[job.kind]
+          f.tool.position.set(f.x, 0.9 + (job.watering ? 0.15 : 0), f.z + 0.3)
+          f.tool.material.rotation = job.kind === 'water' && job.watering ? -0.55 : 0
+        }
       }
+      // 우유·달걀 표시와 노점 주문 작물
+      const fst = getFarm(), nowMs = Date.now()
+      for (const tg of tags) {
+        const wait = animalWait(fst, tg.g, nowMs)
+        tg.sp.position.set(tg.a.x, tg.top + (wait === 0 ? Math.abs(Math.sin(nowMs / 220)) * 0.25 : 0), tg.a.z)
+        tg.sp.material.opacity = wait === 0 ? 1 : 0.35 + 0.4 * (1 - wait / ANIMAL_SECONDS)
+      }
+      const oc = orderCrop(fst).id
+      if (!orderTex.has(oc)) orderTex.set(oc, w.texOf(assetUrl(`assets/farm/harvest_${oc}.webp`)))
+      if (orderSp.material.map !== orderTex.get(oc)) { orderSp.material.map = orderTex.get(oc)!; orderSp.material.needsUpdate = true }
+      orderSp.position.set(7, 3.3 + Math.sin(nowMs / 400) * 0.1, fz1 + 5)
       for (const p of plots) for (const c of p.crops) if (c.root.visible) w.face(c, 1)
       for (const d of buildings) w.face(d, 1)
       // 우리 동물: 우리 안 아무 데나 천천히 걸어갔다가 쉬었다가
-      for (const a of penned) {
+      for (const a of animals) {
         a.t += dt
         if (a.wait > 0) a.wait -= dt
         else {
@@ -284,7 +434,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         w.face(a.doll, a.dir)
       }
     })
-    return () => { unsub(); w.dispose(); world.current = null }
+    return () => { unsub(); unsubFriends(); w.dispose(); world.current = null }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 한 번만 만든다(arrive 는 처음 자리만 정한다)
 
   useEffect(() => {
@@ -301,6 +451,10 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         <div className="pointer-events-auto flex items-center gap-1.5">
           <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-black shadow"><CoinIcon /> {farm.coins}</span>
           <button aria-label="옷 갈아입기" onClick={() => { playTap(); setDressing(true) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#8a4b55] shadow">👗 옷</button>
+          {/* 같이 농사지을 친구 고르기(고른 친구 얼굴, 혼자면 🐾) */}
+          <button aria-label="같이 농사지을 친구" onClick={() => { playTap(); setPicking(true) }} className="flex h-10 items-center rounded-full bg-white/95 px-2.5 shadow">
+            {friendsNow.length ? friendsNow.map((f) => <img key={f} src={assetUrl(guestFace(f))} alt="" draggable={false} className="-mx-0.5 h-7 w-7 object-contain" />) : <span className="text-lg">🐾</span>}
+          </button>
           <button aria-label="닫기" onClick={onExit} className="h-10 w-10 rounded-full bg-white/95 text-lg font-bold shadow">✕</button>
         </div>
       </div>
@@ -310,14 +464,42 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
           <button key={c.id} role="radio" aria-checked={seed === c.id} aria-label={`${c.ko} 씨앗`} onClick={() => { playTap(); setSeed(c.id) }}
             className={`flex h-11 items-center gap-1 rounded-full px-3 text-sm font-black ${seed === c.id ? 'bg-[#ff8fab] text-white' : 'text-[#6b4a2b]'}`}>
             <img src={assetUrl(`assets/farm/harvest_${c.id}.webp`)} alt="" className="h-7 w-7 object-contain" />{c.ko}
+            {/* 지금 가진 수 */}
+            <span className={`rounded-full px-1.5 text-[11px] font-extrabold ${seed === c.id ? 'bg-white/30' : 'bg-[#fdf2d8]'}`}>×{farm.inventory[c.id]}</span>
           </button>
         ))}
       </div>
-      <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">밭을 누르면 심고 · 💧 물 주고 · ✨ 수확해요 · 옆으로 끌면 둘러봐요</p>
+      {/* 도구: 물주기·수확(친구가 있으면 큰 밭은 친구들이), 노점, 주방 */}
+      <div className="absolute right-2 bottom-24 z-10 flex flex-col gap-1.5">
+        {([['water', '물주기', 'icon_water'], ['harvest', '수확', 'icon_basket'], ['stall', '노점', ''], ['kitchen', '주방', 'icon_kitchen']] as const).map(([id, label, icon]) => (
+          <button key={id} aria-label={label} onClick={() => { if (id === 'water' || id === 'harvest') doChore(id); else if (id === 'stall') { playTap(); setStall(true) } else { playTap(); onKitchen?.() } }}
+            className="flex w-14 flex-col items-center rounded-2xl border-2 border-[#e5cfa3] bg-[#fdf2d8]/95 py-1 shadow">
+            {icon ? <img src={assetUrl(`assets/farm/${icon}.webp`)} alt="" draggable={false} className="h-8 w-8 object-contain" /> : <span className="flex h-8 items-center text-2xl">🧺</span>}
+            <span className="text-[11px] font-extrabold text-[#6b4a2b]">{label}</span>
+          </button>
+        ))}
+      </div>
+      <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">밭을 누르면 심고 · 💧 물 주고 · ✨ 수확해요 · 젖소·닭을 누르면 우유·달걀 · 옆으로 끌면 둘러봐요</p>
       {notice && <p role="status" className="absolute top-14 left-1/2 z-20 m-0 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-sm font-bold whitespace-nowrap shadow">{notice}</p>}
       {!ready && <p className="absolute inset-0 z-20 m-0 flex items-center justify-center text-sm font-bold text-[#3d6b2f]">농장을 만드는 중…</p>}
       {/* 카페 길을 넘어갈 때 하얗게 */}
       <div aria-hidden className="pointer-events-none absolute inset-0 z-30 bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
+      {/* 아직 못 산 밭: 코인으로 사기 */}
+      {buying !== null && (
+        <div role="dialog" aria-label="밭 사기" className="absolute top-1/3 left-1/2 z-30 flex w-max max-w-[96%] -translate-x-1/2 items-center gap-2 rounded-3xl bg-white/95 p-3 whitespace-nowrap shadow-lg">
+          <span className="text-sm font-extrabold">{buying >= MAIN_PLOTS ? '옆 밭' : '새 밭'} · {plotPrice(farm)} <CoinIcon /></span>
+          <button className="min-h-11 rounded-2xl bg-[#ff8fab] px-3 py-2 text-sm font-bold text-white disabled:opacity-40" disabled={farm.coins < plotPrice(farm)} onClick={() => { if (apply({ type: 'buy', plot: buying })) setNotice('새 밭이 생겼어요! 🌱'); setBuying(null) }}>사기</button>
+          <button className="min-h-11 rounded-2xl bg-[#ffe4ec] px-3 py-2 text-sm font-bold" onClick={() => setBuying(null)}>아니요</button>
+          {farm.coins < plotPrice(farm) && <span className="text-xs font-bold text-[#d0587a]">코인이 모자라요</span>}
+        </div>
+      )}
+      {stall && <div className="absolute inset-0 z-40"><FarmStall apply={apply} notice={notice ?? ''} onClose={() => setStall(false)} /></div>}
+      {picking && (
+        <div className="absolute inset-0 z-40">
+          <PartyInvite here={[]} initial={friendsNow} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`아바타 친구와 수학으로 모은 동물 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
+            cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
+        </div>
+      )}
       {dressing && (
         <div role="dialog" aria-label="옷 갈아입기" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) setDressing(false) }}>
           <div className="sheet-in flex max-h-full w-full max-w-md flex-col rounded-3xl bg-[#fff8fb] p-4 shadow-2xl" style={{ height: 'min(560px, 100%)' }}>
