@@ -166,7 +166,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     const shopShadow = new THREE.Mesh(keep(new THREE.CircleGeometry(1, 32)), keep(new THREE.MeshBasicMaterial({ color: 0x3c5a2a, transparent: true, opacity: 0.22, depthWrite: false })))
     shopShadow.rotation.x = -Math.PI / 2
     shopShadow.position.y = 0.02
-    shopShadow.scale.set(2.6, 2, 1)
+    shopShadow.scale.set(2.1, 1.5, 1) // 그림 판 뒤에 숨는 크기(앞으로 삐져나오면 건물이 그림자 위에 떠 보인다)
     shopRoot.add(shopShadow, shopPlane)
     scene.add(shopRoot)
     let shopView = -1
@@ -185,6 +185,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     const updateShop = () => {
       const a = Math.atan2(w.camera.position.x - SHOP.x, w.camera.position.z - SHOP.z)
       shopPlane.rotation.y = a
+      // 그림의 맨 아래(건물 바닥 앞쪽 모서리)가 땅에 닿아 보이게 판을 카메라 쪽 건물 앞 끝으로 내민다(가운데에 두면 떠 보였다)
+      shopPlane.position.set(Math.sin(a) * 1.5, 0, Math.cos(a) * 1.5)
       const sector = Math.PI / 4
       const off = (k: number) => Math.abs(Math.atan2(Math.sin(a - k * sector), Math.cos(a - k * sector)))
       // 경계에서 그림이 왔다 갔다 하지 않게 지금 그림은 조금 더 오래 유지한다

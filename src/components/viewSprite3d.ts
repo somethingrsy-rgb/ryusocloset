@@ -6,7 +6,7 @@ import { assetUrl } from '../lib/items'
  * 시계 반대로 1 = 앞오른쪽 …)에 맞는 그림만 끼워 보여 준다. 판이 하나라 그림끼리 겹쳐 지지직거리지 않는다.
  * views[k] = [그림 주소, 가로÷세로, 좌우 뒤집기]
  */
-export function viewSprite(k: { keep: <T extends { dispose: () => void }>(x: T) => T; texOf: (src: string) => THREE.Texture }, views: [string, number, boolean][], h: number, shadow: [number, number]) {
+export function viewSprite(k: { keep: <T extends { dispose: () => void }>(x: T) => T; texOf: (src: string) => THREE.Texture }, views: [string, number, boolean][], h: number, shadow: [number, number], /** 판을 카메라 쪽으로 내미는 거리(물건 앞 끝까지). 가운데에 두면 떠 보인다 */ front = 0) {
   const tex = new Map<string, THREE.Texture>()
   for (const [img] of views) if (!tex.has(img)) tex.set(img, k.texOf(assetUrl(img))) // 미리 받아 둔다
   const mat = k.keep(new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.4, side: THREE.DoubleSide }))
@@ -31,6 +31,7 @@ export function viewSprite(k: { keep: <T extends { dispose: () => void }>(x: T) 
   const update = (camera: THREE.Camera) => {
     const a = Math.atan2(camera.position.x - root.position.x, camera.position.z - root.position.z)
     plane.rotation.y = a
+    plane.position.set(Math.sin(a) * front, 0, Math.cos(a) * front)
     const off = (i: number) => Math.abs(Math.atan2(Math.sin(a - i * sector), Math.cos(a - i * sector)))
     if (off(cur) > sector / 2 + 0.08) show(((Math.round(a / sector) % 8) + 8) % 8)
   }
