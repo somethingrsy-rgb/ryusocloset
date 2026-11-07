@@ -8,8 +8,10 @@ import { stepCafe, type CafePoint } from '../lib/cafeWalk'
 import { createStage, type Doll, type Stage } from './stage3d'
 
 /** 기존 주문 저장을 공유하는 자유 산책 카페. 길과 잔디 모두 걸을 수 있다. */
-const seatAt = (i: number) => new THREE.Vector3([-6, -2.6, 2.6, 6][i % 4], 0, i < 4 ? -1.5 : 3.2)
-const tableAt = (i: number) => seatAt(i).clone().add(new THREE.Vector3(i % 4 < 2 ? 1.25 : -1.25, 0, 0))
+/** 세로 화면(폰)은 테이블을 옆으로 좁혀 놓는다(양 끝 손님이 화면 밖으로 잘리지 않게) */
+let SX = 1
+const seatAt = (i: number) => new THREE.Vector3([-6, -2.6, 2.6, 6][i % 4] * SX, 0, i < 4 ? -1.5 : 3.2)
+const tableAt = (i: number) => seatAt(i).clone().add(new THREE.Vector3((i % 4 < 2 ? 1.25 : -1.25) * SX, 0, 0))
 
 export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMeet, bubble, float }: {
   outfit: Outfit; tweaks: Tweaks
@@ -32,18 +34,21 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   useEffect(() => {
     const el = host.current
     if (!el) return
+    SX = el.clientWidth < el.clientHeight ? 0.62 : 1
     const guests: THREE.Object3D[] = [], guestDolls: Doll[] = []
     let target: CafePoint | null = null, following: number | null = null
     const approach = (i: number) => { if (!state.current.paused) { following = i; target = null } }
     approachRef.current = approach
     const s = createStage(el, {
-      sky: 0xcdeeff, fog: [30, 70], orbit: true, pitchRange: [0.35, 1.05],
+      sky: 0xcdeeff, fog: [30, 70], orbit: true, pitchRange: [0.55, 1.0],
+      // 그림 판(가게·테이블·나무)은 늘 앞을 보고 있어서, 옆으로는 조금(약 20도)만 돌려 본다
+      yawRange: [-0.35, 0.35],
       view: { yaw: 0, pitch: 0.72, dist: 17, target: [0, 0.6, 0.6] },
       pickables: guests, onPick: (o) => approach(guests.indexOf(o)),
       onTap: (x, y) => {
         if (state.current.paused) return
         const p = s.ground(x, y)
-        if (p) { following = null; target = { x: Math.max(-8.5, Math.min(8.5, p.x)), z: Math.max(-4.8, Math.min(6.5, p.z)) } }
+        if (p) { following = null; target = { x: Math.max(-8.5 * SX, Math.min(8.5 * SX, p.x)), z: Math.max(-4.8, Math.min(6.5, p.z)) } }
       },
       fov: (w, h) => (w < h ? 66 : 44),
     })
@@ -110,31 +115,48 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     s.view.dist = Math.max(15, 8.6 / Math.tan(hf / 2))
     // 세로 화면: 위에서 더 내려다봐서 정원이 화면 세로를 채우게
     if (w < h) { s.view.pitch = 0.9; s.view.dist = 5.6 / Math.tan(hf / 2); s.view.target.z = -0.4 }
+    // 그림 판은 앞(+z)을 보게 고정하고, 처음 시점만큼만 뒤로 살짝 눕힌다(돌려 봐도 가게·의자가 따라 돌지 않게)
+    for (const d of props) { d.body.rotation.order = 'YXZ'; d.body.rotation.set(-s.view.pitch * 0.5, 0, 0) }
     s.onFrame((dt) => {
       t += dt
       const st = state.current
       const frozen = st.paused || st.walking
       let moving = false
+      // 손님: 주문한 손님(만드는 중·완성)은 자리로 돌아와 앉아 기다리고, 주문 전 손님은 절반만 돌아다닌다(짝수 자리)
       for (let i = 0; i < guestDolls.length; i++) {
-        const d = guestDolls[i], r = roam[i]
-        const near = d.root.position.distanceTo(me.root.position) < 1.5
+        const d = guestDolls[i], r = roam[i], p = d.root.position
+        const near = p.distanceTo(me.root.position) < 1.5
+        const sits = !st.encounters[i].startsWith('new:') || i % 2 === 1
+        const seat = seatAt(i)
+        if (sits) { r.goal = { x: seat.x, z: seat.z }; r.wait = 0 }
+        let stepped = false
         if (!frozen && !near && following !== i) {
           r.wait -= dt
-          if (r.wait <= 0 && Math.hypot(d.root.position.x - r.goal.x, d.root.position.z - r.goal.z) < 0.15) {
-            r.goal = { x: (Math.random() - 0.5) * 15, z: -3.8 + Math.random() * 9.5 }
-            r.wait = 1 + Math.random() * 2
+          if (!sits && r.wait <= 0 && Math.hypot(p.x - r.goal.x, p.z - r.goal.z) < 0.15) {
+            // 다른 손님 자리·지금 있는 곳과 떨어진 빈 곳을 고른다
+            for (let k = 0; k < 8; k++) {
+              const g = { x: (Math.random() - 0.5) * 15 * SX, z: -3.8 + Math.random() * 9.5 }
+              if (guestDolls.every((o, j) => j === i || Math.hypot(o.root.position.x - g.x, o.root.position.z - g.z) > 1.6)) { r.goal = g; break }
+            }
+            r.wait = 1.5 + Math.random() * 2.5
           }
-          if (r.wait <= 0) {
-            const prev = d.root.position.x
-            const next = stepCafe(d.root.position, r.goal, 0.65 * dt, obstacles)
-            d.root.position.set(next.x, 0, next.z)
+          if (r.wait <= 0 && Math.hypot(p.x - r.goal.x, p.z - r.goal.z) > 0.05) {
+            const prev = p.x
+            const next = stepCafe(p, r.goal, 0.65 * dt, obstacles)
+            p.set(next.x, 0, next.z)
             if (Math.abs(next.x - prev) > 0.001) r.dir = next.x > prev ? 1 : -1
-            d.body.position.y = Math.abs(Math.sin(t * 7 + i)) * 0.06
-            if (Math.hypot(next.x - r.goal.x, next.z - r.goal.z) < 0.15) r.wait = 1 + Math.random() * 2
+            stepped = true
+            if (!sits && Math.hypot(next.x - r.goal.x, next.z - r.goal.z) < 0.15) r.wait = 1.5 + Math.random() * 2.5
           }
-        } else d.body.position.y = 0
+        }
+        // 부딪히지 않게: 다른 손님·아바타와 1 이상 떨어진다(앉은 손님은 자리를 지키고 걷는 손님이 비킨다)
+        if (!sits) for (const o of [...guestDolls.filter((_, j) => j !== i).map((x) => x.root.position), me.root.position]) {
+          const dx = p.x - o.x, dz = p.z - o.z, dd = Math.hypot(dx, dz)
+          if (dd < 1 && dd > 1e-3) { p.x = o.x + (dx / dd) * 1; p.z = o.z + (dz / dd) * 1 }
+        }
+        d.body.position.y = stepped ? Math.abs(Math.sin(t * 7 + i)) * 0.06 : 0
         s.face(d, r.dir)
-        if (!near && d.root.position.distanceTo(me.root.position) > 2.1) r.met = ''
+        if (!near && p.distanceTo(me.root.position) > 2.1) r.met = ''
       }
       if (!frozen) {
         const goal = following !== null ? guestDolls[following].root.position : target
@@ -155,7 +177,6 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       }
       me.body.position.y = moving ? Math.abs(Math.sin(t * 9)) * 0.1 : 0
       s.face(me, direction)
-      for (const d of props) s.faceTilt(d)
       if (st.hold) {
         if (!holdTex.has(st.hold)) holdTex.set(st.hold, s.texOf(assetUrl(`cafe/menu2/${st.hold}.webp`)))
         holdSprite.material.map = holdTex.get(st.hold)!
@@ -165,7 +186,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       } else holdSprite.visible = false
       // 말풍선·코인 표시를 손님 머리 위 화면 자리에
       for (let i = 0; i < 8; i++) {
-        const pos = s.project(tmp.copy(guestDolls[i].root.position).setY(1.75))
+        const pos = s.project(tmp.copy(guestDolls[i].root.position).setY(1.6))
         for (const node of [anchors.current[i], floats.current[i]]) if (node) { node.style.transform = `translate(${pos.x}px, ${pos.y}px)`; node.style.visibility = pos.front ? 'visible' : 'hidden' }
       }
     })
@@ -183,7 +204,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       <div ref={host} className="absolute inset-0" />
       {Array.from({ length: 8 }, (_, i) => (
         <div key={i} ref={(n) => { anchors.current[i] = n }} className="pointer-events-none absolute top-0 left-0 z-[5]">
-          <div className="pointer-events-auto absolute -translate-x-1/2 -translate-y-full">{bubble(i, () => approachRef.current(i))}</div>
+          {/* 말풍선은 2D 보다 작게(손님 머리를 가리지 않게) */}
+          <div className="pointer-events-auto absolute -translate-x-1/2 -translate-y-full"><div className="origin-bottom scale-[0.62]">{bubble(i, () => approachRef.current(i))}</div></div>
         </div>
       ))}
       {Array.from({ length: 8 }, (_, i) => (
