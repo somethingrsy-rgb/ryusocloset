@@ -205,7 +205,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       for (let i = 0; i < guestDolls.length; i++) {
         const d = guestDolls[i], r = roam[i], p = d.root.position
         const near = Math.hypot(p.x - me.x, p.z - me.z) < 1.5
-        const sits = !st.encounters[i].startsWith('new:') || i % 2 === 1 || !!st.eating[i]
+        // 음식이 완성된 손님(과 먹는 손님)만 자리에 앉아 기다리고, 나머지는 주문했어도 테이블 둘레를 거닌다
+        const sits = st.encounters[i].startsWith('ready:') || !!st.eating[i]
         const seat = seatAt(i)
         if (sits) { r.goal = { x: seat.x, z: seat.z }; r.wait = 0 }
         let stepped = false
@@ -261,7 +262,10 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         const tex = texFor(id)
         if (sp.material.map !== tex) { sp.material.map = tex; sp.material.needsUpdate = true }
         const tp = tableAt(i)
-        sp.position.set(tp.x + Math.sign(SIDE(i)) * 0.18, 1.0, tp.z - 0.2).addScaledVector(v.set(w.camera.position.x - tp.x, 0, w.camera.position.z - tp.z).normalize(), 0.22)
+        // 파라솔 기둥(테이블 가운데)과 겹치지 않게 화면에서 손님 쪽 옆으로 비켜 놓는다
+        v.set(w.camera.position.x - tp.x, 0, w.camera.position.z - tp.z).normalize()
+        const side = w.screenSide(SIDE(i), 0) >= 0 ? 1 : -1
+        sp.position.set(tp.x + v.z * 0.36 * side + v.x * 0.12, 1.0, tp.z - 0.2 - v.x * 0.36 * side + v.z * 0.12)
       })
       // 말풍선·코인 표시를 손님 머리 위 화면 자리에(음식이 나온 동안은 말풍선을 숨긴다)
       for (let i = 0; i < 8; i++) {
