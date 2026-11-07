@@ -175,27 +175,29 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     const sz0 = -4 - (PD + GAP) - 1.2, sz1 = -4 + (PD + GAP) + 1.2
     fenceLine(sx0, sz0, sx1, sz0); fenceLine(sx0, sz1, sx1, sz1, SIDE_X); fenceLine(sx0, sz0, sx0, sz1); fenceLine(sx1, sz0, sx1, sz1)
 
-    // 빨간 헛간과 노점, 나무
-    const barn = new THREE.Group()
-    const bWall = new THREE.Mesh(keep(new THREE.BoxGeometry(5, 3.4, 4)), lambert(0xd84a3c))
-    bWall.position.y = 1.7
-    const bRoof = new THREE.Mesh(keep(new THREE.CylinderGeometry(2.2, 2.2, 5.2, 4, 1, false, Math.PI / 4)), lambert(0x8a3b30))
-    bRoof.rotation.z = Math.PI / 2
-    bRoof.scale.set(1, 1, 0.75)
-    bRoof.position.y = 3.4
-    const bDoor = new THREE.Mesh(keep(new THREE.BoxGeometry(1.8, 2.2, 0.1)), lambert(0xfff6e8))
-    bDoor.position.set(0, 1.1, 2.02)
-    for (const m of [bWall, bRoof]) { m.castShadow = true; m.receiveShadow = true }
-    barn.add(bWall, bRoof, bDoor)
-    barn.position.set(-fx - 5, 0, -6)
-    barn.rotation.y = Math.PI / 2
-    scene.add(barn)
-    w.obstacles.push({ x: barn.position.x, z: barn.position.z, r: 3 })
+    // 헛간·집·우리 동물: 받은 3D 그림(public/farm/3d)을 세운 판(늘 카메라를 본다)
+    const art = (name: string, h: number, aspect: number, x: number, z: number) => {
+      const d = w.paperDoll(w.texOf(assetUrl(`farm/3d/${name}.webp`)), h, aspect)
+      d.root.position.set(x, 0, z)
+      return d
+    }
+    const buildings = [art('barn', 5, 1041 / 1085, -fx - 5, -6), art('house', 5.6, 1018 / 1188, -5, -fz1 - 14)]
+    for (const d of buildings) w.obstacles.push({ x: d.root.position.x, z: d.root.position.z, r: 2.4 })
+    // 동물 우리: 헛간 앞 울타리 안에서 젖소·양·닭이 거닌다
+    const PEN = { x0: -fx - 11, x1: -fx - 2, z0: fz1 - 3, z1: fz1 + 5 }
+    fenceLine(PEN.x0, PEN.z0, PEN.x1, PEN.z0); fenceLine(PEN.x0, PEN.z1, PEN.x1, PEN.z1); fenceLine(PEN.x0, PEN.z0, PEN.x0, PEN.z1); fenceLine(PEN.x1, PEN.z0, PEN.x1, PEN.z1)
+    w.obstacles.push({ x: (PEN.x0 + PEN.x1) / 2, z: (PEN.z0 + PEN.z1) / 2, r: 4.4 })
+    const inPen = () => ({ x: PEN.x0 + 1 + rnd() * (PEN.x1 - PEN.x0 - 2), z: PEN.z0 + 1 + rnd() * (PEN.z1 - PEN.z0 - 2) })
+    const penned = ([['cow', 1.7, 966 / 1150], ['sheep', 1.4, 989 / 1135], ['hen', 0.95, 895 / 1079], ['hen', 0.9, 895 / 1079]] as const).map(([n, h, a]) => {
+      const p = inPen()
+      return { doll: art(n, h, a, p.x, p.z), x: p.x, z: p.z, tx: p.x, tz: p.z, wait: rnd() * 3, dir: 1 as 1 | -1, t: rnd() * 5, speed: n === 'hen' ? 1.4 : 0.8 }
+    })
     // 나무: 카페와 같은 3D 나무 그림(world3d.addTree)
     let trees = 0
     for (let i = 0; i < 300 && trees < 60; i++) {
       const x = (rnd() - 0.5) * BOUNDS * 1.9, z = (rnd() - 0.5) * BOUNDS * 1.9
-      if (x > -fx - 4 && x < sx1 + 4 && z > fz0 - 4 && z < fz1 + 6) continue
+      if (x > PEN.x0 - 3 && x < sx1 + 4 && z > fz0 - 4 && z < PEN.z1 + 4) continue
+      if (Math.hypot(x - buildings[1].root.position.x, z - buildings[1].root.position.z) < 5) continue
       if (w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 10)) continue
       w.addTree(x, z, 0.8 + rnd() * 0.7)
       trees++
@@ -241,6 +243,24 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
         w.face(f.doll, f.dir)
       }
       for (const p of plots) for (const c of p.crops) if (c.root.visible) w.face(c, 1)
+      for (const d of buildings) w.face(d, 1)
+      // 우리 동물: 우리 안 아무 데나 천천히 걸어갔다가 쉬었다가
+      for (const a of penned) {
+        a.t += dt
+        if (a.wait > 0) a.wait -= dt
+        else {
+          const dx = a.tx - a.x, dz = a.tz - a.z, d = Math.hypot(dx, dz)
+          if (d < 0.1) { a.wait = 1.5 + rnd() * 3.5; const p = inPen(); a.tx = p.x; a.tz = p.z }
+          else {
+            a.x += (dx / d) * a.speed * dt; a.z += (dz / d) * a.speed * dt
+            const sd = w.screenSide(dx, dz)
+            if (Math.abs(sd) > 0.05) a.dir = sd > 0 ? 1 : -1 // 그림은 오른쪽을 본다(꼬리가 왼쪽)
+          }
+        }
+        a.doll.root.position.set(a.x, 0, a.z)
+        a.doll.body.position.y = a.wait > 0 ? 0 : Math.abs(Math.sin(a.t * 9)) * 0.08
+        w.face(a.doll, a.dir)
+      }
     })
     return () => { unsub(); w.dispose(); world.current = null }
   }, [])
