@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { assetUrl } from '../lib/items'
 
 /**
  * 3D 시험판(산책·농장)이 같이 쓰는 바탕: 하늘·햇빛·잔디·구름, 종이 인형(지금 그림을 세운 판),
@@ -46,7 +47,7 @@ export interface World {
   dispose: () => void
 }
 
-export function createWorld(el: HTMLElement, opts: { bounds: number; start: Mover; /** 처음 카메라 방향(0 이면 -z 쪽을 본다) */ yaw?: number; seed?: number; sky?: number; onPick?: (o: THREE.Object3D) => void; onReady?: () => void }): World {
+export function createWorld(el: HTMLElement, opts: { bounds: number; start: Mover; /** 처음 카메라 방향(0 이면 -z 쪽을 본다) */ yaw?: number; /** 땅 무늬 그림 주소(없으면 연두색) */ grass?: string; seed?: number; sky?: number; onPick?: (o: THREE.Object3D) => void; onReady?: () => void }): World {
   const rnd = seeded(opts.seed ?? 7)
   const renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -73,10 +74,15 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   const lambert = (color: number) => keep(new THREE.MeshLambertMaterial({ color }))
 
   const B = opts.bounds
-  const ground = new THREE.Mesh(keep(new THREE.PlaneGeometry(B * 3, B * 3)), lambert(0x8fd16a))
+  // 땅: grass 를 주면 그 무늬 그림(카페 잔디)을 이어 깔고, 아니면 연두색 + 얼룩
+  const loaderG = new THREE.TextureLoader()
+  const grassTex = opts.grass ? loaderG.load(opts.grass) : null
+  if (grassTex) { grassTex.colorSpace = THREE.SRGBColorSpace; grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping; grassTex.repeat.set((B * 3) / 8, (B * 3) / 8); keep(grassTex) }
+  const ground = new THREE.Mesh(keep(new THREE.PlaneGeometry(B * 3, B * 3)), grassTex ? keep(new THREE.MeshLambertMaterial({ map: grassTex })) : lambert(0x8fd16a))
   ground.rotation.x = -Math.PI / 2
   ground.receiveShadow = true
   scene.add(ground)
+  if (!grassTex) {
   const patchGeo = keep(new THREE.CircleGeometry(1, 20))
   for (let i = 0; i < 40; i++) {
     const p = new THREE.Mesh(patchGeo, lambert(rnd() < 0.5 ? 0x9edb76 : 0x84c860))
@@ -85,6 +91,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     p.scale.setScalar(2 + rnd() * 5)
     p.receiveShadow = true
     scene.add(p)
+  }
   }
 
   // 구름
@@ -104,40 +111,23 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     clouds.push(c)
   }
 
-  // 나무(가리면 흐려지도록 나무마다 재질을 따로)
-  const obstacles: World['obstacles'] = []
-  const fadeable: { x: number; z: number; mats: THREE.MeshLambertMaterial[]; o: number }[] = []
-  const trunkGeo = keep(new THREE.CylinderGeometry(0.22, 0.32, 1.6, 8))
-  const leafGeo = keep(new THREE.IcosahedronGeometry(1, 1))
-  const leafColors = [0x6cc35a, 0x5fb24f, 0x7ad06a, 0xffb7cf, 0xffc9dc]
-  const addTree = (x: number, z: number, s: number) => {
-    const tMat = keep(new THREE.MeshLambertMaterial({ color: 0x9a6b45, transparent: true }))
-    const lMat = keep(new THREE.MeshLambertMaterial({ color: leafColors[Math.floor(rnd() * leafColors.length)], transparent: true }))
-    const tree = new THREE.Group()
-    const trunk = new THREE.Mesh(trunkGeo, tMat)
-    trunk.position.y = 0.8
-    trunk.castShadow = true
-    tree.add(trunk)
-    for (let k = 0; k < 3; k++) {
-      const leaf = new THREE.Mesh(leafGeo, lMat)
-      leaf.position.set((rnd() - 0.5) * 0.9, 2 + k * 0.45, (rnd() - 0.5) * 0.9)
-      leaf.scale.setScalar(1.05 - k * 0.2)
-      leaf.castShadow = true
-      tree.add(leaf)
-    }
-    tree.position.set(x, 0, z)
-    tree.scale.setScalar(s)
-    scene.add(tree)
-    obstacles.push({ x, z, r: 0.6 * s })
-    fadeable.push({ x, z, mats: [tMat, lMat], o: 1 })
-  }
-
   const loader = new THREE.TextureLoader()
   const texOf = (src: HTMLCanvasElement | string) => {
     const t = typeof src === 'string' ? loader.load(src) : new THREE.CanvasTexture(src)
     t.colorSpace = THREE.SRGBColorSpace
     t.anisotropy = 4
     return keep(t)
+  }
+  // 나무: 카페와 같은 3D 나무 그림을 세운 판. 카메라와 아바타 사이를 가리면 숨긴다
+  const obstacles: World['obstacles'] = []
+  const fadeable: { x: number; z: number; doll: Doll }[] = []
+  let treeTex: THREE.Texture | null = null
+  const addTree = (x: number, z: number, s: number) => {
+    treeTex ??= texOf(assetUrl('cafe/3d/tree.webp'))
+    const d = paperDoll(treeTex, 4.2 * s, 951 / 1024)
+    d.root.position.set(x, 0, z)
+    obstacles.push({ x, z, r: 0.6 * s })
+    fadeable.push({ x, z, doll: d })
   }
   const paperDoll = (tex: THREE.Texture, h: number, aspect: number, feet = 1): Doll => {
     const g = keep(new THREE.PlaneGeometry(h * aspect, h))
@@ -281,9 +271,8 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     const cx = camera.position.x, cz = camera.position.z, sx = me.x - cx, sz = me.z - cz, len2 = sx * sx + sz * sz || 1
     for (const t of fadeable) {
       const u = Math.max(0, Math.min(1, ((t.x - cx) * sx + (t.z - cz) * sz) / len2))
-      const block = Math.hypot(cx + sx * u - t.x, cz + sz * u - t.z) < 3.4 && u < 0.97
-      const o = t.o + ((block ? 0 : 1) - t.o) * Math.min(1, dt * 8)
-      if (Math.abs(o - t.o) > 0.002) { t.o = o; for (const m of t.mats) { m.opacity = o; m.depthWrite = o > 0.9; m.visible = o > 0.12 } }
+      t.doll.root.visible = !(Math.hypot(cx + sx * u - t.x, cz + sz * u - t.z) < 2.4 && u < 0.97)
+      face(t.doll, 1)
     }
     for (const c of clouds) { c.position.x += dt * 0.6; if (c.position.x > 90) c.position.x = -90 }
     marker.scale.setScalar(1 + Math.sin(now / 200) * 0.08)
