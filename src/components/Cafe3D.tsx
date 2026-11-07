@@ -14,6 +14,88 @@ let SX = 1, PORTRAIT = false
 const seatAt = (i: number) => new THREE.Vector3([-6, -2.6, 2.6, 6][i % 4] * SX, 0, i < 4 ? (PORTRAIT ? -2.2 : -1.5) : PORTRAIT ? 4.4 : 3.2)
 const tableAt = (i: number) => seatAt(i).clone().add(new THREE.Vector3((i % 4 < 2 ? 1.25 : -1.25) * SX, 0, 0))
 
+/**
+ * 파라솔 테이블 세트(입체): 하얀 동그란 테이블 + 꼬불 다리, 분홍·크림 줄무늬 파라솔(가장자리 물결 + 딸기·꽃 장식),
+ * 테이블 위 꽃병, 양옆 하트 등받이 의자. 모양은 한 번 만들고 테이블마다 같이 쓴다.
+ */
+function makeTableKit(s: Stage) {
+  const { keep } = s
+  // 그림처럼 밝은 파스텔이 되게, 그늘진 쪽도 너무 어두워지지 않게 스스로 조금 빛나게 한다
+  const lambert = (color: number) => keep(new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: 0.32 }))
+  const cream = lambert(0xfff3e6), white = lambert(0xfffaf4), pink = lambert(0xf6a3b6)
+  const red = lambert(0xe8505b), leaf = lambert(0x8fcf5a), yellow = lambert(0xffd23f)
+  // 줄무늬: 둘레를 16칸으로 나눠 분홍·크림을 번갈아 칠한 그림
+  const c = document.createElement('canvas'); c.width = 256; c.height = 8
+  const g2 = c.getContext('2d')!
+  for (let k = 0; k < 16; k++) { g2.fillStyle = k % 2 ? '#fff1dc' : '#f6a3b6'; g2.fillRect(k * 16, 0, 16, 8) }
+  const stripes = keep(new THREE.MeshLambertMaterial({ map: s.texOf(c), side: THREE.DoubleSide, emissive: 0xffffff, emissiveIntensity: 0.25, emissiveMap: s.texOf(c) }))
+  const geo = {
+    top: keep(new THREE.CylinderGeometry(0.62, 0.6, 0.08, 32)),
+    rim: keep(new THREE.TorusGeometry(0.61, 0.03, 8, 32)),
+    stem: keep(new THREE.CylinderGeometry(0.06, 0.07, 0.7, 12)),
+    curl: keep(new THREE.TorusGeometry(0.13, 0.035, 8, 16, Math.PI * 1.5)),
+    foot: keep(new THREE.SphereGeometry(0.06, 10, 8)),
+    pole: keep(new THREE.CylinderGeometry(0.035, 0.035, 1.5, 10)),
+    canopy: keep(new THREE.ConeGeometry(0.82, 0.36, 16, 1, true)),
+    scallop: keep(new THREE.SphereGeometry(0.085, 12, 8)),
+    knob: keep(new THREE.SphereGeometry(0.08, 12, 10)),
+    berry: keep(new THREE.SphereGeometry(0.075, 10, 8)),
+    flower: keep(new THREE.SphereGeometry(0.045, 8, 6)),
+    vase: keep(new THREE.CylinderGeometry(0.07, 0.1, 0.16, 14)),
+    seat: keep(new THREE.CylinderGeometry(0.24, 0.24, 0.07, 20)),
+    leg: keep(new THREE.CylinderGeometry(0.025, 0.03, 0.42, 8)),
+    back: keep(new THREE.TorusGeometry(0.2, 0.03, 8, 20, Math.PI)),
+    heart: keep(new THREE.TorusGeometry(0.07, 0.022, 8, 14, Math.PI * 1.6)),
+  }
+  const mesh = (gm: THREE.BufferGeometry, m: THREE.Material, x: number, y: number, z: number) => { const o = new THREE.Mesh(gm, m); o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; return o }
+  const chair = (side: number) => {
+    const ch = new THREE.Group()
+    ch.add(mesh(geo.seat, cream, 0, 0.44, 0))
+    for (const [lx, lz] of [[-0.15, -0.15], [0.15, -0.15], [-0.15, 0.15], [0.15, 0.15]]) ch.add(mesh(geo.leg, cream, lx, 0.21, lz))
+    // 등받이: 뒤쪽에 세운 반달 + 그 안에 하트 꼬불
+    const back = mesh(geo.back, cream, 0, 0.5, -0.2)
+    back.scale.set(1, 1.6, 1)
+    ch.add(back)
+    for (const sx of [-1, 1]) { const h = mesh(geo.heart, cream, sx * 0.06, 0.68, -0.2); h.rotation.z = sx > 0 ? -0.6 : Math.PI + 0.6; ch.add(h) }
+    ch.position.set(side * 0.82, 0, 0.05)
+    return ch
+  }
+  return (i: number) => {
+    const t = new THREE.Group()
+    // 테이블
+    t.add(mesh(geo.top, white, 0, 0.74, 0))
+    const rim = mesh(geo.rim, cream, 0, 0.72, 0); rim.rotation.x = Math.PI / 2; t.add(rim)
+    t.add(mesh(geo.stem, cream, 0, 0.36, 0))
+    for (let k = 0; k < 3; k++) {
+      const a = (k / 3) * Math.PI * 2 + 0.5
+      const cu = mesh(geo.curl, cream, Math.cos(a) * 0.14, 0.13, Math.sin(a) * 0.14)
+      cu.rotation.y = -a
+      t.add(cu)
+      t.add(mesh(geo.foot, cream, Math.cos(a) * 0.27, 0.05, Math.sin(a) * 0.27))
+    }
+    // 꽃병과 꽃
+    t.add(mesh(geo.vase, white, 0.22, 0.86, 0.12))
+    for (let k = 0; k < 4; k++) t.add(mesh(geo.flower, k % 2 ? white : yellow, 0.22 + Math.cos(k * 1.6) * 0.06, 0.98 + (k % 2) * 0.03, 0.12 + Math.sin(k * 1.6) * 0.06))
+    // 파라솔: 기둥, 줄무늬 지붕, 물결 가장자리, 딸기·꽃 장식, 꼭대기 공
+    t.add(mesh(geo.pole, cream, 0, 1.5, 0))
+    const canopy = mesh(geo.canopy, stripes, 0, 2.22, 0)
+    canopy.rotation.y = (i * 0.37) % (Math.PI / 8)
+    t.add(canopy)
+    for (let k = 0; k < 16; k++) {
+      const a = (k / 16) * Math.PI * 2 + canopy.rotation.y + Math.PI / 16
+      const sc = mesh(geo.scallop, k % 2 ? pink : cream, Math.cos(a) * 0.78, 2.03, -Math.sin(a) * 0.78)
+      sc.scale.set(1.2, 0.7, 1.2)
+      t.add(sc)
+      if (k % 4 === 1) t.add(mesh(geo.berry, red, Math.cos(a) * 0.66, 2.13, -Math.sin(a) * 0.66))
+      if (k % 4 === 3) { t.add(mesh(geo.flower, white, Math.cos(a) * 0.66, 2.14, -Math.sin(a) * 0.66)); t.add(mesh(geo.flower, leaf, Math.cos(a + 0.14) * 0.64, 2.13, -Math.sin(a + 0.14) * 0.64)) }
+    }
+    t.add(mesh(geo.knob, cream, 0, 2.42, 0))
+    // 의자 두 개(손님이 서는 쪽과 반대쪽)
+    t.add(chair(-1), chair(1))
+    return t
+  }
+}
+
 export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMeet, bubble, float, eating }: {
   outfit: Outfit; tweaks: Tweaks
   walking: boolean; hold: string | null; paused: boolean
@@ -84,7 +166,13 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     // 딸기 가게(카운터): 뒤쪽 가운데
     prop('counter', 5.6, 997 / 1024, 0, -6.2)
     // 파라솔 테이블: 손님 옆자리
-    for (let i = 0; i < 8; i++) { const p = tableAt(i); prop('table', 2.4, 939 / 1024, p.x, p.z - 0.2) }
+    // 파라솔 테이블: 받은 그림과 같은 색·모양을 진짜 입체로(어느 쪽에서 봐도 두께가 있게)
+    const tableKit = makeTableKit(s)
+    for (let i = 0; i < 8; i++) {
+      const p = tableAt(i), g = tableKit(i)
+      g.position.set(p.x, 0, p.z - 0.2)
+      scene.add(g)
+    }
     // 둘레 나무와 꽃 덤불
     for (let k = 0; k < 16; k++) {
       const a = Math.PI + (k / 15) * Math.PI // 뒤쪽 반원
