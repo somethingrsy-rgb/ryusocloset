@@ -1,4 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { setArrival } from './lib/farmCafeLink'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
 import { SettingsSheet } from './components/SettingsSheet'
@@ -440,11 +441,11 @@ export default function App() {
             {mode === 'shop' ? (
               <ShopModal onClose={() => setMode(shopFrom.current)} onWear={wearFound} outfit={outfit} tweaks={tweaks} />
             ) : mode === 'cafe' ? (
-              <CafeGame outfit={outfit} tweaks={tweaks} onKitchen={() => setMode('kitchen')} />
+              <CafeGame outfit={outfit} tweaks={tweaks} onKitchen={() => setMode('kitchen')} onFarm={() => { setArrival('fromCafe'); setMode('farm') }} />
             ) : mode === 'kitchen' ? (
               <KitchenGame outfit={outfit} tweaks={tweaks} onGo={(to) => { if (to === 'party') { setTravelPreview(getParty().place); setMode('travel') } else setMode(to) }} />
             ) : mode === 'farm' ? (
-              <FarmScene outfit={outfit} tweaks={tweaks} onKitchen={() => setMode('kitchen')} onOutfit={(next) => applyOutfit(next)} />
+              <FarmScene outfit={outfit} tweaks={tweaks} onKitchen={() => setMode('kitchen')} onOutfit={(next) => applyOutfit(next)} onCafe={() => { setArrival('fromFarm'); setMode('cafe') }} />
             ) : mode === 'travel' ? (
               <TravelGame
                 initialPlaceId={travelPreview}

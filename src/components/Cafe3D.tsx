@@ -1,15 +1,17 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { renderFigure } from '../lib/exportPng'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { stepCafe } from '../lib/cafeWalk'
-import { ANIMAL_H, createWorld, meadowTree, type Doll, type World } from './world3d'
+import { ANIMAL_H, createWorld, meadowTree, signCanvas, type Doll, type World } from './world3d'
 
 /** 기존 주문 저장을 공유하는 자유 산책 카페. 3D 농장과 같은 바탕(world3d): 같은 카메라 각도·따라가기·걷기·끌어서 둘러보기 */
 /** 걸을 수 있는 땅(가운데에서 ±WALK) */
 const WALK = 30
+/** 농장 가는 길: 가게 뒤(-z)로 곧게 뻗고, 끝(z < -FARM_GATE)까지 가면 농장으로 넘어간다 */
+const FARM_GATE = 29
 /** 파라솔 테이블 자리: 숲길을 걷다가 하나씩 만나도록 잔디밭 여기저기에 띄엄띄엄(가게는 (0, -6.2)) */
 const TABLES: [number, number][] = [[-6.5, 0.5], [6.5, -0.5], [-3, 9], [11, 9], [-15, -7], [16, -8], [3, 17], [-13, 15]]
 /** 손님은 테이블 옆(가게 쪽 바깥)에 선다 */
@@ -99,7 +101,11 @@ function makeTableKit(s: Pick<World, 'keep' | 'texOf'>) {
   }
 }
 
-export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMeet, bubble, float, eating }: {
+export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMeet, bubble, float, eating, arrive = false, onFarm }: {
+  /** 농장에서 걸어왔으면 농장 가는 길 끝에서 시작 */
+  arrive?: boolean
+  /** 농장 가는 길 끝에 닿으면 */
+  onFarm?: () => void
   outfit: Outfit; tweaks: Tweaks
   walking: boolean; hold: string | null; paused: boolean
   /** 서빙받은 손님의 음식(자리 → 메뉴). 그동안 손님은 자리에 앉아 있고 음식은 테이블 위에 놓인다 */
@@ -117,6 +123,11 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   const state = useRef({ walking, hold, paused, encounters, onMeet, eating })
   state.current = { walking, hold, paused, encounters, onMeet, eating }
   const approachRef = useRef<(i: number) => void>(() => {})
+  const onFarmRef = useRef(onFarm)
+  onFarmRef.current = onFarm
+  /** 길을 넘어갈 때 하얗게 덮었다 걷는 막 */
+  const [fade, setFade] = useState(arrive)
+  useEffect(() => { if (!arrive) return; const t = setTimeout(() => setFade(false), 350); return () => clearTimeout(t) }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const el = host.current
@@ -127,7 +138,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     approachRef.current = approach
     // 3D 농장과 같은 바탕: 카메라가 아바타 뒤에서 따라가고, 땅을 누르면 걷고, 옆으로 끌면 둘러본다
     const w = createWorld(el, {
-      bounds: WALK, start: { x: 0, z: -2.6 }, seed: 7, sky: 0xcdeeff, grass: assetUrl('cafe/3d/grass.webp'),
+      bounds: WALK, start: arrive ? { x: 0, z: -FARM_GATE + 3 } : { x: 0, z: -2.6 }, yaw: arrive ? Math.PI : 0, seed: 7, sky: 0xcdeeff, grass: assetUrl('cafe/3d/grass.webp'),
       onPick: (o) => approach(guests.indexOf(o)),
     })
     world.current = w
@@ -160,13 +171,14 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     for (let k = 0; k < 400 && trees.length < 70; k++) {
       const x = (rnd() - 0.5) * 2 * (WALK + 12), z = (rnd() - 0.5) * 2 * (WALK + 12)
       if (Math.abs(x) < 5 && z > -10 && z < 0) continue
+      if (Math.abs(x) < 4.5 && z < -8) continue // 농장 가는 길
       if (nearTable(x, z, 4.5) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 30)) continue
       trees.push({ x, z })
       w.addTree(x, z, 0.8 + rnd() * 0.6, meadowTree(rnd()))
     }
     for (let k = 0; k < 24; k++) {
       const x = (rnd() - 0.5) * 2 * WALK, z = (rnd() - 0.5) * 2 * WALK
-      if ((Math.abs(x) < 5 && z > -10 && z < 0) || nearTable(x, z, 3) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 4)) continue
+      if ((Math.abs(x) < 5 && z > -10 && z < 0) || (Math.abs(x) < 4 && z < -8) || nearTable(x, z, 3) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 4)) continue
       prop('bush', 1.15, 1024 / 616, x, z)
     }
     // 손님: 자리마다 동물 친구(누르면 그쪽으로 걸어간다)
@@ -196,7 +208,15 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       v.set(x, y, z).project(w.camera)
       return { x: ((v.x + 1) / 2) * el.clientWidth, y: ((1 - v.y) / 2) * el.clientHeight, front: v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2 }
     }
+    // 농장 가는 길: 가게 뒤로 곧게, 가게 옆에 표지판
+    w.addPath(0, -8.4, 0, -FARM_GATE - 6, 3)
+    const sign = w.paperDoll(w.texOf(signCanvas('🌱 농장', '가게 뒤로 쭉')), 2.2, 1)
+    sign.root.position.set(3.4, 0, -5.2)
+    w.obstacles.push({ x: 3.4, z: -5.2, r: 0.4 })
+    let leaving = false
     w.onFrame((dt) => {
+      w.face(sign, 1)
+      if (!leaving && onFarmRef.current && w.me.z < -FARM_GATE) { leaving = true; setFade(true); window.setTimeout(() => onFarmRef.current?.(), 450) }
       t += dt
       const st = state.current
       const frozen = st.paused || st.walking
@@ -277,7 +297,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       }
     })
     return () => { el.removeEventListener('pointerdown', stopFollow); world.current = null; w.dispose() }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 한 번만 만든다(arrive 는 처음 자리만 정한다)
 
   useEffect(() => {
     let alive = true
@@ -288,6 +308,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   return (
     <div className="absolute inset-0">
       <div ref={host} className="absolute inset-0" />
+      {/* 농장 길을 넘어갈 때 하얗게 */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-[30] bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
       {Array.from({ length: 8 }, (_, i) => (
         <div key={i} ref={(n) => { anchors.current[i] = n }} className="pointer-events-none absolute top-0 left-0 z-[5]">
           {/* 말풍선은 2D 보다 작게(손님 머리를 가리지 않게) */}

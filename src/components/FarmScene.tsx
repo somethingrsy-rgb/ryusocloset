@@ -1,4 +1,5 @@
 import { playCoin, playHarvest, playPlant, playWater, startBgm, stopBgm } from '../lib/sound'
+import { clearArrival, isArriving } from '../lib/farmCafeLink'
 import { actKitchen } from '../lib/kitchen'
 import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
@@ -95,8 +96,11 @@ const stageOf = (wateredAt: number | null, progress: number) => (wateredAt === n
 // 3D 농장(시험판): three.js 가 커서 누를 때만 받는다
 const Farm3D = lazy(() => import('./Farm3D').then((m) => ({ default: m.Farm3D })))
 
-export function FarmScene({ outfit, tweaks, onKitchen, onOutfit }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void; onOutfit: (next: Outfit) => void }) {
-  const [farm3d, setFarm3d] = useState(false)
+export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void; onOutfit: (next: Outfit) => void; /** 3D 농장에서 카페 가는 길 끝까지 걸어가면 */ onCafe?: () => void }) {
+  // 3D 카페에서 걸어왔으면 3D 농장을 열고 카페 가는 길 끝에서 시작한다
+  const [arrived] = useState(() => isArriving('fromCafe'))
+  useEffect(() => { if (arrived) clearArrival() }, [arrived])
+  const [farm3d, setFarm3d] = useState(arrived)
   /** 지금 보는 밭: 큰 밭(0~19) 또는 옆 울타리 밭(20~27) */
   const [field, setField] = useState<'main' | 'side'>('main')
   const { lang } = useI18n()
@@ -494,7 +498,7 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit }: { outfit: Out
           cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
       )}
       {/* 3D 농장(시험판): 농장 화면 위를 덮는다(농장 노래는 그대로 이어진다) */}
-      {farm3d && <div className="absolute inset-0 z-50"><Suspense fallback={null}><Farm3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setFarm3d(false)} /></Suspense></div>}
+      {farm3d && <div className="absolute inset-0 z-50"><Suspense fallback={null}><Farm3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setFarm3d(false)} arrive={arrived} onCafe={onCafe} /></Suspense></div>}
     </section>
   )
 }

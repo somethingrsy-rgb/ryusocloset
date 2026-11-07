@@ -56,6 +56,8 @@ export interface World {
   paperDoll: (tex: THREE.Texture, h: number, aspect: number, feet?: number) => Doll
   /** 나무 한 그루. art 를 주면 그 그림(TREE_ART 중 하나), 없으면 카페 나무 */
   addTree: (x: number, z: number, s: number, art?: { img: string; aspect: number; h: number }) => void
+  /** 곧은 흙길(카페 흙길 그림) */
+  addPath: (x0: number, z0: number, x1: number, z1: number, width: number) => void
   /** 그림을 세운 판(집 같은 것): 늘 카메라를 보고, 부딪히는 자리(r)이며 아바타를 가리면 숨긴다 */
   addProp: (img: string, x: number, z: number, h: number, aspect: number, r: number) => Doll
   setAvatar: (canvas: HTMLCanvasElement) => void
@@ -154,6 +156,17 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     obstacles.push({ x, z, r })
     fadeable.push({ x, z, doll: d })
     return d
+  }
+  let dirtTex: THREE.Texture | null = null
+  const addPath = (x0: number, z0: number, x1: number, z1: number, width: number) => {
+    const len = Math.hypot(x1 - x0, z1 - z0)
+    if (!dirtTex) { dirtTex = texOf(assetUrl('cafe/3d/dirt.webp')); dirtTex.wrapS = dirtTex.wrapT = THREE.RepeatWrapping; dirtTex.repeat.set(1, len / width) }
+    const path = new THREE.Mesh(keep(new THREE.PlaneGeometry(width, len)), keep(new THREE.MeshLambertMaterial({ map: dirtTex })))
+    path.rotation.order = 'YXZ'
+    path.rotation.set(-Math.PI / 2, Math.atan2(x1 - x0, z1 - z0), 0)
+    path.position.set((x0 + x1) / 2, 0.012, (z0 + z1) / 2)
+    path.receiveShadow = true
+    scene.add(path)
   }
   const addTree = (x: number, z: number, s: number, art: { img: string; aspect: number; h: number } = TREE_ART[0]) => { addProp(art.img, x, z, art.h * s, art.aspect, 0.6 * s) }
   const paperDoll = (tex: THREE.Texture, h: number, aspect: number, feet = 1): Doll => {
@@ -320,7 +333,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   frame = requestAnimationFrame(tick)
 
   return {
-    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, setAvatar, walkTo, face, screenSide, pushOut, pickables,
+    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addPath, setAvatar, walkTo, face, screenSide, pushOut, pickables,
     onFrame: (fn) => { frameFns.push(fn) },
     dispose: () => {
       cancelAnimationFrame(frame)
@@ -343,5 +356,28 @@ export function emojiCanvas(text: string, size = 128) {
   g.textAlign = 'center'
   g.textBaseline = 'middle'
   g.fillText(text, size / 2, size * 0.55)
+  return c
+}
+
+/** 나무 표지판 그림(기둥 + 판에 글자 두 줄) */
+export function signCanvas(line1: string, line2: string) {
+  const c = document.createElement('canvas')
+  c.width = c.height = 256
+  const g = c.getContext('2d')!
+  g.fillStyle = '#9a6b45'
+  g.fillRect(116, 120, 24, 136)
+  g.fillStyle = '#f3d3a2'
+  g.strokeStyle = '#9a6b45'
+  g.lineWidth = 10
+  g.beginPath()
+  g.roundRect(14, 24, 228, 112, 22)
+  g.fill(); g.stroke()
+  g.fillStyle = '#6b4a2b'
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  g.font = 'bold 44px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'
+  g.fillText(line1, 128, 62)
+  g.font = 'bold 30px sans-serif'
+  g.fillText(line2, 128, 108)
   return c
 }

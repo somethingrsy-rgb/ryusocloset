@@ -12,7 +12,7 @@ import { playHarvest, playPlant, playTap, playWater } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { CoinIcon } from './Icons'
 import { GuestDresser } from './GuestDresser'
-import { ANIMAL_H, AVATAR_H, FEET, createWorld, meadowTree, emojiCanvas, type Doll, type World } from './world3d'
+import { ANIMAL_H, AVATAR_H, FEET, createWorld, meadowTree, emojiCanvas, signCanvas, type Doll, type World } from './world3d'
 
 /**
  * 3D 농장 (시험판): 큰 밭 20칸과 옆 울타리 밭 8칸(농장 탭과 같은 밭·같은 저장)을 3D 들판에 깔고, 아바타가 걸어가서 심고·물 주고·수확한다.
@@ -34,11 +34,24 @@ const plotAt = (i: number) => {
   return { x: ((i % COLS) - (COLS - 1) / 2) * (PW + GAP), z: -(Math.floor(i / COLS) - (ROWS - 1) / 2) * (PD + GAP) - 4 }
 }
 
-export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void }) {
+/** 카페 가는 길: 농장 문(앞쪽, +z)에서 곧게 뻗고, 끝(CAFE_GATE)까지 가면 카페로 넘어간다 */
+const CAFE_GATE = 34
+export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCafe }: {
+  outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void
+  /** 카페에서 걸어왔으면 카페 가는 길 끝에서 시작 */
+  arrive?: boolean
+  /** 카페 가는 길 끝에 닿으면 */
+  onCafe?: () => void
+}) {
   const host = useRef<HTMLDivElement>(null)
   const world = useRef<World | null>(null)
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
   const [ready, setReady] = useState(false)
+  /** 길을 넘어갈 때 하얗게 덮었다 걷는 막 */
+  const [fade, setFade] = useState(arrive)
+  useEffect(() => { if (!fade || !arrive) return; const t = setTimeout(() => setFade(false), 350); return () => clearTimeout(t) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const onCafeRef = useRef(onCafe)
+  onCafeRef.current = onCafe
   const [seed, setSeed] = useState<CropId>('strawberry')
   const seedRef = useRef(seed)
   seedRef.current = seed
@@ -58,7 +71,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       else if (a.type === 'harvest') playHarvest()
     }
     const w = createWorld(el, {
-      bounds: BOUNDS, start: { x: 0, z: 6 }, seed: 11, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
+      bounds: BOUNDS, start: arrive ? { x: 0, z: CAFE_GATE - 3 } : { x: 0, z: 6 }, seed: 11, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 밭을 누르면 밭 앞까지 걸어가서 그 밭이 필요로 하는 일을 한다
       onPick: (o) => {
         const i = plotOf.get(o)
@@ -197,6 +210,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     for (let i = 0; i < 300 && trees < 60; i++) {
       const x = (rnd() - 0.5) * BOUNDS * 1.9, z = (rnd() - 0.5) * BOUNDS * 1.9
       if (x > PEN.x0 - 3 && x < sx1 + 4 && z > fz0 - 4 && z < PEN.z1 + 4) continue
+      if (Math.abs(x) < 4.5 && z > fz1) continue // 카페 가는 길
       if (Math.hypot(x - buildings[1].root.position.x, z - buildings[1].root.position.z) < 5) continue
       if (w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 10)) continue
       w.addTree(x, z, 0.8 + rnd() * 0.7, meadowTree(rnd()))
@@ -218,7 +232,15 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     })
 
     let repaint = 0
+    // 카페 가는 길: 농장 문에서 앞(+z)으로 곧게, 문 옆에 표지판
+    w.addPath(0, fz1 + 0.3, 0, CAFE_GATE + 6, 3)
+    const sign = w.paperDoll(w.texOf(signCanvas('☕ 카페', '이 길로 쭉')), 2.2, 1)
+    sign.root.position.set(2.6, 0, fz1 + 1.6)
+    w.obstacles.push({ x: 2.6, z: fz1 + 1.6, r: 0.4 })
+    let leaving = false
     w.onFrame((dt) => {
+      w.face(sign, 1)
+      if (!leaving && onCafeRef.current && w.me.z > CAFE_GATE) { leaving = true; setFade(true); window.setTimeout(() => onCafeRef.current?.(), 450) }
       repaint += dt
       if (repaint > 0.5) { repaint = 0; paint() } // 자라는 단계는 시간이 지나면 바뀐다
       for (const p of plots) if (p.mark.visible) p.mark.position.y = (p.mark.material === iconMats.lock ? 0.6 : 1.6) + Math.sin(performance.now() / 300 + p.box.position.x) * 0.12
@@ -263,7 +285,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       }
     })
     return () => { unsub(); w.dispose(); world.current = null }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 한 번만 만든다(arrive 는 처음 자리만 정한다)
 
   useEffect(() => {
     let alive = true
@@ -294,6 +316,8 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">밭을 누르면 심고 · 💧 물 주고 · ✨ 수확해요 · 옆으로 끌면 둘러봐요</p>
       {notice && <p role="status" className="absolute top-14 left-1/2 z-20 m-0 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-sm font-bold whitespace-nowrap shadow">{notice}</p>}
       {!ready && <p className="absolute inset-0 z-20 m-0 flex items-center justify-center text-sm font-bold text-[#3d6b2f]">농장을 만드는 중…</p>}
+      {/* 카페 길을 넘어갈 때 하얗게 */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-30 bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
       {dressing && (
         <div role="dialog" aria-label="옷 갈아입기" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) setDressing(false) }}>
           <div className="sheet-in flex max-h-full w-full max-w-md flex-col rounded-3xl bg-[#fff8fb] p-4 shadow-2xl" style={{ height: 'min(560px, 100%)' }}>
