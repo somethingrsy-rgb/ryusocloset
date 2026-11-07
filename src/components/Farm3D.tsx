@@ -480,7 +480,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         {CROPS.map((c) => (
           <button key={c.id} role="radio" aria-checked={seed === c.id} aria-label={`${c.ko} 씨앗`} onClick={() => { playTap(); setSeed(c.id) }}
             className={`flex h-11 shrink-0 items-center gap-0.5 rounded-full px-1.5 text-[12.5px] font-black sm:px-2 sm:text-sm whitespace-nowrap ${seed === c.id ? 'bg-[#ff8fab] text-white' : 'text-[#6b4a2b]'}`}>
-            <img src={assetUrl(`assets/farm/harvest_${c.id}.webp`)} alt="" className="h-5 w-5 object-contain sm:h-6 sm:w-6" />{c.ko}
+            <img src={assetUrl(`assets/farm/harvest_${c.id}.webp`)} alt="" className="h-7 w-7 object-contain sm:h-6 sm:w-6" /><span className="hidden sm:inline">{c.ko}</span>
             {/* 지금 가진 수 */}
             <span className={`rounded-full px-1 text-[10px] font-extrabold ${seed === c.id ? 'bg-white/30' : 'bg-[#fdf2d8]'}`}>×{farm.inventory[c.id]}</span>
           </button>
