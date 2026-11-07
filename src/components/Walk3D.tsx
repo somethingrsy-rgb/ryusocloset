@@ -10,7 +10,7 @@ import { toggleItem } from '../lib/outfit'
 import { playOrder, playServe, playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { GuestDresser } from './GuestDresser'
-import { ANIMAL_H, createWorld, emojiCanvas, type Doll, type World } from './world3d'
+import { ANIMAL_H, HOUSE_ART, TREE_ART, createWorld, emojiCanvas, type Doll, type World } from './world3d'
 
 /**
  * 3D 산책 (시험판): 마을은 3D(길·나무·집·꽃·구름)이고, 아바타와 동물 친구는 지금 그림을 세운 '종이 인형'이다.
@@ -101,30 +101,12 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     })
     const nearRoad = (x: number, z: number, d: number) => samples.some((p) => (p.x - x) ** 2 + (p.z - z) ** 2 < d * d)
 
-    // 집: 길가에 파스텔 벽 + 빨간 지붕, 문이 길 쪽을 본다
-    const wallMats = [0xfff1d6, 0xffe0ec, 0xe3f1ff, 0xfdf6c8].map(lambert)
-    const roofMat = lambert(0xe2574c), doorMat = lambert(0x9a6b45), winMat = lambert(0x9fd8ff)
+    // 집: 길가에 여행 집 그림(물약 가게·보라 궁전·분홍 성·과자 집)
     ;[0.15, 0.38, 0.62, 0.85].forEach((u, k) => {
       const p = curve.getPointAt(u), t = curve.getTangentAt(u)
       const n = new THREE.Vector3(-t.z, 0, t.x).normalize().multiplyScalar((k % 2 ? 1 : -1) * 6.5)
-      const house = new THREE.Group()
-      const wall = new THREE.Mesh(keep(new THREE.BoxGeometry(3.6, 2.6, 3.2)), wallMats[k])
-      wall.position.y = 1.3
-      const roof = new THREE.Mesh(keep(new THREE.ConeGeometry(2.9, 1.8, 4)), roofMat)
-      roof.position.y = 3.5
-      roof.rotation.y = Math.PI / 4
-      const door = new THREE.Mesh(keep(new THREE.BoxGeometry(0.9, 1.5, 0.08)), doorMat)
-      door.position.set(0, 0.75, 1.62)
-      const win = new THREE.Mesh(keep(new THREE.BoxGeometry(0.7, 0.7, 0.08)), winMat)
-      win.position.set(1.1, 1.7, 1.62)
-      const win2 = win.clone()
-      win2.position.x = -1.1
-      for (const m of [wall, roof]) { m.castShadow = true; m.receiveShadow = true }
-      house.add(wall, roof, door, win, win2)
-      house.position.copy(p).add(n)
-      house.lookAt(p)
-      scene.add(house)
-      w.obstacles.push({ x: house.position.x, z: house.position.z, r: 2.5 })
+      const art = HOUSE_ART[k % HOUSE_ART.length]
+      w.addProp(art.img, p.x + n.x, p.z + n.z, 6, art.aspect, 2.5)
     })
 
     // 나무: 절반은 길가에, 나머지는 들판에
@@ -133,7 +115,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       const s0 = samples[Math.floor(rnd() * samples.length)], a = rnd() * Math.PI * 2, far = 6 + rnd() * 8
       const [x, z] = i % 2 ? [s0.x + Math.cos(a) * far, s0.z + Math.sin(a) * far] : [(rnd() - 0.5) * WORLD * 1.9, (rnd() - 0.5) * WORLD * 1.9]
       if (nearRoad(x, z, 4.5) || w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 9)) continue
-      w.addTree(x, z, 0.8 + rnd() * 0.7)
+      w.addTree(x, z, 0.8 + rnd() * 0.5, TREE_ART[Math.floor(rnd() * TREE_ART.length)])
       trees++
     }
 

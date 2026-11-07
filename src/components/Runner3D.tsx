@@ -8,6 +8,7 @@ import { guestAvatar } from '../lib/party'
 import { PLAYER_H, friendHop, visible, type RunState } from '../lib/runner'
 import type { Outfit, Tweaks } from '../lib/types'
 import { createStage, emojiCanvas, type Doll } from './stage3d'
+import { HOUSE_ART, TREE_ART } from './world3d'
 
 /**
  * 달리기 3D 무대(시험판): 달리기·점프·장애물·별·선물 상자·하트는 원래 달리기 그대로(lib/runner), 그림만 3D 로 그린다.
@@ -55,7 +56,9 @@ export function Runner3D({ live, outfit, tweaks, friends }: { live: MutableRefOb
     const flowerGeo = keep(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 8))
     const flowerMats = [0xff8fb1, 0xffd54a, 0xffffff, 0xc7a6ff].map(lambert)
     const chunks = new Map<number, THREE.Group>()
-    const treeTex = s.texOf(assetUrl('cafe/3d/tree.webp'))
+    // 길가 그림(여러 가지 나무·집)
+    const artTex = new Map<string, THREE.Texture>()
+    const artOf = (img: string) => { if (!artTex.has(img)) artTex.set(img, s.texOf(assetUrl(img))); return artTex.get(img)! }
     const makeChunk = (c: number) => {
       const g = new THREE.Group()
       const z0 = -c * CHUNK
@@ -77,10 +80,19 @@ export function Runner3D({ live, outfit, tweaks, friends }: { live: MutableRefOb
       for (let k = 0; k < 7; k++) {
         // 카메라 쪽(+x)에는 나무를 두지 않는다(아바타를 가린다)
         // 카페와 같은 3D 나무 그림(늘 카메라를 본다)
-        const t = s.paperDoll(treeTex, 4.2 * (0.8 + r() * 0.6), 951 / 1024)
+        const art = TREE_ART[Math.floor(r() * TREE_ART.length)]
+        const t = s.paperDoll(artOf(art.img), art.h * (0.8 + r() * 0.5), art.aspect)
         t.root.position.set(-(4 + r() * 10), 0, z0 - r() * CHUNK)
         g.add(t.root) // 나무도 이 구간 묶음에 넣어 같이 지운다
         g.userData.trees = [...(g.userData.trees ?? []), t]
+      }
+      // 구간 하나 걸러 길가 저 멀리 집 한 채
+      if (c % 2 === 0) {
+        const art = HOUSE_ART[((c / 2) % HOUSE_ART.length + HOUSE_ART.length) % HOUSE_ART.length]
+        const hs = s.paperDoll(artOf(art.img), 6, art.aspect)
+        hs.root.position.set(-(9 + r() * 4), 0, z0 - CHUNK / 2)
+        g.add(hs.root)
+        g.userData.trees = [...(g.userData.trees ?? []), hs]
       }
       chunks.set(c, g)
     }

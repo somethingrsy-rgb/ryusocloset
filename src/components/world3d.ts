@@ -10,6 +10,23 @@ export const AVATAR_H = 2.2 // 아바타 키(장면 단위)
 export const FEET = 1504 / 1536 // 아바타 그림에서 발바닥 높이 비율
 export const ANIMAL_H = AVATAR_H * (2 / 3) // 동물 친구는 아바타 키의 2/3
 const SPEED = 4.2
+/** 여행 3D 나무 그림(이름 → 그림·가로세로 비·키). 산책·달리기가 섞어 심는다 */
+export const TREE_ART = [
+  { img: 'cafe/3d/tree.webp', aspect: 951 / 1024, h: 4.2 },
+  { img: 'travel/3d/tree_flower.webp', aspect: 1079 / 1061, h: 4.3 },
+  { img: 'travel/3d/tree_cherry.webp', aspect: 1008 / 1072, h: 4.2 },
+  { img: 'travel/3d/tree_maple.webp', aspect: 1101 / 1068, h: 4.4 },
+  { img: 'travel/3d/tree_cypress.webp', aspect: 339 / 1096, h: 4.8 },
+  { img: 'travel/3d/tree_snow.webp', aspect: 764 / 1142, h: 4.4 },
+  { img: 'travel/3d/tree_xmas.webp', aspect: 796 / 1183, h: 4.4 },
+] as const
+/** 여행 3D 집 그림 */
+export const HOUSE_ART = [
+  { img: 'travel/3d/house_potion.webp', aspect: 1021 / 1206 },
+  { img: 'travel/3d/house_palace.webp', aspect: 1026 / 1166 },
+  { img: 'travel/3d/house_castle.webp', aspect: 1043 / 1249 },
+  { img: 'travel/3d/house_ginger.webp', aspect: 1038 / 1146 },
+] as const
 const TAP_MOVE = 8
 
 /** 같은 값을 늘 같게 내는 난수(새로 열어도 마을 모양이 같게) */
@@ -32,7 +49,10 @@ export interface World {
   lambert: (color: number) => THREE.MeshLambertMaterial
   texOf: (src: HTMLCanvasElement | string) => THREE.Texture
   paperDoll: (tex: THREE.Texture, h: number, aspect: number, feet?: number) => Doll
-  addTree: (x: number, z: number, s: number) => void
+  /** 나무 한 그루. art 를 주면 그 그림(TREE_ART 중 하나), 없으면 카페 나무 */
+  addTree: (x: number, z: number, s: number, art?: { img: string; aspect: number; h: number }) => void
+  /** 그림을 세운 판(집 같은 것): 늘 카메라를 보고, 부딪히는 자리(r)이며 아바타를 가리면 숨긴다 */
+  addProp: (img: string, x: number, z: number, h: number, aspect: number, r: number) => Doll
   setAvatar: (canvas: HTMLCanvasElement) => void
   /** 그곳까지 걸어간다. 닿으면(dist 안쪽) arrive 를 부른다 */
   walkTo: (x: number, z: number, arrive?: () => void, dist?: number) => void
@@ -121,14 +141,16 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   // 나무: 카페와 같은 3D 나무 그림을 세운 판. 카메라와 아바타 사이를 가리면 숨긴다
   const obstacles: World['obstacles'] = []
   const fadeable: { x: number; z: number; doll: Doll }[] = []
-  let treeTex: THREE.Texture | null = null
-  const addTree = (x: number, z: number, s: number) => {
-    treeTex ??= texOf(assetUrl('cafe/3d/tree.webp'))
-    const d = paperDoll(treeTex, 4.2 * s, 951 / 1024)
+  const propTex = new Map<string, THREE.Texture>()
+  const addProp = (img: string, x: number, z: number, h: number, aspect: number, r: number) => {
+    if (!propTex.has(img)) propTex.set(img, texOf(assetUrl(img)))
+    const d = paperDoll(propTex.get(img)!, h, aspect)
     d.root.position.set(x, 0, z)
-    obstacles.push({ x, z, r: 0.6 * s })
+    obstacles.push({ x, z, r })
     fadeable.push({ x, z, doll: d })
+    return d
   }
+  const addTree = (x: number, z: number, s: number, art: { img: string; aspect: number; h: number } = TREE_ART[0]) => { addProp(art.img, x, z, art.h * s, art.aspect, 0.6 * s) }
   const paperDoll = (tex: THREE.Texture, h: number, aspect: number, feet = 1): Doll => {
     const g = keep(new THREE.PlaneGeometry(h * aspect, h))
     g.translate(0, h / 2 - h * (1 - feet), 0)
@@ -293,7 +315,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   frame = requestAnimationFrame(tick)
 
   return {
-    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, setAvatar, walkTo, face, screenSide, pushOut, pickables,
+    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, setAvatar, walkTo, face, screenSide, pushOut, pickables,
     onFrame: (fn) => { frameFns.push(fn) },
     dispose: () => {
       cancelAnimationFrame(frame)
