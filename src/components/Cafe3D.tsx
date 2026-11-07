@@ -5,6 +5,7 @@ import { renderFigure } from '../lib/exportPng'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { stepCafe } from '../lib/cafeWalk'
+import { pictureBox } from './picbox3d'
 import { ANIMAL_H, createWorld, meadowTree, signCanvas, type Doll, type World } from './world3d'
 
 /** 기존 주문 저장을 공유하는 자유 산책 카페. 3D 농장과 같은 바탕(world3d): 같은 카메라 각도·따라가기·걷기·끌어서 둘러보기 */
@@ -154,27 +155,17 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       props.push(d)
       return d
     }
-    // 딸기 가게: 그림은 늘 앞(+z)을 보게 고정하고(돌지 않게), 뒤에 입체 가게 몸통을 붙여 옆·뒤에서 봐도 건물로 보이게
-    const shop = prop('counter', 5.6, 997 / 1024, 0, -6.2)
-    props.pop()
-    ;(shop.doll.material as THREE.MeshBasicMaterial).side = THREE.FrontSide
-    const shopMat = (c: number) => keep(new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: 0.25 }))
-    const body = new THREE.Mesh(keep(new THREE.BoxGeometry(4.3, 2.4, 2.6)), shopMat(0xfff1e2))
-    body.position.set(0, 1.2, -6.2 - 1.4)
-    const roof = new THREE.Mesh(keep(new THREE.CylinderGeometry(1, 1, 4.5, 3, 1)), shopMat(0xf4a3b8))
-    roof.rotation.z = Math.PI / 2
-    roof.rotation.x = Math.PI / 6
-    roof.scale.set(1, 1, 1.6)
-    roof.position.set(0, 2.4 + 0.5, -6.2 - 1.4) // 지붕 꼭대기가 그림의 차양보다 낮게(앞에서 보면 안 보인다)
-    const base = new THREE.Mesh(keep(new THREE.BoxGeometry(4.5, 0.3, 2.8)), shopMat(0xf7c9a6))
-    base.position.set(0, 0.15, -6.2 - 1.4)
-    for (const m of [body, roof, base]) { m.castShadow = true; m.receiveShadow = true; scene.add(m) }
-    // 가게 뒷면 그림(문이 있는 뒤쪽): 몸통 뒤에 뒤(-z)를 보게 붙인다
-    const back = new THREE.Mesh(keep(new THREE.PlaneGeometry(5.6 * (1155 / 1186), 5.6).translate(0, 2.8, 0)), keep(new THREE.MeshBasicMaterial({ map: w.texOf(assetUrl('cafe/3d/counter_back.webp')), transparent: true, alphaTest: 0.35, side: THREE.FrontSide })))
-    back.position.set(0, 0, -6.2 - 2.8)
-    back.rotation.y = Math.PI
-    scene.add(back)
-    const shopParts: THREE.Object3D[] = [shop.root, body, roof, base, back]
+    // 딸기 가게: 받은 그림 네 장(앞·왼쪽·오른쪽·뒤)으로 만든 입체 건물(돌지 않는다)
+    const H = 5.6, side = (img: string, aspect: number, x: number, yaw: number) => ({ img, h: H, aspect, x, z: 0.35 - (H * aspect) / 2, yaw })
+    const shop = pictureBox(w, [
+      { img: 'cafe/3d/counter.webp', h: H, aspect: 997 / 1024, x: 0, z: 0, yaw: 0 },
+      side('cafe/3d/counter_left.webp', 732 / 1189, -2.05, -Math.PI / 2),
+      side('cafe/3d/counter_right.webp', 692 / 1183, 2.05, Math.PI / 2),
+      { img: 'cafe/3d/counter_back.webp', h: H, aspect: 1155 / 1186, x: 0, z: -2.65, yaw: Math.PI },
+    ], { w: 3.9, h: 3.4, d: 2.5, z: -1.35, color: 0xfff1e2 })
+    shop.position.set(0, 0, -6.2)
+    scene.add(shop)
+    const shopParts: THREE.Object3D[] = [shop]
     w.obstacles.push({ x: 0, z: -6.2, r: 2.4 }, { x: -1.6, z: -7.8, r: 1.4 }, { x: 1.6, z: -7.8, r: 1.4 })
     // 파라솔 테이블(입체): 잔디밭 여기저기 띄엄띄엄
     const tableKit = makeTableKit(w)
