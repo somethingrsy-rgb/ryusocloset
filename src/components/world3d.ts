@@ -247,6 +247,16 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     } else if (target) {
       const dx = target.x - me.x, dz = target.z - me.z, d = Math.hypot(dx, dz)
       if (d < target.dist) { const done = target.arrive; target = null; marker.visible = false; done?.() } else { mx = dx / d; mz = dz / d }
+      // 가는 길에 나무·테이블이 막고 있으면 옆으로 돌아간다(같은 쪽으로 돌아야 좌우로 흔들리며 막히지 않는다)
+      if (mx || mz) for (const o of obstacles) {
+        const ox = o.x - me.x, oz = o.z - me.z, ahead = ox * mx + oz * mz, side = ox * mz - oz * mx
+        if (ahead > 0 && ahead < Math.min(d, o.r + 1.2) && Math.abs(side) < o.r + 0.5) {
+          const od = Math.hypot(ox, oz) || 1, out = Math.max(0, (o.r + 0.75 - od) * 2)
+          const nx = oz / od - (ox / od) * out, nz = -ox / od - (oz / od) * out, nl = Math.hypot(nx, nz) || 1
+          mx = nx / nl; mz = nz / nl
+          break
+        }
+      }
     }
     me.moving = !!(mx || mz)
     if (me.moving) {
