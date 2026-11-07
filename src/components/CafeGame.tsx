@@ -34,6 +34,8 @@ const SEATS = [
   { animal: '🐿️', name: '다람', portrait: [68, 71.2], wide: [63.7, 76] },
   { animal: '🐼', name: '판다', portrait: [85, 71.2], wide: [73.9, 76] },
 ] as const
+/** 서빙받은 손님이 음식을 들고 있는 시간 */
+const EAT_MS = 5000
 const BONUS = 15
 const GOAL = 5
 const KEY = 'ryuso.cafe.v1'
@@ -109,6 +111,8 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
   const [sound, setSound] = useState(true) // 이 화면에서만 끄고 켤 수 있는 소리(설정의 효과음이 꺼져 있으면 어차피 안 남)
   const [toast, setToast] = useState('')
   const [floats, setFloats] = useState<{ id: number; seat: number; amount: number }[]>([])
+  /** 서빙받은 손님이 5초 동안 들고 있는 음식(자리 → 메뉴) */
+  const [eating, setEating] = useState<Record<number, string>>({})
   const toastTimer = useRef<number>(0)
   const secRef = useRef<HTMLElement>(null)
   const [pos, setPos] = useState<{ x: number; y: number; wide: boolean } | null>(() => kept?.pos ?? null)
@@ -187,6 +191,9 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
         sfx(playServe)
         setHold(null)
         setGuests((gs) => gs.map((x, k) => (k === i ? newGuest(i) : x)))
+        // 받은 음식을 5초 동안 들고 있다가 다 먹는다(그동안은 다음 주문 말풍선을 숨긴다)
+        setEating((e) => ({ ...e, [i]: m.id }))
+        later(() => setEating((e) => { const n = { ...e }; if (n[i] === m.id) delete n[i]; return n }), EAT_MS)
         const id = ++floatId.current
         setFloats((f) => [...f, { id, seat: i, amount: m.price }])
         later(() => setFloats((f) => f.filter((x) => x.id !== id)), 1300)
@@ -221,7 +228,7 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
 
   return (
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-hidden rounded-3xl bg-[#b9c97a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
-      {view3d ? <Suspense fallback={null}><Cafe3D outfit={outfit} tweaks={tweaks} walking={walking} hold={hold} paused={!!phone} encounters={guests.map((g, i) => g.stage === 'new' ? `new:${g.wish}` : isReady(i) ? `ready:${g.wish}` : '')} onMeet={(i) => tap(i, true)} bubble={bubbleFor} float={floatFor} /></Suspense> : <>
+      {view3d ? <Suspense fallback={null}><Cafe3D outfit={outfit} tweaks={tweaks} eating={eating} walking={walking} hold={hold} paused={!!phone} encounters={guests.map((g, i) => g.stage === 'new' ? `new:${g.wish}` : isReady(i) ? `ready:${g.wish}` : '')} onMeet={(i) => tap(i, true)} bubble={bubbleFor} float={floatFor} /></Suspense> : <>
       {/* 그림 아래 남는 자리(폰 세로): 그림 맨 아래 덤불·풀밭 부분을 위아래로 뒤집고 늘려 이어 붙여서 정원이 끝까지 이어져 보이게 한다 */}
       {!wide && !pad && (
         <div aria-hidden className="absolute left-1/2 -translate-x-1/2 overflow-hidden" style={{ width: 'min(100cqw, calc(100cqh / 1.7787))', top: 'calc(min(100cqw, 100cqh / 1.7787) * 1.7787 - 1px)', bottom: 0 }}>
@@ -241,7 +248,10 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
               {/* 동물을 누르면 그 동물에게 전화를 건다(주문은 말풍선으로) */}
               <button aria-label={`${x.name}에게 전화하기`} onClick={() => { unlockSpeech(); setPhone({ dial: i }) }} className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 rounded-3xl border-0 bg-transparent p-0" style={{ left: `${cx}%`, top: `${cy + 2}%`, width: wide ? '9%' : '14%', height: wide ? '16%' : '11%' }}>
               </button>
-              <div className="absolute z-[5] -translate-x-1/2 -translate-y-full" style={{ left: `${cx}%`, top: `${cy - 3.5}%` }}>{bubbleFor(i)}</div>
+              {/* 서빙받은 손님은 5초 동안 음식을 들고 있고, 그동안은 다음 주문 말풍선을 숨긴다 */}
+              {eating[i]
+                ? <span aria-hidden className="pointer-events-none absolute z-[5] block -translate-x-1/2" style={{ left: `${cx}%`, top: `${cy + 1}%`, width: wide ? '4.5%' : '9%' }}><Ico id={eating[i]} className="h-auto w-full animate-bounce drop-shadow" /></span>
+                : <div className="absolute z-[5] -translate-x-1/2 -translate-y-full" style={{ left: `${cx}%`, top: `${cy - 3.5}%` }}>{bubbleFor(i)}</div>}
             </div>
           )
         })}
