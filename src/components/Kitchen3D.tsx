@@ -64,21 +64,20 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
       fov: (w, h) => (w < h ? 66 : 46),
     })
     stage.current = s
-    const { scene, keep, lambert } = s
+    const { scene, keep } = s
     {
       const { w, h } = s.size()
       const hf = 2 * Math.atan(Math.tan((s.camera.fov * Math.PI) / 360) * (w / h))
       s.view.dist = Math.max(9, 6.4 / Math.tan(hf / 2))
     }
     // 방: 나무 바닥 + 분홍 타일 벽
-    const floor = new THREE.Mesh(keep(new THREE.PlaneGeometry(16, 10)), lambert(0xe2b98f))
+    // 받은 무늬 그림: 바닥 1장 = 4×4, 벽 1장 = 4×4 (타일 8칸이라 한 칸이 0.5)
+    const wood = s.texOf(assetUrl('kitchen/3d/wood.webp')); wood.wrapS = wood.wrapT = THREE.RepeatWrapping; wood.repeat.set(4, 2.5)
+    const floor = new THREE.Mesh(keep(new THREE.PlaneGeometry(16, 10)), keep(new THREE.MeshLambertMaterial({ map: wood })))
     floor.rotation.x = -Math.PI / 2
     floor.position.z = 1
     floor.receiveShadow = true
-    const tc = document.createElement('canvas'); tc.width = tc.height = 64
-    const tg = tc.getContext('2d')!
-    tg.fillStyle = '#ffdfe7'; tg.fillRect(0, 0, 64, 64); tg.strokeStyle = '#ffffff'; tg.lineWidth = 4; tg.strokeRect(0, 0, 64, 64)
-    const tile = s.texOf(tc); tile.wrapS = tile.wrapT = THREE.RepeatWrapping; tile.repeat.set(16, 7)
+    const tile = s.texOf(assetUrl('kitchen/3d/tile.webp')); tile.wrapS = tile.wrapT = THREE.RepeatWrapping; tile.repeat.set(4, 1.75)
     const wall = new THREE.Mesh(keep(new THREE.PlaneGeometry(16, 7)), keep(new THREE.MeshLambertMaterial({ map: tile })))
     wall.position.set(0, 3.5, -3)
     wall.receiveShadow = true
