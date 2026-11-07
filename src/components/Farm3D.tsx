@@ -12,7 +12,7 @@ import { playHarvest, playPlant, playTap, playWater } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { CoinIcon } from './Icons'
 import { GuestDresser } from './GuestDresser'
-import { ANIMAL_H, AVATAR_H, FEET, createWorld, emojiCanvas, type Doll, type World } from './world3d'
+import { ANIMAL_H, AVATAR_H, FEET, createWorld, meadowTree, emojiCanvas, type Doll, type World } from './world3d'
 
 /**
  * 3D 농장 (시험판): 큰 밭 20칸과 옆 울타리 밭 8칸(농장 탭과 같은 밭·같은 저장)을 3D 들판에 깔고, 아바타가 걸어가서 심고·물 주고·수확한다.
@@ -199,7 +199,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       if (x > PEN.x0 - 3 && x < sx1 + 4 && z > fz0 - 4 && z < PEN.z1 + 4) continue
       if (Math.hypot(x - buildings[1].root.position.x, z - buildings[1].root.position.z) < 5) continue
       if (w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 10)) continue
-      w.addTree(x, z, 0.8 + rnd() * 0.7)
+      w.addTree(x, z, 0.8 + rnd() * 0.7, meadowTree(rnd()))
       trees++
     }
 

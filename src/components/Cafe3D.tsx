@@ -5,7 +5,7 @@ import { renderFigure } from '../lib/exportPng'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { stepCafe } from '../lib/cafeWalk'
-import { ANIMAL_H, createWorld, type Doll, type World } from './world3d'
+import { ANIMAL_H, createWorld, meadowTree, type Doll, type World } from './world3d'
 
 /** 기존 주문 저장을 공유하는 자유 산책 카페. 3D 농장과 같은 바탕(world3d): 같은 카메라 각도·따라가기·걷기·끌어서 둘러보기 */
 /** 걸을 수 있는 땅(가운데에서 ±WALK) */
@@ -162,7 +162,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       if (Math.abs(x) < 5 && z > -10 && z < 0) continue
       if (nearTable(x, z, 4.5) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 30)) continue
       trees.push({ x, z })
-      w.addTree(x, z, 0.8 + rnd() * 0.6)
+      w.addTree(x, z, 0.8 + rnd() * 0.6, meadowTree(rnd()))
     }
     for (let k = 0; k < 24; k++) {
       const x = (rnd() - 0.5) * 2 * WALK, z = (rnd() - 0.5) * 2 * WALK
