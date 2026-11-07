@@ -58,6 +58,8 @@ export interface World {
   addTree: (x: number, z: number, s: number, art?: { img: string; aspect: number; h: number }) => void
   /** 곧은 흙길(카페 흙길 그림) */
   addPath: (x0: number, z0: number, x1: number, z1: number, width: number) => void
+  /** 굽이굽이 흙길: 지나는 점들(x, z)을 부드럽게 이은 길(카페 흙길 그림) */
+  addCurvePath: (points: [number, number][], width: number) => void
   /** 그림을 세운 판(집 같은 것): 늘 카메라를 보고, 부딪히는 자리(r)이며 아바타를 가리면 숨긴다 */
   addProp: (img: string, x: number, z: number, h: number, aspect: number, r: number) => Doll
   setAvatar: (canvas: HTMLCanvasElement) => void
@@ -165,6 +167,29 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     path.rotation.order = 'YXZ'
     path.rotation.set(-Math.PI / 2, Math.atan2(x1 - x0, z1 - z0), 0)
     path.position.set((x0 + x1) / 2, 0.012, (z0 + z1) / 2)
+    path.receiveShadow = true
+    scene.add(path)
+  }
+  let curveTex: THREE.Texture | null = null
+  const addCurvePath = (points: [number, number][], width: number) => {
+    const curve = new THREE.CatmullRomCurve3(points.map(([x, z]) => new THREE.Vector3(x, 0, z)))
+    const n = Math.max(8, Math.round(curve.getLength() * 2)), pts = curve.getSpacedPoints(n)
+    const pos: number[] = [], uv: number[] = [], idx: number[] = []
+    let along = 0
+    pts.forEach((p, i) => {
+      const t = curve.getTangentAt(i / n), nx = -t.z, nz = t.x, l = Math.hypot(nx, nz) || 1
+      pos.push(p.x + (nx / l) * width / 2, 0.012, p.z + (nz / l) * width / 2, p.x - (nx / l) * width / 2, 0.012, p.z - (nz / l) * width / 2)
+      if (i) along += p.distanceTo(pts[i - 1])
+      uv.push(0, along / width, 1, along / width)
+      if (i) { const a = (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2) }
+    })
+    const geo = keep(new THREE.BufferGeometry())
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+    geo.setIndex(idx)
+    geo.computeVertexNormals()
+    if (!curveTex) { curveTex = texOf(assetUrl('cafe/3d/dirt.webp')); curveTex.wrapS = curveTex.wrapT = THREE.RepeatWrapping }
+    const path = new THREE.Mesh(geo, keep(new THREE.MeshLambertMaterial({ map: curveTex, side: THREE.DoubleSide })))
     path.receiveShadow = true
     scene.add(path)
   }
@@ -333,7 +358,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   frame = requestAnimationFrame(tick)
 
   return {
-    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addPath, setAvatar, walkTo, face, screenSide, pushOut, pickables,
+    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables,
     onFrame: (fn) => { frameFns.push(fn) },
     dispose: () => {
       cancelAnimationFrame(frame)

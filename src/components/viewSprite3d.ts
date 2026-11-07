@@ -29,7 +29,8 @@ export function viewSprite(k: { keep: <T extends { dispose: () => void }>(x: T) 
   const sector = Math.PI / 4
   /** 매 프레임: 카메라 쪽으로 판을 돌리고 방향에 맞는 그림으로(경계에서 왔다 갔다 하지 않게 여유를 둔다) */
   const update = (camera: THREE.Camera) => {
-    const a = Math.atan2(camera.position.x - root.position.x, camera.position.z - root.position.z)
+    // 물건이 돌려 세워져 있으면(root.rotation.y) 그만큼 빼서 물건 기준 방향으로
+    const a = Math.atan2(camera.position.x - root.position.x, camera.position.z - root.position.z) - root.rotation.y
     plane.rotation.y = a
     plane.position.set(Math.sin(a) * front, 0, Math.cos(a) * front)
     const off = (i: number) => Math.abs(Math.atan2(Math.sin(a - i * sector), Math.cos(a - i * sector)))
