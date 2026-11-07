@@ -284,10 +284,12 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       [sv('v4'), 418 / 440, false], [sv('v5'), 685 / 649, false], [sv('v6'), 295 / 448, false], [sv('v1'), 709 / 662, true],
     ], 3.3, [0.01, 0.01], 1.25) // 그림자는 없앤다(그림 판 아래로 비치면 떠 보였다), 판은 노점 앞 끝으로
     const sg = stallView.root
-    sg.position.set(7, 0, fz1 + 5)
+    // 자리: 소·닭 우리 바로 앞(+z) 옆
+    const STALL = { x: (PEN.x0 + PEN.x1) / 2 + 1.5, z: PEN.z1 + 3.4 }
+    sg.position.set(STALL.x, 0, STALL.z)
     scene.add(sg)
     w.pickables.push(sg)
-    w.obstacles.push({ x: 7, z: fz1 + 5, r: 1.7 })
+    w.obstacles.push({ x: STALL.x, z: STALL.z, r: 1.7 })
     stallGroup = sg
     const orderTex = new Map<string, THREE.Texture>()
     const orderSp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true, depthWrite: false })))
@@ -300,7 +302,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       if (x > PEN.x0 - 3 && x < sx1 + 4 && z > fz0 - 4 && z < PEN.z1 + 4) continue
       if (Math.abs(x - cafeRoadX(z)) < 4.5 && z > fz1) continue // 카페 가는 길
       if (Math.hypot(x, z - CAFE_GATE - 3.6) < 5.5) continue // 길 끝 카페 가게
-      if (Math.hypot(x - 7, z - fz1 - 5) < 4) continue // 노점
+      if (Math.hypot(x - STALL.x, z - STALL.z) < 4.5) continue // 노점
       if (Math.hypot(x - buildings[1].root.position.x, z - buildings[1].root.position.z) < 5) continue
       if (w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 10)) continue
       w.addTree(x, z, 0.8 + rnd() * 0.7, meadowTree(rnd()))
@@ -356,7 +358,8 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     // 카페 가는 길: 농장 문에서 앞(+z)으로 곧게, 문 옆에 표지판
     // 굽이굽이 흙길(산책길처럼), 끝에 카페 가게(여덟 방향 그림, 앞이 농장 쪽을 본다)
     const roadPts: [number, number][] = []
-    for (let z = fz1 + 0.3; z <= CAFE_GATE + 1; z += 1.5) roadPts.push([cafeRoadX(z), z])
+    // 카페 가게 밑까지(길이 가게와 이어지게)
+    for (let z = fz1 + 0.3; z <= CAFE_GATE + 3.6; z += 1.5) roadPts.push([cafeRoadX(z), z])
     w.addCurvePath(roadPts, 3)
     const cv = (n: string) => `cafe/3d/shop/${n}.webp`
     const cafeShop = viewSprite(w, [
@@ -430,7 +433,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       if (orderSp.material.map !== orderTex.get(oc)) { orderSp.material.map = orderTex.get(oc)!; orderSp.material.needsUpdate = true }
       stallView.update(w.camera)
       cafeShop.update(w.camera)
-      orderSp.position.set(7, 3.7 + Math.sin(nowMs / 400) * 0.1, fz1 + 5)
+      orderSp.position.set(STALL.x, 3.7 + Math.sin(nowMs / 400) * 0.1, STALL.z)
       for (const p of plots) for (const c of p.crops) if (c.root.visible) w.face(c, 1)
       for (const d of buildings) w.face(d, 1)
       // 우리 동물: 우리 안 아무 데나 천천히 걸어갔다가 쉬었다가
