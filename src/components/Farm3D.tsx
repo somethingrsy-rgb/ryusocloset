@@ -52,7 +52,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       else if (a.type === 'harvest') playHarvest()
     }
     const w = createWorld(el, {
-      bounds: BOUNDS, start: { x: 0, z: 6 }, seed: 11, onReady: () => setReady(true),
+      bounds: BOUNDS, start: { x: 0, z: 6 }, seed: 11, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 밭을 누르면 밭 앞까지 걸어가서 그 밭이 필요로 하는 일을 한다
       onPick: (o) => {
         const i = plotOf.get(o)
@@ -181,18 +181,14 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     barn.rotation.y = Math.PI / 2
     scene.add(barn)
     w.obstacles.push({ x: barn.position.x, z: barn.position.z, r: 3 })
-    // 나무: 카페와 같은 3D 나무 그림(public/cafe/3d/tree.webp)을 세운 판. 카메라와 아바타 사이를 가리면 숨긴다
-    const treeTex = w.texOf(assetUrl('cafe/3d/tree.webp'))
-    const trees: Doll[] = []
-    for (let i = 0; i < 300 && trees.length < 60; i++) {
+    // 나무: 카페와 같은 3D 나무 그림(world3d.addTree)
+    let trees = 0
+    for (let i = 0; i < 300 && trees < 60; i++) {
       const x = (rnd() - 0.5) * BOUNDS * 1.9, z = (rnd() - 0.5) * BOUNDS * 1.9
       if (Math.abs(x) < fx + 4 && z > fz0 - 4 && z < fz1 + 6) continue
       if (w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 10)) continue
-      const sc = 0.8 + rnd() * 0.7
-      const d = w.paperDoll(treeTex, 4.2 * sc, 951 / 1024)
-      d.root.position.set(x, 0, z)
-      trees.push(d)
-      w.obstacles.push({ x, z, r: 0.6 * sc })
+      w.addTree(x, z, 0.8 + rnd() * 0.7)
+      trees++
     }
 
     // 같이 농사짓는 친구(농장 탭에서 고른 친구): 밭 둘레를 거닌다. 아바타 친구는 고른 옷을 입은 아바타
@@ -211,13 +207,6 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
 
     let repaint = 0
     w.onFrame((dt) => {
-      // 나무 그림은 늘 카메라를 보고, 카메라와 아바타 사이를 가리는 나무는 잠깐 숨긴다
-      const cam = w.camera.position, sx = w.me.x - cam.x, sz = w.me.z - cam.z, len2 = sx * sx + sz * sz || 1
-      for (const d of trees) {
-        const p = d.root.position, u = Math.max(0, Math.min(1, ((p.x - cam.x) * sx + (p.z - cam.z) * sz) / len2))
-        d.root.visible = !(Math.hypot(cam.x + sx * u - p.x, cam.z + sz * u - p.z) < 2 && u < 0.97)
-        w.face(d, 1)
-      }
       repaint += dt
       if (repaint > 0.5) { repaint = 0; paint() } // 자라는 단계는 시간이 지나면 바뀐다
       for (const p of plots) if (p.mark.visible) p.mark.position.y = (p.mark.material === iconMats.lock ? 0.6 : 1.6) + Math.sin(performance.now() / 300 + p.box.position.x) * 0.12

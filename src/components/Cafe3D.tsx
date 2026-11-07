@@ -148,14 +148,6 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     lawn.rotation.x = -Math.PI / 2
     lawn.receiveShadow = true
     scene.add(lawn)
-    const dirtTex = s.texOf(assetUrl('cafe/3d/dirt.webp'))
-    dirtTex.wrapS = dirtTex.wrapT = THREE.RepeatWrapping
-    dirtTex.repeat.set(1, 5)
-    const path = new THREE.Mesh(keep(new THREE.PlaneGeometry(2.4, 13)), keep(new THREE.MeshLambertMaterial({ map: dirtTex })))
-    path.rotation.x = -Math.PI / 2
-    path.position.set(0, 0.01, 0.2)
-    path.receiveShadow = true
-    scene.add(path)
     const props: Doll[] = []
     const prop = (name: string, h: number, aspect: number, x: number, z: number) => {
       const d = s.paperDoll(s.texOf(assetUrl(`cafe/3d/${name}.webp`)), h, aspect)

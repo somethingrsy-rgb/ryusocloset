@@ -7,7 +7,7 @@ import { assetUrl } from '../lib/items'
 import { guestAvatar } from '../lib/party'
 import { PLAYER_H, friendHop, visible, type RunState } from '../lib/runner'
 import type { Outfit, Tweaks } from '../lib/types'
-import { createStage, cuteTree, emojiCanvas, type Doll } from './stage3d'
+import { createStage, emojiCanvas, type Doll } from './stage3d'
 
 /**
  * 달리기 3D 무대(시험판): 달리기·점프·장애물·별·선물 상자·하트는 원래 달리기 그대로(lib/runner), 그림만 3D 로 그린다.
@@ -48,6 +48,7 @@ export function Runner3D({ live, outfit, tweaks, friends }: { live: MutableRefOb
     const flowerGeo = keep(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 8))
     const flowerMats = [0xff8fb1, 0xffd54a, 0xffffff, 0xc7a6ff].map(lambert)
     const chunks = new Map<number, THREE.Group>()
+    const treeTex = s.texOf(assetUrl('cafe/3d/tree.webp'))
     const makeChunk = (c: number) => {
       const g = new THREE.Group()
       const z0 = -c * CHUNK
@@ -68,8 +69,11 @@ export function Runner3D({ live, outfit, tweaks, friends }: { live: MutableRefOb
       scene.add(g)
       for (let k = 0; k < 7; k++) {
         // 카메라 쪽(+x)에는 나무를 두지 않는다(아바타를 가린다)
-        const t = cuteTree(s, -(4 + r() * 10), z0 - r() * CHUNK, 0.8 + r() * 0.6, [0x6cc35a, 0x5fb24f, 0xffb7cf, 0x7ad06a][k % 4])
-        g.add(t) // 나무도 이 구간 묶음에 넣어 같이 지운다
+        // 카페와 같은 3D 나무 그림(늘 카메라를 본다)
+        const t = s.paperDoll(treeTex, 4.2 * (0.8 + r() * 0.6), 951 / 1024)
+        t.root.position.set(-(4 + r() * 10), 0, z0 - r() * CHUNK)
+        g.add(t.root) // 나무도 이 구간 묶음에 넣어 같이 지운다
+        g.userData.trees = [...(g.userData.trees ?? []), t]
       }
       chunks.set(c, g)
     }
@@ -105,6 +109,7 @@ export function Runner3D({ live, outfit, tweaks, friends }: { live: MutableRefOb
       const c0 = Math.floor(run.x * U / CHUNK)
       for (let c = c0 - 1; c <= c0 + 3; c++) if (!chunks.has(c)) makeChunk(c)
       for (const [c, g] of chunks) if (c < c0 - 1 || c > c0 + 3) { scene.remove(g); chunks.delete(c) }
+      for (const g of chunks.values()) for (const d of (g.userData.trees ?? []) as Doll[]) s.face(d)
       grass.position.z = pz; road.position.z = pz - 60
       // 보이는 것
       const { obstacles, coins, gifts } = visible(run.seed, run.x - 300, run.x + 2600, run.level, run.k)
