@@ -40,6 +40,8 @@ export function Cafe3D({ outfit, tweaks, lane, walking, hold, onCall, bubble, fl
     const el = host.current
     if (!el) return
     const guests: THREE.Object3D[] = [], guestDolls: Doll[] = []
+    /** 손님이 자기 테이블 둘레를 천천히 거닐다 쉬었다 한다(말풍선도 따라간다). 자리마다 가는 곳·쉬는 시간 */
+    const roam = Array.from({ length: 8 }, (_, i) => ({ tx: 0, tz: 0, wait: 1 + i * 0.6, dir: 1 as 1 | -1, t: i }))
     const s = createStage(el, {
       sky: 0xcdeeff, fog: [30, 70], orbit: true, pitchRange: [0.35, 1.05],
       view: { yaw: 0, pitch: 0.72, dist: 17, target: [0, 0.6, 0.6] },
@@ -113,9 +115,20 @@ export function Cafe3D({ outfit, tweaks, lane, walking, hold, onCall, bubble, fl
       const moving = me.root.position.distanceTo(goal) > 0.05
       me.body.position.y = moving || st.walking ? Math.abs(Math.sin(t * 9)) * 0.1 : 0
       s.face(me)
-      for (const d of guestDolls) s.face(d)
       for (const d of props) s.faceTilt(d)
-      for (const d of guestDolls) s.faceTilt(d, 0.4)
+      guestDolls.forEach((d, i) => {
+        const r = roam[i], home = seatAt(i), p = d.root.position
+        r.t += dt
+        if (r.wait > 0) { r.wait -= dt; if (r.wait <= 0) { r.tx = home.x + (Math.random() - 0.5) * 3 * SX; r.tz = home.z + (Math.random() - 0.5) * 1.6 } }
+        else {
+          const dx = r.tx - p.x, dz = r.tz - p.z, dist = Math.hypot(dx, dz)
+          if (dist < 0.05) r.wait = 2 + Math.random() * 4
+          else { const sp = Math.min(dist, dt * 1.1); p.x += (dx / dist) * sp; p.z += (dz / dist) * sp; if (Math.abs(dx) > 0.02) r.dir = dx > 0 ? 1 : -1 }
+        }
+        d.body.position.y = r.wait > 0 ? 0 : Math.abs(Math.sin(r.t * 8)) * 0.08
+        s.faceTilt(d, 0.4)
+        d.doll.scale.x = Math.abs(d.doll.scale.x) * r.dir
+      })
       if (st.hold) {
         if (!holdTex.has(st.hold)) holdTex.set(st.hold, s.texOf(assetUrl(`cafe/menu2/${st.hold}.webp`)))
         holdSprite.material.map = holdTex.get(st.hold)!
@@ -125,7 +138,7 @@ export function Cafe3D({ outfit, tweaks, lane, walking, hold, onCall, bubble, fl
       } else holdSprite.visible = false
       // 말풍선·코인 표시를 손님 머리 위 화면 자리에
       for (let i = 0; i < 8; i++) {
-        const pos = s.project(tmp.copy(seatAt(i)).setY(1.75))
+        const pos = s.project(tmp.copy(guests[i].position).setY(1.75))
         for (const node of [anchors.current[i], floats.current[i]]) if (node) { node.style.transform = `translate(${pos.x}px, ${pos.y}px)`; node.style.visibility = pos.front ? 'visible' : 'hidden' }
       }
     })
