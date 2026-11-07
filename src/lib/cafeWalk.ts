@@ -27,34 +27,3 @@ export function stepCafe(from: CafePoint, goal: CafePoint, distance: number, obs
   }
   return { x: Math.max(-8.5, Math.min(8.5, x)), z: Math.max(-4.8, Math.min(6.5, z)) }
 }
-
-export const CAFE_GUEST_GAP = 1.65
-export const CAFE_SEATED_COUNT = 4
-
-/** 다른 손님이 있으면 우회하고, 양쪽 모두 막혔을 때는 제자리에서 기다린다. */
-export function stepCafeCrowd(from: CafePoint, goal: CafePoint, distance: number, obstacles: CafeObstacle[], others: CafePoint[]): CafePoint {
-  const clear = (p: CafePoint) => others.every(o => {
-    const before = Math.hypot(from.x - o.x, from.z - o.z)
-    const after = Math.hypot(p.x - o.x, p.z - o.z)
-    // 화면 회전으로 배치가 좁아진 직후에는 더 멀어지는 방향으로 빠져나온다.
-    return after >= CAFE_GUEST_GAP || (before < CAFE_GUEST_GAP && after > before + 0.00001)
-  })
-  const next = stepCafe(from, goal, distance, obstacles)
-  if (clear(next)) return next
-  const dx = goal.x - from.x, dz = goal.z - from.z, n = Math.hypot(dx, dz) || 1
-  for (const sign of [1, -1]) {
-    const side = stepCafe(from, { x: from.x + sign * dz / n, z: from.z - sign * dx / n }, distance, obstacles)
-    if (clear(side)) return side
-  }
-  return { x: from.x, z: from.z }
-}
-
-/** 주위에서 가장 가까운 한 손님만 주문 내용을 펼친다. */
-export function nearestCafeGuest(me: CafePoint, guests: CafePoint[], radius = 2.2): number | null {
-  let nearest: number | null = null, best = radius
-  guests.forEach((p, i) => {
-    const d = Math.hypot(p.x - me.x, p.z - me.z)
-    if (d < best) { best = d; nearest = i }
-  })
-  return nearest
-}

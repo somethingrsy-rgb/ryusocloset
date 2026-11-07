@@ -195,23 +195,15 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
   }
 
   /** 손님 머리 위 말풍선(주문받기·만드는 중·완성): 2D 그림 위에도, 3D 손님 머리 위에도 같은 단추 */
-  const bubbleFor = (i: number, approach?: () => void, compact = false) => {
+  const bubbleFor = (i: number, approach?: () => void) => {
     const x = guests[i]
     const m = MENU[x.wish]
     const ready = isReady(i)
     const label = x.stage === 'new' ? tx.askOrder : ready ? tx.ready : tx.toKitchen
-    if (approach) return (
-      <button aria-label={`${x.name} · ${label}`} onClick={approach}
-        className={`relative flex items-center justify-center gap-1 rounded-full border border-white/90 after:absolute after:-inset-1.5 after:content-[''] bg-[#fffdf8]/95 text-[#8a4b55] shadow-sm ${compact ? 'h-8 w-8 p-1' : 'min-h-9 max-w-36 px-2 py-1'}`}>
-        {x.stage === 'new' ? <span aria-hidden className="text-lg leading-none">💬</span> : <Ico id={m.id} className="h-5 w-5 shrink-0" />}
-        {!compact && <span className="text-[10px] font-bold whitespace-nowrap">{label}</span>}
-        {compact && ready && <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />}
-      </button>
-    )
     return (
       <button
         aria-label={`${x.name} · ${label}`}
-        onClick={() => tap(i)}
+        onClick={() => approach ? approach() : tap(i)}
         className="block rounded-[20px] border-0 bg-[#fffdf8] p-1 shadow-[0_3px_0_#f0c6cd] active:scale-95"
       >
         {x.stage === 'new'
@@ -277,7 +269,7 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
           <button aria-label={tx.sound[sound ? 1 : 0]} aria-pressed={sound} onClick={() => { const v = !sound; setSound(v); if (v) playOrder() }} className="h-9 w-9 rounded-full bg-white/90 shadow">{sound ? '🔊' : '🔇'}</button>
         </div>
       </div>
-      <p className="absolute inset-x-3 bottom-2 z-20 m-0 rounded-full bg-white/90 px-3 py-1.5 text-center text-[11px] shadow">{view3d ? (lang === 'ko' ? '땅을 눌러 자유롭게 걸어요 · 동물을 만나면 주문받고 완성된 음식을 서빙해요' : 'Tap the ground to walk · meet animals to take orders and serve ready food') : tx.hint}</p>
+      <p className="absolute inset-x-3 bottom-2 z-20 m-0 rounded-full bg-white/90 px-3 py-1.5 text-center text-[11px] shadow">{view3d ? (lang === 'ko' ? '땅을 눌러 자유롭게 걸어요 · 동물을 만나면 주문받고 완성된 음식을 서빙해요 · 끌어서 둘러봐요' : 'Tap the ground to walk · meet animals to take orders and serve ready food · drag to look around') : tx.hint}</p>
 
       {phone && <PhoneSheet theme={phoneTheme} kid={kidName} avatar={<FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />} muted={!sound} dial={phone.dial} onClose={() => setPhone(null)} />}
       {toast && <div role="status" className="absolute bottom-12 left-1/2 z-30 max-w-[90%] -translate-x-1/2 rounded-full bg-[#8a4b55] px-5 py-3 text-center text-sm text-[#fff9e9] shadow-lg">{toast}</div>}
