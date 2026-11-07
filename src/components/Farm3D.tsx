@@ -40,8 +40,10 @@ const plotAt = (i: number) => {
   return { x: ((i % COLS) - (COLS - 1) / 2) * (PW + GAP), z: -(Math.floor(i / COLS) - (ROWS - 1) / 2) * (PD + GAP) - 4 }
 }
 
-/** 카페 가는 길: 농장 문(앞쪽, +z)에서 곧게 뻗고, 끝(CAFE_GATE)까지 가면 카페로 넘어간다 */
+/** 카페 가는 길: 농장 문(앞쪽, +z)에서 굽이굽이 뻗고, 길 끝 카페 가게 앞(CAFE_GATE)까지 가면 카페로 넘어간다 */
 const CAFE_GATE = 34
+/** 카페 가는 길이 지나는 x(z 에 따라 좌우로 굽이친다, 양 끝은 가운데) */
+const cafeRoadX = (z: number) => { const u = Math.max(0, Math.min(1, (z - 7) / (CAFE_GATE - 7))); return Math.sin(u * Math.PI * 2) * 3.2 * Math.sin(u * Math.PI) }
 export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCafe, onKitchen }: {
   outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void
   /** 주방 버튼 */
@@ -125,7 +127,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     let penned: { doll: Doll; good: AnimalGood | null }[] = []
     let PEN = { x0: 0, x1: 0, z0: 0, z1: 0 }
     const w = createWorld(el, {
-      bounds: BOUNDS, start: arrive ? { x: 0, z: CAFE_GATE - 3 } : { x: 0, z: 6 }, seed: 11, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
+      bounds: BOUNDS, start: arrive ? { x: cafeRoadX(CAFE_GATE - 7), z: CAFE_GATE - 7 } : { x: 0, z: 6 }, seed: 11, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 밭을 누르면 밭 앞까지 걸어가서 그 밭이 필요로 하는 일을 한다
       onPick: (o) => {
         // 노점·우리 동물
@@ -296,7 +298,8 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     for (let i = 0; i < 300 && trees < 60; i++) {
       const x = (rnd() - 0.5) * BOUNDS * 1.9, z = (rnd() - 0.5) * BOUNDS * 1.9
       if (x > PEN.x0 - 3 && x < sx1 + 4 && z > fz0 - 4 && z < PEN.z1 + 4) continue
-      if (Math.abs(x) < 4.5 && z > fz1) continue // 카페 가는 길
+      if (Math.abs(x - cafeRoadX(z)) < 4.5 && z > fz1) continue // 카페 가는 길
+      if (Math.hypot(x, z - CAFE_GATE - 3.6) < 5.5) continue // 길 끝 카페 가게
       if (Math.hypot(x - 7, z - fz1 - 5) < 4) continue // 노점
       if (Math.hypot(x - buildings[1].root.position.x, z - buildings[1].root.position.z) < 5) continue
       if (w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 10)) continue
@@ -351,7 +354,19 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
 
     let repaint = 0
     // 카페 가는 길: 농장 문에서 앞(+z)으로 곧게, 문 옆에 표지판
-    w.addPath(0, fz1 + 0.3, 0, CAFE_GATE + 6, 3)
+    // 굽이굽이 흙길(산책길처럼), 끝에 카페 가게(여덟 방향 그림, 앞이 농장 쪽을 본다)
+    const roadPts: [number, number][] = []
+    for (let z = fz1 + 0.3; z <= CAFE_GATE + 1; z += 1.5) roadPts.push([cafeRoadX(z), z])
+    w.addCurvePath(roadPts, 3)
+    const cv = (n: string) => `cafe/3d/shop/${n}.webp`
+    const cafeShop = viewSprite(w, [
+      [cv('v0'), 1155 / 1186, false], [cv('v1'), 1164 / 1198, false], [cv('v2'), 692 / 1183, false], [cv('v3'), 1110 / 1149, false],
+      [cv('v4'), 1155 / 1186, false], [cv('v3'), 1110 / 1149, true], [cv('v6'), 732 / 1189, false], [cv('v7'), 1148 / 1197, false],
+    ], 5.8, [2.1, 1.5], 1.5)
+    cafeShop.root.position.set(0, 0, CAFE_GATE + 3.6)
+    cafeShop.root.rotation.y = Math.PI
+    scene.add(cafeShop.root)
+    w.obstacles.push({ x: 0, z: CAFE_GATE + 3.6, r: 2.4 })
     const sign = w.paperDoll(w.texOf(signCanvas('☕ 카페', '이 길로 쭉')), 2.2, 1)
     sign.root.position.set(2.6, 0, fz1 + 1.6)
     w.obstacles.push({ x: 2.6, z: fz1 + 1.6, r: 0.4 })
@@ -414,6 +429,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       if (!orderTex.has(oc)) orderTex.set(oc, w.texOf(assetUrl(`assets/farm/harvest_${oc}.webp`)))
       if (orderSp.material.map !== orderTex.get(oc)) { orderSp.material.map = orderTex.get(oc)!; orderSp.material.needsUpdate = true }
       stallView.update(w.camera)
+      cafeShop.update(w.camera)
       orderSp.position.set(7, 3.7 + Math.sin(nowMs / 400) * 0.1, fz1 + 5)
       for (const p of plots) for (const c of p.crops) if (c.root.visible) w.face(c, 1)
       for (const d of buildings) w.face(d, 1)
