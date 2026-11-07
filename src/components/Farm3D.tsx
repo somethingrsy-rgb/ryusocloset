@@ -487,7 +487,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         ))}
       </div>
       {/* 도구: 물주기·수확(친구가 있으면 큰 밭은 친구들이), 노점, 주방 */}
-      <div className="absolute right-2 bottom-24 z-10 flex flex-col gap-1.5">
+      <div className="absolute top-16 right-2 bottom-24 z-10 flex flex-col justify-end gap-1.5 landscape:bottom-9">
         {([['water', '물주기', 'icon_water'], ['harvest', '수확', 'icon_basket'], ['stall', '노점', ''], ['kitchen', '주방', 'icon_kitchen']] as const).map(([id, label, icon]) => (
           <button key={id} aria-label={label} onClick={() => { if (id === 'water' || id === 'harvest') doChore(id); else if (id === 'stall') { playTap(); setStall(true) } else { playTap(); onKitchen?.() } }}
             className="flex w-14 flex-col items-center rounded-2xl border-2 border-[#e5cfa3] bg-[#fdf2d8]/95 py-1 shadow">
