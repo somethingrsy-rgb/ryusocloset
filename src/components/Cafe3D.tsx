@@ -9,13 +9,16 @@ import { createStage, type Doll, type Stage } from './stage3d'
 
 /** 기존 주문 저장을 공유하는 자유 산책 카페. 길과 잔디 모두 걸을 수 있다. */
 /** 세로 화면(폰)은 테이블을 옆으로 좁혀 놓는다(양 끝 손님이 화면 밖으로 잘리지 않게) */
-let SX = 1
-const seatAt = (i: number) => new THREE.Vector3([-6, -2.6, 2.6, 6][i % 4] * SX, 0, i < 4 ? -1.5 : 3.2)
+let SX = 1, PORTRAIT = false
+/** 세로 화면은 옆으로는 조금 좁히고 앞뒤 줄 사이는 넓힌다(테이블끼리 붙어 보이지 않게) */
+const seatAt = (i: number) => new THREE.Vector3([-6, -2.6, 2.6, 6][i % 4] * SX, 0, i < 4 ? (PORTRAIT ? -2.2 : -1.5) : PORTRAIT ? 4.4 : 3.2)
 const tableAt = (i: number) => seatAt(i).clone().add(new THREE.Vector3((i % 4 < 2 ? 1.25 : -1.25) * SX, 0, 0))
 
-export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMeet, bubble, float }: {
+export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMeet, bubble, float, eating }: {
   outfit: Outfit; tweaks: Tweaks
   walking: boolean; hold: string | null; paused: boolean
+  /** 서빙받은 손님이 들고 있는 음식(자리 → 메뉴). 들고 있는 동안은 자리에 앉아 있고 말풍선은 숨긴다 */
+  eating: Record<number, string>
   encounters: string[]; onMeet: (i: number) => void
   /** 손님 머리 위에 띄울 단추(원래 카페의 말풍선) */
   bubble: (i: number, approach: () => void) => ReactNode
@@ -27,14 +30,15 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   const floats = useRef<(HTMLDivElement | null)[]>([])
   const stage = useRef<Stage | null>(null)
   const meRef = useRef<Doll | null>(null)
-  const state = useRef({ walking, hold, paused, encounters, onMeet })
-  state.current = { walking, hold, paused, encounters, onMeet }
+  const state = useRef({ walking, hold, paused, encounters, onMeet, eating })
+  state.current = { walking, hold, paused, encounters, onMeet, eating }
   const approachRef = useRef<(i: number) => void>(() => {})
 
   useEffect(() => {
     const el = host.current
     if (!el) return
-    SX = el.clientWidth < el.clientHeight ? 0.62 : 1
+    PORTRAIT = el.clientWidth < el.clientHeight
+    SX = PORTRAIT ? 0.8 : 1
     const guests: THREE.Object3D[] = [], guestDolls: Doll[] = []
     let target: CafePoint | null = null, following: number | null = null
     const approach = (i: number) => { if (!state.current.paused) { following = i; target = null } }
@@ -94,6 +98,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       guests.push(d.root)
       guestDolls.push(d)
     }
+    // 손님이 받은 음식(손 앞에 든다)
+    const foods = guestDolls.map(() => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true }))); sp.scale.setScalar(0.85); sp.renderOrder = 5; sp.visible = false; scene.add(sp); return sp })
     // 아바타
     const me = s.paperDoll(null, 2.3, 1024 / 1536, 1504 / 1536)
     me.root.position.set(0, 0, -4.6)
@@ -114,7 +120,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     const hf = 2 * Math.atan(Math.tan((s.camera.fov * Math.PI) / 360) * (w / h))
     s.view.dist = Math.max(15, 8.6 / Math.tan(hf / 2))
     // 세로 화면: 위에서 더 내려다봐서 정원이 화면 세로를 채우게
-    if (w < h) { s.view.pitch = 0.9; s.view.dist = 5.6 / Math.tan(hf / 2); s.view.target.z = -0.4 }
+    if (w < h) { s.view.pitch = 0.9; s.view.dist = 6.4 / Math.tan(hf / 2); s.view.target.z = 0 }
     // 그림 판은 앞(+z)을 보게 고정하고, 처음 시점만큼만 뒤로 살짝 눕힌다(돌려 봐도 가게·의자가 따라 돌지 않게)
     for (const d of props) { d.body.rotation.order = 'YXZ'; d.body.rotation.set(-s.view.pitch * 0.5, 0, 0) }
     s.onFrame((dt) => {
@@ -126,7 +132,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       for (let i = 0; i < guestDolls.length; i++) {
         const d = guestDolls[i], r = roam[i], p = d.root.position
         const near = p.distanceTo(me.root.position) < 1.5
-        const sits = !st.encounters[i].startsWith('new:') || i % 2 === 1
+        const sits = !st.encounters[i].startsWith('new:') || i % 2 === 1 || !!st.eating[i]
         const seat = seatAt(i)
         if (sits) { r.goal = { x: seat.x, z: seat.z }; r.wait = 0 }
         let stepped = false
@@ -184,10 +190,21 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         holdSprite.position.copy(me.root.position).add(tmp.set(0, 1.3 + me.body.position.y, 0.35))
         holdSprite.visible = true
       } else holdSprite.visible = false
-      // 말풍선·코인 표시를 손님 머리 위 화면 자리에
+      // 받은 음식: 손님 손 앞에서 냠냠(살짝 통통)
+      foods.forEach((sp, i) => {
+        const id = st.eating[i]
+        sp.visible = !!id
+        if (!id) return
+        if (!holdTex.has(id)) holdTex.set(id, s.texOf(assetUrl(`cafe/menu2/${id}.webp`)))
+        if (sp.material.map !== holdTex.get(id)) { sp.material.map = holdTex.get(id)!; sp.material.needsUpdate = true }
+        sp.position.copy(guestDolls[i].root.position).add(tmp.set(0, 0.8 + Math.abs(Math.sin(t * 4 + i)) * 0.06, 0.5))
+      })
+      // 말풍선·코인 표시를 손님 머리 위 화면 자리에(음식을 들고 있는 동안은 말풍선을 숨긴다)
       for (let i = 0; i < 8; i++) {
         const pos = s.project(tmp.copy(guestDolls[i].root.position).setY(1.6))
-        for (const node of [anchors.current[i], floats.current[i]]) if (node) { node.style.transform = `translate(${pos.x}px, ${pos.y}px)`; node.style.visibility = pos.front ? 'visible' : 'hidden' }
+        const a = anchors.current[i], f = floats.current[i]
+        if (a) { a.style.transform = `translate(${pos.x}px, ${pos.y}px)`; a.style.visibility = pos.front && !st.eating[i] ? 'visible' : 'hidden' }
+        if (f) { f.style.transform = `translate(${pos.x}px, ${pos.y}px)`; f.style.visibility = pos.front ? 'visible' : 'hidden' }
       }
     })
     return () => { stage.current = null; meRef.current = null; s.dispose() }
