@@ -4,10 +4,10 @@ import { CALL_ANIMALS } from '../lib/animalCalls'
 import { renderFigure } from '../lib/exportPng'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
-import { stepCafe, type CafePoint } from '../lib/cafeWalk'
-import { createStage, type Doll, type Stage } from './stage3d'
+import { stepCafe } from '../lib/cafeWalk'
+import { ANIMAL_H, createWorld, type Doll, type World } from './world3d'
 
-/** 기존 주문 저장을 공유하는 자유 산책 카페. 농장처럼 넓은 잔디밭을 걸어 다니고, 카메라가 아바타를 따라간다. */
+/** 기존 주문 저장을 공유하는 자유 산책 카페. 3D 농장과 같은 바탕(world3d): 같은 카메라 각도·따라가기·걷기·끌어서 둘러보기 */
 /** 걸을 수 있는 땅(가운데에서 ±WALK) */
 const WALK = 30
 /** 파라솔 테이블 자리: 숲길을 걷다가 하나씩 만나도록 잔디밭 여기저기에 띄엄띄엄(가게는 (0, -6.2)) */
@@ -21,7 +21,7 @@ const seatAt = (i: number) => tableAt(i).add(new THREE.Vector3(SIDE(i), 0, 0))
  * 파라솔 테이블 세트(입체): 하얀 동그란 테이블 + 꼬불 다리, 분홍·크림 줄무늬 파라솔(가장자리 물결 + 딸기·꽃 장식),
  * 테이블 위 꽃병, 양옆 하트 등받이 의자. 모양은 한 번 만들고 테이블마다 같이 쓴다.
  */
-function makeTableKit(s: Stage) {
+function makeTableKit(s: Pick<World, 'keep' | 'texOf'>) {
   const { keep } = s
   // 그림처럼 밝은 파스텔이 되게, 그늘진 쪽도 너무 어두워지지 않게 스스로 조금 빛나게 한다
   const lambert = (color: number) => keep(new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: 0.32 }))
@@ -102,7 +102,7 @@ function makeTableKit(s: Stage) {
 export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMeet, bubble, float, eating }: {
   outfit: Outfit; tweaks: Tweaks
   walking: boolean; hold: string | null; paused: boolean
-  /** 서빙받은 손님이 들고 있는 음식(자리 → 메뉴). 들고 있는 동안은 자리에 앉아 있고 말풍선은 숨긴다 */
+  /** 서빙받은 손님의 음식(자리 → 메뉴). 그동안 손님은 자리에 앉아 있고 음식은 테이블 위에 놓인다 */
   eating: Record<number, string>
   encounters: string[]; onMeet: (i: number) => void
   /** 손님 머리 위에 띄울 단추(원래 카페의 말풍선) */
@@ -113,8 +113,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   const host = useRef<HTMLDivElement>(null)
   const anchors = useRef<(HTMLDivElement | null)[]>([])
   const floats = useRef<(HTMLDivElement | null)[]>([])
-  const stage = useRef<Stage | null>(null)
-  const meRef = useRef<Doll | null>(null)
+  const world = useRef<World | null>(null)
   const state = useRef({ walking, hold, paused, encounters, onMeet, eating })
   state.current = { walking, hold, paused, encounters, onMeet, eating }
   const approachRef = useRef<(i: number) => void>(() => {})
@@ -123,110 +122,89 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     const el = host.current
     if (!el) return
     const guests: THREE.Object3D[] = [], guestDolls: Doll[] = []
-    let target: CafePoint | null = null, following: number | null = null
-    const approach = (i: number) => { if (!state.current.paused) { following = i; target = null } }
+    let following: number | null = null
+    const approach = (i: number) => { if (!state.current.paused && i >= 0) following = i }
     approachRef.current = approach
-    const s = createStage(el, {
-      sky: 0xcdeeff, fog: [28, 60], orbit: true, pitchRange: [0.55, 1.0],
-      // 그림 판(가게·테이블·나무)은 늘 앞을 보고 있어서, 옆으로는 조금(약 20도)만 돌려 본다
-      yawRange: [-0.35, 0.35],
-      view: { yaw: 0, pitch: 0.72, dist: 12, target: [0, 0.6, -4.6] },
-      pickables: guests, onPick: (o) => approach(guests.indexOf(o)),
-      onTap: (x, y) => {
-        if (state.current.paused) return
-        const p = s.ground(x, y)
-        if (p) { following = null; target = { x: Math.max(-WALK, Math.min(WALK, p.x)), z: Math.max(-WALK, Math.min(WALK, p.z)) } }
-      },
-      fov: (w, h) => (w < h ? 66 : 44),
+    // 3D 농장과 같은 바탕: 카메라가 아바타 뒤에서 따라가고, 땅을 누르면 걷고, 옆으로 끌면 둘러본다
+    const w = createWorld(el, {
+      bounds: WALK, start: { x: 0, z: -2.6 }, seed: 7, sky: 0xcdeeff, grass: assetUrl('cafe/3d/grass.webp'),
+      onPick: (o) => approach(guests.indexOf(o)),
     })
-    stage.current = s
-    const { scene, keep } = s
-    // 그림은 받은 카페 그림(public/cafe/3d): 잔디 무늬 바닥, 가게·파라솔 테이블·나무·꽃 덤불은 그림을 세운 판
-    const grassTex = s.texOf(assetUrl('cafe/3d/grass.webp'))
-    grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping
-    grassTex.repeat.set(24, 24)
-    const lawn = new THREE.Mesh(keep(new THREE.PlaneGeometry(200, 200)), keep(new THREE.MeshLambertMaterial({ map: grassTex })))
-    lawn.rotation.x = -Math.PI / 2
-    lawn.receiveShadow = true
-    scene.add(lawn)
+    world.current = w
+    const { scene, keep, rnd } = w
+    // 땅을 누르거나 끌면 따라가던 손님은 그만 따라간다(손님을 누른 것이면 onPick 이 다시 정한다)
+    const stopFollow = () => { following = null }
+    el.addEventListener('pointerdown', stopFollow)
+    // 딸기 가게(카운터)·꽃 덤불: 그림을 세운 판(나무처럼 늘 카메라를 본다)
     const props: Doll[] = []
     const prop = (name: string, h: number, aspect: number, x: number, z: number) => {
-      const d = s.paperDoll(s.texOf(assetUrl(`cafe/3d/${name}.webp`)), h, aspect)
+      const d = w.paperDoll(w.texOf(assetUrl(`cafe/3d/${name}.webp`)), h, aspect)
       d.root.position.set(x, 0, z)
       props.push(d)
       return d
     }
-    // 딸기 가게(카운터): 뒤쪽 가운데
     prop('counter', 5.6, 997 / 1024, 0, -6.2)
-    // 파라솔 테이블: 손님 옆자리
-    // 파라솔 테이블: 받은 그림과 같은 색·모양을 진짜 입체로(어느 쪽에서 봐도 두께가 있게)
-    const tableKit = makeTableKit(s)
+    w.obstacles.push({ x: 0, z: -6.2, r: 2.4 })
+    // 파라솔 테이블(입체): 잔디밭 여기저기 띄엄띄엄
+    const tableKit = makeTableKit(w)
     for (let i = 0; i < 8; i++) {
       const p = tableAt(i), g = tableKit(i)
       g.position.set(p.x, 0, p.z - 0.2)
       scene.add(g)
+      w.obstacles.push({ x: p.x, z: p.z - 0.2, r: 0.7 })
     }
-    // 꽃 덤불: 카페 둘레
     const nearTable = (x: number, z: number, r: number) => TABLES.some(([tx, tz]) => (tx - x) ** 2 + (tz - z) ** 2 < r * r)
     for (const [x, z] of [[-4.2, -5.6], [4.2, -5.6], [-6, -4], [6, -4]]) prop('bush', 1.15, 1024 / 616, x, z)
-    // 나무: 농장처럼 넓은 잔디밭에 듬성듬성(카페 자리는 비운다). 걸어가면 새 나무가 보인다
-    let seed = 7
-    const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296 }
-    const trees: { d: Doll; x: number; z: number }[] = []
+    // 나무: 농장처럼 듬성듬성(가게·테이블 둘레는 비운다)
+    const trees: { x: number; z: number }[] = []
     for (let k = 0; k < 400 && trees.length < 70; k++) {
       const x = (rnd() - 0.5) * 2 * (WALK + 12), z = (rnd() - 0.5) * 2 * (WALK + 12)
-      if (Math.abs(x) < 5 && z > -10 && z < -2) continue // 가게 둘레
-      if (nearTable(x, z, 4.5)) continue // 테이블 둘레는 비운다
-      if (trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 30)) continue
-      trees.push({ d: prop('tree', 4.2 * (0.8 + rnd() * 0.6), 951 / 1024, x, z), x, z })
+      if (Math.abs(x) < 5 && z > -10 && z < 0) continue
+      if (nearTable(x, z, 4.5) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 30)) continue
+      trees.push({ x, z })
+      w.addTree(x, z, 0.8 + rnd() * 0.6)
     }
-    // 들판 곳곳 꽃 덤불
     for (let k = 0; k < 24; k++) {
       const x = (rnd() - 0.5) * 2 * WALK, z = (rnd() - 0.5) * 2 * WALK
-      if ((Math.abs(x) < 5 && z > -10 && z < -2) || nearTable(x, z, 3) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 4)) continue
+      if ((Math.abs(x) < 5 && z > -10 && z < 0) || nearTable(x, z, 3) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 4)) continue
       prop('bush', 1.15, 1024 / 616, x, z)
     }
-    // 손님: 자리마다 동물 친구(누르면 전화)
+    // 손님: 자리마다 동물 친구(누르면 그쪽으로 걸어간다)
     for (let i = 0; i < 8; i++) {
-      const d = s.paperDoll(s.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[i].img}_stand.webp`)), 1.55, 1)
-      d.root.position.copy(seatAt(i))
+      const d = w.paperDoll(w.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[i].img}_stand.webp`)), ANIMAL_H, 1)
+      const p = seatAt(i)
+      d.root.position.set(p.x, 0, p.z)
       guests.push(d.root)
       guestDolls.push(d)
     }
-    // 손님이 받은 음식: 그 손님 테이블 위에 놓는다(테이블에 맞는 작은 크기)
+    w.pickables.push(...guests)
+    // 손님이 받은 음식: 그 손님 테이블 위에(테이블에 맞는 작은 크기)
     const foods = guestDolls.map(() => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true }))); sp.scale.setScalar(0.5); sp.visible = false; scene.add(sp); return sp })
-    // 아바타
-    const me = s.paperDoll(null, 2.3, 1024 / 1536, 1504 / 1536)
-    me.root.position.set(0, 0, -4.6)
-    meRef.current = me
-    // 들고 있는 메뉴
+    // 아바타가 들고 있는 메뉴
     const holdSprite = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true })))
     holdSprite.scale.setScalar(0.75)
     holdSprite.visible = false
     scene.add(holdSprite)
     const holdTex = new Map<string, THREE.Texture>()
+    const texFor = (id: string) => { if (!holdTex.has(id)) holdTex.set(id, w.texOf(assetUrl(`cafe/menu2/${id}.webp`))); return holdTex.get(id)! }
 
-    const obstacles = [
-      ...Array.from({ length: 8 }, (_, i) => { const p = tableAt(i); return { x: p.x, z: p.z - 0.2, r: 0.7 } }),
-      ...trees.map((t) => ({ x: t.x, z: t.z, r: 0.6 })),
-    ]
+    const bounds = { x0: -WALK, x1: WALK, z0: -WALK, z1: WALK }
     const roam = guestDolls.map((d, i) => ({ goal: { x: d.root.position.x, z: d.root.position.z }, wait: i * 0.45, met: '', dir: 1 as 1 | -1 }))
-    let t = 0, direction: 1 | -1 = 1
-    const tmp = new THREE.Vector3()
-    // 카메라는 아바타를 따라간다(농장처럼). 세로 화면은 조금 더 멀리·위에서
-    const { w, h } = s.size()
-    if (w < h) { s.view.pitch = 0.85; s.view.dist = 14 }
-    // 그림 판은 앞(+z)을 보게 고정하고, 처음 시점만큼만 뒤로 살짝 눕힌다(돌려 봐도 가게·의자가 따라 돌지 않게)
-    for (const d of props) { d.body.rotation.order = 'YXZ'; d.body.rotation.set(-s.view.pitch * 0.5, 0, 0) }
-    s.onFrame((dt) => {
+    let t = 0
+    const v = new THREE.Vector3()
+    const project = (x: number, y: number, z: number) => {
+      v.set(x, y, z).project(w.camera)
+      return { x: ((v.x + 1) / 2) * el.clientWidth, y: ((1 - v.y) / 2) * el.clientHeight, front: v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2 }
+    }
+    w.onFrame((dt) => {
       t += dt
       const st = state.current
       const frozen = st.paused || st.walking
-      let moving = false
-      // 손님: 주문한 손님(만드는 중·완성)은 자리로 돌아와 앉아 기다리고, 주문 전 손님은 절반만 돌아다닌다(짝수 자리)
+      const me = w.me
+      // 손님: 주문한 손님(만드는 중·완성·먹는 중)은 자리에서 기다리고, 주문 전 손님은 절반만 자기 테이블 둘레를 거닌다
       for (let i = 0; i < guestDolls.length; i++) {
         const d = guestDolls[i], r = roam[i], p = d.root.position
-        const near = p.distanceTo(me.root.position) < 1.5
+        const near = Math.hypot(p.x - me.x, p.z - me.z) < 1.5
         const sits = !st.encounters[i].startsWith('new:') || i % 2 === 1 || !!st.eating[i]
         const seat = seatAt(i)
         if (sits) { r.goal = { x: seat.x, z: seat.z }; r.wait = 0 }
@@ -234,94 +212,72 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         if (!frozen && !near && following !== i) {
           r.wait -= dt
           if (!sits && r.wait <= 0 && Math.hypot(p.x - r.goal.x, p.z - r.goal.z) < 0.15) {
-            // 다른 손님 자리·지금 있는 곳과 떨어진 빈 곳을 고른다
-            for (let k = 0; k < 8; k++) {
-              // 자기 테이블 둘레를 거닌다
-              const g = { x: seat.x + (Math.random() - 0.5) * 6, z: seat.z + (Math.random() - 0.5) * 6 }
-              if (guestDolls.every((o, j) => j === i || Math.hypot(o.root.position.x - g.x, o.root.position.z - g.z) > 1.6)) { r.goal = g; break }
-            }
+            r.goal = { x: seat.x + (Math.random() - 0.5) * 6, z: seat.z + (Math.random() - 0.5) * 6 }
             r.wait = 1.5 + Math.random() * 2.5
           }
           if (r.wait <= 0 && Math.hypot(p.x - r.goal.x, p.z - r.goal.z) > 0.05) {
-            const prev = p.x
-            const next = stepCafe(p, r.goal, 0.65 * dt, obstacles)
+            const px = p.x, pz = p.z
+            const next = stepCafe(p, r.goal, 0.65 * dt, w.obstacles, bounds)
             p.set(next.x, 0, next.z)
-            if (Math.abs(next.x - prev) > 0.001) r.dir = next.x > prev ? 1 : -1
+            const sd = w.screenSide(next.x - px, next.z - pz)
+            if (Math.abs(sd) > 0.0005) r.dir = sd > 0 ? 1 : -1
             stepped = true
             if (!sits && Math.hypot(next.x - r.goal.x, next.z - r.goal.z) < 0.15) r.wait = 1.5 + Math.random() * 2.5
           }
         }
-        // 부딪히지 않게: 다른 손님·아바타와 1 이상 떨어진다(앉은 손님은 자리를 지키고 걷는 손님이 비킨다)
-        if (!sits) for (const o of [...guestDolls.filter((_, j) => j !== i).map((x) => x.root.position), me.root.position]) {
+        // 부딪히지 않게: 걷는 손님이 다른 손님·아바타에게서 비킨다
+        if (!sits) for (const o of [...guestDolls.filter((_, j) => j !== i).map((x) => x.root.position), { x: me.x, z: me.z }]) {
           const dx = p.x - o.x, dz = p.z - o.z, dd = Math.hypot(dx, dz)
           if (dd < 1 && dd > 1e-3) { p.x = o.x + (dx / dd) * 1; p.z = o.z + (dz / dd) * 1 }
         }
         d.body.position.y = stepped ? Math.abs(Math.sin(t * 7 + i)) * 0.06 : 0
-        s.face(d, r.dir)
-        if (!near && p.distanceTo(me.root.position) > 2.1) r.met = ''
+        w.face(d, r.dir)
+        if (!near && Math.hypot(p.x - me.x, p.z - me.z) > 2.1) r.met = ''
       }
+      // 손님을 눌렀으면 그 손님 앞까지 따라간다
+      if (following !== null && !frozen) { const g = guestDolls[following].root.position; w.walkTo(g.x, g.z, () => { following = null }, 1.2) }
       if (!frozen) {
-        const goal = following !== null ? guestDolls[following].root.position : target
-        if (goal && Math.hypot(goal.x - me.root.position.x, goal.z - me.root.position.z) > (following !== null ? 1.2 : 0.08)) {
-          const prev = me.root.position.clone()
-          const next = stepCafe(prev, goal, 3.2 * dt, obstacles)
-          me.root.position.set(next.x, 0, next.z)
-          moving = prev.distanceTo(me.root.position) > 0.001
-          if (Math.abs(next.x - prev.x) > 0.001) direction = next.x > prev.x ? 1 : -1
-        } else if (following === null) target = null
-        // 한 번 만난 손님은 멀어졌다 다시 만나거나 주문 상태가 바뀌어야 다시 접객한다.
-        const i = guestDolls.findIndex((d, i) => st.encounters[i] && d.root.position.distanceTo(me.root.position) < 1.5 && roam[i].met !== st.encounters[i] && !(roam[i].met.startsWith('ready:') && st.encounters[i].startsWith('new:')))
+        // 한 번 만난 손님은 멀어졌다 다시 만나거나 주문 상태가 바뀌어야 다시 접객한다
+        const i = guestDolls.findIndex((d, i) => st.encounters[i] && Math.hypot(d.root.position.x - me.x, d.root.position.z - me.z) < 1.5 && roam[i].met !== st.encounters[i] && !(roam[i].met.startsWith('ready:') && st.encounters[i].startsWith('new:')))
         if (i >= 0) {
           roam[i].met = st.encounters[i]
-          target = null; following = null
+          following = null
+          w.walkTo(me.x, me.z, () => {}) // 멈춘다
           st.onMeet(i)
         }
       }
-      me.body.position.y = moving ? Math.abs(Math.sin(t * 9)) * 0.1 : 0
-      s.face(me, direction)
-      // 카메라가 아바타를 부드럽게 따라간다
-      const k = Math.min(1, dt * 4)
-      s.view.target.x += (me.root.position.x - s.view.target.x) * k
-      s.view.target.z += (me.root.position.z - s.view.target.z) * k
-      // 카메라와 아바타 사이를 가리는 나무는 잠깐 숨긴다
-      const cx = s.camera.position.x, cz = s.camera.position.z, ax = me.root.position.x, az = me.root.position.z
-      const sx = ax - cx, sz = az - cz, len2 = sx * sx + sz * sz || 1
-      for (const tr of trees) {
-        const u = Math.max(0, Math.min(1, ((tr.x - cx) * sx + (tr.z - cz) * sz) / len2))
-        tr.d.root.visible = !(Math.hypot(cx + sx * u - tr.x, cz + sz * u - tr.z) < 2.4 && u < 0.97)
-      }
+      for (const d of props) w.face(d, 1)
       if (st.hold) {
-        if (!holdTex.has(st.hold)) holdTex.set(st.hold, s.texOf(assetUrl(`cafe/menu2/${st.hold}.webp`)))
-        holdSprite.material.map = holdTex.get(st.hold)!
-        holdSprite.material.needsUpdate = true
-        holdSprite.position.copy(me.root.position).add(tmp.set(0, 1.3 + me.body.position.y, 0.35))
+        const tex = texFor(st.hold)
+        if (holdSprite.material.map !== tex) { holdSprite.material.map = tex; holdSprite.material.needsUpdate = true }
+        holdSprite.position.set(me.x, 1.35, me.z).addScaledVector(v.set(w.camera.position.x - me.x, 0, w.camera.position.z - me.z).normalize(), 0.35)
         holdSprite.visible = true
       } else holdSprite.visible = false
-      // 받은 음식: 손님 손 앞에서 냠냠(살짝 통통)
+      // 받은 음식: 테이블 위, 손님 쪽으로 조금, 카메라 쪽으로 조금(파라솔에 가리지 않게)
       foods.forEach((sp, i) => {
         const id = st.eating[i]
         sp.visible = !!id
         if (!id) return
-        if (!holdTex.has(id)) holdTex.set(id, s.texOf(assetUrl(`cafe/menu2/${id}.webp`)))
-        if (sp.material.map !== holdTex.get(id)) { sp.material.map = holdTex.get(id)!; sp.material.needsUpdate = true }
-        // 테이블 위, 손님 쪽으로 조금, 카메라 쪽으로 조금(파라솔에 가리지 않게)
+        const tex = texFor(id)
+        if (sp.material.map !== tex) { sp.material.map = tex; sp.material.needsUpdate = true }
         const tp = tableAt(i)
-        sp.position.set(tp.x + Math.sign(SIDE(i)) * 0.18, 0.78 + 0.22, tp.z - 0.2 + 0.22)
+        sp.position.set(tp.x + Math.sign(SIDE(i)) * 0.18, 1.0, tp.z - 0.2).addScaledVector(v.set(w.camera.position.x - tp.x, 0, w.camera.position.z - tp.z).normalize(), 0.22)
       })
-      // 말풍선·코인 표시를 손님 머리 위 화면 자리에(음식을 들고 있는 동안은 말풍선을 숨긴다)
+      // 말풍선·코인 표시를 손님 머리 위 화면 자리에(음식이 나온 동안은 말풍선을 숨긴다)
       for (let i = 0; i < 8; i++) {
-        const pos = s.project(tmp.copy(guestDolls[i].root.position).setY(1.6))
+        const g = guestDolls[i].root.position
+        const pos = project(g.x, ANIMAL_H + 0.1, g.z)
         const a = anchors.current[i], f = floats.current[i]
         if (a) { a.style.transform = `translate(${pos.x}px, ${pos.y}px)`; a.style.visibility = pos.front && !st.eating[i] ? 'visible' : 'hidden' }
         if (f) { f.style.transform = `translate(${pos.x}px, ${pos.y}px)`; f.style.visibility = pos.front ? 'visible' : 'hidden' }
       }
     })
-    return () => { stage.current = null; meRef.current = null; s.dispose() }
+    return () => { el.removeEventListener('pointerdown', stopFollow); world.current = null; w.dispose() }
   }, [])
 
   useEffect(() => {
     let alive = true
-    renderFigure(outfit, tweaks).then((cv) => { const s = stage.current, me = meRef.current; if (alive && s && me) s.setMap(me, s.texOf(cv)) }).catch(() => {})
+    renderFigure(outfit, tweaks).then((cv) => { if (alive) world.current?.setAvatar(cv) }).catch(() => {})
     return () => { alive = false }
   }, [outfit, tweaks])
 
