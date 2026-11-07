@@ -131,7 +131,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       // 밭을 누르면 밭 앞까지 걸어가서 그 밭이 필요로 하는 일을 한다
       onPick: (o) => {
         // 노점·우리 동물
-        if (o === stallGroup) { w.walkTo(stallGroup.position.x, stallGroup.position.z + 1.6, () => setStall(true), 0.4); return }
+        if (o === stallGroup) { w.walkTo(stallGroup.position.x + 1.8, stallGroup.position.z, () => setStall(true), 0.4); return }
         const an = penned.find((a) => a.doll.root === o)
         if (an) {
           if (!an.good) { setNotice('메에~ 🐑 털이 보송보송해요'); return }
@@ -287,6 +287,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     // 자리: 소·닭 우리 바로 앞(+z) 옆
     const STALL = { x: (PEN.x0 + PEN.x1) / 2 + 1.5, z: PEN.z1 + 3.4 }
     sg.position.set(STALL.x, 0, STALL.z)
+    sg.rotation.y = Math.PI / 2 // 앞면이 카페 가는 길 쪽(+x)을 보게(길에서 오면 앞모습이 보인다)
     scene.add(sg)
     w.pickables.push(sg)
     w.obstacles.push({ x: STALL.x, z: STALL.z, r: 1.7 })
