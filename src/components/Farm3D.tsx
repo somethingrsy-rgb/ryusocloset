@@ -280,7 +280,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     const stallView = viewSprite(w, [
       [sv('v0'), 451 / 443, false], [sv('v1'), 709 / 662, false], [sv('v2'), 271 / 448, false], [sv('v5'), 685 / 649, true],
       [sv('v4'), 418 / 440, false], [sv('v5'), 685 / 649, false], [sv('v6'), 295 / 448, false], [sv('v1'), 709 / 662, true],
-    ], 3.3, [1.2, 0.9], 0.9)
+    ], 3.3, [0.01, 0.01], 1.25) // 그림자는 없앤다(그림 판 아래로 비치면 떠 보였다), 판은 노점 앞 끝으로
     const sg = stallView.root
     sg.position.set(7, 0, fz1 + 5)
     scene.add(sg)
