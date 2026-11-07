@@ -20,6 +20,11 @@ export const TREE_ART = [
   { img: 'travel/3d/tree_snow.webp', aspect: 764 / 1142, h: 4.4 },
   { img: 'travel/3d/tree_xmas.webp', aspect: 796 / 1183, h: 4.4 },
 ] as const
+/** 농장·카페 나무: 초록 나무가 대부분이고 노랑·주황 나무는 드문드문(r 은 0~1 난수) */
+export const meadowTree = (r: number) =>
+  r < 0.1 ? { img: 'cafe/3d/tree_yellow.webp', aspect: 824 / 866, h: 4.0 }
+    : r < 0.2 ? { img: 'cafe/3d/tree_orange.webp', aspect: 827 / 865, h: 4.0 }
+      : TREE_ART[0]
 /** 여행 3D 집 그림 */
 export const HOUSE_ART = [
   { img: 'travel/3d/house_potion.webp', aspect: 1021 / 1206 },
