@@ -17,6 +17,8 @@ export interface Stage {
   /** 지금 그림을 세운 판(발이 원점). face 로 늘 카메라를 보게 한다 */
   paperDoll: (tex: THREE.Texture | null, h: number, aspect: number, feet?: number, shadow?: boolean) => Doll
   face: (d: Doll, flip?: 1 | -1) => void
+  /** face 와 같고, 위에서 내려다볼 때 판을 카메라 쪽으로 조금 눕힌다(소품이 납작해 보이지 않게) */
+  faceTilt: (d: Doll, k?: number) => void
   setMap: (d: Doll, tex: THREE.Texture, aspect?: number) => void
   view: { yaw: number; pitch: number; dist: number; target: THREE.Vector3 }
   onFrame: (fn: (dt: number, now: number) => void) => void
@@ -102,6 +104,14 @@ export function createStage(el: HTMLElement, opts: {
     d.doll.scale.x = Math.abs(d.doll.scale.x) * flip
   }
 
+  const faceTilt = (d: Doll, k = 0.6) => {
+    face(d)
+    const p = new THREE.Vector3()
+    d.root.getWorldPosition(p)
+    const dx = camera.position.x - p.x, dz = camera.position.z - p.z, dy = camera.position.y - p.y
+    d.body.rotation.order = 'YXZ'
+    d.body.rotation.x = -Math.atan2(dy, Math.hypot(dx, dz)) * k
+  }
   const view = { yaw: opts.view.yaw, pitch: opts.view.pitch, dist: opts.view.dist, target: new THREE.Vector3(...opts.view.target) }
   let W = 1, H = 1
   const resize = () => {
@@ -205,7 +215,7 @@ export function createStage(el: HTMLElement, opts: {
   frame = requestAnimationFrame(tick)
 
   return {
-    scene, camera, renderer, keep, lambert, texOf, paperDoll, face, setMap, view, project, ground,
+    scene, camera, renderer, keep, lambert, texOf, paperDoll, face, faceTilt, setMap, view, project, ground,
     size: () => ({ w: W, h: H }),
     onFrame: (fn) => { fns.push(fn) },
     dispose: () => {

@@ -4,15 +4,17 @@ import { CALL_ANIMALS } from '../lib/animalCalls'
 import { renderFigure } from '../lib/exportPng'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
-import { createStage, cuteTree, type Doll, type Stage } from './stage3d'
+import { createStage, type Doll, type Stage } from './stage3d'
 
 /**
  * 카페 3D 무대(시험판): 정원에 테이블 여덟 개와 손님(동물 친구), 가운데 카운터. 주문·서빙·전화·주방은 원래 카페 그대로.
  * 손님 머리 위 말풍선은 원래 화면의 단추를 3D 자리에 맞춰 띄운다(bubble(i) 가 그 단추). 손님을 누르면 onCall(i), 걷는 자리는 lane(0 카운터 앞·1 윗줄·2 아랫줄).
  */
 /** 자리 i 의 손님 위치(윗줄 0~3, 아랫줄 4~7). 동물 그림은 CALL_ANIMALS[i](카페 손님 = 동물 i) */
-const seatAt = (i: number) => new THREE.Vector3([-6, -2.6, 2.6, 6][i % 4], 0, i < 4 ? -1.5 : 3.2)
-const tableAt = (i: number) => seatAt(i).clone().add(new THREE.Vector3(i % 4 < 2 ? 1.25 : -1.25, 0, 0))
+/** 세로 화면은 테이블을 옆으로 좁혀 놓는다(폰에서 너무 작아 보이지 않게) */
+let SX = 1
+const seatAt = (i: number) => new THREE.Vector3([-6, -2.6, 2.6, 6][i % 4] * SX, 0, i < 4 ? -1.5 : 3.2)
+const tableAt = (i: number) => seatAt(i).clone().add(new THREE.Vector3((i % 4 < 2 ? 1.25 : -1.25) * SX, 0, 0))
 const LANES = [new THREE.Vector3(0, 0, -4.6), new THREE.Vector3(0, 0, -0.6), new THREE.Vector3(0, 0, 4.1)]
 
 export function Cafe3D({ outfit, tweaks, lane, walking, hold, onCall, bubble, float }: {
@@ -45,70 +47,38 @@ export function Cafe3D({ outfit, tweaks, lane, walking, hold, onCall, bubble, fl
       fov: (w, h) => (w < h ? 66 : 44),
     })
     stage.current = s
+    SX = el.clientWidth < el.clientHeight ? 0.6 : 1
     const { scene, keep, lambert } = s
-    // 잔디 정원 + 가운데 길 + 울타리 같은 꽃밭
-    const lawn = new THREE.Mesh(keep(new THREE.PlaneGeometry(120, 120)), lambert(0x9fd47a))
+    // 그림은 받은 카페 그림(public/cafe/3d): 잔디 무늬 바닥, 가게·파라솔 테이블·나무·꽃 덤불은 그림을 세운 판
+    const grassTex = s.texOf(assetUrl('cafe/3d/grass.webp'))
+    grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping
+    grassTex.repeat.set(24, 24)
+    const lawn = new THREE.Mesh(keep(new THREE.PlaneGeometry(120, 120)), keep(new THREE.MeshLambertMaterial({ map: grassTex })))
     lawn.rotation.x = -Math.PI / 2
     lawn.receiveShadow = true
     scene.add(lawn)
-    const path = new THREE.Mesh(keep(new THREE.PlaneGeometry(2.4, 14)), lambert(0xf3dfb3))
+    const path = new THREE.Mesh(keep(new THREE.PlaneGeometry(2.4, 13)), lambert(0xf3dfb3))
     path.rotation.x = -Math.PI / 2
-    path.position.set(0, 0.01, 0.4)
+    path.position.set(0, 0.01, 0.2)
     path.receiveShadow = true
     scene.add(path)
-    // 카운터: 분홍 지붕 가게(뒤쪽)
-    const shop = new THREE.Group()
-    const counter = new THREE.Mesh(keep(new THREE.BoxGeometry(7, 1.2, 1.4)), lambert(0xfff1d6))
-    counter.position.y = 0.6
-    const top = new THREE.Mesh(keep(new THREE.BoxGeometry(7.3, 0.15, 1.6)), lambert(0xe8a0b4))
-    top.position.y = 1.25
-    const back = new THREE.Mesh(keep(new THREE.BoxGeometry(7.6, 3.6, 0.4)), lambert(0xffe4ec))
-    back.position.set(0, 1.8, -1.6)
-    const awning = new THREE.Mesh(keep(new THREE.BoxGeometry(8, 0.2, 2.6)), lambert(0xff8fab))
-    awning.position.set(0, 3.7, -0.5)
-    awning.rotation.x = 0.18
-    for (const m of [counter, top, back, awning]) { m.castShadow = true; m.receiveShadow = true }
-    shop.add(counter, top, back, awning)
-    // 줄무늬 차양: 하얀 띠
-    for (let k = -3; k <= 3; k += 2) { const st = new THREE.Mesh(keep(new THREE.BoxGeometry(0.9, 0.22, 2.62)), lambert(0xffffff)); st.position.set(k, 3.7, -0.5); st.rotation.x = 0.18; shop.add(st) }
-    shop.position.set(0, 0, -7.2)
-    scene.add(shop)
-    // 테이블·의자·파라솔
-    const tableGeo = keep(new THREE.CylinderGeometry(0.75, 0.75, 0.08, 20)), legGeo = keep(new THREE.CylinderGeometry(0.08, 0.1, 0.8, 8))
-    const tableMat = lambert(0xffffff), legMat = lambert(0xd9b38c)
-    const umbGeo = keep(new THREE.ConeGeometry(0.95, 0.45, 12)), poleGeo = keep(new THREE.CylinderGeometry(0.04, 0.04, 2.2, 6))
-    const umbMats = [0xff9eb8, 0xffd27a, 0xa9dcc8, 0xc7a6ff].map(lambert)
-    const cupGeo = keep(new THREE.CylinderGeometry(0.12, 0.09, 0.18, 12)), cupMat = lambert(0xfff6e8)
-    for (let i = 0; i < 8; i++) {
-      const p = tableAt(i)
-      const t = new THREE.Mesh(tableGeo, tableMat)
-      t.position.copy(p).setY(0.82)
-      const leg = new THREE.Mesh(legGeo, legMat)
-      leg.position.copy(p).setY(0.4)
-      const pole = new THREE.Mesh(poleGeo, legMat)
-      pole.position.copy(p).setY(1.9)
-      const umb = new THREE.Mesh(umbGeo, umbMats[i % 4])
-      umb.position.copy(p).setY(3.0)
-      const cup = new THREE.Mesh(cupGeo, cupMat)
-      cup.position.copy(p).add(new THREE.Vector3(0.25, 0.95, 0.2))
-      for (const m of [t, leg, umb]) { m.castShadow = true; m.receiveShadow = true }
-      scene.add(t, leg, pole, umb, cup)
+    const props: Doll[] = []
+    const prop = (name: string, h: number, aspect: number, x: number, z: number) => {
+      const d = s.paperDoll(s.texOf(assetUrl(`cafe/3d/${name}.webp`)), h, aspect)
+      d.root.position.set(x, 0, z)
+      props.push(d)
+      return d
     }
-    // 둘레 나무·꽃
-    for (let k = 0; k < 18; k++) {
-      const a = (k / 18) * Math.PI * 2
-      const x = Math.cos(a) * 15, z = Math.sin(a) * 11 - 2
-      if (z > 6) continue
-      cuteTree(s, x, z, 0.9 + (k % 3) * 0.2, [0x6cc35a, 0xffb7cf, 0x7ad06a][k % 3])
+    // 딸기 가게(카운터): 뒤쪽 가운데
+    prop('counter', 5.6, 870 / 1024, 0, -6.2)
+    // 파라솔 테이블: 손님 옆자리
+    for (let i = 0; i < 8; i++) { const p = tableAt(i); prop('table', 2.1, 1024 / 967, p.x, p.z - 0.2) }
+    // 둘레 나무와 꽃 덤불
+    for (let k = 0; k < 16; k++) {
+      const a = Math.PI + (k / 15) * Math.PI // 뒤쪽 반원
+      prop('tree', 4.2 + (k % 3) * 0.5, 1024 / 1010, Math.cos(a) * 14, Math.sin(a) * 9 - 2.5)
     }
-    const flowerGeo = keep(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 8))
-    const fm = [0xff8fb1, 0xffd54a, 0xffffff, 0xc7a6ff].map(lambert)
-    for (let k = 0; k < 160; k++) {
-      const f = new THREE.Mesh(flowerGeo, fm[k % 4])
-      const a = (k * 2.399) % (Math.PI * 2), r = 9 + (k % 7)
-      f.position.set(Math.cos(a) * r * 1.2, 0.03, Math.sin(a) * r * 0.8)
-      scene.add(f)
-    }
+    for (const [x, z] of [[-9, -1], [9, -1], [-9.5, 3.5], [9.5, 3.5], [-4.2, -5.6], [4.2, -5.6], [-8, 7], [8, 7], [-3.5, 7.5], [3.5, 7.5]]) prop('bush', 1.25, 1024 / 755, x, z)
     // 손님: 자리마다 동물 친구(누르면 전화)
     for (let i = 0; i < 8; i++) {
       const d = s.paperDoll(s.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[i].img}_stand.webp`)), 1.55, 1)
@@ -134,7 +104,7 @@ export function Cafe3D({ outfit, tweaks, lane, walking, hold, onCall, bubble, fl
     const hf = 2 * Math.atan(Math.tan((s.camera.fov * Math.PI) / 360) * (w / h))
     s.view.dist = Math.max(15, 8.6 / Math.tan(hf / 2))
     // 세로 화면: 위에서 더 내려다봐서 정원이 화면 세로를 채우게
-    if (w < h) { s.view.pitch = 1.02; s.view.dist = 7.4 / Math.tan(hf / 2); s.view.target.z = -1.2 }
+    if (w < h) { s.view.pitch = 0.9; s.view.dist = 5.6 / Math.tan(hf / 2); s.view.target.z = -0.4 }
     s.onFrame((dt) => {
       t += dt
       const st = state.current
@@ -144,6 +114,8 @@ export function Cafe3D({ outfit, tweaks, lane, walking, hold, onCall, bubble, fl
       me.body.position.y = moving || st.walking ? Math.abs(Math.sin(t * 9)) * 0.1 : 0
       s.face(me)
       for (const d of guestDolls) s.face(d)
+      for (const d of props) s.faceTilt(d)
+      for (const d of guestDolls) s.faceTilt(d, 0.4)
       if (st.hold) {
         if (!holdTex.has(st.hold)) holdTex.set(st.hold, s.texOf(assetUrl(`cafe/menu2/${st.hold}.webp`)))
         holdSprite.material.map = holdTex.get(st.hold)!
