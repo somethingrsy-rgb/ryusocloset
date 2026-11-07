@@ -1,7 +1,7 @@
 import { getAvatar, subscribeAvatar } from './avatars'
 import { avatarGuest, canJoin, validGuest } from './party'
 import { getMeet, subscribeMeet } from './meet'
-import { actFarm, getFarm, growth, subscribeFarm } from './farm'
+import { MAIN_PLOTS, actFarm, getFarm, growth, subscribeFarm } from './farm'
 
 /**
  * 농장 친구들: 고른 동물 친구(최대 2명)가 물이 필요한 밭에 저절로 가서 물을 주고,
@@ -61,7 +61,7 @@ export const waterNow = () => { clearTimeout(pendingTimer); dispatch() }
  *  두 친구는 같은 박자로 움직이지 않게 두 번째 친구가 반 박자 늦게 출발한다(엇박자) */
 export function harvestAll(now = Date.now()): boolean {
   const st = getFarm()
-  if (!st.plots.some((p, i) => st.owned[i] && growth(p, now) === 1)) return false
+  if (!st.plots.some((p, i) => i < MAIN_PLOTS && st.owned[i] && growth(p, now) === 1)) return false
   friends.forEach((f, k) => {
     harvestWanted.add(f)
     if (jobs[f]) return // 물 주기를 마치면 바로 수확하러 간다
@@ -111,7 +111,8 @@ const mine = (k: number, i: number) => friends.length < 2 || (k === 0 ? rc(i).c 
 function workList() {
   const st = getFarm()
   const work: { plot: number; kind: JobKind }[] = []
-  st.plots.forEach((p, i) => { if (p && st.owned[i] && p.wateredAt === null) work.push({ plot: i, kind: 'water' }) })
+  // 친구들은 큰 밭(0~19)만 돌본다. 옆 울타리 밭은 내가 직접
+  st.plots.forEach((p, i) => { if (i < MAIN_PLOTS && p && st.owned[i] && p.wateredAt === null) work.push({ plot: i, kind: 'water' }) })
   return work
 }
 
@@ -132,7 +133,7 @@ export function harvestPath(k: number, nCols = cols, rows = Math.ceil(PLOTS / nC
   })
   return out
 }
-const PLOTS = 20
+const PLOTS = MAIN_PLOTS
 
 /** 한 친구가 수확 길을 따라 걸으며 다 자란 밭을 딴다. 다 자라지 않은 밭은 지나가기만 한다 */
 function harvestRoute(f: number) {

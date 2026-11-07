@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { getAvatar } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
-import { CROPS, PLOT_COUNT, actFarm, getFarm, growth, subscribeFarm, type CropId, type FarmAction } from '../lib/farm'
+import { CROPS, MAIN_PLOTS, PLOT_COUNT, actFarm, getFarm, growth, subscribeFarm, type CropId, type FarmAction } from '../lib/farm'
 import { getFarmFriends } from '../lib/farmFriends'
 import { assetUrl } from '../lib/items'
 import { guestAvatar } from '../lib/party'
@@ -15,18 +15,24 @@ import { GuestDresser } from './GuestDresser'
 import { ANIMAL_H, AVATAR_H, FEET, createWorld, emojiCanvas, type Doll, type World } from './world3d'
 
 /**
- * 3D 농장 (시험판): 밭 20칸(농장 탭과 같은 밭·같은 저장)을 3D 들판에 깔고, 아바타가 걸어가서 심고·물 주고·수확한다.
+ * 3D 농장 (시험판): 큰 밭 20칸과 옆 울타리 밭 8칸(농장 탭과 같은 밭·같은 저장)을 3D 들판에 깔고, 아바타가 걸어가서 심고·물 주고·수확한다.
  * 밭을 누르면 그 밭이 필요로 하는 일(심기 → 물주기 → 다 자라면 수확)을 한다. 작물은 농장 그림을 세운 종이 인형.
  * 같이 농사짓는 동물 친구는 밭 둘레를 거닌다(물 주기는 농장 탭처럼 친구들이 따로 한다).
  */
 const COLS = 5, ROWS = 4
 const PW = 2.6, PD = 2.0, GAP = 0.7
 const BOUNDS = 40
+/** 옆 울타리 밭(20~27번): 큰 밭 오른쪽 옆 땅에 4칸×2줄 */
+const SIDE_COLS = 4
+const SIDE_X = (COLS * (PW + GAP)) / 2 + 1.2 + 4 + (SIDE_COLS * (PW + GAP)) / 2 + 1.2
 /** 작물 그림 크기(가로·세로 px) */
 const CROP_BOX: Record<CropId, [number, number]> = { carrot: [568, 499], strawberry: [578, 453], corn: [505, 619] }
 const stageOf = (wateredAt: number | null, progress: number) => (wateredAt === null ? 1 : progress >= 1 ? 4 : progress < 0.4 ? 2 : 3)
 /** 밭 자리: 처음부터 내 밭인 앞 칸(0~8)이 들어오는 문(앞쪽, +z) 가까이 오게 줄 번호가 클수록 뒤로 */
-const plotAt = (i: number) => ({ x: ((i % COLS) - (COLS - 1) / 2) * (PW + GAP), z: -(Math.floor(i / COLS) - (ROWS - 1) / 2) * (PD + GAP) - 4 })
+const plotAt = (i: number) => {
+  if (i >= MAIN_PLOTS) { const j = i - MAIN_PLOTS; return { x: SIDE_X + ((j % SIDE_COLS) - (SIDE_COLS - 1) / 2) * (PW + GAP), z: -(Math.floor(j / SIDE_COLS) - 0.5) * (PD + GAP) - 4 } }
+  return { x: ((i % COLS) - (COLS - 1) / 2) * (PW + GAP), z: -(Math.floor(i / COLS) - (ROWS - 1) / 2) * (PD + GAP) - 4 }
+}
 
 export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void }) {
   const host = useRef<HTMLDivElement>(null)
@@ -58,7 +64,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
         const i = plotOf.get(o)
         if (i === undefined || busy.has(i)) return
         const st = getFarm()
-        if (!st.owned[i]) { setNotice('이 밭은 아직 내 밭이 아니에요 · 농장 탭에서 살 수 있어요'); return }
+        if (!st.owned[i]) { setNotice(i >= MAIN_PLOTS ? '옆 밭은 농장 탭의 「옆 밭」에서 코인으로 살 수 있어요' : '이 밭은 아직 내 밭이 아니에요 · 농장 탭에서 살 수 있어요'); return }
         const plot = st.plots[i]
         const need = !plot ? 'seed' : plot.wateredAt === null ? 'water' : growth(plot, Date.now()) === 1 ? 'harvest' : null
         if (!need) { setNotice('자라는 중이에요 🌱'); return }
@@ -164,6 +170,10 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       }
     }
     fenceLine(-fx, fz0, fx, fz0); fenceLine(-fx, fz1, fx, fz1, 0); fenceLine(-fx, fz0, -fx, fz1); fenceLine(fx, fz0, fx, fz1)
+    // 옆 울타리 밭 울타리(앞에 문)
+    const sx0 = SIDE_X - (SIDE_COLS * (PW + GAP)) / 2 - 1.2, sx1 = SIDE_X + (SIDE_COLS * (PW + GAP)) / 2 + 1.2
+    const sz0 = -4 - (PD + GAP) - 1.2, sz1 = -4 + (PD + GAP) + 1.2
+    fenceLine(sx0, sz0, sx1, sz0); fenceLine(sx0, sz1, sx1, sz1, SIDE_X); fenceLine(sx0, sz0, sx0, sz1); fenceLine(sx1, sz0, sx1, sz1)
 
     // 빨간 헛간과 노점, 나무
     const barn = new THREE.Group()
@@ -185,7 +195,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     let trees = 0
     for (let i = 0; i < 300 && trees < 60; i++) {
       const x = (rnd() - 0.5) * BOUNDS * 1.9, z = (rnd() - 0.5) * BOUNDS * 1.9
-      if (Math.abs(x) < fx + 4 && z > fz0 - 4 && z < fz1 + 6) continue
+      if (x > -fx - 4 && x < sx1 + 4 && z > fz0 - 4 && z < fz1 + 6) continue
       if (w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 10)) continue
       w.addTree(x, z, 0.8 + rnd() * 0.7)
       trees++
