@@ -12,6 +12,7 @@ import { TravelScene } from './TravelScene'
 const StarRainWalk = lazy(() => import('./StarRainWalk').then((m) => ({ default: m.StarRainWalk })))
 const RunnerGame = lazy(() => import('./RunnerGame').then((m) => ({ default: m.RunnerGame })))
 const JumpPuzzle = lazy(() => import('./JumpPuzzle').then((m) => ({ default: m.JumpPuzzle })))
+const FlagGame = lazy(() => import('./FlagGame').then((m) => ({ default: m.FlagGame })))
 const SoccerGame = lazy(() => import('./SoccerGame').then((m) => ({ default: m.SoccerGame })))
 // 3D 산책(시험판): three.js 가 커서 누를 때만 받는다
 const Walk3D = lazy(() => import('./Walk3D').then((m) => ({ default: m.Walk3D })))
@@ -55,19 +56,21 @@ export function TravelGame({ outfit, tweaks, onWear, onOutfit, onFull, onDecorat
   const [speaking, setSpeaking] = useState(false)
   const [math, setMath] = useState(false)
   const [jump, setJump] = useState(false)
+  const [flags, setFlags] = useState(false)
   const [soccer, setSoccer] = useState(false)
   const [walk3d, setWalk3d] = useState(false)
-  useEffect(() => { onFull?.(math || speaking || jump || soccer || (runner && wide)); return () => onFull?.(false) }, [math, speaking, jump, soccer, runner, wide, onFull])
+  useEffect(() => { onFull?.(math || speaking || jump || soccer || flags || (runner && wide)); return () => onFull?.(false) }, [math, speaking, jump, soccer, flags, runner, wide, onFull])
   const game = useGame()
   const ver = useItemsVersion()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const assign = useMemo(currentAssignment, [ver])
   const [scene, setScene] = useState<string | null>(initialPlaceId)
   // 마을과 집 안에서는 배경 음악이 이어지고, 게임 화면(별비·수학·점프·영어)에서는 끈다
-  const walking = !starRain && !runner && !math && !jump && !speaking && !soccer && !walk3d
+  const walking = !starRain && !runner && !math && !jump && !speaking && !soccer && !flags && !walk3d
   useEffect(() => { if (!walking) return; startBgm('room'); return stopBgm }, [walking])
 
   if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setWalk3d(false)} /></Suspense>
+  if (flags) return <Suspense fallback={null}><FlagGame onExit={() => setFlags(false)} /></Suspense>
   if (soccer) return <Suspense fallback={null}><SoccerGame onExit={() => setSoccer(false)} /></Suspense>
   if (runner) return <Suspense fallback={null}><RunnerGame outfit={outfit} tweaks={tweaks} onExit={() => setRunner(false)} /></Suspense>
   if (starRain) return <Suspense fallback={null}><StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} /></Suspense>
@@ -84,6 +87,7 @@ export function TravelGame({ outfit, tweaks, onWear, onOutfit, onFull, onDecorat
         <button className={actionButton} aria-label="수학 놀이터" onClick={() => setMath(true)}>{label(lang === 'ko' ? '수학' : 'Math')}</button>
         <button className={actionButton} aria-label="점프 퍼즐" onClick={() => setJump(true)}>{label(lang === 'ko' ? '점프' : 'Jump')}</button>
         <button className={actionButton} aria-label="축구" onClick={() => setSoccer(true)}>{label(lang === 'ko' ? '축구' : 'Soccer')}</button>
+        <button className={actionButton} aria-label={lang === 'ko' ? '국기 게임' : 'Flag quiz'} onClick={() => setFlags(true)}>{label(lang === 'ko' ? '국기' : 'Flags')}</button>
         <button className={actionButton} aria-label="3D 산책 (시험판)" onClick={() => setWalk3d(true)}>{label('3D')}</button>
       </>}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
