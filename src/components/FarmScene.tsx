@@ -7,8 +7,8 @@ import { actFarm, CROPS, getFarm, growth, MAIN_PLOTS, orderCrop, PLOT_COUNT, plo
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { FarmFx } from './FarmFx'
+import { FarmImg, FarmStall } from './FarmStall'
 import { FigureLayers } from './FigureLayers'
-import { Modal } from './Modal'
 import { PILL, PillText } from './pill'
 import { CoinIcon } from './Icons'
 import { guestFace, isAvatarGuest } from '../lib/party'
@@ -58,12 +58,6 @@ const avatarWidth = (L: Layout) => (L.avatarH * (1024 / 1536)) / (L.w / L.h)
 /** 작물 그림 한 장의 크기(px). 가로 500 = 칸 폭의 48% */
 const CROP_BOX: Record<string, [number, number]> = { carrot: [568, 499], strawberry: [578, 453], corn: [505, 619] }
 
-/** 그림 파일이 없으면 이모지로 대신 보여 준다 (그림을 나중에 채워도 코드는 그대로) */
-function FarmImg({ name, emoji, className, style, alt = '' }: { name: string; emoji: string; className?: string; style?: React.CSSProperties; alt?: string }) {
-  const [failed, setFailed] = useState(false)
-  if (failed) return <span aria-hidden className={className} style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.4rem', lineHeight: 1 }}>{emoji}</span>
-  return <img src={assetUrl(`assets/farm/${name}.webp`)} alt={alt} className={className} style={style} draggable={false} onError={() => setFailed(true)} />
-}
 
 /** 친구 그림 칸 너비 ÷ 아바타 너비(파티·주방과 같은 크기) */
 const FRIEND_PER_AVATAR_W = GUEST_PER_AVATAR_W * 0.8
@@ -470,35 +464,13 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { out
         </div>
       </div>
 
-      {stall && (
-        <Modal title={`🧺 ${ko ? '노점' : 'Market stall'}`} onClose={() => setStall(false)}>
-          <div className="rounded-2xl bg-petal/60 p-3">
-            <h3 className="m-0 text-sm font-bold">🐰 {ko ? '주민의 부탁' : 'Resident request'} · +12 <CoinIcon /></h3>
-            <p lang="en" className="mb-1 text-base font-bold">Can I have two {order.plural}?</p>
-            <p className="mt-0 text-xs">{ko ? `${order.ko} 두 개를 줄 수 있나요?` : `Give the resident two ${order.plural}.`}</p>
-            <button disabled={farm.inventory[order.id] < 2} className={`${btn} w-full bg-blush text-white disabled:opacity-40`} onClick={() => apply({ type: 'deliver' })}>
-              {ko ? '전달하기' : 'Deliver'} · {farm.inventory[order.id]}/2
-            </button>
-          </div>
-          <h3 className="mt-3 mb-1 text-sm font-bold">🧺 {ko ? '바구니 팔기' : 'Sell from basket'}</h3>
-          <div className="grid grid-cols-3 gap-2">
-            {CROPS.map((c) => (
-              <div key={c.id} className="text-center">
-                <FarmImg name={`harvest_${c.id}`} emoji={c.emoji} className="mx-auto h-14 w-14 object-contain" />
-                <p className="my-1 text-sm font-bold">{c[lang]} × {farm.inventory[c.id]}</p>
-                <button disabled={!farm.inventory[c.id]} className={`${btn} w-full bg-petal disabled:opacity-40`} onClick={() => apply({ type: 'sell', crop: c.id })}>{ko ? '팔기' : 'Sell'} +{c.price} <CoinIcon /></button>
-              </div>
-            ))}
-          </div>
-          <p role="status" className="mt-2 min-h-5 text-xs font-bold">{notice}</p>
-        </Modal>
-      )}
+      {stall && <FarmStall apply={apply} notice={notice} onClose={() => setStall(false)} />}
       {picking && (
         <PartyInvite here={[]} initial={friends} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`아바타 친구와 수학으로 모은 동물 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
           cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
       )}
       {/* 3D 농장(시험판): 농장 화면 위를 덮는다(농장 노래는 그대로 이어진다) */}
-      {farm3d && <div className="absolute inset-0 z-50"><Suspense fallback={null}><Farm3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setFarm3d(false)} arrive={arrived} onCafe={onCafe} /></Suspense></div>}
+      {farm3d && <div className="absolute inset-0 z-50"><Suspense fallback={null}><Farm3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setFarm3d(false)} arrive={arrived} onCafe={onCafe} onKitchen={onKitchen} /></Suspense></div>}
     </section>
   )
 }
