@@ -1,4 +1,5 @@
 import { playOrder, playServe, playTap, startBgm, stopBgm } from '../lib/sound'
+import { clearArrival, isArriving } from '../lib/farmCafeLink'
 import { MENU } from '../lib/recipes'
 import { actKitchen, getKitchen, subscribeKitchen } from '../lib/kitchen'
 import { unlockSpeech } from './AnimalCall'
@@ -101,7 +102,7 @@ const AVATAR = {
 /** 다른 탭(농장·여행 등)에 다녀와도 손님·주문·아바타 자리가 그대로 남도록 화면 밖에 기억해 둔다 (앱을 완전히 닫으면 새로 시작) */
 let kept: { guests: Guest[]; pos: { x: number; y: number; wide: boolean } | null; hold: string | null } | null = null
 
-export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void }) {
+export function CafeGame({ outfit, tweaks, onKitchen, onFarm }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void; /** 3D 카페에서 농장 가는 길 끝까지 걸어가면 */ onFarm?: () => void }) {
   const { lang } = useI18n()
   const tx = T[lang]
   const [st, setSt] = useState<Saved>(loadSaved)
@@ -124,7 +125,10 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
   // 휴대폰(📞 버튼, 또는 동물을 누르면 그 동물에게 바로 건다). 휴대폰이 열려 있는 동안은 동물 목소리가 잘 들리게 음악을 멈춘다
   const [phone, setPhone] = useState<{ dial: number | null } | null>(null)
   /** 3D 로 보기(시험판): 주문·서빙·전화·주방은 그대로, 정원과 손님·아바타만 3D. 고른 것은 기억한다 */
-  const [view3d, setView3d] = useState(() => { try { return localStorage.getItem('ryuso.cafe.3d') === '1' } catch { return false } })
+  // 3D 농장에서 걸어왔으면 3D 로 열고 농장 가는 길 끝에서 시작한다
+  const [arrived] = useState(() => isArriving('fromFarm'))
+  useEffect(() => { if (arrived) clearArrival() }, [arrived])
+  const [view3d, setView3d] = useState(() => { if (arrived) return true; try { return localStorage.getItem('ryuso.cafe.3d') === '1' } catch { return false } })
   // 지금 고른 아바타 이름으로 동물이 불러 주고(유하야·유엘아), 휴대폰 색도 아바타에 맞춘다(유엘 파랑, 유하 분홍)
   useSyncExternalStore(subscribeAvatar, avatarVersion)
   const kidName = avatarName(getAvatar())
@@ -228,7 +232,7 @@ export function CafeGame({ outfit, tweaks, onKitchen }: { outfit: Outfit; tweaks
 
   return (
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-hidden rounded-3xl bg-[#b9c97a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
-      {view3d ? <Suspense fallback={null}><Cafe3D outfit={outfit} tweaks={tweaks} eating={eating} walking={walking} hold={hold} paused={!!phone} encounters={guests.map((g, i) => g.stage === 'new' ? `new:${g.wish}` : isReady(i) ? `ready:${g.wish}` : '')} onMeet={(i) => tap(i, true)} bubble={bubbleFor} float={floatFor} /></Suspense> : <>
+      {view3d ? <Suspense fallback={null}><Cafe3D outfit={outfit} tweaks={tweaks} eating={eating} walking={walking} hold={hold} paused={!!phone} encounters={guests.map((g, i) => g.stage === 'new' ? `new:${g.wish}` : isReady(i) ? `ready:${g.wish}` : '')} onMeet={(i) => tap(i, true)} bubble={bubbleFor} float={floatFor} arrive={arrived} onFarm={onFarm} /></Suspense> : <>
       {/* 그림 아래 남는 자리(폰 세로): 그림 맨 아래 덤불·풀밭 부분을 위아래로 뒤집고 늘려 이어 붙여서 정원이 끝까지 이어져 보이게 한다 */}
       {!wide && !pad && (
         <div aria-hidden className="absolute left-1/2 -translate-x-1/2 overflow-hidden" style={{ width: 'min(100cqw, calc(100cqh / 1.7787))', top: 'calc(min(100cqw, 100cqh / 1.7787) * 1.7787 - 1px)', bottom: 0 }}>
