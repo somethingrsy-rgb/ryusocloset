@@ -12,6 +12,8 @@ import { ANIMAL_H, createWorld, meadowTree, signCanvas, type Doll, type World } 
 const WALK = 30
 /** 농장 가는 길: 가게 뒤(-z)로 곧게 뻗고, 끝(z < -FARM_GATE)까지 가면 농장으로 넘어간다 */
 const FARM_GATE = 29
+/** 농장 가는 길이 지나는 x(z 에 따라 좌우로 굽이친다, 양 끝은 가운데) */
+const farmRoadX = (z: number) => { const u = Math.max(0, Math.min(1, (-z - 8.4) / (FARM_GATE - 8.4))); return Math.sin(u * Math.PI * 2) * 3.2 * Math.sin(u * Math.PI) }
 /** 파라솔 테이블 자리: 숲길을 걷다가 하나씩 만나도록 잔디밭 여기저기에 띄엄띄엄(가게는 (0, -6.2)) */
 const TABLES: [number, number][] = [[-6.5, 0.5], [6.5, -0.5], [-3, 9], [11, 9], [-15, -7], [16, -8], [3, 17], [-13, 15]]
 /** 손님은 테이블 옆(가게 쪽 바깥)에 선다 */
@@ -209,14 +211,14 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     for (let k = 0; k < 400 && trees.length < 70; k++) {
       const x = (rnd() - 0.5) * 2 * (WALK + 12), z = (rnd() - 0.5) * 2 * (WALK + 12)
       if (Math.abs(x) < 5 && z > -10 && z < 0) continue
-      if (Math.abs(x) < 4.5 && z < -8) continue // 농장 가는 길
+      if (Math.abs(x - farmRoadX(z)) < 4.5 && z < -8) continue // 농장 가는 길
       if (nearTable(x, z, 4.5) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 30)) continue
       trees.push({ x, z })
       w.addTree(x, z, 0.8 + rnd() * 0.6, meadowTree(rnd()))
     }
     for (let k = 0; k < 24; k++) {
       const x = (rnd() - 0.5) * 2 * WALK, z = (rnd() - 0.5) * 2 * WALK
-      if ((Math.abs(x) < 5 && z > -10 && z < 0) || (Math.abs(x) < 4 && z < -8) || nearTable(x, z, 3) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 4)) continue
+      if ((Math.abs(x) < 5 && z > -10 && z < 0) || (Math.abs(x - farmRoadX(z)) < 4 && z < -8) || nearTable(x, z, 3) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 4)) continue
       prop('bush', 1.15, 1024 / 616, x, z)
     }
     // 손님: 자리마다 동물 친구(누르면 그쪽으로 걸어간다)
@@ -247,7 +249,10 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       return { x: ((v.x + 1) / 2) * el.clientWidth, y: ((1 - v.y) / 2) * el.clientHeight, front: v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2 }
     }
     // 농장 가는 길: 가게 뒤로 곧게, 가게 옆에 표지판
-    w.addPath(0, -8.4, 0, -FARM_GATE - 6, 3)
+    // 굽이굽이 흙길(산책길처럼)
+    const roadPts: [number, number][] = []
+    for (let z = -8.4; z >= -FARM_GATE - 6; z -= 1.5) roadPts.push([farmRoadX(z), z])
+    w.addCurvePath(roadPts, 3)
     const sign = w.paperDoll(w.texOf(signCanvas('🌱 농장', '가게 뒤로 쭉')), 2.2, 1)
     sign.root.position.set(3.4, 0, -5.2)
     w.obstacles.push({ x: 3.4, z: -5.2, r: 0.4 })
