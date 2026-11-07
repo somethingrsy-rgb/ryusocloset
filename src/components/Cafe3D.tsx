@@ -154,28 +154,44 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       props.push(d)
       return d
     }
-    // 딸기 가게: 그림은 늘 앞(+z)을 보게 고정하고(돌지 않게), 뒤에 입체 가게 몸통을 붙여 옆·뒤에서 봐도 건물로 보이게
-    const shop = prop('counter', 5.6, 997 / 1024, 0, -6.2)
-    props.pop()
-    ;(shop.doll.material as THREE.MeshBasicMaterial).side = THREE.FrontSide
-    const shopMat = (c: number) => keep(new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: 0.25 }))
-    const body = new THREE.Mesh(keep(new THREE.BoxGeometry(4.3, 2.4, 2.6)), shopMat(0xfff1e2))
-    body.position.set(0, 1.2, -6.2 - 1.4)
-    const roof = new THREE.Mesh(keep(new THREE.CylinderGeometry(1, 1, 4.5, 3, 1)), shopMat(0xf4a3b8))
-    roof.rotation.z = Math.PI / 2
-    roof.rotation.x = Math.PI / 6
-    roof.scale.set(1, 1, 1.6)
-    roof.position.set(0, 2.4 + 0.5, -6.2 - 1.4) // 지붕 꼭대기가 그림의 차양보다 낮게(앞에서 보면 안 보인다)
-    const base = new THREE.Mesh(keep(new THREE.BoxGeometry(4.5, 0.3, 2.8)), shopMat(0xf7c9a6))
-    base.position.set(0, 0.15, -6.2 - 1.4)
-    for (const m of [body, roof, base]) { m.castShadow = true; m.receiveShadow = true; scene.add(m) }
-    // 가게 뒷면 그림(문이 있는 뒤쪽): 몸통 뒤에 뒤(-z)를 보게 붙인다
-    const back = new THREE.Mesh(keep(new THREE.PlaneGeometry(5.6 * (1155 / 1186), 5.6).translate(0, 2.8, 0)), keep(new THREE.MeshBasicMaterial({ map: w.texOf(assetUrl('cafe/3d/counter_back.webp')), transparent: true, alphaTest: 0.35, side: THREE.FrontSide })))
-    back.position.set(0, 0, -6.2 - 2.8)
-    back.rotation.y = Math.PI
-    scene.add(back)
-    const shopParts: THREE.Object3D[] = [shop.root, body, roof, base, back]
-    w.obstacles.push({ x: 0, z: -6.2, r: 2.4 }, { x: -1.6, z: -7.8, r: 1.4 }, { x: 1.6, z: -7.8, r: 1.4 })
+    // 딸기 가게: 여덟 방향에서 본 그림(받은 그림 7장 + 왼쪽 뒤는 오른쪽 뒤를 뒤집어서) 중 지금 보는 방향에 맞는 한 장만 보여 준다.
+    // 판은 하나라 그림끼리 겹쳐서 지지직거리지 않고, 둘러보면 건물을 돌아가며 보는 것처럼 바뀐다
+    const SHOP = { x: 0, z: -6.2, h: 5.8 }
+    const VIEWS: [string, number, boolean][] = [['v0', 1155 / 1186, false], ['v1', 1164 / 1198, false], ['v2', 692 / 1183, false], ['v3', 1110 / 1149, false], ['v4', 1155 / 1186, false], ['v3', 1110 / 1149, true], ['v6', 732 / 1189, false], ['v7', 1148 / 1197, false]]
+    const viewTex = new Map<string, THREE.Texture>()
+    const shopMat = keep(new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.4, side: THREE.DoubleSide }))
+    const shopPlane = new THREE.Mesh(keep(new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0)), shopMat)
+    const shopRoot = new THREE.Group()
+    shopRoot.position.set(SHOP.x, 0, SHOP.z)
+    const shopShadow = new THREE.Mesh(keep(new THREE.CircleGeometry(1, 32)), keep(new THREE.MeshBasicMaterial({ color: 0x3c5a2a, transparent: true, opacity: 0.22, depthWrite: false })))
+    shopShadow.rotation.x = -Math.PI / 2
+    shopShadow.position.y = 0.02
+    shopShadow.scale.set(2.6, 2, 1)
+    shopRoot.add(shopShadow, shopPlane)
+    scene.add(shopRoot)
+    let shopView = -1
+    const showView = (k: number) => {
+      shopView = k
+      const [name, aspect, flip] = VIEWS[k]
+      if (!viewTex.has(name)) viewTex.set(name, w.texOf(assetUrl(`cafe/3d/shop/${name}.webp`)))
+      shopMat.map = viewTex.get(name)!
+      shopMat.needsUpdate = true
+      shopPlane.scale.set(SHOP.h * aspect * (flip ? -1 : 1), SHOP.h, 1)
+    }
+    // 미리 받아 둔다(처음 돌아볼 때 빈 판이 보이지 않게)
+    for (const [name] of VIEWS) if (!viewTex.has(name)) viewTex.set(name, w.texOf(assetUrl(`cafe/3d/shop/${name}.webp`)))
+    showView(0)
+    /** 매 프레임: 카메라가 건물 둘레 어느 쪽에 있는지(0 = 앞, 시계 반대로 45도씩)로 그림을 고르고 판을 카메라로 돌린다 */
+    const updateShop = () => {
+      const a = Math.atan2(w.camera.position.x - SHOP.x, w.camera.position.z - SHOP.z)
+      shopPlane.rotation.y = a
+      const sector = Math.PI / 4
+      const off = (k: number) => Math.abs(Math.atan2(Math.sin(a - k * sector), Math.cos(a - k * sector)))
+      // 경계에서 그림이 왔다 갔다 하지 않게 지금 그림은 조금 더 오래 유지한다
+      if (shopView < 0 || off(shopView) > sector / 2 + 0.08) showView(((Math.round(a / sector) % 8) + 8) % 8)
+    }
+    w.obstacles.push({ x: 0, z: -6.2, r: 2.4 }, { x: -1.4, z: -7.6, r: 1.4 }, { x: 1.4, z: -7.6, r: 1.4 })
+    const shopParts: THREE.Object3D[] = [shopRoot]
     // 파라솔 테이블(입체): 잔디밭 여기저기 띄엄띄엄
     const tableKit = makeTableKit(w)
     for (let i = 0; i < 8; i++) {
@@ -288,6 +304,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         }
       }
       for (const d of props) w.face(d, 1)
+      updateShop()
       // 가게가 카메라와 아바타 사이를 가리면 잠깐 숨긴다(나무처럼)
       {
         const cx = w.camera.position.x, cz = w.camera.position.z, sx = me.x - cx, sz = me.z - cz, len2 = sx * sx + sz * sz || 1
