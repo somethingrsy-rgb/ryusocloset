@@ -5,6 +5,7 @@ import { renderFigure } from '../lib/exportPng'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { stepCafe } from '../lib/cafeWalk'
+import { viewSprite } from './viewSprite3d'
 import { ANIMAL_H, createWorld, meadowTree, signCanvas, type Doll, type World } from './world3d'
 
 /** 기존 주문 저장을 공유하는 자유 산책 카페. 3D 농장과 같은 바탕(world3d): 같은 카메라 각도·따라가기·걷기·끌어서 둘러보기 */
@@ -156,44 +157,15 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       props.push(d)
       return d
     }
-    // 딸기 가게: 여덟 방향에서 본 그림(받은 그림 7장 + 왼쪽 뒤는 오른쪽 뒤를 뒤집어서) 중 지금 보는 방향에 맞는 한 장만 보여 준다.
-    // 판은 하나라 그림끼리 겹쳐서 지지직거리지 않고, 둘러보면 건물을 돌아가며 보는 것처럼 바뀐다
-    const SHOP = { x: 0, z: -6.2, h: 5.8 }
-    const VIEWS: [string, number, boolean][] = [['v0', 1155 / 1186, false], ['v1', 1164 / 1198, false], ['v2', 692 / 1183, false], ['v3', 1110 / 1149, false], ['v4', 1155 / 1186, false], ['v3', 1110 / 1149, true], ['v6', 732 / 1189, false], ['v7', 1148 / 1197, false]]
-    const viewTex = new Map<string, THREE.Texture>()
-    const shopMat = keep(new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.4, side: THREE.DoubleSide }))
-    const shopPlane = new THREE.Mesh(keep(new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0)), shopMat)
-    const shopRoot = new THREE.Group()
-    shopRoot.position.set(SHOP.x, 0, SHOP.z)
-    const shopShadow = new THREE.Mesh(keep(new THREE.CircleGeometry(1, 32)), keep(new THREE.MeshBasicMaterial({ color: 0x3c5a2a, transparent: true, opacity: 0.22, depthWrite: false })))
-    shopShadow.rotation.x = -Math.PI / 2
-    shopShadow.position.y = 0.02
-    shopShadow.scale.set(2.1, 1.5, 1) // 그림 판 뒤에 숨는 크기(앞으로 삐져나오면 건물이 그림자 위에 떠 보인다)
-    shopRoot.add(shopShadow, shopPlane)
-    scene.add(shopRoot)
-    let shopView = -1
-    const showView = (k: number) => {
-      shopView = k
-      const [name, aspect, flip] = VIEWS[k]
-      if (!viewTex.has(name)) viewTex.set(name, w.texOf(assetUrl(`cafe/3d/shop/${name}.webp`)))
-      shopMat.map = viewTex.get(name)!
-      shopMat.needsUpdate = true
-      shopPlane.scale.set(SHOP.h * aspect * (flip ? -1 : 1), SHOP.h, 1)
-    }
-    // 미리 받아 둔다(처음 돌아볼 때 빈 판이 보이지 않게)
-    for (const [name] of VIEWS) if (!viewTex.has(name)) viewTex.set(name, w.texOf(assetUrl(`cafe/3d/shop/${name}.webp`)))
-    showView(0)
-    /** 매 프레임: 카메라가 건물 둘레 어느 쪽에 있는지(0 = 앞, 시계 반대로 45도씩)로 그림을 고르고 판을 카메라로 돌린다 */
-    const updateShop = () => {
-      const a = Math.atan2(w.camera.position.x - SHOP.x, w.camera.position.z - SHOP.z)
-      shopPlane.rotation.y = a
-      // 그림의 맨 아래(건물 바닥 앞쪽 모서리)가 땅에 닿아 보이게 판을 카메라 쪽 건물 앞 끝으로 내민다(가운데에 두면 떠 보였다)
-      shopPlane.position.set(Math.sin(a) * 1.5, 0, Math.cos(a) * 1.5)
-      const sector = Math.PI / 4
-      const off = (k: number) => Math.abs(Math.atan2(Math.sin(a - k * sector), Math.cos(a - k * sector)))
-      // 경계에서 그림이 왔다 갔다 하지 않게 지금 그림은 조금 더 오래 유지한다
-      if (shopView < 0 || off(shopView) > sector / 2 + 0.08) showView(((Math.round(a / sector) % 8) + 8) % 8)
-    }
+    // 딸기 가게: 여덟 방향에서 본 그림 중 보는 방향에 맞는 한 장(viewSprite3d, 농장 노점과 같은 방식). 왼쪽 뒤는 오른쪽 뒤를 뒤집어서
+    const cv = (n: string) => `cafe/3d/shop/${n}.webp`
+    const shopView = viewSprite(w, [
+      [cv('v0'), 1155 / 1186, false], [cv('v1'), 1164 / 1198, false], [cv('v2'), 692 / 1183, false], [cv('v3'), 1110 / 1149, false],
+      [cv('v4'), 1155 / 1186, false], [cv('v3'), 1110 / 1149, true], [cv('v6'), 732 / 1189, false], [cv('v7'), 1148 / 1197, false],
+    ], 5.8, [2.1, 1.5], 1.5)
+    shopView.root.position.set(0, 0, -6.2)
+    scene.add(shopView.root)
+    const shopRoot = shopView.root
     w.obstacles.push({ x: 0, z: -6.2, r: 2.4 }, { x: -1.4, z: -7.6, r: 1.4 }, { x: 1.4, z: -7.6, r: 1.4 })
     const shopParts: THREE.Object3D[] = [shopRoot]
     // 파라솔 테이블(입체): 잔디밭 여기저기 띄엄띄엄
@@ -251,7 +223,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     // 농장 가는 길: 가게 뒤로 곧게, 가게 옆에 표지판
     // 굽이굽이 흙길(산책길처럼)
     const roadPts: [number, number][] = []
-    for (let z = -8.4; z >= -FARM_GATE - 6; z -= 1.5) roadPts.push([farmRoadX(z), z])
+    // 가게 밑에서부터 시작(길이 가게와 이어지게)
+    for (let z = -6.2; z >= -FARM_GATE - 6; z -= 1.5) roadPts.push([farmRoadX(z), z])
     w.addCurvePath(roadPts, 3)
     const sign = w.paperDoll(w.texOf(signCanvas('🌱 농장', '가게 뒤로 쭉')), 2.2, 1)
     sign.root.position.set(3.4, 0, -5.2)
@@ -311,7 +284,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         }
       }
       for (const d of props) w.face(d, 1)
-      updateShop()
+      shopView.update(w.camera)
       // 가게가 카메라와 아바타 사이를 가리면 잠깐 숨긴다(나무처럼)
       {
         const cx = w.camera.position.x, cz = w.camera.position.z, sx = me.x - cx, sz = me.z - cz, len2 = sx * sx + sz * sz || 1
