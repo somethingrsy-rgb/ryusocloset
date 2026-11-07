@@ -44,7 +44,7 @@ describe('farming lifecycle',()=>{
   it('sanitizes malformed and old save data',()=>{
     expect(sanitizeFarm(null)).toEqual(defaultFarm())
     const state=sanitizeFarm({plots:[{crop:'bad'},null,{crop:'carrot',wateredAt:-1}],inventory:{carrot:-5,tomato:3.5,corn:1},coins:Infinity,decorations:['fence','fence','invalid']})
-    expect(state.plots).toHaveLength(20);expect(state.plots[0]).toBeNull()
+    expect(state.plots).toHaveLength(28);expect(state.plots[0]).toBeNull()
     expect(state.plots[2]?.wateredAt).toBeNull();expect(state.inventory.corn).toBe(4);expect(state.inventory.carrot).toBe(0)
     expect(state.coins).toBe(0);expect(state.decorations).toEqual(['fence'])
   })
@@ -67,7 +67,7 @@ it('persists atomically, blocks restoration writes and keeps farm on storage fai
 })
 it('예전 6칸·토마토 저장은 9칸·옥수수로 이어진다',()=>{
   const old=sanitizeFarm({plots:[{crop:'tomato',wateredAt:5},{crop:'carrot',wateredAt:null},null,null,null,{crop:'strawberry',wateredAt:7}],inventory:{carrot:2,tomato:3,strawberry:1},coins:40,deliveries:2})
-  expect(old.plots).toHaveLength(20)
+  expect(old.plots).toHaveLength(28)
   expect(old.plots[0]).toEqual({crop:'corn',wateredAt:5});expect(old.plots[5]?.crop).toBe('strawberry');expect(old.plots[8]).toBeNull()
   expect(old.inventory).toEqual({carrot:2,strawberry:1,corn:3});expect(old.coins).toBe(40);expect(old.deliveries).toBe(2)
 })
@@ -91,13 +91,21 @@ describe('새 땅 밭 사기', () => {
   it('코인이 모자라거나 범위 밖이면 살 수 없다', () => {
     const state = { ...defaultFarm(), coins: 19 }
     expect(reduceFarm(state, { type: 'buy', plot: 9 }, 0)).toBe(state)
-    expect(reduceFarm({ ...state, coins: 99 }, { type: 'buy', plot: 20 }, 0)).toEqual({ ...state, coins: 99 })
+    expect(reduceFarm({ ...state, coins: 99 }, { type: 'buy', plot: 28 }, 0)).toEqual({ ...state, coins: 99 })
+  })
+  it('옆 울타리 밭 8칸(20~27번)도 코인으로 사서 심는다', () => {
+    let state = { ...defaultFarm(), coins: 100 }
+    expect(state.owned.slice(20)).toEqual(Array(8).fill(false))
+    state = reduceFarm(state, { type: 'buy', plot: 27 }, 0)
+    expect(state.owned[27]).toBe(true); expect(state.coins).toBe(80)
+    state = reduceFarm(state, { type: 'plant', plot: 27, crop: 'carrot' }, 0)
+    expect(state.plots[27]?.crop).toBe('carrot')
   })
   it('예전 저장(9칸)은 가운데 땅 그대로 이어지고 산 땅은 저장에서 읽는다', () => {
     const old = sanitizeFarm({ plots: [{ crop: 'carrot', wateredAt: null }], coins: 7 })
     expect(old.owned.filter(Boolean)).toHaveLength(9)
     const saved = sanitizeFarm({ plots: [], owned: Array(20).fill(true), coins: 1 })
-    expect(saved.owned.every(Boolean)).toBe(true)
+    expect(saved.owned.slice(0, 20).every(Boolean)).toBe(true); expect(saved.owned.slice(20).some(Boolean)).toBe(false) // 예전 20칸 저장: 옆 밭은 아직 안 산 것
     expect(sanitizeFarm({ owned: 'x' }).owned.filter(Boolean)).toHaveLength(9)
   })
 })

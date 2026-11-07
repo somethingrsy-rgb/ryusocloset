@@ -35,11 +35,18 @@ export function Runner3D({ live, outfit, tweaks, friends }: { live: MutableRefOb
     const { scene, keep, lambert } = s
 
     // 땅·길은 아바타를 따라 움직이는 큰 판, 길가 나무·꽃·돌은 구간마다 만들고 지나가면 지운다
-    const grass = new THREE.Mesh(keep(new THREE.PlaneGeometry(200, 200)), lambert(0x8fd16a))
+    // 카페와 같은 잔디·흙길 그림
+    const grassTex = s.texOf(assetUrl('cafe/3d/grass.webp'))
+    grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping
+    grassTex.repeat.set(25, 25)
+    const dirtTex = s.texOf(assetUrl('cafe/3d/dirt.webp'))
+    dirtTex.wrapS = dirtTex.wrapT = THREE.RepeatWrapping
+    dirtTex.repeat.set(1, 200 / 3.4)
+    const grass = new THREE.Mesh(keep(new THREE.PlaneGeometry(200, 200)), keep(new THREE.MeshLambertMaterial({ map: grassTex })))
     grass.rotation.x = -Math.PI / 2
     grass.receiveShadow = true
     scene.add(grass)
-    const road = new THREE.Mesh(keep(new THREE.PlaneGeometry(3.4, 200)), lambert(0xf1d9a6))
+    const road = new THREE.Mesh(keep(new THREE.PlaneGeometry(3.4, 200)), keep(new THREE.MeshLambertMaterial({ map: dirtTex })))
     road.rotation.x = -Math.PI / 2
     road.position.y = 0.01
     road.receiveShadow = true
@@ -111,6 +118,8 @@ export function Runner3D({ live, outfit, tweaks, friends }: { live: MutableRefOb
       for (const [c, g] of chunks) if (c < c0 - 1 || c > c0 + 3) { scene.remove(g); chunks.delete(c) }
       for (const g of chunks.values()) for (const d of (g.userData.trees ?? []) as Doll[]) s.face(d)
       grass.position.z = pz; road.position.z = pz - 60
+      // 판은 아바타를 따라가니 무늬는 반대로 밀어서 땅에 붙어 있게 한다
+      grassTex.offset.y = -pz / 8; dirtTex.offset.y = -pz / 3.4
       // 보이는 것
       const { obstacles, coins, gifts } = visible(run.seed, run.x - 300, run.x + 2600, run.level, run.k)
       const want = new Set<string>()

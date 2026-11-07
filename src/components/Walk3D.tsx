@@ -45,7 +45,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     const friendOf = new Map<THREE.Object3D, number>()
     const friends: { animal: number; doll: Doll; x: number; z: number; tx: number; tz: number; wait: number; dir: 1 | -1; t: number }[] = []
     const w = createWorld(el, {
-      bounds: WORLD, start: { x: 0, z: 0 }, yaw: Math.PI, onReady: () => setReady(true),
+      bounds: WORLD, start: { x: 0, z: 0 }, yaw: Math.PI, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 친구를 누르면 그 친구 앞까지 걸어가서 이야기를 시작한다
       onPick: (o) => {
         const k = friendOf.get(o)
@@ -62,23 +62,29 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     world.current = w
     const { scene, rnd, keep, lambert } = w
 
-    // 산책길: 구불구불한 흙길 + 길가 돌멩이
+    // 산책길: 구불구불한 흙길(카페 흙길 그림) + 길가 돌멩이
     const curve = new THREE.CatmullRomCurve3(Array.from({ length: 9 }, (_, i) => new THREE.Vector3(Math.sin(i * 1.3) * 9, 0, -WORLD + (i * WORLD * 2) / 8)))
     const samples = curve.getSpacedPoints(240)
     w.me.x = samples[20].x; w.me.z = samples[20].z
     const roadW = 3.4
-    const pos: number[] = [], idx: number[] = []
+    const pos: number[] = [], idx: number[] = [], uv: number[] = []
+    let along = 0
     samples.forEach((p, i) => {
       const t = curve.getTangentAt(i / (samples.length - 1))
       const n = new THREE.Vector3(-t.z, 0, t.x).normalize().multiplyScalar(roadW / 2)
       pos.push(p.x + n.x, 0.02, p.z + n.z, p.x - n.x, 0.02, p.z - n.z)
+      if (i) along += p.distanceTo(samples[i - 1])
+      uv.push(0, along / roadW, 1, along / roadW) // 흙길 그림 한 장 = 길 폭만큼
       if (i) { const a = (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2) }
     })
     const roadGeo = keep(new THREE.BufferGeometry())
     roadGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+    roadGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
     roadGeo.setIndex(idx)
     roadGeo.computeVertexNormals()
-    const road = new THREE.Mesh(roadGeo, keep(new THREE.MeshLambertMaterial({ color: 0xf1d9a6, side: THREE.DoubleSide })))
+    const dirt = w.texOf(assetUrl('cafe/3d/dirt.webp'))
+    dirt.wrapS = dirt.wrapT = THREE.RepeatWrapping
+    const road = new THREE.Mesh(roadGeo, keep(new THREE.MeshLambertMaterial({ map: dirt, side: THREE.DoubleSide })))
     road.receiveShadow = true
     scene.add(road)
     const stoneGeo = keep(new THREE.SphereGeometry(0.18, 8, 6)), stoneMat = lambert(0xe3e0d6)

@@ -2,7 +2,7 @@ import { playCoin, playHarvest, playPlant, playWater, startBgm, stopBgm } from '
 import { actKitchen } from '../lib/kitchen'
 import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useI18n } from '../i18n'
-import { actFarm, CROPS, getFarm, growth, orderCrop, PLOT_COUNT, plotPrice, subscribeFarm, type CropId, type FarmAction, animalWait, ANIMAL_SECONDS, type AnimalGood } from '../lib/farm'
+import { actFarm, CROPS, getFarm, growth, MAIN_PLOTS, orderCrop, PLOT_COUNT, plotPrice, subscribeFarm, type CropId, type FarmAction, animalWait, ANIMAL_SECONDS, type AnimalGood } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { FarmFx } from './FarmFx'
@@ -48,6 +48,10 @@ function plotBox(i: number, L: Layout) {
   const y = L.cy + (r - (L.rows - 1) / 2) * rowPitch
   return { x: (x / L.w) * 100, y: (y / L.h) * 100, w: (L.tw / L.w) * 100, h: (th / L.h) * 100, row: r }
 }
+/** 옆 울타리 밭(20~27번): 큰 밭 자리에 4칸×2줄로 조금 크게 놓는다(옆 밭 화면으로 바꿨을 때) */
+const sideLayout = (L: Layout) => ({ ...L, cols: 4, rows: 2, tw: L.tw * 1.2, rowGap: L.rowGap + 8 }) as unknown as Layout
+/** 밭 번호 → 그림 위 자리: 큰 밭은 plotBox, 옆 밭은 sideLayout */
+const boxOf = (i: number, L: Layout) => (i < MAIN_PLOTS ? plotBox(i, L) : plotBox(i - MAIN_PLOTS, sideLayout(L)))
 /** 아바타 크기: 높이가 그림 높이의 avatarH% 가 되도록 가로 %를 구한다 */
 const avatarWidth = (L: Layout) => (L.avatarH * (1024 / 1536)) / (L.w / L.h)
 /** 작물 그림 한 장의 크기(px). 가로 500 = 칸 폭의 48% */
@@ -93,6 +97,8 @@ const Farm3D = lazy(() => import('./Farm3D').then((m) => ({ default: m.Farm3D })
 
 export function FarmScene({ outfit, tweaks, onKitchen, onOutfit }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void; onOutfit: (next: Outfit) => void }) {
   const [farm3d, setFarm3d] = useState(false)
+  /** 지금 보는 밭: 큰 밭(0~19) 또는 옆 울타리 밭(20~27) */
+  const [field, setField] = useState<'main' | 'side'>('main')
   const { lang } = useI18n()
   const ko = lang === 'ko'
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
@@ -243,11 +249,11 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit }: { outfit: Out
     if (!need) { setNotice(ko ? '자라는 중이에요' : 'Still growing'); return }
     if (pending.current.has(i)) return
     pending.current.add(i)
-    const box = plotBox(i, L)
+    const box = boxOf(i, L)
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
     if (claimed(i)) return // 친구가 지금 그 밭에서 일하는 중
     // 친구가 있으면 물 주기는 친구들이 저절로 한다(누르지 않아도 된다). 수확은 수확 버튼을 누르면 친구들이, 밭을 누르면 내가 한다
-    if (need === 'water' && friends.length) {
+    if (need === 'water' && friends.length && i < MAIN_PLOTS) {
       pending.current.delete(i)
       setNotice(ko ? '친구가 곧 물을 줄 거예요 💧' : 'A friend will water it soon 💧')
       return
@@ -272,14 +278,14 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit }: { outfit: Out
   const pick = (t: Tool) => {
     if (t === 'seed') { setPicker((p) => (tool === 'seed' ? !p : true)); setTool('seed'); return }
     // 친구가 있으면 물주기·수확 버튼 한 번에 친구들이 밭을 돌며 알아서 한다
-    if (friends.length && t === 'water') {
+    if (friends.length && field === 'main' && t === 'water') {
       setPicker(false)
       const need = farm.plots.some((p, i) => farm.owned[i] && p && p.wateredAt === null)
       if (need) waterNow()
       setNotice(need ? (ko ? '친구들이 물을 주러 가요 💧' : 'Friends are off to water 💧') : (ko ? '물 줄 밭이 없어요' : 'Nothing to water'))
       return
     }
-    if (friends.length && t === 'harvest') {
+    if (friends.length && field === 'main' && t === 'harvest') {
       setPicker(false)
       setNotice(harvestAll(now) ? (ko ? '친구들이 수확하러 가요 🧺' : 'Friends are off to harvest 🧺') : (ko ? '아직 다 자란 작물이 없어요' : 'Nothing is ready yet'))
       return
@@ -328,9 +334,16 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit }: { outfit: Out
             </button>
           )
         })}
-        {/* 밭 45칸 */}
-        {Array.from({ length: PLOT_COUNT }, (_, i) => {
-          const box = plotBox(i, L)
+        {/* 옆 울타리 밭: 하얀 울타리로 둘러싼 8칸 */}
+        {field === 'side' && (() => {
+          const bs = Array.from({ length: PLOT_COUNT - MAIN_PLOTS }, (_, j) => boxOf(MAIN_PLOTS + j, L))
+          const x0 = Math.min(...bs.map((b) => b.x - b.w / 2)) - 2, x1 = Math.max(...bs.map((b) => b.x + b.w / 2)) + 2
+          const y0 = Math.min(...bs.map((b) => b.y - b.h / 2)) - 3, y1 = Math.max(...bs.map((b) => b.y + b.h / 2)) + 2
+          return <div aria-hidden className="pointer-events-none absolute rounded-xl" style={{ left: `${x0}%`, top: `${y0}%`, width: `${x1 - x0}%`, height: `${y1 - y0}%`, zIndex: 1, border: '4px dashed #fffaf0', boxShadow: '0 0 0 2px rgba(150,110,70,0.35), inset 0 0 0 2px rgba(150,110,70,0.25)', background: 'rgba(120,170,70,0.25)' }} />
+        })()}
+        {/* 밭: 큰 밭 20칸 또는 옆 밭 8칸 */}
+        {Array.from({ length: PLOT_COUNT }, (_, i) => i).filter((i) => (field === 'main') === (i < MAIN_PLOTS)).map((i) => {
+          const box = boxOf(i, L)
           const plot = farm.plots[i]
           const mine = farm.owned[i]
           const progress = growth(plot, now)
@@ -367,7 +380,7 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit }: { outfit: Out
         </div>
 
         {/* 같이 농사짓는 친구들: 평소에는 밭 둘레를 따로따로 거닐고, 일이 생기면 자기 구역(둘이면 왼쪽 반·오른쪽 반)의 가까운 밭부터 줄을 따라 차례로 물을 주거나 수확한다 */}
-        {friends.map((f, k) => {
+        {field === 'main' && friends.map((f, k) => {
           const fw = aw * FRIEND_PER_AVATAR_W // 친구 그림 칸 너비(%, 정사각형)
           const fh = fw * (L.w / L.h) // 같은 칸의 높이(그림 높이에 대한 %)
           const job = jobs[f]
@@ -409,6 +422,8 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit }: { outfit: Out
         <div className="absolute flex items-center gap-1" style={{ right: '2.5%', top: '1.8%', zIndex: 12 }}>
           {/* 같이 농사지을 친구 고르기: 고른 친구 얼굴(혼자면 🐾) */}
           <button aria-label="3D 농장 (시험판)" onClick={() => setFarm3d(true)} className={PILL}><PillText>3D</PillText></button>
+          {/* 큰 밭 ↔ 옆 울타리 밭 */}
+          <button aria-label={field === 'main' ? (ko ? '옆 밭 보기' : 'Side field') : (ko ? '큰 밭 보기' : 'Main field')} onClick={() => { setField((f) => (f === 'main' ? 'side' : 'main')); setBuying(null); setPos(null) }} className={PILL}><PillText>{field === 'main' ? (ko ? '옆 밭 ▶' : 'Side ▶') : (ko ? '◀ 큰 밭' : '◀ Main')}</PillText></button>
           <button aria-label={ko ? '같이 농사지을 친구' : 'Farm friends'} onClick={() => setPicking(true)} className={PILL}>
             <PillText>{friends.length ? friends.map((f) => <img key={f} src={assetUrl(guestFace(f))} alt="" draggable={false} className="-mx-0.5 inline-block h-6 w-6 object-contain align-middle" />) : '🐾'}</PillText>
           </button>
