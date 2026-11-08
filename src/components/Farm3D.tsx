@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
 import { MultiplayerBoss } from './MultiplayerBoss'
+import { attachBossBattle, type BossBattle } from './bossBattle3d'
 import { mpDock } from './MultiplayerBar'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
@@ -65,6 +66,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
 }) {
   const host = useRef<HTMLDivElement>(null)
   const world = useRef<World | null>(null)
+  const [bossBattle, setBossBattle] = useState<BossBattle | null>(null)
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
   const [ready, setReady] = useState(false)
   /** 길을 넘어갈 때 하얗게 덮었다 걷는 막 */
@@ -248,6 +250,8 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
     world.current = w
     // 같이 놀기(멀티플레이어): 켜지 않으면 아무것도 하지 않는다
     const detachMp = attachMultiplayer(w, 'farm')
+    const battle = attachBossBattle(w, 'farm')
+    setBossBattle(battle)
     const { scene, rnd, keep, lambert } = w
 
     // 큰 밭 20칸 + 옆 밭 20칸: 흙 상자(마른 흙·젖은 흙·못 산 큰 밭은 풀빛, 설치 안 한 옆 밭은 흐린 흙) + 작물 둘 + 표시(💧 물 필요, ✨ 다 자람, 🔒 잠김)
@@ -660,121 +664,115 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
       const oc = orderCrop(fst).id
       if (!orderTex.has(oc)) orderTex.set(oc, w.texOf(assetUrl(`assets/farm/harvest_${oc}.webp`)))
       if (orderSp.material.map !== orderTex.get(oc)) { orderSp.material.map = orderTex.get(oc)!; orderSp.material.needsUpdate = true }
-      stallView.update(w.camera)
-      cafeShop.update(w.camera)
-      orderSp.position.set(STALL.x, 3.7 + Math.sin(nowMs / 400) * 0.1, STALL.z)
-      for (const p of plots) for (const c of p.crops) if (c.root.visible) w.face(c, 1)
-      for (const d of buildings) w.face(d, 1)
-      // 우리 동물: 우리 안 아무 데나 천천히 걸어갔다가 쉬었다가
-      for (const a of animals) {
-        a.t += dt
-        if (a.wait > 0) a.wait -= dt
-        else {
-          const dx = a.tx - a.x, dz = a.tz - a.z, d = Math.hypot(dx, dz)
-          if (d < 0.1) { a.wait = 1.5 + rnd() * 3.5; const p = inPen(); a.tx = p.x; a.tz = p.z }
-          else {
-            a.x += (dx / d) * a.speed * dt; a.z += (dz / d) * a.speed * dt
-            const sd = w.screenSide(dx, dz)
-            if (Math.abs(sd) > 0.05) a.dir = sd > 0 ? 1 : -1 // 그림은 오른쪽을 본다(꼬리가 왼쪽)
-          }
-        }
-        a.doll.root.position.set(a.x, 0, a.z)
-        a.doll.body.position.y = a.wait > 0 ? 0 : Math.abs(Math.sin(a.t * 9)) * 0.08
-        w.face(a.doll, a.dir)
-      }
-    })
-    return () => { detachMp(); unsub(); unsubFriends(); unsubFence(); w.dispose(); world.current = null }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 한 번만 만든다(arrive 는 처음 자리만 정한다)
-
-  useEffect(() => {
-    let alive = true
-    renderFigure(outfit, tweaks).then((cv) => { if (alive) world.current?.setAvatar(cv) }).catch(() => setReady(true))
-    return () => { alive = false }
-  }, [outfit, tweaks])
-
-  return (
-    <section aria-label="3D 농장" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none">
-      <div ref={host} className="absolute inset-0" />
-      <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex flex-col gap-1.5">
-        <div className="flex flex-wrap items-start justify-between gap-1.5">
-          <div className="flex items-center gap-1.5">
-            <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌱 3D 농장</span>
-            {/* 같이 놀기 👥 단추 자리 */}
-            <span ref={mpDock} className="pointer-events-auto flex" />
-          </div>
-          <div className="pointer-events-auto flex items-center gap-1.5">
-            <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-black shadow"><CoinIcon /> {farm.coins}</span>
-            {/* 위에서 내려다보기 ↔ 아바타 뒤에서 보기(위아래로 끌어도 높이가 바뀐다) */}
-            <button aria-label="위에서 보기 · 배치" aria-pressed={placing} onClick={() => { playTap(); setSeedPicker(false); if (placing) endPlacing(); else setPlacing(true) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#3d6b2f] shadow">🦅 위</button>
-            {/* 같이 농사지을 친구 고르기(고른 친구 얼굴, 혼자면 🐾) */}
-            <button aria-label="같이 농사지을 친구" onClick={() => { playTap(); setPicking(true) }} className="flex h-10 items-center rounded-full bg-white/95 px-2.5 shadow">
-              {friendsNow.length ? friendsNow.map((f) => <img key={f} src={assetUrl(guestFace(f))} alt="" draggable={false} className="-mx-0.5 h-7 w-7 object-contain" />) : <span className="text-lg">🐾</span>}
-            </button>
-            <button aria-label="닫기" onClick={onExit} className="h-10 w-10 rounded-full bg-white/95 text-lg font-bold shadow">✕</button>
+      stallView.update(w.camera…11486 tokens truncated…uae4c지 걸어가서 직접 물 주고 수확한다 */}
+        <div aria-hidden className="pointer-events-none absolute" style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${aw}%`, aspectRatio: '1024 / 1536', zIndex: 10, transition: 'left 0.8s ease-in-out, top 0.8s ease-in-out' }}>
+          <div className={walking ? 'farm-walk' : ''} style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
+            {hold === 'can' ? (
+              <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '66%', top: '50%', width: '34%', zIndex: 1000, transformOrigin: '15% 60%', transform: watering ? 'rotate(32deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />
+            ) : (
+              <img src={assetUrl(`assets/farm/${hold === 'seed' ? 'icon_seed' : 'icon_basket'}.webp`)} alt="" draggable={false} className="absolute" style={hold === 'seed' ? { left: '64%', top: '42%', width: '44%', zIndex: 1000 } : { left: '62%', top: '44%', width: '42%', zIndex: 1000 }} />
+            )}
+            {watering && <span className="absolute text-sm" style={{ left: '98%', top: '58%', zIndex: 1000 }}>💧</span>}
           </div>
         </div>
-        {/* 도구: 물주기·수확(친구가 있으면 큰 밭은 친구들이), 노점, 주방 */}
-        {!placing && <div className="pointer-events-auto grid w-full max-w-[19rem] grid-cols-4 gap-1 self-end">
-          {([['seed', '씨앗', 'icon_seed'], ['water', '물주기', 'icon_water'], ['harvest', '수확', 'icon_basket'], ['kitchen', '주방', 'icon_kitchen']] as const).map(([id, label, icon]) => (
-            <button key={id} aria-label={label} aria-expanded={id === 'seed' ? seedPicker : undefined} onClick={() => { if (id === 'water' || id === 'harvest') doChore(id); else if (id === 'seed') { playTap(); setSeedPicker((v) => !v) } else { playTap(); onKitchen?.() } }}
-              className="flex min-w-0 flex-col items-center rounded-2xl border-2 border-[#e5cfa3] bg-[#fdf2d8]/95 py-1 shadow">
-              {<img src={assetUrl(`assets/farm/${icon}.webp`)} alt="" draggable={false} className="h-6 w-6 object-contain" />}
-              <span className="text-[11px] font-extrabold text-[#6b4a2b]">{label}</span>
-            </button>
-          ))}
-        </div>}
-        {/* 심을 씨앗 고르기 */}
-        {!placing && seedPicker && (
-        <div role="radiogroup" aria-label="심을 씨앗" className="pointer-events-auto flex w-full max-w-[19rem] self-end justify-around gap-0.5 rounded-full bg-white/90 p-1 whitespace-nowrap shadow">
-          {CROPS.map((c) => (
-            <button key={c.id} role="radio" aria-checked={seed === c.id} aria-label={`${c.ko} 씨앗`} onClick={() => { playTap(); setSeed(c.id); setSeedPicker(false) }}
-              className={`flex h-11 shrink-0 items-center gap-0.5 rounded-full px-1.5 text-[12.5px] font-black sm:px-2 sm:text-sm whitespace-nowrap ${seed === c.id ? 'bg-[#ff8fab] text-white' : 'text-[#6b4a2b]'}`}>
-              <img src={assetUrl(`assets/farm/harvest_${c.id}.webp`)} alt="" className="h-7 w-7 object-contain sm:h-6 sm:w-6" /><span className="inline">{c.ko}</span>
-              {/* 지금 가진 수 */}
-              <span className={`rounded-full px-1 text-[10px] font-extrabold ${seed === c.id ? 'bg-white/30' : 'bg-[#fdf2d8]'}`}>×{farm.inventory[c.id]}</span>
-            </button>
-          ))}
-        </div>
+
+        {/* 같이 농사짓는 친구들: 평소에는 밭 둘레를 따로따로 거닐고, 일이 생기면 자기 구역(둘이면 왼쪽 반·오른쪽 반)의 가까운 밭부터 줄을 따라 차례로 물을 주거나 수확한다 */}
+        {friends.map((f, k) => {
+          // 다른 밭에서 일하는 친구는 이 화면에서 숨긴다(쉬는 친구는 어느 밭에서나 거닌다)
+          if (jobs[f] && (jobs[f].plot < MAIN_PLOTS) !== (field === 'main')) return null
+          const fw = aw * FRIEND_PER_AVATAR_W // 친구 그림 칸 너비(%, 정사각형)
+          const fh = fw * (L.w / L.h) // 같은 칸의 높이(그림 높이에 대한 %)
+          const job = jobs[f]
+          const stroll = strolls[f]
+          // 발 위치(가운데 x, 발 y): 일할 때는 밭 옆, 쉴 때는 밭 둘레를 거닐며 가는 곳(아바타를 따라다니지 않는다)
+          const feet = job ? workSpot(job.plot, L, job.side) : stroll ?? { x: L.home.x + aw / 2 + (k === 0 ? -1 : 1) * (aw * 0.55 + fw * 0.45), y: L.home.y + L.avatarH }
+          const strolling = !job && !!stroll && stroll.until > 0 // 걷는 중
+          const moving = (!!job && !job.watering) || strolling
+          const walkMs = job ? job.walkMs : stroll?.ms ?? WALK_MS
+          return (
+            <div key={f} aria-hidden className="pointer-events-none absolute" style={{ left: `${feet.x - fw / 2}%`, top: `${feet.y - fh}%`, width: `${fw}%`, aspectRatio: '1 / 1', zIndex: job ? 11 : 9, transition: `left ${walkMs}ms linear, top ${walkMs}ms linear` }}>
+              <div className={`relative h-full w-full ${moving ? 'farm-walk' : ''}`}>
+                {/* 동물 친구는 서 있는 그림, 아바타 친구는 고른 옷을 입은 아바타(내 아바타와 같은 크기) */}
+                <FriendFigure g={f} flip={!job && stroll?.dir === -1} avatarW={1 / FRIEND_PER_AVATAR_W} />
+                {/* 물뿌리개·바구니는 손 높이에: 아바타 친구는 키가 커서 손이 칸 위쪽에 있다 */}
+                <span className="absolute inset-0 block" style={{ transform: isAvatarGuest(f) ? 'translate(18%, -50%)' : undefined }}>
+                {job?.kind === 'water' && <img src={assetUrl('assets/farm/can.webp')} alt="" draggable={false} className="absolute" style={{ left: '62%', top: '42%', width: '46%', transformOrigin: '15% 60%', transform: job.watering ? 'rotate(32deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }} />}
+                {job?.kind === 'water' && job.watering && <span className="absolute text-sm" style={{ left: '102%', top: '56%' }}>💧</span>}
+                {/* 수확: 바구니를 들고 가서, 밭에서 바구니를 살짝 내렸다 들며 담는다 */}
+                {job?.kind === 'harvest' && <img src={assetUrl('assets/farm/icon_basket.webp')} alt="" draggable={false} className="absolute" style={{ left: '58%', top: '44%', width: '50%', transform: job.watering ? 'translateY(12%) rotate(-8deg)' : 'none', transition: 'transform 0.2s' }} />}
+                {job?.kind === 'harvest' && job.watering && <span className="absolute text-sm" style={{ left: '96%', top: '30%' }}><Sparkle /></span>}
+                </span>
+              </div>
+              {job && job.n === Math.max(...Object.values(jobs).map((j) => j.n)) && <p className={`absolute ${isAvatarGuest(f) ? 'bottom-[196%]' : 'bottom-[98%]'} left-1/2 m-0 w-max -translate-x-1/2 rounded-2xl bg-white px-2 py-0.5 text-[11px] font-bold text-[#6b4b52] shadow`}>{job.line}</p>}
+            </div>
+          )
+        })}
+
+        {buying !== null && (
+          <div role="dialog" aria-label={ko ? '밭 사기' : 'Buy a plot'} className="absolute left-1/2 flex w-max max-w-[96%] -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-3xl bg-white/95 p-3 shadow-lg" style={{ top: '45%', zIndex: 14 }}>
+            <span className="text-sm font-extrabold">{buying >= MAIN_PLOTS ? (ko ? '옆 밭 설치' : 'Set up plot') : ko ? '새 밭' : 'New plot'} · {plotPrice(farm)} <CoinIcon /></span>
+            <button className={`${btn} bg-blush text-white disabled:opacity-40`} disabled={farm.coins < plotPrice(farm)} onClick={() => { if (apply({ type: 'buy', plot: buying })) setNotice(ko ? '새 밭이 생겼어요! 🌱' : 'New plot! 🌱'); setBuying(null) }}>{buying >= MAIN_PLOTS ? (ko ? '설치하기' : 'Set up') : ko ? '사기' : 'Buy'}</button>
+            <button className={`${btn} bg-petal`} onClick={() => setBuying(null)}>{ko ? '아니요' : 'No'}</button>
+            {farm.coins < plotPrice(farm) && <span className="text-xs font-bold text-blush-deep">{ko ? '코인이 모자라요' : 'Not enough coins'}</span>}
+          </div>
         )}
-        {notice && <p role="status" className="m-0 self-center rounded-full bg-white/95 px-3 py-1.5 text-center text-sm font-bold shadow">{notice}</p>}
+
+        {/* 위쪽: 코인 */}
+        <div className="absolute flex items-center gap-1" style={{ right: '2.5%', top: '1.8%', zIndex: 12 }}>
+          {/* 같이 농사지을 친구 고르기: 고른 친구 얼굴(혼자면 🐾) */}
+          <button aria-label="3D 농장" onClick={() => setFarm3d(true)} className={PILL}><PillText>3D</PillText></button>
+          {/* 큰 밭 ↔ 옆 울타리 밭 */}
+          <button aria-label={field === 'main' ? (ko ? '옆 밭 보기' : 'Side field') : (ko ? '큰 밭 보기' : 'Main field')} onClick={() => { setField((f) => (f === 'main' ? 'side' : 'main')); setBuying(null); setPos(null) }} className={PILL}><PillText>{field === 'main' ? (ko ? '옆 밭 ▶' : 'Side ▶') : (ko ? '◀ 큰 밭' : '◀ Main')}</PillText></button>
+          <button aria-label={ko ? '같이 농사지을 친구' : 'Farm friends'} onClick={() => setPicking(true)} className={PILL}>
+            <PillText>{friends.length ? friends.map((f) => <img key={f} src={assetUrl(guestFace(f))} alt="" draggable={false} className="-mx-0.5 inline-block h-6 w-6 object-contain align-middle" />) : '🐾'}</PillText>
+          </button>
+          <span className={PILL}><PillText><CoinIcon /> {farm.coins}</PillText></span>
+        </div>
+        {notice && <p role="status" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-xs font-bold shadow-md" style={{ top: '14%', maxWidth: '90%', zIndex: 13 }}>{notice}</p>}
       </div>
-      {/* 확장 모드: 옆 밭을 원하는 곳에 설치·옮기기 */}
-      {placing && (
-        <div className="absolute inset-x-2 bottom-4 z-20 mx-auto flex w-fit max-w-full flex-col items-center gap-1.5">
-          <p className="m-0 rounded-2xl bg-white/95 px-3 py-2 text-center text-sm font-extrabold text-[#3d6b2f] shadow">
-            {tool === 'plot' ? <>🪴 확장 · 옆 밭 {farm.owned.filter((o, k) => o && k >= MAIN_PLOTS).length}/20</> : <>🪵 울타리 {farm.fences.length}칸 · 한 칸 {FENCE_PRICE} <CoinIcon /></>}<br />
-            <span className="text-xs font-bold text-black/60">{tool === 'fence' ? (pickedFence ? '옮길 곳의 땅을 눌러요 (울타리를 한 번 더 누르면 취소)' : '땅을 누르면 울타리 한 칸 설치 · 울타리를 누르면 옮기기') : moving !== null ? '옮길 ＋ 자리를 눌러요 (밭을 한 번 더 누르면 취소)' : <>＋ 자리를 누르면 설치 · {plotPrice(farm)} <CoinIcon /> · 설치한 밭을 누르면 옮기기</>}</span>
-          </p>
-          <div className="flex gap-1.5">
-            <button aria-pressed={tool === 'plot'} onClick={() => { playTap(); setTool('plot'); setMoving(null); setPickedFence(null) }} className={`h-10 rounded-full px-3 text-sm font-black shadow ${tool === 'plot' ? 'bg-[#5cc46a] text-white' : 'bg-white/95'}`}>🪴 밭</button>
-            <button aria-pressed={tool === 'fence'} onClick={() => { playTap(); setTool('fence'); setMoving(null) }} className={`h-10 rounded-full px-3 text-sm font-black shadow ${tool === 'fence' ? 'bg-[#c98d55] text-white' : 'bg-white/95'}`}>🪵 울타리</button>
-            {tool === 'fence' && pickedFence && <button onClick={() => { if (actFarm({ type: 'unfence', x: pickedFence[0], z: pickedFence[1] }) === 'saved') { playTap(); setNotice('울타리를 치웠어요') } setPickedFence(null) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#d0587a] shadow">🗑 치우기</button>}
-            {tool === 'fence' && <button aria-label="울타리 방향" onClick={() => { playTap(); setFenceDir((d) => (d ? 0 : 1)) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black shadow">{fenceDir ? '↕ 세로' : '↔ 가로'}</button>}
+
+      {/* 도구 버튼: 폰은 그림 아래, 가로 화면은 그림 오른쪽 위에 세로 한 줄로 얹는다 */}
+      <div className={`absolute flex flex-col items-center justify-center ${wide ? '' : 'inset-x-0 bottom-0 px-3 py-3'}`} style={wide && side ? { zIndex: 15, left: 'calc(min(100cqw, 160cqh) + 0.5rem)', right: '0.5rem', top: '50%', transform: 'translateY(-50%)' } : wide ? { zIndex: 15, left: 'calc(min(100cqw, 160cqh) * 0.715)', width: 'calc(min(100cqw, 160cqh) * 0.235)', top: 'calc((100cqh - min(100cqw, 160cqh) / 1.5988) / 2 + min(100cqw, 160cqh) / 1.5988 * 0.37)' } : { zIndex: 5, height: 'max(calc(100cqh - min(150cqw, 100cqh)), 8rem)' }}>
+        <div className={`flex w-full flex-col gap-3 ${wide ? '' : 'max-w-[440px]'}`}>
+          {/* 씨앗 고르기 */}
+          {picker && (
+            <div className="flex justify-center gap-2 rounded-3xl bg-white/95 p-2 shadow-lg" role="radiogroup" aria-label={ko ? '씨앗 고르기' : 'Choose seeds'}>
+              {CROPS.map((c) => (
+                <button key={c.id} role="radio" aria-checked={selected === c.id} className={`flex flex-1 flex-col items-center rounded-2xl p-1 ${selected === c.id ? 'bg-petal ring-2 ring-blush' : ''}`} onClick={() => { setSelected(c.id); setPicker(false) }}>
+                  <FarmImg name={`harvest_${c.id}`} emoji={c.emoji} className="h-12 w-12 object-contain" />
+                  <span className="text-xs font-bold">{c[lang]}</span>
+                  <span className="text-[10px]">{c.seconds}{ko ? '초' : 's'}</span>
+                  {/* 지금 가진 수 */}
+                  <span className="mt-0.5 rounded-full bg-[#fdf2d8] px-2 text-xs font-extrabold text-[#6b4a2b]">×{farm.inventory[c.id]}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* 도구 4개 */}
+          <div className={wide ? 'grid grid-cols-2 gap-2' : 'flex gap-2'}>
+            {tools.map((t) => {
+              const active = tool === t.id
+              return (
+                <button key={t.id} aria-pressed={t.id === 'kitchen' ? undefined : active} className={`flex flex-1 items-center rounded-3xl border-2 shadow-md ${wide ? 'min-h-[5.5rem] flex-col justify-center px-2 py-2' : 'flex-col px-1 pt-2 pb-2.5'} ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'kitchen' ? onKitchen() : pick(t.id))}>
+                  {/* 아이패드처럼 넓은 세로 화면에서 버튼이 너무 커지지 않게 그림 크기에 상한(폰은 그대로) */}
+                  <FarmImg name={t.icon} emoji={t.emoji} className={wide ? 'h-14 w-14 shrink-0 object-contain' : 'aspect-square w-[85%] max-w-[4.5rem] object-contain'} />
+                  <span className="text-sm font-extrabold text-[#6b4a2b]">{t[lang]}</span>
+                </button>
+              )
+            })}
           </div>
-          <button onClick={() => { playTap(); endPlacing() }} className="h-10 rounded-full bg-[#ff8fab] px-4 text-sm font-black text-white shadow">✓ 다 했어요</button>
         </div>
-      )}
-      {!placing && <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">밭을 누르면 심고 · 💧 물 주고 · ✨ 수확해요 · 젖소·닭을 누르면 우유·달걀 · 옆으로 끌면 둘러보고 위아래로 끌면 높이가 바뀌어요</p>}
-      {!ready && <p className="absolute inset-0 z-20 m-0 flex items-center justify-center text-sm font-bold text-[#3d6b2f]">농장을 만드는 중…</p>}
-      {/* 카페 길을 넘어갈 때 하얗게 */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-30 bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
-      {/* 아직 못 산 밭: 코인으로 사기 */}
-      {buying !== null && (
-        <div role="dialog" aria-label="밭 사기" className="absolute top-1/3 left-1/2 z-30 flex w-max max-w-[96%] -translate-x-1/2 items-center gap-2 rounded-3xl bg-white/95 p-3 whitespace-nowrap shadow-lg">
-          <span className="text-sm font-extrabold">{buying >= MAIN_PLOTS ? '옆 밭 설치' : '새 밭'} · {plotPrice(farm)} <CoinIcon /></span>
-          <button className="min-h-11 rounded-2xl bg-[#ff8fab] px-3 py-2 text-sm font-bold text-white disabled:opacity-40" disabled={farm.coins < plotPrice(farm)} onClick={() => { if (apply({ type: 'buy', plot: buying })) setNotice('새 밭이 생겼어요! 🌱'); setBuying(null) }}>{buying >= MAIN_PLOTS ? '설치하기' : '사기'}</button>
-          <button className="min-h-11 rounded-2xl bg-[#ffe4ec] px-3 py-2 text-sm font-bold" onClick={() => setBuying(null)}>아니요</button>
-          {farm.coins < plotPrice(farm) && <span className="text-xs font-bold text-[#d0587a]">코인이 모자라요</span>}
-        </div>
-      )}
-      {stall && <div className="absolute inset-0 z-40"><FarmStall apply={apply} notice={notice ?? ''} onClose={() => setStall(false)} /></div>}
+      </div>
+
+      {stall && <FarmStall apply={apply} notice={notice} onClose={() => setStall(false)} />}
       {picking && (
-        <div className="absolute inset-0 z-40">
-          <PartyInvite here={[]} initial={friendsNow} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`아바타 친구와 수학으로 모은 동물 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
-            cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
-        </div>
+        <PartyInvite here={[]} initial={friends} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`아바타 친구와 수학으로 모은 동물 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
+          cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
       )}
-      <MultiplayerBoss />
+      {/* 3D 농장: 농장 화면 위를 덮는다(농장 노래는 그대로 이어진다) */}
+      {farm3d && <div className="absolute inset-0 z-50"><Suspense fallback={null}><Farm3D outfit={outfit} tweaks={tweaks} onExit={() => setFarm3d(false)} arrive={arrived} onCafe={onCafe} onKitchen={onKitchen} onWalk={onWalk} /></Suspense></div>}
     </section>
   )
 }

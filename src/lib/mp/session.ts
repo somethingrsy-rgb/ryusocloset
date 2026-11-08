@@ -6,6 +6,7 @@
  * Firebase 는 들어갈 때 처음 불러온다(동적 import) → 멀티플레이어를 안 쓰면 앱 크기·동작이 그대로다.
  */
 import { MAX_FOOD, MAX_PLAYERS, STALE_MS, cleanChat, cleanName, shouldSend, type Boss, type ChatMsg, type Food, type Home, type Look, type PlayerState, type Where } from './core'
+import { withBattlePose } from './bossCombat'
 import { firebaseReady, localTest } from './config'
 import type { Transport } from './transport'
 
@@ -25,6 +26,9 @@ export const subscribeMp = (fn: () => void) => (listeners.add(fn), () => void li
 
 let tr: Transport | null = null
 let myName = ''
+let myLook: Look = { avatar: '', outfit: {} }
+let battleHand: string | null = null
+let battlePose: string | null = null
 let lastSent: { x: number; z: number; dir: number; moving: boolean; at: number } | null = null
 let pos = { x: 0, z: 0, dir: 1 as 1 | -1, moving: false }
 let joinId = 0
@@ -33,6 +37,7 @@ export async function joinMp(name: string, look: Look) {
   leaveMp()
   const id = ++joinId
   myName = cleanName(name) || '친구'
+  myLook = look
   try { localStorage.setItem(NAME_KEY, myName) } catch { /* 이번만 */ }
   set({ status: 'connecting', error: null, players: {}, chat: [], boss: null })
   try {
@@ -64,6 +69,7 @@ export function leaveMp() {
   tr?.leave()
   tr = null
   lastSent = null
+  battleHand = null; battlePose = null
   if (state.status !== 'off') set({ status: 'off', players: {}, chat: [], boss: null, uid: null, visiting: null, hosting: false, home: null, foods: [] })
 }
 
@@ -80,7 +86,12 @@ export function setPos(x: number, z: number, dir: 1 | -1, moving: boolean) {
 export function setHomePos(host: string, x: number, y: number, dir: 1 | -1, moving: boolean) {
   if (state.room === 'home' && state.host === host && (!state.visiting || state.visiting === host)) setPos(x, y, dir, moving)
 }
-export function setLook(look: Look) { tr?.update({ look }) }
+export function setLook(look: Look) { myLook = look; tr?.update({ look: withBattlePose(myLook, battleHand, battlePose) }) }
+/** 전투 포즈는 의상과 함께 동기화한다. 일반 위치 전송이나 옷 바꾸기로 지워지지 않는다. */
+export function setBattlePose(weapon: string | null, attack: string | null = null) {
+  battleHand = weapon; battlePose = attack
+  if (tr && !state.visiting) tr.update({ ...pos, look: withBattlePose(myLook, weapon, attack) })
+}
 /** 3D 카페·농장·산책에 들어오고 나갈 때(나가면 'none'). 들어오기 전 상태에서도 기억해 둔다 */
 export function setWhere(room: Where, host: string | null = null) {
   if (room !== 'home') host = null
