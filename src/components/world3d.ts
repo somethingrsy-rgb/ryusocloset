@@ -74,6 +74,8 @@ export interface World {
   pushOut: (o: Mover, r: number) => void
   /** 위에서 내려다보기(확장 모드 지도): {x, z, h} 위 하늘에서 그곳을 본다. null 이면 다시 아바타 뒤 */
   setOverhead: (o: { x: number; z: number; h: number } | null) => void
+  /** 카메라 높이(0 = 아바타 뒤 낮게, 1 = 위에서 내려다보기). 위아래로 끌어도 바뀐다 */
+  tilt: { value: number }
   onFrame: (fn: (dt: number, now: number) => void) => void
   /** 누른 곳에 맞은 물체 중 이것들 안에 든 것이 있으면 onPick, 아니면 땅을 누른 것(걷기) */
   pickables: THREE.Object3D[]
@@ -263,13 +265,15 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   let yaw = opts.yaw ?? 0
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2()
   const pickables: THREE.Object3D[] = []
-  let press: { x: number; y: number; yaw: number; dragged: boolean } | null = null
-  const onDown = (e: PointerEvent) => { dom.setPointerCapture(e.pointerId); press = { x: e.clientX, y: e.clientY, yaw, dragged: false } }
+  let press: { x: number; y: number; yaw: number; tilt: number; dragged: boolean } | null = null
+  /** 카메라 높이: 0 아바타 뒤 낮게 ~ 1 위에서 내려다보기 */
+  const tilt = { value: 0 }
+  const onDown = (e: PointerEvent) => { dom.setPointerCapture(e.pointerId); press = { x: e.clientX, y: e.clientY, yaw, tilt: tilt.value, dragged: false } }
   const onMove = (e: PointerEvent) => {
     if (!press) return
     const dx = e.clientX - press.x
     if (Math.abs(dx) > TAP_MOVE || Math.abs(e.clientY - press.y) > TAP_MOVE) press.dragged = true
-    if (press.dragged) yaw = press.yaw - dx * 0.008
+    if (press.dragged) { yaw = press.yaw - dx * 0.008; tilt.value = Math.max(0, Math.min(1, press.tilt + (e.clientY - press.y) * 0.004)) }
   }
   const onUp = (e: PointerEvent) => {
     if (press && !press.dragged) {
@@ -310,7 +314,11 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   const right = new THREE.Vector3()
   const screenSide = (dx: number, dz: number) => dx * right.x + dz * right.z
   const face = (d: Doll, dir: 1 | -1) => {
-    d.body.rotation.y = Math.atan2(camera.position.x - d.root.position.x, camera.position.z - d.root.position.z)
+    const dx = camera.position.x - d.root.position.x, dz = camera.position.z - d.root.position.z
+    d.body.rotation.order = 'YXZ'
+    d.body.rotation.y = Math.atan2(dx, dz)
+    // 위에서 내려다볼 때는 그림을 카메라 쪽으로 눕혀서 납작해 보이지 않게(낮은 시점에서는 그대로 세워 둔다)
+    d.body.rotation.x = -Math.max(0, Math.atan2(camera.position.y - d.root.position.y, Math.hypot(dx, dz)) - 0.5)
     d.doll.scale.x = dir
   }
 
@@ -352,7 +360,11 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
       walkT += dt
     }
     if (overhead) { camPos.set(overhead.x, overhead.h, overhead.z + overhead.h * 0.3); look.set(overhead.x, 0, overhead.z) }
-    else { camPos.set(me.x + Math.sin(yaw) * 8, 4.2, me.z + Math.cos(yaw) * 8); look.set(me.x, 1.3, me.z) }
+    else {
+      // 높이각: 낮게(0.48) ~ 거의 위에서(1.35), 높아질수록 조금 멀리
+      const pa = 0.48 + tilt.value * 0.87, dist = 9 + tilt.value * 9
+      camPos.set(me.x + Math.sin(yaw) * Math.cos(pa) * dist, Math.sin(pa) * dist, me.z + Math.cos(yaw) * Math.cos(pa) * dist); look.set(me.x, 1.3 - tilt.value * 0.8, me.z)
+    }
     camera.position.lerp(camPos, 1 - Math.pow(0.002, dt))
     camera.lookAt(look)
     sun.position.set(me.x + 18, 30, me.z + 12)
@@ -378,7 +390,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   frame = requestAnimationFrame(tick)
 
   return {
-    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addCastleGate, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables, setOverhead: (o) => { overhead = o },
+    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addCastleGate, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables, setOverhead: (o) => { overhead = o }, tilt,
     onFrame: (fn) => { frameFns.push(fn) },
     dispose: () => {
       cancelAnimationFrame(frame)
