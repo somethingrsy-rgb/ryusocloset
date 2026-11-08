@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from 'react'
+import { Sparkle } from './Sparkle'
 import { useI18n } from '../i18n'
 import { MY_ROOM_ID, PLACE_BY_ID, findItem, getGame, isFound, spotFor, travelItem } from '../lib/game'
 import { assetUrl } from '../lib/items'
@@ -283,7 +284,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
               className={`sparkle ${night ? 'sparkle-night' : ''} absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-2xl`}
               style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: layout ? 10000 : 110 }}
             >
-              <span aria-hidden>✨</span>
+              <Sparkle />
             </button>
           )
         })}

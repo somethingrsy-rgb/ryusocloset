@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
 import { MultiplayerBar } from './MultiplayerBar'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
@@ -254,7 +255,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     const ridgeGeo = keep(new THREE.BoxGeometry(PW * 0.92, 0.08, 0.16))
     const dryMat = lambert(0xc4935f), wetMat = lambert(0x7d5234), lockedMat = lambert(0xa9cf86), ridgeDry = lambert(0xb07e4c), ridgeWet = lambert(0x6a4329)
     const icon = (s: string) => keep(new THREE.SpriteMaterial({ map: w.texOf(emojiCanvas(s)), transparent: true, depthWrite: false }))
-    const iconMats = { water: icon('💧'), ready: icon('✨'), lock: icon('🔒'), add: icon('➕') }
+    const iconMats = { water: icon('💧'), ready: keep(new THREE.SpriteMaterial({ map: w.texOf(assetUrl(SPARKLE_IMG)), transparent: true, depthWrite: false })), lock: icon('🔒'), add: icon('➕') }
     // 누른 밭 둘레에 초록 LED 테두리(어느 밭을 눌렀는지 잘 보이게)
     const ledMat = keep(new THREE.MeshBasicMaterial({ color: 0x19e64f, transparent: true, opacity: 0.95, depthWrite: false }))
     const lw = PW + 0.4, ld = PD + 0.4, t = 0.08 // 테두리만, 얇게

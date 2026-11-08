@@ -1,4 +1,5 @@
 import { playOrder, playServe, playTap, startBgm, stopBgm } from '../lib/sound'
+import { Sparkle } from './Sparkle'
 import { clearArrival, isArriving } from '../lib/farmCafeLink'
 import { MENU } from '../lib/recipes'
 import { actKitchen, getKitchen, subscribeKitchen } from '../lib/kitchen'
@@ -232,7 +233,7 @@ export function CafeGame({ outfit, tweaks, onKitchen, onFarm, onWalk }: { outfit
           : <span className="relative block h-11 w-11">
               <Ico id={m.id} className={`h-11 w-11 ${ready ? 'animate-bounce' : 'opacity-60'}`} />
               {!ready && <span aria-hidden className="absolute -right-2 -bottom-2 text-lg leading-none">🍳</span>}
-              {ready && <span aria-hidden className="absolute -top-2 -right-2 text-lg">✨</span>}
+              {ready && <span aria-hidden className="absolute -top-2 -right-2 text-lg"><Sparkle /></span>}
             </span>}
         {ready && <span className="block text-center text-[10px] leading-tight font-bold text-[#c04a5a]">{tx.ready}</span>}
       </button>
