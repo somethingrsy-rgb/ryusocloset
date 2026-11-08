@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { attachMultiplayer } from './remotePlayers3d'
+import { MultiplayerBar } from './MultiplayerBar'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -243,6 +245,8 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       },
     })
     world.current = w
+    // 같이 놀기(멀티플레이어): 켜지 않으면 아무것도 하지 않는다
+    const detachMp = attachMultiplayer(w, 'farm')
     const { scene, rnd, keep, lambert } = w
 
     // 큰 밭 20칸 + 옆 밭 20칸: 흙 상자(마른 흙·젖은 흙·못 산 큰 밭은 풀빛, 설치 안 한 옆 밭은 흐린 흙) + 작물 둘 + 표시(💧 물 필요, ✨ 다 자람, 🔒 잠김)
@@ -678,7 +682,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         w.face(a.doll, a.dir)
       }
     })
-    return () => { unsub(); unsubFriends(); unsubFence(); w.dispose(); world.current = null }
+    return () => { detachMp(); unsub(); unsubFriends(); unsubFence(); w.dispose(); world.current = null }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 한 번만 만든다(arrive 는 처음 자리만 정한다)
 
   useEffect(() => {
@@ -690,6 +694,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
   return (
     <section aria-label="3D 농장" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none">
       <div ref={host} className="absolute inset-0" />
+      <MultiplayerBar room="farm" outfit={outfit} />
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex flex-wrap items-start justify-between gap-2">
         <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌱 3D 농장 <span className="text-xs font-bold text-black/40">시험판</span></span>
         <div className="pointer-events-auto flex items-center gap-1.5">

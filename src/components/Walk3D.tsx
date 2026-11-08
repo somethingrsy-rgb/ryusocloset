@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { attachMultiplayer } from './remotePlayers3d'
+import { MultiplayerBar } from './MultiplayerBar'
 import { EXTRA_ANIMALS, animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -148,6 +150,8 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       },
     })
     world.current = w
+    // 같이 놀기(멀티플레이어): 켜지 않으면 아무것도 하지 않는다
+    const detachMp = attachMultiplayer(w, 'walk')
     const { scene, rnd, keep, lambert } = w
 
     // 산책길: 구불구불한 흙길(카페 흙길 그림) + 길가 돌멩이
@@ -547,7 +551,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
         }
       }
     })
-    return () => { w.dispose(); world.current = null }
+    return () => { detachMp(); w.dispose(); world.current = null }
   }, [])
 
   // 옷이 바뀌면 아바타 그림을 다시 그려 판에 붙인다
@@ -569,6 +573,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
   return (
     <section aria-label="3D 산책" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none">
       <div ref={host} className="absolute inset-0" />
+      <MultiplayerBar room="walk" outfit={outfit} />
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
         <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌳 3D 산책 <span className="text-xs font-bold text-black/40">시험판</span></span>
         <div className="pointer-events-auto flex gap-1.5">
