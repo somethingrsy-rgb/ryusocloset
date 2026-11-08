@@ -31,6 +31,8 @@ const MONSTERS = [
 ] as const
 /** 몬스터 마법 풀기: 마법봉으로 이만큼 톡톡 */
 const HITS = 10
+/** 마법이 풀린 몬스터가 하는 고마운 말 */
+const THANKS = ['구해 줘서 고마워! 💕', '덕분이야! 이제 마음이 따뜻해졌어 😊', '고마워! 우리 이제 친구 하자! 🤝', '마법이 풀렸어! 정말 고마워 ✨', '덕분에 다시 웃을 수 있게 됐어! 💖', '고마워~ 너는 정말 멋진 마법사야! 🪄']
 /** 지금까지 마법을 풀어 준 몬스터 수 */
 const RESCUE_KEY = 'ryuso.walk.rescuedCount'
 const loadRescued = () => { try { const n = Number(localStorage.getItem(RESCUE_KEY)); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0 } catch { return 0 } }
@@ -52,6 +54,8 @@ const hash = (s: string) => {
 export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void; /** 길가 카페·농장 노점에서 그쪽 화면으로 */ onGo?: (to: 'cafe' | 'farm') => void }) {
   const [near, setNear] = useState<'cafe' | 'farm' | null>(null)
   const nearRef = useRef<'cafe' | 'farm' | null>(null)
+  const onGoRef = useRef(onGo)
+  onGoRef.current = onGo
   const host = useRef<HTMLDivElement>(null)
   const world = useRef<World | null>(null)
   const [ready, setReady] = useState(false)
@@ -63,7 +67,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Out
   const [hello, setHello] = useState<string | null>(null)
   useEffect(() => { if (!hello) return; const t = setTimeout(() => setHello(null), 2600); return () => clearTimeout(t) }, [hello])
   // 몬스터 마법 풀기(전투): k = 몬스터 번호, hits = 마법봉으로 친 횟수, done = 마법이 풀림
-  const [battle, setBattle] = useState<{ k: number; t: number; hits: number; done: boolean; total?: number } | null>(null)
+  const [battle, setBattle] = useState<{ k: number; t: number; hits: number; done: boolean; total?: number; say?: string } | null>(null)
   const battleRef = useRef<number | null>(null)
   battleRef.current = battle && !battle.done ? battle.k : null
   const [wand, setWand] = useState(() => (outfit.wand && ITEM_BY_ID[outfit.wand] ? outfit.wand : WANDS[0]?.id ?? ''))
@@ -85,6 +89,9 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Out
       bounds: WORLD, start: { x: 0, z: 0 }, yaw: startYaw(), grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 친구를 누르면 그 친구 앞까지 걸어가서 이야기를 시작한다
       onPick: (o) => {
+        // 길가 카페·노점을 누르면 문 앞까지 걸어가서 그쪽으로
+        const st = stopOf.get(o)
+        if (st) { w.walkTo(st.x, st.z, () => goStop(st.to), 0.5); return }
         // 몬스터: 마법 풀기 중이면 마법봉으로 톡, 아니면 가서 마법 풀기 시작
         const mk = monOf.get(o)
         if (mk !== undefined) {
@@ -168,8 +175,12 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Out
       w.obstacles.push({ x: bx, z: bz, r: to === 'cafe' ? 2.4 : 1.7 })
       const sign = w.paperDoll(w.texOf(signCanvas(to === 'cafe' ? '☕ 카페' : '🧺 농장', '이쪽으로')), 2, 1)
       sign.root.position.set(p.x + out.x * 2.6 + t.x * 2.2, 0, p.z + out.z * 2.6 + t.z * 2.2)
+      w.pickables.push(sp.root)
       return { to, sp, sign, x: bx - out.x * 3, z: bz - out.z * 3 }
     })
+    const stopOf = new Map(stops.map((st) => [st.sp.root as THREE.Object3D, st]))
+    let going = false
+    const goStop = (to: 'cafe' | 'farm') => { if (going || !onGoRef.current) return; going = true; playServe(); window.setTimeout(() => onGoRef.current?.(to), 300) }
 
     // 나무: 절반은 길가에, 나머지는 들판에
     let trees = 0
@@ -310,7 +321,10 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Out
           try { localStorage.setItem(RESCUE_KEY, String(rescuedCount)) } catch { /* 이번만 */ }
           actFarm({ type: 'earn', amount: 10 })
           battleRef.current = null
-          setBattle({ k: m.k, t: m.type, hits: HITS, done: true, total: rescuedCount })
+          setBattle({ k: m.k, t: m.type, hits: HITS, done: false })
+          // 휘리릭 돌아 웃는 얼굴이 된 다음에 고맙다고 인사한다
+          const total = rescuedCount, say = THANKS[Math.floor(Math.random() * THANKS.length)]
+          window.setTimeout(() => setBattle({ k: m.k, t: m.type, hits: HITS, done: true, total, say }), 1000)
         } else {
           playTap()
           setBattle({ k: m.k, t: m.type, hits: m.hits, done: false })
@@ -321,7 +335,10 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Out
     let helpBk: number | null = null, helpers: typeof friends = []
     w.onFrame((dt, now) => {
       for (const st of stops) { st.sp.update(w.camera); w.face(st.sign, 1) }
-      const nearStop = stops.find((st) => Math.hypot(w.me.x - st.x, w.me.z - st.z) < 4)?.to ?? null
+      const nearStop = stops.find((st) => Math.hypot(w.me.x - st.x, w.me.z - st.z) < 6)?.to ?? null
+      // 가게 문 앞까지 걸어가면 바로 그쪽으로 간다
+      const atDoor = battleRef.current === null && talking.current === null ? stops.find((st) => Math.hypot(w.me.x - st.x, w.me.z - st.z) < 1.6) : undefined
+      if (atDoor) goStop(atDoor.to)
       if (nearStop !== nearRef.current) { nearRef.current = nearStop; setNear(nearStop) }
       // 몬스터: 가까이 가면 마법 풀기 시작, 맞으면 흔들, 다 풀리면 빙글 돌며 얼굴이 바뀐다
       const bk = battleRef.current
@@ -356,10 +373,16 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Out
         if (m.shake > 0) { m.shake -= dt; sx = Math.sin(m.shake * 60) * 0.15 }
         m.doll.body.position.set(sx, m.happy ? Math.abs(Math.sin(m.t * 3)) * 0.12 : m.wait > 0 ? Math.abs(Math.sin(m.t * 6)) * 0.04 : Math.abs(Math.sin(m.t * 8)) * 0.08, 0)
         if (m.spin >= 0) {
-          m.spin += dt / 1.2
-          if (m.spin >= 0.5 && !m.happy) { m.happy = true; (m.doll.doll.material as THREE.MeshBasicMaterial).map = monTex(m.id, 'happy'); (m.doll.doll.material as THREE.MeshBasicMaterial).needsUpdate = true }
-          if (m.spin >= 1) m.spin = -1
-          else { m.doll.body.rotation.y += m.spin * Math.PI * 2; m.doll.body.position.y += Math.sin(m.spin * Math.PI) * 0.8 }
+          // 휘리릭: 0.8초 동안 빠르게 세 바퀴(점점 느려지며), 살짝 뛰어올랐다가 통 내려앉는다
+          m.spin += dt / 0.8
+          const u = Math.min(1, m.spin), ease = 1 - Math.pow(1 - u, 3)
+          if (u >= 0.3 && !m.happy) { m.happy = true; (m.doll.doll.material as THREE.MeshBasicMaterial).map = monTex(m.id, 'happy'); (m.doll.doll.material as THREE.MeshBasicMaterial).needsUpdate = true }
+          if (m.spin >= 1) { m.spin = -1; m.doll.root.scale.setScalar(1) }
+          else {
+            m.doll.body.rotation.y += ease * Math.PI * 6
+            m.doll.body.position.y += Math.sin(u * Math.PI) * 0.6
+            m.doll.root.scale.setScalar(1 + Math.sin(u * Math.PI) * 0.15)
+          }
         }
       }
       // 마법봉은 전투 중에만 아바타 손에
@@ -470,7 +493,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Out
         return battle.done ? (
           <div role="dialog" aria-label="마법이 풀렸어요" className="absolute inset-x-2 bottom-3 z-30 mx-auto flex max-w-md items-center gap-3 rounded-3xl bg-white/95 p-3 shadow-xl">
             <img src={assetUrl(`travel/monster/${m.id}_happy.webp`)} alt="" className="h-16 w-16 shrink-0 object-contain" />
-            <p className="m-0 flex-1 text-sm leading-snug font-bold text-[#6b4b52]">🎉 마법이 풀렸어요!<br />{m.name}: 「구해 줘서 고마워요! 💕」 · +10 코인{battle.total ? <><br /><span className="text-xs text-[#7a3d8f]">지금까지 구한 몬스터 {battle.total}마리</span></> : null}</p>
+            <p className="m-0 flex-1 text-sm leading-snug font-bold text-[#6b4b52]">🎉 마법이 풀렸어요!<br />{m.name}: 「{battle.say ?? '구해 줘서 고마워! 💕'}」 · +10 코인{battle.total ? <><br /><span className="text-xs text-[#7a3d8f]">지금까지 구한 몬스터 {battle.total}마리</span></> : null}</p>
             <button onClick={() => { playTap(); setBattle(null) }} className="min-h-11 shrink-0 rounded-full bg-[#ff8fab] px-4 text-sm font-bold text-white shadow">좋아요</button>
           </div>
         ) : (
