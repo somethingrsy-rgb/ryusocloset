@@ -193,7 +193,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       const img = animal >= 0 ? CALL_ANIMALS[animal].img : EXTRA_ANIMALS[-animal - 1].img
       const doll = w.paperDoll(w.texOf(animal3dUrl(img)), ANIMAL_H, animal3dAspect(img))
       doll.root.userData.tex = [w.texOf(animal3dUrl(img)), w.texOf(animal3dUrl(img, true))]
-      const s = samples[(30 + k * 21) % samples.length]
+      const s = samples[(42 + k * 22) % samples.length] // 처음 자리도 아바타(20번)에서 멀리
       friendOf.set(doll.root, k)
       w.pickables.push(doll.root)
       const x = s.x + (k % 2 ? 2.2 : -2.2)
@@ -289,6 +289,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       } })
     }
 
+    let helpBk: number | null = null, helpers: typeof friends = []
     w.onFrame((dt, now) => {
       // 몬스터: 가까이 가면 마법 풀기 시작, 맞으면 흔들, 다 풀리면 빙글 돌며 얼굴이 바뀐다
       const bk = battleRef.current
@@ -346,13 +347,16 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
         f.sp.material.rotation += dt * 4
         if (u >= 1) { scene.remove(f.sp); fx.splice(i, 1); f.onHit?.() }
       }
+      // 마법 풀기 때 도와주러 오는 친구: 그 몬스터에서 가까운 두 마리만
+      if (bk !== helpBk) { helpBk = bk; helpers = bk === null ? [] : [...friends].sort((a, b) => Math.hypot(a.x - monsters[bk].x, a.z - monsters[bk].z) - Math.hypot(b.x - monsters[bk].x, b.z - monsters[bk].z)).slice(0, 2) }
       for (const f of friends) {
         f.t += dt
         const busy = talking.current === f.animal
-        // 마법 풀기 중: 친구들도 다 같이 몬스터 둘레로 달려간다
-        if (bk !== null) {
-          const m = monsters[bk], a = (friends.indexOf(f) / friends.length) * Math.PI * 2 + 0.6
-          f.tx = m.x + Math.cos(a) * 2.6; f.tz = m.z + Math.sin(a) * 2.6; f.wait = 0
+        const hk = helpers.indexOf(f)
+        if (bk !== null && hk >= 0) {
+          // 몬스터 양옆으로 달려간다
+          const m = monsters[bk], a = hk ? -0.9 : 0.9, cx = w.camera.position.x - m.x, cz = w.camera.position.z - m.z, base = Math.atan2(cz, cx)
+          f.tx = m.x + Math.cos(base + Math.PI / 2 + a) * 2.8; f.tz = m.z + Math.sin(base + Math.PI / 2 + a) * 2.8; f.wait = 0
         }
         if (busy) f.dir = w.me.x < f.x ? -1 : 1
         else if (f.wait > 0) f.wait = Math.min(f.wait, 5) - dt
@@ -360,9 +364,15 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
           const dx = f.tx - f.x, dz = f.tz - f.z, d = Math.hypot(dx, dz)
           if (d < 0.1) {
             f.wait = 1.5 + rnd() * 3
-            const s = samples[Math.floor(rnd() * samples.length)]
-            const near = Math.hypot(s.x - w.me.x, s.z - w.me.z) < 18 ? s : { x: w.me.x + (rnd() - 0.5) * 10, z: w.me.z + (rnd() - 0.5) * 10 }
-            f.tx = near.x + (rnd() - 0.5) * 3; f.tz = near.z + (rnd() - 0.5) * 3
+            // 다음 갈 곳: 아바타에게서 9~24, 다른 친구(가는 곳)에게서 8 이상 떨어진 곳(길가·들판)
+            for (let i = 0; i < 12; i++) {
+              const s = samples[Math.floor(rnd() * samples.length)]
+              const c = Math.hypot(s.x - w.me.x, s.z - w.me.z) < 24 ? { x: s.x + (rnd() - 0.5) * 8, z: s.z + (rnd() - 0.5) * 8 } : (() => { const a = rnd() * Math.PI * 2, d = 9 + rnd() * 15; return { x: w.me.x + Math.cos(a) * d, z: w.me.z + Math.sin(a) * d } })()
+              const dMe = Math.hypot(c.x - w.me.x, c.z - w.me.z)
+              if (dMe < 9 || dMe > 26 || friends.some((o) => o !== f && Math.hypot(o.tx - c.x, o.tz - c.z) < 8)) continue
+              f.tx = c.x; f.tz = c.z
+              break
+            }
           } else {
             f.x += (dx / d) * 2.3 * dt; f.z += (dz / d) * 2.3 * dt
             showBack(f.doll, walkingAway(dx, dz, f.x, f.z, w.camera.position.x, w.camera.position.z))
@@ -371,9 +381,10 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
             w.pushOut(f, 0.35)
           }
         }
-        // 아바타와 겹치지 않게 살짝 비켜 선다
+        // 아바타에게 너무 붙지 않게(이야기·마법 풀기 중이 아니면 5 떨어져 선다)
+        const gap = busy || (hk >= 0 && bk !== null) ? 1.3 : 5
         const ax = f.x - w.me.x, az = f.z - w.me.z, ad = Math.hypot(ax, az)
-        if (ad < 1.3 && ad > 1e-3) { f.x = w.me.x + (ax / ad) * 1.3; f.z = w.me.z + (az / ad) * 1.3 }
+        if (ad < gap && ad > 1e-3) { f.x = w.me.x + (ax / ad) * gap; f.z = w.me.z + (az / ad) * gap }
         f.doll.root.position.set(f.x, 0, f.z)
         if (f.wait > 0 || busy) showBack(f.doll, false)
         f.doll.body.position.y = f.wait > 0 || busy ? 0 : Math.abs(Math.sin(f.t * 8)) * 0.1
