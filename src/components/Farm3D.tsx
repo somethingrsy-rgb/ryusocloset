@@ -77,25 +77,27 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
   const [placing, setPlacing] = useState(false)
   const placingRef = useRef(false)
   placingRef.current = placing
-  const [ghost, setGhost] = useState<{ x: number; z: number; why: string | null } | null>(null)
   const [moving, setMoving] = useState<number | null>(null)
   const movingRef = useRef<number | null>(null)
-  const hideGhostRef = useRef(() => {})
-  const endPlacing = () => { setPlacing(false); setGhost(null); setMoving(null); movingRef.current = null; hideGhostRef.current() }
-  const confirmPlace = () => {
-    if (!ghost || ghost.why) return
+  movingRef.current = moving
+  const endPlacing = () => { setPlacing(false); setMoving(null) }
+  // 확장 모드에서는 하늘 위에서 농장을 지도처럼 내려다본다
+  useEffect(() => { world.current?.setOverhead(placing ? { x: 9, z: -3, h: 40 } : null) }, [placing])
+  /** ＋ 자리를 눌렀을 때: 고른 밭을 거기로 옮기거나, 새 밭을 설치해서 거기에 놓는다 */
+  const placeAt = (x: number, z: number) => {
     if (moving !== null) {
-      if (apply({ type: 'place', plot: moving, x: ghost.x, z: ghost.z })) setNotice('밭을 옮겼어요 🌱')
-    } else {
-      const st = getFarm()
-      const i = st.owned.findIndex((o, k) => k >= MAIN_PLOTS && !o)
-      if (i < 0) { setNotice('옆 밭 20칸을 모두 설치했어요'); return }
-      if (st.coins < plotPrice(st)) { setNotice('코인이 모자라요'); return }
-      // 설치하고 바로 고른 자리로 옮긴다
-      if (apply({ type: 'buy', plot: i })) { actFarm({ type: 'place', plot: i, x: ghost.x, z: ghost.z }); setNotice('새 밭을 설치했어요! 🌱') }
+      if (apply({ type: 'place', plot: moving, x, z })) setNotice('밭을 옮겼어요 🌱')
+      setMoving(null)
+      return
     }
-    setGhost(null); setMoving(null); movingRef.current = null; hideGhostRef.current()
+    const st = getFarm()
+    const i = st.owned.findIndex((o, k) => k >= MAIN_PLOTS && !o)
+    if (i < 0) { setNotice('옆 밭 20칸을 모두 설치했어요'); return }
+    if (st.coins < plotPrice(st)) { setNotice('코인이 모자라요'); return }
+    if (apply({ type: 'buy', plot: i })) { actFarm({ type: 'place', plot: i, x, z }); setNotice('새 밭을 설치했어요! 🌱') }
   }
+  const placeAtRef = useRef(placeAt)
+  placeAtRef.current = placeAt
   const [stall, setStall] = useState(false)
   const [picking, setPicking] = useState(false)
   const friendsNow = useSyncExternalStore(subscribeFarmFriends, getFarmFriends)
@@ -153,24 +155,25 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     let penned: { doll: Doll; good: AnimalGood | null }[] = []
     let PEN = { x0: 0, x1: 0, z0: 0, z1: 0 }
     let showLed: (i: number) => void = () => {}
-    let canPlace: (x: number, z: number, except: number | null) => string | null = () => null
-    let showGhost: (x: number, z: number, ok: boolean) => void = () => {}
-    let hideGhost = () => {}
+    // 확장 모드의 ＋ 자리들(아래에서 만든다)
+    const slotOf = new Map<THREE.Object3D, number>()
+    let slots: { x: number; z: number; box: THREE.Mesh; hit: THREE.Mesh; mark: THREE.Sprite }[] = []
     const w = createWorld(el, {
       bounds: BOUNDS, start: arrive ? { x: cafeRoadX(CAFE_GATE - 7), z: CAFE_GATE - 7 } : { x: 0, z: 6 }, seed: 11, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 밭을 누르면 밭 앞까지 걸어가서 그 밭이 필요로 하는 일을 한다
       // 확장 모드: 땅을 누르면 그 자리에 새 밭(또는 옮길 밭) 미리보기
-      onGround: (x, z) => {
+      onGround: () => {
         if (!placingRef.current) return false
-        const gx = Math.round(x * 2) / 2, gz = Math.round(z * 2) / 2
-        const why = canPlace(gx, gz, movingRef.current)
-        showGhost(gx, gz, !why)
-        setGhost({ x: gx, z: gz, why })
+        setNotice('＋ 자리를 눌러요')
         return true
       },
       onPick: (o) => {
         // 확장 모드에서는 노점·동물을 누르지 않는다
-        if (placingRef.current && !plotOf.has(o)) return
+        if (placingRef.current) {
+          const k = slotOf.get(o)
+          if (k !== undefined) { placeAtRef.current(slots[k].x, slots[k].z); return }
+          if (!plotOf.has(o)) return
+        }
         // 노점·우리 동물
         if (o === stallGroup) { w.walkTo(stallGroup.position.x + 1.8, stallGroup.position.z, () => setStall(true), 0.4); return }
         const an = penned.find((a) => a.doll.root === o)
@@ -183,7 +186,10 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         const i = plotOf.get(o)
         // 확장 모드: 설치한 옆 밭을 누르면 옮길 밭으로 고른다(다른 것은 누르지 않는다)
         if (placingRef.current) {
-          if (i !== undefined && i >= MAIN_PLOTS) { movingRef.current = i; setMoving(i); showLed(i); hideGhost(); setNotice('옮길 곳의 땅을 눌러요') }
+          if (i !== undefined && i >= MAIN_PLOTS) {
+            if (movingRef.current === i) { setMoving(null); return } // 한 번 더 누르면 그만 옮기기
+            setMoving(i); showLed(i); setNotice('옮길 ＋ 자리를 눌러요')
+          }
           return
         }
         if (i === undefined) return
@@ -215,7 +221,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     const ridgeGeo = keep(new THREE.BoxGeometry(PW * 0.92, 0.08, 0.16))
     const dryMat = lambert(0xc4935f), wetMat = lambert(0x7d5234), lockedMat = lambert(0xa9cf86), ridgeDry = lambert(0xb07e4c), ridgeWet = lambert(0x6a4329)
     const icon = (s: string) => keep(new THREE.SpriteMaterial({ map: w.texOf(emojiCanvas(s)), transparent: true, depthWrite: false }))
-    const iconMats = { water: icon('💧'), ready: icon('✨'), lock: icon('🔒') }
+    const iconMats = { water: icon('💧'), ready: icon('✨'), lock: icon('🔒'), add: icon('➕') }
     // 누른 밭 둘레에 초록 LED 테두리(어느 밭을 눌렀는지 잘 보이게)
     const ledMat = keep(new THREE.MeshBasicMaterial({ color: 0x19e64f, transparent: true, opacity: 0.95, depthWrite: false }))
     const lw = PW + 0.4, ld = PD + 0.4, t = 0.08 // 테두리만, 얇게
@@ -458,32 +464,46 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     sign.root.position.set(2.6, 0, fz1 + 1.6)
     w.obstacles.push({ x: 2.6, z: fz1 + 1.6, r: 0.4 })
     let leaving = false
-    // 확장 모드: 놓을 수 있는 자리인지(안 되면 그 까닭), 미리보기 밭(초록 = 놓을 수 있음, 빨강 = 안 됨)
-    canPlace = (x, z, except) => {
-      if (Math.abs(x) > BOUNDS - 3 || Math.abs(z) > BOUNDS - 3) return '너무 멀어요'
-      if (x > -fx - 0.5 && x < fx + 0.5 && z > fz0 - 0.5 && z < fz1 + 0.5) return '큰 밭 자리예요'
-      if (z > fz1 - 1 && Math.abs(x - cafeRoadX(z)) < 3.2) return '길 위예요'
-      const st = getFarm()
-      for (let i = MAIN_PLOTS; i < PLOT_COUNT; i++) {
-        if (i === except || !st.owned[i]) continue
-        const p = plotAt(i)
-        if (Math.abs(p.x - x) < PW + 0.3 && Math.abs(p.z - z) < PD + 0.3) return '다른 밭과 겹쳐요'
-      }
-      if (w.obstacles.some((o) => Math.hypot(o.x - x, o.z - z) < o.r + 1.5)) return '나무나 건물이 있어요'
-      return null
+    // 확장 모드 ＋ 자리: 빈 땅(큰 밭·길·나무·건물이 없는 곳)에 밭 크기 칸을 미리 정해 두고, 큰 밭에서 가까운 40곳만
+    const freeAt = (x: number, z: number) =>
+      Math.abs(x) <= BOUNDS - 3 && Math.abs(z) <= BOUNDS - 3 &&
+      !(x > -fx - 0.5 && x < fx + 0.5 && z > fz0 - 0.5 && z < fz1 + 0.5) &&
+      !(z > fz1 - 1 && Math.abs(x - cafeRoadX(z)) < 3.2) &&
+      !w.obstacles.some((o) => Math.hypot(o.x - x, o.z - z) < o.r + 1.5)
+    const cand: { x: number; z: number; d: number }[] = []
+    for (let c = -16; c <= 8; c++) for (let m = -8; m <= 7; m++) {
+      const x = SIDE_X + c * (PW + GAP), z = -4 + (m + 0.5) * (PD + GAP)
+      if (freeAt(x, z)) cand.push({ x, z, d: Math.hypot(x - 4, (z + 4) * 1.3) })
     }
-    const ghostOk = keep(new THREE.MeshLambertMaterial({ color: 0x8fe08a, transparent: true, opacity: 0.55 })), ghostNo = keep(new THREE.MeshLambertMaterial({ color: 0xff8a8a, transparent: true, opacity: 0.55 }))
-    const ghost = new THREE.Mesh(boxGeo, ghostOk)
-    ghost.visible = false
-    scene.add(ghost)
-    const ghostLed = makeLed()
-    showGhost = (x, z, ok) => { ghost.position.set(x, 0.11, z); ghost.material = ok ? ghostOk : ghostNo; ghost.visible = true; ghostLed.position.set(x, 0.26, z); ghostLed.visible = ok }
-    hideGhost = () => { ghost.visible = false; ghostLed.visible = false }
-    hideGhostRef.current = hideGhost
+    cand.sort((a, b) => a.d - b.d)
+    const slotMat = keep(new THREE.MeshLambertMaterial({ color: 0xbfe9a8, transparent: true, opacity: 0.6 }))
+    slots = cand.slice(0, 40).map((c, k) => {
+      const box = new THREE.Mesh(boxGeo, slotMat); box.position.set(c.x, 0.06, c.z); box.visible = false; scene.add(box)
+      const hit = new THREE.Mesh(hitGeo, hitMat); hit.position.set(c.x, 0.7, c.z); scene.add(hit); slotOf.set(hit, k)
+      const mark = new THREE.Sprite(iconMats.add); mark.position.set(c.x, 0.9, c.z); mark.scale.setScalar(1.1); mark.visible = false; scene.add(mark)
+      return { x: c.x, z: c.z, box, hit, mark }
+    })
+    // 확장 모드일 때 빈 ＋ 자리만 보이고 누를 수 있다(옮기는 중인 밭이 있던 자리도 빈 자리로)
+    let slotSig = ''
+    const refreshSlots = () => {
+      const st = getFarm(), on = placingRef.current, mv = movingRef.current
+      const taken = Array.from({ length: PLOT_COUNT - MAIN_PLOTS }, (_, j) => MAIN_PLOTS + j).filter((i) => st.owned[i] && i !== mv).map(plotAt)
+      const sig = `${on}|${mv}|${taken.map((p) => `${p.x},${p.z}`).join(';')}`
+      if (sig === slotSig) return
+      slotSig = sig
+      for (const sl of slots) {
+        const free = on && !taken.some((p) => Math.abs(p.x - sl.x) < PW + 0.3 && Math.abs(p.z - sl.z) < PD + 0.3)
+        sl.box.visible = free; sl.mark.visible = free
+        const k = w.pickables.indexOf(sl.hit)
+        if (free && k < 0) w.pickables.push(sl.hit)
+        if (!free && k >= 0) w.pickables.splice(k, 1)
+      }
+    }
     w.onFrame((dt) => {
       w.face(sign, 1)
       if (!leaving && onCafeRef.current && w.me.z > CAFE_GATE) { leaving = true; setFade(true); window.setTimeout(() => onCafeRef.current?.(), 450) }
       repaint += dt
+      refreshSlots()
       if (led.visible && ledUntil < performance.now() && !busy.has(ledPlot)) led.visible = false
       if (choreLed.visible && choreCur < 0) choreLed.visible = false
       ledMat.opacity = 0.55 + 0.4 * Math.abs(Math.sin(performance.now() / 160))
@@ -589,6 +609,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         </div>
       </div>
       {/* 심을 씨앗 고르기 */}
+      {!placing && (
       <div role="radiogroup" aria-label="심을 씨앗" className="absolute inset-x-0 bottom-10 z-10 mx-auto flex w-fit max-w-[calc(100%-1rem)] gap-0.5 rounded-full bg-white/90 p-1 whitespace-nowrap shadow portrait:bottom-14">
         {CROPS.map((c) => (
           <button key={c.id} role="radio" aria-checked={seed === c.id} aria-label={`${c.ko} 씨앗`} onClick={() => { playTap(); setSeed(c.id) }}
@@ -599,6 +620,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
           </button>
         ))}
       </div>
+      )}
       {/* 도구: 물주기·수확(친구가 있으면 큰 밭은 친구들이), 노점, 주방 */}
       {!placing && <div className="absolute top-16 right-2 bottom-24 z-10 flex flex-col justify-end gap-1.5 landscape:bottom-9">
         {([['water', '물주기', 'icon_water'], ['harvest', '수확', 'icon_basket'], ['stall', '노점', ''], ['expand', '확장', ''], ['kitchen', '주방', 'icon_kitchen']] as const).map(([id, label, icon]) => (
@@ -611,25 +633,15 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       </div>}
       {/* 확장 모드: 옆 밭을 원하는 곳에 설치·옮기기 */}
       {placing && (
-        <div className="absolute inset-x-2 top-28 z-20 mx-auto flex w-fit max-w-full flex-col items-center gap-1.5">
+        <div className="absolute inset-x-2 bottom-4 z-20 mx-auto flex w-fit max-w-full flex-col items-center gap-1.5">
           <p className="m-0 rounded-2xl bg-white/95 px-3 py-2 text-center text-sm font-extrabold text-[#3d6b2f] shadow">
             🪴 확장 · 옆 밭 {farm.owned.filter((o, k) => o && k >= MAIN_PLOTS).length}/20<br />
-            <span className="text-xs font-bold text-black/60">{moving !== null ? '옮길 곳의 땅을 눌러요' : '땅을 누르면 새 밭 자리 · 설치한 밭을 누르면 옮기기'}</span>
+            <span className="text-xs font-bold text-black/60">{moving !== null ? '옮길 ＋ 자리를 눌러요 (밭을 한 번 더 누르면 취소)' : <>＋ 자리를 누르면 설치 · {plotPrice(farm)} <CoinIcon /> · 설치한 밭을 누르면 옮기기</>}</span>
           </p>
           <button onClick={() => { playTap(); endPlacing() }} className="h-10 rounded-full bg-[#ff8fab] px-4 text-sm font-black text-white shadow">✓ 다 했어요</button>
         </div>
       )}
-      {placing && ghost && (
-        <div role="dialog" aria-label="밭 놓기" className="absolute inset-x-2 bottom-24 z-30 mx-auto flex w-fit max-w-full items-center gap-2 rounded-3xl bg-white/95 p-2.5 whitespace-nowrap shadow-lg">
-          {ghost.why ? <span className="px-1 text-sm font-extrabold text-[#d0587a]">여기는 놓을 수 없어요 · {ghost.why}</span> : (
-            <button onClick={() => { playTap(); confirmPlace() }} disabled={moving === null && farm.coins < plotPrice(farm)} className="min-h-11 rounded-2xl bg-[#5cc46a] px-3 text-sm font-black text-white disabled:opacity-40">
-              {moving !== null ? '여기로 옮기기' : <>여기 설치 · {plotPrice(farm)} <CoinIcon /></>}
-            </button>
-          )}
-          <button onClick={() => { setGhost(null); hideGhostRef.current() }} className="min-h-11 rounded-2xl bg-[#ffe4ec] px-3 text-sm font-bold">취소</button>
-        </div>
-      )}
-      <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">밭을 누르면 심고 · 💧 물 주고 · ✨ 수확해요 · 젖소·닭을 누르면 우유·달걀 · 옆으로 끌면 둘러봐요</p>
+      {!placing && <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">밭을 누르면 심고 · 💧 물 주고 · ✨ 수확해요 · 젖소·닭을 누르면 우유·달걀 · 옆으로 끌면 둘러봐요</p>}
       {notice && <p role="status" className="absolute top-14 left-1/2 z-20 m-0 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-sm font-bold whitespace-nowrap shadow">{notice}</p>}
       {!ready && <p className="absolute inset-0 z-20 m-0 flex items-center justify-center text-sm font-bold text-[#3d6b2f]">농장을 만드는 중…</p>}
       {/* 카페 길을 넘어갈 때 하얗게 */}
