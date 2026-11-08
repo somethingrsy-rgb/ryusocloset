@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { AVATARS } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
 import { MENU } from '../lib/recipes'
-import { getMp, setPos, subscribeMp } from '../lib/mp/session'
+import { getMp, setHomePos, subscribeMp } from '../lib/mp/session'
 import type { Food, Look, PlayerState } from '../lib/mp/core'
 import type { Vec } from '../lib/walk'
 import { Ico } from './CafeGame'
@@ -61,8 +61,8 @@ export function HomeFriends({ host, me, dir, walking, w, feet, z, onFood }: {
   // 내 위치: 바뀔 때 + 1초마다(멈춘 자리를 놓치지 않게)
   const meRef = useRef({ me, dir, walking })
   meRef.current = { me, dir, walking }
-  useEffect(() => { setPos(me.x, me.y, dir, walking) }, [me.x, me.y, dir, walking])
-  useEffect(() => { const t = setInterval(() => { const m = meRef.current; setPos(m.me.x, m.me.y, m.dir, m.walking) }, 1000); return () => clearInterval(t) }, [])
+  useEffect(() => { setHomePos(host, me.x, me.y, dir, walking) }, [host, me.x, me.y, dir, walking])
+  useEffect(() => { const t = setInterval(() => { const m = meRef.current; setHomePos(host, m.me.x, m.me.y, m.dir, m.walking) }, 1000); return () => clearInterval(t) }, [host])
   // 방금(6초 안에) 한 말은 머리 위에
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t) }, [])
