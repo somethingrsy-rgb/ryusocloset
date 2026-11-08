@@ -17,6 +17,7 @@ import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
 import { FoodPicker, HomeFriends, menuName } from './HomeFriends'
 import { Ico } from './CafeGame'
+import { mpVisitDock } from './MultiplayerBar'
 
 /** 받은 집 데이터 → 꾸민 방(room) 또는 장소 그림(place) */
 export function homeScene(raw: unknown) {
@@ -145,6 +146,7 @@ export function HomeVisit({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }
         <p className="m-0 rounded-2xl bg-white/95 px-4 py-3 text-center text-sm font-bold text-[#6b4b52] shadow">{waited ? `🚪 ${hostName}가 문을 닫았어요` : `🏠 ${hostName}에게 가는 중…`}</p>
       )}
       <div className="absolute top-2 left-2 right-2 z-[20000] flex flex-wrap items-center gap-2">
+        <span ref={mpVisitDock} className="flex shrink-0" />
         <button onClick={() => { playTap(); leaveVisit() }} className={`${btn} bg-white/90 ring-1 ring-black/5`}>🚪 돌아가기</button>
         <span className={`${btn} bg-white/90 text-[#7a3d8f]`}>{place ? place.place.icon : '🏠'} {label}</span>
         {where && <>

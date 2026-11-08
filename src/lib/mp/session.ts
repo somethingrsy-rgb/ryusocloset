@@ -76,6 +76,10 @@ export function setPos(x: number, z: number, dir: 1 | -1, moving: boolean) {
   lastSent = { ...pos, at }
   tr.update(pos)
 }
+/** Only the visible home scene may send coordinates for the active visit. */
+export function setHomePos(host: string, x: number, y: number, dir: 1 | -1, moving: boolean) {
+  if (state.room === 'home' && state.host === host && (!state.visiting || state.visiting === host)) setPos(x, y, dir, moving)
+}
 export function setLook(look: Look) { tr?.update({ look }) }
 /** 3D 카페·농장·산책에 들어오고 나갈 때(나가면 'none'). 들어오기 전 상태에서도 기억해 둔다 */
 export function setWhere(room: Where, host: string | null = null) {

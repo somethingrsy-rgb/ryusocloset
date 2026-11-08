@@ -29,12 +29,15 @@ let dockEl: HTMLElement | null = null
 const dockSubs = new Set<() => void>()
 export const mpDock = (el: HTMLElement | null) => { if (dockEl === el) return; dockEl = el; dockSubs.forEach((f) => f()) }
 const subscribeDock = (f: () => void) => { dockSubs.add(f); return () => { dockSubs.delete(f) } }
+// A visit overlays the current scene; keep its dock separate from the background scene.
+let visitDockEl: HTMLElement | null = null
+export const mpVisitDock = (el: HTMLElement | null) => { if (visitDockEl === el) return; visitDockEl = el; dockSubs.forEach((f) => f()) }
 const FADE_MS = 8000
 const IDLE_MS = 20000
 
 export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** 화면 아래 왼쪽에 큰 단추가 있는 화면(방)이면 말하는 줄을 그 위로 올린다 */ lift?: boolean }) {
   const mp = useSyncExternalStore(subscribeMp, getMp)
-  const dock = useSyncExternalStore(subscribeDock, () => dockEl)
+  const dock = useSyncExternalStore(subscribeDock, () => mp.visiting ? visitDockEl : dockEl)
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(savedName)
   const [text, setText] = useState('')
@@ -88,7 +91,7 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
     <>
       {dock && createPortal(mainBtn, dock)}
       {/* 👥 단추(위 왼쪽, 화면이 자리를 주면 그 자리) + 들어가기 칸 */}
-      <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: dock ? '3.5rem' : 'max(22%, 7rem)' }}>
+      <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: dock ? '3.5rem' : '0.5rem' }}>
         {!dock && mainBtn}
         {showInvite && invite && (
           <div role="dialog" aria-label="초대장" className="pointer-events-auto flex w-full flex-col gap-1.5 rounded-2xl border-2 border-[#ffc2d4] bg-white/97 p-2.5 shadow-lg">
