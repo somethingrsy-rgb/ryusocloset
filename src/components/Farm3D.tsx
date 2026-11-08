@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { getAvatar } from '../lib/avatars'
@@ -18,7 +19,7 @@ import { GuestDresser } from './GuestDresser'
 import { FarmStall } from './FarmStall'
 import { PartyInvite } from './PartyGuests'
 import { cafeShopSprite, viewSprite } from './viewSprite3d'
-import { ANIMAL_H, AVATAR_H, FEET, createWorld, meadowTree, emojiCanvas, signCanvas, type Doll, type World } from './world3d'
+import { ANIMAL_H, AVATAR_H, FEET, createWorld, showBack, meadowTree, emojiCanvas, signCanvas, type Doll, type World } from './world3d'
 
 /**
  * 3D 농장 (시험판): 큰 밭 20칸과 옆 울타리 밭 8칸(농장 탭과 같은 밭·같은 저장)을 3D 들판에 깔고, 아바타가 걸어가서 심고·물 주고·수확한다.
@@ -414,7 +415,11 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
           // 아바타 친구 그림은 옷을 합쳐 그린 뒤에 붙인다(그 전에는 빈 판)
           doll = w.paperDoll(w.texOf(document.createElement('canvas')), AVATAR_H, 1024 / 1536, FEET)
           renderFigure(guestLook(av.id), {}, av).then((cv) => { const m = doll.doll.material as THREE.MeshBasicMaterial; m.map = w.texOf(cv); m.needsUpdate = true }).catch(() => {})
-        } else doll = w.paperDoll(w.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[g].img}_stand.webp`)), ANIMAL_H, 1)
+        } else {
+          const img = CALL_ANIMALS[g].img
+          doll = w.paperDoll(w.texOf(animal3dUrl(img)), ANIMAL_H, animal3dAspect(img))
+          doll.root.userData.tex = [w.texOf(animal3dUrl(img)), w.texOf(animal3dUrl(img, true))]
+        }
         const tool = new THREE.Sprite(toolMats.water)
         tool.scale.setScalar(0.6)
         tool.visible = false
@@ -536,11 +541,13 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
             const sp = job ? 4 : 2.2, step = Math.min(d, sp * dt)
             f.x += (dx / d) * step; f.z += (dz / d) * step
             moving = true
+            showBack(f.doll, walkingAway(dx, dz, f.x, f.z, w.camera.position.x, w.camera.position.z))
             const s2 = w.screenSide(dx, dz)
             if (Math.abs(s2) > 0.05) f.dir = s2 > 0 ? 1 : -1
           }
         }
         f.doll.root.position.set(f.x, 0, f.z)
+        if (!moving) showBack(f.doll, false)
         f.doll.body.position.y = moving ? Math.abs(Math.sin(f.t * 8)) * 0.1 : 0
         w.face(f.doll, f.dir)
         // 들고 있는 물뿌리개·바구니(물 줄 때는 기울인다)

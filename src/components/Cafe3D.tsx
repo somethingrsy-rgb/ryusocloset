@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { renderFigure } from '../lib/exportPng'
@@ -6,7 +7,7 @@ import { assetUrl } from '../lib/items'
 import type { Outfit, Tweaks } from '../lib/types'
 import { stepCafe } from '../lib/cafeWalk'
 import { cafeShopSprite, viewSprite } from './viewSprite3d'
-import { ANIMAL_H, createWorld, meadowTree, signCanvas, type Doll, type World } from './world3d'
+import { ANIMAL_H, createWorld, meadowTree, showBack, signCanvas, type Doll, type World } from './world3d'
 
 /** 기존 주문 저장을 공유하는 자유 산책 카페. 3D 농장과 같은 바탕(world3d): 같은 카메라 각도·따라가기·걷기·끌어서 둘러보기 */
 /** 걸을 수 있는 땅(가운데에서 ±WALK) */
@@ -191,7 +192,10 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     }
     // 손님: 자리마다 동물 친구(누르면 그쪽으로 걸어간다)
     for (let i = 0; i < 8; i++) {
-      const d = w.paperDoll(w.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[i].img}_stand.webp`)), ANIMAL_H, 1)
+      const img = CALL_ANIMALS[i].img
+      const d = w.paperDoll(w.texOf(animal3dUrl(img)), ANIMAL_H, animal3dAspect(img))
+      d.root.userData.tex = [w.texOf(animal3dUrl(img)), w.texOf(animal3dUrl(img, true))]
+      d.root.userData.img = img
       const p = seatAt(i)
       d.root.position.set(p.x, 0, p.z)
       guests.push(d.root)
@@ -260,6 +264,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
           if (r.wait <= 0 && Math.hypot(p.x - r.goal.x, p.z - r.goal.z) > 0.05) {
             const px = p.x, pz = p.z
             const next = stepCafe(p, r.goal, 0.65 * dt, w.obstacles, bounds)
+            showBack(d, walkingAway(next.x - p.x, next.z - p.z, p.x, p.z, w.camera.position.x, w.camera.position.z))
             p.set(next.x, 0, next.z)
             const sd = w.screenSide(next.x - px, next.z - pz)
             if (Math.abs(sd) > 0.0005) r.dir = sd > 0 ? 1 : -1
@@ -272,6 +277,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
           const dx = p.x - o.x, dz = p.z - o.z, dd = Math.hypot(dx, dz)
           if (dd < 1 && dd > 1e-3) { p.x = o.x + (dx / dd) * 1; p.z = o.z + (dz / dd) * 1 }
         }
+        if (!stepped) showBack(d, false)
         d.body.position.y = stepped ? Math.abs(Math.sin(t * 7 + i)) * 0.06 : 0
         w.face(d, r.dir)
         if (!near && Math.hypot(p.x - me.x, p.z - me.z) > 2.1) r.met = ''

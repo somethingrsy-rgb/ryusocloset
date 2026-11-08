@@ -1,4 +1,5 @@
 import { useEffect, useRef, type MutableRefObject } from 'react'
+import { animal3dAspect, animal3dUrl } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { renderFigure } from '../lib/exportPng'
@@ -109,7 +110,8 @@ export function Runner3D({ live, outfit, tweaks, friends }: { live: MutableRefOb
         renderFigure(guestLook(av.id), {}, av).then((cv) => s.setMap(d, s.texOf(cv))).catch(() => {})
         return d
       }
-      return s.paperDoll(s.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[g].img}_stand.webp`)), ah * 0.55, 1)
+      const img = CALL_ANIMALS[g].img
+      return s.paperDoll(s.texOf(animal3dUrl(img)), ah * 0.55, animal3dAspect(img))
     })
 
     // 장애물·별·선물: 지금 보이는 구간에 있는 것만 판으로 만들고, 지나가거나 먹으면 지운다
