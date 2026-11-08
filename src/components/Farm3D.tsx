@@ -538,6 +538,9 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     sign.root.position.set(2.6, 0, fz1 + 1.6)
     w.obstacles.push({ x: 2.6, z: fz1 + 1.6, r: 0.4 })
     let leaving = false
+    // 지도 표시
+    w.mapMark(0, -4, '🌱'); w.mapMark((PEN.x0 + PEN.x1) / 2, (PEN.z0 + PEN.z1) / 2, '🐄'); w.mapMark(STALL.x, STALL.z, '🧺')
+    w.mapMark(0, CAFE_GATE + 3.6, '☕'); w.mapMark(CASTLE.x, CASTLE.z, '🏰'); w.mapMark(-5, -fz1 - 14, '🏠'); w.mapMark(-fx - 5, -6, '🛖')
     // 확장 모드 ＋ 자리: 빈 땅(큰 밭·길·나무·건물이 없는 곳)에 밭 크기 칸을 미리 정해 두고, 큰 밭에서 가까운 40곳만
     const freeAt = (x: number, z: number) =>
       Math.abs(x) <= BOUNDS - 3 && Math.abs(z) <= BOUNDS - 3 &&
