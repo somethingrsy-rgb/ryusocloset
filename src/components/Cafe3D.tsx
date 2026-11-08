@@ -105,7 +105,9 @@ function makeTableKit(s: Pick<World, 'keep' | 'texOf'>) {
   }
 }
 
-export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMeet, bubble, float, eating, arrive = false, onFarm }: {
+export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMeet, bubble, float, eating, arrive = false, onFarm, menus = [] }: {
+  /** 손님마다 바라는 메뉴 그림 이름(완성된 음식을 들고 갈 때) */
+  menus?: string[]
   /** 농장에서 걸어왔으면 농장 가는 길 끝에서 시작 */
   arrive?: boolean
   /** 농장 가는 길 끝에 닿으면 */
@@ -124,8 +126,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   const anchors = useRef<(HTMLDivElement | null)[]>([])
   const floats = useRef<(HTMLDivElement | null)[]>([])
   const world = useRef<World | null>(null)
-  const state = useRef({ walking, hold, paused, encounters, onMeet, eating })
-  state.current = { walking, hold, paused, encounters, onMeet, eating }
+  const state = useRef({ walking, hold, paused, encounters, onMeet, eating, menus })
+  state.current = { walking, hold, paused, encounters, onMeet, eating, menus }
   const approachRef = useRef<(i: number) => void>(() => {})
   const onFarmRef = useRef(onFarm)
   onFarmRef.current = onFarm
@@ -203,10 +205,15 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     }
     w.pickables.push(...guests)
     // 손님이 받은 음식: 그 손님 테이블 위에(테이블에 맞는 작은 크기)
-    const foods = guestDolls.map(() => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true }))); sp.scale.setScalar(0.5); sp.visible = false; scene.add(sp); return sp })
+    const foods = guestDolls.map(() => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true }))); sp.scale.setScalar(0.38); sp.visible = false; scene.add(sp); return sp })
     // 아바타가 들고 있는 메뉴
     const holdSprite = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true })))
-    holdSprite.scale.setScalar(0.75)
+    holdSprite.scale.setScalar(0.5)
+    // 완성 말풍선을 누른 손님 테이블 둘레에 노랑 LED 고리
+    const ledRing = new THREE.Mesh(keep(new THREE.TorusGeometry(1.25, 0.05, 8, 48)), keep(new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, depthWrite: false })))
+    ledRing.rotation.x = -Math.PI / 2
+    ledRing.visible = false
+    scene.add(ledRing)
     holdSprite.visible = false
     scene.add(holdSprite)
     const holdTex = new Map<string, THREE.Texture>()
@@ -304,10 +311,17 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         const hide = Math.hypot(cx + sx * u, cz + sz * u + 7) < 2.8 && u < 0.97
         for (const o of shopParts) o.visible = !hide
       }
-      if (st.hold) {
-        const tex = texFor(st.hold)
+      // 완성된 음식 손님에게 가는 중: 노랑 LED, 아바타가 그 음식을 들고 간다
+      const goingReady = following !== null && st.encounters[following]?.startsWith('ready:')
+      ledRing.visible = goingReady
+      if (goingReady && following !== null) { const tp = tableAt(following); ledRing.position.set(tp.x + SIDE(following) * 0.5, 0.06, tp.z - 0.2); (ledRing.material as THREE.MeshBasicMaterial).opacity = 0.6 + 0.4 * Math.abs(Math.sin(t * 6)) }
+      const carry = st.hold ?? (goingReady && following !== null ? st.menus[following] : null)
+      if (carry) {
+        const tex = texFor(carry)
         if (holdSprite.material.map !== tex) { holdSprite.material.map = tex; holdSprite.material.needsUpdate = true }
-        holdSprite.position.set(me.x, 1.35, me.z).addScaledVector(v.set(w.camera.position.x - me.x, 0, w.camera.position.z - me.z).normalize(), 0.35)
+        // 손 높이, 화면에서 오른쪽 손 앞(얼굴을 가리지 않게)
+        v.set(w.camera.position.x - me.x, 0, w.camera.position.z - me.z).normalize()
+        holdSprite.position.set(me.x - v.z * 0.45 + v.x * 0.3, 0.95, me.z + v.x * 0.45 + v.z * 0.3)
         holdSprite.visible = true
       } else holdSprite.visible = false
       // 받은 음식: 테이블 위, 손님 쪽으로 조금, 카메라 쪽으로 조금(파라솔에 가리지 않게)

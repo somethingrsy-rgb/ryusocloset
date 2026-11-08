@@ -94,7 +94,8 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { out
   // 3D 카페에서 걸어왔으면 3D 농장을 열고 카페 가는 길 끝에서 시작한다
   const [arrived] = useState(() => isArriving('fromCafe'))
   useEffect(() => { if (arrived) clearArrival() }, [arrived])
-  const [farm3d, setFarm3d] = useState(arrived)
+  // 농장은 3D 로 먼저 켠다(닫으면 2D 농장)
+  const [farm3d, setFarm3d] = useState(true)
   /** 지금 보는 밭: 큰 밭(0~19) 또는 옆 울타리 밭(20~27) */
   const [field, setField] = useState<'main' | 'side'>('main')
   const { lang } = useI18n()

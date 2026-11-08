@@ -132,7 +132,8 @@ export function CafeGame({ outfit, tweaks, onKitchen, onFarm }: { outfit: Outfit
   // 3D 농장에서 걸어왔으면 3D 로 열고 농장 가는 길 끝에서 시작한다
   const [arrived] = useState(() => isArriving('fromFarm'))
   useEffect(() => { if (arrived) clearArrival() }, [arrived])
-  const [view3d, setView3d] = useState(() => { if (arrived) return true; try { return localStorage.getItem('ryuso.cafe.3d') === '1' } catch { return false } })
+  // 카페는 3D 로 먼저 켠다(3D 단추로 2D 로 바꿀 수 있다)
+  const [view3d, setView3d] = useState(true)
   // 지금 고른 아바타 이름으로 동물이 불러 주고(유하야·유엘아), 휴대폰 색도 아바타에 맞춘다(유엘 파랑, 유하 분홍)
   useSyncExternalStore(subscribeAvatar, avatarVersion)
   const kidName = avatarName(getAvatar())
@@ -241,7 +242,7 @@ export function CafeGame({ outfit, tweaks, onKitchen, onFarm }: { outfit: Outfit
 
   return (
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-hidden rounded-3xl bg-[#b9c97a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
-      {view3d ? <Suspense fallback={null}><Cafe3D outfit={outfit} tweaks={tweaks} eating={eating} walking={walking} hold={hold} paused={!!phone} encounters={guests.map((g, i) => g.stage === 'new' ? `new:${g.wish}` : isReady(i) ? `ready:${g.wish}` : '')} onMeet={(i) => tap(i, true)} bubble={bubbleFor} float={floatFor} arrive={arrived} onFarm={onFarm} /></Suspense> : <>
+      {view3d ? <Suspense fallback={null}><Cafe3D outfit={outfit} tweaks={tweaks} eating={eating} walking={walking} hold={hold} paused={!!phone} encounters={guests.map((g, i) => g.stage === 'new' ? `new:${g.wish}` : isReady(i) ? `ready:${g.wish}` : '')} onMeet={(i) => tap(i, true)} menus={guests.map((g) => MENU[g.wish]?.id ?? '')} bubble={bubbleFor} float={floatFor} arrive={arrived} onFarm={onFarm} /></Suspense> : <>
       {/* 그림 아래 남는 자리(폰 세로): 그림 맨 아래 덤불·풀밭 부분을 위아래로 뒤집고 늘려 이어 붙여서 정원이 끝까지 이어져 보이게 한다 */}
       {!wide && !pad && (
         <div aria-hidden className="absolute left-1/2 -translate-x-1/2 overflow-hidden" style={{ width: 'min(100cqw, calc(100cqh / 1.7787))', top: 'calc(min(100cqw, 100cqh / 1.7787) * 1.7787 - 1px)', bottom: 0 }}>
@@ -290,7 +291,7 @@ export function CafeGame({ outfit, tweaks, onKitchen, onFarm }: { outfit: Outfit
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
           <button aria-label={tx.kitchen} onClick={() => { playTap(); onKitchen() }} className="relative h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">{tx.kitchen}{waiting > 0 && <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef6f86] px-1 text-[11px] text-white">{waiting}</span>}</button>
-          <button aria-label="3D 카페 (시험판)" aria-pressed={view3d} onClick={() => { playTap(); const v = !view3d; setView3d(v); try { localStorage.setItem('ryuso.cafe.3d', v ? '1' : '0') } catch { /* 이번만 */ } }} className={`h-9 rounded-full px-3 text-sm font-bold shadow ${view3d ? 'bg-[#8a4b55] text-white' : 'bg-white/90'}`}>3D</button>
+          <button aria-label="3D 카페 (시험판)" aria-pressed={view3d} onClick={() => { playTap(); setView3d(!view3d) }} className={`h-9 rounded-full px-3 text-sm font-bold shadow ${view3d ? 'bg-[#8a4b55] text-white' : 'bg-white/90'}`}>3D</button>
           <button aria-label="휴대폰 열기" onClick={() => { playTap(); setPhone({ dial: null }) }} className="h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">📱 전화</button>
           <button aria-label={tx.sound[sound ? 1 : 0]} aria-pressed={sound} onClick={() => { const v = !sound; setSound(v); if (v) playOrder() }} className="h-9 w-9 rounded-full bg-white/90 shadow">{sound ? '🔊' : '🔇'}</button>
         </div>
