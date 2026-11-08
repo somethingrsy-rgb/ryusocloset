@@ -4,8 +4,8 @@
  */
 export const ROOMS = ['cafe', 'farm', 'walk'] as const
 export type Room = (typeof ROOMS)[number]
-/** 플레이어가 지금 있는 곳: 3D 카페·농장·산책, 그 밖의 화면이면 'none'(채팅만) */
-export type Where = Room | 'none'
+/** 플레이어가 지금 있는 곳: 3D 카페·농장·산책, 누구네 집(home, host 가 그 집 주인), 그 밖의 화면이면 'none'(채팅만) */
+export type Where = Room | 'home' | 'none'
 export const MAX_PLAYERS = 10
 export const MAX_NAME = 12
 export const MAX_CHAT = 80
@@ -17,8 +17,8 @@ export const KEEPALIVE_MS = 5000
 export const STALE_MS = 15000
 
 export interface Look { avatar: string; outfit: Record<string, string> }
-export interface PlayerState { name: string; room: Where; x: number; z: number; dir: 1 | -1; moving: boolean; look: Look; t: number }
-export interface ChatMsg { id: string; uid: string; name: string; text: string; t: number }
+export interface PlayerState { name: string; room: Where; /** room 이 home 일 때 그 집 주인 uid */ host?: string; /** 지금 먹고 있는 음식(메뉴 id) */ eat?: string; x: number; z: number; dir: 1 | -1; moving: boolean; look: Look; t: number }
+export interface ChatMsg { id: string; uid: string; name: string; text: string; t: number; /** 집 초대면 그 집 주인 uid(= 보낸 사람) */ home?: string }
 
 export const cleanName = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, MAX_NAME) : '')
 export const cleanChat = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, MAX_CHAT) : '')
@@ -34,7 +34,9 @@ export function sanePlayer(v: unknown): PlayerState | null {
   if (look.outfit && typeof look.outfit === 'object') for (const [k, id] of Object.entries(look.outfit as Record<string, unknown>)) if (typeof id === 'string' && k.length < 24 && id.length < 80) outfit[k] = id
   return {
     name: cleanName(r.name) || '친구',
-    room: (ROOMS as readonly string[]).includes(r.room as string) ? (r.room as Room) : 'none',
+    room: r.room === 'home' && typeof r.host === 'string' && r.host ? 'home' : (ROOMS as readonly string[]).includes(r.room as string) ? (r.room as Room) : 'none',
+    ...(r.room === 'home' && typeof r.host === 'string' && r.host ? { host: r.host.slice(0, 64) } : {}),
+    ...(typeof r.eat === 'string' && r.eat ? { eat: r.eat.slice(0, 40) } : {}),
     x: Math.max(-200, Math.min(200, r.x as number)), z: Math.max(-200, Math.min(200, r.z as number)),
     dir: r.dir === -1 ? -1 : 1, moving: r.moving === true,
     look: { avatar: typeof look.avatar === 'string' ? look.avatar.slice(0, 40) : '', outfit },
@@ -76,3 +78,17 @@ export function bossHit(b: Boss | null, id: string, power: number): Boss | null 
 }
 /** 새 대왕 몬스터를 내도 되는지: 아직 없거나, 풀리고 조금 지났을 때 */
 export const bossCanRespawn = (b: Boss | null, now: number) => !b || (b.hp <= 0 && now - b.t > BOSS_RESPAWN_MS)
+
+/** 집 놀이: 바닥에 놓인 음식 하나(x·y 는 방 무대에 대한 %) */
+export interface Food { id: string; menu: string; x: number; y: number; by: string; t: number }
+/** 한 집에 한꺼번에 놓을 수 있는 음식 수 */
+export const MAX_FOOD = 12
+export function saneFood(id: string, v: unknown): Food | null {
+  if (!v || typeof v !== 'object') return null
+  const r = v as Record<string, unknown>
+  const num = (n: unknown) => typeof n === 'number' && Number.isFinite(n)
+  if (typeof r.menu !== 'string' || !num(r.x) || !num(r.y)) return null
+  return { id, menu: r.menu.slice(0, 40), x: Math.max(0, Math.min(100, r.x as number)), y: Math.max(0, Math.min(100, r.y as number)), by: typeof r.by === 'string' ? r.by.slice(0, 12) : '친구', t: num(r.t) ? (r.t as number) : 0 }
+}
+/** 친구에게 보여 주는 집: 주인 이름과 방 꾸밈(RoomState 그대로, 받는 쪽에서 다시 검사한다) */
+export interface Home { name: string; room: unknown; t: number }

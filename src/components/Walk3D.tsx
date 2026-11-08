@@ -18,13 +18,19 @@ import { getMeet, talkFor, type Talk } from '../lib/meet'
 import { playOrder, playServe, playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { cafeShopSprite, stallSprite } from './viewSprite3d'
-import { ANIMAL_H, HOUSE_ART, TREE_ART, createWorld, showBack, signCanvas, emojiCanvas, type Doll, type World } from './world3d'
+import { ANIMAL_H, HOUSE_ART, createWorld, showBack, signCanvas, emojiCanvas, type Doll, type World } from './world3d'
 
 /**
  * 3D 산책: 마을은 3D(길·나무·집·꽃·구름)이고, 아바타와 동물 친구는 지금 그림을 세운 '종이 인형'이다.
  * 땅을 누르면 그곳으로 걷고, 끌면 둘레를 돈다. 길에 반짝이(✨)가 있으면 가서 줍고, 친구를 누르면 다가가서 이야기한다.
  */
 const WORLD = 70
+/** 산책 마을 나무: 초록·노랑·주황 꽃나무(카페·농장의 그 나무) */
+const WALK_TREES = [
+  { img: 'cafe/3d/tree.webp', aspect: 951 / 1024, h: 4.2 },
+  { img: 'cafe/3d/tree_yellow.webp', aspect: 824 / 866, h: 4.2 },
+  { img: 'cafe/3d/tree_orange.webp', aspect: 827 / 865, h: 4.2 },
+] as const
 /** 마법에 걸린 몬스터(무서운 얼굴 → 마법이 풀리면 귀여운 얼굴). 그림 크기(가로·세로), stage = 몇 단계부터 나오는지 */
 const MONSTERS: { id: string; name: string; size: readonly [number, number]; stage: number }[] = [
   { id: 'dino', name: '아기 공룡', size: [909, 1205], stage: 0 },
@@ -293,8 +299,18 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
       const s0 = samples[Math.floor(rnd() * samples.length)], a = rnd() * Math.PI * 2, far = 6 + rnd() * 8
       const [x, z] = i % 2 ? [s0.x + Math.cos(a) * far, s0.z + Math.sin(a) * far] : [(rnd() - 0.5) * WORLD * 1.9, (rnd() - 0.5) * WORLD * 1.9]
       if (nearRoad(x, z, 4.5) || w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 9)) continue
-      w.addTree(x, z, 0.8 + rnd() * 0.5, TREE_ART[Math.floor(rnd() * TREE_ART.length)])
+      // 산책 마을 나무는 초록·노랑·주황 꽃나무 세 가지만
+      w.addTree(x, z, 0.8 + rnd() * 0.5, WALK_TREES[Math.floor(rnd() * WALK_TREES.length)])
       trees++
+    }
+    // 꽃 덤불: 길가와 들판 여기저기
+    let bushes = 0
+    for (let i = 0; i < 300 && bushes < 60; i++) {
+      const s0 = samples[Math.floor(rnd() * samples.length)], a = rnd() * Math.PI * 2, far = 3.2 + rnd() * 4
+      const [x, z] = i % 3 ? [s0.x + Math.cos(a) * far, s0.z + Math.sin(a) * far] : [(rnd() - 0.5) * WORLD * 1.9, (rnd() - 0.5) * WORLD * 1.9]
+      if (nearRoad(x, z, 2.8) || w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < (t.r + 1.4) ** 2)) continue
+      w.addProp('cafe/3d/bush.webp', x, z, 0.9 + rnd() * 0.4, 1024 / 616, 0.45)
+      bushes++
     }
 
     // 꽃: 납작한 꽃송이를 한꺼번에(InstancedMesh)

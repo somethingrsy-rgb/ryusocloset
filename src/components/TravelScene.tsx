@@ -23,7 +23,10 @@ import { Ico } from './CafeGame'
 import { getTravelRoom, subscribeTravelRooms, travelRoomsVersion } from '../lib/travelRooms'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import { sceneAssets } from '../lib/exportRoom'
-import { defaultRoom, drawables } from '../lib/room'
+import { CUSTOM_ROOM_PREFIX, defaultRoom, drawables } from '../lib/room'
+import { closeHome, eatFood, enterMyHome, getMp, inviteHome, putFood, say, setEating as mpEating, setWhere, subscribeMp } from '../lib/mp/session'
+import type { Food } from '../lib/mp/core'
+import { FoodPicker, HomeFriends, menuName } from './HomeFriends'
 import { AVATAR_BASE_W, AVATAR_FEET_RATIO, ROOM_W, ROOM_H } from '../lib/roomTypes'
 
 /** 찾았다 상자를 보여 주는 시간(ms) */
@@ -149,6 +152,30 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
     setPartyEnd(false)
     setEating(null)
   }
+  // 같이 놀기: 내 방에 친구를 초대한다(친구가 놀러 오면 같이 걷고, 간식을 꺼내 놓고 같이 먹는다)
+  const mp = useSyncExternalStore(subscribeMp, getMp)
+  const isMyRoom = placeId === MY_ROOM_ID
+  const hostingHere = isMyRoom && mp.status === 'on' && mp.hosting && !!mp.uid
+  useEffect(() => { if (!hostingHere) return; enterMyHome(); setWhere('home', getMp().uid) }, [hostingHere])
+  // 내 방을 나가면 집을 닫는다(놀러 온 친구들은 돌아간다)
+  useEffect(() => () => { if (placeId === MY_ROOM_ID) { closeHome(); if (getMp().room === 'home') setWhere('none') } }, [placeId])
+  const inviteFriends = () => {
+    if (!layout) return
+    // 내가 사진으로 추가한 소품은 이 기기에만 있어서 친구에게는 보내지 않는다
+    const room = { ...layout.room, items: layout.room.items.filter((it) => !it.itemId.startsWith(CUSTOM_ROOM_PREFIX)) }
+    inviteHome({ scene: layout.scene, room })
+    playServe()
+  }
+  const [picking, setPicking] = useState(false)
+  const putFoodNear = (m: string) => putFood(m, Math.max(8, Math.min(92, posRef.current.x + (Math.random() < 0.5 ? -9 : 9))), Math.max(minY + 4, Math.min(97, posRef.current.y + (Math.random() - 0.5) * 6)))
+  const [myEat, setMyEat] = useState<string | null>(null)
+  useEffect(() => { if (!myEat) return; const t = setTimeout(() => setMyEat(null), 4000); return () => clearTimeout(t) }, [myEat])
+  const pendingEat = useRef<Food | null>(null)
+  const eatNow = (f: Food) => {
+    if (!getMp().foods.some((x) => x.id === f.id)) return
+    eatFood(f.id); mpEating(f.menu); setMyEat(f.menu); playServe()
+    say(`😋 ${menuName(f.menu)} 냠냠! 맛있다`)
+  }
   useSyncExternalStore(subscribeAvatar, avatarVersion)
   const kidName = avatarName(getAvatar())
 
@@ -186,6 +213,9 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           target.current = null
           setWalking(false)
           setDestination(null)
+          const f = pendingEat.current
+          pendingEat.current = null
+          if (f) eatNow(f)
         }
       }
       // 지나가다 가까워지면 줍는다
@@ -208,6 +238,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
 
   const walkTo = (v: Vec) => {
     if (blocked) return
+    pendingEat.current = null
     // 가로 화면에서는 무대 양옆(이어 붙인 그림)까지 화면 끝 가까이 걸어갈 수 있다
     target.current = { x: Math.min(WALK_BOUNDS.maxX + sideX, Math.max(WALK_BOUNDS.minX - sideX, v.x)), y: Math.min(layout ? 100 : WALK_BOUNDS.maxY, Math.max(minY, v.y)) }
     setDestination(target.current)
@@ -310,6 +341,11 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             announce={announce}
           />
         )}
+        {hostingHere && layout && (
+          <HomeFriends host={mp.uid!} me={pos} dir={dir} walking={walking} w={() => AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100} feet={AVATAR_FEET_RATIO}
+            z={(y) => avatarLayer + (y >= posRef.current.y ? 1 : -1)}
+            onFood={(f) => { walkTo({ x: f.x + (posRef.current.x < f.x ? -6 : 6), y: f.y }); pendingEat.current = f }} />
+        )}
         {destination && <div aria-hidden className="walk-destination pointer-events-none absolute" style={{ left: `${destination.x}%`, top: `${destination.y}%`, zIndex: 2 }} />}
         {/* 류소: 발 위치(pos)에 서고, 아래쪽일수록 크게. 걸을 땐 통통 튀고 가는 방향을 바라본다 */}
         <div
@@ -321,7 +357,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             <FigureLayers outfit={outfit} tweaks={tweaks} animate={false} />
             </div>
             {/* 같이 먹는 동안 아바타도 음식을 하나 들고 있다(카페에서 서빙할 때 드는 자리). 옷·머리 층보다 위에 그려 손 앞에 오게 */}
-            {eating && Object.values(eating)[0] && <span aria-hidden className="party-yum absolute block" style={{ left: '76%', top: '42%', width: '41%', zIndex: 1000 }}><Ico id={Object.values(eating)[0]} className="h-auto w-full" /></span>}
+            {myEat && <span aria-hidden className="party-yum absolute block" style={{ left: '76%', top: '42%', width: '41%', zIndex: 1000 }}><Ico id={myEat} className="h-auto w-full" /></span>}
+            {!myEat && eating && Object.values(eating)[0] && <span aria-hidden className="party-yum absolute block" style={{ left: '76%', top: '42%', width: '41%', zIndex: 1000 }}><Ico id={Object.values(eating)[0]} className="h-auto w-full" /></span>}
           </div>
         </div>
       </div>
@@ -395,6 +432,20 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           </div>
         </div>
       )}
+      {/* 같이 놀기 집 놀이 단추: 위 단추 줄이 길어지지 않게 오른쪽 가장자리에 */}
+      {isMyRoom && mp.status === 'on' && layout && (
+        <div className="absolute top-1/2 right-2 z-30 flex -translate-y-1/2 flex-col items-end gap-2">
+          <button onClick={inviteFriends} className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#7a3d8f] px-3 py-2 text-sm font-bold text-white shadow-md">
+            <span aria-hidden>👥</span>{mp.hosting ? '또 부르기' : '친구 초대'}
+          </button>
+          {hostingHere && (
+            <button onClick={() => { playTap(); setPicking(true) }} className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#ffd166] px-3 py-2 text-sm font-bold text-[#7a4a12] shadow-md">
+              <span aria-hidden>🍰</span>간식
+            </button>
+          )}
+        </div>
+      )}
+      {picking && <FoodPicker onClose={() => setPicking(false)} onPick={(m) => { setPicking(false); playTap(); putFoodNear(m) }} />}
       {inviting && <PartyInvite here={party} avatars={{ me: getAvatar().id }} locked={CALL_ANIMALS.map((_, i) => i).filter((i) => !meet.met.includes(i))}
         note={meet.met.length ? `수학으로 모은 친구만 초대할 수 있어요 · 모은 친구 ${meet.met.length}/${CALL_ANIMALS.length}` : '아직 모은 친구가 없어요. 수학 문제를 10개 풀 때마다 친구를 한 명씩 만나요!'} onClose={() => setInviting(false)} onInvite={(animals, looks) => {
         setInviting(false)

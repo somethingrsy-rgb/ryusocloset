@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { KEEPALIVE_MS, SEND_MS, bossCanRespawn, bossHit, cleanChat, cleanName, follow, saneBoss, sanePlayer, shouldSend } from './core'
+import { KEEPALIVE_MS, SEND_MS, bossCanRespawn, bossHit, cleanChat, cleanName, follow, saneBoss, saneFood, sanePlayer, shouldSend } from './core'
 
 describe('멀티플레이어 규칙', () => {
   it('닉네임·채팅을 다듬는다', () => {
@@ -45,5 +45,19 @@ describe('대왕 몬스터', () => {
   it('이상한 값은 버린다', () => {
     expect(saneBoss({ ...b, hp: 'x' })).toBeNull()
     expect(saneBoss({ ...b, hp: 99 })?.hp).toBe(40)
+  })
+})
+
+describe('집 놀이', () => {
+  const base = { name: '소영', x: 40, z: 90, dir: 1, moving: false, look: { avatar: 'a', outfit: {} }, t: 1 }
+  it('집에 있는 사람은 주인 uid 를 같이 받는다', () => {
+    expect(sanePlayer({ ...base, room: 'home', host: 'u1' })).toMatchObject({ room: 'home', host: 'u1' })
+    expect(sanePlayer({ ...base, room: 'home' })?.room).toBe('none')
+    expect(sanePlayer({ ...base, room: 'cafe', host: 'u1' })?.host).toBeUndefined()
+    expect(sanePlayer({ ...base, room: 'home', host: 'u1', eat: 'latte' })?.eat).toBe('latte')
+  })
+  it('바닥 음식 값을 다듬는다', () => {
+    expect(saneFood('f1', { menu: 'latte', x: 150, y: -3, by: '소영', t: 5 })).toEqual({ id: 'f1', menu: 'latte', x: 100, y: 0, by: '소영', t: 5 })
+    expect(saneFood('f1', { menu: 3, x: 1, y: 1 })).toBeNull()
   })
 })

@@ -4,14 +4,23 @@
  * 말하는 줄은 아래 한 줄(👥 로 열고 닫음, 20초 안 쓰면 닫힘), 지난 대화와 나가기는 📜 안에.
  * Firebase 설정이 없으면(지금의 배포처럼) 아무것도 그리지 않는다 → 기존 화면 그대로.
  */
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { listen, speechSupported } from '../lib/mp/speech'
 import { getAvatar } from '../lib/avatars'
 import { multiplayerAvailable } from '../lib/mp/config'
 import { MAX_CHAT, MAX_NAME, MAX_PLAYERS } from '../lib/mp/core'
-import { getMp, joinMp, leaveMp, savedName, say, setLook, subscribeMp } from '../lib/mp/session'
-import type { Outfit } from '../lib/types'
+import { getMp, joinMp, leaveMp, savedName, say, setLook, subscribeMp, visitHome } from '../lib/mp/session'
+import type { Outfit, Tweaks } from '../lib/types'
+
+const HomeVisit = lazy(() => import('./HomeVisit').then((m) => ({ default: m.HomeVisit })))
+/** 친구 집에 놀러 간 동안 그 집 화면을 띄운다(App 이 내용 칸 위에 그린다) */
+export function HomeVisitGate({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }) {
+  const v = useSyncExternalStore(subscribeMp, () => getMp().visiting)
+  return v ? <Suspense fallback={null}><HomeVisit key={v} outfit={outfit} tweaks={tweaks} /></Suspense> : null
+}
+/** 초대 글은 이만큼(ms) 동안 「놀러 가기」 카드로 보인다 */
+const INVITE_MS = 3 * 60 * 1000
 
 /** 놀이 화면이 아래쪽 단추를 쓰기 시작할 때 보내는 신호(말하는 줄을 닫는다) */
 export const HUD_BUSY = 'ryuso:hud-busy'
@@ -57,6 +66,10 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
   useEffect(() => { if (!open || hearing || history) return; const t = setTimeout(() => setOpen(false), IDLE_MS); return () => clearTimeout(t) }, [open, hearing, history, used])
   // 놀이 화면이 바쁠 때(몬스터 마법 풀기 시작 등) 말하는 줄을 닫아서 아래 단추를 가리지 않게
   useEffect(() => { const f = () => { setOpen(false); setHistory(false); setAskLeave(false) }; window.addEventListener(HUD_BUSY, f); return () => window.removeEventListener(HUD_BUSY, f) }, [])
+  // 친구가 보낸 집 초대(최근 것 하나): 「놀러 가기」 카드
+  const [dismissed, setDismissed] = useState<string | null>(null)
+  const invite = mp.status === 'on' ? [...mp.chat].reverse().find((c) => c.home && c.uid !== mp.uid && Date.now() - c.t < INVITE_MS) : undefined
+  const showInvite = invite && invite.id !== dismissed && mp.visiting !== invite.home && !!mp.players[invite.uid]
   const look = { avatar: getAvatar().id, outfit: outfit as Record<string, string> }
   const lookKey = JSON.stringify(look)
   // 옷을 갈아입으면 다른 사람 화면에도
@@ -77,6 +90,13 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
       {/* 👥 단추(위 왼쪽, 화면이 자리를 주면 그 자리) + 들어가기 칸 */}
       <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: dock ? '3.5rem' : 'max(22%, 7rem)' }}>
         {!dock && mainBtn}
+        {showInvite && invite && (
+          <div role="dialog" aria-label="집 초대" className="pointer-events-auto flex w-full items-center gap-1.5 rounded-2xl bg-white/95 p-2 shadow-lg">
+            <p className="m-0 flex-1 text-xs leading-snug font-bold text-[#6b4b52]">🏠 <b className="text-[#7a3d8f]">{invite.name}</b>네 집에 초대받았어요!</p>
+            <button onClick={() => { setDismissed(invite.id); visitHome(invite.home!) }} className="h-9 shrink-0 rounded-full bg-[#ff8fab] px-3 text-xs font-black text-white">놀러 가기</button>
+            <button aria-label="초대 닫기" onClick={() => setDismissed(invite.id)} className="h-9 w-7 shrink-0 text-sm font-bold text-black/40">✕</button>
+          </div>
+        )}
         {open && !on && (
           <div className="pointer-events-auto flex w-full flex-col gap-2 rounded-2xl bg-white/95 p-2.5 shadow-lg">
             <label className="text-xs font-bold text-[#6b4b52]">닉네임
@@ -92,7 +112,7 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
       </div>
       {/* 화면 아래: 사라지는 대화 + 말하는 줄 한 줄 */}
       {on && (
-        <div className="pointer-events-none absolute inset-x-2 z-[35] flex flex-col items-start gap-1" style={{ bottom: lift ? '5.5rem' : '0.5rem' }}>
+        <div className="pointer-events-none absolute inset-x-2 z-[35] flex flex-col items-start gap-1" style={{ bottom: lift && !mp.visiting ? '5.5rem' : '0.5rem' }}>
           {history && (
             <div role="dialog" aria-label="지난 대화" className="pointer-events-auto flex max-h-[40vh] w-[min(20rem,100%)] flex-col gap-1.5 rounded-2xl bg-white/95 p-2.5 shadow-lg">
               <ul className="m-0 flex min-h-0 list-none flex-col gap-0.5 overflow-y-auto p-0 text-xs">
