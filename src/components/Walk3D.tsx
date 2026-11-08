@@ -105,6 +105,8 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
   }
   const [pickWand, setPickWand] = useState(false)
   const zapRef = useRef<() => void>(() => {})
+  const thanksRef = useRef<HTMLDivElement>(null)
+  const thanksAt = useRef<number | null>(null)
   const fleeRef = useRef<() => void>(() => {})
   const wandRef = useRef(wand)
   wandRef.current = wand
@@ -393,7 +395,9 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
           setBattle({ k: m.k, t: m.type, hits: HITS, done: false })
           // 휘리릭 돌아 웃는 얼굴이 된 다음에 고맙다고 인사한다
           const total = rescuedCount, say = THANKS[Math.floor(Math.random() * THANKS.length)]
-          window.setTimeout(() => setBattle({ k: m.k, t: m.type, hits: HITS, done: true, total, say }), 1000)
+          window.setTimeout(() => { thanksAt.current = m.k; setBattle({ k: m.k, t: m.type, hits: HITS, done: true, total, say }) }, 1000)
+          // 3.5초 동안 말풍선을 보여 주고 사라진다
+          window.setTimeout(() => { setBattle((b) => (b && b.done && b.k === m.k ? null : b)); thanksAt.current = null }, 4500)
         } else {
           playTap()
           setBattle({ k: m.k, t: m.type, hits: m.hits, done: false })
@@ -403,6 +407,16 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
 
     let helpBk: number | null = null, helpers: typeof friends = []
     w.onFrame((dt, now) => {
+      // 고마운 말 말풍선: 그 몬스터 머리 위 화면 자리로
+      if (thanksRef.current) {
+        const k = thanksAt.current
+        if (k === null) thanksRef.current.style.visibility = 'hidden'
+        else {
+          const m = monsters[k], v = new THREE.Vector3(m.x, m.h + 0.2, m.z).project(w.camera)
+          thanksRef.current.style.transform = `translate(${((v.x + 1) / 2) * el.clientWidth}px, ${((1 - v.y) / 2) * el.clientHeight}px)`
+          thanksRef.current.style.visibility = v.z < 1 ? 'visible' : 'hidden'
+        }
+      }
       for (const st of stops) { st.sp.update(w.camera); w.face(st.sign, 1) }
       const nearStop = stops.find((st) => Math.hypot(w.me.x - st.x, w.me.z - st.z) < 6)?.to ?? null
       // 가게 문 앞까지 걸어가면 바로 그쪽으로 간다
@@ -580,11 +594,13 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       {battle && (() => {
         const m = MONSTERS[battle.t], wi = WEAPON_BY_ID[wand]
         return battle.done ? (
-          <div role="dialog" aria-label="마법이 풀렸어요" className="absolute inset-x-2 bottom-3 z-30 mx-auto flex max-w-md items-center gap-3 rounded-3xl bg-white/95 p-3 shadow-xl">
-            <img src={assetUrl(`travel/monster/${m.id}_happy.webp`)} alt="" className="h-16 w-16 shrink-0 object-contain" />
-            <p className="m-0 flex-1 text-sm leading-snug font-bold text-[#6b4b52]">🎉 마법이 풀렸어요!<br />{m.name}: 「{battle.say ?? '구해 줘서 고마워! 💕'}」 · +10 코인{battle.total ? <><br /><span className="text-xs text-[#7a3d8f]">지금까지 구한 몬스터 {battle.total}마리</span></> : null}</p>
-            <button onClick={() => { playTap(); setBattle(null) }} className="min-h-11 shrink-0 rounded-full bg-[#ff8fab] px-4 text-sm font-bold text-white shadow">좋아요</button>
-          </div>
+          // 고마운 말은 카페처럼 몬스터 머리 위 말풍선으로(자리는 매 프레임 thanksRef 로 맞춘다), 코인은 위에 잠깐
+          <>
+            <div ref={thanksRef} className="pointer-events-none absolute top-0 left-0 z-20" style={{ visibility: 'hidden' }}>
+              <p role="status" className="m-0 w-max max-w-[13rem] -translate-x-1/2 -translate-y-full rounded-2xl bg-white px-3 py-1.5 text-center text-sm leading-snug font-extrabold text-[#c04a5a] shadow-[0_3px_0_#f0c6cd]">{battle.say ?? '구해 줘서 고마워! 💕'}</p>
+            </div>
+            <p className="pointer-events-none absolute inset-x-2 top-14 z-20 mx-auto w-fit rounded-full bg-white/95 px-3 py-1.5 text-center text-sm font-extrabold text-[#7a3d8f] shadow">🎉 {m.name} 마법이 풀렸어요! · +10 코인{battle.total ? ` · 구한 몬스터 ${battle.total}마리` : ''}</p>
+          </>
         ) : (
           <>
             <p role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-fit max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center text-sm font-extrabold text-[#7a3d8f] shadow">
