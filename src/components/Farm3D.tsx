@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
-import { MultiplayerBoss } from './MultiplayerBoss'
-import { attachBossBattle, type BossBattle } from './bossBattle3d'
 import { mpDock } from './MultiplayerBar'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
@@ -66,7 +64,6 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
 }) {
   const host = useRef<HTMLDivElement>(null)
   const world = useRef<World | null>(null)
-  const [bossBattle, setBossBattle] = useState<BossBattle | null>(null)
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
   const [ready, setReady] = useState(false)
   /** 길을 넘어갈 때 하얗게 덮었다 걷는 막 */
@@ -250,8 +247,6 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
     world.current = w
     // 같이 놀기(멀티플레이어): 켜지 않으면 아무것도 하지 않는다
     const detachMp = attachMultiplayer(w, 'farm')
-    const battle = attachBossBattle(w, 'farm')
-    setBossBattle(battle)
     const { scene, rnd, keep, lambert } = w
 
     // 큰 밭 20칸 + 옆 밭 20칸: 흙 상자(마른 흙·젖은 흙·못 산 큰 밭은 풀빛, 설치 안 한 옆 밭은 흐린 흙) + 작물 둘 + 표시(💧 물 필요, ✨ 다 자람, 🔒 잠김)
@@ -687,7 +682,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
         w.face(a.doll, a.dir)
       }
     })
-    return () => { battle.dispose(); detachMp(); unsub(); unsubFriends(); unsubFence(); w.dispose(); world.current = null }
+    return () => { detachMp(); unsub(); unsubFriends(); unsubFence(); w.dispose(); world.current = null }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 한 번만 만든다(arrive 는 처음 자리만 정한다)
 
   useEffect(() => {
@@ -697,7 +692,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
   }, [outfit, tweaks])
 
   return (
-    <section aria-label="3D 농장" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none" style={{ containerType: 'size', containerName: 'farm-world' }}>
+    <section aria-label="3D 농장" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none">
       <div ref={host} className="absolute inset-0" />
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex flex-col gap-1.5">
         <div className="flex flex-wrap items-start justify-between gap-1.5">
@@ -718,7 +713,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
           </div>
         </div>
         {/* 도구: 물주기·수확(친구가 있으면 큰 밭은 친구들이), 노점, 주방 */}
-        {!placing && <div aria-label="농장 작업" className="farm3d-tools pointer-events-auto grid w-full max-w-[19rem] grid-cols-4 gap-1 self-end">
+        {!placing && <div className="pointer-events-auto grid w-full max-w-[19rem] grid-cols-4 gap-1 self-end">
           {([['seed', '씨앗', 'icon_seed'], ['water', '물주기', 'icon_water'], ['harvest', '수확', 'icon_basket'], ['kitchen', '주방', 'icon_kitchen']] as const).map(([id, label, icon]) => (
             <button key={id} aria-label={label} aria-expanded={id === 'seed' ? seedPicker : undefined} onClick={() => { if (id === 'water' || id === 'harvest') doChore(id); else if (id === 'seed') { playTap(); setSeedPicker((v) => !v) } else { playTap(); onKitchen?.() } }}
               className="flex min-w-0 flex-col items-center rounded-2xl border-2 border-[#e5cfa3] bg-[#fdf2d8]/95 py-1 shadow">
@@ -778,7 +773,6 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
             cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
         </div>
       )}
-      <MultiplayerBoss battle={bossBattle} />
     </section>
   )
 }

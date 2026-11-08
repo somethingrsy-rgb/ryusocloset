@@ -8,7 +8,6 @@
 import * as THREE from 'three'
 import { AVATARS } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
-import { cleanBattleLook } from '../lib/mp/bossCombat'
 import { follow, type PlayerState, type Room } from '../lib/mp/core'
 import { getMp, leaveSceneWhere, setPos3d, setSceneWhere } from '../lib/mp/session'
 import { AVATAR_H, FEET, type Doll, type World } from './world3d'
@@ -57,12 +56,11 @@ export function attachMultiplayer(w: World, room: Room) {
     r.label.scale.set(2.4, (2.4 * c.height) / c.width, 1)
   }
   const drawLook = (r: Remote, p: PlayerState) => {
-    const look = cleanBattleLook(p.look)
-    const key = JSON.stringify(look)
+    const key = JSON.stringify(p.look)
     if (key === r.lookKey) return
     r.lookKey = key
-    const av = AVATARS.find((a) => a.id === look.avatar)
-    renderFigure(look.outfit, {}, av).then((cv) => {
+    const av = AVATARS.find((a) => a.id === p.look.avatar)
+    renderFigure(p.look.outfit, {}, av).then((cv) => {
       if (gone) return
       const m = r.doll.doll.material as THREE.MeshBasicMaterial
       m.map = w.texOf(cv); m.needsUpdate = true

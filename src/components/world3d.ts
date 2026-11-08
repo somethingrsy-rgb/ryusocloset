@@ -307,7 +307,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
       if (hit && opts.onPick) {
         let o: THREE.Object3D | null = hit.object
         while (o && !pickables.includes(o)) o = o.parent
-        if (o) { if (typeof o.userData.onPick === 'function') o.userData.onPick(); else opts.onPick(o) }
+        if (o) opts.onPick(o)
       } else {
         const g = ray.intersectObject(ground)[0]
         // onGround 가 true 를 돌려주면(놓기 모드 같은 것) 걷지 않는다

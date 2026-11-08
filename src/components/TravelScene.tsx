@@ -380,7 +380,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             <button onClick={inviteFriends} disabled={invitingFriend} className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#7a3d8f] px-3 py-2 text-sm font-bold text-white shadow-md">
               <span aria-hidden>👥</span>{invitingFriend ? '방 여는 중…' : mp.hosting ? '또 부르기' : '여기로 부르기'}
             </button>
-            {hostingHere && !isMyRoom && (
+            {hostingHere && (
               <button onClick={() => { playTap(); setPicking(true) }} className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#ffd166] px-3 py-2 text-sm font-bold text-[#7a4a12] shadow-md">
                 <span aria-hidden>🍰</span>간식 먹기
               </button>
@@ -399,12 +399,12 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             {tx.decorate}
           </button>
         )}
-        {!isMyRoom && <button onClick={() => { playTap(); setInviting(true) }} disabled={partyEnd} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-[#ff8fab] px-3 py-2 text-sm font-bold text-white shadow-md disabled:opacity-50">
+        <button onClick={() => { playTap(); setInviting(true) }} disabled={partyEnd} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-[#ff8fab] px-3 py-2 text-sm font-bold text-white shadow-md disabled:opacity-50">
           <span aria-hidden>🎉</span>
           {lang === 'ko' ? '파티 초대' : 'Party'}
-        </button>}
+        </button>
         {/* 파티 음식: 주문받기 → 주방에서 만들기 → 같이 먹기 */}
-        {!isMyRoom && party.length > 0 && !partyEnd && !eating && unordered.length > 0 && (
+        {party.length > 0 && !partyEnd && !eating && unordered.length > 0 && (
           <button onClick={() => { playTap(); takeOrders() }} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-[#ffd166] px-3 py-2 text-sm font-bold text-[#7a4a12] shadow-md">
             <span aria-hidden>📝</span>
             {lang === 'ko' ? '주문받기' : 'Take orders'}
@@ -422,7 +422,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             {lang === 'ko' ? '같이 먹기' : 'Eat together'}
           </button>
         )}
-        {!isMyRoom && party.length > 0 && !partyEnd && (
+        {party.length > 0 && !partyEnd && (
           <button onClick={() => { playTap(); setPartyEnd(true) }} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
             <span aria-hidden>👋</span>
             {lang === 'ko' ? '파티 끝' : 'Bye'}

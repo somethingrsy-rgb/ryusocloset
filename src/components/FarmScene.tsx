@@ -458,9 +458,9 @@ export function FarmScene({ outfit, tweaks, onKitchen, onCafe, onWalk }: { outfi
             {tools.map((t) => {
               const active = tool === t.id
               return (
-                <button key={t.id} aria-pressed={t.id === 'kitchen' ? undefined : active} className={`flex flex-1 items-center rounded-3xl border-2 shadow-md ${wide ? 'min-h-[5.5rem] flex-col justify-center px-2 py-2' : 'flex-col px-1 pt-2 pb-2.5'} ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'kitchen' ? onKitchen() : pick(t.id))}>
+                <button key={t.id} aria-pressed={t.id === 'kitchen' ? undefined : active} className={`flex flex-1 items-center rounded-3xl border-2 shadow-md ${wide ? 'flex-col px-1 py-1.5' : 'flex-col px-1 pt-2 pb-2.5'} ${active ? 'border-blush bg-[#fff1cc]' : 'border-[#e5cfa3] bg-[#fdf2d8]/95'}`} onClick={() => (t.id === 'kitchen' ? onKitchen() : pick(t.id))}>
                   {/* 아이패드처럼 넓은 세로 화면에서 버튼이 너무 커지지 않게 그림 크기에 상한(폰은 그대로) */}
-                  <FarmImg name={t.icon} emoji={t.emoji} className={wide ? 'h-14 w-14 shrink-0 object-contain' : 'aspect-square w-[85%] max-w-[4.5rem] object-contain'} />
+                  <FarmImg name={t.icon} emoji={t.emoji} className={wide ? 'h-12 w-12 shrink-0 object-contain' : 'aspect-square w-[85%] max-w-[4.5rem] object-contain'} />
                   <span className="text-sm font-extrabold text-[#6b4a2b]">{t[lang]}</span>
                 </button>
               )

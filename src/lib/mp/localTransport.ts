@@ -12,8 +12,6 @@ export function localTransport(): Transport {
   let chatCb: (m: ChatMsg[]) => void = () => {}
   let beat = 0
   let boss: Boss | null = null
-  let hitSequence = 0
-  const appliedHits = new Set<string>()
   // 집 놀이: 집(방 꾸밈)과 바닥 음식. 지켜보는 쪽에 알려 준다
   const homes: Record<string, Home> = {}
   const foods: Record<string, Record<string, Food>> = {}
@@ -36,14 +34,6 @@ export function localTransport(): Transport {
         else if (m.type === 'home') { const h = (m as { home?: Home | null }).home; if (h) homes[m.uid] = h; else delete homes[m.uid]; tellWatch(m.uid) }
         else if (m.type === 'food+') { const x = m as unknown as { host: string; food: Food }; const f = saneFood(x.food?.id, x.food); if (f) { (foods[x.host] ??= {})[f.id] = f; tellWatch(x.host) } }
         else if (m.type === 'food-') { const x = m as unknown as { host: string; id: string }; if (foods[x.host]) { delete foods[x.host][x.id]; tellWatch(x.host) } }
-        else if (m.type === 'boss-hit') {
-          const hit = m as unknown as { id: string; power: number; hitId: string }
-          if (!appliedHits.has(hit.hitId)) {
-            appliedHits.add(hit.hitId)
-            const b = bossHit(boss, hit.id, hit.power)
-            if (b) setBoss({ ...b, t: Date.now() }, false)
-          }
-        }
         else if (m.type === 'boss') { const b = saneBoss((m as { boss?: unknown }).boss); if (b && (!boss || b.id !== boss.id || b.hp < boss.hp)) setBoss(b, false) }
         else if (m.type === 'bye') { delete players[m.uid]; emit(); if (homes[m.uid]) { delete homes[m.uid]; tellWatch(m.uid) } }
         else if (m.type === 'chat' && m.msg) { chat.push(m.msg); chatCb(chat.slice(-30)) }
@@ -57,20 +47,13 @@ export function localTransport(): Transport {
       window.addEventListener('pagehide', bye)
       return { uid, full: false }
     },
-    update(part) { Object.assign(state, part); players[uid] = { ...(sanePlayer({ ...state, t: Date.now() }) as PlayerState) }; send(); emit() },
+    update(part) { Object.assign(state, part); players[uid] = { ...(sanePlayer({ ...state, t: Date.now() }) as PlayerState) }; send() },
     chat(name, text, home) {
       const msg: ChatMsg = { id: `${Date.now()}-${uid}`, uid, name, text, t: Date.now(), ...(home ? { home: uid } : {}) }
       chat.push(msg); chatCb(chat.slice(-30))
       ch?.postMessage({ type: 'chat', uid, msg })
     },
-    hitBoss(id, power) {
-      const b = bossHit(boss, id, power)
-      if (!b) return
-      const hitId = `${uid}-${++hitSequence}`
-      appliedHits.add(hitId)
-      setBoss({ ...b, t: Date.now() }, false)
-      ch?.postMessage({ type: 'boss-hit', uid, id, power, hitId })
-    },
+    hitBoss(id, power) { const b = bossHit(boss, id, power); if (b) setBoss({ ...b, t: Date.now() }, true) },
     spawnBoss(next) { if (bossCanRespawn(boss, Date.now())) setBoss({ ...next, t: Date.now() }, true) },
     onBoss(cb) { bossCb = cb },
     async openHome(home) { homes[uid] = { ...home, t: Date.now() }; ch?.postMessage({ type: 'home', uid, home: homes[uid] }); tellWatch(uid) },
