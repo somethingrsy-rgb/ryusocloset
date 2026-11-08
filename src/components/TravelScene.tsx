@@ -163,13 +163,18 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   useEffect(() => { if (!hostingHere) return; enterMyHome(); setWhere('home', getMp().uid) }, [hostingHere])
   // 이 장소를 나가면 문을 닫는다(놀러 온 친구들은 돌아간다)
   useEffect(() => () => { closeHome(); if (getMp().room === 'home' && !getMp().visiting) setWhere('none') }, [placeId])
-  const inviteFriends = () => {
+  const [invitingFriend, setInvitingFriend] = useState(false)
+  const [inviteFailed, setInviteFailed] = useState(false)
+  const inviteFriends = async () => {
+    setInvitingFriend(true); setInviteFailed(false)
     // 꾸민 방이면 방 꾸밈을, 아니면 장소 그림(place)을 보낸다. 내가 사진으로 추가한 소품은 이 기기에만 있어서 보내지 않는다
     const where = layout
       ? { scene: layout.scene, room: { ...layout.room, items: layout.room.items.filter((it) => !it.itemId.startsWith(CUSTOM_ROOM_PREFIX)) }, title: placeTitle }
       : { scene: 'place', place: placeId, title: placeTitle }
-    inviteHome(where, `${p.icon} ${placeTitle}${isMyRoom ? '에' : euro(placeTitle)} 놀러 와! 같이 놀자`)
-    playServe()
+    const sent = await inviteHome(where, `${p.icon} ${placeTitle}${isMyRoom ? '에' : euro(placeTitle)} 놀러 와! 같이 놀자`)
+    setInvitingFriend(false)
+    setInviteFailed(!sent)
+    if (sent) playServe()
   }
   const [picking, setPicking] = useState(false)
   const putFoodNear = (m: string) => putFood(m, Math.max(8, Math.min(92, posRef.current.x + (Math.random() < 0.5 ? -9 : 9))), Math.max(minY + 4, Math.min(layout ? 97 : WALK_BOUNDS.maxY, posRef.current.y + (Math.random() - 0.5) * 6)))
@@ -372,8 +377,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
         <span ref={mpDock} className="flex shrink-0" />
         {mp.status === 'on' && (
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={inviteFriends} className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#7a3d8f] px-3 py-2 text-sm font-bold text-white shadow-md">
-              <span aria-hidden>👥</span>{mp.hosting ? '또 부르기' : '여기로 부르기'}
+            <button onClick={inviteFriends} disabled={invitingFriend} className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#7a3d8f] px-3 py-2 text-sm font-bold text-white shadow-md">
+              <span aria-hidden>👥</span>{invitingFriend ? '방 여는 중…' : mp.hosting ? '또 부르기' : '여기로 부르기'}
             </button>
             {hostingHere && (
               <button onClick={() => { playTap(); setPicking(true) }} className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#ffd166] px-3 py-2 text-sm font-bold text-[#7a4a12] shadow-md">
@@ -383,6 +388,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
           </div>
         )}
 
+        {inviteFailed && <span role="status" className="rounded-full bg-white px-3 py-1 text-sm text-[#a53d57]">방을 열지 못했어요. 연결을 확인한 뒤 다시 눌러 주세요.</span>}
         <button onClick={onExit} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-3 py-2 text-sm font-bold shadow-md ring-1 ring-black/5">
           <span aria-hidden>🗺️</span>
           {tx.map}

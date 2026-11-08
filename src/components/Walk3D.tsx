@@ -644,16 +644,16 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
         if (wp?.sword) {
           // 검: 손잡이(그림 오른쪽 위)를 화면 왼쪽 손에 쥐고 칼날은 바깥 아래로. 마법을 쏠 때 살짝 휘두른다
           wandSp.center.set(0.85, 0.87) // 손잡이 가운데
-          wandSp.scale.set(1.25 * wp.aspect, 1.25, 1)
+          wandSp.scale.set(0.875 * wp.aspect, 0.875, 1)
           // 그림은 칼끝이 왼쪽 아래: 손잡이를 중심으로 돌려서 칼끝이 위(살짝 바깥쪽)로 서게
           wandSp.material.rotation = -2.2 + Math.sin(now / 260) * 0.06 - swing * 0.9
           // 몸 앞(카메라 쪽)으로 조금 내밀어서 몸 뒤로 숨지 않게
           const fx = w.camera.position.x - w.me.x, fz = w.camera.position.z - w.me.z, fl = Math.hypot(fx, fz) || 1
           wandSp.position.set(w.me.x + r.x * 0.47 + (fx / fl) * 0.45, 0.9, w.me.z + r.z * 0.47 + (fz / fl) * 0.45)
         } else {
-          // 마법봉: 예전의 2.5배. 손잡이(그림 왼쪽 아래)를 화면 왼쪽 손에 쥐고 끝은 위로(살짝 바깥쪽). 마법을 쏠 때 검처럼 휘두른다
+          // 마법봉: 손잡이 위치를 기준으로 크기를 줄인다. 손잡이(그림 왼쪽 아래)를 화면 왼쪽 손에 쥐고 끝은 위로(살짝 바깥쪽). 마법을 쏠 때 검처럼 휘두른다
           wandSp.center.set(0.4, 0.18)
-          wandSp.scale.set(1.75, 1.75, 1)
+          wandSp.scale.set(1.225, 1.225, 1)
           wandSp.material.rotation = 0.3 + Math.sin(now / 260) * 0.06 + swing * 1.1
           const fx = w.camera.position.x - w.me.x, fz = w.camera.position.z - w.me.z, fl = Math.hypot(fx, fz) || 1
           wandSp.position.set(w.me.x + r.x * 0.47 + (fx / fl) * 0.45, 0.9, w.me.z + r.z * 0.47 + (fz / fl) * 0.45)

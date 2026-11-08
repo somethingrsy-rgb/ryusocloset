@@ -20,7 +20,7 @@ export interface Transport {
   /** 새 대왕 몬스터를 낸다(없거나 풀리고 조금 지났을 때만, 여럿이 동시에 해도 하나만) */
   spawnBoss(next: Omit<Boss, 't'>): void
   /** 내 집을 친구들에게 연다(방 꾸밈을 올린다, 접속이 끊기면 닫힌다) / 닫는다 */
-  openHome(home: Omit<Home, 't'>): void
+  openHome(home: Omit<Home, 't'>): Promise<void>
   closeHome(): void
   /** 누구네 집(방 꾸밈 + 바닥 음식)을 지켜본다. 돌려준 함수로 그만 본다 */
   watchHome(host: string, cb: (home: Home | null, foods: Food[]) => void): () => void
