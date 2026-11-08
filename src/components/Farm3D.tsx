@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { getAvatar } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
-import { ANIMAL_SECONDS, CROPS, MAIN_PLOTS, PLOT_COUNT, actFarm, animalWait, getFarm, growth, orderCrop, plotPrice, subscribeFarm, type AnimalGood, type CropId, type FarmAction } from '../lib/farm'
+import { ANIMAL_SECONDS, CROPS, FENCE_PRICE, MAIN_PLOTS, PLOT_COUNT, actFarm, animalWait, getFarm, growth, orderCrop, plotPrice, subscribeFarm, type AnimalGood, type CropId, type FarmAction } from '../lib/farm'
 import { MAX_FARM_FRIENDS, getFarmFriends, getFriendJobs, harvestAll, setFarmFriends, subscribeFarmFriends, waterNow } from '../lib/farmFriends'
 import { actKitchen } from '../lib/kitchen'
 import { getMeet, notCollected, subscribeMeet } from '../lib/meet'
@@ -80,7 +80,15 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
   placingRef.current = placing
   const [moving, setMoving] = useState<number | null>(null)
   const movingRef = useRef<number | null>(null)
+  /** 확장 모드 도구: 밭 설치·옮기기 또는 울타리(방향 0 가로·1 세로) */
+  const [tool, setTool] = useState<'plot' | 'fence'>('plot')
+  const toolRef = useRef(tool)
+  toolRef.current = tool
+  const [fenceDir, setFenceDir] = useState<0 | 1>(0)
+  const fenceDirRef = useRef(fenceDir)
+  fenceDirRef.current = fenceDir
   movingRef.current = moving
+  const fenceAtRef = useRef<(x: number, z: number) => void>(() => {})
   const endPlacing = () => { setPlacing(false); setMoving(null) }
   // 확장 모드에서는 하늘 위에서 농장을 지도처럼 내려다본다
   useEffect(() => { world.current?.setOverhead(placing ? { x: 9, z: -3, h: 40 } : null) }, [placing])
@@ -157,19 +165,27 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     let PEN = { x0: 0, x1: 0, z0: 0, z1: 0 }
     let showLed: (i: number) => void = () => {}
     // 확장 모드의 ＋ 자리들(아래에서 만든다)
+    const fenceOf = new Map<THREE.Object3D, [number, number]>()
     const slotOf = new Map<THREE.Object3D, number>()
     let slots: { x: number; z: number; box: THREE.Mesh; hit: THREE.Mesh; mark: THREE.Sprite }[] = []
     const w = createWorld(el, {
       bounds: BOUNDS, start: arrive ? { x: cafeRoadX(CAFE_GATE - 7), z: CAFE_GATE - 7 } : { x: 0, z: 6 }, seed: 11, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 밭을 누르면 밭 앞까지 걸어가서 그 밭이 필요로 하는 일을 한다
       // 확장 모드: 땅을 누르면 그 자리에 새 밭(또는 옮길 밭) 미리보기
-      onGround: () => {
+      onGround: (x, z) => {
         if (!placingRef.current) return false
+        if (toolRef.current === 'fence') { fenceAtRef.current(x, z); return true }
         setNotice('＋ 자리를 눌러요')
         return true
       },
       onPick: (o) => {
         // 확장 모드에서는 노점·동물을 누르지 않는다
+        if (placingRef.current && toolRef.current === 'fence') {
+          // 울타리 모드: 놓은 울타리를 누르면 치운다
+          const fp = fenceOf.get(o)
+          if (fp) { if (actFarm({ type: 'unfence', x: fp[0], z: fp[1] }) === 'saved') { playTap(); setNotice('울타리를 치웠어요') } }
+          return
+        }
         if (placingRef.current) {
           const k = slotOf.get(o)
           if (k !== undefined) { placeAtRef.current(slots[k].x, slots[k].z); return }
@@ -340,6 +356,44 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         }
       }
     }
+    // 산 울타리: 한 칸(길이 1.6)마다 기둥 둘 + 가로대 둘. 저장(farm.fences)이 바뀌면 다시 세운다. 아바타는 지나가지 못한다
+    const FL = 1.6
+    const fenceGroup = new THREE.Group()
+    scene.add(fenceGroup)
+    const fenceHitGeo = keep(new THREE.BoxGeometry(FL, 1.2, 0.5)), fenceHitMat = keep(new THREE.MeshBasicMaterial({ visible: false }))
+    let fenceKey = '', fenceObs: { x: number; z: number; r: number }[] = []
+    const buildFences = () => {
+      const list = getFarm().fences, key = JSON.stringify(list)
+      if (key === fenceKey) return
+      fenceKey = key
+      for (const o of [...fenceGroup.children]) { fenceGroup.remove(o); const k = w.pickables.indexOf(o); if (k >= 0) w.pickables.splice(k, 1) }
+      fenceOf.clear()
+      for (const ob of fenceObs) { const k = w.obstacles.indexOf(ob); if (k >= 0) w.obstacles.splice(k, 1) }
+      fenceObs = []
+      for (const [x, z, r] of list) {
+        const seg = new THREE.Group()
+        seg.position.set(x, 0, z)
+        seg.rotation.y = r ? Math.PI / 2 : 0
+        for (const dx of [-FL / 2, FL / 2]) { const post = new THREE.Mesh(postGeo, postMat); post.position.set(dx, 0.5, 0); post.castShadow = true; seg.add(post) }
+        for (const y of [0.35, 0.75]) { const rail = new THREE.Mesh(railGeo, postMat); rail.scale.x = FL; rail.position.y = y; seg.add(rail) }
+        const hit = new THREE.Mesh(fenceHitGeo, fenceHitMat); hit.position.y = 0.6; seg.add(hit)
+        fenceGroup.add(seg)
+        fenceOf.set(hit, [x, z]); w.pickables.push(hit)
+        for (const t of [-0.5, 0, 0.5]) { const ob = { x: x + (r ? 0 : t * FL), z: z + (r ? t * FL : 0), r: 0.35 }; fenceObs.push(ob); w.obstacles.push(ob) }
+      }
+    }
+    buildFences()
+    const unsubFence = subscribeFarm(buildFences)
+    fenceAtRef.current = (x, z) => {
+      const r = fenceDirRef.current
+      // 칸에 맞춰 놓는다: 가로 울타리는 x 를 칸 가운데, z 는 칸 경계에
+      const gx = r ? Math.round(x / FL) * FL : Math.floor(x / FL) * FL + FL / 2, gz = r ? Math.floor(z / FL) * FL + FL / 2 : Math.round(z / FL) * FL
+      const X = Math.round(gx * 100) / 100, Z = Math.round(gz * 100) / 100
+      if (X > -fx + 0.3 && X < fx - 0.3 && Z > fz0 + 0.3 && Z < fz1 - 0.3) { setNotice('큰 밭 안에는 놓을 수 없어요'); return }
+      if (Z > fz1 - 1 && Math.abs(X - cafeRoadX(Z)) < 2.2) { setNotice('길 위에는 놓을 수 없어요'); return }
+      if (getFarm().coins < FENCE_PRICE) { setNotice('코인이 모자라요'); return }
+      if (actFarm({ type: 'fence', x: X, z: Z, r }) === 'saved') { playCoin(); setNotice(`울타리 한 칸 설치 · -${FENCE_PRICE}코인`) } else setNotice('여기에는 이미 울타리가 있어요')
+    }
     fenceLine(-fx, fz0, fx, fz0); fenceLine(-fx, fz1, fx, fz1, 0); fenceLine(-fx, fz0, -fx, fz1); fenceLine(fx, fz0, fx, fz1)
     // 옆 울타리 밭 울타리(앞에 문)
     const sx1 = SIDE_X + (SIDE_COLS * (PW + GAP)) / 2 + 1.2
@@ -491,9 +545,9 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     // 확장 모드일 때 빈 ＋ 자리만 보이고 누를 수 있다(옮기는 중인 밭이 있던 자리도 빈 자리로)
     let slotSig = ''
     const refreshSlots = () => {
-      const st = getFarm(), on = placingRef.current, mv = movingRef.current
+      const st = getFarm(), on = placingRef.current && toolRef.current === 'plot', mv = movingRef.current
       const taken = Array.from({ length: PLOT_COUNT - MAIN_PLOTS }, (_, j) => MAIN_PLOTS + j).filter((i) => st.owned[i] && i !== mv).map(plotAt)
-      const sig = `${on}|${mv}|${taken.map((p) => `${p.x},${p.z}`).join(';')}`
+      const sig = `${on}|${toolRef.current}|${mv}|${taken.map((p) => `${p.x},${p.z}`).join(';')}`
       if (sig === slotSig) return
       slotSig = sig
       for (const sl of slots) {
@@ -591,7 +645,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         w.face(a.doll, a.dir)
       }
     })
-    return () => { unsub(); unsubFriends(); w.dispose(); world.current = null }
+    return () => { unsub(); unsubFriends(); unsubFence(); w.dispose(); world.current = null }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 한 번만 만든다(arrive 는 처음 자리만 정한다)
 
   useEffect(() => {
@@ -642,9 +696,14 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       {placing && (
         <div className="absolute inset-x-2 bottom-4 z-20 mx-auto flex w-fit max-w-full flex-col items-center gap-1.5">
           <p className="m-0 rounded-2xl bg-white/95 px-3 py-2 text-center text-sm font-extrabold text-[#3d6b2f] shadow">
-            🪴 확장 · 옆 밭 {farm.owned.filter((o, k) => o && k >= MAIN_PLOTS).length}/20<br />
-            <span className="text-xs font-bold text-black/60">{moving !== null ? '옮길 ＋ 자리를 눌러요 (밭을 한 번 더 누르면 취소)' : <>＋ 자리를 누르면 설치 · {plotPrice(farm)} <CoinIcon /> · 설치한 밭을 누르면 옮기기</>}</span>
+            {tool === 'plot' ? <>🪴 확장 · 옆 밭 {farm.owned.filter((o, k) => o && k >= MAIN_PLOTS).length}/20</> : <>🪵 울타리 {farm.fences.length}칸 · 한 칸 {FENCE_PRICE} <CoinIcon /></>}<br />
+            <span className="text-xs font-bold text-black/60">{tool === 'fence' ? '땅을 누르면 울타리 한 칸 설치 · 울타리를 누르면 치우기' : moving !== null ? '옮길 ＋ 자리를 눌러요 (밭을 한 번 더 누르면 취소)' : <>＋ 자리를 누르면 설치 · {plotPrice(farm)} <CoinIcon /> · 설치한 밭을 누르면 옮기기</>}</span>
           </p>
+          <div className="flex gap-1.5">
+            <button aria-pressed={tool === 'plot'} onClick={() => { playTap(); setTool('plot'); setMoving(null) }} className={`h-10 rounded-full px-3 text-sm font-black shadow ${tool === 'plot' ? 'bg-[#5cc46a] text-white' : 'bg-white/95'}`}>🪴 밭</button>
+            <button aria-pressed={tool === 'fence'} onClick={() => { playTap(); setTool('fence'); setMoving(null) }} className={`h-10 rounded-full px-3 text-sm font-black shadow ${tool === 'fence' ? 'bg-[#c98d55] text-white' : 'bg-white/95'}`}>🪵 울타리</button>
+            {tool === 'fence' && <button aria-label="울타리 방향" onClick={() => { playTap(); setFenceDir((d) => (d ? 0 : 1)) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black shadow">{fenceDir ? '↕ 세로' : '↔ 가로'}</button>}
+          </div>
           <button onClick={() => { playTap(); endPlacing() }} className="h-10 rounded-full bg-[#ff8fab] px-4 text-sm font-black text-white shadow">✓ 다 했어요</button>
         </div>
       )}

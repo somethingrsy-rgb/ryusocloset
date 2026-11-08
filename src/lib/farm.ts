@@ -21,15 +21,20 @@ export interface FarmState {
   plots: (Plot | null)[]; /** 산 밭 칸 (앞의 9칸은 처음부터 true) */ owned: boolean[]; inventory: Record<CropId, number>; coins: number; deliveries: number; decorations: string[]; /** 마지막으로 우유·달걀을 받은 때(0 = 바로 받을 수 있음) */ barn: Record<AnimalGood, number>
   /** 3D 농장에서 옆 밭(확장 밭)을 놓은 자리(밭 번호 → [x, z]). 없으면 기본 자리 */
   sidePos: Record<number, [number, number]>
+  /** 3D 농장에서 산 울타리 한 칸들: [x, z, 방향(0 가로·1 세로)] */
+  fences: [number, number, 0 | 1][]
 }
-export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number } | { type: 'earn'; amount: number } | { type: 'buy'; plot: number } | { type: 'use'; items: Partial<Record<CropId, number>> } | { type: 'collect'; good: AnimalGood } | { type: 'place'; plot: number; x: number; z: number }
+export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number } | { type: 'earn'; amount: number } | { type: 'buy'; plot: number } | { type: 'use'; items: Partial<Record<CropId, number>> } | { type: 'collect'; good: AnimalGood } | { type: 'place'; plot: number; x: number; z: number } | { type: 'fence'; x: number; z: number; r: 0 | 1 } | { type: 'unfence'; x: number; z: number }
 /** 새 땅 밭 한 칸 값: 처음 20코인, 하나 살 때마다 5코인씩 올라간다 */
 export const PLOT_BASE_PRICE = 20
 export const PLOT_PRICE_STEP = 5
 const startOwned = () => Array.from({ length: PLOT_COUNT }, (_, i) => i < FREE_PLOTS)
 export const boughtCount = (state: Pick<FarmState, 'owned'>) => state.owned.filter((v, i) => v && i >= FREE_PLOTS).length
 export const plotPrice = (state: Pick<FarmState, 'owned'>) => PLOT_BASE_PRICE + PLOT_PRICE_STEP * boughtCount(state)
-export const defaultFarm = (): FarmState => ({ plots: Array(PLOT_COUNT).fill(null), owned: startOwned(), inventory: { carrot: 0, strawberry: 0, corn: 0 }, coins: 0, deliveries: 0, decorations: [], barn: { milk: 0, egg: 0 }, sidePos: {} })
+export const defaultFarm = (): FarmState => ({ plots: Array(PLOT_COUNT).fill(null), owned: startOwned(), inventory: { carrot: 0, strawberry: 0, corn: 0 }, coins: 0, deliveries: 0, decorations: [], barn: { milk: 0, egg: 0 }, sidePos: {}, fences: [] })
+/** 울타리 한 칸 값 */
+export const FENCE_PRICE = 5
+export const MAX_FENCES = 200
 const cropById = (id: unknown) => CROPS.find(c => c.id === id)
 /** 예전 저장의 토마토는 옥수수로 이어간다 */
 const migrateCrop = (id: unknown) => (id === 'tomato' ? 'corn' : id)
@@ -54,6 +59,9 @@ export function sanitizeFarm(value: unknown): FarmState {
     const i = Number(k)
     if (Number.isInteger(i) && i >= MAIN_PLOTS && i < PLOT_COUNT && Array.isArray(v) && v.length === 2 && v.every((n) => typeof n === 'number' && Number.isFinite(n))) base.sidePos[i] = [Math.max(-60, Math.min(60, v[0])), Math.max(-60, Math.min(60, v[1]))]
   }
+  if (Array.isArray(raw.fences)) for (const v of raw.fences.slice(0, MAX_FENCES)) {
+    if (Array.isArray(v) && v.length === 3 && Number.isFinite(v[0]) && Number.isFinite(v[1]) && (v[2] === 0 || v[2] === 1)) base.fences.push([Math.max(-60, Math.min(60, v[0])), Math.max(-60, Math.min(60, v[1])), v[2]])
+  }
   base.decorations = Array.isArray(raw.decorations) ? [...new Set(raw.decorations.filter(id => id === 'fence' || id === 'flowers'))] : []
   return base
 }
@@ -69,7 +77,20 @@ export const orderCrop = (state: FarmState) => CROPS.find((c) => c.id === ORDER_
 export const animalWait = (state: Pick<FarmState, 'barn'>, good: AnimalGood, now: number) => Math.max(0, Math.ceil((state.barn[good] + ANIMAL_SECONDS * 1000 - now) / 1000))
 export const animalReady = (state: Pick<FarmState, 'barn'>, good: AnimalGood, now: number) => !state.barn[good] || animalWait(state, good, now) === 0
 export function reduceFarm(state: FarmState, action: FarmAction, now: number): FarmState {
-  const next: FarmState = { ...state, plots: [...state.plots], owned: [...state.owned], inventory: { ...state.inventory }, decorations: [...state.decorations], barn: { ...state.barn }, sidePos: { ...state.sidePos } }
+  const next: FarmState = { ...state, plots: [...state.plots], owned: [...state.owned], inventory: { ...state.inventory }, decorations: [...state.decorations], barn: { ...state.barn }, sidePos: { ...state.sidePos }, fences: [...state.fences] }
+  if (action.type === 'fence') {
+    // 같은 자리·방향에 이미 있거나, 코인이 모자라거나, 너무 많으면 안 된다
+    if (!Number.isFinite(action.x) || !Number.isFinite(action.z) || Math.abs(action.x) > 60 || Math.abs(action.z) > 60 || (action.r !== 0 && action.r !== 1)) return state
+    if (state.coins < FENCE_PRICE || state.fences.length >= MAX_FENCES || state.fences.some(([x, z, r]) => x === action.x && z === action.z && r === action.r)) return state
+    next.coins -= FENCE_PRICE; next.fences.push([action.x, action.z, action.r])
+    return next
+  }
+  if (action.type === 'unfence') {
+    const k = state.fences.findIndex(([x, z]) => x === action.x && z === action.z)
+    if (k < 0) return state
+    next.fences.splice(k, 1)
+    return next
+  }
   if ('plot' in action) {
     if (!Number.isInteger(action.plot) || action.plot < 0 || action.plot >= PLOT_COUNT) return state
     const plot = state.plots[action.plot]
