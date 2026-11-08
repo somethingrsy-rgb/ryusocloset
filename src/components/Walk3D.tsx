@@ -4,7 +4,8 @@ import { CALL_ANIMALS } from '../lib/animalCalls'
 import { avatarName, getAvatar } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
 import { findItem, isFound, travelFindable, travelItem } from '../lib/game'
-import { ITEM_BY_ID, assetUrl } from '../lib/items'
+import { ITEMS, ITEM_BY_ID, assetUrl } from '../lib/items'
+import { actFarm } from '../lib/farm'
 import { getMeet, talkFor, type Talk } from '../lib/meet'
 import { toggleItem } from '../lib/outfit'
 import { playOrder, playServe, playTap } from '../lib/sound'
@@ -18,6 +19,19 @@ import { ANIMAL_H, HOUSE_ART, TREE_ART, createWorld, emojiCanvas, type Doll, typ
  * 👗 버튼으로 그 자리에서 옷을 갈아입는다(코디 탭과 같은 옷).
  */
 const WORLD = 70
+/** 마법에 걸린 몬스터 다섯(무서운 얼굴 → 마법이 풀리면 귀여운 얼굴). 그림 크기(가로·세로) */
+const MONSTERS = [
+  { id: 'dino', name: '아기 공룡', size: [909, 1205] },
+  { id: 'blob', name: '별더듬이', size: [1059, 1181] },
+  { id: 'fluff', name: '복슬이', size: [1140, 1201] },
+  { id: 'bat', name: '보라 박쥐', size: [1214, 1192] },
+  { id: 'goblin', name: '초록 뿔이', size: [996, 1072] },
+] as const
+/** 몬스터 마법 풀기: 마법봉으로 이만큼 톡톡 */
+const HITS = 10
+const RESCUE_KEY = 'ryuso.walk.rescued'
+const loadRescued = (): string[] => { try { const v = JSON.parse(localStorage.getItem(RESCUE_KEY) ?? '[]'); return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [] } catch { return [] } }
+const WANDS = ITEMS.filter((i) => i.category === 'wand')
 const SPARKLES = 10
 
 const hash = (s: string) => {
@@ -35,6 +49,16 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
   /** 이야기: step 은 지금 묻는 질문, said 는 친구가 방금 한 답, done 이면 끝 */
   const [talk, setTalk] = useState<{ animal: number; t: Talk; step: 0 | 1; said: string | null; done: boolean } | null>(null)
   const talking = useRef<number | null>(null)
+  // 몬스터 마법 풀기(전투): k = 몬스터 번호, hits = 마법봉으로 친 횟수, done = 마법이 풀림
+  const [battle, setBattle] = useState<{ k: number; hits: number; done: boolean } | null>(null)
+  const battleRef = useRef<number | null>(null)
+  battleRef.current = battle && !battle.done ? battle.k : null
+  const [wand, setWand] = useState(() => (outfit.wand && ITEM_BY_ID[outfit.wand] ? outfit.wand : WANDS[0]?.id ?? ''))
+  const [pickWand, setPickWand] = useState(false)
+  const zapRef = useRef<() => void>(() => {})
+  const fleeRef = useRef<() => void>(() => {})
+  const wandRef = useRef(wand)
+  wandRef.current = wand
   talking.current = talk?.animal ?? null
 
   useEffect(() => { if (!got) return; const t = setTimeout(() => setGot(null), 4000); return () => clearTimeout(t) }, [got])
@@ -48,6 +72,13 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       bounds: WORLD, start: { x: 0, z: 0 }, yaw: Math.PI, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 친구를 누르면 그 친구 앞까지 걸어가서 이야기를 시작한다
       onPick: (o) => {
+        // 몬스터: 마법 풀기 중이면 마법봉으로 톡, 아니면 가서 마법 풀기 시작
+        const mk = monOf.get(o)
+        if (mk !== undefined) {
+          if (battleRef.current === mk) zapRef.current()
+          else if (battleRef.current === null) { const m = monsters[mk]; w.walkTo(m.x, m.z, () => startBattle(mk), 2.4) }
+          return
+        }
         const k = friendOf.get(o)
         if (k === undefined || talking.current !== null) return
         const f = friends[k]
@@ -158,10 +189,111 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       friends.push({ animal, doll, x, z: s.z, tx: x, tz: s.z, wait: rnd() * 2, dir: 1, t: rnd() * 5 })
     })
 
+    // 마법에 걸린 몬스터: 길가에 다섯. 가까이 가거나 누르면 마법 풀기가 시작된다(이미 풀어 준 몬스터는 귀여운 얼굴로 거닌다)
+    const rescued = new Set(loadRescued())
+    const monTex = (id: string, mood: 'angry' | 'happy') => w.texOf(assetUrl(`travel/monster/${id}_${mood}.webp`))
+    const monsters = MONSTERS.map((m, k) => {
+      const s = samples[60 + k * 36], t = curve.getTangentAt((60 + k * 36) / (samples.length - 1))
+      const side = k % 2 ? 1 : -1, x = s.x - t.z * side * 3.6, z = s.z + t.x * side * 3.6
+      const h = ANIMAL_H * 1.35
+      const doll = w.paperDoll(monTex(m.id, rescued.has(m.id) ? 'happy' : 'angry'), h, m.size[0] / m.size[1])
+      doll.root.position.set(x, 0, z)
+      w.pickables.push(doll.root)
+      return { ...m, k, doll, x, z, h, happy: rescued.has(m.id), freed: rescued.has(m.id), hits: 0, cool: false, shake: 0, spin: -1, t: rnd() * 5 }
+    })
+    const monOf = new Map(monsters.map((m) => [m.doll.root as THREE.Object3D, m.k]))
+    const startBattle = (k: number) => {
+      if (battleRef.current !== null || talking.current !== null || monsters[k].freed) return
+      monsters[k].hits = 0
+      battleRef.current = k
+      playOrder()
+      w.walkTo(w.me.x, w.me.z) // 멈춘다
+      setBattle({ k, hits: 0, done: false })
+    }
+    // 반짝이 효과(마법봉에서 몬스터로 날아가는 빛, 마법이 풀릴 때 사방으로 퍼지는 별)
+    const fxTex = [w.texOf(emojiCanvas('✨')), w.texOf(emojiCanvas('⭐')), w.texOf(emojiCanvas('💖'))]
+    const fx: { sp: THREE.Sprite; v: THREE.Vector3; life: number; max: number; to?: THREE.Vector3; from?: THREE.Vector3; onHit?: () => void }[] = []
+    const spark = (tex: THREE.Texture, at: THREE.Vector3, size: number) => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }))); sp.position.copy(at); sp.scale.setScalar(size); scene.add(sp); return sp }
+    // 마법봉: 전투 중에는 아바타 손에 든다
+    const wandTex = new Map<string, THREE.Texture>()
+    const wandSp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true, depthWrite: false })))
+    wandSp.scale.set(0.7, 0.7, 1)
+    wandSp.visible = false
+    scene.add(wandSp)
+    fleeRef.current = () => { const k = battleRef.current; if (k !== null) monsters[k].cool = true }
+    zapRef.current = () => {
+      const k = battleRef.current
+      if (k === null) return
+      const m = monsters[k]
+      const from = new THREE.Vector3(w.me.x, 1.4, w.me.z), to = new THREE.Vector3(m.x, m.h * 0.55, m.z)
+      fx.push({ sp: spark(fxTex[0], from, 0.8), v: new THREE.Vector3(), life: 0, max: 0.35, from, to, onHit: () => {
+        m.shake = 0.35
+        for (let i = 0; i < 5; i++) fx.push({ sp: spark(fxTex[i % 2], to, 0.4), v: new THREE.Vector3((Math.random() - 0.5) * 3, 1 + Math.random() * 2, (Math.random() - 0.5) * 3), life: 0, max: 0.6 })
+        // 맞힌 수는 여기서 센다(상태 업데이트 함수 안에서 효과를 내면 개발 모드에서 두 번 돈다)
+        if (m.freed) return
+        m.hits++
+        if (m.hits >= HITS) {
+          // 마법이 풀린다: 빙글 한 바퀴 돌면서 귀여운 얼굴로 + 별이 사방으로
+          m.freed = true
+          m.spin = 0
+          playServe()
+          for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; fx.push({ sp: spark(fxTex[i % 3], to.clone(), 0.6), v: new THREE.Vector3(Math.cos(a) * 3.5, 1.5 + Math.random() * 2.5, Math.sin(a) * 3.5), life: 0, max: 1.6 }) }
+          rescued.add(m.id)
+          try { localStorage.setItem(RESCUE_KEY, JSON.stringify([...rescued])) } catch { /* 이번만 */ }
+          actFarm({ type: 'earn', amount: 10 })
+          battleRef.current = null
+          setBattle({ k: m.k, hits: HITS, done: true })
+        } else {
+          playTap()
+          setBattle({ k: m.k, hits: m.hits, done: false })
+        }
+      } })
+    }
+
     w.onFrame((dt, now) => {
+      // 몬스터: 가까이 가면 마법 풀기 시작, 맞으면 흔들, 다 풀리면 빙글 돌며 얼굴이 바뀐다
+      const bk = battleRef.current
+      for (const m of monsters) {
+        m.t += dt
+        if (m.cool && Math.hypot(w.me.x - m.x, w.me.z - m.z) > 6) m.cool = false // 도망갔다가 멀어지면 다시 만날 수 있다
+        if (!m.freed && !m.cool && bk === null && talking.current === null && Math.hypot(w.me.x - m.x, w.me.z - m.z) < 3.2) startBattle(m.k)
+        w.face(m.doll, 1)
+        let sx = 0
+        if (m.shake > 0) { m.shake -= dt; sx = Math.sin(m.shake * 60) * 0.15 }
+        m.doll.body.position.set(sx, m.happy ? Math.abs(Math.sin(m.t * 3)) * 0.12 : Math.abs(Math.sin(m.t * 6)) * 0.04, 0)
+        if (m.spin >= 0) {
+          m.spin += dt / 1.2
+          if (m.spin >= 0.5 && !m.happy) { m.happy = true; (m.doll.doll.material as THREE.MeshBasicMaterial).map = monTex(m.id, 'happy'); (m.doll.doll.material as THREE.MeshBasicMaterial).needsUpdate = true }
+          if (m.spin >= 1) m.spin = -1
+          else { m.doll.body.rotation.y += m.spin * Math.PI * 2; m.doll.body.position.y += Math.sin(m.spin * Math.PI) * 0.8 }
+        }
+      }
+      // 마법봉은 전투 중에만 아바타 손에
+      wandSp.visible = bk !== null
+      if (bk !== null) {
+        const id = wandRef.current
+        if (id && ITEM_BY_ID[id]) { if (!wandTex.has(id)) wandTex.set(id, w.texOf(assetUrl(ITEM_BY_ID[id].thumb))); if (wandSp.material.map !== wandTex.get(id)) { wandSp.material.map = wandTex.get(id)!; wandSp.material.needsUpdate = true } }
+        const r = new THREE.Vector3().subVectors(w.camera.position, new THREE.Vector3(w.me.x, 0, w.me.z)).cross(new THREE.Vector3(0, 1, 0)).normalize()
+        wandSp.position.set(w.me.x - r.x * 0.55, 1.25 + Math.sin(now / 200) * 0.05, w.me.z - r.z * 0.55)
+      }
+      // 반짝이 효과
+      for (let i = fx.length - 1; i >= 0; i--) {
+        const f = fx[i]
+        f.life += dt
+        const u = Math.min(1, f.life / f.max)
+        if (f.to && f.from) f.sp.position.lerpVectors(f.from, f.to, u).setY(f.from.y + (f.to.y - f.from.y) * u + Math.sin(u * Math.PI) * 0.8)
+        else { f.sp.position.addScaledVector(f.v, dt); f.v.y -= dt * 3; f.sp.material.opacity = 1 - u }
+        f.sp.material.rotation += dt * 4
+        if (u >= 1) { scene.remove(f.sp); fx.splice(i, 1); f.onHit?.() }
+      }
       for (const f of friends) {
         f.t += dt
         const busy = talking.current === f.animal
+        // 마법 풀기 중: 친구들도 다 같이 몬스터 둘레로 달려간다
+        if (bk !== null) {
+          const m = monsters[bk], a = (friends.indexOf(f) / friends.length) * Math.PI * 2 + 0.6
+          f.tx = m.x + Math.cos(a) * 2.6; f.tz = m.z + Math.sin(a) * 2.6; f.wait = 0
+        }
         if (busy) f.dir = w.me.x < f.x ? -1 : 1
         else if (f.wait > 0) f.wait = Math.min(f.wait, 5) - dt
         else {
@@ -226,7 +358,49 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
           <button aria-label="닫기" onClick={onExit} className="h-10 w-10 rounded-full bg-white/95 text-lg font-bold shadow">✕</button>
         </div>
       </div>
-      {!talk && <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">땅을 누르면 걸어가요 · 옆으로 끌면 둘러봐요 · ✨ 줍고, 친구를 누르면 이야기해요</p>}
+      {/* 몬스터 마법 풀기 */}
+      {battle && (() => {
+        const m = MONSTERS[battle.k], wi = ITEM_BY_ID[wand]
+        return battle.done ? (
+          <div role="dialog" aria-label="마법이 풀렸어요" className="absolute inset-x-2 bottom-3 z-30 mx-auto flex max-w-md items-center gap-3 rounded-3xl bg-white/95 p-3 shadow-xl">
+            <img src={assetUrl(`travel/monster/${m.id}_happy.webp`)} alt="" className="h-16 w-16 shrink-0 object-contain" />
+            <p className="m-0 flex-1 text-sm leading-snug font-bold text-[#6b4b52]">🎉 마법이 풀렸어요!<br />{m.name}: 「구해 줘서 고마워요! 💕」 · +10 코인</p>
+            <button onClick={() => { playTap(); setBattle(null) }} className="min-h-11 shrink-0 rounded-full bg-[#ff8fab] px-4 text-sm font-bold text-white shadow">좋아요</button>
+          </div>
+        ) : (
+          <>
+            <p role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-fit max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center text-sm font-extrabold text-[#7a3d8f] shadow">
+              😈 {m.name}가 마법에 걸렸어요!<br /><span className="text-[#c0587a]">🐾 다 같이 마법을 풀러 가자!</span>
+            </p>
+            <div className="absolute inset-x-2 bottom-3 z-30 mx-auto flex w-fit max-w-full flex-col items-center gap-2 rounded-3xl bg-white/95 p-3 shadow-xl">
+              <div aria-label={`마법 풀기 ${battle.hits}/${HITS}`} className="flex gap-0.5 text-lg leading-none">{Array.from({ length: HITS }, (_, i) => <span key={i} className={i < battle.hits ? '' : 'opacity-25 grayscale'}>💖</span>)}</div>
+              <div className="flex items-center gap-2">
+                <button aria-label="마법봉 고르기" onClick={() => { playTap(); setPickWand(true) }} className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#e5cfa3] bg-[#fdf2d8]">
+                  {wi ? <img src={assetUrl(wi.thumb)} alt="" className="h-11 w-11 object-contain" /> : '🪄'}
+                </button>
+                <button onClick={() => zapRef.current()} className="h-14 rounded-full bg-gradient-to-r from-[#c58bff] to-[#ff8fab] px-6 text-lg font-black text-white shadow-lg active:scale-95">✨ 마법!</button>
+                <button onClick={() => { playTap(); fleeRef.current(); setBattle(null) }} className="h-10 rounded-full bg-[#ffe4ec] px-3 text-sm font-bold">도망가기</button>
+              </div>
+            </div>
+          </>
+        )
+      })()}
+      {pickWand && (
+        <div role="dialog" aria-label="마법봉 고르기" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) setPickWand(false) }}>
+          <div className="w-full max-w-sm rounded-3xl bg-[#fff8fb] p-4 shadow-2xl">
+            <p className="mt-0 mb-2 text-center text-base font-black text-[#7a3d8f]">🪄 어떤 마법봉으로 할까요?</p>
+            <div className="grid grid-cols-4 gap-2">
+              {WANDS.map((it) => (
+                <button key={it.id} aria-label={it.name.ko} aria-pressed={wand === it.id} onClick={() => { playTap(); setWand(it.id); setPickWand(false) }}
+                  className={`aspect-square rounded-2xl p-1 ${wand === it.id ? 'bg-[#ffe1ea] ring-2 ring-[#ff8fab]' : 'bg-white'}`}>
+                  <img src={assetUrl(it.thumb)} alt="" className="h-full w-full object-contain" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {!talk && !battle && <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">땅을 누르면 걸어가요 · 옆으로 끌면 둘러봐요 · ✨ 줍고, 친구를 누르면 이야기해요</p>}
       {!ready && <p className="absolute inset-0 z-20 m-0 flex items-center justify-center text-sm font-bold text-[#3d6b2f]">마을을 만드는 중…</p>}
 
       {gotItem && (
