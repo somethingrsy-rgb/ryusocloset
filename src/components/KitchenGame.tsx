@@ -127,7 +127,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const [shake, setShake] = useState<Station | null>(null)
   const [busy, setBusy] = useState(false) // 요리 단계가 바뀔 때 아바타가 통통
   /** 3D 로 보기(시험판): 주문서·요리 단계·마트는 그대로, 주방과 아바타·친구만 3D. 고른 것은 기억한다 */
-  const [view3d, setView3d] = useState(() => { try { return localStorage.getItem('ryuso.kitchen.3d') === '1' } catch { return false } })
+  // 주방은 2D 로 먼저 켠다
+  const [view3d, setView3d] = useState(false)
   const timers = useRef<number[]>([])
   const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
@@ -377,7 +378,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             {friends.length ? friends.map((f) => <img key={f} src={assetUrl(guestFace(f))} alt="" draggable={false} className="-mx-0.5 h-7 w-7 object-contain" />) : <span style={{ fontSize: 20 }}>🐾</span>}
           </button>
           <button aria-label={tx.pantry} onClick={() => { playTap(); setPantry(true) }} className={`h-9 shrink-0 rounded-full bg-white/90 text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'}`}>{phoneL ? <span style={{ fontSize: 20 }}>🛒</span> : tx.pantry}</button>
-          <button aria-label="3D 주방 (시험판)" aria-pressed={view3d} onClick={() => { playTap(); const v = !view3d; setView3d(v); try { localStorage.setItem('ryuso.kitchen.3d', v ? '1' : '0') } catch { /* 이번만 */ } }} className={`h-9 shrink-0 rounded-full text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'} ${view3d ? 'bg-[#8a4b2a] text-white' : 'bg-white/90'}`}>3D</button>
+          <button aria-label="3D 주방 (시험판)" aria-pressed={view3d} onClick={() => { playTap(); setView3d(!view3d) }} className={`h-9 shrink-0 rounded-full text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'} ${view3d ? 'bg-[#8a4b2a] text-white' : 'bg-white/90'}`}>3D</button>
           <button aria-label={tx.cafe} onClick={() => { playTap(); onGo('cafe') }} className={`h-9 shrink-0 rounded-full bg-white/90 text-sm font-bold shadow ${phoneL ? 'w-11 px-0' : 'px-3'}`}>{phoneL ? <span style={{ fontSize: 20 }}>☕</span> : tx.cafe}</button>
         </div>
       </div>
