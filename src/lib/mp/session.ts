@@ -109,19 +109,24 @@ function watch(host: string) {
 }
 function unwatch() { stopWatch?.(); stopWatch = null; watching = null; if (state.home || state.foods.length) set({ home: null, foods: [] }) }
 /** 지금 있는 곳(방 꾸밈 또는 장소)을 친구들에게 열고 모두에게 초대장(초대 글)을 보낸다 */
-export function inviteHome(room: unknown, text = '🏠 우리집에 놀러 와! 같이 간식 먹자 🍰') {
-  if (!tr || !state.uid) return
+let inviteAttempt = 0
+export async function inviteHome(room: unknown, text = '🏠 우리집에 놀러 와! 같이 간식 먹자 🍰') {
+  const transport = tr, uid = state.uid
+  if (!transport || !uid) return false
+  const attempt = ++inviteAttempt
   // Firebase 는 undefined 값을 받지 않아서 JSON 으로 한 번 걸러 보낸다
-  tr.openHome({ name: myName, room: JSON.parse(JSON.stringify(room ?? null)) })
+  try { await transport.openHome({ name: myName, room: JSON.parse(JSON.stringify(room ?? null)) }) } catch { return false }
+  if (attempt !== inviteAttempt || tr !== transport) return false
   set({ hosting: true })
-  watch(state.uid)
+  watch(uid)
   say(text, true)
+  return true
 }
 /** 내 방 화면에 들어오면 부른다: 이미 연 집이면 친구들·음식을 다시 본다 */
 export function enterMyHome() { if (state.hosting && state.uid) watch(state.uid) }
 /** 내 방 화면을 나가면 집을 닫는다(놀러 와 있던 친구들은 돌아간다) */
 export function closeHome() {
-  if (!state.hosting) return
+  inviteAttempt++
   tr?.closeHome()
   set({ hosting: false })
   if (watching === state.uid) unwatch()
