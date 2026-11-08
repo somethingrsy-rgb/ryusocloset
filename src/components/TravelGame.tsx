@@ -35,6 +35,11 @@ interface Props {
   /** 수학·영어 같은 전체 화면 놀이가 열려 있으면 true (아래 여행 도감을 숨긴다) */
   onFull?: (full: boolean) => void
   /** 장소 안에서 "방 꾸미기"를 누르면 그 테마로 내 방을 연다 */
+  /** 산책 탭: 처음부터 3D 산책을 보여 주고, 산책을 닫으면 onLeaveWalk */
+  walkTab?: boolean
+  onLeaveWalk?: () => void
+  /** 게임 탭의 「방꾸미기」 */
+  onRoom?: () => void
   onDecorate?: (placeId: string) => void
   /** 파티 친구 주문을 만들러 주방 탭으로 */
   onKitchen?: () => void
@@ -43,7 +48,7 @@ interface Props {
 }
 
 /** 여행 탭: 넓은 맵(OverWorld)을 걸어다니다가 문에 들어가면 그 장소 장면(TravelScene)으로 */
-export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitchen, onGo, initialPlaceId = null }: Props) {
+export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitchen, onGo, initialPlaceId = null, walkTab = false, onLeaveWalk, onRoom }: Props) {
   const { lang } = useI18n()
   const [starRain, setStarRain] = useState(false)
   const [runner, setRunner] = useState(false)
@@ -60,7 +65,8 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   const [jump, setJump] = useState(false)
   const [flags, setFlags] = useState(false)
   const [soccer, setSoccer] = useState(false)
-  const [walk3d, setWalk3d] = useState(takeWalkNext)
+  // 산책 탭은 처음부터 3D 산책(✕ 를 누르면 게임 탭으로)
+  const [walk3d, setWalk3d] = useState(() => takeWalkNext() || walkTab)
   /** 3D 산책에서 집에 들어갔으면, 집에서 나올 때 다시 3D 산책으로 */
   const [backToWalk, setBackToWalk] = useState(false)
   // 전체 화면(여행 도감 숨김): 놀이 화면들, 3D 산책, 3D 산책에서 들어간 집 안(가로 화면만)
@@ -75,7 +81,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   const walking = !starRain && !runner && !math && !jump && !speaking && !soccer && !flags && !walk3d
   useEffect(() => { if (!walking) return; startBgm('room'); return stopBgm }, [walking])
 
-  if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onExit={() => setWalk3d(false)} onGo={onGo} onEnter={(id) => { travelTo(id); setScene(id); setBackToWalk(true); setWalk3d(false) }} /></Suspense>
+  if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onExit={() => { if (walkTab && onLeaveWalk) onLeaveWalk(); else setWalk3d(false) }} onGo={onGo} onEnter={(id) => { travelTo(id); setScene(id); setBackToWalk(true); setWalk3d(false) }} /></Suspense>
   if (flags) return <Suspense fallback={null}><FlagGame onExit={() => setFlags(false)} /></Suspense>
   if (soccer) return <Suspense fallback={null}><SoccerGame onExit={() => setSoccer(false)} /></Suspense>
   if (runner) return <Suspense fallback={null}><RunnerGame outfit={outfit} tweaks={tweaks} onExit={() => setRunner(false)} /></Suspense>
@@ -94,7 +100,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
         <button className={actionButton} aria-label="점프 퍼즐" onClick={() => setJump(true)}>{label(lang === 'ko' ? '점프' : 'Jump')}</button>
         <button className={actionButton} aria-label="축구" onClick={() => setSoccer(true)}>{label(lang === 'ko' ? '축구' : 'Soccer')}</button>
         <button className={actionButton} aria-label={lang === 'ko' ? '국기 게임' : 'Flag quiz'} onClick={() => setFlags(true)}>{label(lang === 'ko' ? '국기' : 'Flags')}</button>
-        <button className={actionButton} aria-label="3D 산책" onClick={() => setWalk3d(true)}>{label('3D')}</button>
+        {onRoom && <button className={actionButton} aria-label="방꾸미기" onClick={onRoom}>{label(lang === 'ko' ? '방꾸미기' : 'Room')}</button>}
       </>}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
     />}
