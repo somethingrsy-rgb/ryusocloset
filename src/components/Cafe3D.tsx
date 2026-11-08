@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { attachMultiplayer } from './remotePlayers3d'
+import { MultiplayerBoss } from './MultiplayerBoss'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -392,6 +393,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
           <div className="absolute -translate-x-1/2" style={{ top: -110 }}>{float(i)}</div>
         </div>
       ))}
+      <MultiplayerBoss />
     </div>
   )
 }

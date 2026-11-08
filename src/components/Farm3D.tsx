@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
+import { MultiplayerBoss } from './MultiplayerBoss'
 import { mpDock } from './MultiplayerBar'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
@@ -773,6 +774,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
             cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
         </div>
       )}
+      <MultiplayerBoss />
     </section>
   )
 }
