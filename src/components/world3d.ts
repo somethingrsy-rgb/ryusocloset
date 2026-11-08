@@ -76,7 +76,7 @@ export interface World {
   dispose: () => void
 }
 
-export function createWorld(el: HTMLElement, opts: { bounds: number; start: Mover; /** 처음 카메라 방향(0 이면 -z 쪽을 본다) */ yaw?: number; /** 땅 무늬 그림 주소(없으면 연두색) */ grass?: string; seed?: number; sky?: number; onPick?: (o: THREE.Object3D) => void; onReady?: () => void }): World {
+export function createWorld(el: HTMLElement, opts: { bounds: number; start: Mover; /** 처음 카메라 방향(0 이면 -z 쪽을 본다) */ yaw?: number; /** 땅 무늬 그림 주소(없으면 연두색) */ grass?: string; seed?: number; sky?: number; onPick?: (o: THREE.Object3D) => void; /** 땅을 눌렀을 때(true 면 걷지 않는다) */ onGround?: (x: number, z: number) => boolean; onReady?: () => void }): World {
   const rnd = seeded(opts.seed ?? 7)
   const renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -265,7 +265,8 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
         if (o) opts.onPick(o)
       } else {
         const g = ray.intersectObject(ground)[0]
-        if (g) walkTo(g.point.x, g.point.z)
+        // onGround 가 true 를 돌려주면(놓기 모드 같은 것) 걷지 않는다
+        if (g && !opts.onGround?.(g.point.x, g.point.z)) walkTo(g.point.x, g.point.z)
       }
     }
     press = null
