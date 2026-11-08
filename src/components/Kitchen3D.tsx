@@ -76,30 +76,34 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
       s.view.dist = Math.max(10, 5.7 / Math.tan(hf / 2))
     }
     fitView()
-    // 방: 나무 바닥 + 분홍 타일 벽
-    // 받은 무늬 그림: 바닥 1장 = 4×4, 벽 1장 = 4×4 (타일 8칸이라 한 칸이 0.5)
+    // 방: 나무 바닥과 창문이 있는 따뜻한 벽면
     const wood = s.texOf(assetUrl('kitchen/3d/wood.webp')); wood.wrapS = wood.wrapT = THREE.RepeatWrapping; wood.repeat.set(4, 5)
     const floor = new THREE.Mesh(keep(new THREE.PlaneGeometry(16, 20)), keep(new THREE.MeshLambertMaterial({ map: wood })))
     floor.rotation.x = -Math.PI / 2
     floor.position.z = 6 // 바닥·벽은 넉넉하게(폰 세로처럼 긴 화면에서도 위아래가 비지 않게)
     floor.receiveShadow = true
-    const tile = s.texOf(assetUrl('kitchen/3d/tile-strawberry.jpg')); tile.wrapS = tile.wrapT = THREE.RepeatWrapping; tile.repeat.set(4, 3.5)
-    const wall = new THREE.Mesh(keep(new THREE.PlaneGeometry(16, 14)), keep(new THREE.MeshLambertMaterial({ map: tile })))
-    wall.position.set(0, 7, -3)
-    wall.receiveShadow = true
-    scene.add(floor, wall)
-    // 양쪽 벽도 뒤 벽과 같은 타일 크기로 맞춘다. 안쪽에서만 보여 방을 가리지 않는다.
-    for (const side of [-1, 1]) {
-      const sideTile = keep(tile.clone()); sideTile.repeat.set(5, 3.5)
-      const sideWall = new THREE.Mesh(keep(new THREE.PlaneGeometry(20, 14)), keep(new THREE.MeshLambertMaterial({ map: sideTile })))
-      sideWall.rotation.y = -side * Math.PI / 2
-      sideWall.position.set(side * 8, 7, 7)
-      sideWall.receiveShadow = true
-      scene.add(sideWall)
+    // 그림은 10×5.625 크기로 비율을 유지한다. 벽의 남는 부분은 가장자리 색을 늘려 창문을 반복하지 않는다.
+    const makeWall = (image: string, x: number, z: number, turn: number) => {
+      const texture = s.texOf(assetUrl(`kitchen/3d/${image}.jpg`))
+      texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping
+      texture.repeat.set(16 / 10, 14 / 5.625)
+      texture.offset.set(-0.3, 0)
+      const wall = new THREE.Mesh(keep(new THREE.PlaneGeometry(16, 14)), keep(new THREE.MeshLambertMaterial({ map: texture })))
+      wall.position.set(x, 7, z)
+      wall.rotation.y = turn
+      wall.receiveShadow = true
+      scene.add(wall)
     }
+    scene.add(floor)
+    makeWall('wall-window', 0, -3, 0)
+    // 왼쪽 벽의 오른쪽 끝과 오른쪽 벽의 왼쪽 끝이 창문 쪽 모서리에 닿는다.
+    makeWall('wall-left', -8, 5, Math.PI / 2)
+    makeWall('wall-right', 8, 5, -Math.PI / 2)
     // 벽 선반(그림)
     const shelf = s.paperDoll(s.texOf(assetUrl('kitchen/3d/shelf.webp')), 1.45, 1400 / 401, 1, false)
-    shelf.root.position.set(0.3, 2.9, -2.95)
+    // 창문과 커튼을 가리지 않게 선반은 왼쪽 벽으로 옮긴다.
+    shelf.root.position.set(-7.95, 2.9, 0)
+    shelf.root.rotation.y = Math.PI / 2
     // 자리마다 그림을 세운다. 뒤에는 같은 그림을 분홍으로 물들인 판을 조금 크게 두어, 지금 누를 곳이면 반짝이게 한다
     const boxes: Partial<Record<Station, { doll: Doll; glow: THREE.Mesh; glowMat: THREE.MeshBasicMaterial }>> = {}
     for (const k of Object.keys(ART) as Station[]) {
