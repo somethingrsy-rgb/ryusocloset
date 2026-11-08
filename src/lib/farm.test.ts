@@ -134,3 +134,18 @@ describe('우리 안 동물', () => {
     expect(sanitizeFarm({}).barn).toEqual({ milk: 0, egg: 0 })
   })
 })
+
+describe('옆 밭 놓기(3D 확장)', () => {
+  it('설치한 옆 밭만 자리를 정하고, 저장에서 다시 읽는다', () => {
+    let state = { ...defaultFarm(), coins: 100 }
+    expect(reduceFarm(state, { type: 'place', plot: 25, x: 3, z: 4 }, 0)).toBe(state) // 아직 설치 안 함
+    expect(reduceFarm(state, { type: 'place', plot: 3, x: 3, z: 4 }, 0)).toBe(state) // 큰 밭은 못 옮김
+    state = reduceFarm(state, { type: 'buy', plot: 25 }, 0)
+    state = reduceFarm(state, { type: 'place', plot: 25, x: 12.5, z: -3 }, 0)
+    expect(state.sidePos[25]).toEqual([12.5, -3])
+    expect(reduceFarm(state, { type: 'place', plot: 25, x: NaN, z: 0 }, 0)).toBe(state)
+    expect(sanitizeFarm(JSON.parse(JSON.stringify(state))).sidePos).toEqual({ 25: [12.5, -3] })
+    expect(sanitizeFarm({ sidePos: { 3: [1, 1], 30: ['a', 1], 31: [999, 0] } }).sidePos).toEqual({ 31: [60, 0] })
+  })
+})
+
