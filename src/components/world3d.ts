@@ -59,7 +59,7 @@ export interface World {
   /** 곧은 흙길(카페 흙길 그림) */
   addPath: (x0: number, z0: number, x1: number, z1: number, width: number) => void
   /** 굽이굽이 흙길: 지나는 점들(x, z)을 부드럽게 이은 길(카페 흙길 그림) */
-  addCurvePath: (points: [number, number][], width: number) => void
+  addCurvePath: (points: [number, number][], width: number, bushes?: 'none' | 'start' | 'end' | 'both') => void
   /** 그림을 세운 판(집 같은 것): 늘 카메라를 보고, 부딪히는 자리(r)이며 아바타를 가리면 숨긴다 */
   addProp: (img: string, x: number, z: number, h: number, aspect: number, r: number) => Doll
   /** 산책길로 가는 분홍 성: 앞이 (tx, tz) 쪽을 보게 고정(돌지 않는다), 길을 그 앞까지 잇는다. 문 앞 자리를 돌려준다 */
@@ -82,7 +82,7 @@ export interface World {
   dispose: () => void
 }
 
-export function createWorld(el: HTMLElement, opts: { bounds: number; start: Mover; /** 처음 카메라 방향(0 이면 -z 쪽을 본다) */ yaw?: number; /** 땅 무늬 그림 주소(없으면 연두색) */ grass?: string; seed?: number; sky?: number; onPick?: (o: THREE.Object3D) => void; /** 땅을 눌렀을 때(true 면 걷지 않는다) */ onGround?: (x: number, z: number) => boolean; onReady?: () => void }): World {
+export function createWorld(el: HTMLElement, opts: { bounds: number; start: Mover; /** 처음 카메라 방향(0 이면 -z 쪽을 본다) */ yaw?: number; /** 땅 무늬 그림 주소(없으면 연두색) */ grass?: string; seed?: number; sky?: number; onPick?: (o: THREE.Object3D) => void; /** 땅을 눌렀을 때(true 면 걷지 않는다) */ onGround?: (x: number, z: number) => boolean; /** 위아래로 끌어 위에서 내려다보기(농장만) */ tiltable?: boolean; onReady?: () => void }): World {
   const rnd = seeded(opts.seed ?? 7)
   const renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -177,7 +177,23 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     scene.add(path)
   }
   let curveTex: THREE.Texture | null = null
-  const addCurvePath = (points: [number, number][], width: number) => {
+  /** 길 끝 꾸미기: 둥근 끝(흙 원판) + 양옆 꽃 덤불(길이 갑자기 끝나 보이지 않게) */
+  const capEnd = (x: number, z: number, ux: number, uz: number, width: number, bushes: boolean) => {
+    if (!curveTex) { curveTex = texOf(assetUrl('cafe/3d/dirt.webp')); curveTex.wrapS = curveTex.wrapT = THREE.RepeatWrapping }
+    const cap = new THREE.Mesh(keep(new THREE.CircleGeometry(width / 2, 24)), keep(new THREE.MeshLambertMaterial({ map: curveTex })))
+    cap.rotation.x = -Math.PI / 2
+    cap.position.set(x, 0.011, z)
+    cap.receiveShadow = true
+    scene.add(cap)
+    if (!bushes) return
+    const nx = -uz, nz = ux
+    for (const sd of [-1, 1]) for (const [f, o, h] of [[0.6, 0.9, 1.2], [1.8, 1.3, 0.95]] as const) {
+      const bx = x + ux * f + nx * sd * (width / 2 + o), bz = z + uz * f + nz * sd * (width / 2 + o)
+      addProp('cafe/3d/bush.webp', bx, bz, h, 1024 / 616, 0.45)
+    }
+  }
+  /** 길: 지나는 점들을 부드럽게 잇는다. bushes 로 시작·끝에 덤불을 둔다(start 끝은 points[0]) */
+  const addCurvePath = (points: [number, number][], width: number, bushes: 'none' | 'start' | 'end' | 'both' = 'none') => {
     const curve = new THREE.CatmullRomCurve3(points.map(([x, z]) => new THREE.Vector3(x, 0, z)))
     const n = Math.max(8, Math.round(curve.getLength() * 2)), pts = curve.getSpacedPoints(n)
     const pos: number[] = [], uv: number[] = [], idx: number[] = []
@@ -198,11 +214,18 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     const path = new THREE.Mesh(geo, keep(new THREE.MeshLambertMaterial({ map: curveTex, side: THREE.DoubleSide })))
     path.receiveShadow = true
     scene.add(path)
+    // 두 끝을 둥글게, 원하면 덤불(끝에서 길 안쪽으로 조금 들어가 양옆에)
+    const t0 = curve.getTangentAt(0), t1 = curve.getTangentAt(1)
+    capEnd(pts[0].x, pts[0].z, t0.x, t0.z, width, bushes === 'start' || bushes === 'both')
+    capEnd(pts[n].x, pts[n].z, -t1.x, -t1.z, width, bushes === 'end' || bushes === 'both')
   }
   const addCastleGate = (x: number, z: number, tx: number, tz: number) => {
     const h = 7.5, aspect = 1043 / 1249
     const dx = tx - x, dz = tz - z, l = Math.hypot(dx, dz) || 1, ux = dx / l, uz = dz / l
-    addCurvePath([[tx, tz], [x + ux * (l * 0.5), z + uz * (l * 0.5)], [x, z]], 2.6)
+    // 꼬불꼬불한 길(시작 끝에 덤불)
+    const wig: [number, number][] = []
+    for (let k = 0; k <= 6; k++) { const f = k / 6, off = Math.sin(f * Math.PI * 2) * Math.sin(f * Math.PI) * 2.2; wig.push([tx + (x - tx) * f - uz * off, tz + (z - tz) * f + ux * off]) }
+    addCurvePath(wig, 2.6, 'start')
     const g = new THREE.Group()
     const m = new THREE.Mesh(keep(new THREE.PlaneGeometry(h * aspect, h).translate(0, h / 2, 0)), keep(new THREE.MeshBasicMaterial({ map: texOf(assetUrl('travel/3d/pink_castle.webp')), transparent: true, alphaTest: 0.4, side: THREE.DoubleSide })))
     g.add(m)
@@ -273,7 +296,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     if (!press) return
     const dx = e.clientX - press.x
     if (Math.abs(dx) > TAP_MOVE || Math.abs(e.clientY - press.y) > TAP_MOVE) press.dragged = true
-    if (press.dragged) { yaw = press.yaw - dx * 0.008; tilt.value = Math.max(0, Math.min(1, press.tilt + (e.clientY - press.y) * 0.004)) }
+    if (press.dragged) { yaw = press.yaw - dx * 0.008; if (opts.tiltable) tilt.value = Math.max(0, Math.min(1, press.tilt + (e.clientY - press.y) * 0.004)) }
   }
   const onUp = (e: PointerEvent) => {
     if (press && !press.dragged) {
