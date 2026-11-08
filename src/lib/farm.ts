@@ -9,9 +9,9 @@ export type CropId = (typeof CROPS)[number]['id']
 export const FREE_PLOTS = 9
 /** 큰 밭 칸 수(앞 9칸 무료 + 11칸) */
 export const MAIN_PLOTS = 20
-/** 옆 울타리 밭 칸 수: 큰 밭 다음 번호(20~27). 모두 코인으로 산다 */
-export const SIDE_PLOTS = 8
-/** 밭 칸 전체 수: 큰 밭 20칸 + 옆 밭 8칸 */
+/** 옆 울타리 밭 칸 수: 큰 밭 다음 번호(20~39). 큰 밭과 같은 모양으로 미리 깔려 있고, 원할 때 코인으로 설치한다 */
+export const SIDE_PLOTS = 20
+/** 밭 칸 전체 수: 큰 밭 20칸 + 옆 밭 20칸 */
 export const PLOT_COUNT = MAIN_PLOTS + SIDE_PLOTS
 /** 우리 안 동물: 젖소는 우유, 닭은 달걀을 준다. 한 번 받으면 다시 받을 때까지 2분 */
 export const ANIMAL_SECONDS = 120

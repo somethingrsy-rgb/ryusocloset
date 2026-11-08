@@ -50,7 +50,7 @@ function plotBox(i: number, L: Layout) {
   return { x: (x / L.w) * 100, y: (y / L.h) * 100, w: (L.tw / L.w) * 100, h: (th / L.h) * 100, row: r }
 }
 /** 옆 울타리 밭(20~27번): 큰 밭 자리에 4칸×2줄로 조금 크게 놓는다(옆 밭 화면으로 바꿨을 때) */
-const sideLayout = (L: Layout) => ({ ...L, cols: 4, rows: 2, tw: L.tw * 1.2, rowGap: L.rowGap + 8 }) as unknown as Layout
+const sideLayout = (L: Layout) => L // 옆 밭 20칸도 큰 밭과 같은 자리·모양(옆 밭 화면으로 바꿔서 본다)
 /** 밭 번호 → 그림 위 자리: 큰 밭은 plotBox, 옆 밭은 sideLayout */
 const boxOf = (i: number, L: Layout) => (i < MAIN_PLOTS ? plotBox(i, L) : plotBox(i - MAIN_PLOTS, sideLayout(L)))
 /** 아바타 크기: 높이가 그림 높이의 avatarH% 가 되도록 가로 %를 구한다 */
@@ -77,7 +77,7 @@ function wanderArea(L: Layout) {
 }
 /** 친구가 밭에서 일할 때 서는 자리(발): 밭 바로 앞(아래) 줄 사이 길목. 줄을 따라 옆으로 다니면 작물 위를 밟지 않는다 */
 const workSpot = (i: number, L: Layout, side: Side = 'front') => {
-  const b = plotBox(i, L)
+  const b = boxOf(i, L)
   // 수확 길: 세로 줄 사이 길목(밭 왼쪽·오른쪽 옆)에 선다
   if (side !== 'front') return { x: b.x + (side === 'left' ? -0.56 : 0.56) * b.w, y: b.y + b.h * 0.4 }
   return { x: b.x, y: b.y + b.h * 0.62 }
@@ -251,7 +251,7 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { out
     const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
     if (claimed(i)) return // 친구가 지금 그 밭에서 일하는 중
     // 친구가 있으면 물 주기는 친구들이 저절로 한다(누르지 않아도 된다). 수확은 수확 버튼을 누르면 친구들이, 밭을 누르면 내가 한다
-    if (need === 'water' && friends.length && i < MAIN_PLOTS) {
+    if (need === 'water' && friends.length) {
       pending.current.delete(i)
       setNotice(ko ? '친구가 곧 물을 줄 거예요 💧' : 'A friend will water it soon 💧')
       return
@@ -276,14 +276,14 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { out
   const pick = (t: Tool) => {
     if (t === 'seed') { setPicker((p) => (tool === 'seed' ? !p : true)); setTool('seed'); return }
     // 친구가 있으면 물주기·수확 버튼 한 번에 친구들이 밭을 돌며 알아서 한다
-    if (friends.length && field === 'main' && t === 'water') {
+    if (friends.length && t === 'water') {
       setPicker(false)
       const need = farm.plots.some((p, i) => farm.owned[i] && p && p.wateredAt === null)
       if (need) waterNow()
       setNotice(need ? (ko ? '친구들이 물을 주러 가요 💧' : 'Friends are off to water 💧') : (ko ? '물 줄 밭이 없어요' : 'Nothing to water'))
       return
     }
-    if (friends.length && field === 'main' && t === 'harvest') {
+    if (friends.length && t === 'harvest') {
       setPicker(false)
       setNotice(harvestAll(now) ? (ko ? '친구들이 수확하러 가요 🧺' : 'Friends are off to harvest 🧺') : (ko ? '아직 다 자란 작물이 없어요' : 'Nothing is ready yet'))
       return
@@ -332,7 +332,7 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { out
             </button>
           )
         })}
-        {/* 옆 울타리 밭: 하얀 울타리로 둘러싼 8칸 */}
+        {/* 옆 울타리 밭: 하얀 울타리로 둘러싼 20칸 */}
         {field === 'side' && (() => {
           const bs = Array.from({ length: PLOT_COUNT - MAIN_PLOTS }, (_, j) => boxOf(MAIN_PLOTS + j, L))
           const x0 = Math.min(...bs.map((b) => b.x - b.w / 2)) - 2, x1 = Math.max(...bs.map((b) => b.x + b.w / 2)) + 2
@@ -348,9 +348,9 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { out
           const ready = progress === 1
           const crop = plot ? CROPS.find((cr) => cr.id === plot.crop)! : null
           const wet = !!plot && plot.wateredAt !== null && !ready
-          const label = !mine ? (ko ? `새 밭 사기 (${plotPrice(farm)}코인)` : `Buy plot (${plotPrice(farm)} coins)`) : !plot ? (ko ? `${i + 1}번 밭 심기` : `Plant in plot ${i + 1}`) : plot.wateredAt === null ? (ko ? `${i + 1}번 밭 물 주기` : `Water plot ${i + 1}`) : ready ? (ko ? `${i + 1}번 밭 수확하기` : `Harvest plot ${i + 1}`) : (ko ? `${i + 1}번 밭 자라는 중` : `Plot ${i + 1} growing`)
+          const label = !mine ? (i >= MAIN_PLOTS ? (ko ? `밭 설치하기 (${plotPrice(farm)}코인)` : `Set up plot (${plotPrice(farm)} coins)`) : ko ? `새 밭 사기 (${plotPrice(farm)}코인)` : `Buy plot (${plotPrice(farm)} coins)`) : !plot ? (ko ? `${i + 1}번 밭 심기` : `Plant in plot ${i + 1}`) : plot.wateredAt === null ? (ko ? `${i + 1}번 밭 물 주기` : `Water plot ${i + 1}`) : ready ? (ko ? `${i + 1}번 밭 수확하기` : `Harvest plot ${i + 1}`) : (ko ? `${i + 1}번 밭 자라는 중` : `Plot ${i + 1} growing`)
           return (
-            <div key={i} className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${box.x}%`, top: `${box.y}%`, width: `${box.w}%`, height: `${box.h}%`, zIndex: 2 + box.row, opacity: mine ? 1 : 0.55 }}>
+            <div key={i} className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${box.x}%`, top: `${box.y}%`, width: `${box.w}%`, height: `${box.h}%`, zIndex: 2 + box.row, opacity: mine ? 1 : i >= MAIN_PLOTS ? 0.45 : 0.55 }}>
               <FarmImg name={wet ? 'plot_wet' : 'plot_dry'} emoji="🟫" className="absolute inset-0 h-full w-full" style={{ objectFit: 'fill' }} />
               {plot && crop && [{ x: 67, b: 40 }, { x: 34, b: 27 }].map((pp) => (
                 <FarmImg key={pp.x} name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute -translate-x-1/2" style={{ left: `${pp.x}%`, bottom: `${pp.b}%`, width: `${CROP_BOX[crop.id][0] / 500 * 36}%`, aspectRatio: `${CROP_BOX[crop.id][0]} / ${CROP_BOX[crop.id][1]}`, objectFit: 'contain', objectPosition: 'bottom' }} />
@@ -358,7 +358,8 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { out
               {plot && (plot.wateredAt === null || ready) && (
                 <span aria-hidden className={`absolute left-1/2 -translate-x-1/2 text-lg leading-none drop-shadow ${ready ? 'animate-bounce' : ''}`} style={{ bottom: '8%' }}>{ready ? '✨' : '💧'}</span>
               )}
-              {!mine && <span aria-hidden className="absolute inset-0 flex items-center justify-center text-base drop-shadow">🔒</span>}
+              {/* 옆 밭은 미리 깔려 있고 원할 때 설치(＋), 큰 밭의 못 산 칸은 자물쇠 */}
+              {!mine && <span aria-hidden className="absolute inset-0 flex items-center justify-center text-base drop-shadow">{i >= MAIN_PLOTS ? <span className="rounded-full bg-white/90 px-1.5 text-xs font-extrabold text-[#5a9a3a]">＋ 설치</span> : '🔒'}</span>}
               <button aria-label={label} className="pointer-events-auto absolute inset-0" style={{ clipPath: 'polygon(19.6% 0, 100% 0, 80.4% 100%, 0 100%)' }} onClick={() => tapPlot(i)} />
             </div>
           )
@@ -378,7 +379,9 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { out
         </div>
 
         {/* 같이 농사짓는 친구들: 평소에는 밭 둘레를 따로따로 거닐고, 일이 생기면 자기 구역(둘이면 왼쪽 반·오른쪽 반)의 가까운 밭부터 줄을 따라 차례로 물을 주거나 수확한다 */}
-        {field === 'main' && friends.map((f, k) => {
+        {friends.map((f, k) => {
+          // 다른 밭에서 일하는 친구는 이 화면에서 숨긴다(쉬는 친구는 어느 밭에서나 거닌다)
+          if (jobs[f] && (jobs[f].plot < MAIN_PLOTS) !== (field === 'main')) return null
           const fw = aw * FRIEND_PER_AVATAR_W // 친구 그림 칸 너비(%, 정사각형)
           const fh = fw * (L.w / L.h) // 같은 칸의 높이(그림 높이에 대한 %)
           const job = jobs[f]
@@ -409,8 +412,8 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { out
 
         {buying !== null && (
           <div role="dialog" aria-label={ko ? '밭 사기' : 'Buy a plot'} className="absolute left-1/2 flex w-max max-w-[96%] -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-3xl bg-white/95 p-3 shadow-lg" style={{ top: '45%', zIndex: 14 }}>
-            <span className="text-sm font-extrabold">{ko ? '새 밭' : 'New plot'} · {plotPrice(farm)} <CoinIcon /></span>
-            <button className={`${btn} bg-blush text-white disabled:opacity-40`} disabled={farm.coins < plotPrice(farm)} onClick={() => { if (apply({ type: 'buy', plot: buying })) setNotice(ko ? '새 밭이 생겼어요! 🌱' : 'New plot! 🌱'); setBuying(null) }}>{ko ? '사기' : 'Buy'}</button>
+            <span className="text-sm font-extrabold">{buying >= MAIN_PLOTS ? (ko ? '옆 밭 설치' : 'Set up plot') : ko ? '새 밭' : 'New plot'} · {plotPrice(farm)} <CoinIcon /></span>
+            <button className={`${btn} bg-blush text-white disabled:opacity-40`} disabled={farm.coins < plotPrice(farm)} onClick={() => { if (apply({ type: 'buy', plot: buying })) setNotice(ko ? '새 밭이 생겼어요! 🌱' : 'New plot! 🌱'); setBuying(null) }}>{buying >= MAIN_PLOTS ? (ko ? '설치하기' : 'Set up') : ko ? '사기' : 'Buy'}</button>
             <button className={`${btn} bg-petal`} onClick={() => setBuying(null)}>{ko ? '아니요' : 'No'}</button>
             {farm.coins < plotPrice(farm) && <span className="text-xs font-bold text-blush-deep">{ko ? '코인이 모자라요' : 'Not enough coins'}</span>}
           </div>
