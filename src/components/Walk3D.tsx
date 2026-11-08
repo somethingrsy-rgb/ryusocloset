@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { EXTRA_ANIMALS, animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -7,7 +7,8 @@ import { renderFigure } from '../lib/exportPng'
 import { MY_ROOM_ID, findItem, isFound, travelFindable, travelItem } from '../lib/game'
 import { setPartyState } from '../lib/party'
 import { ITEMS, ITEM_BY_ID, assetUrl } from '../lib/items'
-import { actFarm } from '../lib/farm'
+import { actFarm, getFarm, subscribeFarm } from '../lib/farm'
+import { CoinIcon } from './Icons'
 import { getMeet, talkFor, type Talk } from '../lib/meet'
 import { toggleItem } from '../lib/outfit'
 import { playOrder, playServe, playTap } from '../lib/sound'
@@ -39,12 +40,22 @@ const RESCUE_KEY = 'ryuso.walk.rescuedCount'
 const loadRescued = () => { try { const n = Number(localStorage.getItem(RESCUE_KEY)); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0 } catch { return 0 } }
 /** 한꺼번에 돌아다니는 몬스터 수(풀어 주거나 멀어지면 다른 곳에 새 몬스터가 나온다) */
 const MONSTER_SLOTS = 6
-/** 마법 풀기에 쓰는 것: 옷장의 마법봉 + 마법 검 다섯(손잡이를 아바타 손에 쥔다) */
-type Weapon = { id: string; name: string; img: string; sword: boolean; aspect: number }
+/** 마법 풀기에 쓰는 것: 옷장의 마법봉 + 마법 검 다섯(손잡이를 아바타 손에 쥔다).
+ *  처음엔 마법봉 하나·검 하나만 무료, 나머지는 「마법 상점」에서 코인으로 산다.
+ *  종류마다 힘(한 번에 채우는 💖 수)과 마법 효과(날아가는 그림)가 다르다 */
+type Weapon = { id: string; name: string; img: string; sword: boolean; aspect: number; power: number; fx: string; skill: string; price: number }
+const WAND_FX: [string, string][] = [['⭐', '별빛 마법'], ['💖', '하트 마법'], ['🌸', '꽃잎 마법'], ['❄️', '눈꽃 마법'], ['🌈', '무지개 마법'], ['🫧', '비눗방울 마법'], ['🍬', '사탕 마법'], ['🌙', '달빛 마법'], ['🦋', '나비 마법'], ['🎀', '리본 마법'], ['🍓', '딸기 마법'], ['💎', '보석 마법'], ['🌟', '반짝 마법']]
+const SWORD_FX: Record<string, [string, string]> = { blue: ['✨', '반짝 베기'], green: ['🍃', '바람 베기'], red: ['🔥', '불꽃 베기'], aqua: ['💧', '물방울 베기'], violet: ['⚡', '번개 베기'] }
 const SWORDS: Weapon[] = ([['blue', '파랑 별 검', 1081 / 1275], ['green', '초록 별 검', 1093 / 1270], ['red', '빨강 별 검', 1086 / 1277], ['aqua', '하늘빛 별 검', 1084 / 1276], ['violet', '보라 별 검', 1080 / 1272]] as const)
-  .map(([c, name, aspect]) => ({ id: `sword_${c}`, name, img: `travel/sword/${c}.webp`, sword: true, aspect }))
-const WANDS: Weapon[] = [...ITEMS.filter((i) => i.category === 'wand').map((i) => ({ id: i.id, name: i.name.ko, img: i.thumb, sword: false, aspect: 1 })), ...SWORDS]
+  .map(([c, name, aspect], k) => ({ id: `sword_${c}`, name, img: `travel/sword/${c}.webp`, sword: true, aspect, power: k ? 3 : 1, fx: SWORD_FX[c][0], skill: SWORD_FX[c][1], price: k ? 60 : 0 }))
+const WANDS: Weapon[] = [
+  ...ITEMS.filter((i) => i.category === 'wand').map((i, k) => ({ id: i.id, name: i.name.ko, img: i.thumb, sword: false, aspect: 1, power: k ? 2 : 1, fx: k ? WAND_FX[(k - 1) % WAND_FX.length][0] : '✨', skill: k ? WAND_FX[(k - 1) % WAND_FX.length][1] : '반짝 마법', price: k ? 30 : 0 })),
+  ...SWORDS,
+]
 const WEAPON_BY_ID = Object.fromEntries(WANDS.map((x) => [x.id, x]))
+const OWN_KEY = 'ryuso.walk.weapons'
+const loadOwned = (): string[] => { try { const v = JSON.parse(localStorage.getItem(OWN_KEY) ?? '[]'); return Array.isArray(v) ? v.filter((x) => typeof x === 'string' && WEAPON_BY_ID[x]) : [] } catch { return [] } }
+const ownedOf = (list: string[]) => new Set([...WANDS.filter((x) => x.price === 0).map((x) => x.id), ...list])
 const SPARKLES = 10
 /** 산책길: 한 바퀴 이어진 고리(끝이 다시 처음과 이어져서 걷다 보면 처음 자리로 돌아온다) */
 const loopCurve = () => new THREE.CatmullRomCurve3(Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2, r = WORLD * 0.62 + Math.sin(i * 2.3) * 7; return new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r) }), true)
@@ -78,7 +89,20 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
   const [battle, setBattle] = useState<{ k: number; t: number; hits: number; done: boolean; total?: number; say?: string } | null>(null)
   const battleRef = useRef<number | null>(null)
   battleRef.current = battle && !battle.done ? battle.k : null
-  const [wand, setWand] = useState(() => (outfit.wand && WEAPON_BY_ID[outfit.wand] ? outfit.wand : WANDS[0]?.id ?? ''))
+  const [ownedList, setOwnedList] = useState(loadOwned)
+  const owned = ownedOf(ownedList)
+  const farmNow = useSyncExternalStore(subscribeFarm, getFarm)
+  const [wand, setWand] = useState(() => (outfit.wand && ownedOf(loadOwned()).has(outfit.wand) ? outfit.wand : WANDS[0]?.id ?? ''))
+  const [buyWeapon, setBuyWeapon] = useState<string | null>(null)
+  const buy = (id: string) => {
+    const wp = WEAPON_BY_ID[id]
+    if (!wp || owned.has(id)) return
+    if (actFarm({ type: 'spend', amount: wp.price }) !== 'saved') return
+    const next = [...ownedList, id]
+    setOwnedList(next)
+    try { localStorage.setItem(OWN_KEY, JSON.stringify(next)) } catch { /* 이번만 */ }
+    playServe(); setWand(id); setBuyWeapon(null); setPickWand(false)
+  }
   const [pickWand, setPickWand] = useState(false)
   const zapRef = useRef<() => void>(() => {})
   const fleeRef = useRef<() => void>(() => {})
@@ -325,6 +349,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       setBattle({ k, t: monsters[k].type, hits: 0, done: false })
     }
     // 반짝이 효과(마법봉에서 몬스터로 날아가는 빛, 마법이 풀릴 때 사방으로 퍼지는 별)
+    const wpTex = new Map<string, THREE.Texture>()
     const fxTex = [w.texOf(emojiCanvas('✨')), w.texOf(emojiCanvas('⭐')), w.texOf(emojiCanvas('💖'))]
     const fx: { sp: THREE.Sprite; v: THREE.Vector3; life: number; max: number; to?: THREE.Vector3; from?: THREE.Vector3; onHit?: () => void }[] = []
     const spark = (tex: THREE.Texture, at: THREE.Vector3, size: number) => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }))); sp.position.copy(at); sp.scale.setScalar(size); scene.add(sp); return sp }
@@ -345,12 +370,15 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       if (k === null) return
       const m = monsters[k]
       const from = new THREE.Vector3(w.me.x, 1.4, w.me.z), to = new THREE.Vector3(m.x, m.h * 0.55, m.z)
-      fx.push({ sp: spark(fxTex[0], from, 0.8), v: new THREE.Vector3(), life: 0, max: 0.35, from, to, onHit: () => {
-        m.shake = 0.35
-        for (let i = 0; i < 5; i++) fx.push({ sp: spark(fxTex[i % 2], to, 0.4), v: new THREE.Vector3((Math.random() - 0.5) * 3, 1 + Math.random() * 2, (Math.random() - 0.5) * 3), life: 0, max: 0.6 })
+      const wp = WEAPON_BY_ID[wandRef.current] ?? WANDS[0]
+      if (!wpTex.has(wp.fx)) wpTex.set(wp.fx, w.texOf(emojiCanvas(wp.fx)))
+      const ft = wpTex.get(wp.fx)!
+      fx.push({ sp: spark(ft, from, 0.6 + wp.power * 0.2), v: new THREE.Vector3(), life: 0, max: 0.35, from, to, onHit: () => {
+        m.shake = 0.25 + wp.power * 0.1
+        for (let i = 0; i < 3 + wp.power * 2; i++) fx.push({ sp: spark(i % 2 ? ft : fxTex[0], to, 0.4), v: new THREE.Vector3((Math.random() - 0.5) * 3, 1 + Math.random() * 2, (Math.random() - 0.5) * 3), life: 0, max: 0.6 })
         // 맞힌 수는 여기서 센다(상태 업데이트 함수 안에서 효과를 내면 개발 모드에서 두 번 돈다)
         if (m.freed) return
-        m.hits++
+        m.hits = Math.min(HITS, m.hits + wp.power) // 힘이 센 마법봉·검은 한 번에 💖를 여러 칸 채운다
         if (m.hits >= HITS) {
           // 마법이 풀린다: 빙글 한 바퀴 돌면서 귀여운 얼굴로 + 별이 사방으로
           m.freed = true
@@ -576,17 +604,33 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
         )
       })()}
       {pickWand && (
-        <div role="dialog" aria-label="마법봉 고르기" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) setPickWand(false) }}>
-          <div className="w-full max-w-sm rounded-3xl bg-[#fff8fb] p-4 shadow-2xl">
-            <p className="mt-0 mb-2 text-center text-base font-black text-[#7a3d8f]">🪄 어떤 마법봉·마법 검으로 할까요?</p>
-            <div className="grid grid-cols-4 gap-2">
-              {WANDS.map((it) => (
-                <button key={it.id} aria-label={it.name} aria-pressed={wand === it.id} onClick={() => { playTap(); setWand(it.id); setPickWand(false) }}
-                  className={`aspect-square rounded-2xl p-1 ${wand === it.id ? 'bg-[#ffe1ea] ring-2 ring-[#ff8fab]' : 'bg-white'}`}>
-                  <img src={assetUrl(it.img)} alt="" className="h-full w-full object-contain" />
-                </button>
-              ))}
+        <div role="dialog" aria-label="마법봉 고르기" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) { setPickWand(false); setBuyWeapon(null) } }}>
+          <div className="flex max-h-full w-full max-w-md flex-col rounded-3xl bg-[#fff8fb] p-4 shadow-2xl">
+            <p className="mt-0 mb-1 text-center text-base font-black text-[#7a3d8f]">🪄 마법 상점</p>
+            <p className="mt-0 mb-2 text-center text-xs font-bold text-black/50">가진 것은 눌러서 고르고, 🔒 는 코인으로 사요 · <CoinIcon /> {farmNow.coins}</p>
+            <div className="grid min-h-0 grid-cols-4 gap-2 overflow-y-auto">
+              {WANDS.map((it) => {
+                const have = owned.has(it.id)
+                return (
+                  <button key={it.id} aria-label={`${it.name}${have ? '' : ` (${it.price}코인)`}`} aria-pressed={wand === it.id} onClick={() => { playTap(); if (have) { setWand(it.id); setPickWand(false) } else setBuyWeapon(it.id) }}
+                    className={`relative flex flex-col items-center rounded-2xl p-1 ${wand === it.id ? 'bg-[#ffe1ea] ring-2 ring-[#ff8fab]' : 'bg-white'}`}>
+                    <img src={assetUrl(it.img)} alt="" className={`aspect-square w-full object-contain ${have ? '' : 'opacity-50'}`} />
+                    <span className="text-[10px] font-extrabold text-[#7a3d8f]">{it.fx} 💖×{it.power}</span>
+                    {!have && <span className="absolute top-1 right-1 rounded-full bg-white/90 px-1 text-[10px] font-black">🔒{it.price}</span>}
+                  </button>
+                )
+              })}
             </div>
+            {buyWeapon && (() => {
+              const it = WEAPON_BY_ID[buyWeapon]
+              return (
+                <div className="mt-2 flex items-center gap-2 rounded-2xl bg-white p-2 shadow">
+                  <img src={assetUrl(it.img)} alt="" className="h-12 w-12 object-contain" />
+                  <p className="m-0 flex-1 text-xs leading-snug font-bold text-[#6b4b52]">{it.name}<br />{it.fx} {it.skill} · 한 번에 💖 {it.power}칸</p>
+                  <button disabled={farmNow.coins < it.price} onClick={() => buy(it.id)} className="min-h-10 rounded-full bg-[#ff8fab] px-3 text-sm font-black text-white disabled:opacity-40">{it.price} <CoinIcon /> 사기</button>
+                </div>
+              )
+            })()}
           </div>
         </div>
       )}
