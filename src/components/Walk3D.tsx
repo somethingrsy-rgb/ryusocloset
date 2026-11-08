@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
+import { HUD_BUSY } from './MultiplayerBar'
 import { BOSS_MAX, bossCanRespawn } from '../lib/mp/core'
 import { getMp, hitBoss, serverNow, spawnBoss, subscribeMp } from '../lib/mp/session'
 import { EXTRA_ANIMALS, animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
@@ -27,14 +28,41 @@ import { ANIMAL_H, HOUSE_ART, TREE_ART, createWorld, showBack, signCanvas, emoji
  * 👗 버튼으로 그 자리에서 옷을 갈아입는다(코디 탭과 같은 옷).
  */
 const WORLD = 70
-/** 마법에 걸린 몬스터 다섯(무서운 얼굴 → 마법이 풀리면 귀여운 얼굴). 그림 크기(가로·세로) */
-const MONSTERS = [
-  { id: 'dino', name: '아기 공룡', size: [909, 1205] },
-  { id: 'blob', name: '별더듬이', size: [1059, 1181] },
-  { id: 'fluff', name: '복슬이', size: [1140, 1201] },
-  { id: 'bat', name: '보라 박쥐', size: [1214, 1192] },
-  { id: 'goblin', name: '초록 뿔이', size: [996, 1072] },
-] as const
+/** 마법에 걸린 몬스터(무서운 얼굴 → 마법이 풀리면 귀여운 얼굴). 그림 크기(가로·세로), stage = 몇 단계부터 나오는지 */
+const MONSTERS: { id: string; name: string; size: readonly [number, number]; stage: number }[] = [
+  { id: 'dino', name: '아기 공룡', size: [909, 1205], stage: 0 },
+  { id: 'blob', name: '별더듬이', size: [1059, 1181], stage: 0 },
+  { id: 'fluff', name: '복슬이', size: [1140, 1201], stage: 0 },
+  { id: 'bat', name: '보라 박쥐', size: [1214, 1192], stage: 0 },
+  { id: 'goblin', name: '초록 뿔이', size: [996, 1072], stage: 0 },
+  { id: 'bunny', name: '분홍 토끼', size: [250, 301], stage: 1 },
+  { id: 'penguin', name: '왕관 펭귄', size: [262, 309], stage: 1 },
+  { id: 'lion', name: '해님 사자', size: [267, 307], stage: 1 },
+  { id: 'sheep', name: '구름 양', size: [269, 295], stage: 1 },
+  { id: 'sprout', name: '새싹 몽이', size: [249, 301], stage: 1 },
+  { id: 'puppy', name: '점박이 강아지', size: [345, 307], stage: 2 },
+  { id: 'owl', name: '무지개 부엉이', size: [283, 309], stage: 2 },
+  { id: 'hedgehog', name: '도토리 고슴도치', size: [293, 305], stage: 2 },
+  { id: 'jelly', name: '별 해파리', size: [264, 307], stage: 2 },
+  { id: 'mushroom', name: '딸기 버섯', size: [286, 309], stage: 2 },
+  { id: 'fox', name: '바람 여우', size: [287, 314], stage: 3 },
+  { id: 'polar', name: '눈꽃 곰', size: [289, 312], stage: 3 },
+  { id: 'dragon', name: '꼬마 용', size: [309, 319], stage: 3 },
+  { id: 'lotus', name: '연꽃 요정', size: [260, 318], stage: 3 },
+  { id: 'golem', name: '수정 골렘', size: [296, 319], stage: 3 },
+  { id: 'angel', name: '구름 천사', size: [323, 314], stage: 4 },
+  { id: 'peach', name: '복숭아 콩이', size: [234, 310], stage: 4 },
+  { id: 'otter', name: '튜브 수달', size: [271, 298], stage: 4 },
+  { id: 'unicorn', name: '무지개 유니콘', size: [262, 314], stage: 4 },
+  { id: 'pudding', name: '푸딩 몬', size: [288, 308], stage: 4 },
+]
+/** 단계: 몬스터를 이만큼 구하면 다음 다섯 마리가 나오기 시작한다 */
+const STAGE_AT = [0, 10, 25, 45, 70]
+const stageOf = (rescued: number) => STAGE_AT.filter((n) => rescued >= n).length - 1
+const nextStageIn = (rescued: number) => { const n = STAGE_AT.find((x) => x > rescued); return n === undefined ? null : n - rescued }
+/** 같이 사냥으로 마법을 풀어 준 대왕 몬스터 도감(이 기기에 저장) */
+const DEX_KEY = 'ryuso.walk.bossDex'
+const loadDex = (): string[] => { try { const v = JSON.parse(localStorage.getItem(DEX_KEY) ?? '[]'); return Array.isArray(v) ? v.filter((x) => typeof x === 'string' && MONSTERS.some((m) => m.id === x)) : [] } catch { return [] } }
 /** 몬스터 마법 풀기: 마법봉으로 이만큼 톡톡 */
 const HITS = 10
 /** 마법이 풀린 몬스터가 하는 고마운 말 */
@@ -90,16 +118,23 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
   const [hello, setHello] = useState<string | null>(null)
   useEffect(() => { if (!hello) return; const t = setTimeout(() => setHello(null), 2600); return () => clearTimeout(t) }, [hello])
   // 몬스터 마법 풀기(전투): k = 몬스터 번호, hits = 마법봉으로 친 횟수, done = 마법이 풀림
-  const [battle, setBattle] = useState<{ k: number; t: number; hits: number; done: boolean; total?: number; say?: string } | null>(null)
+  const [battle, setBattle] = useState<{ k: number; t: number; hits: number; done: boolean; total?: number; say?: string; unlock?: boolean } | null>(null)
   const battleRef = useRef<number | null>(null)
   battleRef.current = battle && !battle.done ? battle.k : null
   // 같이 사냥(같이 놀기 중일 때 산책에 나오는 대왕 몬스터): 모두가 같은 하나를 보고, 💖 는 같이 채운다
   const mpStatus = useSyncExternalStore(subscribeMp, () => getMp().status)
   const [bossUi, setBossUi] = useState<{ type: number; hp: number; max: number; far: number; fight: boolean; friends: string[] } | null>(null)
-  const [bossDone, setBossDone] = useState<{ type: number; friends: string[] } | null>(null)
+  const [bossDone, setBossDone] = useState<{ type: number; friends: string[]; isNew: boolean } | null>(null)
+  const [dex, setDex] = useState(loadDex)
+  const [showDex, setShowDex] = useState(false)
+  const addDexRef = useRef<(id: string) => boolean>(() => false)
+  addDexRef.current = (id) => { const cur = loadDex(); if (cur.includes(id)) return false; const next = [...cur, id]; try { localStorage.setItem(DEX_KEY, JSON.stringify(next)) } catch { /* 이번만 */ } setDex(next); return true }
   const bossFight = useRef(false)
   const goBossRef = useRef<() => void>(() => {})
   const restBossRef = useRef<() => void>(() => {})
+  // 마법 풀기가 시작되면 같이 놀기 말하는 줄을 닫는다(아래 ✨ 단추를 가리지 않게)
+  const busy = (!!battle && !battle.done) || !!bossUi?.fight
+  useEffect(() => { if (busy) window.dispatchEvent(new Event(HUD_BUSY)) }, [busy])
   const [ownedList, setOwnedList] = useState(loadOwned)
   const owned = ownedOf(ownedList)
   const farmNow = useSyncExternalStore(subscribeFarm, getFarm)
@@ -329,7 +364,10 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
         const cx = w.me.x + Math.cos(a) * d, cz = w.me.z + Math.sin(a) * d
         if (freeSpot(cx, cz, m)) { x = cx; z = cz; break }
       }
-      const type = Math.floor(rnd() * MONSTERS.length), info = MONSTERS[type]
+      const pool = MONSTERS.map((_, i) => i).filter((i) => MONSTERS[i].stage <= stageOf(rescuedCount))
+      // 새로 열린 단계의 몬스터가 조금 더 자주 나온다
+      const top = pool.filter((i) => MONSTERS[i].stage === stageOf(rescuedCount))
+      const type = top.length < pool.length && rnd() < 0.4 ? top[Math.floor(rnd() * top.length)] : pool[Math.floor(rnd() * pool.length)], info = MONSTERS[type]
       const mat = m.doll.doll.material as THREE.MeshBasicMaterial
       mat.map = monTex(info.id, 'angry'); mat.needsUpdate = true
       m.doll.body.scale.set(info.size[0] / info.size[1], 1, 1)
@@ -400,14 +438,16 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
           playServe()
           for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; fx.push({ sp: spark(fxTex[i % 3], to.clone(), 0.6), v: new THREE.Vector3(Math.cos(a) * 3.5, 1.5 + Math.random() * 2.5, Math.sin(a) * 3.5), life: 0, max: 1.6 }) }
           m.freedAt = performance.now()
+          const before = stageOf(rescuedCount)
           rescuedCount++
+          const unlock = stageOf(rescuedCount) > before
           try { localStorage.setItem(RESCUE_KEY, String(rescuedCount)) } catch { /* 이번만 */ }
           actFarm({ type: 'earn', amount: 10 })
           battleRef.current = null
           setBattle({ k: m.k, t: m.type, hits: HITS, done: false })
           // 휘리릭 돌아 웃는 얼굴이 된 다음에 고맙다고 인사한다
           const total = rescuedCount, say = THANKS[Math.floor(Math.random() * THANKS.length)]
-          window.setTimeout(() => setBattle({ k: m.k, t: m.type, hits: HITS, done: true, total, say }), 1000)
+          window.setTimeout(() => setBattle({ k: m.k, t: m.type, hits: HITS, done: true, total, say, unlock }), 1000)
         } else {
           playTap()
           setBattle({ k: m.k, t: m.type, hits: m.hits, done: false })
@@ -495,7 +535,8 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
           if (myHits.has(b.id)) {
             actFarm({ type: 'earn', amount: 30 })
             const names = nearFriends(bs.x, bs.z, 16).map((p) => p.name), type = bs.type
-            window.setTimeout(() => setBossDone({ type, friends: names }), 1000)
+            const isNew = addDexRef.current(MONSTERS[type].id)
+            window.setTimeout(() => setBossDone({ type, friends: names, isNew }), 1000)
           }
           bossFight.current = false
         }
@@ -697,6 +738,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
         <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌳 3D 산책 <span className="text-xs font-bold text-black/40">시험판</span></span>
         <div className="pointer-events-auto flex gap-1.5">
+          <button aria-label="대왕 몬스터 도감" onClick={() => { playTap(); setShowDex(true) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#7a3d8f] shadow">📖 {dex.length}/{MONSTERS.length}</button>
           <button aria-label="옷 갈아입기" onClick={() => { playTap(); setDressing(true) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#8a4b55] shadow">👗 옷</button>
           <button aria-label="닫기" onClick={onExit} className="h-10 w-10 rounded-full bg-white/95 text-lg font-bold shadow">✕</button>
         </div>
@@ -707,7 +749,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
         return battle.done ? (
           <div role="dialog" aria-label="마법이 풀렸어요" className="absolute inset-x-2 bottom-3 z-30 mx-auto flex max-w-md items-center gap-3 rounded-3xl bg-white/95 p-3 shadow-xl">
             <img src={assetUrl(`travel/monster/${m.id}_happy.webp`)} alt="" className="h-16 w-16 shrink-0 object-contain" />
-            <p className="m-0 flex-1 text-sm leading-snug font-bold text-[#6b4b52]">🎉 마법이 풀렸어요!<br />{m.name}: 「{battle.say ?? '구해 줘서 고마워! 💕'}」 · +10 코인{battle.total ? <><br /><span className="text-xs text-[#7a3d8f]">지금까지 구한 몬스터 {battle.total}마리</span></> : null}</p>
+            <p className="m-0 flex-1 text-sm leading-snug font-bold text-[#6b4b52]">🎉 마법이 풀렸어요!<br />{m.name}: 「{battle.say ?? '구해 줘서 고마워! 💕'}」 · +10 코인{battle.total ? <><br /><span className="text-xs text-[#7a3d8f]">지금까지 구한 몬스터 {battle.total}마리{nextStageIn(battle.total) ? ` · ${nextStageIn(battle.total)}마리 더 구하면 새 몬스터!` : ''}</span></> : null}{battle.unlock ? <><br /><span className="text-xs font-black text-[#e0567f]">🌟 새로운 몬스터 친구들이 나타나기 시작했어요!</span></> : null}</p>
             <button onClick={() => { playTap(); setBattle(null) }} className="min-h-11 shrink-0 rounded-full bg-[#ff8fab] px-4 text-sm font-bold text-white shadow">좋아요</button>
           </div>
         ) : (
@@ -747,9 +789,9 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
             </div>
           </>
         ) : (
-          <button onClick={() => { playTap(); goBossRef.current() }} className="absolute top-14 right-2 z-20 flex max-w-[13rem] items-center gap-1.5 rounded-2xl bg-white/95 px-2 py-1.5 text-left text-xs font-extrabold text-[#7a3d8f] shadow">
+          <button onClick={() => { playTap(); goBossRef.current() }} className="absolute top-14 right-2 z-20 flex items-center whitespace-nowrap gap-1.5 rounded-2xl bg-white/95 px-2 py-1.5 text-left text-xs font-extrabold text-[#7a3d8f] shadow">
             <img src={assetUrl(`travel/monster/${m.id}_angry.webp`)} alt="" className="h-9 w-9 shrink-0 object-contain" />
-            <span>👑 대왕 몬스터가 나타났어요!{pct ? ` (${pct}%)` : ''}<br /><span className="text-[#c0587a]">누르면 {bossUi.far}걸음 걸어가요</span></span>
+            <span>👑 대왕 몬스터 출현!{pct ? ` ${pct}%` : ''}<br /><span className="text-[#c0587a]">눌러서 가기 · {bossUi.far}걸음</span></span>
           </button>
         )
       })()}
@@ -758,11 +800,31 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
         return (
           <div role="dialog" aria-label="다 같이 마법을 풀었어요" className="absolute inset-x-2 bottom-3 z-30 mx-auto flex max-w-md items-center gap-3 rounded-3xl bg-white/95 p-3 shadow-xl">
             <img src={assetUrl(`travel/monster/${m.id}_happy.webp`)} alt="" className="h-16 w-16 shrink-0 object-contain" />
-            <p className="m-0 flex-1 text-sm leading-snug font-bold text-[#6b4b52]">🎉 다 같이 대왕 {m.name}의 마법을 풀었어요!<br />{bossDone.friends.length ? `🤝 ${bossDone.friends.join(', ')} 고마워! · ` : ''}+30 코인</p>
+            <p className="m-0 flex-1 text-sm leading-snug font-bold text-[#6b4b52]">🎉 다 같이 대왕 {m.name}의 마법을 풀었어요!<br />{bossDone.friends.length ? `🤝 ${bossDone.friends.join(', ')} 고마워! · ` : ''}+30 코인<br /><span className="text-xs font-black text-[#7a3d8f]">{bossDone.isNew ? '📖 도감에 새로 들어왔어요!' : '📖 도감에 이미 있는 친구예요'} ({dex.length}/{MONSTERS.length})</span></p>
             <button onClick={() => { playTap(); setBossDone(null) }} className="min-h-11 shrink-0 rounded-full bg-[#ff8fab] px-4 text-sm font-bold text-white shadow">좋아요</button>
           </div>
         )
       })()}
+      {showDex && (
+        <div role="dialog" aria-label="대왕 몬스터 도감" className="absolute inset-0 z-40 flex items-end justify-center bg-black/35 p-3 sm:items-center" onClick={(e) => { if (e.target === e.currentTarget) setShowDex(false) }}>
+          <div className="flex max-h-full w-full max-w-md flex-col rounded-3xl bg-[#fff8fb] p-4 shadow-2xl">
+            <p className="mt-0 mb-1 text-center text-base font-black text-[#7a3d8f]">📖 대왕 몬스터 도감 {dex.length}/{MONSTERS.length}</p>
+            <p className="mt-0 mb-2 text-center text-xs font-bold text-black/50">👥 같이 놀기에서 친구들과 대왕 몬스터의 마법을 풀면 모여요</p>
+            <div className="grid min-h-0 grid-cols-5 gap-1.5 overflow-y-auto">
+              {MONSTERS.map((m) => {
+                const have = dex.includes(m.id)
+                return (
+                  <div key={m.id} aria-label={have ? m.name : '아직 못 만난 몬스터'} className={`flex flex-col items-center rounded-2xl p-1 ${have ? 'bg-white' : 'bg-[#efe6ee]'}`}>
+                    <img src={assetUrl(`travel/monster/${m.id}_happy.webp`)} alt="" className={`aspect-square w-full object-contain ${have ? '' : 'opacity-40 brightness-0'}`} />
+                    <span className="text-center text-[10px] leading-tight font-extrabold text-[#7a3d8f]">{have ? m.name : '?'}</span>
+                  </div>
+                )
+              })}
+            </div>
+            <button onClick={() => { playTap(); setShowDex(false) }} className="mt-3 min-h-11 rounded-full bg-[#ff8fab] text-sm font-black text-white">닫기</button>
+          </div>
+        </div>
+      )}
       {pickWand && (
         <div role="dialog" aria-label="마법봉 고르기" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) { setPickWand(false); setBuyWeapon(null) } }}>
           <div className="flex max-h-full w-full max-w-md flex-col rounded-3xl bg-[#fff8fb] p-4 shadow-2xl">
