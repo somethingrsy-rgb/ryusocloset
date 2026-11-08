@@ -70,6 +70,8 @@ export interface World {
   /** 화면 오른쪽 방향(카메라 기준): 걷는 방향이 화면 왼쪽인지 오른쪽인지 잴 때 */
   screenSide: (dx: number, dz: number) => number
   pushOut: (o: Mover, r: number) => void
+  /** 위에서 내려다보기(확장 모드 지도): {x, z, h} 위 하늘에서 그곳을 본다. null 이면 다시 아바타 뒤 */
+  setOverhead: (o: { x: number; z: number; h: number } | null) => void
   onFrame: (fn: (dt: number, now: number) => void) => void
   /** 누른 곳에 맞은 물체 중 이것들 안에 든 것이 있으면 onPick, 아니면 땅을 누른 것(걷기) */
   pickables: THREE.Object3D[]
@@ -297,6 +299,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   }
 
   const frameFns: ((dt: number, now: number) => void)[] = []
+  let overhead: { x: number; z: number; h: number } | null = null
   const camPos = new THREE.Vector3(), look = new THREE.Vector3()
   let last = performance.now(), frame = 0
   const tick = (now: number) => {
@@ -332,9 +335,9 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
       if (Math.abs(side) > 0.2) me.dir = side > 0 ? 1 : -1
       walkT += dt
     }
-    camPos.set(me.x + Math.sin(yaw) * 8, 4.2, me.z + Math.cos(yaw) * 8)
+    if (overhead) { camPos.set(overhead.x, overhead.h, overhead.z + overhead.h * 0.3); look.set(overhead.x, 0, overhead.z) }
+    else { camPos.set(me.x + Math.sin(yaw) * 8, 4.2, me.z + Math.cos(yaw) * 8); look.set(me.x, 1.3, me.z) }
     camera.position.lerp(camPos, 1 - Math.pow(0.002, dt))
-    look.set(me.x, 1.3, me.z)
     camera.lookAt(look)
     sun.position.set(me.x + 18, 30, me.z + 12)
     sun.target.position.set(me.x, 0, me.z)
@@ -359,7 +362,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   frame = requestAnimationFrame(tick)
 
   return {
-    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables,
+    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables, setOverhead: (o) => { overhead = o },
     onFrame: (fn) => { frameFns.push(fn) },
     dispose: () => {
       cancelAnimationFrame(frame)
