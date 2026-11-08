@@ -101,11 +101,12 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
   const secRef = useRef<HTMLElement>(null)
   const [wide, setWide] = useState(false)
+  const [phonePortrait, setPhonePortrait] = useState(false)
   const [short, setShort] = useState(false) // 폰 가로처럼 낮은 화면: 요리 중 안내를 한 줄로 줄여 도마를 가리지 않게 한다
   useEffect(() => {
     const el = secRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => { setWide(el.clientWidth > el.clientHeight * 1.2); setShort(el.clientHeight < 520) })
+    const ro = new ResizeObserver(() => { setWide(el.clientWidth > el.clientHeight * 1.2); setShort(el.clientHeight < 520); setPhonePortrait(el.clientWidth <= 600 && el.clientHeight > el.clientWidth) })
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -144,6 +145,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   }, [kitchen.tickets, selTicket, cooking, done])
 
   const L = SPOTS[wide ? 'wide' : 'portrait']
+  const phoneP = view3d && phonePortrait
   const phoneL = wide && short // 폰 가로
   const bounce = () => { setBusy(true); later(() => setBusy(false), 650) }
 
@@ -247,7 +249,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-clip rounded-3xl bg-[#e9b06c] ring-1 ring-black/5 select-none" style={{ containerType: 'size' }}>
       {/* 주방 그림: 화면을 꽉 채우고(넘치는 쪽은 조금 잘림) 가운데에 둔다. 그림 속 자리는 그림 크기에 대한 % 라 그대로 맞는다 */}
       {/* 폰 가로(낮고 넓은 화면): 그림을 잘라 키우면 아일랜드가 잘리고 아래 칸이 아바타를 가려서, 그림은 왼쪽에 다 보이게 놓고 주문서·버튼은 오른쪽 칸으로 */}
-      {view3d ? <div className="absolute inset-y-0 left-0" style={{ width: phoneL ? `calc(100cqw - ${SIDE})` : '100%' }}><Suspense fallback={null}><Kitchen3D outfit={outfit} tweaks={tweaks} view={view} onStation={tapStation} line={helperLine} /></Suspense></div> : <>
+      {view3d ? <div data-kitchen-scene className="absolute top-0 left-0" style={{ height: phoneP ? '58%' : '100%', width: phoneL ? `calc(100cqw - ${SIDE})` : '100%' }}><Suspense fallback={null}><Kitchen3D outfit={outfit} tweaks={tweaks} view={view} onStation={tapStation} line={helperLine} /></Suspense></div> : <>
       <div className={`absolute top-1/2 -translate-y-1/2 ${phoneL ? 'left-0' : 'left-1/2 -translate-x-1/2'}`} style={{ width: phoneL ? `min(calc(100cqw - ${SIDE}), calc(100cqh * ${L.ratio}))` : `max(100cqw, calc(100cqh * ${L.ratio}))`, aspectRatio: `${L.ratio}` }}>
         <img src={assetUrl(L.img)} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
         {/* 지금 누를 곳 네모 테두리: 도마 말고는(오븐·냄비·싱크대·냉장고) 그림 바로 위, 같이 요리하는 친구·아바타보다 뒤에 그린다(친구 얼굴을 가리지 않게).
@@ -383,8 +385,10 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
         </div>
       </div>
 
+      <div data-kitchen-orders className={phoneP ? 'absolute inset-x-0 top-[58%] bottom-0 z-20 flex min-h-0 flex-col gap-2 overflow-y-auto bg-[#e9b06c] p-2' : 'contents'}>
+      {phoneP && <h2 className="m-0 px-1 text-xs font-bold text-[#8a4b2a]">📝 {lang === 'ko' ? '주문서' : 'Orders'}</h2>}
       {/* 주문서 보드(주문서가 없을 때 안내는 아래 칸에만: 위아래에 같은 글이 두 번 보였다) */}
-      <div className={`absolute top-12 z-20 flex gap-2 overflow-x-auto px-1 pt-2.5 pb-2 ${phoneL ? 'right-1' : 'inset-x-1'}`} style={phoneL ? { width: `calc(${SIDE} - 0.5rem)` } : undefined}>
+      <div className={phoneP ? 'relative flex shrink-0 gap-2 overflow-x-auto px-1 pt-1.5 pb-2' : `absolute top-12 z-20 flex gap-2 overflow-x-auto px-1 pt-2.5 pb-2 ${phoneL ? 'right-1' : 'inset-x-1'}`} style={phoneL ? { width: `calc(${SIDE} - 0.5rem)` } : undefined}>
         {tickets.map((t) => {
           const m = menuById(t.menu)!
           const on = sel === t.seat
@@ -406,7 +410,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       </div>
 
       {/* 아래: 고른 주문서의 레시피 · 요리 단계 · 완성 */}
-      <div className={`absolute bottom-2 z-20 rounded-3xl bg-white/95 shadow-xl ${phoneL ? 'right-2 overflow-y-auto p-2.5' : 'inset-x-2 mx-auto max-w-md p-3'}`} style={phoneL ? { width: `calc(${SIDE} - 1rem)`, maxHeight: 'calc(100cqh - 9.5rem)' } : undefined}>
+      <div className={phoneP ? 'relative mt-auto w-full shrink-0 rounded-3xl bg-white/95 p-3 shadow-xl' : `absolute bottom-2 z-20 rounded-3xl bg-white/95 shadow-xl ${phoneL ? 'right-2 overflow-y-auto p-2.5' : 'inset-x-2 mx-auto max-w-md p-3'}`} style={phoneL ? { width: `calc(${SIDE} - 1rem)`, maxHeight: 'calc(100cqh - 9.5rem)' } : undefined}>
         {done !== null && doneMenu ? (
           <div className="flex flex-col items-center gap-2 text-center">
             <p className="m-0 text-lg font-black text-[#c04a5a]">{tx.done(doneMenu[lang])}</p>
@@ -473,6 +477,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
             {!tickets.length && <button onClick={() => { playTap(); onGo('cafe') }} className={`${btn} shrink-0 whitespace-nowrap bg-[#ef8d99] text-white`}>{tx.cafe}</button>}
           </div>
         )}
+      </div>
+
       </div>
 
       {pantry && (

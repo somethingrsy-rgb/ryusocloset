@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { castleSprite } from './castleSprite3d'
 import { assetUrl } from '../lib/items'
 
 /**
@@ -220,15 +221,14 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     capEnd(pts[n].x, pts[n].z, -t1.x, -t1.z, width, bushes === 'end' || bushes === 'both')
   }
   const addCastleGate = (x: number, z: number, tx: number, tz: number) => {
-    const h = 7.5, aspect = 1043 / 1249
     const dx = tx - x, dz = tz - z, l = Math.hypot(dx, dz) || 1, ux = dx / l, uz = dz / l
     // 꼬불꼬불한 길(시작 끝에 덤불)
     const wig: [number, number][] = []
     for (let k = 0; k <= 6; k++) { const f = k / 6, off = Math.sin(f * Math.PI * 2) * Math.sin(f * Math.PI) * 2.2; wig.push([tx + (x - tx) * f - uz * off, tz + (z - tz) * f + ux * off]) }
     addCurvePath(wig, 2.6, 'start')
-    const g = new THREE.Group()
-    const m = new THREE.Mesh(keep(new THREE.PlaneGeometry(h * aspect, h).translate(0, h / 2, 0)), keep(new THREE.MeshBasicMaterial({ map: texOf(assetUrl('travel/3d/pink_castle.webp')), transparent: true, alphaTest: 0.4, side: THREE.DoubleSide })))
-    g.add(m)
+    const castle = castleSprite({ keep, texOf })
+    const g = castle.root
+    frameFns.push(() => castle.update(camera))
     g.position.set(x, 0, z)
     g.rotation.y = Math.atan2(ux, uz)
     scene.add(g)
