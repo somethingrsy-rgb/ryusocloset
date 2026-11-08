@@ -694,6 +694,8 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌱 3D 농장 <span className="text-xs font-bold text-black/40">시험판</span></span>
         <div className="pointer-events-auto flex items-center gap-1.5">
           <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-black shadow"><CoinIcon /> {farm.coins}</span>
+          {/* 위에서 내려다보기 ↔ 아바타 뒤에서 보기(위아래로 끌어도 높이가 바뀐다) */}
+          <button aria-label="위에서 보기" onClick={() => { playTap(); const t = world.current?.tilt; if (t) t.value = t.value > 0.5 ? 0 : 1 }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#3d6b2f] shadow">🦅 위</button>
           <button aria-label="옷 갈아입기" onClick={() => { playTap(); setDressing(true) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#8a4b55] shadow">👗 옷</button>
           {/* 같이 농사지을 친구 고르기(고른 친구 얼굴, 혼자면 🐾) */}
           <button aria-label="같이 농사지을 친구" onClick={() => { playTap(); setPicking(true) }} className="flex h-10 items-center rounded-full bg-white/95 px-2.5 shadow">
@@ -741,7 +743,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
           <button onClick={() => { playTap(); endPlacing() }} className="h-10 rounded-full bg-[#ff8fab] px-4 text-sm font-black text-white shadow">✓ 다 했어요</button>
         </div>
       )}
-      {!placing && <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">밭을 누르면 심고 · 💧 물 주고 · ✨ 수확해요 · 젖소·닭을 누르면 우유·달걀 · 옆으로 끌면 둘러봐요</p>}
+      {!placing && <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">밭을 누르면 심고 · 💧 물 주고 · ✨ 수확해요 · 젖소·닭을 누르면 우유·달걀 · 옆으로 끌면 둘러보고 위아래로 끌면 높이가 바뀌어요</p>}
       {notice && <p role="status" className="absolute top-14 left-1/2 z-20 m-0 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-sm font-bold whitespace-nowrap shadow">{notice}</p>}
       {!ready && <p className="absolute inset-0 z-20 m-0 flex items-center justify-center text-sm font-bold text-[#3d6b2f]">농장을 만드는 중…</p>}
       {/* 카페 길을 넘어갈 때 하얗게 */}

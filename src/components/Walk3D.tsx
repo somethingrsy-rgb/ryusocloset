@@ -437,7 +437,9 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
           wandSp.scale.set(1.25 * wp.aspect, 1.25, 1)
           // 그림은 칼끝이 왼쪽 아래: 손잡이를 중심으로 돌려서 칼끝이 위(살짝 바깥쪽)로 서게
           wandSp.material.rotation = -2.2 + Math.sin(now / 260) * 0.06 - swing * 0.9
-          wandSp.position.set(w.me.x + r.x * 0.47, 0.9, w.me.z + r.z * 0.47)
+          // 몸 앞(카메라 쪽)으로 조금 내밀어서 몸 뒤로 숨지 않게
+          const fx = w.camera.position.x - w.me.x, fz = w.camera.position.z - w.me.z, fl = Math.hypot(fx, fz) || 1
+          wandSp.position.set(w.me.x + r.x * 0.47 + (fx / fl) * 0.45, 0.9, w.me.z + r.z * 0.47 + (fz / fl) * 0.45)
         } else {
           wandSp.center.set(0.5, 0.5)
           wandSp.scale.set(0.7, 0.7, 1)
