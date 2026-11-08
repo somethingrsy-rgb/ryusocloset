@@ -149,3 +149,17 @@ describe('옆 밭 놓기(3D 확장)', () => {
   })
 })
 
+describe('울타리(3D 농장)', () => {
+  it('코인으로 한 칸씩 사서 놓고, 저장에서 다시 읽고, 치울 수 있다', () => {
+    let state = { ...defaultFarm(), coins: 12 }
+    state = reduceFarm(state, { type: 'fence', x: 10, z: -2, r: 0 }, 0)
+    expect(state.coins).toBe(7); expect(state.fences).toEqual([[10, -2, 0]])
+    expect(reduceFarm(state, { type: 'fence', x: 10, z: -2, r: 0 }, 0)).toBe(state) // 같은 자리
+    state = reduceFarm(state, { type: 'fence', x: 10, z: -2, r: 1 }, 0)
+    expect(state.coins).toBe(2)
+    expect(reduceFarm(state, { type: 'fence', x: 1, z: 1, r: 0 }, 0)).toBe(state) // 코인 모자람
+    expect(sanitizeFarm(JSON.parse(JSON.stringify(state))).fences).toEqual([[10, -2, 0], [10, -2, 1]])
+    expect(reduceFarm(state, { type: 'unfence', x: 10, z: -2 }, 0).fences).toHaveLength(1)
+    expect(sanitizeFarm({ fences: [[1, 2, 3], ['a', 1, 0], [99, 0, 1]] }).fences).toEqual([[60, 0, 1]])
+  })
+})
