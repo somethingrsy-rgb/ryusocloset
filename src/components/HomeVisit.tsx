@@ -101,6 +101,25 @@ export function HomeVisit({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }
   const btn = 'flex flex-none items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-sm font-bold shadow-md'
   return (
     <div ref={rootRef} role="region" aria-label={`${label}에 놀러 옴`} className="absolute inset-0 z-30 flex items-center justify-center overflow-hidden rounded-3xl bg-[#fdf3f6]" style={{ containerType: 'size' }} onPointerUp={onTap}>
+      {/* 방 무대 둘레는 주인 화면처럼 벽지·바닥을 거울처럼 이어 붙여 채운다(세로 화면에서 위아래가 비어 보이지 않게) */}
+      {where && (layout ? !!assets : !!place && wide) && (
+        <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="relative" style={{ width: `min(100cqw, calc(100cqh * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` }}>
+            {[-2, -1, 0, 1, 2].flatMap((ky) => [-2, -1, 0, 1, 2].map((k) => ({ k, ky }))).filter(({ k, ky }) => k || ky).map(({ k, ky }) => {
+              const wall = layout ? assets!.wall : assetUrl(place!.place.wall)
+              const floor = layout ? assets!.floor : assetUrl(place!.place.floor)
+              const floorH = layout ? assets!.floorH : place!.place.floorH
+              return (
+                <div key={`${k}_${ky}`} className="absolute" style={{ left: `calc(${k * 100}% - 1px)`, top: `calc(${ky * 100}% - 1px)`, width: 'calc(100% + 2px)', height: 'calc(100% + 2px)', transform: `scale(${Math.abs(k) % 2 ? -1 : 1}, ${Math.abs(ky) % 2 ? -1 : 1})` }}>
+                  {!layout && <img src={wall} alt="" draggable={false} className="absolute inset-0 h-full w-full" />}
+                  <img src={floor} alt="" draggable={false} className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${floorH / ROOM_H * 100}%` }} />
+                  {layout && <img src={wall} alt="" draggable={false} className="absolute inset-0 h-full w-full" />}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
       {where && (layout ? !!assets : !!place) ? (
         <div ref={boxRef} className={`relative isolate touch-none select-none ${layout || wide ? '' : 'h-full w-full'}`} style={layout || wide ? { width: `min(100cqw, calc(100cqh * ${ROOM_W / ROOM_H}))`, aspectRatio: `${ROOM_W} / ${ROOM_H}` } : undefined}>
           {layout && assets && <>
