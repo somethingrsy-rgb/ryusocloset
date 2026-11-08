@@ -39,7 +39,12 @@ const RESCUE_KEY = 'ryuso.walk.rescuedCount'
 const loadRescued = () => { try { const n = Number(localStorage.getItem(RESCUE_KEY)); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0 } catch { return 0 } }
 /** 한꺼번에 돌아다니는 몬스터 수(풀어 주거나 멀어지면 다른 곳에 새 몬스터가 나온다) */
 const MONSTER_SLOTS = 6
-const WANDS = ITEMS.filter((i) => i.category === 'wand')
+/** 마법 풀기에 쓰는 것: 옷장의 마법봉 + 마법 검 다섯(손잡이를 아바타 손에 쥔다) */
+type Weapon = { id: string; name: string; img: string; sword: boolean; aspect: number }
+const SWORDS: Weapon[] = ([['blue', '파랑 별 검', 1081 / 1275], ['green', '초록 별 검', 1093 / 1270], ['red', '빨강 별 검', 1086 / 1277], ['aqua', '하늘빛 별 검', 1084 / 1276], ['violet', '보라 별 검', 1080 / 1272]] as const)
+  .map(([c, name, aspect]) => ({ id: `sword_${c}`, name, img: `travel/sword/${c}.webp`, sword: true, aspect }))
+const WANDS: Weapon[] = [...ITEMS.filter((i) => i.category === 'wand').map((i) => ({ id: i.id, name: i.name.ko, img: i.thumb, sword: false, aspect: 1 })), ...SWORDS]
+const WEAPON_BY_ID = Object.fromEntries(WANDS.map((x) => [x.id, x]))
 const SPARKLES = 10
 /** 산책길: 한 바퀴 이어진 고리(끝이 다시 처음과 이어져서 걷다 보면 처음 자리로 돌아온다) */
 const loopCurve = () => new THREE.CatmullRomCurve3(Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2, r = WORLD * 0.62 + Math.sin(i * 2.3) * 7; return new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r) }), true)
@@ -73,7 +78,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
   const [battle, setBattle] = useState<{ k: number; t: number; hits: number; done: boolean; total?: number; say?: string } | null>(null)
   const battleRef = useRef<number | null>(null)
   battleRef.current = battle && !battle.done ? battle.k : null
-  const [wand, setWand] = useState(() => (outfit.wand && ITEM_BY_ID[outfit.wand] ? outfit.wand : WANDS[0]?.id ?? ''))
+  const [wand, setWand] = useState(() => (outfit.wand && WEAPON_BY_ID[outfit.wand] ? outfit.wand : WANDS[0]?.id ?? ''))
   const [pickWand, setPickWand] = useState(false)
   const zapRef = useRef<() => void>(() => {})
   const fleeRef = useRef<() => void>(() => {})
@@ -332,8 +337,10 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
     wandSp.scale.set(0.7, 0.7, 1)
     wandSp.visible = false
     scene.add(wandSp)
+    let swing = 0
     fleeRef.current = () => { const k = battleRef.current; if (k !== null) monsters[k].cool = true }
     zapRef.current = () => {
+      swing = 1
       const k = battleRef.current
       if (k === null) return
       const m = monsters[k]
@@ -425,9 +432,22 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       wandSp.visible = bk !== null
       if (bk !== null) {
         const id = wandRef.current
-        if (id && ITEM_BY_ID[id]) { if (!wandTex.has(id)) wandTex.set(id, w.texOf(assetUrl(ITEM_BY_ID[id].thumb))); if (wandSp.material.map !== wandTex.get(id)) { wandSp.material.map = wandTex.get(id)!; wandSp.material.needsUpdate = true } }
+        const wp = WEAPON_BY_ID[id]
+        if (wp) { if (!wandTex.has(id)) wandTex.set(id, w.texOf(assetUrl(wp.img))); if (wandSp.material.map !== wandTex.get(id)) { wandSp.material.map = wandTex.get(id)!; wandSp.material.needsUpdate = true } }
         const r = new THREE.Vector3().subVectors(w.camera.position, new THREE.Vector3(w.me.x, 0, w.me.z)).cross(new THREE.Vector3(0, 1, 0)).normalize()
-        wandSp.position.set(w.me.x - r.x * 0.55, 1.25 + Math.sin(now / 200) * 0.05, w.me.z - r.z * 0.55)
+        if (wp?.sword) {
+          // 검: 손잡이(그림 오른쪽 위)를 화면 왼쪽 손에 쥐고 칼날은 바깥 아래로. 마법을 쏠 때 살짝 휘두른다
+          wandSp.center.set(0.85, 0.87) // 손잡이 가운데
+          wandSp.scale.set(1.25 * wp.aspect, 1.25, 1)
+          wandSp.material.rotation = Math.sin(now / 260) * 0.06 + swing * 0.9
+          wandSp.position.set(w.me.x + r.x * 0.47, 0.86, w.me.z + r.z * 0.47)
+        } else {
+          wandSp.center.set(0.5, 0.5)
+          wandSp.scale.set(0.7, 0.7, 1)
+          wandSp.material.rotation = 0
+          wandSp.position.set(w.me.x - r.x * 0.55, 1.25 + Math.sin(now / 200) * 0.05, w.me.z - r.z * 0.55)
+        }
+        swing = Math.max(0, swing - dt * 4)
       }
       // 반짝이 효과
       for (let i = fx.length - 1; i >= 0; i--) {
@@ -525,7 +545,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       </div>
       {/* 몬스터 마법 풀기 */}
       {battle && (() => {
-        const m = MONSTERS[battle.t], wi = ITEM_BY_ID[wand]
+        const m = MONSTERS[battle.t], wi = WEAPON_BY_ID[wand]
         return battle.done ? (
           <div role="dialog" aria-label="마법이 풀렸어요" className="absolute inset-x-2 bottom-3 z-30 mx-auto flex max-w-md items-center gap-3 rounded-3xl bg-white/95 p-3 shadow-xl">
             <img src={assetUrl(`travel/monster/${m.id}_happy.webp`)} alt="" className="h-16 w-16 shrink-0 object-contain" />
@@ -541,7 +561,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
               <div aria-label={`마법 풀기 ${battle.hits}/${HITS}`} className="flex gap-0.5 text-lg leading-none">{Array.from({ length: HITS }, (_, i) => <span key={i} className={i < battle.hits ? '' : 'opacity-25 grayscale'}>💖</span>)}</div>
               <div className="flex items-center gap-2">
                 <button aria-label="마법봉 고르기" onClick={() => { playTap(); setPickWand(true) }} className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#e5cfa3] bg-[#fdf2d8]">
-                  {wi ? <img src={assetUrl(wi.thumb)} alt="" className="h-11 w-11 object-contain" /> : '🪄'}
+                  {wi ? <img src={assetUrl(wi.img)} alt="" className="h-11 w-11 object-contain" /> : '🪄'}
                 </button>
                 <button onClick={() => zapRef.current()} className="h-14 rounded-full bg-gradient-to-r from-[#c58bff] to-[#ff8fab] px-6 text-lg font-black text-white shadow-lg active:scale-95">✨ 마법!</button>
                 <button onClick={() => { playTap(); fleeRef.current(); setBattle(null) }} className="h-10 rounded-full bg-[#ffe4ec] px-3 text-sm font-bold">도망가기</button>
@@ -553,12 +573,12 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       {pickWand && (
         <div role="dialog" aria-label="마법봉 고르기" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) setPickWand(false) }}>
           <div className="w-full max-w-sm rounded-3xl bg-[#fff8fb] p-4 shadow-2xl">
-            <p className="mt-0 mb-2 text-center text-base font-black text-[#7a3d8f]">🪄 어떤 마법봉으로 할까요?</p>
+            <p className="mt-0 mb-2 text-center text-base font-black text-[#7a3d8f]">🪄 어떤 마법봉·마법 검으로 할까요?</p>
             <div className="grid grid-cols-4 gap-2">
               {WANDS.map((it) => (
-                <button key={it.id} aria-label={it.name.ko} aria-pressed={wand === it.id} onClick={() => { playTap(); setWand(it.id); setPickWand(false) }}
+                <button key={it.id} aria-label={it.name} aria-pressed={wand === it.id} onClick={() => { playTap(); setWand(it.id); setPickWand(false) }}
                   className={`aspect-square rounded-2xl p-1 ${wand === it.id ? 'bg-[#ffe1ea] ring-2 ring-[#ff8fab]' : 'bg-white'}`}>
-                  <img src={assetUrl(it.thumb)} alt="" className="h-full w-full object-contain" />
+                  <img src={assetUrl(it.img)} alt="" className="h-full w-full object-contain" />
                 </button>
               ))}
             </div>
