@@ -27,8 +27,9 @@ import { ANIMAL_H, HOUSE_ART, createWorld, showBack, signCanvas, emojiCanvas, ty
  * 👗 버튼으로 그 자리에서 옷을 갈아입는다(코디 탭과 같은 옷).
  */
 const WORLD = 70
-/** 산책 마을 나무: 노랑·주황 꽃나무(카페·농장의 그 나무) */
+/** 산책 마을 나무: 초록·노랑·주황 꽃나무(카페·농장의 그 나무) */
 const WALK_TREES = [
+  { img: 'cafe/3d/tree.webp', aspect: 951 / 1024, h: 4.2 },
   { img: 'cafe/3d/tree_yellow.webp', aspect: 824 / 866, h: 4.2 },
   { img: 'cafe/3d/tree_orange.webp', aspect: 827 / 865, h: 4.2 },
 ] as const
@@ -267,9 +268,18 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       const s0 = samples[Math.floor(rnd() * samples.length)], a = rnd() * Math.PI * 2, far = 6 + rnd() * 8
       const [x, z] = i % 2 ? [s0.x + Math.cos(a) * far, s0.z + Math.sin(a) * far] : [(rnd() - 0.5) * WORLD * 1.9, (rnd() - 0.5) * WORLD * 1.9]
       if (nearRoad(x, z, 4.5) || w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 9)) continue
-      // 산책 마을 나무는 노랑·주황 꽃나무 두 가지만
-      w.addTree(x, z, 0.8 + rnd() * 0.5, WALK_TREES[rnd() < 0.5 ? 0 : 1])
+      // 산책 마을 나무는 초록·노랑·주황 꽃나무 세 가지만
+      w.addTree(x, z, 0.8 + rnd() * 0.5, WALK_TREES[Math.floor(rnd() * WALK_TREES.length)])
       trees++
+    }
+    // 꽃 덤불: 길가와 들판 여기저기
+    let bushes = 0
+    for (let i = 0; i < 300 && bushes < 60; i++) {
+      const s0 = samples[Math.floor(rnd() * samples.length)], a = rnd() * Math.PI * 2, far = 3.2 + rnd() * 4
+      const [x, z] = i % 3 ? [s0.x + Math.cos(a) * far, s0.z + Math.sin(a) * far] : [(rnd() - 0.5) * WORLD * 1.9, (rnd() - 0.5) * WORLD * 1.9]
+      if (nearRoad(x, z, 2.8) || w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < (t.r + 1.4) ** 2)) continue
+      w.addProp('cafe/3d/bush.webp', x, z, 0.9 + rnd() * 0.4, 1024 / 616, 0.45)
+      bushes++
     }
 
     // 꽃: 납작한 꽃송이를 한꺼번에(InstancedMesh)
