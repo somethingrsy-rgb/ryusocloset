@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { EXTRA_ANIMALS, animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { avatarName, getAvatar } from '../lib/avatars'
@@ -11,7 +12,7 @@ import { toggleItem } from '../lib/outfit'
 import { playOrder, playServe, playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { GuestDresser } from './GuestDresser'
-import { ANIMAL_H, HOUSE_ART, TREE_ART, createWorld, emojiCanvas, type Doll, type World } from './world3d'
+import { ANIMAL_H, HOUSE_ART, TREE_ART, createWorld, showBack, emojiCanvas, type Doll, type World } from './world3d'
 
 /**
  * 3D 산책 (시험판): 마을은 3D(길·나무·집·꽃·구름)이고, 아바타와 동물 친구는 지금 그림을 세운 '종이 인형'이다.
@@ -52,6 +53,8 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
   /** 이야기: step 은 지금 묻는 질문, said 는 친구가 방금 한 답, done 이면 끝 */
   const [talk, setTalk] = useState<{ animal: number; t: Talk; step: 0 | 1; said: string | null; done: boolean } | null>(null)
   const talking = useRef<number | null>(null)
+  const [hello, setHello] = useState<string | null>(null)
+  useEffect(() => { if (!hello) return; const t = setTimeout(() => setHello(null), 2600); return () => clearTimeout(t) }, [hello])
   // 몬스터 마법 풀기(전투): k = 몬스터 번호, hits = 마법봉으로 친 횟수, done = 마법이 풀림
   const [battle, setBattle] = useState<{ k: number; t: number; hits: number; done: boolean; total?: number } | null>(null)
   const battleRef = useRef<number | null>(null)
@@ -85,6 +88,8 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
         const k = friendOf.get(o)
         if (k === undefined || talking.current !== null) return
         const f = friends[k]
+        // 새 친구는 인사만
+        if (f.animal < 0) { const e = EXTRA_ANIMALS[-f.animal - 1]; playOrder(); setHello(`${e.name}: ${e.hi}`); return }
         w.walkTo(f.x, f.z, () => {
           playOrder()
           f.wait = 999
@@ -183,9 +188,12 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     }
 
     // 동물 친구 넷: 근처를 거닐다 쉬었다 한다. 누르면 이야기
-    ;[0, 2, 4, 6].forEach((animal, k) => {
-      const doll = w.paperDoll(w.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[animal].img}_stand.webp`)), ANIMAL_H, 1)
-      const s = samples[30 + k * 25]
+    // 새 친구 다섯(호랑이·너구리·유니콘·하마·사자, 누르면 인사)은 animal 이 -1, -2 … (이야기 대신 인사)
+    ;[0, 2, 4, 6, -1, -2, -3, -4, -5].forEach((animal, k) => {
+      const img = animal >= 0 ? CALL_ANIMALS[animal].img : EXTRA_ANIMALS[-animal - 1].img
+      const doll = w.paperDoll(w.texOf(animal3dUrl(img)), ANIMAL_H, animal3dAspect(img))
+      doll.root.userData.tex = [w.texOf(animal3dUrl(img)), w.texOf(animal3dUrl(img, true))]
+      const s = samples[(30 + k * 21) % samples.length]
       friendOf.set(doll.root, k)
       w.pickables.push(doll.root)
       const x = s.x + (k % 2 ? 2.2 : -2.2)
@@ -357,6 +365,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
             f.tx = near.x + (rnd() - 0.5) * 3; f.tz = near.z + (rnd() - 0.5) * 3
           } else {
             f.x += (dx / d) * 2.3 * dt; f.z += (dz / d) * 2.3 * dt
+            showBack(f.doll, walkingAway(dx, dz, f.x, f.z, w.camera.position.x, w.camera.position.z))
             const side = w.screenSide(dx, dz)
             if (Math.abs(side) > 0.05) f.dir = side > 0 ? 1 : -1
             w.pushOut(f, 0.35)
@@ -366,6 +375,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
         const ax = f.x - w.me.x, az = f.z - w.me.z, ad = Math.hypot(ax, az)
         if (ad < 1.3 && ad > 1e-3) { f.x = w.me.x + (ax / ad) * 1.3; f.z = w.me.z + (az / ad) * 1.3 }
         f.doll.root.position.set(f.x, 0, f.z)
+        if (f.wait > 0 || busy) showBack(f.doll, false)
         f.doll.body.position.y = f.wait > 0 || busy ? 0 : Math.abs(Math.sin(f.t * 8)) * 0.1
         w.face(f.doll, f.dir)
       }
@@ -452,6 +462,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
           </div>
         </div>
       )}
+      {hello && !battle && <p role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-fit max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center text-sm font-extrabold text-[#6b4b52] shadow">{hello}</p>}
       {!talk && !battle && <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">땅을 누르면 걸어가요 · 옆으로 끌면 둘러봐요 · ✨ 줍고, 친구를 누르면 이야기해요</p>}
       {!ready && <p className="absolute inset-0 z-20 m-0 flex items-center justify-center text-sm font-bold text-[#3d6b2f]">마을을 만드는 중…</p>}
 

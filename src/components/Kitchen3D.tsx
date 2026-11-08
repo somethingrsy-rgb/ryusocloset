@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { animal3dAspect, animal3dUrl } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { renderFigure } from '../lib/exportPng'
@@ -113,11 +114,11 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
       helpers.length = 0
       crew.forEach((g, k) => {
         const av = guestAvatar(g)
-        const d = av ? s.paperDoll(null, 2.6, 1024 / 1536, 1504 / 1536, false) : s.paperDoll(s.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[g].img}_stand.webp`)), 1.7, 1, 1, false)
+        const d = av ? s.paperDoll(null, 2.6, 1024 / 1536, 1504 / 1536, false) : s.paperDoll(s.texOf(animal3dUrl(CALL_ANIMALS[g].img)), 1.7, animal3dAspect(CALL_ANIMALS[g].img), 1, false)
         if (av) renderFigure(guestLook(av.id), {}, av).then((cv) => s.setMap(d, s.texOf(cv))).catch(() => {})
         d.root.position.set(k ? 2.4 : -2.4, 0, 0.6)
         d.root.userData.go = { x: k ? 2.4 : -2.4, z: 0.6, wait: 1 + k, dir: (k ? -1 : 1) as 1 | -1 }
-        d.root.userData.wave = av ? null : s.texOf(assetUrl(`cafe/stand/${CALL_ANIMALS[g].img}_wave.webp`))
+        d.root.userData.wave = null // 3D 동물 그림은 한 장(기쁠 때는 통통 뛴다)
         d.root.userData.stand = d.mat.map
         helpers.push(d)
       })

@@ -410,3 +410,11 @@ export function signCanvas(line1: string, line2: string) {
   g.fillText(line2, 128, 108)
   return c
 }
+
+/** 앞모습·뒷모습 그림이 있는 종이 인형(root.userData.tex = [앞, 뒤])을 뒷모습/앞모습으로 */
+export function showBack(d: Doll, back: boolean) {
+  const t = d.root.userData.tex as THREE.Texture[] | undefined
+  if (!t) return
+  const m = d.doll.material as THREE.MeshBasicMaterial, want = t[back ? 1 : 0]
+  if (m.map !== want) { m.map = want; m.needsUpdate = true }
+}
