@@ -29,7 +29,8 @@ const ART: Record<Station, { img: string; x: number; z: number; w: number; aspec
   sink: { img: 'sink', x: -1.6, z: -2.0, w: 2.6, aspect: 1308 / 1054, top: 0.25 },
   stove: { img: 'stove', x: 0.9, z: -2.0, w: 2.0, aspect: 953 / 1052, top: 0.3 },
   oven: { img: 'oven', x: 3.25, z: -2.0, w: 2.3, aspect: 1147 / 1055, top: 0.6 },
-  board: { img: 'island', x: 0, z: 1.8, w: 4.4, aspect: 1400 / 511, top: 0.15 },
+  // 아일랜드: 앞쪽 왼편(가운데를 비워서 아바타·친구가 다니기 좋게)
+  board: { img: 'island', x: -2.6, z: 1.9, w: 4.0, aspect: 1400 / 511, top: 0.15 },
 }
 const hOf = (k: Station) => ART[k].w / ART[k].aspect
 /** 그림 속 높이(위에서부터 비율) → 장면 높이 */
@@ -37,7 +38,7 @@ const yAt = (k: Station, fy: number) => hOf(k) * (1 - fy)
 /** 아바타·친구가 다니는 곳(조리대 앞 ~ 아일랜드 뒤) */
 const WALK = { x0: -4.6, x1: 4.6, z0: -1.4, z1: 1.1 }
 /** 자리에서 요리할 때 아바타가 서는 곳 */
-const standAt = (k: Station) => (k === 'board' ? { x: 0, z: 0.95 } : { x: ART[k].x + (ART[k].x > 0 ? -1 : 1) * ART[k].w * 0.45, z: -1.2 })
+const standAt = (k: Station) => (k === 'board' ? { x: ART.board.x, z: 1.05 } : { x: ART[k].x + (ART[k].x > 0 ? -1 : 1) * ART[k].w * 0.45, z: -1.2 })
 
 export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: Outfit; tweaks: Tweaks; view: KitchenView; onStation: (s: Station) => void; line: string | null }) {
   const host = useRef<HTMLDivElement>(null)
@@ -55,7 +56,7 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
     const el = host.current
     if (!el) return
     const picks: THREE.Object3D[] = []
-    const goTo = { x: 0, z: 0.95 }
+    const goTo = { x: ART.board.x, z: 1.05 }
     const s = createStage(el, {
       sky: 0xffeef2, orbit: true, pitchRange: [0.3, 0.75], yawRange: [-0.3, 0.3],
       view: { yaw: 0, pitch: 0.42, dist: 12, target: [0, 1.2, 0] },
@@ -70,17 +71,19 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
       const { w, h } = s.size()
       const hf = 2 * Math.atan(Math.tan((s.camera.fov * Math.PI) / 360) * (w / h))
       s.view.dist = Math.max(9, 6.4 / Math.tan(hf / 2))
+      // 폰 세로(좁고 긴 화면): 양옆을 조금 잘라도 가까이, 위에서 더 내려다봐서 바닥이 화면 아래를 채우게
+      if (w < h) { s.view.dist = 3.9 / Math.tan(hf / 2); s.view.pitch = 0.52; s.view.target.set(-0.4, 1.3, 0) }
     }
     // 방: 나무 바닥 + 분홍 타일 벽
     // 받은 무늬 그림: 바닥 1장 = 4×4, 벽 1장 = 4×4 (타일 8칸이라 한 칸이 0.5)
-    const wood = s.texOf(assetUrl('kitchen/3d/wood.webp')); wood.wrapS = wood.wrapT = THREE.RepeatWrapping; wood.repeat.set(4, 2.5)
-    const floor = new THREE.Mesh(keep(new THREE.PlaneGeometry(16, 10)), keep(new THREE.MeshLambertMaterial({ map: wood })))
+    const wood = s.texOf(assetUrl('kitchen/3d/wood.webp')); wood.wrapS = wood.wrapT = THREE.RepeatWrapping; wood.repeat.set(4, 5)
+    const floor = new THREE.Mesh(keep(new THREE.PlaneGeometry(16, 20)), keep(new THREE.MeshLambertMaterial({ map: wood })))
     floor.rotation.x = -Math.PI / 2
-    floor.position.z = 1
+    floor.position.z = 6 // 바닥·벽은 넉넉하게(폰 세로처럼 긴 화면에서도 위아래가 비지 않게)
     floor.receiveShadow = true
-    const tile = s.texOf(assetUrl('kitchen/3d/tile.webp')); tile.wrapS = tile.wrapT = THREE.RepeatWrapping; tile.repeat.set(4, 1.75)
-    const wall = new THREE.Mesh(keep(new THREE.PlaneGeometry(16, 7)), keep(new THREE.MeshLambertMaterial({ map: tile })))
-    wall.position.set(0, 3.5, -3)
+    const tile = s.texOf(assetUrl('kitchen/3d/tile.webp')); tile.wrapS = tile.wrapT = THREE.RepeatWrapping; tile.repeat.set(4, 3.5)
+    const wall = new THREE.Mesh(keep(new THREE.PlaneGeometry(16, 14)), keep(new THREE.MeshLambertMaterial({ map: tile })))
+    wall.position.set(0, 7, -3)
     wall.receiveShadow = true
     scene.add(floor, wall)
     // 벽 선반(그림)
@@ -103,7 +106,7 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
     }
     // 아바타(아일랜드 뒤 가운데)와 같이 요리하는 친구(양옆)
     const me = s.paperDoll(null, 2.6, 1024 / 1536, 1504 / 1536, false)
-    me.root.position.set(0, 0, 0.95)
+    me.root.position.set(ART.board.x, 0, 1.05)
     const meGo = goTo
     let meDir: 1 | -1 = 1, lastHere: Station | null = null
     meRef.current = me
