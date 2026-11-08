@@ -64,7 +64,9 @@ export function TravelGame({ outfit, tweaks, onWear, onOutfit, onFull, onDecorat
   const [walk3d, setWalk3d] = useState(takeWalkNext)
   /** 3D 산책에서 집에 들어갔으면, 집에서 나올 때 다시 3D 산책으로 */
   const [backToWalk, setBackToWalk] = useState(false)
-  useEffect(() => { onFull?.(math || speaking || jump || soccer || flags || walk3d || (runner && wide)); return () => onFull?.(false) }, [math, speaking, jump, soccer, flags, walk3d, runner, wide, onFull])
+  // 전체 화면(여행 도감 숨김): 놀이 화면들, 3D 산책, 3D 산책에서 들어간 집 안(가로 화면만)
+  useEffect(() => { onFull?.(math || speaking || jump || soccer || flags || walk3d || (runner && wide) || (backToWalk && wide)); return () => onFull?.(false) }, [math, speaking, jump, soccer, flags, walk3d, runner, wide, backToWalk, onFull])
+
   const game = useGame()
   const ver = useItemsVersion()
   // eslint-disable-next-line react-hooks/exhaustive-deps

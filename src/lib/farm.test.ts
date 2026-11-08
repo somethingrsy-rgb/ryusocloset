@@ -160,6 +160,9 @@ describe('울타리(3D 농장)', () => {
     expect(reduceFarm(state, { type: 'fence', x: 1, z: 1, r: 0 }, 0)).toBe(state) // 코인 모자람
     expect(sanitizeFarm(JSON.parse(JSON.stringify(state))).fences).toEqual([[10, -2, 0], [10, -2, 1]])
     expect(reduceFarm(state, { type: 'unfence', x: 10, z: -2 }, 0).fences).toHaveLength(1)
+    const moved = reduceFarm(state, { type: 'movefence', from: [10, -2], x: 3.2, z: 8, r: 1 }, 0)
+    expect(moved.fences[0]).toEqual([3.2, 8, 1]); expect(moved.coins).toBe(state.coins) // 옮기는 데는 코인이 안 든다
+    expect(reduceFarm(state, { type: 'movefence', from: [99, 99], x: 1, z: 1, r: 0 }, 0)).toBe(state)
     expect(sanitizeFarm({ fences: [[1, 2, 3], ['a', 1, 0], [99, 0, 1]] }).fences).toEqual([[60, 0, 1]])
   })
 })
