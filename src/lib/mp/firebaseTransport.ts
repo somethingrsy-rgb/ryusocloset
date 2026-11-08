@@ -1,4 +1,5 @@
-/** Firebase Realtime Database 로 하는 연결. 경로: rooms/{room}/players/{uid}, rooms/{room}/chat/{id} (규칙은 database.rules.json) */
+/** Firebase Realtime Database 로 하는 연결. 경로: lobby/players/{uid}(지금 있는 곳 room 포함), lobby/chat/{id} (규칙은 database.rules.json).
+ *  한 번 들어가면 카페·농장·산책·다른 탭 어디에 있든 같이 놀기에 남아 있고 채팅은 모두와 한다 */
 import { child, get, limitToLast, onDisconnect, onValue, push, query, ref, remove, serverTimestamp, set, update, type DatabaseReference, type Unsubscribe } from 'firebase/database'
 import { connect } from './firebase'
 import { MAX_PLAYERS, sanePlayer, type ChatMsg, type PlayerState } from './core'
@@ -13,9 +14,9 @@ export function firebaseTransport(): Transport {
   let off: Unsubscribe[] = []
   let skew = 0
   return {
-    async join(room, state) {
+    async join(state) {
       const { user, db } = await connect()
-      const players = ref(db, `rooms/${room}/players`)
+      const players = ref(db, 'lobby/players')
       // 10명이 넘으면 들어가지 않는다(규칙으로는 사람 수를 셀 수 없어서 들어가기 전에 확인한다)
       const now = (await get(players)).val() as Record<string, unknown> | null
       const others = Object.keys(now ?? {}).filter((k) => k !== user.uid)
@@ -34,7 +35,7 @@ export function firebaseTransport(): Transport {
         s.forEach((c) => { const p = sanePlayer(c.val()); if (p && c.key) out[c.key] = p })
         playersCb(out)
       }))
-      chatRef = ref(db, `rooms/${room}/chat`)
+      chatRef = ref(db, 'lobby/chat')
       off.push(onValue(query(chatRef, limitToLast(30)), (s) => {
         const out: ChatMsg[] = []
         s.forEach((c) => {

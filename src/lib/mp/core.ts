@@ -4,6 +4,8 @@
  */
 export const ROOMS = ['cafe', 'farm', 'walk'] as const
 export type Room = (typeof ROOMS)[number]
+/** 플레이어가 지금 있는 곳: 3D 카페·농장·산책, 그 밖의 화면이면 'none'(채팅만) */
+export type Where = Room | 'none'
 export const MAX_PLAYERS = 10
 export const MAX_NAME = 12
 export const MAX_CHAT = 80
@@ -15,7 +17,7 @@ export const KEEPALIVE_MS = 5000
 export const STALE_MS = 15000
 
 export interface Look { avatar: string; outfit: Record<string, string> }
-export interface PlayerState { name: string; x: number; z: number; dir: 1 | -1; moving: boolean; look: Look; t: number }
+export interface PlayerState { name: string; room: Where; x: number; z: number; dir: 1 | -1; moving: boolean; look: Look; t: number }
 export interface ChatMsg { id: string; uid: string; name: string; text: string; t: number }
 
 export const cleanName = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, MAX_NAME) : '')
@@ -32,6 +34,7 @@ export function sanePlayer(v: unknown): PlayerState | null {
   if (look.outfit && typeof look.outfit === 'object') for (const [k, id] of Object.entries(look.outfit as Record<string, unknown>)) if (typeof id === 'string' && k.length < 24 && id.length < 80) outfit[k] = id
   return {
     name: cleanName(r.name) || '친구',
+    room: (ROOMS as readonly string[]).includes(r.room as string) ? (r.room as Room) : 'none',
     x: Math.max(-200, Math.min(200, r.x as number)), z: Math.max(-200, Math.min(200, r.z as number)),
     dir: r.dir === -1 ? -1 : 1, moving: r.moving === true,
     look: { avatar: typeof look.avatar === 'string' ? look.avatar.slice(0, 40) : '', outfit },

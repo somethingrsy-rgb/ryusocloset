@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
-import { MultiplayerBar } from './MultiplayerBar'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -695,7 +694,6 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
   return (
     <section aria-label="3D 농장" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none">
       <div ref={host} className="absolute inset-0" />
-      <MultiplayerBar room="farm" outfit={outfit} />
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex flex-wrap items-start justify-between gap-2">
         <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌱 3D 농장 <span className="text-xs font-bold text-black/40">시험판</span></span>
         <div className="pointer-events-auto flex items-center gap-1.5">

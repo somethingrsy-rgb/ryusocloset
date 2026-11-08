@@ -1,6 +1,6 @@
 # 같이 놀기(멀티플레이어) — `multiplayer-dev` 브랜치
 
-3D 카페·3D 농장·3D 산책에서 같은 공간에 최대 10명이 함께 걷고, 닉네임과 채팅을 주고받는다.
+한 번 「같이 놀기」에 들어가면 앱 어느 탭에 있든 계속 연결돼 있고 채팅은 모두와 한다(최대 10명). 3D 카페·농장·산책에서는 같은 곳에 있는 친구가 3D 로 보인다.
 Firebase 설정이 없는 빌드(지금의 GitHub Pages 배포)는 「👥 같이 놀기」 단추가 나오지 않고 예전과 똑같이 동작한다.
 
 ## 구조
@@ -9,15 +9,15 @@ Firebase 설정이 없는 빌드(지금의 GitHub Pages 배포)는 「👥 같�
 |---|---|
 | `src/lib/mp/config.ts` | 환경변수로 Firebase 설정이 있는지 확인(Firebase 를 불러오지 않음) |
 | `src/lib/mp/firebase.ts` | Firebase 앱·익명 로그인·Realtime Database 연결(이 파일만 Firebase 를 안다) |
-| `src/lib/mp/firebaseTransport.ts` | `rooms/{room}/players/{uid}`, `rooms/{room}/chat` 읽기·쓰기, `onDisconnect` 로 접속 정리, 10명 제한 |
+| `src/lib/mp/firebaseTransport.ts` | `lobby/players/{uid}`(지금 있는 곳 `room`: cafe·farm·walk·none), `lobby/chat` 읽기·쓰기, `onDisconnect` 로 접속 정리, 10명 제한 |
 | `src/lib/mp/localTransport.ts` | 시험용: `?mp=local` 이면 같은 브라우저의 탭끼리(BroadcastChannel) 연결 |
 | `src/lib/mp/core.ts` | 공통 규칙(인원·전송 주기·값 검사·보간) + 테스트 `core.test.ts` |
 | `src/lib/mp/session.ts` | 방 들어가기/나가기, 위치 보내기(최대 초당 8번, 움직였을 때만, 5초마다 생존 신호), 채팅 |
 | `src/components/remotePlayers3d.ts` | 3D 장면에 다른 플레이어(옷 입은 아바타 + 닉네임 + 채팅 말풍선)를 그리고 부드럽게 보간 |
-| `src/components/MultiplayerBar.tsx` | 「👥 같이 놀기」 단추, 닉네임, 인원, 채팅 칸 |
+| `src/components/MultiplayerBar.tsx` | 「👥 같이 놀기」 단추, 닉네임, 인원, 채팅 칸(App 이 화면 왼쪽에 늘 하나 그림) |
 | `database.rules.json` | 데이터베이스 보안 규칙 |
 
-기존 장면(`Cafe3D.tsx`·`Farm3D.tsx`·`Walk3D.tsx`)에는 `attachMultiplayer(w, '방')` 한 줄과 `<MultiplayerBar />` 한 줄만 더했다.
+기존 장면(`Cafe3D.tsx`·`Farm3D.tsx`·`Walk3D.tsx`)에는 `attachMultiplayer(w, '방')` 한 줄만 더했다(들어오면 그곳을, 나가면 'none' 을 알린다). `<MultiplayerBar />` 는 `App.tsx` 에 하나.
 Firebase SDK 는 「들어가기」를 누를 때 처음 받는다(동적 import, 별도 파일) → 멀티플레이어를 안 쓰면 앱 크기가 그대로다.
 
 ## 설정
@@ -29,7 +29,7 @@ Firebase SDK 는 「들어가기」를 누를 때 처음 받는다(동적 import
 3. Realtime Database > 규칙 에 `database.rules.json` 내용을 붙여 넣고 게시한다.
    - 로그인한(익명 포함) 사용자만 읽을 수 있고, 각자 자기 `players/{uid}` 만 쓰고 지울 수 있다.
    - 채팅은 자기 uid 로만 새 글을 쓰고, 자기 글만 지울 수 있다(남의 글 수정 불가). 이름 12자·채팅 80자·좌표 범위·필드 모양을 검사한다.
-   - 방은 `cafe`·`farm`·`walk` 셋만.
+   - `room` 은 `cafe`·`farm`·`walk`·`none` 중 하나.
 4. Authentication > 로그인 방법 에서 「익명」이 켜져 있는지 확인한다.
 
 ## 두 브라우저에서 동시 접속 시험

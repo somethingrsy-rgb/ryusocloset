@@ -2,39 +2,73 @@
   "rules": {
     ".read": false,
     ".write": false,
-    "rooms": {
-      "$room": {
-        ".validate": "$room === 'cafe' || $room === 'farm' || $room === 'walk'",
-        "players": {
-          ".read": "auth != null",
-          "$uid": {
-            ".write": "auth != null && auth.uid === $uid",
-            ".validate": "newData.hasChildren(['name', 'x', 'z', 'dir', 'moving', 'look', 't'])",
-            "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12" },
-            "x": { ".validate": "newData.isNumber() && newData.val() >= -200 && newData.val() <= 200" },
-            "z": { ".validate": "newData.isNumber() && newData.val() >= -200 && newData.val() <= 200" },
-            "dir": { ".validate": "newData.val() === 1 || newData.val() === -1" },
-            "moving": { ".validate": "newData.isBoolean()" },
-            "t": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
-            "look": {
-              "avatar": { ".validate": "newData.isString() && newData.val().length <= 40" },
-              "outfit": { "$slot": { ".validate": "newData.isString() && newData.val().length <= 80" } },
-              "$other": { ".validate": false }
+    "lobby": {
+      "players": {
+        ".read": "auth != null",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['name', 'room', 'x', 'z', 'dir', 'moving', 'look', 't'])",
+          "name": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12"
+          },
+          "room": {
+            ".validate": "newData.val() === 'cafe' || newData.val() === 'farm' || newData.val() === 'walk' || newData.val() === 'none'"
+          },
+          "x": {
+            ".validate": "newData.isNumber() && newData.val() >= -200 && newData.val() <= 200"
+          },
+          "z": {
+            ".validate": "newData.isNumber() && newData.val() >= -200 && newData.val() <= 200"
+          },
+          "dir": {
+            ".validate": "newData.val() === 1 || newData.val() === -1"
+          },
+          "moving": {
+            ".validate": "newData.isBoolean()"
+          },
+          "t": {
+            ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+          },
+          "look": {
+            "avatar": {
+              ".validate": "newData.isString() && newData.val().length <= 40"
             },
-            "$other": { ".validate": false }
+            "outfit": {
+              "$slot": {
+                ".validate": "newData.isString() && newData.val().length <= 80"
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "$other": {
+            ".validate": false
           }
-        },
-        "chat": {
-          ".read": "auth != null",
-          ".indexOn": ["t"],
-          "$msg": {
-            ".write": "auth != null && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && data.child('uid').val() === auth.uid))",
-            ".validate": "newData.hasChildren(['uid', 'name', 'text', 't'])",
-            "uid": { ".validate": "newData.val() === auth.uid" },
-            "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12" },
-            "text": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80" },
-            "t": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
-            "$other": { ".validate": false }
+        }
+      },
+      "chat": {
+        ".read": "auth != null",
+        ".indexOn": [
+          "t"
+        ],
+        "$msg": {
+          ".write": "auth != null && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && data.child('uid').val() === auth.uid))",
+          ".validate": "newData.hasChildren(['uid', 'name', 'text', 't'])",
+          "uid": {
+            ".validate": "newData.val() === auth.uid"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12"
+          },
+          "text": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80"
+          },
+          "t": {
+            ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+          },
+          "$other": {
+            ".validate": false
           }
         }
       }

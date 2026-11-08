@@ -15,8 +15,8 @@ export function localTransport(): Transport {
   const send = () => ch?.postMessage({ type: 'p', uid, state: { ...state, t: Date.now() } })
   const bye = () => ch?.postMessage({ type: 'bye', uid })
   return {
-    async join(room, me) {
-      ch = new BroadcastChannel(`ryuso-mp-${room}`)
+    async join(me) {
+      ch = new BroadcastChannel('ryuso-mp-lobby')
       state = { ...me }
       ch.onmessage = (e) => {
         const m = e.data as { type: string; uid: string; state?: unknown; msg?: ChatMsg }
