@@ -439,8 +439,9 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
           // 검: 손잡이(그림 오른쪽 위)를 화면 왼쪽 손에 쥐고 칼날은 바깥 아래로. 마법을 쏠 때 살짝 휘두른다
           wandSp.center.set(0.85, 0.87) // 손잡이 가운데
           wandSp.scale.set(1.25 * wp.aspect, 1.25, 1)
-          wandSp.material.rotation = Math.sin(now / 260) * 0.06 + swing * 0.9
-          wandSp.position.set(w.me.x + r.x * 0.47, 0.86, w.me.z + r.z * 0.47)
+          // 그림은 칼끝이 왼쪽 아래: 손잡이를 중심으로 돌려서 칼끝이 위(살짝 바깥쪽)로 서게
+          wandSp.material.rotation = -2.2 + Math.sin(now / 260) * 0.06 - swing * 0.9
+          wandSp.position.set(w.me.x + r.x * 0.47, 0.9, w.me.z + r.z * 0.47)
         } else {
           wandSp.center.set(0.5, 0.5)
           wandSp.scale.set(0.7, 0.7, 1)
