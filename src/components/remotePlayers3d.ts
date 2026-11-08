@@ -37,6 +37,12 @@ function labelCanvas(name: string, chat: string | null) {
 
 export function attachMultiplayer(w: World, room: Room) {
   const remotes = new Map<string, Remote>()
+  // 내 머리 위 말풍선(내가 방금 한 말): 다른 사람 것과 같은 모양
+  const mine = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false }))
+  mine.renderOrder = 8
+  mine.visible = false
+  w.scene.add(mine)
+  let mineKey = ''
   let gone = false
   const makeLabel = (r: Remote, p: PlayerState, chat: string | null) => {
     const key = `${p.name}|${chat ?? ''}`
@@ -64,6 +70,22 @@ export function attachMultiplayer(w: World, room: Room) {
     const mp = getMp()
     // 내 위치(방이 맞을 때만)
     if (mp.room === room) setPos(w.me.x, w.me.z, w.me.dir, w.me.moving)
+    // 내가 8초 안에 한 말이 있으면 내 머리 위에
+    const myLast = mp.room === room && mp.status === 'on' ? [...mp.chat].reverse().find((c) => c.uid === mp.uid && Date.now() - c.t < 8000) : undefined
+    mine.visible = !!myLast
+    if (myLast) {
+      const key = myLast.id
+      if (key !== mineKey) {
+        mineKey = key
+        const c = labelCanvas(myLast.name, myLast.text)
+        mine.material.map?.dispose()
+        mine.material.map = new THREE.CanvasTexture(c); mine.material.map.colorSpace = THREE.SRGBColorSpace; mine.material.needsUpdate = true
+        mine.scale.set(2.4, (2.4 * c.height) / c.width, 1)
+      }
+      mine.position.set(w.me.x, AVATAR_H + 0.35 + mine.scale.y / 2, w.me.z)
+    }
+    // 붙어 서 있으면 말풍선이 겹치지 않게 위로 쌓는다
+    const placed: { x: number; z: number; y0: number; y1: number }[] = mine.visible ? [{ x: w.me.x, z: w.me.z, y0: mine.position.y - mine.scale.y / 2, y1: mine.position.y + mine.scale.y / 2 }] : []
     const others = mp.room === room && mp.status === 'on' ? Object.entries(mp.players).filter(([uid]) => uid !== mp.uid) : []
     const seen = new Set<string>()
     const now = Date.now()
@@ -79,7 +101,7 @@ export function attachMultiplayer(w: World, room: Room) {
         remotes.set(uid, r)
       }
       drawLook(r, p)
-      const recent = [...mp.chat].reverse().find((c) => c.uid === uid && now - c.t < 6000)
+      const recent = [...mp.chat].reverse().find((c) => c.uid === uid && now - c.t < 8000)
       makeLabel(r, p, recent?.text ?? null)
       // 받은 위치로 부드럽게(보간)
       const k = follow(dt, 8)
@@ -89,7 +111,14 @@ export function attachMultiplayer(w: World, room: Room) {
       r.doll.root.position.set(r.x, 0, r.z)
       r.doll.body.position.y = moving ? Math.abs(Math.sin(r.t * 9)) * 0.12 : 0
       w.face(r.doll, p.dir)
-      r.label.position.set(r.x, AVATAR_H + 0.35 + r.label.scale.y / 2, r.z)
+      let y = AVATAR_H + 0.35 + r.label.scale.y / 2
+      for (let tries = 0; tries < 10; tries++) {
+        const hit = placed.find((q) => Math.hypot(q.x - r!.x, q.z - r!.z) < 2 && y + r!.label.scale.y / 2 > q.y0 && y - r!.label.scale.y / 2 < q.y1)
+        if (!hit) break
+        y = hit.y1 + r.label.scale.y / 2 + 0.05
+      }
+      placed.push({ x: r.x, z: r.z, y0: y - r.label.scale.y / 2, y1: y + r.label.scale.y / 2 })
+      r.label.position.set(r.x, y, r.z)
     }
     for (const [uid, r] of remotes) if (!seen.has(uid)) {
       w.scene.remove(r.doll.root); w.scene.remove(r.label); r.label.material.map?.dispose(); r.label.material.dispose()
@@ -98,6 +127,7 @@ export function attachMultiplayer(w: World, room: Room) {
   })
   return () => {
     gone = true
+    w.scene.remove(mine); mine.material.map?.dispose(); mine.material.dispose()
     for (const r of remotes.values()) { w.scene.remove(r.doll.root); w.scene.remove(r.label); r.label.material.map?.dispose(); r.label.material.dispose() }
     remotes.clear()
   }
