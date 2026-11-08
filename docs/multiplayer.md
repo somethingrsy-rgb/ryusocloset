@@ -9,7 +9,7 @@ Firebase 설정이 없는 빌드(지금의 GitHub Pages 배포)는 「👥 같�
 |---|---|
 | `src/lib/mp/config.ts` | 환경변수로 Firebase 설정이 있는지 확인(Firebase 를 불러오지 않음) |
 | `src/lib/mp/firebase.ts` | Firebase 앱·익명 로그인·Realtime Database 연결(이 파일만 Firebase 를 안다) |
-| `src/lib/mp/firebaseTransport.ts` | `lobby/players/{uid}`(지금 있는 곳 `room`: cafe·farm·walk·none), `lobby/chat` 읽기·쓰기, `onDisconnect` 로 접속 정리, 10명 제한 |
+| `src/lib/mp/firebaseTransport.ts` | `lobby/players/{uid}`(지금 있는 곳 `room`: cafe·farm·walk·none), `lobby/chat`, `lobby/boss`(같이 사냥하는 대왕 몬스터, 트랜잭션으로 💖 깎기) 읽기·쓰기, `onDisconnect` 로 접속 정리, 10명 제한 |
 | `src/lib/mp/localTransport.ts` | 시험용: `?mp=local` 이면 같은 브라우저의 탭끼리(BroadcastChannel) 연결 |
 | `src/lib/mp/core.ts` | 공통 규칙(인원·전송 주기·값 검사·보간) + 테스트 `core.test.ts` |
 | `src/lib/mp/session.ts` | 방 들어가기/나가기, 위치 보내기(최대 초당 8번, 움직였을 때만, 5초마다 생존 신호), 채팅 |
@@ -59,4 +59,5 @@ Firebase 없이 화면만 볼 때: `.env.local` 없이 `npm run dev` 후 `http:/
 
 - 10명 제한은 들어가기 전에 인원을 세는 방식이라, 여러 명이 정확히 동시에 들어오면 잠깐 11명이 될 수 있다(규칙으로는 사람 수를 셀 수 없다).
 - 채팅 글은 데이터베이스에 남는다(화면에는 최근 30개만). 오래된 글 정리는 나중에 Cloud Functions 나 수동으로.
-- 카페 손님·주문, 농장 밭, 몬스터는 각자 자기 화면의 것(공유하지 않음). 위치·방향·옷·닉네임·채팅만 공유한다.
+- 카페 손님·주문, 농장 밭, 작은 몬스터는 각자 자기 화면의 것(공유하지 않음). 위치·방향·옷·닉네임·채팅과 산책의 **대왕 몬스터** 하나만 공유한다.
+- 대왕 몬스터: 같이 놀기 중에 산책에 들어가면 보인다. 💖 40칸을 모두가 같이 채우고(한 번에 최대 3), 다 채우면 한 번이라도 친 사람은 30 코인. 풀리고 10초 뒤 길가 다른 곳에 새로 나온다. 규칙은 같은 몬스터의 hp 를 0~3 만큼 줄이기, 또는 풀리고 8초 지난 뒤 새 몬스터 내기만 허락한다(코인은 각자 기기에 저장되어 서버가 확인하지 않는다).

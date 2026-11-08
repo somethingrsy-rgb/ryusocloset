@@ -1,13 +1,15 @@
-/** Firebase Realtime Database 로 하는 연결. 경로: lobby/players/{uid}(지금 있는 곳 room 포함), lobby/chat/{id} (규칙은 database.rules.json).
+/** Firebase Realtime Database 로 하는 연결. 경로: lobby/players/{uid}(지금 있는 곳 room 포함), lobby/chat/{id}, lobby/boss(같이 사냥하는 대왕 몬스터) (규칙은 database.rules.json).
  *  한 번 들어가면 카페·농장·산책·다른 탭 어디에 있든 같이 놀기에 남아 있고 채팅은 모두와 한다 */
-import { child, get, limitToLast, onDisconnect, onValue, push, query, ref, remove, serverTimestamp, set, update, type DatabaseReference, type Unsubscribe } from 'firebase/database'
+import { child, get, limitToLast, onDisconnect, onValue, push, query, ref, remove, runTransaction, serverTimestamp, set, update, type DatabaseReference, type Unsubscribe } from 'firebase/database'
 import { connect } from './firebase'
-import { MAX_PLAYERS, sanePlayer, type ChatMsg, type PlayerState } from './core'
+import { MAX_PLAYERS, bossCanRespawn, bossHit, saneBoss, sanePlayer, type Boss, type ChatMsg, type PlayerState } from './core'
 import type { Transport } from './transport'
 
 export function firebaseTransport(): Transport {
   let me: DatabaseReference | null = null
   let chatRef: DatabaseReference | null = null
+  let bossRef: DatabaseReference | null = null
+  let bossCb: (b: Boss | null) => void = () => {}
   let last: Record<string, unknown> = {}
   let playersCb: (p: Record<string, PlayerState>) => void = () => {}
   let chatCb: (m: ChatMsg[]) => void = () => {}
@@ -44,6 +46,8 @@ export function firebaseTransport(): Transport {
         })
         chatCb(out)
       }))
+      bossRef = ref(db, 'lobby/boss')
+      off.push(onValue(bossRef, (s) => bossCb(saneBoss(s.val()))))
       return { uid: user.uid, full: false }
     },
     update(part) {
@@ -55,15 +59,27 @@ export function firebaseTransport(): Transport {
       if (!chatRef || !me) return
       push(chatRef, { uid: me.key, name, text, t: serverTimestamp() }).catch(() => {})
     },
+    hitBoss(id, power) {
+      if (!bossRef || !me) return
+      // 트랜잭션: 여럿이 동시에 쳐도 서로 덮어쓰지 않고 차례로 깎인다
+      runTransaction(bossRef, (cur) => { const b = bossHit(saneBoss(cur), id, power); return b ? { ...b, t: serverTimestamp() } : undefined }).catch(() => {})
+    },
+    spawnBoss(next) {
+      if (!bossRef || !me) return
+      const now = Date.now() + skew
+      runTransaction(bossRef, (cur) => (bossCanRespawn(saneBoss(cur), now) ? { ...next, t: serverTimestamp() } : undefined)).catch(() => {})
+    },
     leave() {
       for (const f of off) f()
       off = []
       if (me) { onDisconnect(me).cancel().catch(() => {}); remove(me).catch(() => {}) }
       me = null
       chatRef = null
+      bossRef = null
     },
     onPlayers(cb) { playersCb = cb },
     onChat(cb) { chatCb = cb },
+    onBoss(cb) { bossCb = cb },
     offset: () => skew,
   }
 }

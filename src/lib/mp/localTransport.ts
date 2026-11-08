@@ -1,5 +1,5 @@
 /** 시험용 연결(주소에 ?mp=local): 같은 브라우저의 다른 탭끼리 BroadcastChannel 로 주고받는다. Firebase 설정 없이 화면을 확인할 때 */
-import { MAX_PLAYERS, sanePlayer, type ChatMsg, type PlayerState } from './core'
+import { MAX_PLAYERS, bossCanRespawn, bossHit, saneBoss, sanePlayer, type Boss, type ChatMsg, type PlayerState } from './core'
 import type { Transport } from './transport'
 
 export function localTransport(): Transport {
@@ -11,6 +11,9 @@ export function localTransport(): Transport {
   let playersCb: (p: Record<string, PlayerState>) => void = () => {}
   let chatCb: (m: ChatMsg[]) => void = () => {}
   let beat = 0
+  let boss: Boss | null = null
+  let bossCb: (b: Boss | null) => void = () => {}
+  const setBoss = (b: Boss, tell: boolean) => { boss = b; bossCb(b); if (tell) ch?.postMessage({ type: 'boss', uid, boss: b }) }
   const emit = () => playersCb({ ...players })
   const send = () => ch?.postMessage({ type: 'p', uid, state: { ...state, t: Date.now() } })
   const bye = () => ch?.postMessage({ type: 'bye', uid })
@@ -21,7 +24,8 @@ export function localTransport(): Transport {
       ch.onmessage = (e) => {
         const m = e.data as { type: string; uid: string; state?: unknown; msg?: ChatMsg }
         if (m.type === 'p') { const p = sanePlayer(m.state); if (p) { players[m.uid] = { ...p, t: Date.now() }; emit() } }
-        else if (m.type === 'hi') send()
+        else if (m.type === 'hi') { send(); if (boss) ch?.postMessage({ type: 'boss', uid, boss }) }
+        else if (m.type === 'boss') { const b = saneBoss((m as { boss?: unknown }).boss); if (b && (!boss || b.id !== boss.id || b.hp < boss.hp)) setBoss(b, false) }
         else if (m.type === 'bye') { delete players[m.uid]; emit() }
         else if (m.type === 'chat' && m.msg) { chat.push(m.msg); chatCb(chat.slice(-30)) }
       }
@@ -40,6 +44,9 @@ export function localTransport(): Transport {
       chat.push(msg); chatCb(chat.slice(-30))
       ch?.postMessage({ type: 'chat', uid, msg })
     },
+    hitBoss(id, power) { const b = bossHit(boss, id, power); if (b) setBoss({ ...b, t: Date.now() }, true) },
+    spawnBoss(next) { if (bossCanRespawn(boss, Date.now())) setBoss({ ...next, t: Date.now() }, true) },
+    onBoss(cb) { bossCb = cb },
     leave() { bye(); clearInterval(beat); window.removeEventListener('pagehide', bye); ch?.close(); ch = null },
     onPlayers(cb) { playersCb = cb },
     onChat(cb) { chatCb = cb },

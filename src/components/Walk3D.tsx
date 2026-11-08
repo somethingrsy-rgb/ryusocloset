@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
+import { BOSS_MAX, bossCanRespawn } from '../lib/mp/core'
+import { getMp, hitBoss, serverNow, spawnBoss, subscribeMp } from '../lib/mp/session'
 import { EXTRA_ANIMALS, animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -91,6 +93,13 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
   const [battle, setBattle] = useState<{ k: number; t: number; hits: number; done: boolean; total?: number; say?: string } | null>(null)
   const battleRef = useRef<number | null>(null)
   battleRef.current = battle && !battle.done ? battle.k : null
+  // 같이 사냥(같이 놀기 중일 때 산책에 나오는 대왕 몬스터): 모두가 같은 하나를 보고, 💖 는 같이 채운다
+  const mpStatus = useSyncExternalStore(subscribeMp, () => getMp().status)
+  const [bossUi, setBossUi] = useState<{ type: number; hp: number; max: number; far: number; fight: boolean; friends: string[] } | null>(null)
+  const [bossDone, setBossDone] = useState<{ type: number; friends: string[] } | null>(null)
+  const bossFight = useRef(false)
+  const goBossRef = useRef<() => void>(() => {})
+  const restBossRef = useRef<() => void>(() => {})
   const [ownedList, setOwnedList] = useState(loadOwned)
   const owned = ownedOf(ownedList)
   const farmNow = useSyncExternalStore(subscribeFarm, getFarm)
@@ -130,8 +139,9 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
         const hs = houseOf.get(o)
         if (hs) { w.walkTo(hs.x, hs.z, () => enterHouse(hs), 0.6); return }
         // 몬스터: 마법 풀기 중이면 마법봉으로 톡, 아니면 가서 마법 풀기 시작
+        if (o === bossDoll.root) { if (bossFight.current) zapRef.current(); else if (battleRef.current === null) goBossRef.current(); return }
         const mk = monOf.get(o)
-        if (mk !== undefined) {
+        if (mk !== undefined && !bossFight.current) {
           if (battleRef.current === mk) zapRef.current()
           else if (battleRef.current === null) { const m = monsters[mk]; w.walkTo(m.x, m.z, () => startBattle(mk), 2.4) }
           return
@@ -405,6 +415,115 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       } })
     }
 
+    // ── 같이 사냥하는 대왕 몬스터 ──
+    // 서버(같이 놀기)에 하나만 있다: 없거나 풀리고 10초 지나면 누군가(먼저 한 사람) 길가 어딘가에 새로 낸다
+    const BH = MH * 1.7
+    const bossDoll = w.paperDoll(monTex(MONSTERS[0].id, 'angry'), BH, 1)
+    bossDoll.root.visible = false
+    w.pickables.push(bossDoll.root)
+    const bs = { id: '', type: 0, hp: 0, max: BOSS_MAX, x: 0, z: 0, shake: 0, spin: -1, happy: false, t: 0, cool: false, mine: 0 }
+    const myHits = new Set<string>()
+    let spawnTry = -1e9, uiKey = ''
+    const bossOn = () => bossDoll.root.visible && bs.hp > 0
+    const startBossFight = () => {
+      if (!bossOn() || battleRef.current !== null || talking.current !== null) return
+      bossFight.current = true; bs.cool = false
+      playOrder()
+      w.walkTo(w.me.x, w.me.z)
+    }
+    goBossRef.current = () => { if (bossOn()) w.walkTo(bs.x, bs.z, startBossFight, 5) }
+    restBossRef.current = () => { bossFight.current = false; bs.cool = true }
+    const bossSpot = () => {
+      for (let i = 0; i < 40; i++) {
+        const s = samples[Math.floor(Math.random() * samples.length)], a = Math.random() * Math.PI * 2, d = 3 + Math.random() * 4
+        const x = s.x + Math.cos(a) * d, z = s.z + Math.sin(a) * d
+        if (Math.abs(x) < WORLD - 6 && Math.abs(z) < WORLD - 6 && !w.obstacles.some((o) => Math.hypot(o.x - x, o.z - z) < o.r + 2.5)) return { x: Math.round(x * 10) / 10, z: Math.round(z * 10) / 10 }
+      }
+      return { x: samples[0].x, z: samples[0].z }
+    }
+    const nearFriends = (x: number, z: number, r: number) => { const mp = getMp(); return Object.entries(mp.players).filter(([uid, p]) => uid !== mp.uid && p.room === 'walk' && Math.hypot(p.x - x, p.z - z) < r).map(([, p]) => p) }
+    const bossTo = () => new THREE.Vector3(bs.x, BH * 0.5, bs.z)
+    const zapLocal = zapRef.current
+    zapRef.current = () => {
+      if (!bossFight.current) { zapLocal(); return }
+      swing = 1
+      if (!bossOn()) return
+      const wp = WEAPON_BY_ID[wandRef.current] ?? WANDS[0]
+      if (!wpTex.has(wp.fx)) wpTex.set(wp.fx, w.texOf(wp.fx === '✨' ? assetUrl(SPARKLE_IMG) : emojiCanvas(wp.fx)))
+      const ft = wpTex.get(wp.fx)!, id = bs.id, from = new THREE.Vector3(w.me.x, 1.4, w.me.z), to = bossTo()
+      playTap()
+      fx.push({ sp: spark(ft, from, 0.6 + wp.power * 0.2), v: new THREE.Vector3(), life: 0, max: 0.35, from, to, onHit: () => {
+        for (let i = 0; i < 3 + wp.power * 2; i++) fx.push({ sp: spark(i % 2 ? ft : fxTex[0], to, 0.5), v: new THREE.Vector3((Math.random() - 0.5) * 3, 1 + Math.random() * 2, (Math.random() - 0.5) * 3), life: 0, max: 0.6 })
+        if (id !== bs.id || bs.hp <= 0) return
+        myHits.add(id); bs.mine += wp.power; bs.shake = 0.3
+        hitBoss(id, wp.power)
+      } })
+    }
+    const bossFrame = (dt: number, now: number) => {
+      const mp = getMp(), b = mp.status === 'on' ? mp.boss : null
+      if (mp.status === 'on' && bossCanRespawn(b, serverNow()) && now - spawnTry > 3000) {
+        spawnTry = now
+        spawnBoss({ id: Math.random().toString(36).slice(2, 10), type: Math.floor(Math.random() * MONSTERS.length), ...bossSpot(), hp: BOSS_MAX, max: BOSS_MAX })
+      }
+      // 마법이 풀리고 6초 지나면 사라졌다가 새로 나온다
+      const show = !!b && (b.hp > 0 || serverNow() - b.t < 6000)
+      bossDoll.root.visible = show
+      if (!b || !show) { if (bossFight.current) bossFight.current = false; bs.hp = 0; if (uiKey) { uiKey = ''; setBossUi(null) } return }
+      const mat = bossDoll.doll.material as THREE.MeshBasicMaterial
+      if (b.id !== bs.id) {
+        const info = MONSTERS[b.type % MONSTERS.length]
+        Object.assign(bs, { id: b.id, type: b.type % MONSTERS.length, hp: b.hp, max: b.max, x: b.x, z: b.z, spin: -1, happy: b.hp <= 0, cool: false, mine: 0 })
+        mat.map = monTex(info.id, b.hp > 0 ? 'angry' : 'happy'); mat.needsUpdate = true
+        bossDoll.body.scale.set(info.size[0] / info.size[1], 1, 1)
+        bossDoll.root.position.set(b.x, 0, b.z)
+      } else if (b.hp < bs.hp) {
+        // 깎인 만큼: 내가 친 것 말고는 친구가 친 것 → 친구 쪽에서 반짝이가 날아온다
+        const dec = bs.hp - b.hp, mine = Math.min(dec, bs.mine)
+        bs.mine -= mine; bs.shake = 0.3
+        if (dec > mine) {
+          const fr = nearFriends(bs.x, bs.z, 14).sort((p, q) => Math.hypot(p.x - bs.x, p.z - bs.z) - Math.hypot(q.x - bs.x, q.z - bs.z))[0]
+          const a = Math.random() * Math.PI * 2, from = fr ? new THREE.Vector3(fr.x, 1.4, fr.z) : new THREE.Vector3(bs.x + Math.cos(a) * 3, 1.4, bs.z + Math.sin(a) * 3)
+          fx.push({ sp: spark(fxTex[2], from, 0.7), v: new THREE.Vector3(), life: 0, max: 0.35, from, to: bossTo() })
+        }
+        bs.hp = b.hp
+        if (b.hp <= 0 && !bs.happy) {
+          // 다 같이 마법을 풀었다: 빙글 돌며 웃는 얼굴로, 친 사람은 코인
+          bs.spin = 0
+          playServe()
+          const to = bossTo()
+          for (let i = 0; i < 36; i++) { const a = (i / 36) * Math.PI * 2; fx.push({ sp: spark(fxTex[i % 3], to.clone(), 0.8), v: new THREE.Vector3(Math.cos(a) * 4.5, 2 + Math.random() * 3, Math.sin(a) * 4.5), life: 0, max: 1.8 }) }
+          if (myHits.has(b.id)) {
+            actFarm({ type: 'earn', amount: 30 })
+            const names = nearFriends(bs.x, bs.z, 16).map((p) => p.name), type = bs.type
+            window.setTimeout(() => setBossDone({ type, friends: names }), 1000)
+          }
+          bossFight.current = false
+        }
+      }
+      bs.t += dt
+      const dMe = Math.hypot(w.me.x - bs.x, w.me.z - bs.z)
+      if (bs.cool && dMe > 10) bs.cool = false
+      if (bossFight.current && dMe > 10) bossFight.current = false
+      if (!bossFight.current && !bs.cool && bs.hp > 0 && battleRef.current === null && talking.current === null && dMe < 5.5) startBossFight()
+      // 움직임: 제자리에서 통통, 맞으면 흔들, 풀리면 빙글
+      w.face(bossDoll, w.me.x < bs.x ? -1 : 1)
+      let sx = 0
+      if (bs.shake > 0) { bs.shake -= dt; sx = Math.sin(bs.shake * 60) * 0.25 }
+      bossDoll.body.position.set(sx, Math.abs(Math.sin(bs.t * (bs.happy ? 3 : 2))) * (bs.happy ? 0.25 : 0.1), 0)
+      if (bs.spin >= 0) {
+        bs.spin += dt / 0.9
+        const u = Math.min(1, bs.spin), ease = 1 - Math.pow(1 - u, 3)
+        if (u >= 0.3 && !bs.happy) { bs.happy = true; mat.map = monTex(MONSTERS[bs.type].id, 'happy'); mat.needsUpdate = true }
+        if (bs.spin >= 1) { bs.spin = -1; bossDoll.root.scale.setScalar(1) }
+        else { bossDoll.body.rotation.y += ease * Math.PI * 6; bossDoll.body.position.y += Math.sin(u * Math.PI) * 0.9; bossDoll.root.scale.setScalar(1 + Math.sin(u * Math.PI) * 0.15) }
+      }
+      // 화면 글(바뀔 때만 React 로)
+      const friendsNow = nearFriends(bs.x, bs.z, 12).map((p) => p.name)
+      const far = bossFight.current ? 0 : Math.max(1, Math.round(dMe / 5) * 5)
+      const key = `${bs.id}|${b.hp}|${far}|${bossFight.current}|${friendsNow.join(',')}`
+      if (key !== uiKey) { uiKey = key; setBossUi(b.hp > 0 ? { type: bs.type, hp: b.hp, max: b.max, far, fight: bossFight.current, friends: friendsNow } : null) }
+    }
+
     let helpBk: number | null = null, helpers: typeof friends = []
     w.onFrame((dt, now) => {
       for (const st of stops) { st.sp.update(w.camera); w.face(st.sign, 1) }
@@ -421,7 +540,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
         m.t += dt
         if (m.cool && Math.hypot(w.me.x - m.x, w.me.z - m.z) > 6) m.cool = false // 도망갔다가 멀어지면 다시 만날 수 있다
         const dMe = Math.hypot(w.me.x - m.x, w.me.z - m.z)
-        if (!m.freed && !m.cool && bk === null && talking.current === null && dMe < 3.2) startBattle(m.k)
+        if (!m.freed && !m.cool && bk === null && !bossFight.current && talking.current === null && dMe < 3.2) startBattle(m.k)
         // 너무 멀어진 몬스터, 풀어 주고 한참 지난 몬스터는 아바타 둘레 다른 곳에 새 몬스터로
         if (bk !== m.k && m.spin < 0 && (dMe > 45 || (m.freed && now - m.freedAt > 20000 && dMe > 12))) spawn(m)
         // 돌아다니기: 제 자리 둘레를 천천히(마법 풀기 중인 몬스터는 멈춘다)
@@ -460,9 +579,11 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
           }
         }
       }
+      bossFrame(dt, now)
       // 마법봉은 전투 중에만 아바타 손에
-      wandSp.visible = bk !== null
-      if (bk !== null) {
+      const armed = bk !== null || bossFight.current
+      wandSp.visible = armed
+      if (armed) {
         const id = wandRef.current
         const wp = WEAPON_BY_ID[id]
         if (wp) { if (!wandTex.has(id)) wandTex.set(id, w.texOf(assetUrl(wp.img))); if (wandSp.material.map !== wandTex.get(id)) { wandSp.material.map = wandTex.get(id)!; wandSp.material.needsUpdate = true } }
@@ -607,6 +728,41 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
           </>
         )
       })()}
+      {/* 같이 사냥: 대왕 몬스터 */}
+      {mpStatus === 'on' && bossUi && !battle && !talk && (() => {
+        const m = MONSTERS[bossUi.type], pct = Math.round((1 - bossUi.hp / bossUi.max) * 100), wi = WEAPON_BY_ID[wand]
+        return bossUi.fight ? (
+          <>
+            <div role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-72 max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center shadow">
+              <p className="m-0 text-sm font-extrabold text-[#7a3d8f]">👑 대왕 {m.name} · 다 같이 마법 풀기!</p>
+              <div aria-label={`마법 풀기 ${pct}%`} className="mt-1 h-3 overflow-hidden rounded-full bg-[#f3dbe6]"><div className="h-full rounded-full bg-gradient-to-r from-[#c58bff] to-[#ff8fab] transition-all" style={{ width: `${pct}%` }} /></div>
+              <p className="m-0 mt-1 text-xs font-bold text-[#c0587a]">{bossUi.friends.length ? `🤝 ${bossUi.friends.join(', ')}와(과) 같이 싸우는 중` : '🐾 친구를 불러서 같이 풀어요!'}</p>
+            </div>
+            <div className="absolute inset-x-2 bottom-3 z-30 mx-auto flex w-fit max-w-full items-center gap-2 rounded-3xl bg-white/95 p-3 shadow-xl">
+              <button aria-label="마법봉 고르기" onClick={() => { playTap(); setPickWand(true) }} className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#e5cfa3] bg-[#fdf2d8]">
+                {wi ? <img src={assetUrl(wi.img)} alt="" className="h-11 w-11 object-contain" /> : '🪄'}
+              </button>
+              <button onClick={() => zapRef.current()} className="h-14 rounded-full bg-gradient-to-r from-[#c58bff] to-[#ff8fab] px-6 text-lg font-black text-white shadow-lg active:scale-95">✨ 마법!</button>
+              <button onClick={() => { playTap(); restBossRef.current(); setBossUi((u) => (u ? { ...u, fight: false } : u)) }} className="h-10 rounded-full bg-[#ffe4ec] px-3 text-sm font-bold">잠깐 쉬기</button>
+            </div>
+          </>
+        ) : (
+          <button onClick={() => { playTap(); goBossRef.current() }} className="absolute top-14 right-2 z-20 flex max-w-[13rem] items-center gap-1.5 rounded-2xl bg-white/95 px-2 py-1.5 text-left text-xs font-extrabold text-[#7a3d8f] shadow">
+            <img src={assetUrl(`travel/monster/${m.id}_angry.webp`)} alt="" className="h-9 w-9 shrink-0 object-contain" />
+            <span>👑 대왕 몬스터가 나타났어요!{pct ? ` (${pct}%)` : ''}<br /><span className="text-[#c0587a]">누르면 {bossUi.far}걸음 걸어가요</span></span>
+          </button>
+        )
+      })()}
+      {bossDone && (() => {
+        const m = MONSTERS[bossDone.type]
+        return (
+          <div role="dialog" aria-label="다 같이 마법을 풀었어요" className="absolute inset-x-2 bottom-3 z-30 mx-auto flex max-w-md items-center gap-3 rounded-3xl bg-white/95 p-3 shadow-xl">
+            <img src={assetUrl(`travel/monster/${m.id}_happy.webp`)} alt="" className="h-16 w-16 shrink-0 object-contain" />
+            <p className="m-0 flex-1 text-sm leading-snug font-bold text-[#6b4b52]">🎉 다 같이 대왕 {m.name}의 마법을 풀었어요!<br />{bossDone.friends.length ? `🤝 ${bossDone.friends.join(', ')} 고마워! · ` : ''}+30 코인</p>
+            <button onClick={() => { playTap(); setBossDone(null) }} className="min-h-11 shrink-0 rounded-full bg-[#ff8fab] px-4 text-sm font-bold text-white shadow">좋아요</button>
+          </div>
+        )
+      })()}
       {pickWand && (
         <div role="dialog" aria-label="마법봉 고르기" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) { setPickWand(false); setBuyWeapon(null) } }}>
           <div className="flex max-h-full w-full max-w-md flex-col rounded-3xl bg-[#fff8fb] p-4 shadow-2xl">
@@ -642,7 +798,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
         <button onClick={() => { playTap(); onGo(near) }} className="absolute inset-x-2 top-14 z-20 mx-auto h-12 w-fit rounded-full bg-[#ff8fab] px-5 text-base font-black text-white shadow-lg">{near === 'cafe' ? '☕ 카페로 가기' : '🧺 농장으로 가기'}</button>
       )}
       {hello && !battle && <p role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-fit max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center text-sm font-extrabold text-[#6b4b52] shadow">{hello}</p>}
-      {!talk && !battle && <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">땅을 누르면 걸어가요 · 옆으로 끌면 둘러봐요 · ✨ 줍고, 친구를 누르면 이야기해요</p>}
+      {!talk && !battle && !bossUi?.fight && !bossDone && <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">땅을 누르면 걸어가요 · 옆으로 끌면 둘러봐요 · ✨ 줍고, 친구를 누르면 이야기해요</p>}
       {!ready && <p className="absolute inset-0 z-20 m-0 flex items-center justify-center text-sm font-bold text-[#3d6b2f]">마을을 만드는 중…</p>}
 
       {gotItem && (

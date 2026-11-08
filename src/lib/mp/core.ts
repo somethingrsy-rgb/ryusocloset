@@ -52,3 +52,27 @@ export function shouldSend(last: { x: number; z: number; dir: number; moving: bo
 
 /** 부드럽게 따라가기: 한 프레임(dt 초)에 목표 쪽으로 다가가는 비율(프레임 빠르기와 상관없이 같은 느낌) */
 export const follow = (dt: number, rate = 10) => 1 - Math.exp(-rate * dt)
+
+/** 같이 사냥하는 대왕 몬스터(산책): 같이 놀기에 들어온 모두가 같은 하나를 본다. hp 가 0 이 되면 마법이 풀린 것 */
+export interface Boss { id: string; type: number; x: number; z: number; hp: number; max: number; t: number }
+/** 대왕 몬스터 💖 수, 한 번에 깎을 수 있는 가장 큰 힘(검 3) */
+export const BOSS_MAX = 40
+export const BOSS_POWER = 3
+/** 마법이 풀리고 이만큼 지나면 새 대왕 몬스터가 나온다(ms, 규칙은 8초) */
+export const BOSS_RESPAWN_MS = 10000
+
+export function saneBoss(v: unknown): Boss | null {
+  if (!v || typeof v !== 'object') return null
+  const r = v as Record<string, unknown>
+  const num = (n: unknown) => typeof n === 'number' && Number.isFinite(n)
+  if (typeof r.id !== 'string' || !num(r.type) || !num(r.x) || !num(r.z) || !num(r.hp) || !num(r.max) || !num(r.t)) return null
+  const max = Math.max(1, Math.min(60, r.max as number))
+  return { id: r.id.slice(0, 24), type: Math.max(0, Math.floor(r.type as number)), x: r.x as number, z: r.z as number, hp: Math.max(0, Math.min(max, r.hp as number)), max, t: r.t as number }
+}
+/** 마법 한 번(power 만큼 💖 채우기 = hp 깎기). 다른 몬스터거나 이미 풀렸으면 null */
+export function bossHit(b: Boss | null, id: string, power: number): Boss | null {
+  if (!b || b.id !== id || b.hp <= 0) return null
+  return { ...b, hp: Math.max(0, b.hp - Math.max(1, Math.min(BOSS_POWER, Math.floor(power)))) }
+}
+/** 새 대왕 몬스터를 내도 되는지: 아직 없거나, 풀리고 조금 지났을 때 */
+export const bossCanRespawn = (b: Boss | null, now: number) => !b || (b.hp <= 0 && now - b.t > BOSS_RESPAWN_MS)
