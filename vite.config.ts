@@ -20,7 +20,8 @@ export default defineConfig({
         theme_color: '#ffe9ef',
         background_color: '#fff7f0',
         display: 'standalone',
-        orientation: 'portrait',
+        // 가로·세로 모두(안드로이드는 홈 화면 앱에서 이 값을 지켜서 'portrait' 이면 가로가 막혔다)
+        orientation: 'any',
         start_url: './',
         scope: './',
         icons: [
