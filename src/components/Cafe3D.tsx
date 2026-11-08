@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { attachMultiplayer } from './remotePlayers3d'
+import { MultiplayerBar } from './MultiplayerBar'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -155,6 +157,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       onPick: (o) => { const g = gateRef.current; if (g && o === g.root) { following = null; w.walkTo(g.x, g.z, undefined, 0.3); return } approach(guests.indexOf(o)) },
     })
     world.current = w
+    // 같이 놀기(멀티플레이어): 켜지 않으면 아무것도 하지 않는다
+    const detachMp = attachMultiplayer(w, 'cafe')
     const { scene, keep, rnd } = w
     // 땅을 누르거나 끌면 따라가던 손님은 그만 따라간다(손님을 누른 것이면 onPick 이 다시 정한다)
     const stopFollow = () => { following = null }
@@ -364,7 +368,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         if (f) { f.style.transform = `translate(${pos.x}px, ${pos.y}px)`; f.style.visibility = pos.front ? 'visible' : 'hidden' }
       }
     })
-    return () => { el.removeEventListener('pointerdown', stopFollow); world.current = null; w.dispose() }
+    return () => { detachMp(); el.removeEventListener('pointerdown', stopFollow); world.current = null; w.dispose() }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 한 번만 만든다(arrive 는 처음 자리만 정한다)
 
   useEffect(() => {
@@ -376,6 +380,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   return (
     <div className="absolute inset-0">
       <div ref={host} className="absolute inset-0" />
+      <MultiplayerBar room="cafe" outfit={outfit} />
       {/* 농장 길을 넘어갈 때 하얗게 */}
       <div aria-hidden className="pointer-events-none absolute inset-0 z-[30] bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
       {Array.from({ length: 8 }, (_, i) => (
