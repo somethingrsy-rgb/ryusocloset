@@ -175,16 +175,24 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     // 누른 밭 둘레에 초록 LED 테두리(어느 밭을 눌렀는지 잘 보이게)
     const ledMat = keep(new THREE.MeshBasicMaterial({ color: 0x19e64f, transparent: true, opacity: 0.95, depthWrite: false }))
     const ledFill = keep(new THREE.MeshBasicMaterial({ color: 0x3dff6e, transparent: true, opacity: 0.3, depthWrite: false }))
-    const led = new THREE.Group()
     const lw = PW + 0.4, ld = PD + 0.4, t = 0.16
-    for (const [x, z, sx, sz] of [[0, -ld / 2, lw, t], [0, ld / 2, lw, t], [-lw / 2, 0, t, ld], [lw / 2, 0, t, ld]]) {
-      const bar = new THREE.Mesh(keep(new THREE.BoxGeometry(sx, 0.06, sz)), ledMat); bar.position.set(x, 0, z); led.add(bar)
+    const barGeos = [[lw, t], [lw, t], [t, ld], [t, ld]].map(([sx, sz]) => keep(new THREE.BoxGeometry(sx, 0.06, sz))), fillGeo = keep(new THREE.PlaneGeometry(lw, ld))
+    const makeLed = () => {
+      const g = new THREE.Group()
+      ;[[0, -ld / 2], [0, ld / 2], [-lw / 2, 0], [lw / 2, 0]].forEach(([x, z], k) => { const bar = new THREE.Mesh(barGeos[k], ledMat); bar.position.set(x, 0, z); g.add(bar) })
+      const fill = new THREE.Mesh(fillGeo, ledFill); fill.rotation.x = -Math.PI / 2; fill.position.y = 0.17; g.add(fill)
+      g.visible = false
+      scene.add(g)
+      return g
     }
-    const fill = new THREE.Mesh(keep(new THREE.PlaneGeometry(lw, ld)), ledFill); fill.rotation.x = -Math.PI / 2; fill.position.y = 0.17; led.add(fill)
-    led.visible = false
-    scene.add(led)
-    let ledUntil = 0
-    showLed = (i: number) => { const p = plotAt(i); led.position.set(p.x, 0.26, p.z); led.visible = true; ledUntil = performance.now() + 2600 }
+    const ledAt = (g: THREE.Group, i: number) => { const p = plotAt(i); g.position.set(p.x, 0.26, p.z); g.visible = true }
+    // 누른 밭(심기·물주기·수확 모두): 누른 뒤 2.6초 + 그 밭 일을 마칠 때까지 켜 둔다
+    const led = makeLed()
+    let ledUntil = 0, ledPlot = -1
+    showLed = (i: number) => { ledAt(led, i); ledPlot = i; ledUntil = performance.now() + 2600 }
+    // 일하는 밭: 물주기·수확 버튼으로 아바타가 도는 밭, 친구가 일하는 밭에도 켠다
+    const choreLed = makeLed()
+    const friendLeds = [makeLed(), makeLed()]
     // 누르기 쉽게: 밭보다 조금 크고 높은 보이지 않는 상자를 누르는 자리로
     const hitGeo = keep(new THREE.BoxGeometry(PW + GAP * 0.9, 1.4, PD + GAP * 0.9)), hitMat = keep(new THREE.MeshBasicMaterial({ visible: false }))
     const cropTex = new Map<string, THREE.Texture>()
@@ -359,13 +367,15 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     const unsubFriends = subscribeFarmFriends(() => { const k = getFarmFriends().join(); if (k !== friendKey) { friendKey = k; makeFriends() } })
 
     // 물주기·수확 버튼(혼자 할 때, 또는 옆 밭): 아바타가 밭을 차례로 돌며 한다
-    let choreId = 0
+    let choreId = 0, choreCur = -1
     choreRef.current = (kind, list) => {
       const id = ++choreId
       const next = (k: number) => {
-        if (id !== choreId || k >= list.length) return
+        if (id !== choreId || k >= list.length) { if (id === choreId) choreCur = -1; return }
         const i = list[k], p = plotAt(i)
         busy.add(i)
+        choreCur = i
+        ledAt(choreLed, i)
         w.walkTo(p.x, p.z + PD / 2 + 0.6, () => window.setTimeout(() => {
           busy.delete(i)
           const plot = getFarm().plots[i]
@@ -375,7 +385,8 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       }
       next(0)
     }
-    el.addEventListener('pointerdown', () => { choreId++ }) // 땅·밭을 직접 누르면 돌던 일은 멈춘다
+    // 땅·밭을 직접 누르면 돌던 일은 멈춘다(가던 밭은 다시 누를 수 있게 풀어 둔다)
+    el.addEventListener('pointerdown', () => { choreId++; if (choreCur >= 0) { busy.delete(choreCur); choreCur = -1 } })
 
     let repaint = 0
     // 카페 가는 길: 농장 문에서 앞(+z)으로 곧게, 문 옆에 표지판
@@ -397,10 +408,13 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       w.face(sign, 1)
       if (!leaving && onCafeRef.current && w.me.z > CAFE_GATE) { leaving = true; setFade(true); window.setTimeout(() => onCafeRef.current?.(), 450) }
       repaint += dt
-      if (led.visible) { const left = ledUntil - performance.now(); if (left <= 0) led.visible = false; else ledMat.opacity = 0.55 + 0.4 * Math.abs(Math.sin(performance.now() / 160)) }
+      if (led.visible && ledUntil < performance.now() && !busy.has(ledPlot)) led.visible = false
+      if (choreLed.visible && choreCur < 0) choreLed.visible = false
+      ledMat.opacity = 0.55 + 0.4 * Math.abs(Math.sin(performance.now() / 160))
       if (repaint > 0.5) { repaint = 0; paint() } // 자라는 단계는 시간이 지나면 바뀐다
       for (const p of plots) if (p.mark.visible) p.mark.position.y = (p.mark.material === iconMats.lock || p.mark.material === iconMats.add ? 0.6 : 1.6) + Math.sin(performance.now() / 300 + p.box.position.x) * 0.12
       const jobs = getFriendJobs()
+      friendLeds.forEach((g, k) => { const j = friends[k] && jobs[friends[k].g]; if (j) ledAt(g, j.plot); else g.visible = false })
       for (const f of friends) {
         f.t += dt
         const job = jobs[f.g]
