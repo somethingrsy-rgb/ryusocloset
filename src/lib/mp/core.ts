@@ -73,7 +73,7 @@ export function saneBoss(v: unknown): Boss | null {
 }
 /** 마법 한 번(power 만큼 💖 채우기 = hp 깎기). 다른 몬스터거나 이미 풀렸으면 null */
 export function bossHit(b: Boss | null, id: string, power: number): Boss | null {
-  if (!b || b.id !== id || b.hp <= 0) return null
+  if (!b || b.id !== id || b.hp <= 0 || !Number.isFinite(power)) return null
   return { ...b, hp: Math.max(0, b.hp - Math.max(1, Math.min(BOSS_POWER, Math.floor(power)))) }
 }
 /** 새 대왕 몬스터를 내도 되는지: 아직 없거나, 풀리고 조금 지났을 때 */

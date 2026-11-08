@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { attachMultiplayer } from './remotePlayers3d'
 import { MultiplayerBoss } from './MultiplayerBoss'
+import { attachBossBattle, type BossBattle } from './bossBattle3d'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -132,6 +133,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   const anchors = useRef<(HTMLDivElement | null)[]>([])
   const floats = useRef<(HTMLDivElement | null)[]>([])
   const world = useRef<World | null>(null)
+  const [bossBattle, setBossBattle] = useState<BossBattle | null>(null)
   const state = useRef({ walking, hold, paused, encounters, onMeet, eating, menus })
   state.current = { walking, hold, paused, encounters, onMeet, eating, menus }
   const approachRef = useRef<(i: number) => void>(() => {})
@@ -159,6 +161,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     world.current = w
     // 같이 놀기(멀티플레이어): 켜지 않으면 아무것도 하지 않는다
     const detachMp = attachMultiplayer(w, 'cafe')
+    const battle = attachBossBattle(w, 'cafe')
+    setBossBattle(battle)
     const { scene, keep, rnd } = w
     // 땅을 누르거나 끌면 따라가던 손님은 그만 따라간다(손님을 누른 것이면 onPick 이 다시 정한다)
     const stopFollow = () => { following = null }
@@ -368,7 +372,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         if (f) { f.style.transform = `translate(${pos.x}px, ${pos.y}px)`; f.style.visibility = pos.front ? 'visible' : 'hidden' }
       }
     })
-    return () => { detachMp(); el.removeEventListener('pointerdown', stopFollow); world.current = null; w.dispose() }
+    return () => { battle.dispose(); detachMp(); el.removeEventListener('pointerdown', stopFollow); world.current = null; w.dispose() }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 한 번만 만든다(arrive 는 처음 자리만 정한다)
 
   useEffect(() => {
@@ -393,7 +397,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
           <div className="absolute -translate-x-1/2" style={{ top: -110 }}>{float(i)}</div>
         </div>
       ))}
-      <MultiplayerBoss />
+      <MultiplayerBoss battle={bossBattle} />
     </div>
   )
 }
