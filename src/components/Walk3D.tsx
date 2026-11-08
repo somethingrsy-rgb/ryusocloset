@@ -12,7 +12,8 @@ import { toggleItem } from '../lib/outfit'
 import { playOrder, playServe, playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { GuestDresser } from './GuestDresser'
-import { ANIMAL_H, HOUSE_ART, TREE_ART, createWorld, showBack, emojiCanvas, type Doll, type World } from './world3d'
+import { cafeShopSprite, stallSprite } from './viewSprite3d'
+import { ANIMAL_H, HOUSE_ART, TREE_ART, createWorld, showBack, signCanvas, emojiCanvas, type Doll, type World } from './world3d'
 
 /**
  * 3D 산책 (시험판): 마을은 3D(길·나무·집·꽃·구름)이고, 아바타와 동물 친구는 지금 그림을 세운 '종이 인형'이다.
@@ -37,6 +38,10 @@ const loadRescued = () => { try { const n = Number(localStorage.getItem(RESCUE_K
 const MONSTER_SLOTS = 6
 const WANDS = ITEMS.filter((i) => i.category === 'wand')
 const SPARKLES = 10
+/** 산책길: 한 바퀴 이어진 고리(끝이 다시 처음과 이어져서 걷다 보면 처음 자리로 돌아온다) */
+const loopCurve = () => new THREE.CatmullRomCurve3(Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2, r = WORLD * 0.62 + Math.sin(i * 2.3) * 7; return new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r) }), true)
+/** 처음 카메라 방향: 아바타 뒤에서 길 앞쪽을 보게 */
+const startYaw = () => { const t = loopCurve().getTangentAt(20 / 240); return Math.atan2(-t.x, -t.z) }
 
 const hash = (s: string) => {
   let h = 2166136261
@@ -44,7 +49,9 @@ const hash = (s: string) => {
   return h >>> 0
 }
 
-export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void }) {
+export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void; /** 길가 카페·농장 노점에서 그쪽 화면으로 */ onGo?: (to: 'cafe' | 'farm') => void }) {
+  const [near, setNear] = useState<'cafe' | 'farm' | null>(null)
+  const nearRef = useRef<'cafe' | 'farm' | null>(null)
   const host = useRef<HTMLDivElement>(null)
   const world = useRef<World | null>(null)
   const [ready, setReady] = useState(false)
@@ -75,7 +82,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     const friendOf = new Map<THREE.Object3D, number>()
     const friends: { animal: number; doll: Doll; x: number; z: number; tx: number; tz: number; wait: number; dir: 1 | -1; t: number }[] = []
     const w = createWorld(el, {
-      bounds: WORLD, start: { x: 0, z: 0 }, yaw: Math.PI, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
+      bounds: WORLD, start: { x: 0, z: 0 }, yaw: startYaw(), grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 친구를 누르면 그 친구 앞까지 걸어가서 이야기를 시작한다
       onPick: (o) => {
         // 몬스터: 마법 풀기 중이면 마법봉으로 톡, 아니면 가서 마법 풀기 시작
@@ -102,7 +109,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     const { scene, rnd, keep, lambert } = w
 
     // 산책길: 구불구불한 흙길(카페 흙길 그림) + 길가 돌멩이
-    const curve = new THREE.CatmullRomCurve3(Array.from({ length: 9 }, (_, i) => new THREE.Vector3(Math.sin(i * 1.3) * 9, 0, -WORLD + (i * WORLD * 2) / 8)))
+    const curve = loopCurve()
     const samples = curve.getSpacedPoints(240)
     w.me.x = samples[20].x; w.me.z = samples[20].z
     const roadW = 3.4
@@ -146,6 +153,22 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       const n = new THREE.Vector3(-t.z, 0, t.x).normalize().multiplyScalar((k % 2 ? 1 : -1) * 6.5)
       const art = HOUSE_ART[k % HOUSE_ART.length]
       w.addProp(art.img, p.x + n.x, p.z + n.z, 6, art.aspect, 2.5)
+    })
+
+    // 길가에 카페 가게와 농장 노점: 길에서 갈래 흙길로 이어지고, 가까이 가면 「카페로 / 농장으로」 단추
+    const stops = ([[0.3, 'cafe'], [0.72, 'farm']] as const).map(([u, to]) => {
+      const p = curve.getPointAt(u), t = curve.getTangentAt(u)
+      const out = new THREE.Vector3(p.x, 0, p.z).normalize() // 고리 바깥쪽
+      const bx = p.x + out.x * 9, bz = p.z + out.z * 9
+      w.addCurvePath([[p.x, p.z], [p.x + out.x * 4 + t.x * 0.6, p.z + out.z * 4 + t.z * 0.6], [bx - out.x * 1.6, bz - out.z * 1.6]], 2.4)
+      const sp = to === 'cafe' ? cafeShopSprite(w) : stallSprite(w)
+      sp.root.position.set(bx, 0, bz)
+      sp.root.rotation.y = Math.atan2(-out.x, -out.z) // 앞이 길 쪽
+      scene.add(sp.root)
+      w.obstacles.push({ x: bx, z: bz, r: to === 'cafe' ? 2.4 : 1.7 })
+      const sign = w.paperDoll(w.texOf(signCanvas(to === 'cafe' ? '☕ 카페' : '🧺 농장', '이쪽으로')), 2, 1)
+      sign.root.position.set(p.x + out.x * 2.6 + t.x * 2.2, 0, p.z + out.z * 2.6 + t.z * 2.2)
+      return { to, sp, sign, x: bx - out.x * 3, z: bz - out.z * 3 }
     })
 
     // 나무: 절반은 길가에, 나머지는 들판에
@@ -203,7 +226,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
     // 마법에 걸린 몬스터: 아바타 둘레(길가·숲속 어디든)에 여섯이 돌아다닌다. 풀어 주거나 멀리 떨어지면 다른 곳에 새 몬스터가 나온다
     let rescuedCount = loadRescued()
     const monTexCache = new Map<string, THREE.Texture>()
-    const monTex = (id: string, mood: 'angry' | 'happy') => { const k = `${id}_${mood}`; if (!monTexCache.has(k)) monTexCache.set(k, w.texOf(assetUrl(`travel/monster/${k}.webp`))); return monTexCache.get(k)! }
+    const monTex = (id: string, mood: 'angry' | 'happy' | 'back') => { const k = `${id}_${mood}`; if (!monTexCache.has(k)) monTexCache.set(k, w.texOf(assetUrl(`travel/monster/${k}.webp`))); return monTexCache.get(k)! }
     const MH = ANIMAL_H * 1.35
     type Mon = { k: number; type: number; id: string; doll: Doll; x: number; z: number; hx: number; hz: number; tx: number; tz: number; wait: number; dir: 1 | -1; h: number; happy: boolean; freed: boolean; freedAt: number; hits: number; cool: boolean; shake: number; spin: number; t: number }
     const monsters: Mon[] = []
@@ -235,10 +258,16 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
       monsters.push(m)
       spawn(m, 8, 24)
     }
+    /** 몬스터 앞모습(무서운·귀여운 얼굴)/뒷모습(걸어서 멀어질 때) */
+    const monFace = (m: Mon, back: boolean) => {
+      const mat = m.doll.doll.material as THREE.MeshBasicMaterial, want = back ? monTex(m.id, 'back') : monTex(m.id, m.happy ? 'happy' : 'angry')
+      if (mat.map !== want) { mat.map = want; mat.needsUpdate = true }
+    }
     const monOf = new Map(monsters.map((m) => [m.doll.root as THREE.Object3D, m.k]))
     const startBattle = (k: number) => {
       if (battleRef.current !== null || talking.current !== null || monsters[k].freed) return
       monsters[k].hits = 0
+      monFace(monsters[k], false)
       // 아바타 옆(화면에서 오른쪽)으로 와서 선다: 아바타에 가려지지 않게
       { const m = monsters[k], cx = w.me.x - w.camera.position.x, cz = w.me.z - w.camera.position.z, l = Math.hypot(cx, cz) || 1, rx = -cz / l, rz = cx / l
         const nx = w.me.x - rx * 2.4 + (cx / l) * 0.8, nz = w.me.z - rz * 2.4 + (cz / l) * 0.8
@@ -291,6 +320,9 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
 
     let helpBk: number | null = null, helpers: typeof friends = []
     w.onFrame((dt, now) => {
+      for (const st of stops) { st.sp.update(w.camera); w.face(st.sign, 1) }
+      const nearStop = stops.find((st) => Math.hypot(w.me.x - st.x, w.me.z - st.z) < 4)?.to ?? null
+      if (nearStop !== nearRef.current) { nearRef.current = nearStop; setNear(nearStop) }
       // 몬스터: 가까이 가면 마법 풀기 시작, 맞으면 흔들, 다 풀리면 빙글 돌며 얼굴이 바뀐다
       const bk = battleRef.current
       for (const m of monsters) {
@@ -302,7 +334,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
         if (bk !== m.k && m.spin < 0 && (dMe > 45 || (m.freed && now - m.freedAt > 20000 && dMe > 12))) spawn(m)
         // 돌아다니기: 제 자리 둘레를 천천히(마법 풀기 중인 몬스터는 멈춘다)
         if (bk !== m.k && m.spin < 0) {
-          if (m.wait > 0) m.wait -= dt
+          if (m.wait > 0) { m.wait -= dt; monFace(m, false) }
           else {
             const dx = m.tx - m.x, dz = m.tz - m.z, d = Math.hypot(dx, dz)
             if (d < 0.15) {
@@ -311,6 +343,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
             } else {
               const sp = m.happy ? 1.4 : 0.9
               m.x += (dx / d) * sp * dt; m.z += (dz / d) * sp * dt
+              monFace(m, walkingAway(dx, dz, m.x, m.z, w.camera.position.x, w.camera.position.z))
               w.pushOut(m, 0.5)
               const side = w.screenSide(dx, dz)
               if (Math.abs(side) > 0.05) m.dir = side > 0 ? 1 : -1
@@ -472,6 +505,9 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit }: { outfit: Outfit; t
             </div>
           </div>
         </div>
+      )}
+      {near && !battle && !talk && onGo && (
+        <button onClick={() => { playTap(); onGo(near) }} className="absolute inset-x-2 top-14 z-20 mx-auto h-12 w-fit rounded-full bg-[#ff8fab] px-5 text-base font-black text-white shadow-lg">{near === 'cafe' ? '☕ 카페로 가기' : '🧺 농장으로 가기'}</button>
       )}
       {hello && !battle && <p role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-fit max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center text-sm font-extrabold text-[#6b4b52] shadow">{hello}</p>}
       {!talk && !battle && <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">땅을 누르면 걸어가요 · 옆으로 끌면 둘러봐요 · ✨ 줍고, 친구를 누르면 이야기해요</p>}

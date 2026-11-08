@@ -456,6 +456,7 @@ export default function App() {
                 onFull={handleFull}
                 onDecorate={decorateWith}
                 onKitchen={() => setMode('kitchen')}
+                onGo={(to) => setMode(to)}
               />
             ) : mode === 'closet' ? (
               <Stage
