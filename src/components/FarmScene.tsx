@@ -88,10 +88,10 @@ interface Stroll { x: number; y: number; ms: number; dir: 1 | -1; until: number 
 
 const stageOf = (wateredAt: number | null, progress: number) => (wateredAt === null ? 1 : progress >= 1 ? 4 : progress < 0.4 ? 2 : 3)
 
-// 3D 농장(시험판): three.js 가 커서 누를 때만 받는다
+// 3D 농장: three.js 가 커서 누를 때만 받는다
 const Farm3D = lazy(() => import('./Farm3D').then((m) => ({ default: m.Farm3D })))
 
-export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe, onWalk }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void; onOutfit: (next: Outfit) => void; /** 3D 농장에서 카페 가는 길 끝까지 걸어가면 */ onCafe?: () => void; /** 분홍 성(산책길)으로 */ onWalk?: () => void }) {
+export function FarmScene({ outfit, tweaks, onKitchen, onCafe, onWalk }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void; /** 3D 농장에서 카페 가는 길 끝까지 걸어가면 */ onCafe?: () => void; /** 분홍 성(산책길)으로 */ onWalk?: () => void }) {
   // 3D 카페에서 걸어왔으면 3D 농장을 열고 카페 가는 길 끝에서 시작한다
   const [arrived] = useState(() => isArriving('fromCafe'))
   useEffect(() => { if (arrived) clearArrival() }, [arrived])
@@ -424,7 +424,7 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe, onWalk 
         {/* 위쪽: 코인 */}
         <div className="absolute flex items-center gap-1" style={{ right: '2.5%', top: '1.8%', zIndex: 12 }}>
           {/* 같이 농사지을 친구 고르기: 고른 친구 얼굴(혼자면 🐾) */}
-          <button aria-label="3D 농장 (시험판)" onClick={() => setFarm3d(true)} className={PILL}><PillText>3D</PillText></button>
+          <button aria-label="3D 농장" onClick={() => setFarm3d(true)} className={PILL}><PillText>3D</PillText></button>
           {/* 큰 밭 ↔ 옆 울타리 밭 */}
           <button aria-label={field === 'main' ? (ko ? '옆 밭 보기' : 'Side field') : (ko ? '큰 밭 보기' : 'Main field')} onClick={() => { setField((f) => (f === 'main' ? 'side' : 'main')); setBuying(null); setPos(null) }} className={PILL}><PillText>{field === 'main' ? (ko ? '옆 밭 ▶' : 'Side ▶') : (ko ? '◀ 큰 밭' : '◀ Main')}</PillText></button>
           <button aria-label={ko ? '같이 농사지을 친구' : 'Farm friends'} onClick={() => setPicking(true)} className={PILL}>
@@ -474,8 +474,8 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe, onWalk 
         <PartyInvite here={[]} initial={friends} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`아바타 친구와 수학으로 모은 동물 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
           cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
       )}
-      {/* 3D 농장(시험판): 농장 화면 위를 덮는다(농장 노래는 그대로 이어진다) */}
-      {farm3d && <div className="absolute inset-0 z-50"><Suspense fallback={null}><Farm3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setFarm3d(false)} arrive={arrived} onCafe={onCafe} onKitchen={onKitchen} onWalk={onWalk} /></Suspense></div>}
+      {/* 3D 농장: 농장 화면 위를 덮는다(농장 노래는 그대로 이어진다) */}
+      {farm3d && <div className="absolute inset-0 z-50"><Suspense fallback={null}><Farm3D outfit={outfit} tweaks={tweaks} onExit={() => setFarm3d(false)} arrive={arrived} onCafe={onCafe} onKitchen={onKitchen} onWalk={onWalk} /></Suspense></div>}
     </section>
   )
 }

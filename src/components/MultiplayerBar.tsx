@@ -5,6 +5,7 @@
  * Firebase 설정이 없으면(지금의 배포처럼) 아무것도 그리지 않는다 → 기존 화면 그대로.
  */
 import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 import { listen, speechSupported } from '../lib/mp/speech'
 import { getAvatar } from '../lib/avatars'
 import { multiplayerAvailable } from '../lib/mp/config'
@@ -23,11 +24,17 @@ const INVITE_MS = 3 * 60 * 1000
 
 /** 놀이 화면이 아래쪽 단추를 쓰기 시작할 때 보내는 신호(말하는 줄을 닫는다) */
 export const HUD_BUSY = 'ryuso:hud-busy'
+/** 👥 단추를 놓을 자리(화면 제목 옆 등): 그 화면이 ref={mpDock} 으로 빈 칸을 주면 단추가 그 안으로 간다 */
+let dockEl: HTMLElement | null = null
+const dockSubs = new Set<() => void>()
+export const mpDock = (el: HTMLElement | null) => { if (dockEl === el) return; dockEl = el; dockSubs.forEach((f) => f()) }
+const subscribeDock = (f: () => void) => { dockSubs.add(f); return () => { dockSubs.delete(f) } }
 const FADE_MS = 8000
 const IDLE_MS = 20000
 
 export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** 화면 아래 왼쪽에 큰 단추가 있는 화면(방)이면 말하는 줄을 그 위로 올린다 */ lift?: boolean }) {
   const mp = useSyncExternalStore(subscribeMp, getMp)
+  const dock = useSyncExternalStore(subscribeDock, () => dockEl)
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(savedName)
   const [text, setText] = useState('')
@@ -72,13 +79,17 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
   const n = Object.keys(mp.players).length
   const btn = 'h-9 rounded-full px-3 text-sm font-black shadow'
   const say1 = (t: string) => { say(t); touch() }
-  return (
-    <>
-      {/* 👥 단추(위 왼쪽) + 들어가기 칸 */}
-      <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: 'max(22%, 7rem)' }}>
+  const mainBtn = (
         <button aria-label="같이 놀기" aria-expanded={open} onClick={() => { setOpen((o) => !o); setHistory(false); setAskLeave(false); touch() }} className={`pointer-events-auto ${btn} ${on ? 'bg-[#7a3d8f] text-white' : 'bg-white/95 text-[#7a3d8f]'}`}>
           👥 {on ? `${n}/${MAX_PLAYERS}` : '같이 놀기'}{on && <span className="ml-1 text-xs">{open ? '▾' : '💬'}</span>}
         </button>
+  )
+  return (
+    <>
+      {dock && createPortal(mainBtn, dock)}
+      {/* 👥 단추(위 왼쪽, 화면이 자리를 주면 그 자리) + 들어가기 칸 */}
+      <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: dock ? '3.5rem' : 'max(22%, 7rem)' }}>
+        {!dock && mainBtn}
         {showInvite && invite && (
           <div role="dialog" aria-label="집 초대" className="pointer-events-auto flex w-full items-center gap-1.5 rounded-2xl bg-white/95 p-2 shadow-lg">
             <p className="m-0 flex-1 text-xs leading-snug font-bold text-[#6b4b52]">🏠 <b className="text-[#7a3d8f]">{invite.name}</b>네 집에 초대받았어요!</p>
