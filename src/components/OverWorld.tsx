@@ -1,4 +1,3 @@
-import { mpDock } from './MultiplayerBar'
 import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { Sparkle } from './Sparkle'
 import { useI18n } from '../i18n'
@@ -340,7 +339,6 @@ export function OverWorld({ reach, chunk, outfit, tweaks, onEnter, paused = fals
       })()}
       <div className="absolute top-2 left-2 right-2 z-10 flex min-w-0 flex-wrap items-center gap-1">
         <div className="flex min-w-0 flex-wrap items-center gap-1" onPointerUp={e => e.stopPropagation()}>{actions}</div>
-        <div ref={mpDock} className="flex basis-full" />
       </div>
     </div>
   )

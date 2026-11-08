@@ -56,7 +56,7 @@ export function localTransport(): Transport {
     hitBoss(id, power) { const b = bossHit(boss, id, power); if (b) setBoss({ ...b, t: Date.now() }, true) },
     spawnBoss(next) { if (bossCanRespawn(boss, Date.now())) setBoss({ ...next, t: Date.now() }, true) },
     onBoss(cb) { bossCb = cb },
-    async openHome(home) { homes[uid] = { ...home, t: Date.now() }; ch?.postMessage({ type: 'home', uid, home: homes[uid] }); tellWatch(uid) },
+    openHome(home) { homes[uid] = { ...home, t: Date.now() }; ch?.postMessage({ type: 'home', uid, home: homes[uid] }); tellWatch(uid) },
     closeHome() { delete homes[uid]; ch?.postMessage({ type: 'home', uid, home: null }); tellWatch(uid) },
     watchHome(host, cb) { const w = { host, cb }; watchers.add(w); cb(homes[host] ?? null, Object.values(foods[host] ?? {})); return () => { watchers.delete(w) } },
     addFood(host, food) { const f: Food = { ...food, id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, t: Date.now() }; (foods[host] ??= {})[f.id] = f; ch?.postMessage({ type: 'food+', uid, host, food: f }); tellWatch(host) },

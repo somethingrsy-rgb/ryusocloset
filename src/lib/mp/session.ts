@@ -76,10 +76,6 @@ export function setPos(x: number, z: number, dir: 1 | -1, moving: boolean) {
   lastSent = { ...pos, at }
   tr.update(pos)
 }
-/** Only the visible home scene may send coordinates for the active visit. */
-export function setHomePos(host: string, x: number, y: number, dir: 1 | -1, moving: boolean) {
-  if (state.room === 'home' && state.host === host && (!state.visiting || state.visiting === host)) setPos(x, y, dir, moving)
-}
 export function setLook(look: Look) { tr?.update({ look }) }
 /** 3D 카페·농장·산책에 들어오고 나갈 때(나가면 'none'). 들어오기 전 상태에서도 기억해 둔다 */
 export function setWhere(room: Where, host: string | null = null) {
@@ -109,24 +105,19 @@ function watch(host: string) {
 }
 function unwatch() { stopWatch?.(); stopWatch = null; watching = null; if (state.home || state.foods.length) set({ home: null, foods: [] }) }
 /** 지금 있는 곳(방 꾸밈 또는 장소)을 친구들에게 열고 모두에게 초대장(초대 글)을 보낸다 */
-let inviteAttempt = 0
-export async function inviteHome(room: unknown, text = '🏠 우리집에 놀러 와! 같이 간식 먹자 🍰') {
-  const transport = tr, uid = state.uid
-  if (!transport || !uid) return false
-  const attempt = ++inviteAttempt
+export function inviteHome(room: unknown, text = '🏠 우리집에 놀러 와! 같이 간식 먹자 🍰') {
+  if (!tr || !state.uid) return
   // Firebase 는 undefined 값을 받지 않아서 JSON 으로 한 번 걸러 보낸다
-  try { await transport.openHome({ name: myName, room: JSON.parse(JSON.stringify(room ?? null)) }) } catch { return false }
-  if (attempt !== inviteAttempt || tr !== transport) return false
+  tr.openHome({ name: myName, room: JSON.parse(JSON.stringify(room ?? null)) })
   set({ hosting: true })
-  watch(uid)
+  watch(state.uid)
   say(text, true)
-  return true
 }
 /** 내 방 화면에 들어오면 부른다: 이미 연 집이면 친구들·음식을 다시 본다 */
 export function enterMyHome() { if (state.hosting && state.uid) watch(state.uid) }
 /** 내 방 화면을 나가면 집을 닫는다(놀러 와 있던 친구들은 돌아간다) */
 export function closeHome() {
-  inviteAttempt++
+  if (!state.hosting) return
   tr?.closeHome()
   set({ hosting: false })
   if (watching === state.uid) unwatch()

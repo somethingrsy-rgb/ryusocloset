@@ -17,13 +17,6 @@ export function firebaseTransport(): Transport {
   let chatCb: (m: ChatMsg[]) => void = () => {}
   let off: Unsubscribe[] = []
   let skew = 0
-  let openRoom: Omit<Home, 't'> | null = null
-  async function publishRoom(room: Omit<Home, 't'>) {
-    if (!db || !me) throw new Error('Not connected')
-    const r = ref(db, `lobby/homes/${uid}`)
-    await onDisconnect(r).remove()
-    if (openRoom === room && me) await set(r, { ...room, t: serverTimestamp() })
-  }
   return {
     async join(state) {
       const { user, db: d } = await connect()
@@ -39,7 +32,6 @@ export function firebaseTransport(): Transport {
       // 다시 연결될 때마다: 끊기면 내 자리를 지우도록 걸어 두고, 내 상태를 다시 쓴다
       off.push(onValue(ref(db, '.info/connected'), (s) => {
         if (s.val() !== true) return
-        if (openRoom) void publishRoom(openRoom).catch(() => {})
         onDisconnect(meRef).remove().then(() => set(meRef, { ...last, t: serverTimestamp() })).catch(() => {})
       }))
       off.push(onValue(ref(db, '.info/serverTimeOffset'), (s) => { skew = Number(s.val()) || 0 }))
@@ -80,13 +72,13 @@ export function firebaseTransport(): Transport {
       const now = Date.now() + skew
       runTransaction(bossRef, (cur) => (bossCanRespawn(saneBoss(cur), now) ? { ...next, t: serverTimestamp() } : undefined)).catch(() => {})
     },
-    async openHome(home) {
-      const previous = openRoom
-      openRoom = home
-      try { await publishRoom(home) } catch (e) { if (openRoom === home) openRoom = previous; throw e }
+    openHome(home) {
+      if (!db || !uid) return
+      const r = ref(db, `lobby/homes/${uid}`)
+      onDisconnect(r).remove().catch(() => {})
+      set(r, { ...home, t: serverTimestamp() }).catch(() => {})
     },
     closeHome() {
-      openRoom = null
       if (!db || !uid) return
       const r = ref(db, `lobby/homes/${uid}`)
       onDisconnect(r).cancel().catch(() => {})
@@ -108,7 +100,6 @@ export function firebaseTransport(): Transport {
       remove(ref(db, `lobby/food/${host}/${id}`)).catch(() => {})
     },
     leave() {
-      openRoom = null
       for (const f of off) f()
       off = []
       if (me) { onDisconnect(me).cancel().catch(() => {}); remove(me).catch(() => {}) }

@@ -4,7 +4,7 @@
  * 서비스 계정 비공개 키는 쓰지 않는다: 브라우저는 익명 로그인 + 데이터베이스 보안 규칙(database.rules.json)으로만 접근한다.
  */
 import { initializeApp, type FirebaseApp } from 'firebase/app'
-import { initializeAuth, inMemoryPersistence, signInAnonymously, type Auth, type User } from 'firebase/auth'
+import { getAuth, onAuthStateChanged, signInAnonymously, type User } from 'firebase/auth'
 import { getDatabase, type Database } from 'firebase/database'
 
 export const firebaseConfig = {
@@ -17,16 +17,18 @@ export const firebaseConfig = {
 
 let app: FirebaseApp | null = null
 let db: Database | null = null
-let auth: Auth | null = null
 let userP: Promise<User> | null = null
 
-/** One anonymous identity per page prevents open tabs from writing to the same player. */
+/** 익명 로그인한 사용자(처음 한 번만 로그인, 같은 브라우저면 같은 uid 를 다시 쓴다)와 데이터베이스 */
 export function connect(): Promise<{ user: User; db: Database }> {
   if (!app) {
     app = initializeApp(firebaseConfig)
-    auth = initializeAuth(app, { persistence: inMemoryPersistence })
     db = getDatabase(app)
   }
-  userP ??= signInAnonymously(auth!).then(({ user }) => user).catch((e) => { userP = null; throw e })
+  const auth = getAuth(app)
+  userP ??= new Promise<User>((resolve, reject) => {
+    const off = onAuthStateChanged(auth, (u) => { if (u) { off(); resolve(u) } }, reject)
+    signInAnonymously(auth).catch((e) => { off(); userP = null; reject(e) })
+  })
   return userP.then((user) => ({ user, db: db! }))
 }

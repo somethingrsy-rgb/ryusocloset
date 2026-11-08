@@ -56,6 +56,7 @@ const FarmScene = lazy(() => import('./components/FarmScene').then((m) => ({ def
 const ShopModal = lazy(() => import('./components/ShopModal').then((m) => ({ default: m.ShopModal })))
 const TravelGame = lazy(() => import('./components/TravelGame').then((m) => ({ default: m.TravelGame })))
 // 방 3D 보기: three.js 가 커서 3D 를 켤 때만 받는다
+const Room3D = lazy(() => import('./components/Room3D').then((m) => ({ default: m.Room3D })))
 
 /** 되돌리기: 이 시간(ms) 안에 이어지는 조절은 한 번으로 묶고, 최대 이만큼 기억한다 */
 const UNDO_GAP_MS = 500
@@ -382,6 +383,8 @@ export default function App() {
   const wide = useWideScreen()
   const [travelFull, setTravelFull] = useState(false)
   /** 방을 3D 로 보기. 고른 것은 기억한다 */
+  const [room3d, setRoom3d] = useState(() => { try { return localStorage.getItem('ryuso.room.3d') === '1' } catch { return false } })
+  const toggleRoom3d = () => { const v = !room3d; setRoom3d(v); try { localStorage.setItem('ryuso.room.3d', v ? '1' : '0') } catch { /* 이번만 */ } }
   const full = (mode === 'travel' || mode === 'walk') && travelFull
   const handleFull = useCallback((v: boolean) => setTravelFull(v), [])
   const split = wide && mode !== 'farm' && mode !== 'cafe' && mode !== 'kitchen' && mode !== 'shop' && mode !== 'walk'
@@ -481,15 +484,29 @@ export default function App() {
                 </div>
               </Stage>
             ) : (
+              room3d ? (
+              <Room3D assets={sceneAssets(scene, sceneState.night, sceneState.wallId, sceneState.floorId)} outfit={outfit} tweaks={tweaks} room={sceneState} selection={selection} onSelect={setSelection} onChange={editRoom}>
+                <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
+                  {fab(t('goCloset'), '👗', () => setMode('closet'))}
+                  {room.wallId === 'camp' && fab(room.night ? t('campDay') : t('campNight'), room.night ? '☀️' : '🌙', () => editRoom({ ...room, night: !room.night }))}
+                  {fab(t('roomUndo'), '↶', undoRoom, undefined, !canUndoRoom)}
+                  {fab(t('roomReset'), '🧹', resetRoom)}
+                  {fab(lang === 'ko' ? '3D로 보기' : '3D view (beta)', '🧊', toggleRoom3d)}
+                </div>
+              <button onClick={() => setModal('sendToGame')} className="absolute bottom-3 left-3 z-20 min-h-12 rounded-full bg-blush px-4 font-bold text-white shadow-md">🎮 {lang === 'ko' ? '게임에 보내기' : 'Send to game'}</button>
+              </Room3D>
+              ) : (
               <RoomView onViewportChange={value => { exportViewport.current = value }} key={scene} assets={sceneAssets(scene, sceneState.night, sceneState.wallId, sceneState.floorId)} outfit={outfit} tweaks={tweaks} room={sceneState} selection={selection} onSelect={setSelection} onChange={editRoom} canUndo={canUndoRoom} onUndo={undoRoom}>
                 <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
                   {fab(t('goCloset'), '👗', () => setMode('closet'))}
                   {room.wallId === 'camp' && fab(room.night ? t('campDay') : t('campNight'), room.night ? '☀️' : '🌙', () => editRoom({ ...room, night: !room.night }))}
                   {fab(t('roomUndo'), '↶', undoRoom, undefined, !canUndoRoom)}
                   {fab(t('roomReset'), '🧹', resetRoom)}
+                  {fab(lang === 'ko' ? '3D로 보기' : '3D view (beta)', '🧊', toggleRoom3d)}
                 </div>
               <button onClick={() => setModal('sendToGame')} className="absolute bottom-3 left-3 z-20 min-h-12 rounded-full bg-blush px-4 font-bold text-white shadow-md">🎮 {lang === 'ko' ? '게임에 보내기' : 'Send to game'}</button>
               </RoomView>
+              )
             )}
             </Suspense>
             {/* 같이 놀기: 한 번 들어가면 어느 탭에 있든 계속(채팅도 계속). 설정이 없으면 그리지 않는다 */}

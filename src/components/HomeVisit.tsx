@@ -17,7 +17,6 @@ import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
 import { FoodPicker, HomeFriends, menuName } from './HomeFriends'
 import { Ico } from './CafeGame'
-import { mpVisitDock } from './MultiplayerBar'
 
 /** 받은 집 데이터 → 꾸민 방(room) 또는 장소 그림(place) */
 export function homeScene(raw: unknown) {
@@ -35,8 +34,6 @@ export function HomeVisit({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }
   // (돌아갈 때는 leaveVisit 이 원래 있던 곳으로 되돌린다)
   useEffect(() => { setWhere('home', host) }, [host])
   const where = useMemo(() => (mp.home ? homeScene(mp.home.room) : null), [mp.home])
-  const seenOpen = useRef(false)
-  useEffect(() => { if (mp.home) seenOpen.current = true }, [mp.home])
   const layout = where?.kind === 'room' ? where : null
   const place = where?.kind === 'place' ? where : null
   const title = where?.title ?? '집'
@@ -145,10 +142,9 @@ export function HomeVisit({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }
           {hearts > 0 && <span key={hearts} aria-hidden className="pointer-events-none absolute text-4xl" style={{ left: `${pos.x}%`, top: `${pos.y - 45}%`, zIndex: z + 5, animation: 'float-up 1.4s ease-out forwards' }}>💖</span>}
         </div>
       ) : (
-        <p className="m-0 rounded-2xl bg-white/95 px-4 py-3 text-center text-sm font-bold text-[#6b4b52] shadow">{waited ? (seenOpen.current ? '🚪 방과 연결이 끊겼어요. 잠시 기다리거나 새 초대를 받아 주세요.' : '🏠 방을 불러오지 못했어요. 새 초대를 받아 다시 시도해 주세요.') : `🏠 ${hostName}에게 가는 중…`}</p>
+        <p className="m-0 rounded-2xl bg-white/95 px-4 py-3 text-center text-sm font-bold text-[#6b4b52] shadow">{waited ? `🚪 ${hostName}가 문을 닫았어요` : `🏠 ${hostName}에게 가는 중…`}</p>
       )}
       <div className="absolute top-2 left-2 right-2 z-[20000] flex flex-wrap items-center gap-2">
-        <span ref={mpVisitDock} className="flex shrink-0" />
         <button onClick={() => { playTap(); leaveVisit() }} className={`${btn} bg-white/90 ring-1 ring-black/5`}>🚪 돌아가기</button>
         <span className={`${btn} bg-white/90 text-[#7a3d8f]`}>{place ? place.place.icon : '🏠'} {label}</span>
         {where && <>
