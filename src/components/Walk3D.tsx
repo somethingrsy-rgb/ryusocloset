@@ -333,6 +333,9 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
     const wandSp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true, depthWrite: false })))
     wandSp.scale.set(0.7, 0.7, 1)
     wandSp.visible = false
+    // 몸·옷·머리에 가리지 않게 늘 맨 앞에 그린다
+    wandSp.material.depthTest = false
+    wandSp.renderOrder = 10
     scene.add(wandSp)
     let swing = 0
     fleeRef.current = () => { const k = battleRef.current; if (k !== null) monsters[k].cool = true }
@@ -442,10 +445,12 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
           const fx = w.camera.position.x - w.me.x, fz = w.camera.position.z - w.me.z, fl = Math.hypot(fx, fz) || 1
           wandSp.position.set(w.me.x + r.x * 0.47 + (fx / fl) * 0.45, 0.9, w.me.z + r.z * 0.47 + (fz / fl) * 0.45)
         } else {
-          wandSp.center.set(0.5, 0.5)
-          wandSp.scale.set(0.7, 0.7, 1)
-          wandSp.material.rotation = 0
-          wandSp.position.set(w.me.x - r.x * 0.55, 1.25 + Math.sin(now / 200) * 0.05, w.me.z - r.z * 0.55)
+          // 마법봉: 예전의 2.5배. 손잡이(그림 왼쪽 아래)를 화면 왼쪽 손에 쥐고 끝은 위로(살짝 바깥쪽). 마법을 쏠 때 검처럼 휘두른다
+          wandSp.center.set(0.4, 0.18)
+          wandSp.scale.set(1.75, 1.75, 1)
+          wandSp.material.rotation = 0.3 + Math.sin(now / 260) * 0.06 + swing * 1.1
+          const fx = w.camera.position.x - w.me.x, fz = w.camera.position.z - w.me.z, fl = Math.hypot(fx, fz) || 1
+          wandSp.position.set(w.me.x + r.x * 0.47 + (fx / fl) * 0.45, 0.9, w.me.z + r.z * 0.47 + (fz / fl) * 0.45)
         }
         swing = Math.max(0, swing - dt * 4)
       }
