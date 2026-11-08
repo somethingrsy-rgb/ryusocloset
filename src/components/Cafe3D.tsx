@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { attachMultiplayer } from './remotePlayers3d'
-import { MultiplayerBar } from './MultiplayerBar'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -380,7 +379,6 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   return (
     <div className="absolute inset-0">
       <div ref={host} className="absolute inset-0" />
-      <MultiplayerBar room="cafe" outfit={outfit} />
       {/* 농장 길을 넘어갈 때 하얗게 */}
       <div aria-hidden className="pointer-events-none absolute inset-0 z-[30] bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
       {Array.from({ length: 8 }, (_, i) => (

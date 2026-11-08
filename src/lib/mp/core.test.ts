@@ -10,7 +10,7 @@ describe('멀티플레이어 규칙', () => {
   it('받은 플레이어 값이 이상하면 버리거나 고친다', () => {
     expect(sanePlayer({ x: 'a', z: 1, t: 1 })).toBeNull()
     const p = sanePlayer({ name: '', x: 999, z: -3, dir: 7, moving: 'y', t: 5, look: { avatar: 'yuha', outfit: { dress: 'd1', bad: 3 } } })!
-    expect(p).toEqual({ name: '친구', x: 200, z: -3, dir: 1, moving: false, look: { avatar: 'yuha', outfit: { dress: 'd1' } }, t: 5 })
+    expect(p).toEqual({ name: '친구', room: 'none', x: 200, z: -3, dir: 1, moving: false, look: { avatar: 'yuha', outfit: { dress: 'd1' } }, t: 5 })
   })
   it('위치는 너무 자주 보내지 않고, 움직였을 때·오래됐을 때만 보낸다', () => {
     const last = { x: 0, z: 0, dir: 1, moving: false, at: 1000 }

@@ -9,7 +9,7 @@ import * as THREE from 'three'
 import { AVATARS } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
 import { follow, type PlayerState, type Room } from '../lib/mp/core'
-import { getMp, setPos } from '../lib/mp/session'
+import { getMp, setPos, setWhere } from '../lib/mp/session'
 import { AVATAR_H, FEET, type Doll, type World } from './world3d'
 
 interface Remote { doll: Doll; label: THREE.Sprite; labelKey: string; x: number; z: number; t: number; lookKey: string }
@@ -37,6 +37,7 @@ function labelCanvas(name: string, chat: string | null) {
 
 export function attachMultiplayer(w: World, room: Room) {
   const remotes = new Map<string, Remote>()
+  setWhere(room)
   // 내 머리 위 말풍선(내가 방금 한 말): 다른 사람 것과 같은 모양
   const mine = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false }))
   mine.renderOrder = 8
@@ -69,7 +70,7 @@ export function attachMultiplayer(w: World, room: Room) {
     if (gone) return
     const mp = getMp()
     // 내 위치(방이 맞을 때만)
-    if (mp.room === room) setPos(w.me.x, w.me.z, w.me.dir, w.me.moving)
+    setPos(w.me.x, w.me.z, w.me.dir, w.me.moving)
     // 내가 8초 안에 한 말이 있으면 내 머리 위에
     const myLast = mp.room === room && mp.status === 'on' ? [...mp.chat].reverse().find((c) => c.uid === mp.uid && Date.now() - c.t < 8000) : undefined
     mine.visible = !!myLast
@@ -86,7 +87,7 @@ export function attachMultiplayer(w: World, room: Room) {
     }
     // 붙어 서 있으면 말풍선이 겹치지 않게 위로 쌓는다
     const placed: { x: number; z: number; y0: number; y1: number }[] = mine.visible ? [{ x: w.me.x, z: w.me.z, y0: mine.position.y - mine.scale.y / 2, y1: mine.position.y + mine.scale.y / 2 }] : []
-    const others = mp.room === room && mp.status === 'on' ? Object.entries(mp.players).filter(([uid]) => uid !== mp.uid) : []
+    const others = mp.room === room && mp.status === 'on' ? Object.entries(mp.players).filter(([uid, p]) => uid !== mp.uid && p.room === room) : []
     const seen = new Set<string>()
     const now = Date.now()
     for (const [uid, p] of others) {
@@ -127,6 +128,7 @@ export function attachMultiplayer(w: World, room: Room) {
   })
   return () => {
     gone = true
+    if (getMp().room === room) setWhere('none')
     w.scene.remove(mine); mine.material.map?.dispose(); mine.material.dispose()
     for (const r of remotes.values()) { w.scene.remove(r.doll.root); w.scene.remove(r.label); r.label.material.map?.dispose(); r.label.material.dispose() }
     remotes.clear()
