@@ -104,7 +104,7 @@ const AVATAR = {
 /** 다른 탭(농장·여행 등)에 다녀와도 손님·주문·아바타 자리가 그대로 남도록 화면 밖에 기억해 둔다 (앱을 완전히 닫으면 새로 시작) */
 let kept: { guests: Guest[]; pos: { x: number; y: number; wide: boolean } | null; hold: string | null } | null = null
 
-export function CafeGame({ outfit, tweaks, onKitchen, onFarm }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void; /** 3D 카페에서 농장 가는 길 끝까지 걸어가면 */ onFarm?: () => void }) {
+export function CafeGame({ outfit, tweaks, onKitchen, onFarm, onWalk }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void; /** 3D 카페에서 농장 가는 길 끝까지 걸어가면 */ onFarm?: () => void; /** 분홍 성(산책길)으로 */ onWalk?: () => void }) {
   const { lang } = useI18n()
   const tx = T[lang]
   const [st, setSt] = useState<Saved>(loadSaved)
@@ -242,7 +242,7 @@ export function CafeGame({ outfit, tweaks, onKitchen, onFarm }: { outfit: Outfit
 
   return (
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-hidden rounded-3xl bg-[#b9c97a] ring-1 ring-black/5" style={{ containerType: 'size' }}>
-      {view3d ? <Suspense fallback={null}><Cafe3D outfit={outfit} tweaks={tweaks} eating={eating} walking={walking} hold={hold} paused={!!phone} encounters={guests.map((g, i) => g.stage === 'new' ? `new:${g.wish}` : isReady(i) ? `ready:${g.wish}` : '')} onMeet={(i) => tap(i, true)} menus={guests.map((g) => MENU[g.wish]?.id ?? '')} bubble={bubbleFor} float={floatFor} arrive={arrived} onFarm={onFarm} /></Suspense> : <>
+      {view3d ? <Suspense fallback={null}><Cafe3D outfit={outfit} tweaks={tweaks} eating={eating} walking={walking} hold={hold} paused={!!phone} encounters={guests.map((g, i) => g.stage === 'new' ? `new:${g.wish}` : isReady(i) ? `ready:${g.wish}` : '')} onMeet={(i) => tap(i, true)} menus={guests.map((g) => MENU[g.wish]?.id ?? '')} bubble={bubbleFor} float={floatFor} arrive={arrived} onFarm={onFarm} onWalk={onWalk} /></Suspense> : <>
       {/* 그림 아래 남는 자리(폰 세로): 그림 맨 아래 덤불·풀밭 부분을 위아래로 뒤집고 늘려 이어 붙여서 정원이 끝까지 이어져 보이게 한다 */}
       {!wide && !pad && (
         <div aria-hidden className="absolute left-1/2 -translate-x-1/2 overflow-hidden" style={{ width: 'min(100cqw, calc(100cqh / 1.7787))', top: 'calc(min(100cqw, 100cqh / 1.7787) * 1.7787 - 1px)', bottom: 0 }}>

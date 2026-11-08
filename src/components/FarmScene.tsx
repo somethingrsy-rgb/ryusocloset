@@ -90,7 +90,7 @@ const stageOf = (wateredAt: number | null, progress: number) => (wateredAt === n
 // 3D 농장(시험판): three.js 가 커서 누를 때만 받는다
 const Farm3D = lazy(() => import('./Farm3D').then((m) => ({ default: m.Farm3D })))
 
-export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void; onOutfit: (next: Outfit) => void; /** 3D 농장에서 카페 가는 길 끝까지 걸어가면 */ onCafe?: () => void }) {
+export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe, onWalk }: { outfit: Outfit; tweaks: Tweaks; onKitchen: () => void; onOutfit: (next: Outfit) => void; /** 3D 농장에서 카페 가는 길 끝까지 걸어가면 */ onCafe?: () => void; /** 분홍 성(산책길)으로 */ onWalk?: () => void }) {
   // 3D 카페에서 걸어왔으면 3D 농장을 열고 카페 가는 길 끝에서 시작한다
   const [arrived] = useState(() => isArriving('fromCafe'))
   useEffect(() => { if (arrived) clearArrival() }, [arrived])
@@ -474,7 +474,7 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe }: { out
           cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
       )}
       {/* 3D 농장(시험판): 농장 화면 위를 덮는다(농장 노래는 그대로 이어진다) */}
-      {farm3d && <div className="absolute inset-0 z-50"><Suspense fallback={null}><Farm3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setFarm3d(false)} arrive={arrived} onCafe={onCafe} onKitchen={onKitchen} /></Suspense></div>}
+      {farm3d && <div className="absolute inset-0 z-50"><Suspense fallback={null}><Farm3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setFarm3d(false)} arrive={arrived} onCafe={onCafe} onKitchen={onKitchen} onWalk={onWalk} /></Suspense></div>}
     </section>
   )
 }
