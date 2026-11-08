@@ -105,7 +105,9 @@ function makeTableKit(s: Pick<World, 'keep' | 'texOf'>) {
   }
 }
 
-export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMeet, bubble, float, eating, arrive = false, onFarm, menus = [] }: {
+export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMeet, bubble, float, eating, arrive = false, onFarm, menus = [], onWalk }: {
+  /** 분홍 성(산책길)으로 들어가면 */
+  onWalk?: () => void
   /** 손님마다 바라는 메뉴 그림 이름(완성된 음식을 들고 갈 때) */
   menus?: string[]
   /** 농장에서 걸어왔으면 농장 가는 길 끝에서 시작 */
@@ -130,6 +132,9 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   state.current = { walking, hold, paused, encounters, onMeet, eating, menus }
   const approachRef = useRef<(i: number) => void>(() => {})
   const onFarmRef = useRef(onFarm)
+  const onWalkRef = useRef(onWalk)
+  onWalkRef.current = onWalk
+  const gateRef = useRef<{ x: number; z: number; root: THREE.Object3D } | null>(null)
   onFarmRef.current = onFarm
   /** 길을 넘어갈 때 하얗게 덮었다 걷는 막 */
   const [fade, setFade] = useState(arrive)
@@ -145,7 +150,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     // 3D 농장과 같은 바탕: 카메라가 아바타 뒤에서 따라가고, 땅을 누르면 걷고, 옆으로 끌면 둘러본다
     const w = createWorld(el, {
       bounds: WALK, start: arrive ? { x: farmRoadX(-FARM_GATE + 7), z: -FARM_GATE + 7 } : { x: 0, z: -2.6 }, yaw: arrive ? Math.PI : 0, seed: 7, sky: 0xcdeeff, grass: assetUrl('cafe/3d/grass.webp'),
-      onPick: (o) => approach(guests.indexOf(o)),
+      onPick: (o) => { const g = gateRef.current; if (g && o === g.root) { following = null; w.walkTo(g.x, g.z, undefined, 0.3); return } approach(guests.indexOf(o)) },
     })
     world.current = w
     const { scene, keep, rnd } = w
@@ -177,12 +182,20 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     }
     const nearTable = (x: number, z: number, r: number) => TABLES.some(([tx, tz]) => (tx - x) ** 2 + (tz - z) ** 2 < r * r)
     for (const [x, z] of [[-4.2, -5.6], [4.2, -5.6], [-6, -4], [6, -4]]) prop('bush', 1.15, 1024 / 616, x, z)
+    // 산책길로 가는 분홍 성: 카페 앞쪽 들판. 문 앞까지 가면(또는 성을 누르면) 3D 산책으로
+    const CASTLE = { x: 9, z: 25 }
+    const gate = w.addCastleGate(CASTLE.x, CASTLE.z, 0, 2)
+    w.pickables.push(gate.root)
+    gateRef.current = gate
+    const gateSign = w.paperDoll(w.texOf(signCanvas('🏰 산책길', '분홍 성으로')), 2, 1)
+    gateSign.root.position.set(gate.x + 2.2, 0, gate.z)
     // 나무: 농장처럼 듬성듬성(가게·테이블 둘레는 비운다)
     const trees: { x: number; z: number }[] = []
     for (let k = 0; k < 400 && trees.length < 70; k++) {
       const x = (rnd() - 0.5) * 2 * (WALK + 12), z = (rnd() - 0.5) * 2 * (WALK + 12)
       if (Math.abs(x) < 5 && z > -10 && z < 0) continue
       if (Math.abs(x - farmRoadX(z)) < 4.5 && z < -8) continue // 농장 가는 길
+      if (Math.hypot(x - CASTLE.x, z - CASTLE.z) < 7 || Math.abs((x - 0) * (CASTLE.z - 2) - (z - 2) * (CASTLE.x - 0)) / Math.hypot(CASTLE.x, CASTLE.z - 2) < 2.5 && z > 2 && z < CASTLE.z) continue
       if (nearTable(x, z, 4.5) || trees.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 30)) continue
       trees.push({ x, z })
       w.addTree(x, z, 0.8 + rnd() * 0.6, meadowTree(rnd()))
@@ -249,6 +262,8 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     w.onFrame((dt) => {
       w.face(sign, 1)
       if (!leaving && onFarmRef.current && w.me.z < -FARM_GATE) { leaving = true; setFade(true); window.setTimeout(() => onFarmRef.current?.(), 450) }
+      w.face(gateSign, 1)
+      if (!leaving && onWalkRef.current && Math.hypot(w.me.x - gate.x, w.me.z - gate.z) < 1.4) { leaving = true; setFade(true); window.setTimeout(() => onWalkRef.current?.(), 450) }
       t += dt
       const st = state.current
       const frozen = st.paused || st.walking

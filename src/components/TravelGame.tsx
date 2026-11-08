@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { takeWalkNext } from '../lib/farmCafeLink'
 import { startBgm, stopBgm } from '../lib/sound'
 import { currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from '../lib/game'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -60,7 +61,9 @@ export function TravelGame({ outfit, tweaks, onWear, onOutfit, onFull, onDecorat
   const [jump, setJump] = useState(false)
   const [flags, setFlags] = useState(false)
   const [soccer, setSoccer] = useState(false)
-  const [walk3d, setWalk3d] = useState(false)
+  const [walk3d, setWalk3d] = useState(takeWalkNext)
+  /** 3D 산책에서 집에 들어갔으면, 집에서 나올 때 다시 3D 산책으로 */
+  const [backToWalk, setBackToWalk] = useState(false)
   useEffect(() => { onFull?.(math || speaking || jump || soccer || flags || walk3d || (runner && wide)); return () => onFull?.(false) }, [math, speaking, jump, soccer, flags, walk3d, runner, wide, onFull])
   const game = useGame()
   const ver = useItemsVersion()
@@ -71,7 +74,7 @@ export function TravelGame({ outfit, tweaks, onWear, onOutfit, onFull, onDecorat
   const walking = !starRain && !runner && !math && !jump && !speaking && !soccer && !flags && !walk3d
   useEffect(() => { if (!walking) return; startBgm('room'); return stopBgm }, [walking])
 
-  if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setWalk3d(false)} onGo={onGo} /></Suspense>
+  if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setWalk3d(false)} onGo={onGo} onEnter={(id) => { travelTo(id); setScene(id); setBackToWalk(true); setWalk3d(false) }} /></Suspense>
   if (flags) return <Suspense fallback={null}><FlagGame onExit={() => setFlags(false)} /></Suspense>
   if (soccer) return <Suspense fallback={null}><SoccerGame onExit={() => setSoccer(false)} /></Suspense>
   if (runner) return <Suspense fallback={null}><RunnerGame outfit={outfit} tweaks={tweaks} onExit={() => setRunner(false)} /></Suspense>
@@ -80,7 +83,7 @@ export function TravelGame({ outfit, tweaks, onWear, onOutfit, onFull, onDecorat
   const actionButton = PILL
   const label = (text: string) => <PillText>{text}</PillText>
   return <div className="relative h-full">
-    {scene ? <TravelScene paused={speaking} key={scene} placeId={scene} assign={assign} outfit={outfit} tweaks={tweaks} onExit={() => setScene(null)} onWear={onWear} onDecorate={onDecorate} onKitchen={onKitchen} /> : <OverWorld
+    {scene ? <TravelScene paused={speaking} key={scene} placeId={scene} assign={assign} outfit={outfit} tweaks={tweaks} onExit={() => { setScene(null); if (backToWalk) { setBackToWalk(false); setWalk3d(true) } }} onWear={onWear} onDecorate={onDecorate} onKitchen={onKitchen} /> : <OverWorld
       paused={speaking} reach={game.reach} chunk={game.chunk} assign={assign} outfit={outfit} tweaks={tweaks}
       actions={<>
         <button className={actionButton} aria-label="한마디 영어" onClick={() => setSpeaking(true)}>{label(lang === 'ko' ? '영어' : 'Talk')}</button>

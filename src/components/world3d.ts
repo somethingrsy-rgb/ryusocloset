@@ -62,6 +62,8 @@ export interface World {
   addCurvePath: (points: [number, number][], width: number) => void
   /** 그림을 세운 판(집 같은 것): 늘 카메라를 보고, 부딪히는 자리(r)이며 아바타를 가리면 숨긴다 */
   addProp: (img: string, x: number, z: number, h: number, aspect: number, r: number) => Doll
+  /** 산책길로 가는 분홍 성: 앞이 (tx, tz) 쪽을 보게 고정(돌지 않는다), 길을 그 앞까지 잇는다. 문 앞 자리를 돌려준다 */
+  addCastleGate: (x: number, z: number, tx: number, tz: number) => { x: number; z: number; root: THREE.Object3D }
   setAvatar: (canvas: HTMLCanvasElement) => void
   /** 그곳까지 걸어간다. 닿으면(dist 안쪽) arrive 를 부른다 */
   walkTo: (x: number, z: number, arrive?: () => void, dist?: number) => void
@@ -194,6 +196,19 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     const path = new THREE.Mesh(geo, keep(new THREE.MeshLambertMaterial({ map: curveTex, side: THREE.DoubleSide })))
     path.receiveShadow = true
     scene.add(path)
+  }
+  const addCastleGate = (x: number, z: number, tx: number, tz: number) => {
+    const h = 7.5, aspect = 1043 / 1249
+    const dx = tx - x, dz = tz - z, l = Math.hypot(dx, dz) || 1, ux = dx / l, uz = dz / l
+    addCurvePath([[tx, tz], [x + ux * (l * 0.5), z + uz * (l * 0.5)], [x, z]], 2.6)
+    const g = new THREE.Group()
+    const m = new THREE.Mesh(keep(new THREE.PlaneGeometry(h * aspect, h).translate(0, h / 2, 0)), keep(new THREE.MeshBasicMaterial({ map: texOf(assetUrl('travel/3d/pink_castle.webp')), transparent: true, alphaTest: 0.4, side: THREE.DoubleSide })))
+    g.add(m)
+    g.position.set(x, 0, z)
+    g.rotation.y = Math.atan2(ux, uz)
+    scene.add(g)
+    obstacles.push({ x, z, r: 2.8 })
+    return { x: x + ux * 3.4, z: z + uz * 3.4, root: g }
   }
   const addTree = (x: number, z: number, s: number, art: { img: string; aspect: number; h: number } = TREE_ART[0]) => { addProp(art.img, x, z, art.h * s, art.aspect, 0.6 * s) }
   const paperDoll = (tex: THREE.Texture, h: number, aspect: number, feet = 1): Doll => {
@@ -363,7 +378,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   frame = requestAnimationFrame(tick)
 
   return {
-    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables, setOverhead: (o) => { overhead = o },
+    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addCastleGate, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables, setOverhead: (o) => { overhead = o },
     onFrame: (fn) => { frameFns.push(fn) },
     dispose: () => {
       cancelAnimationFrame(frame)

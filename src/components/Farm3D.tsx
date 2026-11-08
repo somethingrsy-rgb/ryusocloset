@@ -48,7 +48,9 @@ const plotAt = (i: number) => {
 const CAFE_GATE = 34
 /** 카페 가는 길이 지나는 x(z 에 따라 좌우로 굽이친다, 양 끝은 가운데) */
 const cafeRoadX = (z: number) => { const u = Math.max(0, Math.min(1, (z - 7) / (CAFE_GATE - 7))); return Math.sin(u * Math.PI * 2) * 3.2 * Math.sin(u * Math.PI) }
-export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCafe, onKitchen }: {
+export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCafe, onKitchen, onWalk }: {
+  /** 분홍 성(산책길)으로 들어가면 */
+  onWalk?: () => void
   outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void
   /** 주방 버튼 */
   onKitchen?: () => void
@@ -65,6 +67,9 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
   const [fade, setFade] = useState(arrive)
   useEffect(() => { if (!fade || !arrive) return; const t = setTimeout(() => setFade(false), 350); return () => clearTimeout(t) }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const onCafeRef = useRef(onCafe)
+  const onWalkRef = useRef(onWalk)
+  onWalkRef.current = onWalk
+  const gateRef = useRef<{ x: number; z: number; root: THREE.Object3D } | null>(null)
   onCafeRef.current = onCafe
   const [seed, setSeed] = useState<CropId>('strawberry')
   const seedRef = useRef(seed)
@@ -191,6 +196,8 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
           if (k !== undefined) { placeAtRef.current(slots[k].x, slots[k].z); return }
           if (!plotOf.has(o)) return
         }
+        // 분홍 성: 문 앞까지 걸어가면 산책길로
+        if (gateRef.current && o === gateRef.current.root) { const g = gateRef.current; w.walkTo(g.x, g.z, undefined, 0.3); return }
         // 노점·우리 동물
         if (o === stallGroup) { w.walkTo(stallGroup.position.x + 1.8, stallGroup.position.z, () => setStall(true), 0.4); return }
         const an = penned.find((a) => a.doll.root === o)
@@ -441,12 +448,20 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     const orderSp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true, depthWrite: false })))
     orderSp.scale.setScalar(1)
     scene.add(orderSp)
+    // 산책길로 가는 분홍 성: 카페 가는 길 왼쪽 앞. 문 앞까지 가면(또는 성을 누르면) 3D 산책으로
+    const CASTLE = { x: -13, z: fz1 + 17 }
+    const gate = w.addCastleGate(CASTLE.x, CASTLE.z, cafeRoadX(fz1 + 8), fz1 + 8)
+    w.pickables.push(gate.root)
+    const gateSign = w.paperDoll(w.texOf(signCanvas('🏰 산책길', '분홍 성으로')), 2, 1)
+    gateSign.root.position.set(gate.x + 2.2, 0, gate.z)
+    gateRef.current = gate
     // 나무: 카페와 같은 3D 나무 그림(world3d.addTree)
     let trees = 0
     for (let i = 0; i < 300 && trees < 60; i++) {
       const x = (rnd() - 0.5) * BOUNDS * 1.9, z = (rnd() - 0.5) * BOUNDS * 1.9
       if (x > PEN.x0 - 3 && x < sx1 + 4 && z > fz0 - 4 && z < PEN.z1 + 4) continue
       if (Math.abs(x - cafeRoadX(z)) < 4.5 && z > fz1) continue // 카페 가는 길
+      if (Math.hypot(x - CASTLE.x, z - CASTLE.z) < 7 || (x < 0 && x > CASTLE.x - 3 && z > fz1 + 6 && z < CASTLE.z + 2)) continue // 분홍 성과 성 가는 길
       if (Math.hypot(x, z - CAFE_GATE - 3.6) < 5.5) continue // 길 끝 카페 가게
       if (Math.hypot(x - STALL.x, z - STALL.z) < 4.5) continue // 노점
       if (Math.hypot(x - buildings[1].root.position.x, z - buildings[1].root.position.z) < 5) continue
@@ -561,6 +576,8 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     w.onFrame((dt) => {
       w.face(sign, 1)
       if (!leaving && onCafeRef.current && w.me.z > CAFE_GATE) { leaving = true; setFade(true); window.setTimeout(() => onCafeRef.current?.(), 450) }
+      w.face(gateSign, 1)
+      if (!leaving && onWalkRef.current && !placingRef.current && Math.hypot(w.me.x - gate.x, w.me.z - gate.z) < 1.4) { leaving = true; setFade(true); window.setTimeout(() => onWalkRef.current?.(), 450) }
       repaint += dt
       refreshSlots()
       if (led.visible && ledUntil < performance.now() && !busy.has(ledPlot)) led.visible = false

@@ -4,7 +4,8 @@ import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { avatarName, getAvatar } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
-import { findItem, isFound, travelFindable, travelItem } from '../lib/game'
+import { MY_ROOM_ID, findItem, isFound, travelFindable, travelItem } from '../lib/game'
+import { setPartyState } from '../lib/party'
 import { ITEMS, ITEM_BY_ID, assetUrl } from '../lib/items'
 import { actFarm } from '../lib/farm'
 import { getMeet, talkFor, type Talk } from '../lib/meet'
@@ -51,7 +52,9 @@ const hash = (s: string) => {
   return h >>> 0
 }
 
-export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void; /** 길가 카페·농장 노점에서 그쪽 화면으로 */ onGo?: (to: 'cafe' | 'farm') => void }) {
+export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void; /** 길가 카페·농장 노점에서 그쪽 화면으로 */ onGo?: (to: 'cafe' | 'farm') => void; /** 집에 들어가면 그 장소(집 안) 화면으로 */ onEnter?: (place: string) => void }) {
+  const onEnterRef = useRef(onEnter)
+  onEnterRef.current = onEnter
   const [near, setNear] = useState<'cafe' | 'farm' | null>(null)
   const nearRef = useRef<'cafe' | 'farm' | null>(null)
   const onGoRef = useRef(onGo)
@@ -92,6 +95,9 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Out
         // 길가 카페·노점을 누르면 문 앞까지 걸어가서 그쪽으로
         const st = stopOf.get(o)
         if (st) { w.walkTo(st.x, st.z, () => goStop(st.to), 0.5); return }
+        // 집을 누르면 문 앞까지 걸어가서 들어간다
+        const hs = houseOf.get(o)
+        if (hs) { w.walkTo(hs.x, hs.z, () => enterHouse(hs), 0.6); return }
         // 몬스터: 마법 풀기 중이면 마법봉으로 톡, 아니면 가서 마법 풀기 시작
         const mk = monOf.get(o)
         if (mk !== undefined) {
@@ -155,19 +161,43 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Out
     const nearRoad = (x: number, z: number, d: number) => samples.some((p) => (p.x - x) ** 2 + (p.z - z) ** 2 < d * d)
 
     // 집: 길가에 여행 집 그림(물약 가게·보라 궁전·분홍 성·과자 집)
-    ;[0.15, 0.38, 0.62, 0.85].forEach((u, k) => {
+    // 집마다 들어가면 2D 산책과 같은 장소(집 안)로: 분홍 성은 우리집(내 방), 나머지는 테마 장소
+    const HOUSE_PLACE = [{ place: 'halloween', name: '물약 가게' }, { place: 'palace', name: '보라 궁전' }, { place: MY_ROOM_ID, name: '우리집' }, { place: 'christmas', name: '과자 집' }]
+    const houses = [0.15, 0.38, 0.62, 0.85].map((u, k) => {
       const p = curve.getPointAt(u), t = curve.getTangentAt(u)
-      const n = new THREE.Vector3(-t.z, 0, t.x).normalize().multiplyScalar((k % 2 ? 1 : -1) * 6.5)
+      const nd = new THREE.Vector3(-t.z, 0, t.x).normalize().multiplyScalar(k % 2 ? 1 : -1)
+      const hx = p.x + nd.x * 6.5, hz = p.z + nd.z * 6.5
       const art = HOUSE_ART[k % HOUSE_ART.length]
-      w.addProp(art.img, p.x + n.x, p.z + n.z, 6, art.aspect, 2.5)
+      // 길에서 집 문 앞까지 흙길(집 밑까지 이어서 끊기지 않게)
+      w.addCurvePath([[p.x, p.z], [p.x + nd.x * 3.2, p.z + nd.z * 3.2], [hx, hz]], 2.2)
+      const d = w.addProp(art.img, hx, hz, 6, art.aspect, 2.5)
+      w.pickables.push(d.root)
+      return { ...HOUSE_PLACE[k], doll: d, x: hx - nd.x * 3, z: hz - nd.z * 3 }
     })
+    const houseOf = new Map(houses.map((h) => [h.doll.root as THREE.Object3D, h]))
+    let entering = false
+    /** 집에 들어간다: 가까이 있는 동물 친구들에게 「우리집에 놀러 가자!」 하고 같이 들어간다 */
+    const enterHouse = (h: (typeof houses)[number]) => {
+      if (entering || !onEnterRef.current) return
+      entering = true
+      const pals = friends.filter((f) => f.animal >= 0 && Math.hypot(f.x - w.me.x, f.z - w.me.z) < 16).slice(0, 3)
+      if (pals.length) {
+        setHello(`🏠 친구들아, ${h.place === MY_ROOM_ID ? '우리집에' : `${h.name}에`} 놀러 가자! · ${pals.map((f) => CALL_ANIMALS[f.animal].name).join('·')}: 「좋아! 🎵」`)
+        for (const f of pals) { f.tx = h.x + (Math.random() - 0.5) * 1.5; f.tz = h.z + (Math.random() - 0.5) * 1.5; f.wait = 0 }
+      }
+      playServe()
+      window.setTimeout(() => {
+        setPartyState(pals.length ? { place: h.place, guests: pals.map((f) => f.animal) } : { place: null, guests: [] })
+        onEnterRef.current?.(h.place)
+      }, pals.length ? 1600 : 300)
+    }
 
     // 길가에 카페 가게와 농장 노점: 길에서 갈래 흙길로 이어지고, 가까이 가면 「카페로 / 농장으로」 단추
     const stops = ([[0.3, 'cafe'], [0.72, 'farm']] as const).map(([u, to]) => {
       const p = curve.getPointAt(u), t = curve.getTangentAt(u)
       const out = new THREE.Vector3(p.x, 0, p.z).normalize() // 고리 바깥쪽
       const bx = p.x + out.x * 9, bz = p.z + out.z * 9
-      w.addCurvePath([[p.x, p.z], [p.x + out.x * 4 + t.x * 0.6, p.z + out.z * 4 + t.z * 0.6], [bx - out.x * 1.6, bz - out.z * 1.6]], 2.4)
+      w.addCurvePath([[p.x, p.z], [p.x + out.x * 4 + t.x * 0.6, p.z + out.z * 4 + t.z * 0.6], [bx, bz]], 2.4) // 건물 밑까지(끊기지 않게)
       const sp = to === 'cafe' ? cafeShopSprite(w) : stallSprite(w)
       sp.root.position.set(bx, 0, bz)
       sp.root.rotation.y = Math.atan2(-out.x, -out.z) // 앞이 길 쪽
@@ -339,6 +369,8 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo }: { outfit: Out
       // 가게 문 앞까지 걸어가면 바로 그쪽으로 간다
       const atDoor = battleRef.current === null && talking.current === null ? stops.find((st) => Math.hypot(w.me.x - st.x, w.me.z - st.z) < 1.6) : undefined
       if (atDoor) goStop(atDoor.to)
+      const atHouse = battleRef.current === null && talking.current === null ? houses.find((h) => Math.hypot(w.me.x - h.x, w.me.z - h.z) < 1.4) : undefined
+      if (atHouse) enterHouse(atHouse)
       if (nearStop !== nearRef.current) { nearRef.current = nearStop; setNear(nearStop) }
       // 몬스터: 가까이 가면 마법 풀기 시작, 맞으면 흔들, 다 풀리면 빙글 돌며 얼굴이 바뀐다
       const bk = battleRef.current

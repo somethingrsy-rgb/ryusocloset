@@ -8,3 +8,7 @@ let pending: Arrival | null = null
 export const setArrival = (a: Arrival) => { pending = a }
 export const isArriving = (a: Arrival) => pending === a
 export const clearArrival = () => { pending = null }
+/** 카페·농장의 분홍 성으로 들어가면 여행 탭을 3D 산책으로 연다(한 번 쓰고 지운다) */
+let walkNext = false
+export const setWalkNext = () => { walkNext = true }
+export const takeWalkNext = () => { const v = walkNext; walkNext = false; return v }
