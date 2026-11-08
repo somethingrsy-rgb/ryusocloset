@@ -19,7 +19,7 @@ import { playOrder, playServe, playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { GuestDresser } from './GuestDresser'
 import { cafeShopSprite, stallSprite } from './viewSprite3d'
-import { ANIMAL_H, HOUSE_ART, TREE_ART, createWorld, showBack, signCanvas, emojiCanvas, type Doll, type World } from './world3d'
+import { ANIMAL_H, HOUSE_ART, createWorld, showBack, signCanvas, emojiCanvas, type Doll, type World } from './world3d'
 
 /**
  * 3D 산책 (시험판): 마을은 3D(길·나무·집·꽃·구름)이고, 아바타와 동물 친구는 지금 그림을 세운 '종이 인형'이다.
@@ -27,6 +27,11 @@ import { ANIMAL_H, HOUSE_ART, TREE_ART, createWorld, showBack, signCanvas, emoji
  * 👗 버튼으로 그 자리에서 옷을 갈아입는다(코디 탭과 같은 옷).
  */
 const WORLD = 70
+/** 산책 마을 나무: 노랑·주황 꽃나무(카페·농장의 그 나무) */
+const WALK_TREES = [
+  { img: 'cafe/3d/tree_yellow.webp', aspect: 824 / 866, h: 4.2 },
+  { img: 'cafe/3d/tree_orange.webp', aspect: 827 / 865, h: 4.2 },
+] as const
 /** 마법에 걸린 몬스터 다섯(무서운 얼굴 → 마법이 풀리면 귀여운 얼굴). 그림 크기(가로·세로) */
 const MONSTERS = [
   { id: 'dino', name: '아기 공룡', size: [909, 1205] },
@@ -262,7 +267,8 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       const s0 = samples[Math.floor(rnd() * samples.length)], a = rnd() * Math.PI * 2, far = 6 + rnd() * 8
       const [x, z] = i % 2 ? [s0.x + Math.cos(a) * far, s0.z + Math.sin(a) * far] : [(rnd() - 0.5) * WORLD * 1.9, (rnd() - 0.5) * WORLD * 1.9]
       if (nearRoad(x, z, 4.5) || w.obstacles.some((t) => (t.x - x) ** 2 + (t.z - z) ** 2 < 9)) continue
-      w.addTree(x, z, 0.8 + rnd() * 0.5, TREE_ART[Math.floor(rnd() * TREE_ART.length)])
+      // 산책 마을 나무는 노랑·주황 꽃나무 두 가지만
+      w.addTree(x, z, 0.8 + rnd() * 0.5, WALK_TREES[rnd() < 0.5 ? 0 : 1])
       trees++
     }
 
