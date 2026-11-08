@@ -1,14 +1,16 @@
 /** Firebase Realtime Database 로 하는 연결. 경로: lobby/players/{uid}(지금 있는 곳 room 포함), lobby/chat/{id}, lobby/boss(같이 사냥하는 대왕 몬스터) (규칙은 database.rules.json).
  *  한 번 들어가면 카페·농장·산책·다른 탭 어디에 있든 같이 놀기에 남아 있고 채팅은 모두와 한다 */
-import { child, get, limitToLast, onDisconnect, onValue, push, query, ref, remove, runTransaction, serverTimestamp, set, update, type DatabaseReference, type Unsubscribe } from 'firebase/database'
+import { child, get, limitToLast, onDisconnect, onValue, push, query, ref, remove, runTransaction, serverTimestamp, set, update, type Database, type DatabaseReference, type Unsubscribe } from 'firebase/database'
 import { connect } from './firebase'
-import { MAX_PLAYERS, bossCanRespawn, bossHit, saneBoss, sanePlayer, type Boss, type ChatMsg, type PlayerState } from './core'
+import { MAX_PLAYERS, bossCanRespawn, bossHit, saneBoss, saneFood, sanePlayer, type Boss, type ChatMsg, type Food, type Home, type PlayerState } from './core'
 import type { Transport } from './transport'
 
 export function firebaseTransport(): Transport {
   let me: DatabaseReference | null = null
   let chatRef: DatabaseReference | null = null
   let bossRef: DatabaseReference | null = null
+  let db: Database | null = null
+  let uid = ''
   let bossCb: (b: Boss | null) => void = () => {}
   let last: Record<string, unknown> = {}
   let playersCb: (p: Record<string, PlayerState>) => void = () => {}
@@ -17,7 +19,8 @@ export function firebaseTransport(): Transport {
   let skew = 0
   return {
     async join(state) {
-      const { user, db } = await connect()
+      const { user, db: d } = await connect()
+      db = d; uid = user.uid
       const players = ref(db, 'lobby/players')
       // 10명이 넘으면 들어가지 않는다(규칙으로는 사람 수를 셀 수 없어서 들어가기 전에 확인한다)
       const now = (await get(players)).val() as Record<string, unknown> | null
@@ -42,7 +45,7 @@ export function firebaseTransport(): Transport {
         const out: ChatMsg[] = []
         s.forEach((c) => {
           const v = c.val() as Record<string, unknown>
-          if (c.key && typeof v?.text === 'string' && typeof v.uid === 'string') out.push({ id: c.key, uid: v.uid, name: typeof v.name === 'string' ? v.name : '친구', text: v.text, t: Number(v.t) || 0 })
+          if (c.key && typeof v?.text === 'string' && typeof v.uid === 'string') out.push({ id: c.key, uid: v.uid, name: typeof v.name === 'string' ? v.name : '친구', text: v.text, t: Number(v.t) || 0, ...(v.home === v.uid ? { home: v.uid } : {}) })
         })
         chatCb(out)
       }))
@@ -55,9 +58,9 @@ export function firebaseTransport(): Transport {
       Object.assign(last, part)
       update(me, { ...part, t: serverTimestamp() }).catch(() => {})
     },
-    chat(name, text) {
+    chat(name, text, home) {
       if (!chatRef || !me) return
-      push(chatRef, { uid: me.key, name, text, t: serverTimestamp() }).catch(() => {})
+      push(chatRef, { uid: me.key, name, text, t: serverTimestamp(), ...(home ? { home: me.key } : {}) }).catch(() => {})
     },
     hitBoss(id, power) {
       if (!bossRef || !me) return
@@ -69,10 +72,38 @@ export function firebaseTransport(): Transport {
       const now = Date.now() + skew
       runTransaction(bossRef, (cur) => (bossCanRespawn(saneBoss(cur), now) ? { ...next, t: serverTimestamp() } : undefined)).catch(() => {})
     },
+    openHome(home) {
+      if (!db || !uid) return
+      const r = ref(db, `lobby/homes/${uid}`)
+      onDisconnect(r).remove().catch(() => {})
+      set(r, { ...home, t: serverTimestamp() }).catch(() => {})
+    },
+    closeHome() {
+      if (!db || !uid) return
+      const r = ref(db, `lobby/homes/${uid}`)
+      onDisconnect(r).cancel().catch(() => {})
+      remove(r).catch(() => {})
+    },
+    watchHome(host, cb) {
+      if (!db) return () => {}
+      let home: Home | null = null, foods: Food[] = []
+      const a = onValue(ref(db, `lobby/homes/${host}`), (s) => { const v = s.val() as Home | null; home = v && typeof v.name === 'string' ? { name: v.name, room: v.room, t: Number(v.t) || 0 } : null; cb(home, foods) })
+      const b = onValue(ref(db, `lobby/food/${host}`), (s) => { const out: Food[] = []; s.forEach((c) => { const f = c.key ? saneFood(c.key, c.val()) : null; if (f) out.push(f) }); foods = out; cb(home, foods) })
+      return () => { a(); b() }
+    },
+    addFood(host, food) {
+      if (!db) return
+      push(ref(db, `lobby/food/${host}`), { ...food, t: serverTimestamp() }).catch(() => {})
+    },
+    eatFood(host, id) {
+      if (!db) return
+      remove(ref(db, `lobby/food/${host}/${id}`)).catch(() => {})
+    },
     leave() {
       for (const f of off) f()
       off = []
       if (me) { onDisconnect(me).cancel().catch(() => {}); remove(me).catch(() => {}) }
+      if (db && uid) { const h = ref(db, `lobby/homes/${uid}`); onDisconnect(h).cancel().catch(() => {}); remove(h).catch(() => {}) }
       me = null
       chatRef = null
       bossRef = null

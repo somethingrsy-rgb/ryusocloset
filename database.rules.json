@@ -12,7 +12,7 @@
             ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12"
           },
           "room": {
-            ".validate": "newData.val() === 'cafe' || newData.val() === 'farm' || newData.val() === 'walk' || newData.val() === 'none'"
+            ".validate": "newData.val() === 'cafe' || newData.val() === 'farm' || newData.val() === 'walk' || newData.val() === 'home' || newData.val() === 'none'"
           },
           "x": {
             ".validate": "newData.isNumber() && newData.val() >= -200 && newData.val() <= 200"
@@ -44,6 +44,12 @@
           },
           "$other": {
             ".validate": false
+          },
+          "host": {
+            ".validate": "newData.isString() && newData.val().length <= 64"
+          },
+          "eat": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
           }
         }
       },
@@ -69,6 +75,9 @@
           },
           "$other": {
             ".validate": false
+          },
+          "home": {
+            ".validate": "newData.val() === auth.uid"
           }
         }
       },
@@ -99,6 +108,52 @@
         },
         "$other": {
           ".validate": false
+        }
+      },
+      "homes": {
+        ".read": "auth != null",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['name', 'room', 't'])",
+          "name": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12"
+          },
+          "room": {
+            ".validate": "newData.hasChildren(['scene', 'room'])"
+          },
+          "t": {
+            ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "food": {
+        ".read": "auth != null",
+        "$host": {
+          "$id": {
+            ".write": "auth != null && ((!data.exists() && newData.exists()) || (data.exists() && !newData.exists()))",
+            ".validate": "newData.hasChildren(['menu', 'x', 'y', 'by', 't'])",
+            "menu": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
+            },
+            "x": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+            },
+            "y": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+            },
+            "by": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12"
+            },
+            "t": {
+              ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
         }
       }
     }
