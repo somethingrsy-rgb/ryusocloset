@@ -202,7 +202,8 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     const doll = new THREE.Mesh(g, keep(new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.35, side: THREE.DoubleSide })))
     const shadow = new THREE.Mesh(keep(new THREE.CircleGeometry(h * 0.2, 24)), keep(new THREE.MeshBasicMaterial({ color: 0x3c5a2a, transparent: true, opacity: 0.28, depthWrite: false })))
     shadow.rotation.x = -Math.PI / 2
-    shadow.position.y = 0.02
+    shadow.position.y = 0.05 // 길(0.02)보다 위: 같은 높이면 겹쳐서 지지직거렸다
+    shadow.renderOrder = 1
     shadow.scale.set(1.3, 0.75, 1)
     const root = new THREE.Group(), body = new THREE.Group()
     body.add(doll)

@@ -50,3 +50,12 @@ export const CAFE_SHOP_VIEWS: [string, number, boolean][] = [
 ]
 /** 카페 가게 만들기: 눈높이 그림이라 눕히지 않고(lean 0), 판은 가운데에 두고(방향이 바뀌어도 자리가 움직이지 않게), 그림자 없이 */
 export const cafeShopSprite = (k: Parameters<typeof viewSprite>[0]) => viewSprite(k, CAFE_SHOP_VIEWS, 5.6, [0.01, 0.01], 0, 0)
+
+/** 농장 노점 여덟 방향 그림(받은 그림 6장 + 비스듬한 두 방향은 뒤집어서) */
+const sv = (n: string) => `farm/3d/stall/${n}.webp`
+export const STALL_VIEWS: [string, number, boolean][] = [
+  [sv('v0'), 451 / 443, false], [sv('v1'), 709 / 662, false], [sv('v2'), 271 / 448, false], [sv('v5'), 685 / 649, true],
+  [sv('v4'), 418 / 440, false], [sv('v5'), 685 / 649, false], [sv('v6'), 295 / 448, false], [sv('v1'), 709 / 662, true],
+]
+/** 농장 노점 만들기: 그림자 없이, 판은 노점 앞 끝으로 */
+export const stallSprite = (k: Parameters<typeof viewSprite>[0]) => viewSprite(k, STALL_VIEWS, 3.3, [0.01, 0.01], 1.25)

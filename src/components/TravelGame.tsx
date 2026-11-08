@@ -38,10 +38,12 @@ interface Props {
   onDecorate?: (placeId: string) => void
   /** 파티 친구 주문을 만들러 주방 탭으로 */
   onKitchen?: () => void
+  /** 3D 산책 길가의 카페·농장 노점에서 그 탭으로 */
+  onGo?: (to: 'cafe' | 'farm') => void
 }
 
 /** 여행 탭: 넓은 맵(OverWorld)을 걸어다니다가 문에 들어가면 그 장소 장면(TravelScene)으로 */
-export function TravelGame({ outfit, tweaks, onWear, onOutfit, onFull, onDecorate, onKitchen, initialPlaceId = null }: Props) {
+export function TravelGame({ outfit, tweaks, onWear, onOutfit, onFull, onDecorate, onKitchen, onGo, initialPlaceId = null }: Props) {
   const { lang } = useI18n()
   const [starRain, setStarRain] = useState(false)
   const [runner, setRunner] = useState(false)
@@ -69,7 +71,7 @@ export function TravelGame({ outfit, tweaks, onWear, onOutfit, onFull, onDecorat
   const walking = !starRain && !runner && !math && !jump && !speaking && !soccer && !flags && !walk3d
   useEffect(() => { if (!walking) return; startBgm('room'); return stopBgm }, [walking])
 
-  if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setWalk3d(false)} /></Suspense>
+  if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onOutfit={onOutfit} onExit={() => setWalk3d(false)} onGo={onGo} /></Suspense>
   if (flags) return <Suspense fallback={null}><FlagGame onExit={() => setFlags(false)} /></Suspense>
   if (soccer) return <Suspense fallback={null}><SoccerGame onExit={() => setSoccer(false)} /></Suspense>
   if (runner) return <Suspense fallback={null}><RunnerGame outfit={outfit} tweaks={tweaks} onExit={() => setRunner(false)} /></Suspense>
