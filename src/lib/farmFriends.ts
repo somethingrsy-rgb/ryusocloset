@@ -61,7 +61,7 @@ export const waterNow = () => { clearTimeout(pendingTimer); dispatch() }
  *  두 친구는 같은 박자로 움직이지 않게 두 번째 친구가 반 박자 늦게 출발한다(엇박자) */
 export function harvestAll(now = Date.now()): boolean {
   const st = getFarm()
-  if (!st.plots.some((p, i) => i < MAIN_PLOTS && st.owned[i] && growth(p, now) === 1)) return false
+  if (!st.plots.some((p, i) => st.owned[i] && growth(p, now) === 1)) return false
   friends.forEach((f, k) => {
     harvestWanted.add(f)
     if (jobs[f]) return // 물 주기를 마치면 바로 수확하러 간다
@@ -103,7 +103,12 @@ let cols = 4
 export const setFarmCols = (n: number) => { cols = n }
 /** 친구마다 마지막으로 일한 밭(다음에는 거기서 가까운 밭부터) */
 const at: Record<number, number> = {}
-const rc = (i: number) => ({ r: Math.floor(i / cols), c: i % cols })
+/** 밭 줄·칸. 옆 밭(MAIN_PLOTS~)은 큰 밭과 같은 모양의 다른 밭이라 줄 번호를 100부터 센다(서로 멀리 있는 것으로) */
+const rc = (i: number) => { const side = i >= MAIN_PLOTS, j = side ? i - MAIN_PLOTS : i; return { r: Math.floor(j / cols) + (side ? 100 : 0), c: j % cols } }
+const cellAt = (r: number, c: number) => (r >= 100 ? MAIN_PLOTS + (r - 100) * cols + c : r * cols + c)
+/** 두 밭 사이 걸음 수(다른 밭으로 건너가면 6칸 거리로 친다) */
+const sameField = (a: number, b: number) => (a >= MAIN_PLOTS) === (b >= MAIN_PLOTS)
+const cells = (a: number, b: number) => { const A = rc(a), B = rc(b); return !sameField(a, b) ? 6 : Math.abs(A.r - B.r) + Math.abs(A.c - B.c) }
 /** k 번째 친구가 맡는 칸인지: 혼자면 전부, 둘이면 왼쪽(가운데 줄 포함)·오른쪽 */
 const mine = (k: number, i: number) => friends.length < 2 || (k === 0 ? rc(i).c < Math.ceil(cols / 2) : rc(i).c >= Math.ceil(cols / 2))
 
@@ -112,7 +117,7 @@ function workList() {
   const st = getFarm()
   const work: { plot: number; kind: JobKind }[] = []
   // 친구들은 큰 밭(0~19)만 돌본다. 옆 울타리 밭은 내가 직접
-  st.plots.forEach((p, i) => { if (i < MAIN_PLOTS && p && st.owned[i] && p.wateredAt === null) work.push({ plot: i, kind: 'water' }) })
+  st.plots.forEach((p, i) => { if (p && st.owned[i] && p.wateredAt === null) work.push({ plot: i, kind: 'water' }) })
   return work
 }
 
@@ -133,14 +138,15 @@ export function harvestPath(k: number, nCols = cols, rows = Math.ceil(PLOTS / nC
   })
   return out
 }
-const PLOTS = MAIN_PLOTS
+const PLOTS = MAIN_PLOTS // 한 밭(큰 밭·옆 밭 모두 같은 크기)
 
 /** 한 친구가 수확 길을 따라 걸으며 다 자란 밭을 딴다. 다 자라지 않은 밭은 지나가기만 한다 */
 function harvestRoute(f: number) {
   harvestWanted.delete(f)
   const k = friends.indexOf(f)
   if (k < 0) return
-  const path = harvestPath(k)
+  // 큰 밭을 돌고 이어서 옆 밭도 같은 길로 돈다
+  const path = [...harvestPath(k), ...harvestPath(k).map((p) => ({ ...p, plot: p.plot + MAIN_PLOTS }))]
   // 걷는 동안 아바타가 먼저 딴 밭은 건너뛰도록 늘 지금 밭 상태로 본다
   const ripe = (i: number) => { const st = getFarm(); return st.owned[i] && growth(st.plots[i], Date.now()) === 1 }
   // 처음 다 자란 밭부터 마지막 다 자란 밭까지만 걷는다(그 사이 줄 바꿈 자리는 지나간다)
@@ -153,7 +159,7 @@ function harvestRoute(f: number) {
     if (i >= steps.length) { at[f] = steps[steps.length - 1].plot; setJob(f, null); work(f); return }
     const { plot, side } = steps[i]
     const take = ripe(plot) && !Object.entries(jobs).some(([g, j]) => +g !== f && j.target === plot)
-    const ms = prev === undefined ? WALK_MS : Math.max(CELL_MS, (Math.abs(rc(plot).r - rc(prev).r) + Math.abs(rc(plot).c - rc(prev).c)) * CELL_MS)
+    const ms = prev === undefined ? WALK_MS : Math.max(CELL_MS, cells(plot, prev) * CELL_MS)
     const base = { target: plot, kind: 'harvest' as const, side, line: LINES.harvest[Math.floor(Math.random() * LINES.harvest.length)], n: n0 }
     setJob(f, { ...base, plot, walkMs: ms, watering: false })
     prev = plot
@@ -177,19 +183,19 @@ function work(f: number) {
   const from = at[f]
   const todo = workList().filter((w) => mine(k, w.plot) && !Object.entries(jobs).some(([g, j]) => +g !== f && j.target === w.plot))
   if (!todo.length) { setJob(f, null); if (harvestWanted.has(f)) harvestRoute(f); return }
-  const d = (i: number) => (from === undefined ? rc(i).r * 10 + rc(i).c : Math.abs(rc(i).r - rc(from).r) * 1.5 + Math.abs(rc(i).c - rc(from).c))
+  const d = (i: number) => (from === undefined ? rc(i).r * 10 + rc(i).c : !sameField(i, from) ? 50 : Math.abs(rc(i).r - rc(from).r) * 1.5 + Math.abs(rc(i).c - rc(from).c))
   const next = todo.reduce((a, b) => (d(b.plot) < d(a.plot) ? b : a))
   const line = LINES[next.kind][Math.floor(Math.random() * LINES[next.kind].length)]
   const base = { target: next.plot, kind: next.kind, side: 'front' as const, watering: false, line, n: jobs[f]?.n ?? ++jobNo }
   // 다른 줄로 갈 때는 작물 위를 가로지르지 않게 지금 줄을 따라 옆으로 먼저 가고, 그다음 위아래로
   const legs: number[] = []
-  if (from !== undefined && rc(from).r !== rc(next.plot).r && rc(from).c !== rc(next.plot).c) legs.push(rc(from).r * cols + rc(next.plot).c)
+  if (from !== undefined && rc(from).r !== rc(next.plot).r && rc(from).c !== rc(next.plot).c && sameField(from, next.plot)) legs.push(cellAt(rc(from).r, rc(next.plot).c))
   legs.push(next.plot)
   let prev = from
   const walk = (n: number) => {
     if (n >= legs.length) return pour()
     const leg = legs[n]
-    const ms = prev === undefined ? WALK_MS : Math.max(CELL_MS, (Math.abs(rc(leg).r - rc(prev).r) + Math.abs(rc(leg).c - rc(prev).c)) * CELL_MS)
+    const ms = prev === undefined ? WALK_MS : Math.max(CELL_MS, cells(leg, prev) * CELL_MS)
     setJob(f, { ...base, plot: leg, walkMs: ms })
     prev = leg
     window.setTimeout(() => walk(n + 1), ms)
