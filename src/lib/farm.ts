@@ -24,7 +24,7 @@ export interface FarmState {
   /** 3D 농장에서 산 울타리 한 칸들: [x, z, 방향(0 가로·1 세로)] */
   fences: [number, number, 0 | 1][]
 }
-export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number } | { type: 'earn'; amount: number } | { type: 'buy'; plot: number } | { type: 'use'; items: Partial<Record<CropId, number>> } | { type: 'collect'; good: AnimalGood } | { type: 'place'; plot: number; x: number; z: number } | { type: 'fence'; x: number; z: number; r: 0 | 1 } | { type: 'unfence'; x: number; z: number }
+export type FarmAction = { type: 'plant'; plot: number; crop: CropId } | { type: 'water' | 'harvest'; plot: number } | { type: 'deliver' } | { type: 'sell'; crop: CropId } | { type: 'decorate'; id: 'fence' | 'flowers' } | { type: 'spend'; amount: number } | { type: 'earn'; amount: number } | { type: 'buy'; plot: number } | { type: 'use'; items: Partial<Record<CropId, number>> } | { type: 'collect'; good: AnimalGood } | { type: 'place'; plot: number; x: number; z: number } | { type: 'fence'; x: number; z: number; r: 0 | 1 } | { type: 'unfence'; x: number; z: number } | { type: 'movefence'; from: [number, number]; x: number; z: number; r: 0 | 1 }
 /** 새 땅 밭 한 칸 값: 처음 20코인, 하나 살 때마다 5코인씩 올라간다 */
 export const PLOT_BASE_PRICE = 20
 export const PLOT_PRICE_STEP = 5
@@ -83,6 +83,14 @@ export function reduceFarm(state: FarmState, action: FarmAction, now: number): F
     if (!Number.isFinite(action.x) || !Number.isFinite(action.z) || Math.abs(action.x) > 60 || Math.abs(action.z) > 60 || (action.r !== 0 && action.r !== 1)) return state
     if (state.coins < FENCE_PRICE || state.fences.length >= MAX_FENCES || state.fences.some(([x, z, r]) => x === action.x && z === action.z && r === action.r)) return state
     next.coins -= FENCE_PRICE; next.fences.push([action.x, action.z, action.r])
+    return next
+  }
+  if (action.type === 'movefence') {
+    // 이미 산 울타리를 다른 자리로(코인은 들지 않는다)
+    const k = state.fences.findIndex(([x, z]) => x === action.from[0] && z === action.from[1])
+    if (k < 0 || !Number.isFinite(action.x) || !Number.isFinite(action.z) || Math.abs(action.x) > 60 || Math.abs(action.z) > 60 || (action.r !== 0 && action.r !== 1)) return state
+    if (state.fences.some(([x, z, r], j) => j !== k && x === action.x && z === action.z && r === action.r)) return state
+    next.fences[k] = [action.x, action.z, action.r]
     return next
   }
   if (action.type === 'unfence') {

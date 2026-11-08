@@ -174,9 +174,6 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       w.pickables.push(d.root)
       return { ...HOUSE_PLACE[k], doll: d, x: hx - nd.x * 3, z: hz - nd.z * 3 }
     })
-    // 지도: 산책길과 집·카페·노점
-    w.mapPath(samples.map((p) => [p.x, p.z]))
-    for (const h of houses) w.mapMark(h.x, h.z, h.place === MY_ROOM_ID ? '🏰' : '🏠')
     const houseOf = new Map(houses.map((h) => [h.doll.root as THREE.Object3D, h]))
     let entering = false
     /** 집에 들어간다: 가까이 있는 동물 친구들에게 「우리집에 놀러 가자!」 하고 같이 들어간다 */
@@ -211,7 +208,6 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       w.pickables.push(sp.root)
       return { to, sp, sign, x: bx - out.x * 3, z: bz - out.z * 3 }
     })
-    for (const st of stops) w.mapMark(st.x, st.z, st.to === 'cafe' ? '☕' : '🧺')
     const stopOf = new Map(stops.map((st) => [st.sp.root as THREE.Object3D, st]))
     let going = false
     const goStop = (to: 'cafe' | 'farm') => { if (going || !onGoRef.current) return; going = true; playServe(); window.setTimeout(() => onGoRef.current?.(to), 300) }

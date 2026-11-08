@@ -77,9 +77,6 @@ export interface World {
   onFrame: (fn: (dt: number, now: number) => void) => void
   /** 누른 곳에 맞은 물체 중 이것들 안에 든 것이 있으면 onPick, 아니면 땅을 누른 것(걷기) */
   pickables: THREE.Object3D[]
-  /** 지도(왼쪽 위 작은 지도)에 그릴 길(점들)과 표시(그림 글자). 길은 addPath·addCurvePath 가 저절로 넣는다 */
-  mapPath: (pts: [number, number][]) => void
-  mapMark: (x: number, z: number, emoji: string, label?: string) => void
   dispose: () => void
 }
 
@@ -168,7 +165,6 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   }
   let dirtTex: THREE.Texture | null = null
   const addPath = (x0: number, z0: number, x1: number, z1: number, width: number) => {
-    mapPaths.push([[x0, z0], [x1, z1]])
     const len = Math.hypot(x1 - x0, z1 - z0)
     if (!dirtTex) { dirtTex = texOf(assetUrl('cafe/3d/dirt.webp')); dirtTex.wrapS = dirtTex.wrapT = THREE.RepeatWrapping; dirtTex.repeat.set(1, len / width) }
     const path = new THREE.Mesh(keep(new THREE.PlaneGeometry(width, len)), keep(new THREE.MeshLambertMaterial({ map: dirtTex })))
@@ -179,56 +175,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     scene.add(path)
   }
   let curveTex: THREE.Texture | null = null
-  // 지도: 왼쪽 위 작은 동그란 지도(위가 카메라가 보는 쪽). 길·표시·아바타(분홍 점)를 그리고, 표시를 누르면 그곳으로 걸어간다
-  const mapPaths: [number, number][][] = []
-  const mapMarks: { x: number; z: number; emoji: string; label?: string }[] = []
-  const mapCv = document.createElement('canvas')
-  const MAP = 120, MAP_R = Math.min(B, 45) // 지도 지름(px), 지도에 보이는 반경(장면 단위, 아바타 중심)
-  mapCv.width = mapCv.height = MAP * 2
-  Object.assign(mapCv.style, { position: 'absolute', left: '8px', top: '52px', width: `${MAP}px`, height: `${MAP}px`, borderRadius: '50%', boxShadow: '0 2px 8px rgba(0,0,0,.25)', zIndex: '15', touchAction: 'none', cursor: 'pointer' })
-  mapCv.setAttribute('aria-label', '지도')
-  el.appendChild(mapCv)
-  const mg = mapCv.getContext('2d')!
-  /** 장면 자리 → 지도 자리(px×2): 아바타가 가운데, 카메라가 보는 쪽이 위 */
-  const toMap = (x: number, z: number) => {
-    const dx = x - me.x, dz = z - me.z, c = Math.cos(yaw), sn = Math.sin(yaw)
-    const rx = dx * c - dz * sn, rz = dx * sn + dz * c // 카메라 기준으로 돌린다
-    const k = MAP / MAP_R
-    return [MAP + rx * k, MAP + rz * k] as const
-  }
-  const drawMap = () => {
-    mg.clearRect(0, 0, MAP * 2, MAP * 2)
-    mg.save()
-    mg.beginPath(); mg.arc(MAP, MAP, MAP - 3, 0, Math.PI * 2); mg.clip()
-    mg.fillStyle = '#bfe39a'; mg.fillRect(0, 0, MAP * 2, MAP * 2)
-    mg.strokeStyle = '#e2b77a'; mg.lineCap = mg.lineJoin = 'round'; mg.lineWidth = 9
-    for (const path of mapPaths) { mg.beginPath(); path.forEach(([x, z], i) => { const [px, py] = toMap(x, z); if (i) mg.lineTo(px, py); else mg.moveTo(px, py) }); mg.stroke() }
-    mg.font = '30px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; mg.textAlign = 'center'; mg.textBaseline = 'middle'
-    for (const m of mapMarks) {
-      let [px, py] = toMap(m.x, m.z)
-      const dx = px - MAP, dy = py - MAP, d = Math.hypot(dx, dy), lim = MAP - 20
-      if (d > lim) { px = MAP + (dx / d) * lim; py = MAP + (dy / d) * lim; mg.globalAlpha = 0.75 } // 멀리 있으면 가장자리에
-      mg.fillText(m.emoji, px, py); mg.globalAlpha = 1
-    }
-    // 아바타: 가운데 분홍 점 + 보는 쪽(위) 화살
-    mg.fillStyle = '#ff5c8a'; mg.strokeStyle = '#fff'; mg.lineWidth = 4
-    mg.beginPath(); mg.moveTo(MAP, MAP - 16); mg.lineTo(MAP + 9, MAP + 6); mg.lineTo(MAP - 9, MAP + 6); mg.closePath(); mg.fill(); mg.stroke()
-    mg.restore()
-    mg.strokeStyle = '#fff'; mg.lineWidth = 6; mg.beginPath(); mg.arc(MAP, MAP, MAP - 3, 0, Math.PI * 2); mg.stroke()
-  }
-  // 지도를 누르면: 표시 가까이면 그 표시로, 아니면 누른 곳으로 걸어간다
-  const onMapTap = (e: PointerEvent) => {
-    e.stopPropagation()
-    const r = mapCv.getBoundingClientRect(), px = ((e.clientX - r.left) / r.width) * MAP * 2, py = ((e.clientY - r.top) / r.height) * MAP * 2
-    const near = mapMarks.map((m) => ({ m, d: Math.hypot(toMap(m.x, m.z)[0] - px, toMap(m.x, m.z)[1] - py) })).sort((a, b) => a.d - b.d)[0]
-    if (near && near.d < 26) { walkTo(near.m.x, near.m.z, undefined, 2.5); return }
-    const k = MAP_R / MAP, rx = (px - MAP) * k, rz = (py - MAP) * k, c = Math.cos(yaw), sn = Math.sin(yaw)
-    walkTo(me.x + rx * c + rz * sn, me.z - rx * sn + rz * c)
-  }
-  mapCv.addEventListener('pointerdown', (e) => e.stopPropagation())
-  mapCv.addEventListener('pointerup', onMapTap)
   const addCurvePath = (points: [number, number][], width: number) => {
-    mapPaths.push(points)
     const curve = new THREE.CatmullRomCurve3(points.map(([x, z]) => new THREE.Vector3(x, 0, z)))
     const n = Math.max(8, Math.round(curve.getLength() * 2)), pts = curve.getSpacedPoints(n)
     const pos: number[] = [], uv: number[] = [], idx: number[] = []
@@ -370,7 +317,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   const frameFns: ((dt: number, now: number) => void)[] = []
   let overhead: { x: number; z: number; h: number } | null = null
   const camPos = new THREE.Vector3(), look = new THREE.Vector3()
-  let last = performance.now(), frame = 0, mapTick = 1
+  let last = performance.now(), frame = 0
   const tick = (now: number) => {
     const dt = Math.min(0.05, (now - last) / 1000)
     last = now
@@ -425,14 +372,13 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     for (const c of clouds) { c.position.x += dt * 0.6; if (c.position.x > 90) c.position.x = -90 }
     marker.scale.setScalar(1 + Math.sin(now / 200) * 0.08)
     for (const fn of frameFns) fn(dt, now)
-    if ((mapTick += dt) > 0.12) { mapTick = 0; drawMap() }
     renderer.render(scene, camera)
     frame = requestAnimationFrame(tick)
   }
   frame = requestAnimationFrame(tick)
 
   return {
-    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addCastleGate, addPath, mapPath: (pts) => { mapPaths.push(pts) }, mapMark: (x, z, emoji, label) => { mapMarks.push({ x, z, emoji, label }) }, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables, setOverhead: (o) => { overhead = o },
+    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addCastleGate, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables, setOverhead: (o) => { overhead = o },
     onFrame: (fn) => { frameFns.push(fn) },
     dispose: () => {
       cancelAnimationFrame(frame)
@@ -442,7 +388,6 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
       owned.forEach((x) => x.dispose())
       renderer.dispose()
       dom.remove()
-      mapCv.remove()
     },
   }
 }

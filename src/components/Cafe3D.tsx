@@ -259,9 +259,6 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     sign.root.position.set(3.4, 0, -5.2)
     w.obstacles.push({ x: 3.4, z: -5.2, r: 0.4 })
     let leaving = false
-    // 지도 표시
-    w.mapMark(0, -6.2, '☕'); w.mapMark(0, -FARM_GATE - 3.6, '🧺'); w.mapMark(CASTLE.x, CASTLE.z, '🏰')
-    for (let i = 0; i < 8; i++) { const p = tableAt(i); w.mapMark(p.x, p.z, '⛱️') }
     w.onFrame((dt) => {
       w.face(sign, 1)
       if (!leaving && onFarmRef.current && w.me.z < -FARM_GATE) { leaving = true; setFade(true); window.setTimeout(() => onFarmRef.current?.(), 450) }
