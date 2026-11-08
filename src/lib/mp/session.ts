@@ -5,17 +5,19 @@
  * - 3D: 내 위치 보내기(setPos), 다른 플레이어 그리기(state.players)
  * Firebase 는 들어갈 때 처음 불러온다(동적 import) → 멀티플레이어를 안 쓰면 앱 크기·동작이 그대로다.
  */
-import { MAX_PLAYERS, STALE_MS, cleanChat, cleanName, shouldSend, type Boss, type ChatMsg, type Look, type PlayerState, type Where } from './core'
+import { MAX_FOOD, MAX_PLAYERS, STALE_MS, cleanChat, cleanName, shouldSend, type Boss, type ChatMsg, type Food, type Home, type Look, type PlayerState, type Where } from './core'
 import { firebaseReady, localTest } from './config'
 import type { Transport } from './transport'
 
 export type Status = 'off' | 'connecting' | 'on' | 'full' | 'error'
-export interface MpState { status: Status; /** 내가 지금 있는 곳 */ room: Where; uid: string | null; players: Record<string, PlayerState>; chat: ChatMsg[]; /** 같이 사냥하는 대왕 몬스터 */ boss: Boss | null; error: string | null }
+export interface MpState { status: Status; /** 내가 지금 있는 곳 */ room: Where; /** room 이 home 이면 그 집 주인 uid */ host: string | null;
+  /** 놀러 가려는(가 있는) 친구 집 주인 uid: 앱이 그 집 화면을 띄운다 */ visiting: string | null; /** 내 집을 열었는지 */ hosting: boolean;
+  /** 지켜보는 집(내 집이나 놀러 간 집)과 그 바닥 음식 */ home: Home | null; foods: Food[]; uid: string | null; players: Record<string, PlayerState>; chat: ChatMsg[]; /** 같이 사냥하는 대왕 몬스터 */ boss: Boss | null; error: string | null }
 
 const NAME_KEY = 'ryuso.mp.name'
 export const savedName = () => { try { return cleanName(localStorage.getItem(NAME_KEY)) } catch { return '' } }
 
-let state: MpState = { status: 'off', room: 'none', uid: null, players: {}, chat: [], boss: null, error: null }
+let state: MpState = { status: 'off', room: 'none', host: null, visiting: null, hosting: false, home: null, foods: [], uid: null, players: {}, chat: [], boss: null, error: null }
 const listeners = new Set<() => void>()
 const set = (p: Partial<MpState>) => { state = { ...state, ...p }; listeners.forEach((f) => f()) }
 export const getMp = () => state
@@ -45,7 +47,7 @@ export async function joinMp(name: string, look: Look) {
     })
     t.onChat((chat) => set({ chat }))
     t.onBoss((boss) => set({ boss }))
-    const r = await t.join({ name: myName, room: state.room, ...pos, look })
+    const r = await t.join({ name: myName, room: state.room, ...(state.host ? { host: state.host } : {}), ...pos, look })
     if (id !== joinId) { t.leave(); return }
     if (r.full) { set({ status: 'full', uid: r.uid }); return }
     tr = t
@@ -58,10 +60,11 @@ export async function joinMp(name: string, look: Look) {
 
 export function leaveMp() {
   joinId++
+  unwatch()
   tr?.leave()
   tr = null
   lastSent = null
-  if (state.status !== 'off') set({ status: 'off', players: {}, chat: [], boss: null, uid: null })
+  if (state.status !== 'off') set({ status: 'off', players: {}, chat: [], boss: null, uid: null, visiting: null, hosting: false, home: null, foods: [] })
 }
 
 /** 3D 장면이 매 프레임 부른다: 보낼 때가 된 것만 보낸다 */
@@ -75,13 +78,14 @@ export function setPos(x: number, z: number, dir: 1 | -1, moving: boolean) {
 }
 export function setLook(look: Look) { tr?.update({ look }) }
 /** 3D 카페·농장·산책에 들어오고 나갈 때(나가면 'none'). 들어오기 전 상태에서도 기억해 둔다 */
-export function setWhere(room: Where) {
-  if (state.room === room) return
-  set({ room })
-  tr?.update({ room, ...pos })
+export function setWhere(room: Where, host: string | null = null) {
+  if (room !== 'home') host = null
+  if (state.room === room && state.host === host) return
+  set({ room, host })
+  tr?.update({ room, host, ...pos })
   lastSent = { ...pos, at: performance.now() }
 }
-export function say(text: string) { const t = cleanChat(text); if (t && tr) tr.chat(myName, t) }
+export function say(text: string, home = false) { const t = cleanChat(text); if (t && tr) tr.chat(myName, t, home) }
 export const playerCount = () => Object.keys(state.players).length
 export { MAX_PLAYERS }
 /** 대왕 몬스터에게 마법 한 번 / 새로 내기(같이 놀기 중일 때만) */
@@ -89,3 +93,60 @@ export function hitBoss(id: string, power: number) { tr?.hitBoss(id, power) }
 export function spawnBoss(next: Omit<Boss, 't'>) { tr?.spawnBoss(next) }
 /** 서버 시각(대략) */
 export const serverNow = () => Date.now() + (tr?.offset() ?? 0)
+
+// ── 집 놀이: 내 방에 친구를 초대하고, 친구 집에 놀러 간다 ──
+let stopWatch: (() => void) | null = null
+let watching: string | null = null
+function watch(host: string) {
+  if (watching === host || !tr) return
+  unwatch()
+  watching = host
+  stopWatch = tr.watchHome(host, (home, foods) => set({ home, foods }))
+}
+function unwatch() { stopWatch?.(); stopWatch = null; watching = null; if (state.home || state.foods.length) set({ home: null, foods: [] }) }
+/** 내 방(방 꾸밈)을 친구들에게 열고 모두에게 초대 글을 보낸다 */
+export function inviteHome(room: unknown) {
+  if (!tr || !state.uid) return
+  // Firebase 는 undefined 값을 받지 않아서 JSON 으로 한 번 걸러 보낸다
+  tr.openHome({ name: myName, room: JSON.parse(JSON.stringify(room ?? null)) })
+  set({ hosting: true })
+  watch(state.uid)
+  say('🏠 우리집에 놀러 와! 같이 간식 먹자 🍰', true)
+}
+/** 내 방 화면에 들어오면 부른다: 이미 연 집이면 친구들·음식을 다시 본다 */
+export function enterMyHome() { if (state.hosting && state.uid) watch(state.uid) }
+/** 내 방 화면을 나가면 집을 닫는다(놀러 와 있던 친구들은 돌아간다) */
+export function closeHome() {
+  if (!state.hosting) return
+  tr?.closeHome()
+  set({ hosting: false })
+  if (watching === state.uid) unwatch()
+}
+/** 친구 집에 놀러 간다 / 돌아온다 */
+export function visitHome(host: string) { if (!tr || host === state.uid) return; set({ visiting: host }); watch(host) }
+export function leaveVisit() { set({ visiting: null }); if (watching && watching !== state.uid) unwatch(); setWhere(sceneWhere) }
+// 3D 카페·농장·산책은 친구 집에 가 있는 동안에도 뒤에 그대로 있다: 그동안은 3D 위치를 보내지 않고, 돌아오면 그 3D 장소로 되돌린다
+let sceneWhere: Where = 'none'
+/** 3D 장면이 들어오고 나갈 때(remotePlayers3d) */
+export function setSceneWhere(room: Where) { sceneWhere = room; if (!state.visiting) setWhere(room) }
+/** 3D 장면을 나갈 때: 그 장면이 아직 지금 장소면 'none' 으로 */
+export function leaveSceneWhere(room: Where) { if (sceneWhere === room) setSceneWhere('none') }
+/** 3D 장면이 매 프레임 부르는 위치 보내기(친구 집에 가 있으면 보내지 않는다) */
+export function setPos3d(x: number, z: number, dir: 1 | -1, moving: boolean) { if (!state.visiting) setPos(x, z, dir, moving) }
+/** 지켜보는 집 바닥에 음식 놓기 / 먹기 */
+export function putFood(menu: string, x: number, y: number) {
+  if (!tr || !watching) return
+  // 바닥이 꽉 차면 가장 오래된 것을 치우고 놓는다
+  const old = [...state.foods].sort((a, b) => a.t - b.t)
+  for (const f of old.slice(0, Math.max(0, old.length - MAX_FOOD + 1))) tr.eatFood(watching, f.id)
+  tr.addFood(watching, { menu, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, by: myName })
+}
+export function eatFood(id: string) { if (tr && watching) tr.eatFood(watching, id) }
+/** 내가 먹는 중인 음식(친구 화면에도 보인다), 4초 뒤 저절로 끝 */
+let eatTimer = 0
+export function setEating(menu: string) {
+  tr?.update({ eat: menu })
+  clearTimeout(eatTimer)
+  eatTimer = window.setTimeout(() => tr?.update({ eat: null }), 4000)
+}
+export const myMpName = () => myName

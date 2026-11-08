@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { MultiplayerBar } from './components/MultiplayerBar'
+import { HomeVisitGate, MultiplayerBar } from './components/MultiplayerBar'
 import { setArrival, setWalkNext } from './lib/farmCafeLink'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
@@ -504,6 +504,7 @@ export default function App() {
             )}
             </Suspense>
             {/* 같이 놀기: 한 번 들어가면 어느 탭에 있든 계속(채팅도 계속). 설정이 없으면 그리지 않는다 */}
+            <HomeVisitGate outfit={outfit} tweaks={tweaks} />
             <MultiplayerBar outfit={outfit} lift={mode === 'room'} />
           </div>
 
