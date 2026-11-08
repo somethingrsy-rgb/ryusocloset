@@ -91,10 +91,12 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
       <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: dock ? '3.5rem' : 'max(22%, 7rem)' }}>
         {!dock && mainBtn}
         {showInvite && invite && (
-          <div role="dialog" aria-label="집 초대" className="pointer-events-auto flex w-full items-center gap-1.5 rounded-2xl bg-white/95 p-2 shadow-lg">
-            <p className="m-0 flex-1 text-xs leading-snug font-bold text-[#6b4b52]">🏠 <b className="text-[#7a3d8f]">{invite.name}</b>네 집에 초대받았어요!</p>
-            <button onClick={() => { setDismissed(invite.id); visitHome(invite.home!) }} className="h-9 shrink-0 rounded-full bg-[#ff8fab] px-3 text-xs font-black text-white">놀러 가기</button>
-            <button aria-label="초대 닫기" onClick={() => setDismissed(invite.id)} className="h-9 w-7 shrink-0 text-sm font-bold text-black/40">✕</button>
+          <div role="dialog" aria-label="초대장" className="pointer-events-auto flex w-full flex-col gap-1.5 rounded-2xl border-2 border-[#ffc2d4] bg-white/97 p-2.5 shadow-lg">
+            <p className="m-0 text-xs leading-snug font-bold text-[#6b4b52]">💌 <b className="text-[#7a3d8f]">{invite.name}</b>의 초대장<br /><span className="text-[#c04a5a]">「{invite.text}」</span></p>
+            <div className="flex gap-1.5">
+              <button onClick={() => { setDismissed(invite.id); visitHome(invite.home!) }} className="h-9 flex-1 rounded-full bg-[#ff8fab] text-sm font-black text-white">수락</button>
+              <button onClick={() => { setDismissed(invite.id); say(`💌 ${invite.name}, 고마워! 다음에 갈게`) }} className="h-9 flex-1 rounded-full bg-[#f3e6ea] text-sm font-bold text-[#6b4b52]">거절</button>
+            </div>
           </div>
         )}
         {open && !on && (
