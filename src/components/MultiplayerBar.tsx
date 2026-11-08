@@ -2,7 +2,8 @@
  * 같이 놀기(멀티플레이어) 단추와 채팅 칸. 3D 카페·농장·산책 화면 왼쪽에 얹는다.
  * Firebase 설정이 없으면(지금의 배포처럼) 아무것도 그리지 않는다 → 기존 화면 그대로.
  */
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { listen, speechSupported } from '../lib/mp/speech'
 import { getAvatar } from '../lib/avatars'
 import { multiplayerAvailable } from '../lib/mp/config'
 import { MAX_CHAT, MAX_NAME, MAX_PLAYERS, type Room } from '../lib/mp/core'
@@ -14,6 +15,20 @@ export function MultiplayerBar({ room, outfit }: { room: Room; outfit: Outfit })
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(savedName)
   const [text, setText] = useState('')
+  // 말로 채팅: 🎤 를 누르고 말하면 글로 바뀌고, 말을 마치면 바로 보낸다
+  const [hearing, setHearing] = useState(false)
+  const [micNote, setMicNote] = useState('')
+  const stopRef = useRef<() => void>(() => {})
+  useEffect(() => () => stopRef.current(), [])
+  const mic = () => {
+    if (hearing) { stopRef.current(); return }
+    setMicNote(''); setText(''); setHearing(true)
+    stopRef.current = listen((t) => setText(t), (t, err) => {
+      setHearing(false)
+      if (t) { say(t); setText('') }
+      else setMicNote(err === 'not-allowed' || err === 'service-not-allowed' ? '마이크를 쓸 수 있게 허락해 주세요' : '잘 못 들었어요. 다시 말해 볼까요?')
+    })
+  }
   const here = mp.room === room
   const look = { avatar: getAvatar().id, outfit: outfit as Record<string, string> }
   const lookKey = JSON.stringify(look)
@@ -26,7 +41,8 @@ export function MultiplayerBar({ room, outfit }: { room: Room; outfit: Outfit })
   const n = Object.keys(mp.players).length
   const btn = 'h-9 rounded-full px-3 text-sm font-black shadow'
   return (
-    <div className="pointer-events-none absolute top-14 left-2 z-20 flex w-[min(17rem,calc(100%-1rem))] flex-col items-start gap-1.5">
+    // 위쪽 단추 줄(폰에서는 두 줄)과 겹치지 않게 조금 아래 왼쪽에 둔다
+    <div className="pointer-events-none absolute left-2 z-20 flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: 'max(22%, 7rem)' }}>
       <button aria-label="같이 놀기" onClick={() => setOpen((o) => !o)} className={`pointer-events-auto ${btn} ${on ? 'bg-[#7a3d8f] text-white' : 'bg-white/95 text-[#7a3d8f]'}`}>
         👥 {on ? `${n}/${MAX_PLAYERS}` : '같이 놀기'}
       </button>
@@ -49,9 +65,14 @@ export function MultiplayerBar({ room, outfit }: { room: Room; outfit: Outfit })
             {!mp.chat.length && <li className="text-black/40">같이 노는 친구들과 이야기해요</li>}
           </ul>
           <form className="flex gap-1" onSubmit={(e) => { e.preventDefault(); say(text); setText('') }}>
-            <input aria-label="채팅" value={text} maxLength={MAX_CHAT} onChange={(e) => setText(e.target.value)} placeholder="말하기…" className="h-8 min-w-0 flex-1 rounded-xl border border-[#f0c6cd] px-2 text-sm" />
+            {speechSupported && (
+              <button type="button" aria-label={hearing ? '듣는 중 · 누르면 멈춰요' : '말로 채팅하기'} onClick={mic}
+                className={`h-8 w-9 shrink-0 rounded-xl text-base shadow ${hearing ? 'animate-pulse bg-[#ff5c8a] text-white' : 'bg-[#ffe4ec]'}`}>🎤</button>
+            )}
+            <input aria-label="채팅" value={text} maxLength={MAX_CHAT} onChange={(e) => setText(e.target.value)} placeholder={hearing ? '듣고 있어요… 말해 봐요' : speechSupported ? '🎤 누르고 말하기' : '말하기…'} className="h-8 min-w-0 flex-1 rounded-xl border border-[#f0c6cd] px-2 text-sm" />
             <button className="h-8 rounded-xl bg-[#ff8fab] px-2 text-xs font-black text-white">보내기</button>
           </form>
+          {micNote && <p className="m-0 text-[11px] font-bold text-[#d0587a]">{micNote}</p>}
           <button onClick={() => { leaveRoom(); setOpen(false) }} className="self-end text-[11px] font-bold text-black/50">나가기</button>
         </div>
       )}
