@@ -94,18 +94,22 @@ interface Cooking { seat: number; step: number; taps: number }
  * 주방: 카페에서 받은 주문서를 골라, 농장 재료와 기본 재료로 음식을 만든다.
  * 단계마다 그림 속 싱크대·도마·냄비·오븐·냉장고를 톡톡 눌러 만들고, 다 만들면 카페에서 서빙한다. 실패나 시간 제한은 없다.
  */
+/** 폰 세로 3D 화면 높이 */
+const P3_H = '56%'
+
 export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: Tweaks; onGo: (to: 'farm' | 'cafe' | 'party') => void }) {
   const { lang } = useI18n()
   const tx = T[lang]
   const kitchen = useSyncExternalStore(subscribeKitchen, getKitchen)
   const farm = useSyncExternalStore(subscribeFarm, getFarm)
   const secRef = useRef<HTMLElement>(null)
+  const [tallPhone, setTallPhone] = useState(false)
   const [wide, setWide] = useState(false)
   const [short, setShort] = useState(false) // 폰 가로처럼 낮은 화면: 요리 중 안내를 한 줄로 줄여 도마를 가리지 않게 한다
   useEffect(() => {
     const el = secRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => { setWide(el.clientWidth > el.clientHeight * 1.2); setShort(el.clientHeight < 520) })
+    const ro = new ResizeObserver(() => { setWide(el.clientWidth > el.clientHeight * 1.2); setShort(el.clientHeight < 520); setTallPhone(el.clientWidth < 520 && el.clientHeight > el.clientWidth * 1.3) })
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -145,6 +149,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
 
   const L = SPOTS[wide ? 'wide' : 'portrait']
   const phoneL = wide && short // 폰 가로
+  /** 폰 세로 3D: 3D 화면은 위쪽 일부만 쓰고 그 아래에 주문서 줄 */
+  const p3 = view3d && tallPhone
   const bounce = () => { setBusy(true); later(() => setBusy(false), 650) }
 
   const menu = selTicket ? menuById(selTicket.menu) : undefined
@@ -247,7 +253,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
     <section ref={secRef} aria-label={tx.title} className="relative h-full overflow-clip rounded-3xl bg-[#e9b06c] ring-1 ring-black/5 select-none" style={{ containerType: 'size' }}>
       {/* 주방 그림: 화면을 꽉 채우고(넘치는 쪽은 조금 잘림) 가운데에 둔다. 그림 속 자리는 그림 크기에 대한 % 라 그대로 맞는다 */}
       {/* 폰 가로(낮고 넓은 화면): 그림을 잘라 키우면 아일랜드가 잘리고 아래 칸이 아바타를 가려서, 그림은 왼쪽에 다 보이게 놓고 주문서·버튼은 오른쪽 칸으로 */}
-      {view3d ? <div className="absolute inset-y-0 left-0" style={{ width: phoneL ? `calc(100cqw - ${SIDE})` : '100%' }}><Suspense fallback={null}><Kitchen3D outfit={outfit} tweaks={tweaks} view={view} onStation={tapStation} line={helperLine} /></Suspense></div> : <>
+      {view3d ? <div className="absolute top-0 left-0" style={{ width: phoneL ? `calc(100cqw - ${SIDE})` : '100%', height: p3 ? P3_H : '100%' }}><Suspense fallback={null}><Kitchen3D outfit={outfit} tweaks={tweaks} view={view} onStation={tapStation} line={helperLine} /></Suspense></div> : <>
       <div className={`absolute top-1/2 -translate-y-1/2 ${phoneL ? 'left-0' : 'left-1/2 -translate-x-1/2'}`} style={{ width: phoneL ? `min(calc(100cqw - ${SIDE}), calc(100cqh * ${L.ratio}))` : `max(100cqw, calc(100cqh * ${L.ratio}))`, aspectRatio: `${L.ratio}` }}>
         <img src={assetUrl(L.img)} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
         {/* 지금 누를 곳 네모 테두리: 도마 말고는(오븐·냄비·싱크대·냉장고) 그림 바로 위, 같이 요리하는 친구·아바타보다 뒤에 그린다(친구 얼굴을 가리지 않게).
@@ -384,7 +390,8 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       </div>
 
       {/* 주문서 보드(주문서가 없을 때 안내는 아래 칸에만: 위아래에 같은 글이 두 번 보였다) */}
-      <div className={`absolute top-12 z-20 flex gap-2 overflow-x-auto px-1 pt-2.5 pb-2 ${phoneL ? 'right-1' : 'inset-x-1'}`} style={phoneL ? { width: `calc(${SIDE} - 0.5rem)` } : undefined}>
+      {p3 && <p className="absolute inset-x-3 z-20 m-0 text-xs font-black text-[#8a4b2a]" style={{ top: `calc(${P3_H} + 0.3rem)` }}>📝 주문서</p>}
+      <div className={`absolute z-20 flex gap-2 overflow-x-auto px-1 pt-2.5 pb-2 ${p3 ? '' : 'top-12'} ${phoneL ? 'right-1' : 'inset-x-1'}`} style={phoneL ? { width: `calc(${SIDE} - 0.5rem)` } : p3 ? { top: `calc(${P3_H} + 1.1rem)` } : undefined}>
         {tickets.map((t) => {
           const m = menuById(t.menu)!
           const on = sel === t.seat

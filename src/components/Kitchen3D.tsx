@@ -37,6 +37,8 @@ const hOf = (k: Station) => ART[k].w / ART[k].aspect
 const yAt = (k: Station, fy: number) => hOf(k) * (1 - fy)
 /** 아바타·친구가 다니는 곳(조리대 앞 ~ 아일랜드 뒤) */
 const WALK = { x0: -4.6, x1: 4.6, z0: -1.4, z1: 1.1 }
+/** 친구마다 다니는 곳(x 범위): 둘이면 왼쪽 반·오른쪽 반 */
+const laneOf = (k: number): [number, number] => (k === 0 ? [WALK.x0, -0.4] : k === 1 ? [0.4, WALK.x1] : [WALK.x0, WALK.x1])
 /** 자리에서 요리할 때 아바타가 서는 곳 */
 const standAt = (k: Station) => (k === 'board' ? { x: ART.board.x, z: 1.05 } : { x: ART[k].x + (ART[k].x > 0 ? -1 : 1) * ART[k].w * 0.45, z: -1.2 })
 
@@ -86,6 +88,16 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
     wall.position.set(0, 7, -3)
     wall.receiveShadow = true
     scene.add(floor, wall)
+    // 왼쪽·오른쪽 벽: 받은 분홍 딸기 타일(1장 = 4×4)
+    const side = s.texOf(assetUrl('kitchen/3d/tile_side.webp')); side.wrapS = side.wrapT = THREE.RepeatWrapping; side.repeat.set(5, 3.5)
+    const sideMat = keep(new THREE.MeshLambertMaterial({ map: side })), sideGeo = keep(new THREE.PlaneGeometry(20, 14))
+    for (const sx of [-1, 1]) {
+      const sw = new THREE.Mesh(sideGeo, sideMat)
+      sw.rotation.y = -sx * Math.PI / 2
+      sw.position.set(sx * 8, 7, 7)
+      sw.receiveShadow = true
+      scene.add(sw)
+    }
     // 벽 선반(그림)
     const shelf = s.paperDoll(s.texOf(assetUrl('kitchen/3d/shelf.webp')), 1.45, 1400 / 401, 1, false)
     shelf.root.position.set(0.3, 2.9, -2.95)
@@ -128,7 +140,7 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
     }
     // 효과 그림
     const sprite = (src: string, size: number) => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: s.texOf(assetUrl(src)), depthTest: false }))); sp.scale.setScalar(size); sp.renderOrder = 5; sp.visible = false; scene.add(sp); return sp }
-    const point = sprite('kitchen/point.webp', 0.9)
+    const point = sprite('kitchen/point.webp', 0.55)
     const flames = [0, 1, 2].map(() => sprite('kitchen/fire.webp', 0.45))
     const drops = [0, 1].map(() => sprite('kitchen/drop.svg', 0.22))
     const ice = sprite('kitchen/ice.webp', 0.8)
@@ -136,7 +148,7 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
     const texFor = (src: string) => { if (!texCache.has(src)) texCache.set(src, s.texOf(assetUrl(src))); return texCache.get(src)! }
     const pool: THREE.Sprite[] = []
     const tool = new THREE.Sprite(keep(new THREE.SpriteMaterial({ depthTest: false }))); tool.renderOrder = 6; tool.visible = false; scene.add(tool)
-    const doneSp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ depthTest: false }))); doneSp.renderOrder = 6; doneSp.visible = false; doneSp.scale.setScalar(0.9); scene.add(doneSp)
+    const doneSp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ depthTest: false }))); doneSp.renderOrder = 6; doneSp.visible = false; doneSp.scale.setScalar(0.6); scene.add(doneSp)
     const top = (k: Station) => new THREE.Vector3(ART[k].x, hOf(k) + 0.15, ART[k].z)
 
     let t = 0
@@ -185,15 +197,15 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
         if (sp.material.map !== texFor(it.src)) { sp.material.map = texFor(it.src); sp.material.needsUpdate = true }
         const row = items.filter((x) => x.at === it.at), n = row.length, k = row.indexOf(it)
         const a = ART[it.at]
-        sp.scale.setScalar(0.55)
-        sp.position.set(a.x + (k - (n - 1) / 2) * 0.5, yAt(it.at, a.top) + 0.25 + (st.here === it.at ? Math.sin(t * 30) * press * 0.04 : 0), a.z + 0.1)
+        sp.scale.setScalar(0.4)
+        sp.position.set(a.x + (k - (n - 1) / 2) * 0.4, yAt(it.at, a.top) + 0.25 + (st.here === it.at ? Math.sin(t * 30) * press * 0.04 : 0), a.z + 0.1)
       })
       // 도구(손·칼·믹서기…)는 재료 위에서 누를 때마다 꾹
       tool.visible = !!st.tool
       if (st.tool) {
         if (tool.material.map !== texFor(st.tool)) { tool.material.map = texFor(st.tool); tool.material.needsUpdate = true }
-        tool.scale.set(1, 1 - press * 0.15, 1)
-        tool.position.set(ART.board.x + 0.9, yAt('board', ART.board.top) + 0.65 - press * 0.1, ART.board.z + 0.1)
+        tool.scale.set(0.62, 0.62 * (1 - press * 0.15), 1)
+        tool.position.set(ART.board.x + 0.75, yAt('board', ART.board.top) + 0.45 - press * 0.08, ART.board.z + 0.1)
       }
       // 다 만든 음식은 도마 위에서 통통
       doneSp.visible = !!st.done
@@ -224,14 +236,17 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
           if (dd > 0.05 && go.wait <= 0) { const sp = Math.min(dd, dt * 1.6); p.x += (dx / dd) * sp; p.z += (dz / dd) * sp; if (Math.abs(dx) > 0.02) go.dir = dx > 0 ? 1 : -1; walk = true }
           else if (go.wait <= 0) {
             go.wait = 1.5 + Math.random() * 3
-            go.x = WALK.x0 + Math.random() * (WALK.x1 - WALK.x0); go.z = WALK.z0 + Math.random() * (WALK.z1 - WALK.z0)
+            // 친구 둘은 다니는 곳을 나눈다(첫 친구 왼쪽 반, 둘째 친구 오른쪽 반): 서로 겹치지 않게
+            const [lx0, lx1] = laneOf(k)
+            go.x = lx0 + Math.random() * (lx1 - lx0); go.z = WALK.z0 + Math.random() * (WALK.z1 - WALK.z0)
           }
         }
         for (const o of [mp, ...helpers.filter((x) => x !== d).map((x) => x.root.position)]) {
           const ax = p.x - o.x, az = p.z - o.z, ad = Math.hypot(ax, az)
           if (ad < 1.1 && ad > 1e-3) { p.x = o.x + (ax / ad) * 1.1; p.z = o.z + (az / ad) * 1.1 }
         }
-        p.x = Math.max(WALK.x0, Math.min(WALK.x1, p.x)); p.z = Math.max(WALK.z0, Math.min(WALK.z1, p.z))
+        { const [lx0, lx1] = laneOf(k); p.x = Math.max(lx0, Math.min(lx1, p.x)) }
+        p.z = Math.max(WALK.z0, Math.min(WALK.z1, p.z))
         d.body.position.y = happy ? Math.abs(Math.sin(t * 8 + k)) * 0.25 : walk ? Math.abs(Math.sin(t * 8 + k)) * 0.08 : 0
         s.face(d, go.dir)
         d.body.rotation.z = happy || walk ? 0 : Math.sin(t * 2 + k * 1.3) * 0.05
