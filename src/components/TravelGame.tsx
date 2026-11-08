@@ -59,7 +59,7 @@ export function TravelGame({ outfit, tweaks, onWear, onOutfit, onFull, onDecorat
   const [flags, setFlags] = useState(false)
   const [soccer, setSoccer] = useState(false)
   const [walk3d, setWalk3d] = useState(false)
-  useEffect(() => { onFull?.(math || speaking || jump || soccer || flags || (runner && wide)); return () => onFull?.(false) }, [math, speaking, jump, soccer, flags, runner, wide, onFull])
+  useEffect(() => { onFull?.(math || speaking || jump || soccer || flags || walk3d || (runner && wide)); return () => onFull?.(false) }, [math, speaking, jump, soccer, flags, walk3d, runner, wide, onFull])
   const game = useGame()
   const ver = useItemsVersion()
   // eslint-disable-next-line react-hooks/exhaustive-deps
