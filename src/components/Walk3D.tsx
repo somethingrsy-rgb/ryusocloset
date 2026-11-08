@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
 import { MultiplayerBar } from './MultiplayerBar'
 import { EXTRA_ANIMALS, animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
@@ -271,7 +272,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
 
     // 반짝이: 길 위 열 곳. 아직 못 찾은 여행 아이템이 늘 같은 자리에 숨어 있다(찾으면 사라진다)
     const pool = travelFindable().sort((a, b) => (a.id < b.id ? -1 : 1))
-    const sparkTex = w.texOf(emojiCanvas('✨'))
+    const sparkTex = w.texOf(assetUrl(SPARKLE_IMG))
     const sparks: { id: string; sprite: THREE.Sprite; x: number; z: number; t: number }[] = []
     for (let k = 0; k < SPARKLES && pool.length; k++) {
       const item = pool[hash(`walk3d${k}`) % pool.length]
@@ -354,7 +355,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
     }
     // 반짝이 효과(마법봉에서 몬스터로 날아가는 빛, 마법이 풀릴 때 사방으로 퍼지는 별)
     const wpTex = new Map<string, THREE.Texture>()
-    const fxTex = [w.texOf(emojiCanvas('✨')), w.texOf(emojiCanvas('⭐')), w.texOf(emojiCanvas('💖'))]
+    const fxTex = [w.texOf(assetUrl(SPARKLE_IMG)), w.texOf(emojiCanvas('⭐')), w.texOf(emojiCanvas('💖'))]
     const fx: { sp: THREE.Sprite; v: THREE.Vector3; life: number; max: number; to?: THREE.Vector3; from?: THREE.Vector3; onHit?: () => void }[] = []
     const spark = (tex: THREE.Texture, at: THREE.Vector3, size: number) => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }))); sp.position.copy(at); sp.scale.setScalar(size); scene.add(sp); return sp }
     // 마법봉: 전투 중에는 아바타 손에 든다
@@ -375,7 +376,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       const m = monsters[k]
       const from = new THREE.Vector3(w.me.x, 1.4, w.me.z), to = new THREE.Vector3(m.x, m.h * 0.55, m.z)
       const wp = WEAPON_BY_ID[wandRef.current] ?? WANDS[0]
-      if (!wpTex.has(wp.fx)) wpTex.set(wp.fx, w.texOf(emojiCanvas(wp.fx)))
+      if (!wpTex.has(wp.fx)) wpTex.set(wp.fx, w.texOf(wp.fx === '✨' ? assetUrl(SPARKLE_IMG) : emojiCanvas(wp.fx)))
       const ft = wpTex.get(wp.fx)!
       fx.push({ sp: spark(ft, from, 0.6 + wp.power * 0.2), v: new THREE.Vector3(), life: 0, max: 0.35, from, to, onHit: () => {
         m.shake = 0.25 + wp.power * 0.1

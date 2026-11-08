@@ -1,4 +1,5 @@
 import { playCoin, playHarvest, playPlant, playWater, startBgm, stopBgm } from '../lib/sound'
+import { Sparkle } from './Sparkle'
 import { clearArrival, isArriving } from '../lib/farmCafeLink'
 import { actKitchen } from '../lib/kitchen'
 import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
@@ -357,7 +358,7 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe, onWalk 
                 <FarmImg key={pp.x} name={`${crop.id}_${stageOf(plot.wateredAt, progress)}`} emoji={ready ? crop.emoji : plot.wateredAt === null ? '🌰' : progress < 0.4 ? '🌱' : '🌿'} className="absolute -translate-x-1/2" style={{ left: `${pp.x}%`, bottom: `${pp.b}%`, width: `${CROP_BOX[crop.id][0] / 500 * 36}%`, aspectRatio: `${CROP_BOX[crop.id][0]} / ${CROP_BOX[crop.id][1]}`, objectFit: 'contain', objectPosition: 'bottom' }} />
               ))}
               {plot && (plot.wateredAt === null || ready) && (
-                <span aria-hidden className={`absolute left-1/2 -translate-x-1/2 text-lg leading-none drop-shadow ${ready ? 'animate-bounce' : ''}`} style={{ bottom: '8%' }}>{ready ? '✨' : '💧'}</span>
+                <span aria-hidden className={`absolute left-1/2 -translate-x-1/2 text-lg leading-none drop-shadow ${ready ? 'animate-bounce' : ''}`} style={{ bottom: '8%' }}>{ready ? <Sparkle /> : '💧'}</span>
               )}
               {/* 옆 밭은 미리 깔려 있고 원할 때 설치(＋), 큰 밭의 못 산 칸은 자물쇠 */}
               {!mine && <span aria-hidden className="absolute inset-0 flex items-center justify-center text-base drop-shadow">{i >= MAIN_PLOTS ? <span className="rounded-full bg-white/90 px-1.5 text-xs font-extrabold text-[#5a9a3a]">＋ 설치</span> : '🔒'}</span>}
@@ -403,7 +404,7 @@ export function FarmScene({ outfit, tweaks, onKitchen, onOutfit, onCafe, onWalk 
                 {job?.kind === 'water' && job.watering && <span className="absolute text-sm" style={{ left: '102%', top: '56%' }}>💧</span>}
                 {/* 수확: 바구니를 들고 가서, 밭에서 바구니를 살짝 내렸다 들며 담는다 */}
                 {job?.kind === 'harvest' && <img src={assetUrl('assets/farm/icon_basket.webp')} alt="" draggable={false} className="absolute" style={{ left: '58%', top: '44%', width: '50%', transform: job.watering ? 'translateY(12%) rotate(-8deg)' : 'none', transition: 'transform 0.2s' }} />}
-                {job?.kind === 'harvest' && job.watering && <span className="absolute text-sm" style={{ left: '96%', top: '30%' }}>✨</span>}
+                {job?.kind === 'harvest' && job.watering && <span className="absolute text-sm" style={{ left: '96%', top: '30%' }}><Sparkle /></span>}
                 </span>
               </div>
               {job && job.n === Math.max(...Object.values(jobs).map((j) => j.n)) && <p className={`absolute ${isAvatarGuest(f) ? 'bottom-[196%]' : 'bottom-[98%]'} left-1/2 m-0 w-max -translate-x-1/2 rounded-2xl bg-white px-2 py-0.5 text-[11px] font-bold text-[#6b4b52] shadow`}>{job.line}</p>}
