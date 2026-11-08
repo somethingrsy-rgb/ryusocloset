@@ -119,7 +119,7 @@
             ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12"
           },
           "room": {
-            ".validate": "newData.hasChildren(['scene', 'room'])"
+            ".validate": "newData.hasChild('scene') && (newData.hasChild('room') || newData.child('place').isString())"
           },
           "t": {
             ".validate": "newData.isNumber() && newData.val() <= now + 60000"

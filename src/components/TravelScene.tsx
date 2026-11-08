@@ -29,6 +29,8 @@ import type { Food } from '../lib/mp/core'
 import { FoodPicker, HomeFriends, menuName } from './HomeFriends'
 import { AVATAR_BASE_W, AVATAR_FEET_RATIO, ROOM_W, ROOM_H } from '../lib/roomTypes'
 
+/** 받침이 있으면 '으로', 없거나 ㄹ 받침이면 '로' (핼러윈으로 · 앨리스로) */
+const euro = (word: string) => { const c = word.charCodeAt(word.length - 1) - 0xac00; if (c < 0 || c > 11171) return '로'; const j = c % 28; return j === 0 || j === 8 ? '로' : '으로' }
 /** 찾았다 상자를 보여 주는 시간(ms) */
 const FOUND_POP_MS = 700
 const TEXT = {
@@ -152,22 +154,24 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
     setPartyEnd(false)
     setEating(null)
   }
-  // 같이 놀기: 내 방에 친구를 초대한다(친구가 놀러 오면 같이 걷고, 간식을 꺼내 놓고 같이 먹는다)
+  // 같이 놀기: 지금 있는 곳(내 방·핼러윈 집·궁전…)으로 친구를 부른다(친구가 수락하면 같이 걷고, 간식을 꺼내 놓고 같이 먹는다)
   const mp = useSyncExternalStore(subscribeMp, getMp)
   const isMyRoom = placeId === MY_ROOM_ID
-  const hostingHere = isMyRoom && mp.status === 'on' && mp.hosting && !!mp.uid
+  const placeTitle = isMyRoom ? '우리집' : (lang === 'ko' ? p.ko : p.en)
+  const hostingHere = mp.status === 'on' && mp.hosting && !!mp.uid
   useEffect(() => { if (!hostingHere) return; enterMyHome(); setWhere('home', getMp().uid) }, [hostingHere])
-  // 내 방을 나가면 집을 닫는다(놀러 온 친구들은 돌아간다)
-  useEffect(() => () => { if (placeId === MY_ROOM_ID) { closeHome(); if (getMp().room === 'home') setWhere('none') } }, [placeId])
+  // 이 장소를 나가면 문을 닫는다(놀러 온 친구들은 돌아간다)
+  useEffect(() => () => { closeHome(); if (getMp().room === 'home') setWhere('none') }, [placeId])
   const inviteFriends = () => {
-    if (!layout) return
-    // 내가 사진으로 추가한 소품은 이 기기에만 있어서 친구에게는 보내지 않는다
-    const room = { ...layout.room, items: layout.room.items.filter((it) => !it.itemId.startsWith(CUSTOM_ROOM_PREFIX)) }
-    inviteHome({ scene: layout.scene, room })
+    // 꾸민 방이면 방 꾸밈을, 아니면 장소 그림(place)을 보낸다. 내가 사진으로 추가한 소품은 이 기기에만 있어서 보내지 않는다
+    const where = layout
+      ? { scene: layout.scene, room: { ...layout.room, items: layout.room.items.filter((it) => !it.itemId.startsWith(CUSTOM_ROOM_PREFIX)) }, title: placeTitle }
+      : { scene: 'place', place: placeId, title: placeTitle }
+    inviteHome(where, `${p.icon} ${placeTitle}${isMyRoom ? '에' : euro(placeTitle)} 놀러 와! 같이 놀자`)
     playServe()
   }
   const [picking, setPicking] = useState(false)
-  const putFoodNear = (m: string) => putFood(m, Math.max(8, Math.min(92, posRef.current.x + (Math.random() < 0.5 ? -9 : 9))), Math.max(minY + 4, Math.min(97, posRef.current.y + (Math.random() - 0.5) * 6)))
+  const putFoodNear = (m: string) => putFood(m, Math.max(8, Math.min(92, posRef.current.x + (Math.random() < 0.5 ? -9 : 9))), Math.max(minY + 4, Math.min(layout ? 97 : WALK_BOUNDS.maxY, posRef.current.y + (Math.random() - 0.5) * 6)))
   const [myEat, setMyEat] = useState<string | null>(null)
   useEffect(() => { if (!myEat) return; const t = setTimeout(() => setMyEat(null), 4000); return () => clearTimeout(t) }, [myEat])
   const pendingEat = useRef<Food | null>(null)
@@ -341,8 +345,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             announce={announce}
           />
         )}
-        {hostingHere && layout && (
-          <HomeFriends host={mp.uid!} me={pos} dir={dir} walking={walking} w={() => AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100} feet={AVATAR_FEET_RATIO}
+        {hostingHere && (
+          <HomeFriends host={mp.uid!} me={pos} dir={dir} walking={walking} w={(y) => (layout ? AVATAR_BASE_W * layout.room.avatar.scale / ROOM_W * 100 : 30 * depthScale(y))} feet={layout ? AVATAR_FEET_RATIO : 1}
             z={(y) => avatarLayer + (y >= posRef.current.y ? 1 : -1)}
             onFood={(f) => { walkTo({ x: f.x + (posRef.current.x < f.x ? -6 : 6), y: f.y }); pendingEat.current = f }} />
         )}
@@ -433,10 +437,10 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
         </div>
       )}
       {/* 같이 놀기 집 놀이 단추: 위 단추 줄이 길어지지 않게 오른쪽 가장자리에 */}
-      {isMyRoom && mp.status === 'on' && layout && (
+      {mp.status === 'on' && (
         <div className="absolute top-1/2 right-2 z-30 flex -translate-y-1/2 flex-col items-end gap-2">
           <button onClick={inviteFriends} className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#7a3d8f] px-3 py-2 text-sm font-bold text-white shadow-md">
-            <span aria-hidden>👥</span>{mp.hosting ? '또 부르기' : '친구 초대'}
+            <span aria-hidden>👥</span>{mp.hosting ? '또 부르기' : '여기로 부르기'}
           </button>
           {hostingHere && (
             <button onClick={() => { playTap(); setPicking(true) }} className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#ffd166] px-3 py-2 text-sm font-bold text-[#7a4a12] shadow-md">
