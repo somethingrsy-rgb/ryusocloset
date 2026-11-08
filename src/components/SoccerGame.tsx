@@ -8,7 +8,7 @@ import { AvatarHead } from './AvatarHead'
 import { haptic } from '../lib/haptic'
 import type { SoccerApi } from './Soccer3D'
 
-// 3D 경기장(시험판): three.js 가 커서 3D 를 켤 때만 받는다
+// 3D 경기장: three.js 가 커서 3D 를 켤 때만 받는다
 const Soccer3D = lazy(() => import('./Soccer3D').then((m) => ({ default: m.Soccer3D })))
 
 /** 팀 색: 빨강 팀 축구복(유하 몸에 맞춰 그림), 보라 팀 축구복(유엘 몸에 맞춰 그림) */
@@ -72,7 +72,7 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
   const [party, setParty] = useState<{ team: Team; id: number } | null>(null)
   const partyRef = useRef(party)
   partyRef.current = party
-  /** 3D 로 보기(시험판): 규칙·조작은 그대로, 경기장과 선수만 3D. 고른 것은 기억한다 */
+  /** 3D 로 보기: 규칙·조작은 그대로, 경기장과 선수만 3D. 고른 것은 기억한다 */
   const [view3d, setView3d] = useState(() => { try { return localStorage.getItem('ryuso.soccer.3d') === '1' } catch { return false } })
   const api3d = useRef<SoccerApi | null>(null)
   const pointers = useRef(new Map<number, Team>())
@@ -351,9 +351,9 @@ export function SoccerGame({ onExit }: { onExit: () => void }) {
               ))}
             </div>
             <button onClick={() => { playTap(); setAnimals(splitAnimals()) }} className="mt-2 min-h-10 w-full rounded-full bg-white font-bold text-[#6b4b52] shadow-sm">🔀 동물 친구 팀 섞기</button>
-            {/* 3D 로 보기(시험판) */}
+            {/* 3D 로 보기 */}
             <button aria-pressed={view3d} onClick={() => { playTap(); const v = !view3d; setView3d(v); try { localStorage.setItem('ryuso.soccer.3d', v ? '1' : '0') } catch { /* 이번만 */ } }}
-              className={`mt-2 min-h-10 w-full rounded-full font-bold shadow-sm ${view3d ? 'bg-[#3d6b2f] text-white' : 'bg-white text-[#3d6b2f]'}`}>🧊 3D 경기장 {view3d ? '켜짐' : '꺼짐'} <span className="text-xs opacity-70">시험판</span></button>
+              className={`mt-2 min-h-10 w-full rounded-full font-bold shadow-sm ${view3d ? 'bg-[#3d6b2f] text-white' : 'bg-white text-[#3d6b2f]'}`}>🧊 3D 경기장 {view3d ? '켜짐' : '꺼짐'}</button>
             <button onClick={start} className="mt-2 min-h-12 w-full rounded-full bg-[#4caf50] text-lg font-black text-white shadow">{phase === 'done' ? '⚽ 한 번 더' : '⚽ 경기 시작'}</button>
             <button onClick={onExit} className="mt-2 min-h-11 w-full rounded-full bg-white font-bold shadow-sm">나가기</button>
           </div>

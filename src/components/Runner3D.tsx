@@ -12,7 +12,7 @@ import { createStage, emojiCanvas, type Doll } from './stage3d'
 import { HOUSE_ART, TREE_ART } from './world3d'
 
 /**
- * 달리기 3D 무대(시험판): 달리기·점프·장애물·별·선물 상자·하트는 원래 달리기 그대로(lib/runner), 그림만 3D 로 그린다.
+ * 달리기 3D 무대: 달리기·점프·장애물·별·선물 상자·하트는 원래 달리기 그대로(lib/runner), 그림만 3D 로 그린다.
  * 길은 앞(-z)으로 뻗고 카메라는 비스듬히 옆에서 본다(달리는 쪽 = 화면 오른쪽). 장애물·별·선물·아바타·친구는 종이 인형.
  */
 const U = 1 / 60 // 달리기 1px = 1/60 장면 단위

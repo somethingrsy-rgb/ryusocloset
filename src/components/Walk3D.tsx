@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
-import { HUD_BUSY } from './MultiplayerBar'
+import { HUD_BUSY, mpDock } from './MultiplayerBar'
 import { BOSS_MAX, bossCanRespawn } from '../lib/mp/core'
 import { getMp, hitBoss, serverNow, spawnBoss, subscribeMp } from '../lib/mp/session'
 import { EXTRA_ANIMALS, animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
@@ -11,21 +11,18 @@ import { avatarName, getAvatar } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
 import { MY_ROOM_ID, findItem, isFound, travelFindable, travelItem } from '../lib/game'
 import { setPartyState } from '../lib/party'
-import { ITEMS, ITEM_BY_ID, assetUrl } from '../lib/items'
+import { ITEMS, assetUrl } from '../lib/items'
 import { actFarm, getFarm, subscribeFarm } from '../lib/farm'
 import { CoinIcon } from './Icons'
 import { getMeet, talkFor, type Talk } from '../lib/meet'
-import { toggleItem } from '../lib/outfit'
 import { playOrder, playServe, playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
-import { GuestDresser } from './GuestDresser'
 import { cafeShopSprite, stallSprite } from './viewSprite3d'
 import { ANIMAL_H, HOUSE_ART, TREE_ART, createWorld, showBack, signCanvas, emojiCanvas, type Doll, type World } from './world3d'
 
 /**
- * 3D 산책 (시험판): 마을은 3D(길·나무·집·꽃·구름)이고, 아바타와 동물 친구는 지금 그림을 세운 '종이 인형'이다.
+ * 3D 산책: 마을은 3D(길·나무·집·꽃·구름)이고, 아바타와 동물 친구는 지금 그림을 세운 '종이 인형'이다.
  * 땅을 누르면 그곳으로 걷고, 끌면 둘레를 돈다. 길에 반짝이(✨)가 있으면 가서 줍고, 친구를 누르면 다가가서 이야기한다.
- * 👗 버튼으로 그 자리에서 옷을 갈아입는다(코디 탭과 같은 옷).
  */
 const WORLD = 70
 /** 마법에 걸린 몬스터(무서운 얼굴 → 마법이 풀리면 귀여운 얼굴). 그림 크기(가로·세로), stage = 몇 단계부터 나오는지 */
@@ -100,7 +97,7 @@ const hash = (s: string) => {
   return h >>> 0
 }
 
-export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void; /** 길가 카페·농장 노점에서 그쪽 화면으로 */ onGo?: (to: 'cafe' | 'farm') => void; /** 집에 들어가면 그 장소(집 안) 화면으로 */ onEnter?: (place: string) => void }) {
+export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outfit; tweaks: Tweaks; onExit: () => void; /** 길가 카페·농장 노점에서 그쪽 화면으로 */ onGo?: (to: 'cafe' | 'farm') => void; /** 집에 들어가면 그 장소(집 안) 화면으로 */ onEnter?: (place: string) => void }) {
   const onEnterRef = useRef(onEnter)
   onEnterRef.current = onEnter
   const [near, setNear] = useState<'cafe' | 'farm' | null>(null)
@@ -111,7 +108,6 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
   const world = useRef<World | null>(null)
   const [ready, setReady] = useState(false)
   const [got, setGot] = useState<string | null>(null)
-  const [dressing, setDressing] = useState(false)
   /** 이야기: step 은 지금 묻는 질문, said 는 친구가 방금 한 답, done 이면 끝 */
   const [talk, setTalk] = useState<{ animal: number; t: Talk; step: 0 | 1; said: string | null; done: boolean } | null>(null)
   const talking = useRef<number | null>(null)
@@ -729,17 +725,19 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
     talking.current = null
   }
   const gotItem = got ? travelItem(got) : undefined
-  const wearable = got ? ITEM_BY_ID[got] : undefined
   const a = talk ? CALL_ANIMALS[talk.animal] : null
 
   return (
     <section aria-label="3D 산책" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none">
       <div ref={host} className="absolute inset-0" />
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
-        <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌳 3D 산책 <span className="text-xs font-bold text-black/40">시험판</span></span>
+        <div className="flex items-center gap-1.5">
+          <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌳 3D 산책</span>
+          {/* 같이 놀기 👥 단추 자리 */}
+          <span ref={mpDock} className="pointer-events-auto flex" />
+        </div>
         <div className="pointer-events-auto flex gap-1.5">
           <button aria-label="대왕 몬스터 도감" onClick={() => { playTap(); setShowDex(true) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#7a3d8f] shadow">📖 {dex.length}/{MONSTERS.length}</button>
-          <button aria-label="옷 갈아입기" onClick={() => { playTap(); setDressing(true) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#8a4b55] shadow">👗 옷</button>
           <button aria-label="닫기" onClick={onExit} className="h-10 w-10 rounded-full bg-white/95 text-lg font-bold shadow">✕</button>
         </div>
       </div>
@@ -867,7 +865,6 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
         <div role="status" className="absolute top-14 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-white/95 px-3 py-2 shadow-lg">
           <img src={assetUrl(gotItem.thumb)} alt="" className="h-12 w-12 object-contain" />
           <span className="text-sm font-bold whitespace-nowrap">찾았어요! {gotItem.name.ko}</span>
-          {wearable && <button onClick={() => { playTap(); onOutfit(toggleItem(outfit, wearable)); setGot(null) }} className="min-h-9 shrink-0 rounded-full bg-[#ff8fab] px-3 text-sm font-bold text-white">입어 보기</button>}
         </div>
       )}
 
@@ -891,15 +888,6 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
         </div>
       )}
 
-      {dressing && (
-        <div role="dialog" aria-label="옷 갈아입기" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) setDressing(false) }}>
-          <div className="sheet-in flex max-h-full w-full max-w-md flex-col rounded-3xl bg-[#fff8fb] p-4 shadow-2xl" style={{ height: 'min(560px, 100%)' }}>
-            <GuestDresser avatar={getAvatar()} initial={outfit} invited={false} title="옷 갈아입기" doneLabel="✓ 이 옷 입기"
-              onBack={() => setDressing(false)} onUninvite={() => setDressing(false)}
-              onDone={(o) => { onOutfit(o); setDressing(false) }} />
-          </div>
-        </div>
-      )}
     </section>
   )
 }

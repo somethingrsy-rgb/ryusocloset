@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
+import { mpDock } from './MultiplayerBar'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -17,14 +18,13 @@ import { guestLook } from '../lib/guestLooks'
 import { playCoin, playHarvest, playPlant, playTap, playWater } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { CoinIcon } from './Icons'
-import { GuestDresser } from './GuestDresser'
 import { FarmStall } from './FarmStall'
 import { PartyInvite } from './PartyGuests'
 import { cafeShopSprite, viewSprite } from './viewSprite3d'
 import { ANIMAL_H, AVATAR_H, FEET, createWorld, showBack, meadowTree, emojiCanvas, signCanvas, type Doll, type World } from './world3d'
 
 /**
- * 3D 농장 (시험판): 큰 밭 20칸과 옆 울타리 밭 8칸(농장 탭과 같은 밭·같은 저장)을 3D 들판에 깔고, 아바타가 걸어가서 심고·물 주고·수확한다.
+ * 3D 농장: 큰 밭 20칸과 옆 울타리 밭 8칸(농장 탭과 같은 밭·같은 저장)을 3D 들판에 깔고, 아바타가 걸어가서 심고·물 주고·수확한다.
  * 밭을 누르면 그 밭이 필요로 하는 일(심기 → 물주기 → 다 자라면 수확)을 한다. 작물은 농장 그림을 세운 종이 인형.
  * 같이 농사짓는 동물 친구는 밭 둘레를 거닌다(물 주기는 농장 탭처럼 친구들이 따로 한다).
  */
@@ -51,10 +51,10 @@ const plotAt = (i: number) => {
 const CAFE_GATE = 34
 /** 카페 가는 길이 지나는 x(z 에 따라 좌우로 굽이친다, 양 끝은 가운데) */
 const cafeRoadX = (z: number) => { const u = Math.max(0, Math.min(1, (z - 7) / (CAFE_GATE - 7))); return Math.sin(u * Math.PI * 2) * 3.2 * Math.sin(u * Math.PI) }
-export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCafe, onKitchen, onWalk }: {
+export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitchen, onWalk }: {
   /** 분홍 성(산책길)으로 들어가면 */
   onWalk?: () => void
-  outfit: Outfit; tweaks: Tweaks; onOutfit: (next: Outfit) => void; onExit: () => void
+  outfit: Outfit; tweaks: Tweaks; onExit: () => void
   /** 주방 버튼 */
   onKitchen?: () => void
   /** 카페에서 걸어왔으면 카페 가는 길 끝에서 시작 */
@@ -78,7 +78,6 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
   const seedRef = useRef(seed)
   seedRef.current = seed
   const [notice, setNotice] = useState<string | null>(null)
-  const [dressing, setDressing] = useState(false)
   useEffect(() => { if (!notice) return; const t = setTimeout(() => setNotice(null), 2200); return () => clearTimeout(t) }, [notice])
   // 2D 농장과 같은 것들: 밭 사기, 노점, 우유·달걀, 같이 농사짓는 친구, 물주기·수확 버튼, 주방
   const [buying, setBuying] = useState<number | null>(null)
@@ -695,12 +694,15 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     <section aria-label="3D 농장" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none">
       <div ref={host} className="absolute inset-0" />
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex flex-wrap items-start justify-between gap-2">
-        <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌱 3D 농장 <span className="text-xs font-bold text-black/40">시험판</span></span>
+        <div className="flex items-center gap-1.5">
+          <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌱 3D 농장</span>
+          {/* 같이 놀기 👥 단추 자리 */}
+          <span ref={mpDock} className="pointer-events-auto flex" />
+        </div>
         <div className="pointer-events-auto flex items-center gap-1.5">
           <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-black shadow"><CoinIcon /> {farm.coins}</span>
           {/* 위에서 내려다보기 ↔ 아바타 뒤에서 보기(위아래로 끌어도 높이가 바뀐다) */}
           <button aria-label="위에서 보기" onClick={() => { playTap(); const t = world.current?.tilt; if (t) t.value = t.value > 0.5 ? 0 : 1 }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#3d6b2f] shadow">🦅 위</button>
-          <button aria-label="옷 갈아입기" onClick={() => { playTap(); setDressing(true) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#8a4b55] shadow">👗 옷</button>
           {/* 같이 농사지을 친구 고르기(고른 친구 얼굴, 혼자면 🐾) */}
           <button aria-label="같이 농사지을 친구" onClick={() => { playTap(); setPicking(true) }} className="flex h-10 items-center rounded-full bg-white/95 px-2.5 shadow">
             {friendsNow.length ? friendsNow.map((f) => <img key={f} src={assetUrl(guestFace(f))} alt="" draggable={false} className="-mx-0.5 h-7 w-7 object-contain" />) : <span className="text-lg">🐾</span>}
@@ -766,15 +768,6 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
         <div className="absolute inset-0 z-40">
           <PartyInvite here={[]} initial={friendsNow} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`아바타 친구와 수학으로 모은 동물 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
             cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
-        </div>
-      )}
-      {dressing && (
-        <div role="dialog" aria-label="옷 갈아입기" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3" onClick={(e) => { if (e.target === e.currentTarget) setDressing(false) }}>
-          <div className="sheet-in flex max-h-full w-full max-w-md flex-col rounded-3xl bg-[#fff8fb] p-4 shadow-2xl" style={{ height: 'min(560px, 100%)' }}>
-            <GuestDresser avatar={getAvatar()} initial={outfit} invited={false} title="옷 갈아입기" doneLabel="✓ 이 옷 입기"
-              onBack={() => setDressing(false)} onUninvite={() => setDressing(false)}
-              onDone={(o) => { onOutfit(o); setDressing(false) }} />
-          </div>
         </div>
       )}
     </section>

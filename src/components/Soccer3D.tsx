@@ -8,7 +8,7 @@ import { FH, FW, GOAL_BOT, GOAL_TOP, type Match, type Team, type Vec } from '../
 import { createStage, cuteTree, emojiCanvas, type Doll } from './stage3d'
 
 /**
- * 축구 3D 무대(시험판): 경기 규칙·조작·점수판은 원래 축구 화면 그대로이고, 경기장과 선수만 3D 로 그린다.
+ * 축구 3D 무대: 경기 규칙·조작·점수판은 원래 축구 화면 그대로이고, 경기장과 선수만 3D 로 그린다.
  * 경기장 좌표(가로 FW × 세로 FH)를 땅에 눕혀서 중계 화면처럼 옆에서 비스듬히 본다(경기장 +x = 화면 오른쪽, +y = 화면 아래쪽).
  * api 로 화면 자리 ↔ 경기장 자리를 바꿔 준다(손가락으로 끌기·아바타 만지기).
  */

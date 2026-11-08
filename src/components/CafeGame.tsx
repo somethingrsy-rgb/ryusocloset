@@ -16,7 +16,7 @@ import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
 import { CoinIcon } from './Icons'
 
-// 3D 카페(시험판): three.js 가 커서 3D 를 켤 때만 받는다
+// 3D 카페: three.js 가 커서 3D 를 켤 때만 받는다
 const Cafe3D = lazy(() => import('./Cafe3D').then((m) => ({ default: m.Cafe3D })))
 
 /** 메뉴 그림(public/cafe/menu2/<id>.webp). 그림이 아직 없는 메뉴는 이모지로 */
@@ -129,7 +129,7 @@ export function CafeGame({ outfit, tweaks, onKitchen, onFarm, onWalk }: { outfit
   // 카페에 있는 동안 배경 음악(카페의 🔊 를 끄면 음악도 꺼진다)
   // 휴대폰(📞 버튼, 또는 동물을 누르면 그 동물에게 바로 건다). 휴대폰이 열려 있는 동안은 동물 목소리가 잘 들리게 음악을 멈춘다
   const [phone, setPhone] = useState<{ dial: number | null } | null>(null)
-  /** 3D 로 보기(시험판): 주문·서빙·전화·주방은 그대로, 정원과 손님·아바타만 3D. 고른 것은 기억한다 */
+  /** 3D 로 보기: 주문·서빙·전화·주방은 그대로, 정원과 손님·아바타만 3D. 고른 것은 기억한다 */
   // 3D 농장에서 걸어왔으면 3D 로 열고 농장 가는 길 끝에서 시작한다
   const [arrived] = useState(() => isArriving('fromFarm'))
   useEffect(() => { if (arrived) clearArrival() }, [arrived])
@@ -292,7 +292,7 @@ export function CafeGame({ outfit, tweaks, onKitchen, onFarm, onWalk }: { outfit
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm shadow"><CoinIcon /> <b>{farm.coins}</b></span>
           <button aria-label={tx.kitchen} onClick={() => { playTap(); onKitchen() }} className="relative h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">{tx.kitchen}{waiting > 0 && <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef6f86] px-1 text-[11px] text-white">{waiting}</span>}</button>
-          <button aria-label="3D 카페 (시험판)" aria-pressed={view3d} onClick={() => { playTap(); setView3d(!view3d) }} className={`h-9 rounded-full px-3 text-sm font-bold shadow ${view3d ? 'bg-[#8a4b55] text-white' : 'bg-white/90'}`}>3D</button>
+          <button aria-label="3D 카페" aria-pressed={view3d} onClick={() => { playTap(); setView3d(!view3d) }} className={`h-9 rounded-full px-3 text-sm font-bold shadow ${view3d ? 'bg-[#8a4b55] text-white' : 'bg-white/90'}`}>3D</button>
           <button aria-label="휴대폰 열기" onClick={() => { playTap(); setPhone({ dial: null }) }} className="h-9 rounded-full bg-white/90 px-3 text-sm font-bold shadow">📱 전화</button>
           <button aria-label={tx.sound[sound ? 1 : 0]} aria-pressed={sound} onClick={() => { const v = !sound; setSound(v); if (v) playOrder() }} className="h-9 w-9 rounded-full bg-white/90 shadow">{sound ? '🔊' : '🔇'}</button>
         </div>
