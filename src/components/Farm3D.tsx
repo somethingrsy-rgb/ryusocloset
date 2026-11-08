@@ -179,7 +179,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     const slotOf = new Map<THREE.Object3D, number>()
     let slots: { x: number; z: number; box: THREE.Mesh; hit: THREE.Mesh; mark: THREE.Sprite }[] = []
     const w = createWorld(el, {
-      bounds: BOUNDS, start: arrive ? { x: cafeRoadX(CAFE_GATE - 7), z: CAFE_GATE - 7 } : { x: 0, z: 6 }, seed: 11, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
+      bounds: BOUNDS, tiltable: true, start: arrive ? { x: cafeRoadX(CAFE_GATE - 7), z: CAFE_GATE - 7 } : { x: 0, z: 6 }, seed: 11, grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 밭을 누르면 밭 앞까지 걸어가서 그 밭이 필요로 하는 일을 한다
       // 확장 모드: 땅을 누르면 그 자리에 새 밭(또는 옮길 밭) 미리보기
       onGround: (x, z) => {
@@ -542,7 +542,7 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
     const roadPts: [number, number][] = []
     // 카페 가게 밑까지(길이 가게와 이어지게)
     for (let z = fz1 + 0.3; z <= CAFE_GATE + 3.6; z += 1.5) roadPts.push([cafeRoadX(z), z])
-    w.addCurvePath(roadPts, 3)
+    w.addCurvePath(roadPts, 3, 'start')
     const cafeShop = cafeShopSprite(w)
     cafeShop.root.position.set(0, 0, CAFE_GATE + 3.6)
     cafeShop.root.rotation.y = Math.PI
@@ -559,13 +559,13 @@ export function Farm3D({ outfit, tweaks, onOutfit, onExit, arrive = false, onCaf
       !(z > fz1 - 1 && Math.abs(x - cafeRoadX(z)) < 3.2) &&
       !w.obstacles.some((o) => Math.hypot(o.x - x, o.z - z) < o.r + 1.5)
     const cand: { x: number; z: number; d: number }[] = []
-    for (let c = -16; c <= 8; c++) for (let m = -8; m <= 7; m++) {
+    for (let c = -22; c <= 14; c++) for (let m = -13; m <= 12; m++) {
       const x = SIDE_X + c * (PW + GAP), z = -4 + (m + 0.5) * (PD + GAP)
       if (freeAt(x, z)) cand.push({ x, z, d: Math.hypot(x - 4, (z + 4) * 1.3) })
     }
     cand.sort((a, b) => a.d - b.d)
     const slotMat = keep(new THREE.MeshLambertMaterial({ color: 0xbfe9a8, transparent: true, opacity: 0.6 }))
-    slots = cand.slice(0, 40).map((c, k) => {
+    slots = cand.slice(0, 90).map((c, k) => { // 밭을 놓을 수 있는 자리 90곳
       const box = new THREE.Mesh(boxGeo, slotMat); box.position.set(c.x, 0.06, c.z); box.visible = false; scene.add(box)
       const hit = new THREE.Mesh(hitGeo, hitMat); hit.position.set(c.x, 0.7, c.z); scene.add(hit); slotOf.set(hit, k)
       const mark = new THREE.Sprite(iconMats.add); mark.position.set(c.x, 0.9, c.z); mark.scale.setScalar(1.1); mark.visible = false; scene.add(mark)

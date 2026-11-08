@@ -174,7 +174,8 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       const hx = p.x + nd.x * 6.5, hz = p.z + nd.z * 6.5
       const art = HOUSE_ART[k % HOUSE_ART.length]
       // 길에서 집 문 앞까지 흙길(집 밑까지 이어서 끊기지 않게)
-      w.addCurvePath([[p.x, p.z], [p.x + nd.x * 3.2, p.z + nd.z * 3.2], [hx, hz]], 2.2)
+      // 산책길 가장자리에서 시작(덤불이 산책길 위에 놓이지 않게)
+      w.addCurvePath([[p.x + nd.x * 1.5, p.z + nd.z * 1.5], [p.x + nd.x * 3.2 + t.x * 0.8, p.z + nd.z * 3.2 + t.z * 0.8], [hx, hz]], 2.2, 'start')
       const d = w.addProp(art.img, hx, hz, 6, art.aspect, 2.5)
       w.pickables.push(d.root)
       return { ...HOUSE_PLACE[k], doll: d, x: hx - nd.x * 3, z: hz - nd.z * 3 }
@@ -202,7 +203,7 @@ export function Walk3D({ outfit, tweaks, onOutfit, onExit, onGo, onEnter }: { ou
       const p = curve.getPointAt(u), t = curve.getTangentAt(u)
       const out = new THREE.Vector3(p.x, 0, p.z).normalize() // 고리 바깥쪽
       const bx = p.x + out.x * 9, bz = p.z + out.z * 9
-      w.addCurvePath([[p.x, p.z], [p.x + out.x * 4 + t.x * 0.6, p.z + out.z * 4 + t.z * 0.6], [bx, bz]], 2.4) // 건물 밑까지(끊기지 않게)
+      w.addCurvePath([[p.x + out.x * 1.5, p.z + out.z * 1.5], [p.x + out.x * 4 + t.x * 0.6, p.z + out.z * 4 + t.z * 0.6], [bx, bz]], 2.4, 'start') // 건물 밑까지(끊기지 않게), 갈림목에 덤불
       const sp = to === 'cafe' ? cafeShopSprite(w) : stallSprite(w)
       sp.root.position.set(bx, 0, bz)
       sp.root.rotation.y = Math.atan2(-out.x, -out.z) // 앞이 길 쪽
