@@ -19,7 +19,9 @@ const farmRoadX = (z: number) => { const u = Math.max(0, Math.min(1, (-z - 8.4) 
 /** 파라솔 테이블 자리: 숲길을 걷다가 하나씩 만나도록 잔디밭 여기저기에 띄엄띄엄(가게는 (0, -6.2)) */
 const TABLES: [number, number][] = [[-6.5, 0.5], [6.5, -0.5], [-3, 9], [11, 9], [-15, -7], [16, -8], [3, 17], [-13, 15]]
 /** 손님은 테이블 옆(가게 쪽 바깥)에 선다 */
-const SIDE = (i: number) => (TABLES[i][0] < 0 ? -1.25 : 1.25)
+/** 파라솔 테이블 크기 배율 */
+const TABLE_S = 1.5
+const SIDE = (i: number) => (TABLES[i][0] < 0 ? -1.25 : 1.25) * TABLE_S
 const tableAt = (i: number) => new THREE.Vector3(TABLES[i][0], 0, TABLES[i][1])
 const seatAt = (i: number) => tableAt(i).add(new THREE.Vector3(SIDE(i), 0, 0))
 
@@ -177,8 +179,9 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     for (let i = 0; i < 8; i++) {
       const p = tableAt(i), g = tableKit(i)
       g.position.set(p.x, 0, p.z - 0.2)
+      g.scale.setScalar(TABLE_S)
       scene.add(g)
-      w.obstacles.push({ x: p.x, z: p.z - 0.2, r: 0.7 })
+      w.obstacles.push({ x: p.x, z: p.z - 0.2, r: 0.7 * TABLE_S })
     }
     const nearTable = (x: number, z: number, r: number) => TABLES.some(([tx, tz]) => (tx - x) ** 2 + (tz - z) ** 2 < r * r)
     for (const [x, z] of [[-4.2, -5.6], [4.2, -5.6], [-6, -4], [6, -4]]) prop('bush', 1.15, 1024 / 616, x, z)
@@ -332,7 +335,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
       // 완성된 음식 손님에게 가는 중: 노랑 LED, 아바타가 그 음식을 들고 간다
       const goingReady = following !== null && st.encounters[following]?.startsWith('ready:')
       ledRing.visible = goingReady
-      if (goingReady && following !== null) { const tp = tableAt(following); ledRing.position.set(tp.x + SIDE(following) * 0.5, 0.06, tp.z - 0.2); (ledRing.material as THREE.MeshBasicMaterial).opacity = 0.6 + 0.4 * Math.abs(Math.sin(t * 6)) }
+      if (goingReady && following !== null) { const tp = tableAt(following); ledRing.position.set(tp.x + SIDE(following) * 0.4, 0.06, tp.z - 0.2); ledRing.scale.setScalar(TABLE_S); (ledRing.material as THREE.MeshBasicMaterial).opacity = 0.6 + 0.4 * Math.abs(Math.sin(t * 6)) }
       const carry = st.hold ?? (goingReady && following !== null ? st.menus[following] : null)
       if (carry) {
         const tex = texFor(carry)
@@ -353,7 +356,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         // 파라솔 기둥(테이블 가운데)과 겹치지 않게 화면에서 손님 쪽 옆으로 비켜 놓는다
         v.set(w.camera.position.x - tp.x, 0, w.camera.position.z - tp.z).normalize()
         const side = w.screenSide(SIDE(i), 0) >= 0 ? 1 : -1
-        sp.position.set(tp.x + v.z * 0.36 * side + v.x * 0.12, 1.0, tp.z - 0.2 - v.x * 0.36 * side + v.z * 0.12)
+        sp.position.set(tp.x + (v.z * 0.36 * side + v.x * 0.12) * TABLE_S, 0.78 * TABLE_S + 0.22, tp.z - 0.2 + (-v.x * 0.36 * side + v.z * 0.12) * TABLE_S)
       })
       // 말풍선·코인 표시를 손님 머리 위 화면 자리에
       for (let i = 0; i < 8; i++) {
