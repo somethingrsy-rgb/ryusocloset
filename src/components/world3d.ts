@@ -34,6 +34,9 @@ export const HOUSE_ART = [
   { img: 'travel/3d/house_ginger.webp', aspect: 1038 / 1146 },
 ] as const
 const TAP_MOVE = 8
+/** 카메라 거리 배율 범위(0.5 = 두 배 가까이, 2 = 두 배 멀리) */
+const ZOOM_MIN = 0.5
+const ZOOM_MAX = 2
 
 /** 같은 값을 늘 같게 내는 난수(새로 열어도 마을 모양이 같게) */
 export function seeded(seed: number) {
@@ -77,6 +80,9 @@ export interface World {
   setOverhead: (o: { x: number; z: number; h: number } | null) => void
   /** 카메라 높이(0 = 아바타 뒤 낮게, 1 = 위에서 내려다보기). 위아래로 끌어도 바뀐다 */
   tilt: { value: number }
+  /** 카메라 거리 배율(작을수록 크게 보인다): 두 손가락 벌리기·휠로 바뀐다 */
+  zoom: { value: number }
+  zoomBy: (k: number) => void
   onFrame: (fn: (dt: number, now: number) => void) => void
   /** 누른 곳에 맞은 물체 중 이것들 안에 든 것이 있으면 onPick, 아니면 땅을 누른 것(걷기) */
   pickables: THREE.Object3D[]
@@ -291,14 +297,35 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   let press: { x: number; y: number; yaw: number; tilt: number; dragged: boolean } | null = null
   /** 카메라 높이: 0 아바타 뒤 낮게 ~ 1 위에서 내려다보기 */
   const tilt = { value: 0 }
-  const onDown = (e: PointerEvent) => { dom.setPointerCapture(e.pointerId); press = { x: e.clientX, y: e.clientY, yaw, tilt: tilt.value, dragged: false } }
+  // 확대·축소: 두 손가락 벌리기/모으기, 마우스 휠(세로·가로 화면 모두)
+  const zoom = { value: 1 }
+  const zoomBy = (k: number) => { zoom.value = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom.value * k)) }
+  const fingers = new Map<number, { x: number; y: number }>()
+  let pinch = 0
+  const onDown = (e: PointerEvent) => {
+    dom.setPointerCapture(e.pointerId)
+    fingers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    if (fingers.size >= 2) { const [a, b] = [...fingers.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); if (press) press.dragged = true; return }
+    press = { x: e.clientX, y: e.clientY, yaw, tilt: tilt.value, dragged: false }
+  }
   const onMove = (e: PointerEvent) => {
+    if (fingers.has(e.pointerId)) fingers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    if (fingers.size >= 2) {
+      // 두 손가락: 벌리면 가까이(크게), 모으면 멀리(작게). 돌리기·높이는 그대로
+      const [a, b] = [...fingers.values()], d = Math.hypot(a.x - b.x, a.y - b.y)
+      if (pinch > 0 && d > 0) zoomBy(pinch / d)
+      pinch = d
+      return
+    }
     if (!press) return
     const dx = e.clientX - press.x
     if (Math.abs(dx) > TAP_MOVE || Math.abs(e.clientY - press.y) > TAP_MOVE) press.dragged = true
     if (press.dragged) { yaw = press.yaw - dx * 0.008; if (opts.tiltable) tilt.value = Math.max(0, Math.min(1, press.tilt + (e.clientY - press.y) * 0.004)) }
   }
   const onUp = (e: PointerEvent) => {
+    fingers.delete(e.pointerId)
+    if (fingers.size < 2) pinch = 0
+    if (fingers.size > 0) { if (press) press.dragged = true; return }
     if (press && !press.dragged) {
       const r = dom.getBoundingClientRect()
       ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1)
@@ -320,6 +347,8 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   dom.addEventListener('pointermove', onMove)
   dom.addEventListener('pointerup', onUp)
   dom.addEventListener('pointercancel', onUp)
+  const onWheel = (e: WheelEvent) => { e.preventDefault(); zoomBy(1 + Math.max(-0.25, Math.min(0.25, e.deltaY * 0.0015))) }
+  dom.addEventListener('wheel', onWheel, { passive: false })
   const keys = new Set<string>()
   const kd = (e: KeyboardEvent) => { if ((e.target as HTMLElement)?.tagName === 'INPUT') return; keys.add(e.key.toLowerCase()); if (e.key.startsWith('Arrow')) e.preventDefault() }
   const ku = (e: KeyboardEvent) => keys.delete(e.key.toLowerCase())
@@ -385,7 +414,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
     if (overhead) { camPos.set(overhead.x, overhead.h, overhead.z + overhead.h * 0.3); look.set(overhead.x, 0, overhead.z) }
     else {
       // 높이각: 낮게(0.48) ~ 거의 위에서(1.35), 높아질수록 조금 멀리
-      const pa = 0.48 + tilt.value * 0.87, dist = 9 + tilt.value * 9
+      const pa = 0.48 + tilt.value * 0.87, dist = (9 + tilt.value * 9) * zoom.value
       camPos.set(me.x + Math.sin(yaw) * Math.cos(pa) * dist, Math.sin(pa) * dist, me.z + Math.cos(yaw) * Math.cos(pa) * dist); look.set(me.x, 1.3 - tilt.value * 0.8, me.z)
     }
     camera.position.lerp(camPos, 1 - Math.pow(0.002, dt))
@@ -413,7 +442,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   frame = requestAnimationFrame(tick)
 
   return {
-    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addCastleGate, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables, setOverhead: (o) => { overhead = o }, tilt,
+    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addCastleGate, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables, setOverhead: (o) => { overhead = o }, tilt, zoom, zoomBy,
     onFrame: (fn) => { frameFns.push(fn) },
     dispose: () => {
       cancelAnimationFrame(frame)
