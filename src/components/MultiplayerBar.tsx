@@ -5,6 +5,7 @@
  * Firebase 설정이 없으면(지금의 배포처럼) 아무것도 그리지 않는다 → 기존 화면 그대로.
  */
 import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 import { listen, speechSupported } from '../lib/mp/speech'
 import { assetUrl } from '../lib/items'
 import { getAvatar } from '../lib/avatars'
@@ -45,6 +46,57 @@ export function FriendTab() {
     </button>
   )
 }
+/** 내가 방금 한 말: 화면에 보이는 내 아바타(data-me-avatar) 머리 위 말풍선. 3D 장소는 3D 말풍선이 따로 그린다 */
+/** 아바타가 다른 화면에 가려졌는지: 그 점 맨 위가 다른 3D 화면(canvas)이거나, 아바타를 품지 않은 창·덮개(dialog·region·고정 덮개) 안이면 가려진 것.
+ *  (아바타 그림은 눌리지 않게(pointer-events: none) 되어 있어서 맨 위 요소가 아바타 자신이 아닐 수 있다) */
+function covered(el: HTMLElement, x: number, y: number) {
+  const top = document.elementFromPoint(x, y)
+  if (!top) return true
+  const root = el.closest('section, [role=region], [role=dialog]') ?? el.parentElement
+  if (top.tagName === 'CANVAS' && !root?.contains(top)) return true
+  const box = top.closest('[role=dialog], [role=region]')
+  return !!box && !box.contains(el)
+}
+
+function MyBubble({ text, onShown }: { text: string; onShown: (v: boolean) => void }) {
+  const [at, setAt] = useState<{ x: number; y: number } | null>(null)
+  useEffect(() => {
+    let raf = 0, last = ''
+    const find = () => {
+      // 보이는 것만(다른 화면이나 창 밑에 가려진 아바타는 빼고): 가운데 점에 맨 위로 보이는 것이 그 아바타일 때
+      let best: DOMRect | null = null, head: { x: number; y: number } | null = null
+      // 3D 화면이 알려 주는 머리 위 점(주방 3D 등)
+      for (const el of document.querySelectorAll<HTMLElement>('[data-me-head]')) {
+        const r = el.getBoundingClientRect()
+        if (el.style.display === 'none' || r.top < 0 || r.top > innerHeight || r.left < 0 || r.left > innerWidth) continue
+        if (!covered(el, r.left, Math.min(innerHeight - 1, r.top + 20))) head = { x: Math.round(r.left), y: Math.round(r.top) }
+      }
+      for (const el of head ? [] : document.querySelectorAll<HTMLElement>('[data-me-avatar]')) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 24 || r.bottom < 0 || r.top > innerHeight) continue
+        if (covered(el, r.left + r.width / 2, r.top + r.height * 0.45)) continue
+        if (!best || r.width > best.width) best = r
+      }
+      const next = head ?? (best ? { x: Math.round(best.left + best.width / 2), y: Math.round(best.top + best.height * 0.07) } : null)
+      const key = next ? `${next.x},${next.y}` : ''
+      if (key !== last) { last = key; setAt(next); onShown(!!next) }
+      raf = requestAnimationFrame(find)
+    }
+    find()
+    return () => { cancelAnimationFrame(raf); onShown(false) }
+  }, [onShown])
+  if (!at) return null
+  return createPortal(
+    <div aria-hidden className="pointer-events-none fixed z-[70] max-w-[14rem] -translate-x-1/2 -translate-y-full" style={{ left: at.x, top: Math.max(8, at.y) }}>
+      <div className="relative rounded-2xl bg-white px-3 py-1.5 text-center text-sm leading-snug font-bold text-[#c04a5a] shadow-lg ring-1 ring-black/5">
+        {text}
+        <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white ring-0" />
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
 const FADE_MS = 8000
 const IDLE_MS = 20000
 
@@ -70,10 +122,14 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
   }
   // 새 말은 화면 아래에 투명 글자로 8초 보였다가 사라진다(최근 3줄, 눌러도 뒤의 단추를 막지 않는다)
   const [now, setNow] = useState(() => Date.now())
-  const fresh = mp.status === 'on' ? mp.chat.slice(-3).filter((c) => now - c.t < FADE_MS) : []
+  // 내가 한 말은 내 아바타 머리 위 말풍선으로(3D 장소는 3D 말풍선). 아래 글줄에는 친구가 한 말만
+  const [bubbleShown, setBubbleShown] = useState(false)
+  const in3d = (mp.room === 'cafe' || mp.room === 'farm' || mp.room === 'walk') && !mp.visiting
+  const mine = mp.status === 'on' ? [...mp.chat].reverse().find((c) => c.uid === mp.uid && now - c.t < FADE_MS) : undefined
+  const fresh = mp.status === 'on' ? mp.chat.filter((c) => now - c.t < FADE_MS && !(c.uid === mp.uid && (bubbleShown || in3d))).slice(-3) : []
   const newest = mp.chat[mp.chat.length - 1]?.t ?? 0
   useEffect(() => { setNow(Date.now()) }, [newest])
-  useEffect(() => { if (!fresh.length) return; const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t) }, [fresh.length])
+  useEffect(() => { if (!fresh.length && !mine) return; const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t) }, [fresh.length, mine])
   // 말하는 줄: 한동안(20초) 안 쓰면 저절로 닫힌다(화면을 덜 가리게)
   const [history, setHistory] = useState(false)
   const [askLeave, setAskLeave] = useState(false)
@@ -96,6 +152,7 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
   const say1 = (t: string) => { say(t); touch() }
   return (
     <>
+      {mine && !in3d && <MyBubble key={mine.id} text={mine.text} onShown={setBubbleShown} />}
       {/* 초대장 카드 + 들어가기 칸(「친구」 단추로 연다) */}
       <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: '0.5rem' }}>
         {open && !on && (
@@ -125,7 +182,7 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
       )}
       {/* 화면 아래: 사라지는 대화 + 말하는 줄 한 줄 */}
       {on && (
-        <div className="pointer-events-none absolute inset-x-2 z-[35] flex flex-col items-start gap-1" style={{ bottom: lift && !mp.visiting ? '5.5rem' : '0.5rem' }}>
+        <div className="pointer-events-none absolute inset-x-2 z-[60] flex flex-col items-start gap-1" style={{ bottom: lift && !mp.visiting ? '5.5rem' : '0.5rem' }}>
           {history && (
             <div role="dialog" aria-label="지난 대화" className="pointer-events-auto flex max-h-[40vh] w-[min(20rem,100%)] flex-col gap-1.5 rounded-2xl bg-white/95 p-2.5 shadow-lg">
               <ul className="m-0 flex min-h-0 list-none flex-col gap-0.5 overflow-y-auto p-0 text-xs">

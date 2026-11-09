@@ -30,7 +30,8 @@ export const FigureLayers = memo(function FigureLayers({
   const body = bl.body
   return (
     <>
-      <img src={body} alt="" className="layer" style={{ zIndex: 0 }} draggable={false} />
+      {/* 내 아바타(다른 아바타가 아니면)는 표시해 둔다: 같이 놀기 말풍선이 이 머리 위에 뜬다 */}
+      <img src={body} alt="" className="layer" style={{ zIndex: 0 }} draggable={false} data-me-avatar={avatar ? undefined : ''} />
       {items.map((it) => {
         const t = tweaks[it.category]
         return (

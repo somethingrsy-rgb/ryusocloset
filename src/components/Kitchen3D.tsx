@@ -45,6 +45,7 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
   const bubble = useRef<HTMLDivElement>(null)
   const stage = useRef<Stage | null>(null)
   const meRef = useRef<Doll | null>(null)
+  const headRef = useRef<HTMLDivElement>(null)
   const v = useRef(view)
   v.current = view
   const tapRef = useRef(onStation)
@@ -229,6 +230,8 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
       if (meWalk) { const k = Math.min(md, dt * 3.2); mp.x += (mdx / md) * k; mp.z += (mdz / md) * k; if (Math.abs(mdx) > 0.02) meDir = mdx > 0 ? 1 : -1 }
       me.body.position.y = st.busy || meWalk ? Math.abs(Math.sin(t * (meWalk ? 9 : 12))) * (meWalk ? 0.1 : 0.12) : 0
       s.face(me, meDir)
+      // 같이 놀기 말풍선 자리: 내 아바타 머리 위(화면 좌표)
+      { const hd = headRef.current, hp = s.project(tmp.copy(mp).setY(2.55)); if (hd) { hd.style.left = `${hp.x}px`; hd.style.top = `${hp.y}px`; hd.style.display = hp.front ? '' : 'none' } }
       helpers.forEach((d, k) => {
         const happy = st.cheer
         const wave = d.root.userData.wave as THREE.Texture | null
@@ -278,6 +281,8 @@ export function Kitchen3D({ outfit, tweaks, view, onStation, line }: { outfit: O
   return (
     <div className="absolute inset-0">
       <div ref={host} className="absolute inset-0" />
+      {/* 내 아바타 머리 위 한 점(같이 놀기 말풍선이 여기 뜬다) */}
+      <div ref={headRef} data-me-head="" aria-hidden className="pointer-events-none absolute h-px w-px" />
       <div ref={bubble} className="pointer-events-none absolute top-0 left-0 z-[6]" style={{ visibility: 'hidden' }}>
         {line && <p aria-live="polite" className="m-0 w-max max-w-[10rem] -translate-x-1/2 -translate-y-full rounded-2xl bg-white px-2 py-1 text-center text-[12px] leading-snug font-bold text-[#6b4b52] shadow-md">{line}</p>}
       </div>
