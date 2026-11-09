@@ -2,7 +2,9 @@
  * 같이 사냥 대왕 몬스터 화면 글(3D 농장·카페): 「대왕 몬스터 출현!」 단추, 싸우는 동안 진행 막대·✨ 마법!, 다 풀면 고마워 창.
  * 3D 장면 쪽은 bossHunt3d 의 attachBoss 가 맡는다.
  */
-import { useEffect, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import { WEAPON_BY_ID, getWeapon, subscribeWeapons } from '../lib/weapons'
+import { WeaponShop } from './WeaponShop'
 import { assetUrl } from '../lib/items'
 import { MONSTERS, loadDex, subscribeDex } from '../lib/monsters'
 import { getMp, subscribeMp } from '../lib/mp/session'
@@ -17,6 +19,10 @@ export function BossHud({ ui, done, onGo, onZap, onRest, onCloseDone }: { ui: Bo
   const dex = useSyncExternalStore(subscribeDex, dexCount)
   // 싸우기 시작하면 같이 놀기 말하는 줄을 닫는다(아래 단추를 가리지 않게)
   const fight = !!ui?.fight
+  // 마법봉·검 고르기(산책과 같은 마법 상점, 고른 것은 세 곳이 같이 쓴다)
+  const wand = useSyncExternalStore(subscribeWeapons, () => getWeapon())
+  const [shop, setShop] = useState(false)
+  const wi = WEAPON_BY_ID[wand]
   useEffect(() => { if (fight) window.dispatchEvent(new Event(HUD_BUSY)) }, [fight])
   return (
     <>
@@ -30,6 +36,9 @@ export function BossHud({ ui, done, onGo, onZap, onRest, onCloseDone }: { ui: Bo
               <p className="m-0 mt-1 text-xs font-bold text-[#c0587a]">{ui.friends.length ? `🤝 ${ui.friends.join(', ')}와(과) 같이 싸우는 중` : '🐾 친구를 불러서 같이 풀어요!'}</p>
             </div>
             <div className="absolute inset-x-2 bottom-3 z-30 mx-auto flex w-fit max-w-full items-center gap-2 rounded-3xl bg-white/95 p-3 shadow-xl">
+              <button aria-label="마법봉 고르기" onClick={() => { playTap(); setShop(true) }} className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#e5cfa3] bg-[#fdf2d8]">
+                {wi ? <img src={assetUrl(wi.img)} alt="" className="h-11 w-11 object-contain" /> : '🪄'}
+              </button>
               <button onClick={onZap} className="h-14 rounded-full bg-gradient-to-r from-[#c58bff] to-[#ff8fab] px-6 text-lg font-black text-white shadow-lg active:scale-95">✨ 마법!</button>
               <button onClick={() => { playTap(); onRest() }} className="h-10 rounded-full bg-[#ffe4ec] px-3 text-sm font-bold">잠깐 쉬기</button>
             </div>
@@ -41,6 +50,7 @@ export function BossHud({ ui, done, onGo, onZap, onRest, onCloseDone }: { ui: Bo
           </button>
         )
       })()}
+      {shop && <WeaponShop onClose={() => setShop(false)} />}
       {done && (() => {
         const m = MONSTERS[done.type]
         return (

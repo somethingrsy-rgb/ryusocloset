@@ -11,6 +11,7 @@ import { actFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
 import { playOrder, playServe, playTap } from '../lib/sound'
 import { SPARKLE_IMG } from './Sparkle'
+import { WANDS, WEAPON_BY_ID, WEAPON_SCALE, getWeapon } from '../lib/weapons'
 import { ANIMAL_H, emojiCanvas, type World } from './world3d'
 
 export interface BossUi { type: number; hp: number; max: number; far: number; fight: boolean; friends: string[] }
@@ -20,6 +21,8 @@ export interface BossHunt {
   pick: (o: THREE.Object3D) => boolean
   /** 마법 한 번(power 만큼 💖), tex 는 날아가는 그림 */
   zap: (power: number, tex?: THREE.Texture) => void
+  /** 고른 마법봉·검으로 마법 한 번(그 힘·그 그림, 손에 든 것을 휘두른다) */
+  zapWeapon: () => void
   /** 몬스터 앞까지 걸어가서 싸우기 시작 / 잠깐 쉬기 */
   go: () => void
   rest: () => void
@@ -40,6 +43,8 @@ export function attachBoss(w: World, room: Room, opts: {
   onDone: (d: BossDone) => void
   /** 마법 한 번의 힘(산책은 고른 마법봉 힘, 농장·카페는 2) */
   power?: number
+  /** 싸우는 동안 고른 마법봉·검을 아바타 손에 들려 준다(산책은 자기가 따로 그린다) */
+  holdWeapon?: boolean
 }): BossHunt {
   const texCache = new Map<string, THREE.Texture>()
   const monTex = (id: string, mood: 'angry' | 'happy') => { const k = `${id}_${mood}`; if (!texCache.has(k)) texCache.set(k, w.texOf(assetUrl(`travel/monster/${k}.webp`))); return texCache.get(k)! }
@@ -64,11 +69,17 @@ export function attachBoss(w: World, room: Room, opts: {
     w.walkTo(w.me.x, w.me.z)
   }
   const api: BossHunt = {
-    pick: (o) => { if (o !== doll.root) return false; if (bs.fight) api.zap(opts.power ?? 1); else api.go(); return true },
+    pick: (o) => { if (o !== doll.root) return false; if (bs.fight) { if (opts.holdWeapon) api.zapWeapon(); else api.zap(opts.power ?? 1) } else api.go(); return true },
     go: () => { if (on()) w.walkTo(bs.x, bs.z, start, 5) },
     rest: () => { bs.fight = false; bs.cool = true },
     fighting: () => bs.fight,
     owns: (o) => o === doll.root,
+    zapWeapon: () => {
+      const wp = WEAPON_BY_ID[getWeapon()] ?? WANDS[0]
+      if (!wpTex.has(wp.fx)) wpTex.set(wp.fx, w.texOf(wp.fx === '✨' ? assetUrl(SPARKLE_IMG) : emojiCanvas(wp.fx)))
+      swing = 1
+      api.zap(wp.power, wpTex.get(wp.fx))
+    },
     zap: (power, tex) => {
       if (!bs.fight || !on()) return
       const id = bs.id, from = new THREE.Vector3(w.me.x, 1.4, w.me.z), t = to(), ft = tex ?? fxTex[0]
@@ -81,7 +92,29 @@ export function attachBoss(w: World, room: Room, opts: {
       } })
     },
   }
+  // 손에 든 마법봉·검(산책과 같은 자리·같은 크기)
+  const wpTex = new Map<string, THREE.Texture>(), handTex = new Map<string, THREE.Texture>()
+  let swing = 0
+  const hand = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false }))
+  hand.renderOrder = 10
+  hand.visible = false
+  w.scene.add(hand)
+  const holdFrame = (dt: number, now: number) => {
+    hand.visible = !!opts.holdWeapon && bs.fight
+    if (!hand.visible) return
+    const id = getWeapon(), wp = WEAPON_BY_ID[id]
+    if (!wp) { hand.visible = false; return }
+    if (!handTex.has(id)) handTex.set(id, w.texOf(assetUrl(wp.img)))
+    if (hand.material.map !== handTex.get(id)) { hand.material.map = handTex.get(id)!; hand.material.needsUpdate = true }
+    const r = new THREE.Vector3().subVectors(w.camera.position, new THREE.Vector3(w.me.x, 0, w.me.z)).cross(new THREE.Vector3(0, 1, 0)).normalize()
+    const fx = w.camera.position.x - w.me.x, fz = w.camera.position.z - w.me.z, fl = Math.hypot(fx, fz) || 1
+    if (wp.sword) { hand.center.set(0.85, 0.87); hand.scale.set(WEAPON_SCALE * 1.25 * wp.aspect, WEAPON_SCALE * 1.25, 1); hand.material.rotation = -2.2 + Math.sin(now / 260) * 0.06 - swing * 0.9 }
+    else { hand.center.set(0.4, 0.18); hand.scale.set(WEAPON_SCALE * 1.75, WEAPON_SCALE * 1.75, 1); hand.material.rotation = 0.3 + Math.sin(now / 260) * 0.06 + swing * 1.1 }
+    hand.position.set(w.me.x + r.x * 0.47 + (fx / fl) * 0.45, 0.9, w.me.z + r.z * 0.47 + (fz / fl) * 0.45)
+    swing = Math.max(0, swing - dt * 4)
+  }
   w.onFrame((dt, now) => {
+    holdFrame(dt, now)
     const mp = getMp(), b = mp.status === 'on' ? mp.bosses[room] ?? null : null
     // 없거나 풀리고 조금 지났으면 누군가(먼저 한 사람) 새로 낸다
     if (mp.status === 'on' && bossCanRespawn(b, serverNow()) && now - spawnTry > 3000) {
