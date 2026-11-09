@@ -57,6 +57,8 @@ const WEAPON_BY_ID = Object.fromEntries(WANDS.map((x) => [x.id, x]))
 const OWN_KEY = 'ryuso.walk.weapons'
 const loadOwned = (): string[] => { try { const v = JSON.parse(localStorage.getItem(OWN_KEY) ?? '[]'); return Array.isArray(v) ? v.filter((x) => typeof x === 'string' && WEAPON_BY_ID[x]) : [] } catch { return [] } }
 const ownedOf = (list: string[]) => new Set([...WANDS.filter((x) => x.price === 0).map((x) => x.id), ...list])
+/** 손에 든 마법봉·검 크기(예전 크기에 곱한다) */
+const WEAPON_SCALE = 0.6
 const SPARKLES = 10
 /** 산책길: 한 바퀴 이어진 고리(끝이 다시 처음과 이어져서 걷다 보면 처음 자리로 돌아온다) */
 const loopCurve = () => new THREE.CatmullRomCurve3(Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2, r = WORLD * 0.62 + Math.sin(i * 2.3) * 7; return new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r) }), true)
@@ -534,7 +536,7 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
         if (wp?.sword) {
           // 검: 손잡이(그림 오른쪽 위)를 화면 왼쪽 손에 쥐고 칼날은 바깥 아래로. 마법을 쏠 때 살짝 휘두른다
           wandSp.center.set(0.85, 0.87) // 손잡이 가운데
-          wandSp.scale.set(1.25 * wp.aspect, 1.25, 1)
+          wandSp.scale.set(WEAPON_SCALE * 1.25 * wp.aspect, WEAPON_SCALE * 1.25, 1)
           // 그림은 칼끝이 왼쪽 아래: 손잡이를 중심으로 돌려서 칼끝이 위(살짝 바깥쪽)로 서게
           wandSp.material.rotation = -2.2 + Math.sin(now / 260) * 0.06 - swing * 0.9
           // 몸 앞(카메라 쪽)으로 조금 내밀어서 몸 뒤로 숨지 않게
@@ -543,7 +545,7 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
         } else {
           // 마법봉: 예전의 2.5배. 손잡이(그림 왼쪽 아래)를 화면 왼쪽 손에 쥐고 끝은 위로(살짝 바깥쪽). 마법을 쏠 때 검처럼 휘두른다
           wandSp.center.set(0.4, 0.18)
-          wandSp.scale.set(1.75, 1.75, 1)
+          wandSp.scale.set(WEAPON_SCALE * 1.75, WEAPON_SCALE * 1.75, 1)
           wandSp.material.rotation = 0.3 + Math.sin(now / 260) * 0.06 + swing * 1.1
           const fx = w.camera.position.x - w.me.x, fz = w.camera.position.z - w.me.z, fl = Math.hypot(fx, fz) || 1
           wandSp.position.set(w.me.x + r.x * 0.47 + (fx / fl) * 0.45, 0.9, w.me.z + r.z * 0.47 + (fz / fl) * 0.45)

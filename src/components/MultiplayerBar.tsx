@@ -86,11 +86,13 @@ function MyBubble({ text, onShown }: { text: string; onShown: (v: boolean) => vo
     return () => { cancelAnimationFrame(raf); onShown(false) }
   }, [onShown])
   if (!at) return null
+  // 머리에서 조금 떨어진 위에 띄운다. 위 탭 줄(약 5rem)에 닿으면 머리 오른쪽 옆으로
+  const side = at.y - 18 < 110
   return createPortal(
-    <div aria-hidden className="pointer-events-none fixed z-[70] max-w-[14rem] -translate-x-1/2 -translate-y-full" style={{ left: at.x, top: Math.max(8, at.y) }}>
+    <div aria-hidden className={`pointer-events-none fixed z-[70] max-w-[11rem] ${side ? '' : '-translate-x-1/2 -translate-y-full'}`} style={side ? { left: at.x + 52, top: Math.max(110, at.y + 6) } : { left: at.x, top: at.y - 18 }}>
       <div className="relative rounded-2xl bg-white px-3 py-1.5 text-center text-sm leading-snug font-bold text-[#c04a5a] shadow-lg ring-1 ring-black/5">
         {text}
-        <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white ring-0" />
+        <span className={`absolute h-3 w-3 rotate-45 bg-white ${side ? 'top-3 -left-1.5' : '-bottom-1.5 left-1/2 -translate-x-1/2'}`} />
       </div>
     </div>,
     document.body,
