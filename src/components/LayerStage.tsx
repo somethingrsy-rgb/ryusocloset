@@ -251,8 +251,8 @@ export function LayerStage<K extends string>({
           }}
         >
           <div ref={figureRef} className="sticker absolute inset-0">
-            {base.map((b) => (
-              <img key={b.src} src={b.src} alt="" className="layer" style={{ zIndex: b.z }} draggable={false} />
+            {base.map((b, i) => (
+              <img key={b.src} src={b.src} alt="" className="layer" style={{ zIndex: b.z }} draggable={false} data-me-avatar={i === 0 ? '' : undefined} />
             ))}
             {layers.map((l) => {
               const tw = tweaks[l.key]
