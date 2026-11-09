@@ -123,6 +123,12 @@
             },
             "$other": {
               ".validate": false
+            },
+            "uid": {
+              ".validate": "newData.isString() && newData.val().length <= 64"
+            },
+            "kind": {
+              ".validate": "newData.val() === 'order' || newData.val() === 'served'"
             }
           }
         }
