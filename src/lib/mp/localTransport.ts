@@ -11,15 +11,15 @@ export function localTransport(): Transport {
   let playersCb: (p: Record<string, PlayerState>) => void = () => {}
   let chatCb: (m: ChatMsg[]) => void = () => {}
   let beat = 0
-  let boss: Boss | null = null
+  const bosses: Record<string, Boss> = {}
   // 집 놀이: 집(방 꾸밈)과 바닥 음식. 지켜보는 쪽에 알려 준다
   const homes: Record<string, Home> = {}
   const foods: Record<string, Record<string, Food>> = {}
   const watchers = new Set<{ host: string; cb: (h: Home | null, f: Food[]) => void }>()
   const tellWatch = (host: string) => watchers.forEach((w) => { if (w.host === host) w.cb(homes[host] ?? null, Object.values(foods[host] ?? {})) })
   const myHome = () => { if (homes[uid]) ch?.postMessage({ type: 'home', uid, home: homes[uid] }); for (const f of Object.values(foods[uid] ?? {})) ch?.postMessage({ type: 'food+', uid, host: uid, food: f }) }
-  let bossCb: (b: Boss | null) => void = () => {}
-  const setBoss = (b: Boss, tell: boolean) => { boss = b; bossCb(b); if (tell) ch?.postMessage({ type: 'boss', uid, boss: b }) }
+  let bossCb: (b: Record<string, Boss>) => void = () => {}
+  const setBoss = (room: string, b: Boss, tell: boolean) => { bosses[room] = b; bossCb({ ...bosses }); if (tell) ch?.postMessage({ type: 'boss', uid, room, boss: b }) }
   const emit = () => playersCb({ ...players })
   const send = () => ch?.postMessage({ type: 'p', uid, state: { ...state, t: Date.now() } })
   const bye = () => ch?.postMessage({ type: 'bye', uid })
@@ -30,11 +30,11 @@ export function localTransport(): Transport {
       ch.onmessage = (e) => {
         const m = e.data as { type: string; uid: string; state?: unknown; msg?: ChatMsg }
         if (m.type === 'p') { const p = sanePlayer(m.state); if (p) { players[m.uid] = { ...p, t: Date.now() }; emit() } }
-        else if (m.type === 'hi') { send(); if (boss) ch?.postMessage({ type: 'boss', uid, boss }); myHome() }
+        else if (m.type === 'hi') { send(); for (const [room, b] of Object.entries(bosses)) ch?.postMessage({ type: 'boss', uid, room, boss: b }); myHome() }
         else if (m.type === 'home') { const h = (m as { home?: Home | null }).home; if (h) homes[m.uid] = h; else delete homes[m.uid]; tellWatch(m.uid) }
         else if (m.type === 'food+') { const x = m as unknown as { host: string; food: Food }; const f = saneFood(x.food?.id, x.food); if (f) { (foods[x.host] ??= {})[f.id] = f; tellWatch(x.host) } }
         else if (m.type === 'food-') { const x = m as unknown as { host: string; id: string }; if (foods[x.host]) { delete foods[x.host][x.id]; tellWatch(x.host) } }
-        else if (m.type === 'boss') { const b = saneBoss((m as { boss?: unknown }).boss); if (b && (!boss || b.id !== boss.id || b.hp < boss.hp)) setBoss(b, false) }
+        else if (m.type === 'boss') { const x = m as { boss?: unknown; room?: string }, b = saneBoss(x.boss), room = x.room ?? 'walk', cur = bosses[room]; if (b && (!cur || b.id !== cur.id || b.hp < cur.hp)) setBoss(room, b, false) }
         else if (m.type === 'bye') { delete players[m.uid]; emit(); if (homes[m.uid]) { delete homes[m.uid]; tellWatch(m.uid) } }
         else if (m.type === 'chat' && m.msg) { chat.push(m.msg); chatCb(chat.slice(-30)) }
       }
@@ -53,9 +53,9 @@ export function localTransport(): Transport {
       chat.push(msg); chatCb(chat.slice(-30))
       ch?.postMessage({ type: 'chat', uid, msg })
     },
-    hitBoss(id, power) { const b = bossHit(boss, id, power); if (b) setBoss({ ...b, t: Date.now() }, true) },
-    spawnBoss(next) { if (bossCanRespawn(boss, Date.now())) setBoss({ ...next, t: Date.now() }, true) },
-    onBoss(cb) { bossCb = cb },
+    hitBoss(room, id, power) { const b = bossHit(bosses[room] ?? null, id, power); if (b) setBoss(room, { ...b, t: Date.now() }, true) },
+    spawnBoss(room, next) { if (bossCanRespawn(bosses[room] ?? null, Date.now())) setBoss(room, { ...next, t: Date.now() }, true) },
+    onBosses(cb) { bossCb = cb },
     openHome(home) { homes[uid] = { ...home, t: Date.now() }; ch?.postMessage({ type: 'home', uid, home: homes[uid] }); tellWatch(uid) },
     closeHome() { delete homes[uid]; ch?.postMessage({ type: 'home', uid, home: null }); tellWatch(uid) },
     watchHome(host, cb) { const w = { host, cb }; watchers.add(w); cb(homes[host] ?? null, Object.values(foods[host] ?? {})); return () => { watchers.delete(w) } },

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { attachMultiplayer } from './remotePlayers3d'
+import { attachBoss, freeSpot, type BossDone, type BossHunt, type BossUi } from './bossHunt3d'
+import { BossHud } from './BossHud'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -139,6 +141,10 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   onWalkRef.current = onWalk
   const gateRef = useRef<{ x: number; z: number; root: THREE.Object3D } | null>(null)
   onFarmRef.current = onFarm
+  // 같이 사냥 대왕 몬스터
+  const bossRef = useRef<BossHunt | null>(null)
+  const [bossUi, setBossUi] = useState<BossUi | null>(null)
+  const [bossDone, setBossDone] = useState<BossDone | null>(null)
   /** 길을 넘어갈 때 하얗게 덮었다 걷는 막 */
   const [fade, setFade] = useState(arrive)
   useEffect(() => { if (!arrive) return; const t = setTimeout(() => setFade(false), 350); return () => clearTimeout(t) }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -153,11 +159,13 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     // 3D 농장과 같은 바탕: 카메라가 아바타 뒤에서 따라가고, 땅을 누르면 걷고, 옆으로 끌면 둘러본다
     const w = createWorld(el, {
       bounds: WALK, start: arrive ? { x: farmRoadX(-FARM_GATE + 7), z: -FARM_GATE + 7 } : { x: 0, z: -2.6 }, yaw: arrive ? Math.PI : 0, seed: 7, sky: 0xcdeeff, grass: assetUrl('cafe/3d/grass.webp'),
-      onPick: (o) => { const g = gateRef.current; if (g && o === g.root) { following = null; w.walkTo(g.x, g.z, undefined, 0.3); return } approach(guests.indexOf(o)) },
+      onPick: (o) => { if (bossRef.current?.pick(o)) { following = null; return } const g = gateRef.current; if (g && o === g.root) { following = null; w.walkTo(g.x, g.z, undefined, 0.3); return } approach(guests.indexOf(o)) },
     })
     world.current = w
     // 같이 놀기(멀티플레이어): 켜지 않으면 아무것도 하지 않는다
     const detachMp = attachMultiplayer(w, 'cafe')
+    // 같이 사냥하는 대왕 몬스터(같이 놀기 중일 때만, 손님 자리·가게를 피해 빈 땅에)
+    bossRef.current = attachBoss(w, 'cafe', { spot: () => freeSpot(w, WALK - 6), power: 2, onUi: setBossUi, onDone: setBossDone })
     const { scene, keep, rnd } = w
     // 땅을 누르거나 끌면 따라가던 손님은 그만 따라간다(손님을 누른 것이면 onPick 이 다시 정한다)
     const stopFollow = () => { following = null }
@@ -367,7 +375,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
         if (f) { f.style.transform = `translate(${pos.x}px, ${pos.y}px)`; f.style.visibility = pos.front ? 'visible' : 'hidden' }
       }
     })
-    return () => { detachMp(); el.removeEventListener('pointerdown', stopFollow); world.current = null; w.dispose() }
+    return () => { detachMp(); bossRef.current = null; el.removeEventListener('pointerdown', stopFollow); world.current = null; w.dispose() }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 한 번만 만든다(arrive 는 처음 자리만 정한다)
 
   useEffect(() => {
@@ -379,6 +387,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   return (
     <div className="absolute inset-0">
       <div ref={host} className="absolute inset-0" />
+      <BossHud ui={bossUi} done={bossDone} onGo={() => bossRef.current?.go()} onZap={() => bossRef.current?.zap(2)} onRest={() => bossRef.current?.rest()} onCloseDone={() => setBossDone(null)} />
       {/* 농장 길을 넘어갈 때 하얗게 */}
       <div aria-hidden className="pointer-events-none absolute inset-0 z-[30] bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
       {Array.from({ length: 8 }, (_, i) => (

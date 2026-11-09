@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
+import { attachBoss, freeSpot, type BossDone, type BossHunt, type BossUi } from './bossHunt3d'
+import { BossHud } from './BossHud'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -77,6 +79,10 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
   onWalkRef.current = onWalk
   const gateRef = useRef<{ x: number; z: number; root: THREE.Object3D } | null>(null)
   onCafeRef.current = onCafe
+  // 같이 사냥 대왕 몬스터
+  const bossRef = useRef<BossHunt | null>(null)
+  const [bossUi, setBossUi] = useState<BossUi | null>(null)
+  const [bossDone, setBossDone] = useState<BossDone | null>(null)
   const [seed, setSeed] = useState<CropId>('strawberry')
   const seedRef = useRef(seed)
   seedRef.current = seed
@@ -227,6 +233,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
         return true
       },
       onPick: (o) => {
+        if (!placingRef.current && bossRef.current?.pick(o)) return
         // 확장 모드에서는 노점·동물을 누르지 않는다
         if (placingRef.current && toolRef.current === 'fence') {
           const fp = fenceOf.get(o)
@@ -283,6 +290,8 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
     world.current = w
     // 같이 놀기(멀티플레이어): 켜지 않으면 아무것도 하지 않는다
     const detachMp = attachMultiplayer(w, 'farm')
+    // 같이 사냥하는 대왕 몬스터(같이 놀기 중일 때만, 밭·우리·노점을 피해 빈 땅에)
+    bossRef.current = attachBoss(w, 'farm', { spot: () => freeSpot(w, BOUNDS - 8, Array.from({ length: PLOT_COUNT }, (_, i) => ({ ...plotAt(i), r: 3.5 }))), power: 2, canFight: () => !placingRef.current, onUi: setBossUi, onDone: setBossDone })
     const { scene, rnd, keep, lambert } = w
 
     // 큰 밭 20칸 + 옆 밭 20칸: 흙 상자(마른 흙·젖은 흙·못 산 큰 밭은 풀빛, 설치 안 한 옆 밭은 흐린 흙) + 작물 둘 + 표시(💧 물 필요, ✨ 다 자람, 🔒 잠김)
@@ -718,7 +727,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
         w.face(a.doll, a.dir)
       }
     })
-    return () => { detachMp(); unsub(); unsubFriends(); unsubFence(); w.dispose(); world.current = null }
+    return () => { detachMp(); bossRef.current = null; unsub(); unsubFriends(); unsubFence(); w.dispose(); world.current = null }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 한 번만 만든다(arrive 는 처음 자리만 정한다)
 
   useEffect(() => {
@@ -746,7 +755,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
         </div>
       </div>
       {/* 도구 4개(아래): 세로 화면은 한 줄(1×4), 가로 화면은 오른쪽 아래 2×2. 씨앗을 누르면 위에 씨앗 고르기 칸 */}
-      {!placing && (
+      {!placing && !bossUi?.fight && (
         <div className="absolute inset-x-2 bottom-2 z-10 mx-auto flex max-w-[26rem] flex-col items-stretch gap-1.5 landscape:inset-x-auto landscape:right-2 landscape:mx-0 landscape:w-56">
           {seedOpen && (
             <div role="radiogroup" aria-label="심을 씨앗" className="flex justify-center gap-2 rounded-3xl bg-white/95 p-2 shadow-lg">
@@ -795,6 +804,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
       )}
       {notice && <p role="status" className="absolute top-14 left-1/2 z-20 m-0 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-sm font-bold whitespace-nowrap shadow">{notice}</p>}
       {!ready && <p className="absolute inset-0 z-20 m-0 flex items-center justify-center text-sm font-bold text-[#3d6b2f]">농장을 만드는 중…</p>}
+      {!placing && <BossHud ui={bossUi} done={bossDone} onGo={() => bossRef.current?.go()} onZap={() => bossRef.current?.zap(2)} onRest={() => bossRef.current?.rest()} onCloseDone={() => setBossDone(null)} />}
       {/* 카페 길을 넘어갈 때 하얗게 */}
       <div aria-hidden className="pointer-events-none absolute inset-0 z-30 bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
       {/* 아직 못 산 밭: 코인으로 사기 */}

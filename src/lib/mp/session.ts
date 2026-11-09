@@ -12,12 +12,12 @@ import type { Transport } from './transport'
 export type Status = 'off' | 'connecting' | 'on' | 'full' | 'error'
 export interface MpState { status: Status; /** 내가 지금 있는 곳 */ room: Where; /** room 이 home 이면 그 집 주인 uid */ host: string | null;
   /** 놀러 가려는(가 있는) 친구 집 주인 uid: 앱이 그 집 화면을 띄운다 */ visiting: string | null; /** 내 집을 열었는지 */ hosting: boolean;
-  /** 지켜보는 집(내 집이나 놀러 간 집)과 그 바닥 음식 */ home: Home | null; foods: Food[]; uid: string | null; players: Record<string, PlayerState>; chat: ChatMsg[]; /** 같이 사냥하는 대왕 몬스터 */ boss: Boss | null; error: string | null }
+  /** 지켜보는 집(내 집이나 놀러 간 집)과 그 바닥 음식 */ home: Home | null; foods: Food[]; uid: string | null; players: Record<string, PlayerState>; chat: ChatMsg[]; /** 같이 사냥하는 대왕 몬스터(장소마다) */ bosses: Record<string, Boss>; error: string | null }
 
 const NAME_KEY = 'ryuso.mp.name'
 export const savedName = () => { try { return cleanName(localStorage.getItem(NAME_KEY)) } catch { return '' } }
 
-let state: MpState = { status: 'off', room: 'none', host: null, visiting: null, hosting: false, home: null, foods: [], uid: null, players: {}, chat: [], boss: null, error: null }
+let state: MpState = { status: 'off', room: 'none', host: null, visiting: null, hosting: false, home: null, foods: [], uid: null, players: {}, chat: [], bosses: {}, error: null }
 const listeners = new Set<() => void>()
 const set = (p: Partial<MpState>) => { state = { ...state, ...p }; listeners.forEach((f) => f()) }
 export const getMp = () => state
@@ -34,7 +34,7 @@ export async function joinMp(name: string, look: Look) {
   const id = ++joinId
   myName = cleanName(name) || '친구'
   try { localStorage.setItem(NAME_KEY, myName) } catch { /* 이번만 */ }
-  set({ status: 'connecting', error: null, players: {}, chat: [], boss: null })
+  set({ status: 'connecting', error: null, players: {}, chat: [], bosses: {} })
   try {
     const t: Transport = localTest && !firebaseReady
       ? (await import('./localTransport')).localTransport()
@@ -46,7 +46,7 @@ export async function joinMp(name: string, look: Look) {
       set({ players: Object.fromEntries(Object.entries(players).filter(([, p]) => now - p.t < STALE_MS)) })
     })
     t.onChat((chat) => set({ chat }))
-    t.onBoss((boss) => set({ boss }))
+    t.onBosses((bosses) => set({ bosses }))
     const r = await t.join({ name: myName, room: state.room, ...(state.host ? { host: state.host } : {}), ...pos, look })
     if (id !== joinId) { t.leave(); return }
     if (r.full) { set({ status: 'full', uid: r.uid }); return }
@@ -64,7 +64,7 @@ export function leaveMp() {
   tr?.leave()
   tr = null
   lastSent = null
-  if (state.status !== 'off') set({ status: 'off', players: {}, chat: [], boss: null, uid: null, visiting: null, hosting: false, home: null, foods: [] })
+  if (state.status !== 'off') set({ status: 'off', players: {}, chat: [], bosses: {}, uid: null, visiting: null, hosting: false, home: null, foods: [] })
 }
 
 /** 3D 장면이 매 프레임 부른다: 보낼 때가 된 것만 보낸다 */
@@ -89,8 +89,8 @@ export function say(text: string, home = false) { const t = cleanChat(text); if 
 export const playerCount = () => Object.keys(state.players).length
 export { MAX_PLAYERS }
 /** 대왕 몬스터에게 마법 한 번 / 새로 내기(같이 놀기 중일 때만) */
-export function hitBoss(id: string, power: number) { tr?.hitBoss(id, power) }
-export function spawnBoss(next: Omit<Boss, 't'>) { tr?.spawnBoss(next) }
+export function hitBoss(room: string, id: string, power: number) { tr?.hitBoss(room, id, power) }
+export function spawnBoss(room: string, next: Omit<Boss, 't'>) { tr?.spawnBoss(room, next) }
 /** 서버 시각(대략) */
 export const serverNow = () => Date.now() + (tr?.offset() ?? 0)
 
