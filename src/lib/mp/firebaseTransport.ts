@@ -51,7 +51,12 @@ export function firebaseTransport(): Transport {
       const { user, db: d } = await connect()
       db = d; uid = user.uid
       const players = ref(db, 'lobby/players')
-      skew = Number((await get(ref(db, '.info/serverTimeOffset'))).val()) || 0
+      // .info 값은 get() 으로 읽을 수 없다(서버가 'Invalid token in path' 로 거절해 들어가기가 통째로 실패한다): 한 번만 듣는다
+      skew = await new Promise<number>((resolve) => {
+        const done = (v: number) => { clearTimeout(timer); resolve(v) }
+        const timer = setTimeout(() => done(0), 3000)
+        onValue(ref(db!, '.info/serverTimeOffset'), (s) => done(Number(s.val()) || 0), { onlyOnce: true })
+      })
       const snapshot = (await get(players)).val() as Record<string, unknown> | null
       const previous = sanePlayer(snapshot?.[uid])
       if (resumeUid && (resumeUid !== uid || !previous || !retained(previous, Date.now() + skew))) return { uid, full: false, expired: true }
@@ -59,15 +64,18 @@ export function firebaseTransport(): Transport {
       if (others.length >= MAX_PLAYERS) return { uid, full: true }
       me = child(players, uid)
       last = { ...(resumeUid && previous ? previous : state), look: state.look, session, away: false, moving: false }
-      await onDisconnect(me).update({ away: true, moving: false })
+      // 끊기면 자리 비움으로: 규칙이 이 쓰기를 「지금 있는 기록」에 비춰 검사하므로, 기록이 있을 때(복귀) 먼저, 새로 들어갈 때는 기록을 쓴 뒤에 건다
+      if (resumeUid) await onDisconnect(me).update({ away: true, moving: false })
       if (resumeUid) {
         const restored = await runTransaction(me, value => {
+          // 처음엔 가진 값이 없어 null 로 불린다: null 을 돌려주면 서버가 실제 값으로 다시 부른다(서버에도 없으면 아무것도 쓰지 않고 끝난다)
+          if (value === null) return null
           const current = sanePlayer(value)
           return current && current.session === previous?.session && retained(current, Date.now() + skew)
             ? { ...last, t: serverTimestamp() } : undefined
         }, { applyLocally: false })
-        if (!restored.committed) { await onDisconnect(me).cancel(); me = null; return { uid, full: false, expired: true } }
-      } else await set(me, { ...last, t: serverTimestamp() })
+        if (!restored.committed || !restored.snapshot.exists()) { await onDisconnect(me).cancel(); me = null; return { uid, full: false, expired: true } }
+      } else { await set(me, { ...last, t: serverTimestamp() }); await onDisconnect(me).update({ away: true, moving: false }) }
       connected = true; ready = true
       off.push(onValue(ref(db, '.info/connected'), (s) => {
         connected = s.val() === true
@@ -164,7 +172,8 @@ export function firebaseTransport(): Transport {
       if (target && database) {
         void onDisconnect(target).cancel().catch(() => {})
         // Compare ownership before removal: leaving an old tab must not delete a newer session.
-        void runTransaction(ref(database, 'lobby/players/' + owner), current => current?.session === session ? null : undefined)
+        // 처음엔 가진 값이 없어 null 로 불릴 수 있다: 그때 그만두면(undefined) 서버 값으로 다시 묻지 않아 지워지지 않는다. null 을 돌려주면 서버가 실제 값으로 다시 부른다
+        void runTransaction(ref(database, 'lobby/players/' + owner), current => current === null || current?.session === session ? null : undefined)
           .catch(() => {})
       }
     },

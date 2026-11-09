@@ -1,5 +1,5 @@
 {
   "database": { "rules": "database.rules.json" },
-  "functions": [{ "source": "functions", "codebase": "multiplayer", "ignore": ["node_modules", ".git", "*.test.mjs", ".env.example"] }],
+  "functions": [{ "source": "functions", "codebase": "multiplayer", "ignore": ["node_modules", ".git", "*.test.mjs", ".env.example", ".secret.local"] }],
   "emulators": { "database": { "port": 9000 }, "ui": { "enabled": false } }
 }

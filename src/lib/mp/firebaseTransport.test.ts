@@ -12,16 +12,21 @@ vi.mock('firebase/database', () => {
   return {
     ref: (_d: unknown, path: string) => ({ path, key: path.split('/').at(-1) }),
     child: (r: any, key: string) => ({ path: r.path + '/' + key, key }),
-    get: async (r: any) => snapshot(read(r.path)),
+    // 실제 Firebase 처럼 .info 경로는 get() 으로 읽을 수 없다
+    get: async (r: any) => { if (r.path.startsWith('.info')) throw new Error('Invalid token in path'); return snapshot(read(r.path)) },
     set: async (r: any, value: any) => { db.data[r.path] = value; db.writes.push({ path: r.path, value }) },
     update: async (r: any, part: any) => { db.data[r.path] = { ...db.data[r.path], ...part }; db.writes.push({ path: r.path, value: part }) },
     remove: async (r: any) => { delete db.data[r.path] },
     onDisconnect: () => db.disconnect,
-    onValue: (r: any, cb: (s: any) => void) => { db.listeners[r.path] = cb; return () => { delete db.listeners[r.path] } },
+    onValue: (r: any, cb: (s: any) => void) => { db.listeners[r.path] = cb; if (r.path === '.info/serverTimeOffset') cb(snapshot(0)); return () => { delete db.listeners[r.path] } },
     serverTimestamp: () => Date.now(), limitToLast: () => ({}), query: (r: any) => r, push: vi.fn(async () => {}),
+    // 실제 Firebase 처럼: 가진 값이 없으면 처음엔 null 로 부르고, 그 답이 서버 값과 안 맞으면 서버 값으로 다시 부른다
     runTransaction: async (r: any, fn: (v: any) => any) => {
-      const value = fn(read(r.path)); if (value !== undefined) db.data[r.path] = value
-      return { committed: value !== undefined, snapshot: snapshot(value) }
+      const actual = read(r.path)
+      let value = fn(null)
+      if (value !== undefined && actual != null) value = fn(actual)
+      if (value !== undefined) { if (value === null) delete db.data[r.path]; else db.data[r.path] = value }
+      return { committed: value !== undefined, snapshot: { ...snapshot(value), exists: () => value != null } }
     },
   }
 })
@@ -51,6 +56,12 @@ describe('Firebase 자리 보관', () => {
     expect(await t.join(player, 'another-user')).toMatchObject({ expired: true })
     expect(db.writes).toEqual([])
     expect(await t.join(player, 'me')).toMatchObject({ expired: true })
+  })
+  it('직접 나가면 내 참가 기록을 지운다', async () => {
+    const t = firebaseTransport(); await t.join(player)
+    expect(db.data['lobby/players/me']).toBeTruthy()
+    t.leave()
+    await vi.waitFor(() => expect(db.data['lobby/players/me']).toBeUndefined())
   })
   it('resumes the stored room and does not let an old tab remove a new session', async () => {
     db.data['lobby/players/me'] = { ...player, room: 'farm', t: Date.now(), session: 'old', away: true }

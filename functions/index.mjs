@@ -6,11 +6,11 @@ import { defineSecret, defineString } from 'firebase-functions/params'
 import { warn } from 'firebase-functions/logger'
 import webpush from 'web-push'
 import { cleanLobby, retained, shouldNotify, validSubscription } from './policy.mjs'
+import { dbConfig } from './config.mjs'
 
-initializeApp()
-const region = process.env.FUNCTIONS_REGION || 'us-central1'
-const instance = process.env.DATABASE_INSTANCE || 'ryuso-game-default-rtdb'
-const databaseUrl = defineString('DATABASE_URL')
+// 실제 프로젝트 ryuso-game: asia-southeast1 의 ryuso-game-default-rtdb (config.mjs, .env.ryuso-game 으로 바꿀 수 있다)
+const { region, instance, databaseUrl } = dbConfig()
+initializeApp({ databaseURL: databaseUrl })
 const publicKey = defineString('WEB_PUSH_PUBLIC_KEY')
 const subject = defineString('WEB_PUSH_SUBJECT', { description: 'A contact mailto: address or HTTPS URL' })
 const privateKey = defineSecret('WEB_PUSH_PRIVATE_KEY')
@@ -50,7 +50,7 @@ export const notifyChat = onValueCreated({ ref: '/lobby/chat/{messageId}', regio
 
 // Physical cleanup may run up to one minute after expiry; clients hide expired players at ten minutes.
 export const expireAwayPlayers = onSchedule({ schedule: 'every 1 minutes', region }, async () => {
-  const lobby = getDatabase(undefined, databaseUrl.value()).ref('lobby')
+  const lobby = getDatabase().ref('lobby')
   await lobby.transaction(current => cleanLobby(current, Date.now()))
 })
 

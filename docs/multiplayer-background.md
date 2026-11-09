@@ -18,19 +18,21 @@
 GitHub Pages에는 서버 코드를 실행할 수 없으므로 `functions/`의 Firebase Cloud Functions를 별도로 배포해야 한다. Firebase 프로젝트의 Cloud Functions/Cloud Scheduler 사용 가능한 결제 설정(Blaze)이 필요하다. 이 변경은 운영 서비스에 자동 배포하지 않는다.
 
 1. 프로젝트 루트에서 `npm ci`, `npm --prefix functions ci`를 실행한다. 배포 환경 Node.js는 22를 사용한다.
-2. Firebase CLI로 해당 프로젝트에 로그인한다. 아래 명령의 `PROJECT_ID`는 실제 Firebase 프로젝트 ID로 바꾼다.
-3. `functions/.env.example`을 `functions/.env.PROJECT_ID`로 복사한다. RTDB 콘솔의 **실제 지역·인스턴스·URL**을 `FUNCTIONS_REGION`, `DATABASE_INSTANCE`, `DATABASE_URL`에 넣는다. 기본값이 실제 지역과 같다고 가정하지 않는다.
+2. `firebase login` 으로 로그인한다. 프로젝트는 `.firebaserc` 의 기본값 `ryuso-game` 이다(아래 명령은 `--project ryuso-game` 로 한 번 더 명시한다).
+3. `functions/.env.example`을 `functions/.env.ryuso-game`으로 복사한다. 지역·인스턴스·URL은 이미 실제 값으로 들어 있다.
+   - 지역 `asia-southeast1`, 인스턴스 `ryuso-game-default-rtdb`, URL `https://ryuso-game-default-rtdb.asia-southeast1.firebasedatabase.app`
+   - 데이터베이스 트리거는 데이터베이스와 같은 지역에 배포해야 하므로 함수 지역도 `asia-southeast1`이다. 셋이 서로 맞지 않으면 `functions/config.mjs`가 배포 전에 멈춘다.
 4. `functions` 폴더에서 `npx web-push generate-vapid-keys --json`으로 키 쌍을 한 번 생성한다. 공개 키는 `WEB_PUSH_PUBLIC_KEY`, 연락처는 `WEB_PUSH_SUBJECT`에 넣는다. 비공개 키는 파일이나 GitHub 변수, `VITE_*` 변수에 넣지 말고 다음 명령의 비밀 입력 프롬프트에만 입력한다.
 
    ```sh
-   firebase functions:secrets:set WEB_PUSH_PRIVATE_KEY --project PROJECT_ID
+   firebase functions:secrets:set WEB_PUSH_PRIVATE_KEY --project ryuso-game
    ```
 
 5. 로컬 `.env.local` 및 GitHub 저장소 Actions **Variables**에 동일한 공개 키를 `VITE_WEB_PUSH_PUBLIC_KEY`로 넣는다.
 6. 먼저 서버/규칙을 배포한다. 이 순서를 지켜야 새 `away`, `session`, `call`, 구독 필드를 기존 규칙이 거절하지 않는다.
 
    ```sh
-   firebase deploy --only database,functions:multiplayer --project PROJECT_ID
+   firebase deploy --only database,functions:multiplayer --project ryuso-game
    ```
 
 7. 프런트엔드를 병합·배포한다. 기존 PWA 사용자에게 업데이트를 적용한다. 구버전 클라이언트는 기존 즉시 퇴장 방식이므로 전환 확인 때 양쪽 기기를 모두 업데이트한다.
