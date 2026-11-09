@@ -154,6 +154,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   // 같이 놀기: 지금 있는 곳(내 방·핼러윈 집·궁전…)으로 친구를 부른다(친구가 수락하면 같이 걷고, 간식을 꺼내 놓고 같이 먹는다)
   const mp = useSyncExternalStore(subscribeMp, getMp)
   const isMyRoom = placeId === MY_ROOM_ID
+  const mpOn = mp.status === 'on'
   const placeTitle = isMyRoom ? '우리집' : (lang === 'ko' ? p.ko : p.en)
   // 친구 집에 놀러 가 있는 동안은 뒤에 있는 이 장소가 내 위치를 보내지 않는다
   const hostingHere = mp.status === 'on' && mp.hosting && !!mp.uid && !mp.visiting
@@ -390,20 +391,20 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             <span aria-hidden>🍰</span>간식
           </button>
         )}
-        {/* 파티 음식: 주문받기 → 주방에서 만들기 → 같이 먹기 */}
-        {party.length > 0 && !partyEnd && !eating && unordered.length > 0 && (
+        {/* 파티 음식: 주문받기 → 주방에서 만들기 → 같이 먹기 (같이 놀기 중에는 숨긴다: 친구와는 간식을 같이 먹는다) */}
+        {!mpOn && party.length > 0 && !partyEnd && !eating && unordered.length > 0 && (
           <button onClick={() => { playTap(); takeOrders() }} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-[#ffd166] px-3 py-2 text-sm font-bold text-[#7a4a12] shadow-md">
             <span aria-hidden>📝</span>
             {lang === 'ko' ? '주문받기' : 'Take orders'}
           </button>
         )}
-        {party.length > 0 && !partyEnd && cookingLeft && onKitchen && (
+        {!mpOn && party.length > 0 && !partyEnd && cookingLeft && onKitchen && (
           <button onClick={() => { playTap(); onKitchen() }} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-3 py-2 text-sm font-bold text-[#8a4b2a] shadow-md ring-1 ring-black/5">
             <span aria-hidden>🍳</span>
             {lang === 'ko' ? '주방에서 만들기' : 'Cook'}
           </button>
         )}
-        {party.length > 0 && !partyEnd && !eating && readyOnes.length > 0 && (
+        {!mpOn && party.length > 0 && !partyEnd && !eating && readyOnes.length > 0 && (
           <button onClick={() => { playTap(); eatTogether() }} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-[#7bc96f] px-3 py-2 text-sm font-bold text-white shadow-md">
             <span aria-hidden>🍽️</span>
             {lang === 'ko' ? '같이 먹기' : 'Eat together'}
