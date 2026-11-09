@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
-import { HUD_BUSY, mpDock } from './MultiplayerBar'
+import { HUD_BUSY } from './MultiplayerBar'
 import { BOSS_MAX, bossCanRespawn } from '../lib/mp/core'
 import { getMp, hitBoss, serverNow, spawnBoss, subscribeMp } from '../lib/mp/session'
 import { EXTRA_ANIMALS, animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
@@ -749,8 +749,6 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌳 3D 산책</span>
-          {/* 같이 놀기 👥 단추 자리 */}
-          <span ref={mpDock} className="pointer-events-auto flex" />
         </div>
         <div className="pointer-events-auto flex gap-1.5">
           <button aria-label="대왕 몬스터 도감" onClick={() => { playTap(); setShowDex(true) }} className="h-10 rounded-full bg-white/95 px-3 text-sm font-black text-[#7a3d8f] shadow">📖 {dex.length}/{MONSTERS.length}</button>
