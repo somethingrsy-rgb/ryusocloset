@@ -17,7 +17,7 @@ function getCtx(): AudioContext | null {
       ctx = new AC()
     }
     // 앱이 가려진 동안에는 다시 켜지 않는다(가려진 채 효과음·타이머가 소리를 깨우면 배경 음악이 뒤에서 계속 나온다)
-    if (ctx.state !== 'running' && !hiddenNow()) void ctx.resume()
+    if (ctx.state !== 'running' && !hiddenNow() && !micOn) void ctx.resume()
     return ctx
   } catch {
     return null
@@ -42,6 +42,7 @@ function silentAudio() {
 
 /** iOS 는 화면을 만질 때 소리를 열어줘야 이후 효과음이 난다. 앱이 가려졌다 돌아오거나 전화로 끊긴 뒤에도 다시 만지면 이어서 나도록 계속 듣는다 */
 function unlock() {
+  if (micOn) return
   silentAudio()
   if (ctx && ctx.state === 'running') return
   const c = getCtx()
@@ -97,6 +98,18 @@ export function playSnap() {
 
 /* ---------- 놀이 효과음 (모두 합성음, 설정의 효과음 켜기/끄기를 따른다) ---------- */
 let enabled = true
+/** 마이크로 말하는 동안(같이 놀기 🎤): 배경 음악·효과음을 모두 끈다.
+ *  아이폰은 마이크를 켜면 소리 설정이 바뀌어 꺼 둔 소리도 크게 나와서, 듣는 동안은 앱 소리를 아예 멈춘다 */
+let micOn = false
+export function setMicQuiet(on: boolean) {
+  if (micOn === on) return
+  micOn = on
+  if (on) { stopBgmNode(); if (ctx && ctx.state === 'running') void ctx.suspend(); return }
+  // 끝나면 원래 소리 설정으로 돌려놓고 그 화면 음악을 다시
+  sessionType('playback')
+  if (ctx && ctx.state !== 'running' && !hiddenNow()) void ctx.resume()
+  syncBgm()
+}
 export const setSoundEnabled = (on: boolean) => { enabled = on; syncBgm() }
 /** 설정의 효과음이 켜져 있는지(동물 전화 목소리도 이걸 따른다) */
 export const soundOn = () => enabled
@@ -107,7 +120,7 @@ let bgmWant: string | null = null
 const bgmNodes = new Map<string, AudioBufferSourceNode>()
 const bgmLoading = new Set<string>()
 const BGM_GAIN: Record<string, number> = { birds: 0.18, cafe: 0.1, room: 0.2, run: 0.1, shop: 0.12, rain: 0.1 }
-const wanted = () => (bgmWant && enabled && !hiddenNow() ? bgmWant.split('+') : [])
+const wanted = () => (bgmWant && enabled && !micOn && !hiddenNow() ? bgmWant.split('+') : [])
 function stopBgmNode() {
   for (const src of bgmNodes.values()) { try { src.stop() } catch { /* 이미 멈춤 */ } }
   bgmNodes.clear()
@@ -191,7 +204,7 @@ function tone(c: AudioContext, at: number, f0: number, f1: number, dur: number, 
 }
 
 const play = (fn: (c: AudioContext, t: number) => void) => {
-  if (!enabled) return
+  if (!enabled || micOn) return
   const c = getCtx()
   if (!c) return
   fn(c, c.currentTime)
@@ -270,7 +283,7 @@ export function playVoiceFile(path: string, gain = 1): { done: Promise<boolean>;
 }
 /** 소리 파일을 재생한다. 파일을 못 받으면 fallback(합성음)을 대신 울린다 */
 function playSample(name: string, gain: number, fallback: (c: AudioContext, t: number) => void) {
-  if (!enabled) return
+  if (!enabled || micOn) return
   const c = getCtx()
   if (!c) return
   void loadSample(c, name).then((buf) => {
