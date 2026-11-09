@@ -25,9 +25,12 @@ export const defaultKitchen = (): KitchenState => ({ pantry: Object.fromEntries(
 const count = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(9999, Math.floor(v))) : 0)
 /** 파티 친구 주문서 자리: PARTY_SEAT + 동물 번호(0~7). 카페 손님 자리는 0~7 */
 export const PARTY_SEAT = 10
+/** 같이 놀기 친구 주문서 자리: MP_SEAT ~ MP_SEAT+9 (방 주인이 받은 친구 주문, lib/mpOrders 가 누구 것인지 기억한다) */
+export const MP_SEAT = 60
+export const isMpSeat = (seat: number) => seat >= MP_SEAT && seat < MP_SEAT + 10
 const SEATS = 8
 /** 쓸 수 있는 자리: 카페 0~7, 파티 PARTY_SEAT + 손님 번호(동물 친구 0~7, 아바타 친구 AVATAR_GUEST~) */
-const validSeat = (seat: unknown): seat is number => Number.isInteger(seat) && (((seat as number) >= 0 && (seat as number) < SEATS) || ((seat as number) >= PARTY_SEAT && validGuest((seat as number) - PARTY_SEAT)))
+const validSeat = (seat: unknown): seat is number => Number.isInteger(seat) && (((seat as number) >= 0 && (seat as number) < SEATS) || isMpSeat(seat as number) || ((seat as number) >= PARTY_SEAT && validGuest((seat as number) - PARTY_SEAT)))
 export const isPartySeat = (seat: number) => seat >= PARTY_SEAT
 /** 주문서 자리의 손님 번호(카페 자리 i 의 손님은 동물 i, 파티 자리는 동물 번호 또는 아바타 손님 번호) */
 export const ticketAnimal = (seat: number) => (seat >= PARTY_SEAT ? seat - PARTY_SEAT : seat)

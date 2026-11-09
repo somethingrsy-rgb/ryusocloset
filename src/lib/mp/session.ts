@@ -149,6 +149,13 @@ export function putFood(menu: string, x: number, y: number) {
   tr.addFood(watching, { menu, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, by: myName })
 }
 export function eatFood(id: string) { if (tr && watching) tr.eatFood(watching, id) }
+/** 방 주문(같이 놀기): 놀러 간 친구가 메뉴를 주문 / 방 주인이 만든 음식을 그 친구에게 가져다 준다 */
+export function orderFood(menu: string) { if (tr && watching && state.uid) tr.addFood(watching, { menu, x: 0, y: 0, by: myName, uid: state.uid, kind: 'order' }) }
+export function serveFood(order: Food) {
+  if (!tr || !watching) return
+  tr.eatFood(watching, order.id)
+  tr.addFood(watching, { menu: order.menu, x: 0, y: 0, by: order.by, uid: order.uid, kind: 'served' })
+}
 /** 내가 먹는 중인 음식(친구 화면에도 보인다), 4초 뒤 저절로 끝 */
 let eatTimer = 0
 export function setEating(menu: string) {

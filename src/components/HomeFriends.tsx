@@ -7,7 +7,7 @@ import { AVATARS } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
 import { MENU } from '../lib/recipes'
 import { getMp, setPos, subscribeMp } from '../lib/mp/session'
-import type { Food, Look, PlayerState } from '../lib/mp/core'
+import type { Look, PlayerState } from '../lib/mp/core'
 import type { Vec } from '../lib/walk'
 import { Ico } from './CafeGame'
 
@@ -44,7 +44,7 @@ function Friend({ p, said, w, feet, z }: { p: PlayerState; said: string | null; 
   )
 }
 
-export function HomeFriends({ host, me, dir, walking, w, feet, z, onFood }: {
+export function HomeFriends({ host, me, dir, walking, w, feet, z }: {
   host: string
   me: Vec
   dir: 1 | -1
@@ -54,8 +54,6 @@ export function HomeFriends({ host, me, dir, walking, w, feet, z, onFood }: {
   feet: number
   /** 그 자리(y)의 겹침 순서 */
   z: (y: number) => number
-  /** 바닥 음식을 눌렀을 때 */
-  onFood: (f: Food) => void
 }) {
   const mp = useSyncExternalStore(subscribeMp, getMp)
   // 내 위치: 바뀔 때 + 1초마다(멈춘 자리를 놓치지 않게)
@@ -70,23 +68,17 @@ export function HomeFriends({ host, me, dir, walking, w, feet, z, onFood }: {
   const saidOf = (uid: string) => [...mp.chat].reverse().find((c) => c.uid === uid && now - c.t < 6000)?.text ?? null
   return (
     <>
-      {mp.foods.map((f) => (
-        <button key={f.id} aria-label={`${menuName(f.menu)} 먹기`} onClick={(e) => { e.stopPropagation(); onFood(f) }}
-          className="absolute flex -translate-x-1/2 -translate-y-full flex-col items-center" style={{ left: `${f.x}%`, top: `${f.y}%`, width: '9%', zIndex: z(f.y) }}>
-          <Ico id={f.menu} className="h-auto w-full drop-shadow" />
-        </button>
-      ))}
       {friends.map(([uid, p]) => <Friend key={uid} p={p} said={saidOf(uid)} w={w(p.z)} feet={feet} z={z(p.z)} />)}
     </>
   )
 }
 
-/** 음식 고르기 창: 고르면 내 앞 바닥에 놓는다 */
-export function FoodPicker({ onPick, onClose }: { onPick: (menu: string) => void; onClose: () => void }) {
+/** 메뉴 고르기 창(같이 놀기 방 주문) */
+export function FoodPicker({ onPick, onClose, title = '🍰 무엇을 꺼내 놓을까요?' }: { onPick: (menu: string) => void; onClose: () => void; title?: string }) {
   return (
-    <div role="dialog" aria-label="음식 놓기" className="absolute inset-0 z-50 flex items-end justify-center bg-black/30 p-3 sm:items-center" onPointerUp={(e) => e.stopPropagation()} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    <div role="dialog" aria-label="메뉴 고르기" className="absolute inset-0 z-50 flex items-end justify-center bg-black/30 p-3 sm:items-center" onPointerUp={(e) => e.stopPropagation()} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="flex max-h-full w-full max-w-md flex-col rounded-3xl bg-[#fff8fb] p-4 shadow-2xl">
-        <p className="mt-0 mb-2 text-center text-base font-black text-[#c04a5a]">🍰 무엇을 꺼내 놓을까요?</p>
+        <p className="mt-0 mb-2 text-center text-base font-black text-[#c04a5a]">{title}</p>
         <div className="grid min-h-0 grid-cols-4 gap-2 overflow-y-auto">
           {MENU.map((m) => (
             <button key={m.id} aria-label={m.ko} onClick={() => onPick(m.id)} className="flex flex-col items-center rounded-2xl bg-white p-1 shadow-sm active:scale-95">

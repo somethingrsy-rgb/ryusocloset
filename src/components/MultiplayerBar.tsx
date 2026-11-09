@@ -8,6 +8,7 @@ import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } fro
 import { createPortal } from 'react-dom'
 import { listen, speechSupported } from '../lib/mp/speech'
 import { assetUrl } from '../lib/items'
+import { playTap } from '../lib/sound'
 import { getAvatar } from '../lib/avatars'
 import { multiplayerAvailable } from '../lib/mp/config'
 import { MAX_CHAT, MAX_NAME, MAX_PLAYERS } from '../lib/mp/core'
@@ -137,9 +138,13 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
   const [askLeave, setAskLeave] = useState(false)
   const [used, setUsed] = useState(0)
   const touch = () => setUsed((n) => n + 1)
-  useEffect(() => { if (!open || hearing || history) return; const t = setTimeout(() => setOpen(false), IDLE_MS); return () => clearTimeout(t) }, [open, hearing, history, used])
-  // 놀이 화면이 바쁠 때(몬스터 마법 풀기 시작 등) 말하는 줄을 닫아서 아래 단추를 가리지 않게
-  useEffect(() => { const f = () => { setOpen(false); setHistory(false); setAskLeave(false) }; window.addEventListener(HUD_BUSY, f); return () => window.removeEventListener(HUD_BUSY, f) }, [])
+  // 대화 줄(💬 로 연다): 친구 단추와 따로. 한동안 안 쓰면 저절로 닫혀서 화면을 덜 가린다
+  const [chatOpen, setChatOpen] = useState(false)
+  useEffect(() => { if (!chatOpen || hearing || history) return; const t = setTimeout(() => setChatOpen(false), IDLE_MS); return () => clearTimeout(t) }, [chatOpen, hearing, history, used])
+  // 친구 칸(친구 단추로 연다)도 한동안 안 쓰면 닫힌다
+  useEffect(() => { if (!open) return; const t = setTimeout(() => setOpen(false), IDLE_MS); return () => clearTimeout(t) }, [open, used])
+  // 놀이 화면이 바쁠 때(몬스터 마법 풀기 시작 등) 대화 줄을 닫아서 아래 단추를 가리지 않게
+  useEffect(() => { const f = () => { setChatOpen(false); setOpen(false); setHistory(false); setAskLeave(false) }; window.addEventListener(HUD_BUSY, f); return () => window.removeEventListener(HUD_BUSY, f) }, [])
   // 친구가 보낸 집 초대(최근 것 하나): 「놀러 가기」 카드
   const [dismissed, setDismissed] = useState<string | null>(null)
   const invite = mp.status === 'on' ? [...mp.chat].reverse().find((c) => c.home && c.uid !== mp.uid && Date.now() - c.t < INVITE_MS) : undefined
@@ -166,6 +171,17 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
   return (
     <>
       {mine && !in3d && <MyBubble key={mine.id} text={mine.text} onShown={setBubbleShown} />}
+      {/* 대화 단추(같이 놀기 중엔 늘): 🎤 바로 말해서 보내기 · 💬 글로 쓰기. 아래쪽 놀이 단추와 겹치지 않게 왼쪽 가운데 */}
+      {on && !chatOpen && (
+        <div className="pointer-events-none absolute left-2 z-[60] flex flex-col items-start gap-2" style={{ top: '58%' }}>
+          {speechSupported && (
+            <button aria-label={hearing ? '듣는 중 · 누르면 멈춰요' : '말로 채팅하기'} onClick={() => { mic(); touch() }}
+              className={`pointer-events-auto h-12 w-12 rounded-full text-2xl shadow-lg ${hearing ? 'animate-pulse bg-[#ff5c8a] text-white' : 'bg-white/95'}`}>🎤</button>
+          )}
+          <button aria-label="대화하기" onClick={() => { playTap(); setChatOpen(true); touch() }} className="pointer-events-auto h-12 w-12 rounded-full bg-[#7a3d8f] text-2xl text-white shadow-lg">💬</button>
+          {(hearing || micNote) && <p className="m-0 max-w-[12rem] rounded-2xl bg-white/95 px-2.5 py-1 text-xs font-bold text-[#c04a5a] shadow">{hearing ? (text || '듣고 있어요… 말해 봐요') : micNote}</p>}
+        </div>
+      )}
       {/* 초대장 카드 + 들어가기 칸(「친구」 단추로 연다) */}
       <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: '0.5rem' }}>
         {/* 친구들이 지금 어디 있는지: 누르면 그곳으로 */}
@@ -237,7 +253,7 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
               ))}
             </ul>
           )}
-          {open && (
+          {chatOpen && (
             <form className="pointer-events-auto flex w-[min(24rem,100%)] items-center gap-1.5 rounded-full bg-white/85 p-1 shadow-lg" onSubmit={(e) => { e.preventDefault(); say1(text); setText('') }}>
               {speechSupported && (
                 <button type="button" aria-label={hearing ? '듣는 중 · 누르면 멈춰요' : '말로 채팅하기'} onClick={() => { mic(); touch() }}
@@ -245,6 +261,7 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
               )}
               <input aria-label="채팅" value={text} maxLength={MAX_CHAT} onFocus={touch} onChange={(e) => { setText(e.target.value); touch() }} placeholder={micNote || (hearing ? '듣고 있어요… 말해 봐요' : speechSupported ? '🎤 누르고 말하기' : '말하기…')} className={`h-9 min-w-0 flex-1 rounded-full border border-[#f0c6cd] bg-white px-3 text-sm ${micNote ? 'placeholder:text-[#d0587a]' : ''}`} />
               <button className="h-9 shrink-0 rounded-full bg-[#ff8fab] px-3 text-xs font-black text-white">보내기</button>
+              <button type="button" aria-label="대화 닫기" onClick={() => { setChatOpen(false); setHistory(false); setAskLeave(false) }} className="h-9 w-8 shrink-0 rounded-full text-sm font-bold text-black/45">✕</button>
               <button type="button" aria-label="지난 대화" aria-pressed={history} onClick={() => { setHistory((h) => !h); setAskLeave(false); touch() }} className={`h-9 w-9 shrink-0 rounded-full text-base ${history ? 'bg-[#e9d5f5]' : 'bg-[#f6eef8]'}`}>📜</button>
             </form>
           )}

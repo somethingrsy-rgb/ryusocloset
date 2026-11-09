@@ -80,7 +80,7 @@ export function bossHit(b: Boss | null, id: string, power: number): Boss | null 
 export const bossCanRespawn = (b: Boss | null, now: number) => !b || (b.hp <= 0 && now - b.t > BOSS_RESPAWN_MS)
 
 /** 집 놀이: 바닥에 놓인 음식 하나(x·y 는 방 무대에 대한 %) */
-export interface Food { id: string; menu: string; x: number; y: number; by: string; t: number }
+export interface Food { id: string; menu: string; x: number; y: number; by: string; t: number; /** 친구 주문: 주문한 사람 uid, order = 주문함, served = 방 주인이 가져다 줌 */ uid?: string; kind?: 'order' | 'served' }
 /** 한 집에 한꺼번에 놓을 수 있는 음식 수 */
 export const MAX_FOOD = 12
 export function saneFood(id: string, v: unknown): Food | null {
@@ -88,7 +88,8 @@ export function saneFood(id: string, v: unknown): Food | null {
   const r = v as Record<string, unknown>
   const num = (n: unknown) => typeof n === 'number' && Number.isFinite(n)
   if (typeof r.menu !== 'string' || !num(r.x) || !num(r.y)) return null
-  return { id, menu: r.menu.slice(0, 40), x: Math.max(0, Math.min(100, r.x as number)), y: Math.max(0, Math.min(100, r.y as number)), by: typeof r.by === 'string' ? r.by.slice(0, 12) : '친구', t: num(r.t) ? (r.t as number) : 0 }
+  return { id, menu: r.menu.slice(0, 40), x: Math.max(0, Math.min(100, r.x as number)), y: Math.max(0, Math.min(100, r.y as number)), by: typeof r.by === 'string' ? r.by.slice(0, 12) : '친구', t: num(r.t) ? (r.t as number) : 0,
+    ...(typeof r.uid === 'string' && r.uid ? { uid: r.uid.slice(0, 64) } : {}), ...(r.kind === 'order' || r.kind === 'served' ? { kind: r.kind } : {}) }
 }
 /** 친구에게 보여 주는 집: 주인 이름과 방 꾸밈(RoomState 그대로, 받는 쪽에서 다시 검사한다) */
 export interface Home { name: string; room: unknown; t: number }

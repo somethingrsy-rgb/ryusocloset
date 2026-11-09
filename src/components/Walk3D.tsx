@@ -27,6 +27,8 @@ import { ANIMAL_H, HOUSE_ART, createWorld, showBack, signCanvas, emojiCanvas, ty
  * 땅을 누르면 그곳으로 걷고, 끌면 둘레를 돈다. 길에 반짝이(✨)가 있으면 가서 줍고, 친구를 누르면 다가가서 이야기한다.
  */
 const WORLD = 70
+/** 집 가운데에서 이만큼 안에 들어오면 들어갈지 묻는다(집 크기 반지름 2.5 + 둘레) */
+const HOUSE_NEAR = 5
 /** 산책 마을 나무: 초록·노랑·주황 꽃나무(카페·농장의 그 나무) */
 const WALK_TREES = [
   { img: 'cafe/3d/tree.webp', aspect: 951 / 1024, h: 4.2 },
@@ -69,6 +71,9 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
   const [talk, setTalk] = useState<{ animal: number; t: Talk; step: 0 | 1; said: string | null; done: boolean } | null>(null)
   const talking = useRef<number | null>(null)
   const [hello, setHello] = useState<string | null>(null)
+  /** 가까이 간 집: 들어갈지 묻는다 */
+  const [askHouse, setAskHouse] = useState<string | null>(null)
+  const answerHouseRef = useRef<(yes: boolean) => void>(() => {})
   useEffect(() => { if (!hello) return; const t = setTimeout(() => setHello(null), 2600); return () => clearTimeout(t) }, [hello])
   // 몬스터 마법 풀기(전투): k = 몬스터 번호, hits = 마법봉으로 친 횟수, done = 마법이 풀림
   const [battle, setBattle] = useState<{ k: number; t: number; hits: number; done: boolean; total?: number; say?: string; unlock?: boolean } | null>(null)
@@ -111,7 +116,7 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
         if (st) { w.walkTo(st.x, st.z, () => goStop(st.to), 0.5); return }
         // 집을 누르면 문 앞까지 걸어가서 들어간다
         const hs = houseOf.get(o)
-        if (hs) { w.walkTo(hs.x, hs.z, () => enterHouse(hs), 0.6); return }
+        if (hs) { declined = null; w.walkTo(hs.hx, hs.hz, undefined, HOUSE_NEAR - 0.6); return }
         // 몬스터: 마법 풀기 중이면 마법봉으로 톡, 아니면 가서 마법 풀기 시작
         const bh = bossRef.current
         if (bh?.owns(o)) { if (bh.fighting()) zapRef.current(); else if (battleRef.current === null) bh.go(); return }
@@ -200,10 +205,12 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
       w.addCurvePath([[p.x + nd.x * 1.5, p.z + nd.z * 1.5], [p.x + nd.x * 3.2 + t.x * 0.8, p.z + nd.z * 3.2 + t.z * 0.8], [hx, hz]], 2.2, 'start')
       const d = w.addProp(art.img, hx, hz, 6, art.aspect, 2.5)
       w.pickables.push(d.root)
-      return { ...HOUSE_PLACE[k], doll: d, x: hx - nd.x * 3, z: hz - nd.z * 3 }
+      return { ...HOUSE_PLACE[k], doll: d, x: hx - nd.x * 3, z: hz - nd.z * 3, hx, hz }
     })
     const houseOf = new Map(houses.map((h) => [h.doll.root as THREE.Object3D, h]))
     let entering = false
+    let asked: (typeof houses)[number] | null = null, declined: (typeof houses)[number] | null = null
+    answerHouseRef.current = (yes) => { const h = asked; if (!h) return; if (yes) { w.walkTo(w.me.x, w.me.z); enterHouse(h) } else declined = h; asked = null; setAskHouse(null) }
     /** 집에 들어간다: 가까이 있는 동물 친구들에게 「우리집에 놀러 가자!」 하고 같이 들어간다 */
     const enterHouse = (h: (typeof houses)[number]) => {
       if (entering || !onEnterRef.current) return
@@ -448,8 +455,11 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
       // 가게 문 앞까지 걸어가면 바로 그쪽으로 간다
       const atDoor = battleRef.current === null && talking.current === null ? stops.find((st) => Math.hypot(w.me.x - st.x, w.me.z - st.z) < 1.6) : undefined
       if (atDoor) goStop(atDoor.to)
-      const atHouse = battleRef.current === null && talking.current === null ? houses.find((h) => Math.hypot(w.me.x - h.x, w.me.z - h.z) < 1.4) : undefined
-      if (atHouse) enterHouse(atHouse)
+      // 집 앞·뒤·옆 어디든 가까이 가면 「들어갈까요?」 묻는다(아니요 하면 멀어졌다 다시 올 때까지 묻지 않는다)
+      const nearHouse = battleRef.current === null && talking.current === null && !entering ? houses.find((h) => Math.hypot(w.me.x - h.hx, w.me.z - h.hz) < HOUSE_NEAR) : undefined
+      if (declined && Math.hypot(w.me.x - declined.hx, w.me.z - declined.hz) > HOUSE_NEAR + 2) declined = null
+      const ask = nearHouse && nearHouse !== declined ? nearHouse : null
+      if (ask !== asked) { asked = ask; setAskHouse(ask ? ask.name : null) }
       if (nearStop !== nearRef.current) { nearRef.current = nearStop; setNear(nearStop) }
       // 몬스터: 가까이 가면 마법 풀기 시작, 맞으면 흔들, 다 풀리면 빙글 돌며 얼굴이 바뀐다
       const bk = battleRef.current
@@ -703,6 +713,13 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
       {pickWand && <WeaponShop onClose={() => setPickWand(false)} />}
       {near && !battle && !talk && onGo && (
         <button onClick={() => { playTap(); onGo(near) }} className="absolute inset-x-2 top-14 z-20 mx-auto h-12 w-fit rounded-full bg-[#ff8fab] px-5 text-base font-black text-white shadow-lg">{near === 'cafe' ? '☕ 카페로 가기' : '🧺 농장으로 가기'}</button>
+      )}
+      {askHouse && !battle && !talk && (
+        <div role="dialog" aria-label="집에 들어가기" className="absolute inset-x-2 bottom-16 z-30 mx-auto flex w-fit max-w-full items-center gap-2 rounded-3xl bg-white/95 p-3 shadow-xl">
+          <p className="m-0 text-sm font-extrabold text-[#6b4b52]">🏠 {askHouse}에 들어갈까요?</p>
+          <button onClick={() => { playTap(); answerHouseRef.current(true) }} className="h-10 rounded-full bg-[#ff8fab] px-4 text-sm font-black text-white shadow">들어가기</button>
+          <button onClick={() => { playTap(); answerHouseRef.current(false) }} className="h-10 rounded-full bg-[#f3e6ea] px-3 text-sm font-bold">아니요</button>
+        </div>
       )}
       {hello && !battle && <p role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-fit max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center text-sm font-extrabold text-[#6b4b52] shadow">{hello}</p>}
       {!talk && !battle && !bossUi?.fight && !bossDone && <p className="pointer-events-none absolute inset-x-2 bottom-3 z-10 m-0 text-center text-xs font-bold text-[#3d6b2f] drop-shadow-[0_1px_0_white]">땅을 누르면 걸어가요 · 옆으로 끌면 둘러봐요 · ✨ 줍고, 친구를 누르면 이야기해요</p>}

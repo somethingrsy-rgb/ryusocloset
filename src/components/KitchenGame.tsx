@@ -6,7 +6,8 @@ import { getAvatar } from '../lib/avatars'
 import { FriendFigure } from './FriendFigure'
 import { CROPS, getFarm, subscribeFarm } from '../lib/farm'
 import { assetUrl } from '../lib/items'
-import { buyPantry, cookTicket, getKitchen, isPartySeat, missing, subscribeKitchen, ticketAnimal } from '../lib/kitchen'
+import { buyPantry, cookTicket, getKitchen, isMpSeat, isPartySeat, missing, subscribeKitchen, ticketAnimal } from '../lib/kitchen'
+import { mpOrderAt } from '../lib/mpOrders'
 import { PACK, PACK_PRICE, PANTRY, STEPS, ingredient, isCrop, menuById, needList, type IngId, type Station, type StepId } from '../lib/recipes'
 import { playBell, playCloud, playCoin, playCook, playHarvest, playTap, playWater, startBgm, stopBgm } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -196,7 +197,9 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   }
 
   // 주문서 얼굴: 동물 친구는 카페 얼굴, 아바타 친구는 점프 퍼즐 얼굴 그림
-  const face = (seat: number) => assetUrl(guestFace(ticketAnimal(seat)))
+  // 같이 놀기 친구 주문은 친구 그림·이름으로
+  const face = (seat: number) => assetUrl(isMpSeat(seat) ? 'assets/tabs2/friend.webp' : guestFace(ticketAnimal(seat)))
+  const seatName = (seat: number) => (isMpSeat(seat) ? mpOrderAt(seat)?.name ?? '친구' : guestName(ticketAnimal(seat)))
   /** 다 만든 음식 가져가기: 카페 손님 것은 카페로, 파티 친구 것은 파티로 */
   const serveBtn = (seat: number, cls: string, inner: (t: string) => React.ReactNode = (t) => t) => <button onClick={() => { playTap(); onGo(isPartySeat(seat) ? 'party' : 'cafe') }} className={cls}>{inner(isPartySeat(seat) ? tx.toParty : tx.serve)}</button>
   const btn = 'min-h-11 rounded-full px-3 font-bold shadow active:scale-95 disabled:opacity-40'
@@ -206,7 +209,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
   const aw = L.avatarH * (1024 / 1536) / L.ratio // 아바타 너비(그림 너비에 대한 %)
   // 파티 친구 주문을 고르거나 만드는 동안: 그 친구가 주방에 와서 옆에서 같이 요리한다
   const helpSeat = cooking?.seat ?? done ?? selTicket?.seat
-    const partyA = helpSeat !== undefined && helpSeat !== null && isPartySeat(helpSeat) ? ticketAnimal(helpSeat) : null
+    const partyA = helpSeat !== undefined && helpSeat !== null && isPartySeat(helpSeat) && validGuest(ticketAnimal(helpSeat)) ? ticketAnimal(helpSeat) : null
   // 같이 요리하는 친구들: 파티 주문이면 그 친구가 먼저, 그다음 고른 친구(모두 2명까지)
   const crew = [...new Set([...(partyA !== null ? [partyA] : []), ...friends])].slice(0, MAX_FRIENDS)
   // 말은 한 번에 한 친구만: 단계마다 번갈아 말한다
@@ -393,7 +396,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
           const m = menuById(t.menu)!
           const on = sel === t.seat
           return (
-            <button key={t.seat} aria-pressed={on} aria-label={`${guestName(ticketAnimal(t.seat))} ${m[lang]}`} disabled={!!cooking}
+            <button key={t.seat} aria-pressed={on} aria-label={`${seatName(t.seat)} ${m[lang]}`} disabled={!!cooking}
               onClick={() => { playTap(); setDone(null); setSel(t.seat) }}
               className={`relative flex w-[4.6rem] shrink-0 flex-col items-center rounded-2xl bg-[#fffaf0] px-1 pt-1 pb-1.5 shadow-md ring-2 transition active:scale-95 ${on ? 'ring-[#ef8d99]' : 'ring-transparent'} ${cooking && !on ? 'opacity-50' : ''}`}>
               <span aria-hidden className="absolute top-0 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ef6f86] shadow" />
@@ -442,7 +445,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
               <img src={face(selTicket.seat)} alt="" draggable={false} className={`object-contain ${phoneL ? 'h-7 w-7' : 'h-9 w-9'}`} />
               <Ico id={menu.id} className={phoneL ? 'h-8 w-8' : 'h-10 w-10'} />
               <div className="min-w-0 flex-1">
-                <p className={`m-0 text-xs font-bold text-black/45 ${phoneL ? 'hidden' : ''}`}>{tx.order(guestName(ticketAnimal(selTicket.seat)))}</p>
+                <p className={`m-0 text-xs font-bold text-black/45 ${phoneL ? 'hidden' : ''}`}>{tx.order(seatName(selTicket.seat))}</p>
                 <p className="m-0 truncate text-base font-black text-[#8a4b2a]">{menu[lang]} {!isPartySeat(selTicket.seat) && <span className="text-sm font-bold text-[#c9751f]">+{menu.price}<CoinIcon /></span>}</p>
               </div>
             </div>
@@ -512,7 +515,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       )}
       {toast && <div role="status" className="absolute bottom-40 left-1/2 z-50 max-w-[90%] -translate-x-1/2 rounded-full bg-[#8a4b55] px-5 py-3 text-center text-sm text-[#fff9e9] shadow-lg">{toast}</div>}
       {picking && (
-        <PartyInvite here={[]} initial={friends} max={MAX_FRIENDS} allowNone title="👩‍🍳 누구랑 같이 요리할까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`아바타 친구와 수학으로 모은 동물 친구 중 ${MAX_FRIENDS}명까지 골라요 · 아무도 안 고르면 혼자 요리해요`}
+        <PartyInvite here={[]} initial={friends} max={MAX_FRIENDS} allowNone title="👩‍🍳 누구랑 같이 요리할까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`수학으로 모은 동물 친구 중 ${MAX_FRIENDS}명까지 골라요 · 아무도 안 고르면 혼자 요리해요`}
           cta="👩‍🍳 같이 요리하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { playTap(); setPicking(false); setGuestLooks(looks); chooseFriends(a) }} />
       )}
     </section>

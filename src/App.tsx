@@ -415,8 +415,9 @@ export default function App() {
 
   return (
     <I18nContext.Provider value={i18n}>
-      <div className={`mx-auto flex h-dvh flex-col gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))] ${full ? '[@media(max-height:500px)]:p-0' : ''}`}>
-        <header className={`flex shrink-0 items-center justify-between gap-2 px-1 ${full ? '[@media(max-height:500px)]:hidden' : ''}`}>
+      <div className={`mx-auto flex h-dvh flex-col gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))] ${full && mode !== 'walk' ? '[@media(max-height:500px)]:p-0' : ''}`}>
+        {/* 산책 탭은 가로 화면에서도 위 탭 줄을 남긴다(다른 탭으로 바로 가게) */}
+        <header className={`flex shrink-0 items-center justify-between gap-2 px-1 ${full && mode !== 'walk' ? '[@media(max-height:500px)]:hidden' : ''}`}>
             <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep xl:block">{t('title')}</h1>
             <div role="tablist" className="flex min-w-0 flex-1 overflow-x-auto rounded-full bg-white/80 p-0.5 shadow-sm">
               <FriendTab />

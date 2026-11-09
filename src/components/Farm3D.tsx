@@ -895,7 +895,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
       {stall && <div className="absolute inset-0 z-40"><FarmStall apply={apply} notice={notice ?? ''} onClose={() => setStall(false)} /></div>}
       {picking && (
         <div className="absolute inset-0 z-40">
-          <PartyInvite here={[]} initial={friendsNow} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`아바타 친구와 수학으로 모은 동물 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
+          <PartyInvite here={[]} initial={friendsNow} max={MAX_FARM_FRIENDS} allowNone title="🌱 누구랑 같이 농사지을까요?" locked={notCollected(meet)} avatars={{ me: getAvatar().id }} note={`수학으로 모은 동물 친구 중 ${MAX_FARM_FRIENDS}명까지 골라요 · 친구가 물 주고 수확해요 · 아무도 안 고르면 혼자 해요`}
             cta="🌱 같이 하기" ctaNone="🙋 혼자 할래요" onClose={() => setPicking(false)} onInvite={(a, looks) => { setPicking(false); setGuestLooks(looks); setFarmFriends(a) }} />
         </div>
       )}

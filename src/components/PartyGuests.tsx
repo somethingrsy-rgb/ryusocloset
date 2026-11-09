@@ -194,6 +194,9 @@ export function PartyGuests({ invite, leave, kid, floor, me, size, avatarW, feet
  * 파티 초대 창: 카페 동물 친구 얼굴을 여러 명 골라서 초대한다(이미 온 친구는 표시).
  * 달리기 친구 고르기도 같은 창을 쓴다(title·cta 로 글자를 바꾸고, initial 로 지난번에 고른 친구를 미리 골라 둔다. 아무도 안 골라도 된다. single 이면 한 명만 고른다)
  */
+/** 초대 창에 아바타 친구를 보일지(지금은 동물 친구만) */
+const SHOW_AVATAR_GUESTS = false
+
 export function PartyInvite({ here, onInvite, onClose, initial = [], title = '🎉 파티에 누구를 초대할까요?', cta = '💌 초대하기', allowNone = false, single = false, max, ctaNone, note, locked = [], avatars }: { here: number[]; /** 고른 친구(동물 번호·아바타 손님 번호)와, 고른 아바타 친구가 입을 옷 */ onInvite: (friends: number[], looks: Record<string, Outfit>) => void; onClose: () => void; initial?: number[]; title?: string; cta?: string; allowNone?: boolean; single?: boolean; /** 이만큼까지만 고른다(더 고르면 먼저 고른 친구가 빠진다) */ max?: number; /** 아무도 안 골랐을 때 버튼 글자 */ ctaNone?: string; /** 제목 아래 안내 글자 */ note?: string; /** 아직 못 만난 친구: 얼굴을 가리고(???) 고를 수 없다 */ locked?: number[]
   /** 파티 초대: 다른 아바타도 옷을 골라 입혀서 초대할 수 있다(me 는 지금 내 아바타라서 빠진다) */
   avatars?: { me: string } }) {
@@ -202,7 +205,8 @@ export function PartyInvite({ here, onInvite, onClose, initial = [], title = '�
   // 아바타 친구는 누르면 옷 입히기 화면이 열리고, 입힌 옷(looks)과 함께 초대한다
   const [looks, setLooks] = useState<Record<string, Outfit>>({})
   const [dressing, setDressing] = useState<string | null>(null)
-  const others = avatars ? AVATARS.filter((a) => a.id !== avatars.me) : []
+  // 초대는 동물 친구만(아바타 친구는 고르지 않는다). avatars 는 예전 호출과 맞추려고 남겨 둔다
+  const others = avatars ? AVATARS.filter((a) => a.id !== avatars.me && SHOW_AVATAR_GUESTS) : []
   const nPicked = picked.length
   const dressAv = others.find((a) => a.id === dressing)
   const add = (p: number[], i: number) => (p.includes(i) ? p : single ? [i] : max && p.length >= max ? [...p.slice(p.length - max + 1), i] : [...p, i])
