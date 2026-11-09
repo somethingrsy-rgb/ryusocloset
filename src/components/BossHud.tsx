@@ -30,17 +30,17 @@ export function BossHud({ ui, done, onGo, onZap, onRest, onCloseDone }: { ui: Bo
         const m = MONSTERS[ui.type], pct = Math.round((1 - ui.hp / ui.max) * 100)
         return ui.fight ? (
           <>
-            <div role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-72 max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center shadow">
-              <p className="m-0 text-sm font-extrabold text-[#7a3d8f]">👑 대왕 {m.name} · 다 같이 마법 풀기!</p>
-              <div aria-label={`마법 풀기 ${pct}%`} className="mt-1 h-3 overflow-hidden rounded-full bg-[#f3dbe6]"><div className="h-full rounded-full bg-gradient-to-r from-[#c58bff] to-[#ff8fab] transition-all" style={{ width: `${pct}%` }} /></div>
-              <p className="m-0 mt-1 text-xs font-bold text-[#c0587a]">{ui.friends.length ? `🤝 ${ui.friends.join(', ')}와(과) 같이 싸우는 중` : '🐾 친구를 불러서 같이 풀어요!'}</p>
+            <div role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-72 max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center shadow [@media(max-height:500px)]:top-2 [@media(max-height:500px)]:w-52 [@media(max-height:500px)]:rounded-full [@media(max-height:500px)]:bg-white/85 [@media(max-height:500px)]:px-2.5 [@media(max-height:500px)]:py-1">
+              <p className="m-0 text-sm font-extrabold text-[#7a3d8f] [@media(max-height:500px)]:text-[11px] [@media(max-height:500px)]:leading-tight">👑 대왕 {m.name}<span className="[@media(max-height:500px)]:hidden"> · 다 같이 마법 풀기!</span></p>
+              <div aria-label={`마법 풀기 ${pct}%`} className="mt-1 h-3 overflow-hidden rounded-full bg-[#f3dbe6] [@media(max-height:500px)]:mt-0.5 [@media(max-height:500px)]:h-1.5"><div className="h-full rounded-full bg-gradient-to-r from-[#c58bff] to-[#ff8fab] transition-all" style={{ width: `${pct}%` }} /></div>
+              <p className="m-0 mt-1 text-xs font-bold text-[#c0587a] [@media(max-height:500px)]:hidden">{ui.friends.length ? `🤝 ${ui.friends.join(', ')}와(과) 같이 싸우는 중` : '🐾 친구를 불러서 같이 풀어요!'}</p>
             </div>
-            <div className="absolute inset-x-2 bottom-3 z-30 mx-auto flex w-fit max-w-full items-center gap-2 rounded-3xl bg-white/95 p-3 shadow-xl">
-              <button aria-label="마법봉 고르기" onClick={() => { playTap(); setShop(true) }} className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#e5cfa3] bg-[#fdf2d8]">
-                {wi ? <img src={assetUrl(wi.img)} alt="" className="h-11 w-11 object-contain" /> : '🪄'}
+            <div className="absolute inset-x-2 bottom-3 z-30 mx-auto flex w-fit max-w-full items-center gap-2 rounded-3xl bg-white/95 p-3 shadow-xl [@media(max-height:500px)]:inset-x-auto [@media(max-height:500px)]:right-2 [@media(max-height:500px)]:bottom-2 [@media(max-height:500px)]:mx-0 [@media(max-height:500px)]:flex-col [@media(max-height:500px)]:gap-1.5 [@media(max-height:500px)]:bg-white/70 [@media(max-height:500px)]:p-1.5">
+              <button aria-label="마법봉 고르기" onClick={() => { playTap(); setShop(true) }} className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#e5cfa3] bg-[#fdf2d8] [@media(max-height:500px)]:h-10 [@media(max-height:500px)]:w-10">
+                {wi ? <img src={assetUrl(wi.img)} alt="" className="h-11 w-11 object-contain [@media(max-height:500px)]:h-8 [@media(max-height:500px)]:w-8" /> : '🪄'}
               </button>
-              <button onClick={onZap} className="h-14 rounded-full bg-gradient-to-r from-[#c58bff] to-[#ff8fab] px-6 text-lg font-black text-white shadow-lg active:scale-95">✨ 마법!</button>
-              <button onClick={() => { playTap(); onRest() }} className="h-10 rounded-full bg-[#ffe4ec] px-3 text-sm font-bold">잠깐 쉬기</button>
+              <button aria-label="마법!" onClick={onZap} className="h-14 rounded-full bg-gradient-to-r from-[#c58bff] to-[#ff8fab] px-6 text-lg font-black text-white shadow-lg active:scale-95 [@media(max-height:500px)]:h-14 [@media(max-height:500px)]:w-14 [@media(max-height:500px)]:px-0 [@media(max-height:500px)]:text-2xl">✨<span className="[@media(max-height:500px)]:hidden"> 마법!</span></button>
+              <button aria-label="잠깐 쉬기" onClick={() => { playTap(); onRest() }} className="h-10 rounded-full bg-[#ffe4ec] px-3 text-sm font-bold [@media(max-height:500px)]:h-8 [@media(max-height:500px)]:px-2 [@media(max-height:500px)]:text-xs"><span className="[@media(max-height:500px)]:hidden">잠깐 </span>쉬기</button>
             </div>
           </>
         ) : (
