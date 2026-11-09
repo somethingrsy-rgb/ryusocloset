@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { AVATARS } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
 import { MENU } from '../lib/recipes'
+import { assetUrl } from '../lib/items'
 import { getMp, setPos, subscribeMp } from '../lib/mp/session'
 import type { Food, Look, PlayerState } from '../lib/mp/core'
 import type { Vec } from '../lib/walk'
@@ -26,6 +27,14 @@ function useFigure(look: Look) {
   return url
 }
 
+/** 간식 테이블 그림(방 꾸미기 체크 테이블)과 테이블 위 간식 칸(테이블 그림에 대한 %: 가로 가운데, 바닥 끝) */
+const TABLE_ART = { img: 'assets/room/furniture_cafe_table.webp', w: 363, h: 256 }
+const SLOT_W = 27
+const SLOTS: [number, number][] = [
+  [20, 30], [40, 30], [60, 30], [80, 30],
+  [30, 44], [50, 44], [70, 44],
+  [20, 58], [40, 58], [60, 58], [80, 58], [50, 70],
+]
 export const menuName = (id: string) => MENU.find((m) => m.id === id)?.ko ?? '간식'
 
 function Friend({ p, said, w, feet, z }: { p: PlayerState; said: string | null; w: number; feet: number; z: number }) {
@@ -66,16 +75,30 @@ export function HomeFriends({ host, me, dir, walking, w, feet, z, onFood }: {
   // 방금(6초 안에) 한 말은 머리 위에
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t) }, [])
+  // 테이블 자리: 가장 먼저 꺼낸 간식의 자리(모두의 화면에서 같다). 크기는 그 자리에 선 사람 폭의 1.1배
+  const sorted = [...mp.foods].sort((p, q) => p.t - q.t || (p.id < q.id ? -1 : 1))
+  const first = sorted[0]
+  const table = first ? {
+    x: first.x, y: first.y, w: w(first.y) * 1.1,
+    // 칸: 한 줄에 4개, 줄마다 조금씩 아래로(앞줄이 뒷줄을 가리지 않게 엇갈려)
+    foods: sorted.slice(0, SLOTS.length).map((f, i) => ({ f, cx: SLOTS[i][0], cy: SLOTS[i][1] })),
+  } : null
   const friends = Object.entries(mp.players).filter(([uid, p]) => uid !== mp.uid && p.room === 'home' && p.host === host)
   const saidOf = (uid: string) => [...mp.chat].reverse().find((c) => c.uid === uid && now - c.t < 6000)?.text ?? null
   return (
     <>
-      {mp.foods.map((f) => (
-        <button key={f.id} aria-label={`${menuName(f.menu)} 먹기`} onClick={(e) => { e.stopPropagation(); onFood(f) }}
-          className="absolute flex -translate-x-1/2 -translate-y-full flex-col items-center" style={{ left: `${f.x}%`, top: `${f.y}%`, width: '9%', zIndex: z(f.y) }}>
-          <Ico id={f.menu} className="h-auto w-full drop-shadow" />
-        </button>
-      ))}
+      {/* 간식 테이블: 처음 꺼낸 간식 자리에 테이블이 나오고, 간식은 테이블 위 칸에 겹치지 않게 놓인다. 다 먹으면 테이블도 사라진다 */}
+      {table && (
+        <div className="pointer-events-none absolute" style={{ left: `${table.x}%`, top: `${table.y}%`, width: `${table.w}%`, aspectRatio: `${TABLE_ART.w} / ${TABLE_ART.h}`, transform: 'translate(-50%, -100%)', zIndex: z(table.y) }}>
+          <img src={assetUrl(TABLE_ART.img)} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
+          {table.foods.map(({ f, cx, cy }) => (
+            <button key={f.id} aria-label={`${menuName(f.menu)} 먹기`} onClick={(e) => { e.stopPropagation(); onFood({ ...f, x: table.x + (cx - 50) / 100 * table.w, y: table.y }) }}
+              className="pointer-events-auto absolute flex -translate-x-1/2 -translate-y-full items-end justify-center" style={{ left: `${cx}%`, top: `${cy}%`, width: `${SLOT_W}%` }}>
+              <Ico id={f.menu} className="h-auto w-full drop-shadow" />
+            </button>
+          ))}
+        </div>
+      )}
       {friends.map(([uid, p]) => <Friend key={uid} p={p} said={saidOf(uid)} w={w(p.z)} feet={feet} z={z(p.z)} />)}
     </>
   )
