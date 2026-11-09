@@ -5,12 +5,18 @@
 type Rec = { lang: string; interimResults: boolean; continuous: boolean; maxAlternatives: number; start(): void; stop(): void; abort(): void
   onresult: ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null
   onerror: ((e: { error: string }) => void) | null; onend: (() => void) | null }
+import { setMicQuiet } from '../sound'
+
 const Ctor = typeof window !== 'undefined' ? ((window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec }).SpeechRecognition ?? (window as unknown as { webkitSpeechRecognition?: new () => Rec }).webkitSpeechRecognition) : undefined
 export const speechSupported = !!Ctor
 
 /** 듣기 시작. 말하는 동안 onText(지금까지 들은 글), 끝나면 onDone(최종 글, 없으면 빈 글). 멈추는 함수를 돌려준다 */
 export function listen(onText: (t: string) => void, onDone: (t: string, error?: string) => void): () => void {
   if (!Ctor) { onDone('', 'unsupported'); return () => {} }
+  // 듣는 동안 앱 소리(노래·효과음)를 끈다: 조용한 곳에서도 말로 채팅하게
+  setMicQuiet(true)
+  const done = onDone
+  onDone = (t, e) => { setMicQuiet(false); done(t, e) }
   const r = new Ctor()
   r.lang = 'ko-KR'
   r.interimResults = true
