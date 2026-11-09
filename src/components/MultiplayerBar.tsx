@@ -47,6 +47,17 @@ export function FriendTab() {
   )
 }
 /** 내가 방금 한 말: 화면에 보이는 내 아바타(data-me-avatar) 머리 위 말풍선. 3D 장소는 3D 말풍선이 따로 그린다 */
+/** 아바타가 다른 화면에 가려졌는지: 그 점 맨 위가 다른 3D 화면(canvas)이거나, 아바타를 품지 않은 창·덮개(dialog·region·고정 덮개) 안이면 가려진 것.
+ *  (아바타 그림은 눌리지 않게(pointer-events: none) 되어 있어서 맨 위 요소가 아바타 자신이 아닐 수 있다) */
+function covered(el: HTMLElement, x: number, y: number) {
+  const top = document.elementFromPoint(x, y)
+  if (!top) return true
+  const root = el.closest('section, [role=region], [role=dialog]') ?? el.parentElement
+  if (top.tagName === 'CANVAS' && !root?.contains(top)) return true
+  const box = top.closest('[role=dialog], [role=region]')
+  return !!box && !box.contains(el)
+}
+
 function MyBubble({ text, onShown }: { text: string; onShown: (v: boolean) => void }) {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null)
   useEffect(() => {
@@ -58,14 +69,12 @@ function MyBubble({ text, onShown }: { text: string; onShown: (v: boolean) => vo
       for (const el of document.querySelectorAll<HTMLElement>('[data-me-head]')) {
         const r = el.getBoundingClientRect()
         if (el.style.display === 'none' || r.top < 0 || r.top > innerHeight || r.left < 0 || r.left > innerWidth) continue
-        const top = document.elementFromPoint(r.left, Math.min(innerHeight - 1, r.top + 20))
-        if (top && el.parentElement?.contains(top)) head = { x: Math.round(r.left), y: Math.round(r.top) }
+        if (!covered(el, r.left, Math.min(innerHeight - 1, r.top + 20))) head = { x: Math.round(r.left), y: Math.round(r.top) }
       }
       for (const el of head ? [] : document.querySelectorAll<HTMLElement>('[data-me-avatar]')) {
         const r = el.getBoundingClientRect()
         if (r.width < 24 || r.bottom < 0 || r.top > innerHeight) continue
-        const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height * 0.45)
-        if (!top || !el.parentElement?.contains(top)) continue
+        if (covered(el, r.left + r.width / 2, r.top + r.height * 0.45)) continue
         if (!best || r.width > best.width) best = r
       }
       const next = head ?? (best ? { x: Math.round(best.left + best.width / 2), y: Math.round(best.top + best.height * 0.07) } : null)
