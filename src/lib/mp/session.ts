@@ -123,7 +123,14 @@ export function closeHome() {
   if (watching === state.uid) unwatch()
 }
 /** 친구 집에 놀러 간다 / 돌아온다 */
-export function visitHome(host: string) { if (!tr || host === state.uid) return; set({ visiting: host }); watch(host) }
+export function visitHome(host: string) {
+  if (!tr || host === state.uid) return
+  // 내가 다른 곳으로 친구를 부르던 중이면 그건 닫는다: 안 그러면 뒤에 남은 내 장소와 놀러 간 곳이 번갈아 위치를 보내서
+  // 친구 화면에서 내가 두 자리를 왔다 갔다 한다
+  if (state.hosting) { tr.closeHome(); set({ hosting: false }); unwatch() }
+  set({ visiting: host })
+  watch(host)
+}
 export function leaveVisit() { set({ visiting: null }); if (watching && watching !== state.uid) unwatch(); setWhere(sceneWhere) }
 // 3D 카페·농장·산책은 친구 집에 가 있는 동안에도 뒤에 그대로 있다: 그동안은 3D 위치를 보내지 않고, 돌아오면 그 3D 장소로 되돌린다
 let sceneWhere: Where = 'none'

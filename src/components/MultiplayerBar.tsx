@@ -5,8 +5,8 @@
  * Firebase 설정이 없으면(지금의 배포처럼) 아무것도 그리지 않는다 → 기존 화면 그대로.
  */
 import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { createPortal } from 'react-dom'
 import { listen, speechSupported } from '../lib/mp/speech'
+import { assetUrl } from '../lib/items'
 import { getAvatar } from '../lib/avatars'
 import { multiplayerAvailable } from '../lib/mp/config'
 import { MAX_CHAT, MAX_NAME, MAX_PLAYERS } from '../lib/mp/core'
@@ -24,18 +24,34 @@ const INVITE_MS = 3 * 60 * 1000
 
 /** 놀이 화면이 아래쪽 단추를 쓰기 시작할 때 보내는 신호(말하는 줄을 닫는다) */
 export const HUD_BUSY = 'ryuso:hud-busy'
-/** 👥 단추를 놓을 자리(화면 제목 옆 등): 그 화면이 ref={mpDock} 으로 빈 칸을 주면 단추가 그 안으로 간다 */
-let dockEl: HTMLElement | null = null
-const dockSubs = new Set<() => void>()
-export const mpDock = (el: HTMLElement | null) => { if (dockEl === el) return; dockEl = el; dockSubs.forEach((f) => f()) }
-const subscribeDock = (f: () => void) => { dockSubs.add(f); return () => { dockSubs.delete(f) } }
+/** 같이 놀기 칸(들어가기·말하는 줄)이 열렸는지: 위 탭 줄의 「친구」 단추가 연다(앱 어디서든 하나) */
+let panelOpen = false
+const panelSubs = new Set<() => void>()
+const setPanel = (v: boolean) => { if (panelOpen === v) return; panelOpen = v; panelSubs.forEach((f) => f()) }
+const subscribePanel = (f: () => void) => { panelSubs.add(f); return () => { panelSubs.delete(f) } }
+const getPanel = () => panelOpen
+
+/** 위 탭 줄 맨 앞 「친구」 단추: 누르면 같이 놀기(들어가기·채팅) 칸을 열고 닫는다. 들어가 있으면 인원이 붙는다 */
+export function FriendTab() {
+  const mp = useSyncExternalStore(subscribeMp, getMp)
+  const open = useSyncExternalStore(subscribePanel, getPanel)
+  if (!multiplayerAvailable) return null
+  const on = mp.status === 'on'
+  return (
+    <button aria-label="친구 · 같이 놀기" aria-expanded={open} onClick={() => setPanel(!open)}
+      className={`relative flex min-h-11 shrink-0 flex-1 items-center justify-center rounded-full px-0.5 transition ${open ? 'bg-[#ead8f6] shadow' : ''}`}>
+      <img src={assetUrl('assets/tabs2/friend.webp')} alt="" draggable={false} className="h-10 w-10 object-contain" />
+      {on && <span className="absolute -top-1 right-0 rounded-full bg-[#7a3d8f] px-1.5 text-[10px] leading-4 font-black text-white shadow">{Object.keys(mp.players).length}/{MAX_PLAYERS}</span>}
+    </button>
+  )
+}
 const FADE_MS = 8000
 const IDLE_MS = 20000
 
 export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** 화면 아래 왼쪽에 큰 단추가 있는 화면(방)이면 말하는 줄을 그 위로 올린다 */ lift?: boolean }) {
   const mp = useSyncExternalStore(subscribeMp, getMp)
-  const dock = useSyncExternalStore(subscribeDock, () => dockEl)
-  const [open, setOpen] = useState(false)
+  const open = useSyncExternalStore(subscribePanel, getPanel)
+  const setOpen = (v: boolean | ((o: boolean) => boolean)) => setPanel(typeof v === 'function' ? v(getPanel()) : v)
   const [name, setName] = useState(savedName)
   const [text, setText] = useState('')
   // 말로 채팅: 🎤 를 누르고 말하면 글로 바뀌고, 말을 마치면 바로 보낸다
@@ -76,29 +92,12 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
   useEffect(() => { if (mp.status === 'on') setLook(JSON.parse(lookKey)) }, [lookKey, mp.status])
   if (!multiplayerAvailable) return null
   const on = mp.status === 'on'
-  const n = Object.keys(mp.players).length
   const btn = 'h-9 rounded-full px-3 text-sm font-black shadow'
   const say1 = (t: string) => { say(t); touch() }
-  const mainBtn = (
-        <button aria-label="같이 놀기" aria-expanded={open} onClick={() => { setOpen((o) => !o); setHistory(false); setAskLeave(false); touch() }} className={`pointer-events-auto ${btn} ${on ? 'bg-[#7a3d8f] text-white' : 'bg-white/95 text-[#7a3d8f]'}`}>
-          👥 {on ? `${n}/${MAX_PLAYERS}` : '같이 놀기'}{on && <span className="ml-1 text-xs">{open ? '▾' : '💬'}</span>}
-        </button>
-  )
   return (
     <>
-      {dock && createPortal(mainBtn, dock)}
-      {/* 👥 단추(위 왼쪽, 화면이 자리를 주면 그 자리) + 들어가기 칸 */}
-      <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: dock ? '3.5rem' : 'max(22%, 7rem)' }}>
-        {!dock && mainBtn}
-        {showInvite && invite && (
-          <div role="dialog" aria-label="초대장" className="pointer-events-auto flex w-full flex-col gap-1.5 rounded-2xl border-2 border-[#ffc2d4] bg-white/97 p-2.5 shadow-lg">
-            <p className="m-0 text-xs leading-snug font-bold text-[#6b4b52]">💌 <b className="text-[#7a3d8f]">{invite.name}</b>의 초대장<br /><span className="text-[#c04a5a]">「{invite.text}」</span></p>
-            <div className="flex gap-1.5">
-              <button onClick={() => { setDismissed(invite.id); visitHome(invite.home!) }} className="h-9 flex-1 rounded-full bg-[#ff8fab] text-sm font-black text-white">수락</button>
-              <button onClick={() => { setDismissed(invite.id); say(`💌 ${invite.name}, 고마워! 다음에 갈게`) }} className="h-9 flex-1 rounded-full bg-[#f3e6ea] text-sm font-bold text-[#6b4b52]">거절</button>
-            </div>
-          </div>
-        )}
+      {/* 초대장 카드 + 들어가기 칸(「친구」 단추로 연다) */}
+      <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: '0.5rem' }}>
         {open && !on && (
           <div className="pointer-events-auto flex w-full flex-col gap-2 rounded-2xl bg-white/95 p-2.5 shadow-lg">
             <label className="text-xs font-bold text-[#6b4b52]">닉네임
@@ -112,6 +111,18 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
           </div>
         )}
       </div>
+      {/* 친구가 보낸 초대장: 화면 가운데 위쪽에(위 단추 줄을 가리지 않게) */}
+      {showInvite && invite && (
+      <div className="pointer-events-none absolute inset-x-0 z-[60] flex justify-center" style={{ top: '30%' }}>
+          <div role="dialog" aria-label="초대장" className="pointer-events-auto flex w-[min(17rem,calc(100%-1rem))] flex-col gap-1.5 rounded-2xl border-2 border-[#ffc2d4] bg-white/97 p-2.5 shadow-lg">
+            <p className="m-0 text-xs leading-snug font-bold text-[#6b4b52]">💌 <b className="text-[#7a3d8f]">{invite.name}</b>의 초대장<br /><span className="text-[#c04a5a]">「{invite.text}」</span></p>
+            <div className="flex gap-1.5">
+              <button onClick={() => { setDismissed(invite.id); visitHome(invite.home!) }} className="h-9 flex-1 rounded-full bg-[#ff8fab] text-sm font-black text-white">수락</button>
+              <button onClick={() => { setDismissed(invite.id); say(`💌 ${invite.name}, 고마워! 다음에 갈게`) }} className="h-9 flex-1 rounded-full bg-[#f3e6ea] text-sm font-bold text-[#6b4b52]">거절</button>
+            </div>
+          </div>
+      </div>
+      )}
       {/* 화면 아래: 사라지는 대화 + 말하는 줄 한 줄 */}
       {on && (
         <div className="pointer-events-none absolute inset-x-2 z-[35] flex flex-col items-start gap-1" style={{ bottom: lift && !mp.visiting ? '5.5rem' : '0.5rem' }}>

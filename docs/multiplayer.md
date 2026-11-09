@@ -14,7 +14,7 @@ Firebase 설정이 없는 빌드(지금의 GitHub Pages 배포)는 「👥 같�
 | `src/lib/mp/core.ts` | 공통 규칙(인원·전송 주기·값 검사·보간) + 테스트 `core.test.ts` |
 | `src/lib/mp/session.ts` | 방 들어가기/나가기, 위치 보내기(최대 초당 8번, 움직였을 때만, 5초마다 생존 신호), 채팅 |
 | `src/components/remotePlayers3d.ts` | 3D 장면에 다른 플레이어(옷 입은 아바타 + 닉네임 + 채팅 말풍선)를 그리고 부드럽게 보간 |
-| `src/components/MultiplayerBar.tsx` | 「👥 같이 놀기」 단추·닉네임·인원(왼쪽 위), 화면 아래 말하는 줄 한 줄(🎤·입력·보내기·📜, 20초 안 쓰면 닫힘), 새 말은 아래에 8초 떴다 사라짐, 지난 대화와 「나가기」(한 번 더 물음)는 📜 안. 방 화면은 「게임에 보내기」 위로 올림 |
+| `src/components/MultiplayerBar.tsx` | 위 탭 줄 맨 앞 「친구」 단추(`FriendTab`, 인원 표시)로 여는 들어가기 칸, 초대장 카드(화면 가운데), 화면 아래 말하는 줄 한 줄(🎤·입력·보내기·📜, 20초 안 쓰면 닫힘), 새 말은 아래에 8초 떴다 사라짐, 지난 대화와 「나가기」(한 번 더 물음)는 📜 안. 방 화면은 「게임에 보내기」 위로 올림 |
 | `database.rules.json` | 데이터베이스 보안 규칙 |
 
 기존 장면(`Cafe3D.tsx`·`Farm3D.tsx`·`Walk3D.tsx`)에는 `attachMultiplayer(w, '방')` 한 줄만 더했다(들어오면 그곳을, 나가면 'none' 을 알린다). `<MultiplayerBar />` 는 `App.tsx` 에 하나.

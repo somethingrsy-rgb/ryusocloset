@@ -158,7 +158,8 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
   const mp = useSyncExternalStore(subscribeMp, getMp)
   const isMyRoom = placeId === MY_ROOM_ID
   const placeTitle = isMyRoom ? '우리집' : (lang === 'ko' ? p.ko : p.en)
-  const hostingHere = mp.status === 'on' && mp.hosting && !!mp.uid
+  // 친구 집에 놀러 가 있는 동안은 뒤에 있는 이 장소가 내 위치를 보내지 않는다
+  const hostingHere = mp.status === 'on' && mp.hosting && !!mp.uid && !mp.visiting
   useEffect(() => { if (!hostingHere) return; enterMyHome(); setWhere('home', getMp().uid) }, [hostingHere])
   // 이 장소를 나가면 문을 닫는다(놀러 온 친구들은 돌아간다)
   useEffect(() => () => { closeHome(); if (getMp().room === 'home') setWhere('none') }, [placeId])
@@ -378,6 +379,17 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
             {tx.decorate}
           </button>
         )}
+        {/* 같이 놀기: 친구를 이 장소로 부르고, 같이 간식 먹기 */}
+        {mp.status === 'on' && (
+          <button onClick={inviteFriends} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-[#7a3d8f] px-3 py-2 text-sm font-bold text-white shadow-md">
+            <span aria-hidden>👥</span>{mp.hosting ? '또 부르기' : '여기로 부르기'}
+          </button>
+        )}
+        {hostingHere && (
+          <button onClick={() => { playTap(); setPicking(true) }} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-[#ffd166] px-3 py-2 text-sm font-bold text-[#7a4a12] shadow-md">
+            <span aria-hidden>🍰</span>간식
+          </button>
+        )}
         <button onClick={() => { playTap(); setInviting(true) }} disabled={partyEnd} className="flex flex-none items-center gap-1 whitespace-nowrap rounded-full bg-[#ff8fab] px-3 py-2 text-sm font-bold text-white shadow-md disabled:opacity-50">
           <span aria-hidden>🎉</span>
           {lang === 'ko' ? '파티 초대' : 'Party'}
@@ -434,19 +446,6 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
               </button>
             </div>
           </div>
-        </div>
-      )}
-      {/* 같이 놀기 집 놀이 단추: 위 단추 줄이 길어지지 않게 오른쪽 가장자리에 */}
-      {mp.status === 'on' && (
-        <div className="absolute top-1/2 right-2 z-30 flex -translate-y-1/2 flex-col items-end gap-2">
-          <button onClick={inviteFriends} className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#7a3d8f] px-3 py-2 text-sm font-bold text-white shadow-md">
-            <span aria-hidden>👥</span>{mp.hosting ? '또 부르기' : '여기로 부르기'}
-          </button>
-          {hostingHere && (
-            <button onClick={() => { playTap(); setPicking(true) }} className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#ffd166] px-3 py-2 text-sm font-bold text-[#7a4a12] shadow-md">
-              <span aria-hidden>🍰</span>간식
-            </button>
-          )}
         </div>
       )}
       {picking && <FoodPicker onClose={() => setPicking(false)} onPick={(m) => { setPicking(false); playTap(); putFoodNear(m) }} />}
