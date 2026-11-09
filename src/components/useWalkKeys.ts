@@ -11,11 +11,13 @@ export function useWalkKeys(move: (x: number, y: number) => void, stop: () => vo
   latest.current = { move, stop, enabled }
   const keys = useRef(new Set<string>())
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
+  // 방향키로 걷던 것만 멈춘다: 누른 곳으로 걷는 중에 포커스가 빠져도(휴대폰은 화면을 누른 뒤 포커스가 빠진다) 멈추지 않게
   const release = () => {
+    const held = keys.current.size > 0 || timer.current !== null
     keys.current.clear()
     if (timer.current !== null) clearInterval(timer.current)
     timer.current = null
-    latest.current.stop()
+    if (held) latest.current.stop()
   }
   const advance = () => {
     if (!latest.current.enabled) { release(); return }

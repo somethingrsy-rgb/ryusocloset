@@ -86,7 +86,9 @@ export function HomeVisit({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }
     raf.current = requestAnimationFrame(tick)
   }
   const walkTo = (v: Vec, then?: () => void) => {
-    target.current = { v: { x: Math.max(3 - side.x, Math.min(97 + side.x, v.x)), y: Math.max(minY, Math.min(maxY + side.y, v.y)) }, then }
+    const el = rootRef.current, b = boxRef.current
+    const sd = el && b && b.clientWidth && b.clientHeight ? { x: Math.max(0, (el.clientWidth / b.clientWidth - 1) * 50), y: Math.max(0, (el.clientHeight / b.clientHeight - 1) * 50) } : side
+    target.current = { v: { x: Math.max(3 - sd.x, Math.min(97 + sd.x, v.x)), y: Math.max(minY, Math.min(maxY + sd.y, v.y)) }, then }
     setWalking(true)
     cancelAnimationFrame(raf.current)
     last.current = performance.now()

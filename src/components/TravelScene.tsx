@@ -192,10 +192,10 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
     return () => clearTimeout(id)
   }, [popup])
 
+  /** 줍기: 주웠으면 true(못 주운 반짝이 때문에 아바타가 그 자리에 묶이지 않게) */
   const pick = useCallback((id: string) => {
-    if (findItem(id)) {
-      setPopup(id)
-    }
+    if (findItem(id)) { setPopup(id); return true }
+    return false
   }, [])
 
   // 걷는 루프: 목표가 있을 때만 돈다
@@ -225,11 +225,10 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
       const g = getGame()
       const near = shownOf(g.found)
       const hitSpot = ids.findIndex((id, i) => near.has(id) && distPx(me, spotFor(id, i)) < PICK_R)
-      if (hitSpot >= 0) {
+      if (hitSpot >= 0 && pick(ids[hitSpot])) {
         target.current = null
         setWalking(false)
         setDestination(null)
-        pick(ids[hitSpot])
         return
       }
       if (target.current) frame.current = requestAnimationFrame(tick)
@@ -242,8 +241,11 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
     if (blocked) return
     pendingEat.current = null
     // 가로 화면에서는 무대 양옆(이어 붙인 그림)까지 화면 끝 가까이 걸어갈 수 있다
-    // 화면에 보이는 바닥 어디든(양옆·아래로 이어 붙인 바닥까지) 걸어간다
-    target.current = { x: Math.min(97 + sideX, Math.max(3 - sideX, v.x)), y: Math.min(layout ? 98 + sideY : WALK_BOUNDS.maxY + (stage ? sideY : 0), Math.max(minY, v.y)) }
+    // 화면에 보이는 바닥 어디든(양옆·아래로 이어 붙인 바닥까지) 걸어간다. 보이는 범위는 누를 때마다 지금 크기로 다시 잰다(휴대폰에서 처음 잰 값이 0 으로 남던 것)
+    const el = rootRef.current, box = boxRef.current
+    const sx = el && box && box.clientWidth ? Math.max(0, (el.clientWidth / box.clientWidth - 1) * 50) : sideX
+    const sy = el && box && box.clientHeight ? Math.max(0, (el.clientHeight / box.clientHeight - 1) * 50) : sideY
+    target.current = { x: Math.min(97 + sx, Math.max(3 - sx, v.x)), y: Math.min(layout ? 98 + sy : WALK_BOUNDS.maxY + (stage ? sy : 0), Math.max(minY, v.y)) }
     setDestination(target.current)
     setWalking(true)
     cancelAnimationFrame(frame.current)
