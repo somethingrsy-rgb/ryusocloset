@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { HomeVisitGate, MultiplayerBar } from './components/MultiplayerBar'
+import { FriendTab, HomeVisitGate, MultiplayerBar } from './components/MultiplayerBar'
 import { setArrival } from './lib/farmCafeLink'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
@@ -419,6 +419,7 @@ export default function App() {
         <header className={`flex shrink-0 items-center justify-between gap-2 px-1 ${full ? '[@media(max-height:500px)]:hidden' : ''}`}>
             <h1 className="hidden text-lg font-extrabold tracking-tight whitespace-nowrap text-blush-deep xl:block">{t('title')}</h1>
             <div role="tablist" className="flex min-w-0 flex-1 overflow-x-auto rounded-full bg-white/80 p-0.5 shadow-sm">
+              <FriendTab />
               {modeBtn('closet', 'closet', t('modeCloset'))}
               {modeBtn('farm', 'farm', lang === 'ko' ? '농장' : 'Farm')}
               {modeBtn('kitchen', 'kitchen', lang === 'ko' ? '주방' : 'Kitchen')}

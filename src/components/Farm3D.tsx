@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
-import { mpDock } from './MultiplayerBar'
 import { animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -696,8 +695,6 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex flex-wrap items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b2f] shadow">🌱 3D 농장</span>
-          {/* 같이 놀기 👥 단추 자리 */}
-          <span ref={mpDock} className="pointer-events-auto flex" />
         </div>
         <div className="pointer-events-auto flex items-center gap-1.5">
           <span className="rounded-full bg-white/95 px-3 py-2 text-sm font-black shadow"><CoinIcon /> {farm.coins}</span>
