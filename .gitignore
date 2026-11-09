@@ -5,3 +5,8 @@ dev-dist
 .DS_Store
 *.tsbuildinfo
 __pycache__
+
+functions/.env.*
+!functions/.env.example
+functions/.secret.local
+*-debug.log

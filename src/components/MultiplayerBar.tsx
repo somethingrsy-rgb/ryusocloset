@@ -6,12 +6,13 @@
  */
 import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
+import { MultiplayerNotifications } from './MultiplayerNotifications'
 import { listen, speechSupported } from '../lib/mp/speech'
 import { assetUrl } from '../lib/items'
 import { getAvatar } from '../lib/avatars'
 import { multiplayerAvailable } from '../lib/mp/config'
 import { MAX_CHAT, MAX_NAME, MAX_PLAYERS } from '../lib/mp/core'
-import { getMp, joinMp, leaveMp, savedName, say, setLook, subscribeMp, visitHome } from '../lib/mp/session'
+import { callFriend, restoreMp, getMp, joinMp, leaveMp, savedName, say, setLook, subscribeMp, visitHome } from '../lib/mp/session'
 import type { Outfit, Tweaks } from '../lib/types'
 
 const HomeVisit = lazy(() => import('./HomeVisit').then((m) => ({ default: m.HomeVisit })))
@@ -133,7 +134,13 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
   useEffect(() => { setNow(Date.now()) }, [newest])
   useEffect(() => { if (!fresh.length && !mine) return; const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t) }, [fresh.length, mine])
   // 말하는 줄: 한동안(20초) 안 쓰면 저절로 닫힌다(화면을 덜 가리게)
-  const [history, setHistory] = useState(false)
+  const [history, setHistory] = useState(() => new URLSearchParams(location.search).has('mpResume'))
+  useEffect(() => {
+    const openChat = (event: MessageEvent) => { if (event.data?.type === 'ryuso:open-chat') { setPanel(true); setHistory(true) } }
+    navigator.serviceWorker?.addEventListener('message', openChat)
+    if (new URLSearchParams(location.search).has('mpResume')) { setPanel(true); const url = new URL(location.href); url.searchParams.delete('mpResume'); window.history.replaceState(null, '', url) }
+    return () => navigator.serviceWorker?.removeEventListener('message', openChat)
+  }, [])
   const [askLeave, setAskLeave] = useState(false)
   const [used, setUsed] = useState(0)
   const touch = () => setUsed((n) => n + 1)
@@ -146,6 +153,7 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
   const showInvite = invite && invite.id !== dismissed && mp.visiting !== invite.home && !!mp.players[invite.uid]
   const look = { avatar: getAvatar().id, outfit: outfit as Record<string, string> }
   const lookKey = JSON.stringify(look)
+  useEffect(() => { restoreMp(JSON.parse(lookKey)) }, [lookKey])
   // 옷을 갈아입으면 다른 사람 화면에도
   useEffect(() => { if (mp.status === 'on') setLook(JSON.parse(lookKey)) }, [lookKey, mp.status])
   if (!multiplayerAvailable) return null
@@ -165,6 +173,7 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
             <button disabled={mp.status === 'connecting' || !name.trim()} onClick={() => { joinMp(name, look); touch() }} className={`${btn} bg-[#ff8fab] text-white disabled:opacity-50`}>
               {mp.status === 'connecting' ? '연결하는 중…' : '들어가기'}
             </button>
+            {mp.status === 'expired' && <p role="status" className="m-0 text-xs text-[#6b4b52]">자리를 보관하는 시간이 끝났거나 다른 창에서 접속했어요. 다시 들어갈 수 있어요.</p>}
             {mp.status === 'full' && <p className="m-0 text-xs font-bold text-[#d0587a]">지금은 {MAX_PLAYERS}명이 꽉 찼어요. 조금 뒤에 다시 해 봐요</p>}
             {mp.status === 'error' && <p className="m-0 text-xs font-bold text-[#d0587a]">연결하지 못했어요 · {mp.error}</p>}
           </div>
@@ -186,7 +195,15 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
       {on && (
         <div className="pointer-events-none absolute inset-x-2 z-[60] flex flex-col items-start gap-1" style={{ bottom: lift && !mp.visiting ? '5.5rem' : '0.5rem' }}>
           {history && (
-            <div role="dialog" aria-label="지난 대화" className="pointer-events-auto flex max-h-[40vh] w-[min(20rem,100%)] flex-col gap-1.5 rounded-2xl bg-white/95 p-2.5 shadow-lg">
+            <div role="dialog" aria-label="지난 대화" className="pointer-events-auto flex max-h-[60vh] w-[min(20rem,100%)] flex-col gap-1.5 overflow-y-auto rounded-2xl bg-white/95 p-2.5 shadow-lg">
+              <p role="status" className="m-0 text-xs text-[#6b4b52]">{mp.connected ? '화면을 꺼도 10분 동안 자리를 보관해요.' : '다시 연결하는 중… 자리는 보관하고 있어요.'}</p>
+              <ul aria-label="같이 노는 친구" className="m-0 max-h-24 shrink-0 list-none overflow-y-auto p-0 text-xs">
+                {Object.entries(mp.players).map(([uid, p]) => <li key={uid} className="flex items-center justify-between gap-2 py-0.5">
+                  <span>{p.name}{uid === mp.uid ? ' (나)' : ''} · {p.away ? '💤 자리 비움' : '접속 중'}</span>
+                  {uid !== mp.uid && <button type="button" disabled={!mp.connected} onClick={() => { callFriend(uid); touch() }} className="min-h-8 rounded-full bg-[#f3e6ea] px-2 font-bold disabled:opacity-50">🔔 부르기</button>}
+                </li>)}
+              </ul>
+              <MultiplayerNotifications />
               <ul className="m-0 flex min-h-0 list-none flex-col gap-0.5 overflow-y-auto p-0 text-xs">
                 {mp.chat.map((c) => <li key={c.id} className="leading-snug"><b className={c.uid === mp.uid ? 'text-[#c04a5a]' : 'text-[#7a3d8f]'}>{c.name}</b> {c.text}</li>)}
                 {!mp.chat.length && <li className="text-black/40">아직 나눈 이야기가 없어요</li>}
@@ -218,7 +235,7 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
                   className={`h-10 w-12 shrink-0 rounded-full text-xl shadow ${hearing ? 'animate-pulse bg-[#ff5c8a] text-white' : 'bg-[#ffe4ec]'}`}>🎤</button>
               )}
               <input aria-label="채팅" value={text} maxLength={MAX_CHAT} onFocus={touch} onChange={(e) => { setText(e.target.value); touch() }} placeholder={micNote || (hearing ? '듣고 있어요… 말해 봐요' : speechSupported ? '🎤 누르고 말하기' : '말하기…')} className={`h-9 min-w-0 flex-1 rounded-full border border-[#f0c6cd] bg-white px-3 text-sm ${micNote ? 'placeholder:text-[#d0587a]' : ''}`} />
-              <button className="h-9 shrink-0 rounded-full bg-[#ff8fab] px-3 text-xs font-black text-white">보내기</button>
+              <button disabled={!mp.connected} className="h-9 shrink-0 rounded-full bg-[#ff8fab] px-3 text-xs font-black text-white disabled:opacity-50">보내기</button>
               <button type="button" aria-label="지난 대화" aria-pressed={history} onClick={() => { setHistory((h) => !h); setAskLeave(false); touch() }} className={`h-9 w-9 shrink-0 rounded-full text-base ${history ? 'bg-[#e9d5f5]' : 'bg-[#f6eef8]'}`}>📜</button>
             </form>
           )}

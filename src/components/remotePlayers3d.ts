@@ -46,10 +46,11 @@ export function attachMultiplayer(w: World, room: Room) {
   let mineKey = ''
   let gone = false
   const makeLabel = (r: Remote, p: PlayerState, chat: string | null) => {
-    const key = `${p.name}|${chat ?? ''}`
+    const name = p.away ? `${p.name} · 자리 비움` : p.name
+    const key = `${name}|${chat ?? ''}`
     if (key === r.labelKey) return
     r.labelKey = key
-    const c = labelCanvas(p.name, chat)
+    const c = labelCanvas(name, chat)
     const m = r.label.material
     m.map?.dispose()
     m.map = new THREE.CanvasTexture(c); m.map.colorSpace = THREE.SRGBColorSpace; m.needsUpdate = true

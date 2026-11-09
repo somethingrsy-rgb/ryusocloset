@@ -17,8 +17,8 @@ export const KEEPALIVE_MS = 5000
 export const STALE_MS = 15000
 
 export interface Look { avatar: string; outfit: Record<string, string> }
-export interface PlayerState { name: string; room: Where; /** room 이 home 일 때 그 집 주인 uid */ host?: string; /** 지금 먹고 있는 음식(메뉴 id) */ eat?: string; x: number; z: number; dir: 1 | -1; moving: boolean; look: Look; t: number }
-export interface ChatMsg { id: string; uid: string; name: string; text: string; t: number; /** 집 초대면 그 집 주인 uid(= 보낸 사람) */ home?: string }
+export interface PlayerState { away?: boolean; session?: string; name: string; room: Where; /** room 이 home 일 때 그 집 주인 uid */ host?: string; /** 지금 먹고 있는 음식(메뉴 id) */ eat?: string; x: number; z: number; dir: 1 | -1; moving: boolean; look: Look; t: number }
+export interface ChatMsg { call?: string; id: string; uid: string; name: string; text: string; t: number; /** 집 초대면 그 집 주인 uid(= 보낸 사람) */ home?: string }
 
 export const cleanName = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, MAX_NAME) : '')
 export const cleanChat = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, MAX_CHAT) : '')
@@ -41,6 +41,8 @@ export function sanePlayer(v: unknown): PlayerState | null {
     dir: r.dir === -1 ? -1 : 1, moving: r.moving === true,
     look: { avatar: typeof look.avatar === 'string' ? look.avatar.slice(0, 40) : '', outfit },
     t: r.t as number,
+    ...(typeof r.away === 'boolean' ? { away: r.away } : {}),
+    ...(typeof r.session === 'string' ? { session: r.session } : {}),
   }
 }
 

@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FriendTab, HomeVisitGate, MultiplayerBar } from './components/MultiplayerBar'
+import { readResume, rememberMode } from './lib/mp/presence'
 import { setArrival } from './lib/farmCafeLink'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
@@ -102,7 +103,8 @@ export default function App() {
     initial.bgId && BACKGROUNDS.some((b) => b.id === initial.bgId) ? initial.bgId : DEFAULT_BG_ID,
   )
   const [travelPreview, setTravelPreview] = useState<string | null>(null)
-  const [mode, setMode] = useState<Mode>('closet')
+  const [mode, setMode] = useState<Mode>(() => { const m = readResume()?.mode; return ['closet', 'farm', 'cafe', 'kitchen', 'room', 'travel', 'walk', 'shop'].includes(m ?? '') ? m as Mode : 'closet' })
+  useEffect(() => rememberMode(mode), [mode])
   /** 여행 장소에서 "방 꾸미기"로 들어오면 그 테마 소품 묶음부터 보여 준다 (방 탭을 떠나면 비움) */
   const [trayTheme, setTrayTheme] = useState<string | undefined>()
   useEffect(() => { if (mode !== 'room') setTrayTheme(undefined) }, [mode])

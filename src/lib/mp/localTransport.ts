@@ -21,15 +21,24 @@ export function localTransport(): Transport {
   let bossCb: (b: Record<string, Boss>) => void = () => {}
   const setBoss = (room: string, b: Boss, tell: boolean) => { bosses[room] = b; bossCb({ ...bosses }); if (tell) ch?.postMessage({ type: 'boss', uid, room, boss: b }) }
   const emit = () => playersCb({ ...players })
-  const send = () => ch?.postMessage({ type: 'p', uid, state: { ...state, t: Date.now() } })
+  const send = () => {
+    if (!state.away) state.t = Date.now()
+    const player = sanePlayer(state)
+    if (player) players[uid] = player
+    ch?.postMessage({ type: 'p', uid, state })
+    emit()
+  }
   const bye = () => ch?.postMessage({ type: 'bye', uid })
   return {
+    setAway(away) { Object.assign(state, { away, moving: false }); players[uid] = sanePlayer({ ...state, t: Date.now() })!; send(); emit() },
+    onExpired() {},
+    onConnection(cb) { cb(true) },
     async join(me) {
       ch = new BroadcastChannel('ryuso-mp-lobby')
-      state = { ...me }
+      state = { ...me, t: Date.now() }
       ch.onmessage = (e) => {
         const m = e.data as { type: string; uid: string; state?: unknown; msg?: ChatMsg }
-        if (m.type === 'p') { const p = sanePlayer(m.state); if (p) { players[m.uid] = { ...p, t: Date.now() }; emit() } }
+        if (m.type === 'p') { const p = sanePlayer(m.state); if (p) { players[m.uid] = p; emit() } }
         else if (m.type === 'hi') { send(); for (const [room, b] of Object.entries(bosses)) ch?.postMessage({ type: 'boss', uid, room, boss: b }); myHome() }
         else if (m.type === 'home') { const h = (m as { home?: Home | null }).home; if (h) homes[m.uid] = h; else delete homes[m.uid]; tellWatch(m.uid) }
         else if (m.type === 'food+') { const x = m as unknown as { host: string; food: Food }; const f = saneFood(x.food?.id, x.food); if (f) { (foods[x.host] ??= {})[f.id] = f; tellWatch(x.host) } }
@@ -44,12 +53,12 @@ export function localTransport(): Transport {
       players[uid] = { ...(sanePlayer({ ...state, t: Date.now() }) as PlayerState) }
       send(); emit()
       beat = window.setInterval(send, 2000)
-      window.addEventListener('pagehide', bye)
+
       return { uid, full: false }
     },
-    update(part) { Object.assign(state, part); players[uid] = { ...(sanePlayer({ ...state, t: Date.now() }) as PlayerState) }; send() },
-    chat(name, text, home) {
-      const msg: ChatMsg = { id: `${Date.now()}-${uid}`, uid, name, text, t: Date.now(), ...(home ? { home: uid } : {}) }
+    update(part) { if (state.away) return; Object.assign(state, part); players[uid] = { ...(sanePlayer({ ...state, t: Date.now() }) as PlayerState) }; send() },
+    chat(name, text, home, call) {
+      const msg: ChatMsg = { id: `${Date.now()}-${uid}`, uid, name, text, t: Date.now(), ...(home ? { home: uid } : {}), ...(call ? { call } : {}) }
       chat.push(msg); chatCb(chat.slice(-30))
       ch?.postMessage({ type: 'chat', uid, msg })
     },
