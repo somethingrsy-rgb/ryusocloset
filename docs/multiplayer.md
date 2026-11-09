@@ -3,13 +3,15 @@
 한 번 「같이 놀기」에 들어가면 앱 어느 탭에 있든 계속 연결돼 있고 채팅은 모두와 한다(최대 10명). 3D 카페·농장·산책에서는 같은 곳에 있는 친구가 3D 로 보인다.
 Firebase 설정이 없는 빌드(지금의 GitHub Pages 배포)는 「👥 같이 놀기」 단추가 나오지 않고 예전과 똑같이 동작한다.
 
+> 화면 잠금·자리 보관·푸시 알림 설정은 [백그라운드 멀티플레이 배포 안내](multiplayer-background.md)를 참고하세요. 아래 기존 설정에 더해 새 보안 규칙과 Cloud Functions 배포가 필요합니다.
+
 ## 구조
 
 | 파일 | 하는 일 |
 |---|---|
 | `src/lib/mp/config.ts` | 환경변수로 Firebase 설정이 있는지 확인(Firebase 를 불러오지 않음) |
 | `src/lib/mp/firebase.ts` | Firebase 앱·익명 로그인·Realtime Database 연결(이 파일만 Firebase 를 안다) |
-| `src/lib/mp/firebaseTransport.ts` | `lobby/players/{uid}`(지금 있는 곳 `room`: cafe·farm·walk·none), `lobby/chat`, `lobby/bosses/{walk|farm|cafe}`(장소마다 하나인 같이 사냥 대왕 몬스터, 트랜잭션으로 💖 깎기) 읽기·쓰기, `onDisconnect` 로 접속 정리, 10명 제한 |
+| `src/lib/mp/firebaseTransport.ts` | `lobby/players/{uid}`(지금 있는 곳 `room`: cafe·farm·walk·none), `lobby/chat`, `lobby/bosses/{walk|farm|cafe}`(장소마다 하나인 같이 사냥 대왕 몬스터, 트랜잭션으로 💖 깎기) 읽기·쓰기, `onDisconnect` 로 자리 비움 표시, 10명 제한 |
 | `src/lib/mp/localTransport.ts` | 시험용: `?mp=local` 이면 같은 브라우저의 탭끼리(BroadcastChannel) 연결 |
 | `src/lib/mp/core.ts` | 공통 규칙(인원·전송 주기·값 검사·보간) + 테스트 `core.test.ts` |
 | `src/lib/mp/session.ts` | 방 들어가기/나가기, 위치 보내기(최대 초당 8번, 움직였을 때만, 5초마다 생존 신호), 채팅 |
@@ -45,7 +47,7 @@ npm run dev
 2. 다른 브라우저(또는 크롬 시크릿 창)에서 같은 주소를 연다 — 시크릿 창은 익명 uid 가 달라서 다른 플레이어가 된다.
 3. 두 창 모두 「카페」 탭(3D) → 왼쪽 「👥 같이 놀기」 → 닉네임 → 「들어가기」.
 4. 한쪽에서 땅을 누르거나 WASD 로 걸으면 다른 쪽 화면에 그 캐릭터가 부드럽게 따라 움직인다. 채팅을 보내면 머리 위 말풍선과 채팅 칸에 보인다.
-5. 한쪽 창을 닫으면 몇 초 안에 다른 쪽 인원이 줄고 캐릭터가 사라진다(`onDisconnect`).
+5. 한쪽 창을 잠그거나 닫으면 자리 비움으로 표시되고 10분 동안 자리가 유지된다. 직접 나가거나 보관 시간이 만료되면 참가자가 사라진다.
 6. 같은 와이파이의 폰으로 보려면 `npm run dev -- --host` 로 띄우고 폰에서 PC 의 주소(예: `http://192.168.0.5:5173/`)로 연다.
 
 Firebase 없이 화면만 볼 때: `.env.local` 없이 `npm run dev` 후 `http://localhost:5173/?mp=local` 을 **같은 브라우저의 탭 두 개**로 연다.

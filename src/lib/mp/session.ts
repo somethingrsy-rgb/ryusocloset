@@ -5,19 +5,20 @@
  * - 3D: 내 위치 보내기(setPos), 다른 플레이어 그리기(state.players)
  * Firebase 는 들어갈 때 처음 불러온다(동적 import) → 멀티플레이어를 안 쓰면 앱 크기·동작이 그대로다.
  */
-import { MAX_FOOD, MAX_PLAYERS, STALE_MS, cleanChat, cleanName, shouldSend, type Boss, type ChatMsg, type Food, type Home, type Look, type PlayerState, type Where } from './core'
+import { MAX_FOOD, MAX_PLAYERS, cleanChat, cleanName, shouldSend, type Boss, type ChatMsg, type Food, type Home, type Look, type PlayerState, type Where } from './core'
 import { firebaseReady, localTest } from './config'
+import { AWAY_MS, forgetSession, readResume, rememberSession, visiblePlayers, type Resume } from './presence'
 import type { Transport } from './transport'
 
-export type Status = 'off' | 'connecting' | 'on' | 'full' | 'error'
-export interface MpState { status: Status; /** 내가 지금 있는 곳 */ room: Where; /** room 이 home 이면 그 집 주인 uid */ host: string | null;
+export type Status = 'off' | 'connecting' | 'on' | 'full' | 'error' | 'expired'
+export interface MpState { connected: boolean; status: Status; /** 내가 지금 있는 곳 */ room: Where; /** room 이 home 이면 그 집 주인 uid */ host: string | null;
   /** 놀러 가려는(가 있는) 친구 집 주인 uid: 앱이 그 집 화면을 띄운다 */ visiting: string | null; /** 내 집을 열었는지 */ hosting: boolean;
   /** 지켜보는 집(내 집이나 놀러 간 집)과 그 바닥 음식 */ home: Home | null; foods: Food[]; uid: string | null; players: Record<string, PlayerState>; chat: ChatMsg[]; /** 같이 사냥하는 대왕 몬스터(장소마다) */ bosses: Record<string, Boss>; error: string | null }
 
 const NAME_KEY = 'ryuso.mp.name'
 export const savedName = () => { try { return cleanName(localStorage.getItem(NAME_KEY)) } catch { return '' } }
 
-let state: MpState = { status: 'off', room: 'none', host: null, visiting: null, hosting: false, home: null, foods: [], uid: null, players: {}, chat: [], bosses: {}, error: null }
+let state: MpState = { connected: false, status: 'off', room: 'none', host: null, visiting: null, hosting: false, home: null, foods: [], uid: null, players: {}, chat: [], bosses: {}, error: null }
 const listeners = new Set<() => void>()
 const set = (p: Partial<MpState>) => { state = { ...state, ...p }; listeners.forEach((f) => f()) }
 export const getMp = () => state
@@ -28,49 +29,114 @@ let myName = ''
 let lastSent: { x: number; z: number; dir: number; moving: boolean; at: number } | null = null
 let pos = { x: 0, z: 0, dir: 1 as 1 | -1, moving: false }
 let joinId = 0
+let allPlayers: Record<string, PlayerState> = {}
+let stopLifecycle = () => {}
+let lastActive = Date.now()
+let restored = false
+function remember() {
+  if (!state.uid || state.status !== 'on') return
+  rememberSession({ uid: state.uid, name: myName, at: lastActive, visiting: state.visiting, hosting: state.hosting })
+}
+function expired() { leaveMp(); set({ status: 'expired', error: null }) }
+function startLifecycle() {
+  const away = () => { remember(); tr?.setAway(true) }
+  const resume = () => {
+    if (document.hidden) return
+    if (Date.now() - lastActive >= AWAY_MS) { expired(); return }
+    tr?.setAway(false)
+  }
+  const visibility = () => document.hidden ? away() : resume()
+  document.addEventListener('visibilitychange', visibility)
+  window.addEventListener('pagehide', away)
+  window.addEventListener('pageshow', resume)
+  window.addEventListener('online', resume)
+  const timer = window.setInterval(() => {
+    if (Date.now() - lastActive >= AWAY_MS) { expired(); return }
+    if (!document.hidden && state.connected) {
+      lastActive = Date.now(); tr?.update({}); remember()
+    }
+    set({ players: visiblePlayers(allPlayers, serverNow()) })
+  }, 5000)
+  stopLifecycle = () => {
+    clearInterval(timer)
+    document.removeEventListener('visibilitychange', visibility)
+    window.removeEventListener('pagehide', away)
+    window.removeEventListener('pageshow', resume)
+    window.removeEventListener('online', resume)
+  }
+  visibility()
+}
+/** Attempt once per page load; a failed/expired reservation must not silently create a new membership. */
+export function restoreMp(look: Look) {
+  if (restored || state.status !== 'off' || !firebaseReady) return
+  restored = true
+  const resume = readResume()
+  if (resume) void joinMp(resume.name, look, resume)
+}
 
-export async function joinMp(name: string, look: Look) {
+export async function joinMp(name: string, look: Look, resume?: Resume) {
   leaveMp()
   const id = ++joinId
   myName = cleanName(name) || '친구'
   try { localStorage.setItem(NAME_KEY, myName) } catch { /* 이번만 */ }
   set({ status: 'connecting', error: null, players: {}, chat: [], bosses: {} })
+  let joining: Transport | null = null
   try {
     const t: Transport = localTest && !firebaseReady
       ? (await import('./localTransport')).localTransport()
       : (await import('./firebaseTransport')).firebaseTransport()
-    if (id !== joinId) return
-    t.onPlayers((players) => {
-      // 오래 소식 없는 플레이어(끊겼는데 정리가 늦은)는 뺀다
-      const now = Date.now() + t.offset()
-      set({ players: Object.fromEntries(Object.entries(players).filter(([, p]) => now - p.t < STALE_MS)) })
-    })
-    t.onChat((chat) => set({ chat }))
-    t.onBosses((bosses) => set({ bosses }))
-    const r = await t.join({ name: myName, room: state.room, ...(state.host ? { host: state.host } : {}), ...pos, look })
+    joining = t
     if (id !== joinId) { t.leave(); return }
-    if (r.full) { set({ status: 'full', uid: r.uid }); return }
+    t.onExpired(() => { if (id === joinId) expired() })
+    t.onConnection((connected) => { if (id === joinId) { if (connected) lastActive = Date.now(); set({ connected }) } })
+    t.onPlayers((players) => {
+      if (id !== joinId) return
+      allPlayers = players
+      set({ players: visiblePlayers(players, Date.now() + t.offset()) })
+    })
+    t.onChat((chat) => { if (id === joinId) set({ chat }) })
+    t.onBosses((bosses) => { if (id === joinId) set({ bosses }) })
+    const r = await t.join({ name: myName, room: state.room, ...(state.host ? { host: state.host } : {}), ...pos, look }, resume?.uid)
+    if (id !== joinId) { t.leave(); return }
+    if (r.expired) { t.leave(); expired(); return }
+    if (r.full) { t.leave(); set({ status: 'full', uid: r.uid }); return }
     tr = t
     lastSent = { ...pos, at: performance.now() }
-    set({ status: 'on', uid: r.uid })
+    lastActive = Date.now()
+    set({ status: 'on', uid: r.uid, connected: true })
+    if (resume && r.player) {
+      if (resume.hosting) { set({ hosting: true }); watch(r.uid) }
+      pos = { x: r.player.x, z: r.player.z, dir: r.player.dir, moving: false }
+      if (r.player.room === 'home' && r.player.host) {
+        // The existing shared scene can also restore a host's own open home.
+        set({ visiting: r.player.host, hosting: r.player.host === r.uid })
+        watch(r.player.host)
+      }
+    }
+    remember()
+    startLifecycle()
   } catch (e) {
+    joining?.leave()
     if (id === joinId) set({ status: 'error', error: e instanceof Error ? e.message : String(e) })
   }
 }
 
 export function leaveMp() {
   joinId++
+  stopLifecycle(); stopLifecycle = () => {}
+  forgetSession()
+  allPlayers = {}
   unwatch()
   tr?.leave()
   tr = null
   lastSent = null
-  if (state.status !== 'off') set({ status: 'off', players: {}, chat: [], bosses: {}, uid: null, visiting: null, hosting: false, home: null, foods: [] })
+  if (state.status !== 'off') set({ status: 'off', connected: false, players: {}, chat: [], bosses: {}, uid: null, visiting: null, hosting: false, home: null, foods: [] })
 }
 
 /** 3D 장면이 매 프레임 부른다: 보낼 때가 된 것만 보낸다 */
 export function setPos(x: number, z: number, dir: 1 | -1, moving: boolean) {
   pos = { x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100, dir, moving }
-  if (!tr) return
+  if (!tr || document.hidden || !state.connected) return
   const at = performance.now()
   if (!shouldSend(lastSent, pos, at)) return
   lastSent = { ...pos, at }
@@ -86,6 +152,10 @@ export function setWhere(room: Where, host: string | null = null) {
   lastSent = { ...pos, at: performance.now() }
 }
 export function say(text: string, home = false) { const t = cleanChat(text); if (t && tr) tr.chat(myName, t, home) }
+export function callFriend(uid: string) {
+  const friend = state.players[uid]
+  if (friend && uid !== state.uid && tr && state.connected) tr.chat(myName, `🔔 ${friend.name}, 같이 놀자!`, false, uid)
+}
 export const playerCount = () => Object.keys(state.players).length
 export { MAX_PLAYERS }
 /** 대왕 몬스터에게 마법 한 번 / 새로 내기(같이 놀기 중일 때만) */

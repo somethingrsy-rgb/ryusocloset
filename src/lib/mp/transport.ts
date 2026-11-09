@@ -6,10 +6,13 @@ export type PlayerPart = Partial<Omit<PlayerState, 't' | 'host' | 'eat'>> & { ho
 /** 실시간 연결 한 가지(Firebase 또는 탭끼리 시험용). 세션(session.ts)은 이것만 안다 */
 export interface Transport {
   /** 같이 놀기에 들어간다(앱 어디에 있든 하나). 이미 10명이면 full */
-  join(me: Omit<PlayerState, 't'>): Promise<{ uid: string; full: boolean }>
+  join(me: Omit<PlayerState, 't'>, resumeUid?: string): Promise<{ uid: string; full: boolean; expired?: boolean; player?: PlayerState }>
+  setAway(away: boolean): void
+  onExpired(cb: () => void): void
+  onConnection(cb: (connected: boolean) => void): void
   update(me: PlayerPart): void
   /** home 이면 내 집 초대 글 */
-  chat(name: string, text: string, home?: boolean): void
+  chat(name: string, text: string, home?: boolean, call?: string): void
   leave(): void
   onPlayers(cb: (players: Record<string, PlayerState>) => void): void
   onChat(cb: (msgs: ChatMsg[]) => void): void
@@ -20,7 +23,7 @@ export interface Transport {
   hitBoss(room: string, id: string, power: number): void
   /** 새 대왕 몬스터를 낸다(없거나 풀리고 조금 지났을 때만, 여럿이 동시에 해도 하나만) */
   spawnBoss(room: string, next: Omit<Boss, 't'>): void
-  /** 내 집을 친구들에게 연다(방 꾸밈을 올린다, 접속이 끊기면 닫힌다) / 닫는다 */
+  /** 내 집을 친구들에게 연다(방 꾸밈을 올린다, 자리 비움 중에도 유지한다) / 닫는다 */
   openHome(home: Omit<Home, 't'>): void
   closeHome(): void
   /** 누구네 집(방 꾸밈 + 바닥 음식)을 지켜본다. 돌려준 함수로 그만 본다 */

@@ -1,0 +1,5 @@
+{
+  "database": { "rules": "database.rules.json" },
+  "functions": [{ "source": "functions", "codebase": "multiplayer", "ignore": ["node_modules", ".git", "*.test.mjs", ".env.example"] }],
+  "emulators": { "database": { "port": 9000 }, "ui": { "enabled": false } }
+}
