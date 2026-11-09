@@ -165,7 +165,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
     // 같이 놀기(멀티플레이어): 켜지 않으면 아무것도 하지 않는다
     const detachMp = attachMultiplayer(w, 'cafe')
     // 같이 사냥하는 대왕 몬스터(같이 놀기 중일 때만, 손님 자리·가게를 피해 빈 땅에)
-    bossRef.current = attachBoss(w, 'cafe', { spot: () => freeSpot(w, WALK - 6), power: 2, onUi: setBossUi, onDone: setBossDone })
+    bossRef.current = attachBoss(w, 'cafe', { spot: () => freeSpot(w, WALK - 6), holdWeapon: true, onUi: setBossUi, onDone: setBossDone })
     const { scene, keep, rnd } = w
     // 땅을 누르거나 끌면 따라가던 손님은 그만 따라간다(손님을 누른 것이면 onPick 이 다시 정한다)
     const stopFollow = () => { following = null }
@@ -387,7 +387,7 @@ export function Cafe3D({ outfit, tweaks, walking, hold, paused, encounters, onMe
   return (
     <div className="absolute inset-0">
       <div ref={host} className="absolute inset-0" />
-      <BossHud ui={bossUi} done={bossDone} onGo={() => bossRef.current?.go()} onZap={() => bossRef.current?.zap(2)} onRest={() => bossRef.current?.rest()} onCloseDone={() => setBossDone(null)} />
+      <BossHud ui={bossUi} done={bossDone} onGo={() => bossRef.current?.go()} onZap={() => bossRef.current?.zapWeapon()} onRest={() => bossRef.current?.rest()} onCloseDone={() => setBossDone(null)} />
       {/* 농장 길을 넘어갈 때 하얗게 */}
       <div aria-hidden className="pointer-events-none absolute inset-0 z-[30] bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
       {Array.from({ length: 8 }, (_, i) => (

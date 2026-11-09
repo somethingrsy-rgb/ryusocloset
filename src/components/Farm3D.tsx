@@ -291,7 +291,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
     // 같이 놀기(멀티플레이어): 켜지 않으면 아무것도 하지 않는다
     const detachMp = attachMultiplayer(w, 'farm')
     // 같이 사냥하는 대왕 몬스터(같이 놀기 중일 때만, 밭·우리·노점을 피해 빈 땅에)
-    bossRef.current = attachBoss(w, 'farm', { spot: () => freeSpot(w, BOUNDS - 8, Array.from({ length: PLOT_COUNT }, (_, i) => ({ ...plotAt(i), r: 3.5 }))), power: 2, canFight: () => !placingRef.current, onUi: setBossUi, onDone: setBossDone })
+    bossRef.current = attachBoss(w, 'farm', { spot: () => freeSpot(w, BOUNDS - 8, Array.from({ length: PLOT_COUNT }, (_, i) => ({ ...plotAt(i), r: 3.5 }))), holdWeapon: true, canFight: () => !placingRef.current, onUi: setBossUi, onDone: setBossDone })
     const { scene, rnd, keep, lambert } = w
 
     // 큰 밭 20칸 + 옆 밭 20칸: 흙 상자(마른 흙·젖은 흙·못 산 큰 밭은 풀빛, 설치 안 한 옆 밭은 흐린 흙) + 작물 둘 + 표시(💧 물 필요, ✨ 다 자람, 🔒 잠김)
@@ -804,7 +804,7 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
       )}
       {notice && <p role="status" className="absolute top-14 left-1/2 z-20 m-0 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-sm font-bold whitespace-nowrap shadow">{notice}</p>}
       {!ready && <p className="absolute inset-0 z-20 m-0 flex items-center justify-center text-sm font-bold text-[#3d6b2f]">농장을 만드는 중…</p>}
-      {!placing && <BossHud ui={bossUi} done={bossDone} onGo={() => bossRef.current?.go()} onZap={() => bossRef.current?.zap(2)} onRest={() => bossRef.current?.rest()} onCloseDone={() => setBossDone(null)} />}
+      {!placing && <BossHud ui={bossUi} done={bossDone} onGo={() => bossRef.current?.go()} onZap={() => bossRef.current?.zapWeapon()} onRest={() => bossRef.current?.rest()} onCloseDone={() => setBossDone(null)} />}
       {/* 카페 길을 넘어갈 때 하얗게 */}
       <div aria-hidden className="pointer-events-none absolute inset-0 z-30 bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
       {/* 아직 못 산 밭: 코인으로 사기 */}
