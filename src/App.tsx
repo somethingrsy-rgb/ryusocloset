@@ -512,7 +512,7 @@ export default function App() {
             </Suspense>
             {/* 같이 놀기: 한 번 들어가면 어느 탭에 있든 계속(채팅도 계속). 설정이 없으면 그리지 않는다 */}
             <HomeVisitGate outfit={outfit} tweaks={tweaks} />
-            <MultiplayerBar outfit={outfit} lift={mode === 'room'} />
+            <MultiplayerBar outfit={outfit} lift={mode === 'room'} onGo={(to) => { setTravelPreview(null); setSelection(null); setMode(to) }} />
           </div>
 
         <aside hidden={mode === 'farm' || mode === 'cafe' || mode === 'kitchen' || mode === 'shop' || mode === 'walk' || full} className={`flex ${split ? 'min-w-0 flex-1' : 'h-[40dvh] shrink-0'} flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
