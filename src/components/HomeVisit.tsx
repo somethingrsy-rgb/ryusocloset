@@ -1,6 +1,6 @@
 /**
  * 친구가 부른 곳에 놀러 간 화면(같이 놀기): 친구가 꾸민 방이나 친구가 있는 장소(핼러윈 집·궁전…)를 그대로 보여 주고,
- * 걸어 다니며 주인에게 음식을 주문해 같이 먹고 칭찬한다. 앱 어느 탭에서든 초대장을 「수락」하면 화면 위에 뜬다(App 이 그린다). 「돌아가기」로 원래 화면으로.
+ * 걸어 다니며 같이 간식을 먹고 칭찬한다. 앱 어느 탭에서든 초대장을 「수락」하면 화면 위에 뜬다(App 이 그린다). 「돌아가기」로 원래 화면으로.
  */
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from 'react'
 import { assetUrl } from '../lib/items'
@@ -11,7 +11,8 @@ import { WALK_BOUNDS, depthScale, stepToward, type Vec } from '../lib/walk'
 import { PLACE_BY_ID } from '../lib/game'
 import { TravelDecor } from './TravelDecor'
 import { playServe, playTap } from '../lib/sound'
-import { eatFood, getMp, leaveVisit, orderFood, say, setEating, setWhere, subscribeMp } from '../lib/mp/session'
+import { eatFood, getMp, leaveVisit, putFood, say, setEating, setWhere, subscribeMp } from '../lib/mp/session'
+import type { Food } from '../lib/mp/core'
 import type { Outfit, Tweaks } from '../lib/types'
 import { FigureLayers } from './FigureLayers'
 import { FoodPicker, HomeFriends, menuName } from './HomeFriends'
@@ -40,8 +41,20 @@ export function HomeVisit({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }
   const label = myHouse ? `${hostName}네 집` : `${title} · ${hostName}`
   // 장소 그림은 주인 화면처럼: 세로 화면이면 꽉 채우고, 가로 화면이면 방 무대 크기
   const rootRef = useRef<HTMLDivElement>(null)
+  const boxRef = useRef<HTMLDivElement>(null)
   const [wide, setWide] = useState(false)
-  useEffect(() => { const el = rootRef.current; if (!el) return; const ro = new ResizeObserver(() => setWide(el.clientWidth > el.clientHeight)); ro.observe(el); return () => ro.disconnect() }, [])
+  // 무대 양옆·아래로 이어 붙인 바닥이 보이는 만큼(무대에 대한 %): 그 바닥까지 걸어간다
+  const [side, setSide] = useState({ x: 0, y: 0 })
+  useEffect(() => {
+    const el = rootRef.current; if (!el) return
+    const ro = new ResizeObserver(() => {
+      setWide(el.clientWidth > el.clientHeight)
+      const b = boxRef.current
+      setSide(b && b.clientWidth && b.clientHeight ? { x: Math.max(0, (el.clientWidth / b.clientWidth - 1) * 50), y: Math.max(0, (el.clientHeight / b.clientHeight - 1) * 50) } : { x: 0, y: 0 })
+    })
+    ro.observe(el); if (boxRef.current) ro.observe(boxRef.current)
+    return () => ro.disconnect()
+  }, [where?.kind])
   // 집이 닫혔는지: 처음 조금 기다렸다가도 없으면
   const [waited, setWaited] = useState(false)
   useEffect(() => { const t = setTimeout(() => setWaited(true), 4000); return () => clearTimeout(t) }, [])
@@ -73,31 +86,28 @@ export function HomeVisit({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }
     raf.current = requestAnimationFrame(tick)
   }
   const walkTo = (v: Vec, then?: () => void) => {
-    target.current = { v: { x: Math.max(4, Math.min(96, v.x)), y: Math.max(minY, Math.min(maxY, v.y)) }, then }
+    target.current = { v: { x: Math.max(3 - side.x, Math.min(97 + side.x, v.x)), y: Math.max(minY, Math.min(maxY + side.y, v.y)) }, then }
     setWalking(true)
     cancelAnimationFrame(raf.current)
     last.current = performance.now()
     raf.current = requestAnimationFrame(tick)
   }
   useEffect(() => () => cancelAnimationFrame(raf.current), [])
-  const boxRef = useRef<HTMLDivElement>(null)
   const onTap = (e: PointerEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest('button, [role=dialog]')) return
     const r = boxRef.current?.getBoundingClientRect()
     if (!r) return
     walkTo({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 })
   }
-  // 주문: 메뉴를 고르면 집 주인에게 주문이 가고, 주인이 주방에서 만들어 「같이 먹기」로 가져다 주면 손에 들고 냠냠
+  // 간식: 놓기 · 먹기
   const [picking, setPicking] = useState(false)
   const [myEat, setMyEat] = useState<string | null>(null)
-  useEffect(() => { if (!myEat) return; const t = setTimeout(() => setMyEat(null), 5000); return () => clearTimeout(t) }, [myEat])
-  const myOrders = mp.foods.filter((f) => f.uid === mp.uid && f.kind === 'order')
-  const served = mp.foods.find((f) => f.uid === mp.uid && f.kind === 'served')
-  useEffect(() => {
-    if (!served) return
-    eatFood(served.id); setEating(served.menu); setMyEat(served.menu); playServe()
-    say(`😋 ${menuName(served.menu)} 냠냠! 고마워 맛있다`)
-  }, [served])
+  useEffect(() => { if (!myEat) return; const t = setTimeout(() => setMyEat(null), 4000); return () => clearTimeout(t) }, [myEat])
+  const eat = (f: Food) => walkTo({ x: f.x + (posRef.current.x < f.x ? -6 : 6), y: f.y }, () => {
+    if (!getMp().foods.some((x) => x.id === f.id)) return // 친구가 먼저 먹었다
+    eatFood(f.id); setEating(f.menu); setMyEat(f.menu); playServe()
+    say(`😋 ${menuName(f.menu)} 냠냠! 맛있다`)
+  })
   const [hearts, setHearts] = useState(0)
   const btn = 'flex flex-none items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-sm font-bold shadow-md'
   return (
@@ -133,7 +143,7 @@ export function HomeVisit({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }
             <img src={assetUrl(place.place.floor)} alt="" draggable={false} className="absolute inset-x-0 bottom-0 w-full" style={{ height: `${place.place.floorH / ROOM_H * 100}%` }} />
             <TravelDecor placeId={place.placeId} />
           </>}
-          <HomeFriends host={host} me={pos} dir={dir} walking={walking} w={avW} feet={feet} z={(y) => z + (y >= pos.y ? 1 : -1)} />
+          <HomeFriends host={host} me={pos} dir={dir} walking={walking} w={avW} feet={feet} z={(y) => z + (y >= pos.y ? 1 : -1)} onFood={eat} />
           <div className="pointer-events-none absolute" style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${avW(pos.y)}%`, aspectRatio: '1024 / 1536', transform: `translate(-50%, -${feet * 100}%)`, zIndex: z }}>
             <div className="relative h-full w-full" style={{ transform: `scaleX(${dir})` }}>
               <div className={`h-full w-full ${walking ? 'walk-bob' : ''}`}><FigureLayers outfit={outfit} tweaks={tweaks} animate={false} /></div>
@@ -149,12 +159,11 @@ export function HomeVisit({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }
         <button onClick={() => { playTap(); leaveVisit() }} className={`${btn} bg-white/90 ring-1 ring-black/5`}>🚪 돌아가기</button>
         <span className={`${btn} bg-white/90 text-[#7a3d8f]`}>{place ? place.place.icon : '🏠'} {label}</span>
         {where && <>
-          <button onClick={() => { playTap(); setPicking(true) }} className={`${btn} bg-[#ffd166] text-[#7a4a12]`}>📝 주문하기</button>
+          <button onClick={() => { playTap(); setPicking(true) }} className={`${btn} bg-[#ffd166] text-[#7a4a12]`}>🍰 간식 꺼내기</button>
           <button onClick={() => { playServe(); setHearts((h) => h + 1); say(myHouse ? `💖 ${hostName}네 방 정말 예뻐요!` : `💖 ${title} 정말 멋져요!`) }} className={`${btn} bg-[#ff8fab] text-white`}>💖 칭찬</button>
         </>}
       </div>
-      {myOrders.length > 0 && <p role="status" className="absolute inset-x-2 top-28 z-[20000] mx-auto w-fit rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[#7a4a12] shadow">📝 주문했어요: {myOrders.map((o) => menuName(o.menu)).join(', ')} · {hostName}가 만들어 줄 거예요</p>}
-      {picking && <FoodPicker title={`📝 ${hostName}에게 무엇을 주문할까요?`} onClose={() => setPicking(false)} onPick={(m) => { setPicking(false); playTap(); orderFood(m); say(`📝 ${menuName(m)} 주세요!`) }} />}
+      {picking && <FoodPicker onClose={() => setPicking(false)} onPick={(m) => { setPicking(false); playTap(); putFood(m, Math.max(8, Math.min(92, pos.x + (Math.random() < 0.5 ? -9 : 9))), Math.max(minY + 4, Math.min(maxY - 1, pos.y + (Math.random() - 0.5) * 6))) }} />}
     </div>
   )
 }

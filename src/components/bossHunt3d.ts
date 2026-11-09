@@ -14,7 +14,9 @@ import { SPARKLE_IMG } from './Sparkle'
 import { WANDS, WEAPON_BY_ID, WEAPON_SCALE, getWeapon } from '../lib/weapons'
 import { ANIMAL_H, emojiCanvas, type World } from './world3d'
 
-export interface BossUi { type: number; hp: number; max: number; far: number; fight: boolean; friends: string[] }
+export interface BossUi { type: number; hp: number; max: number; far: number; fight: boolean; friends: string[]; /** 대왕 몬스터가 다른 장소에 있으면 그곳(이곳에는 안 나온다) */ away?: Room }
+/** 한 번에 대왕 몬스터는 한 마리: 이만큼(10분) 아무도 안 건드린 몬스터는 없는 것으로 본다 */
+const STALE_BOSS_MS = 10 * 60 * 1000
 export interface BossDone { type: number; friends: string[]; isNew: boolean }
 export interface BossHunt {
   /** 눌린 것이 대왕 몬스터면 처리하고 true(싸우는 중이면 마법, 아니면 걸어간다) */
@@ -116,8 +118,10 @@ export function attachBoss(w: World, room: Room, opts: {
   w.onFrame((dt, now) => {
     holdFrame(dt, now)
     const mp = getMp(), b = mp.status === 'on' ? mp.bosses[room] ?? null : null
+    // 대왕 몬스터는 산책·농장·카페 통틀어 한 번에 한 마리: 다른 곳에 살아 있으면 여기에는 내지 않고, 그곳을 알려 준다
+    const away = mp.status === 'on' ? (Object.entries(mp.bosses).find(([r, x]) => r !== room && x.hp > 0 && serverNow() - x.t < STALE_BOSS_MS)?.[0] as Room | undefined) : undefined
     // 없거나 풀리고 조금 지났으면 누군가(먼저 한 사람) 새로 낸다
-    if (mp.status === 'on' && bossCanRespawn(b, serverNow()) && now - spawnTry > 3000) {
+    if (mp.status === 'on' && !away && bossCanRespawn(b, serverNow()) && now - spawnTry > 3000) {
       spawnTry = now
       spawnBoss(room, { id: Math.random().toString(36).slice(2, 10), type: Math.floor(Math.random() * MONSTERS.length), ...opts.spot(), hp: BOSS_MAX, max: BOSS_MAX })
     }
@@ -134,7 +138,12 @@ export function attachBoss(w: World, room: Room, opts: {
     // 마법이 풀리고 6초 지나면 사라졌다가 새로 나온다
     const show = !!b && (b.hp > 0 || serverNow() - b.t < 6000)
     doll.root.visible = show
-    if (!b || !show) { bs.fight = false; bs.hp = 0; if (uiKey) { uiKey = ''; opts.onUi(null) } return }
+    if (!b || !show) {
+      bs.fight = false; bs.hp = 0
+      const k = away ? `away|${away}` : ''
+      if (uiKey !== k) { uiKey = k; opts.onUi(away ? { type: 0, hp: 1, max: 1, far: 0, fight: false, friends: [], away } : null) }
+      return
+    }
     if (b.id !== bs.id) {
       const info = MONSTERS[b.type % MONSTERS.length]
       Object.assign(bs, { id: b.id, type: b.type % MONSTERS.length, hp: b.hp, max: b.max, x: b.x, z: b.z, spin: -1, happy: b.hp <= 0, cool: false, mine: 0, fight: false })

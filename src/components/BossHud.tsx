@@ -28,7 +28,9 @@ export function BossHud({ ui, done, onGo, onZap, onRest, onCloseDone }: { ui: Bo
     <>
       {on && ui && (() => {
         const m = MONSTERS[ui.type], pct = Math.round((1 - ui.hp / ui.max) * 100)
-        return ui.fight ? (
+        return ui.away ? (
+          <p role="status" className="absolute top-14 right-2 z-20 m-0 rounded-2xl bg-white/95 px-2.5 py-1.5 text-xs font-extrabold whitespace-nowrap text-[#7a3d8f] shadow">👑 대왕 몬스터는 지금 {ui.away === 'walk' ? '🌳 산책' : ui.away === 'farm' ? '🌱 농장' : '☕ 카페'}에 있어요<br /><span className="text-[#c0587a]">친구 목록에서 그곳으로 가요</span></p>
+        ) : ui.fight ? (
           <>
             <div role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-72 max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center shadow [@media(max-height:500px)]:top-2 [@media(max-height:500px)]:w-52 [@media(max-height:500px)]:rounded-full [@media(max-height:500px)]:bg-white/85 [@media(max-height:500px)]:px-2.5 [@media(max-height:500px)]:py-1">
               <p className="m-0 text-sm font-extrabold text-[#7a3d8f] [@media(max-height:500px)]:text-[11px] [@media(max-height:500px)]:leading-tight">👑 대왕 {m.name}<span className="[@media(max-height:500px)]:hidden"> · 다 같이 마법 풀기!</span></p>
