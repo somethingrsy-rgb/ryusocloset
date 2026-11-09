@@ -83,7 +83,7 @@ export function attachMultiplayer(w: World, room: Room) {
         mine.material.map = new THREE.CanvasTexture(c); mine.material.map.colorSpace = THREE.SRGBColorSpace; mine.material.needsUpdate = true
         mine.scale.set(2.4, (2.4 * c.height) / c.width, 1)
       }
-      mine.position.set(w.me.x, AVATAR_H + 0.35 + mine.scale.y / 2, w.me.z)
+      mine.position.set(w.me.x, AVATAR_H + 0.65 + mine.scale.y / 2, w.me.z)
     }
     // 붙어 서 있으면 말풍선이 겹치지 않게 위로 쌓는다
     const placed: { x: number; z: number; y0: number; y1: number }[] = mine.visible ? [{ x: w.me.x, z: w.me.z, y0: mine.position.y - mine.scale.y / 2, y1: mine.position.y + mine.scale.y / 2 }] : []
@@ -112,7 +112,7 @@ export function attachMultiplayer(w: World, room: Room) {
       r.doll.root.position.set(r.x, 0, r.z)
       r.doll.body.position.y = moving ? Math.abs(Math.sin(r.t * 9)) * 0.12 : 0
       w.face(r.doll, p.dir)
-      let y = AVATAR_H + 0.35 + r.label.scale.y / 2
+      let y = AVATAR_H + 0.65 + r.label.scale.y / 2
       for (let tries = 0; tries < 10; tries++) {
         const hit = placed.find((q) => Math.hypot(q.x - r!.x, q.z - r!.z) < 2 && y + r!.label.scale.y / 2 > q.y0 && y - r!.label.scale.y / 2 < q.y1)
         if (!hit) break
