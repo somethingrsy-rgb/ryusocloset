@@ -11,7 +11,7 @@ import { assetUrl } from '../lib/items'
 import { getAvatar } from '../lib/avatars'
 import { multiplayerAvailable } from '../lib/mp/config'
 import { MAX_CHAT, MAX_NAME, MAX_PLAYERS } from '../lib/mp/core'
-import { getMp, joinMp, leaveMp, savedName, say, setLook, subscribeMp, visitHome } from '../lib/mp/session'
+import { getMp, joinMp, leaveMp, leaveVisit, savedName, say, setLook, subscribeMp, visitHome } from '../lib/mp/session'
 import type { Outfit, Tweaks } from '../lib/types'
 
 const HomeVisit = lazy(() => import('./HomeVisit').then((m) => ({ default: m.HomeVisit })))
@@ -102,7 +102,7 @@ function MyBubble({ text, onShown }: { text: string; onShown: (v: boolean) => vo
 const FADE_MS = 8000
 const IDLE_MS = 20000
 
-export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** 화면 아래 왼쪽에 큰 단추가 있는 화면(방)이면 말하는 줄을 그 위로 올린다 */ lift?: boolean }) {
+export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit; /** 화면 아래 왼쪽에 큰 단추가 있는 화면(방)이면 말하는 줄을 그 위로 올린다 */ lift?: boolean; /** 친구 목록에서 장소를 누르면 그 3D 장소(탭)로 */ onGo?: (to: 'cafe' | 'farm' | 'walk') => void }) {
   const mp = useSyncExternalStore(subscribeMp, getMp)
   const open = useSyncExternalStore(subscribePanel, getPanel)
   const setOpen = (v: boolean | ((o: boolean) => boolean)) => setPanel(typeof v === 'function' ? v(getPanel()) : v)
@@ -150,6 +150,17 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
   useEffect(() => { if (mp.status === 'on') setLook(JSON.parse(lookKey)) }, [lookKey, mp.status])
   if (!multiplayerAvailable) return null
   const on = mp.status === 'on'
+  // 친구 위치 목록(나 빼고): 3D 카페·농장·산책은 그 탭으로, 친구가 연 집은 놀러 가기
+  const myWhere = mp.visiting ? `home:${mp.visiting}` : mp.room === 'home' ? `home:${mp.host}` : mp.room
+  const friendRows = Object.entries(mp.players).filter(([uid]) => uid !== mp.uid).map(([uid, p]) => {
+    const where = p.room === 'home' ? `home:${p.host}` : p.room
+    const hostName = p.host === mp.uid ? '우리' : `${mp.players[p.host ?? '']?.name ?? '친구'}네`
+    const place = p.room === 'cafe' ? '☕ 카페' : p.room === 'farm' ? '🌱 농장' : p.room === 'walk' ? '🌳 산책' : p.room === 'home' ? `🏠 ${hostName} 집` : '📱 다른 화면(코디·주방 등)'
+    const room = p.room
+    const go = room === 'cafe' || room === 'farm' || room === 'walk' ? (onGo ? () => { leaveVisit(); onGo(room) } : null)
+      : room === 'home' && p.host && p.host !== mp.uid ? () => visitHome(p.host!) : null
+    return { uid, name: p.name, place, same: where === myWhere && room !== 'none', go: where === myWhere ? null : go }
+  })
   const btn = 'h-9 rounded-full px-3 text-sm font-black shadow'
   const say1 = (t: string) => { say(t); touch() }
   return (
@@ -157,6 +168,21 @@ export function MultiplayerBar({ outfit, lift = false }: { outfit: Outfit; /** �
       {mine && !in3d && <MyBubble key={mine.id} text={mine.text} onShown={setBubbleShown} />}
       {/* 초대장 카드 + 들어가기 칸(「친구」 단추로 연다) */}
       <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: '0.5rem' }}>
+        {/* 친구들이 지금 어디 있는지: 누르면 그곳으로 */}
+        {open && on && (
+          <div role="list" aria-label="친구 위치" className="pointer-events-auto flex w-full flex-col gap-1 rounded-2xl bg-white/95 p-2 shadow-lg">
+            <p className="m-0 text-xs font-black text-[#7a3d8f]">👥 친구들은 지금 어디?</p>
+            {friendRows.length === 0 && <p className="m-0 text-xs font-bold text-black/45">아직 들어온 친구가 없어요</p>}
+            {friendRows.map((f) => (
+              <button key={f.uid} role="listitem" disabled={!f.go} onClick={() => { if (f.go) { setOpen(false); f.go() } }}
+                className={`flex items-center gap-1.5 rounded-xl px-2 py-1 text-left text-xs font-bold ${f.go ? 'bg-[#f6eef8] active:scale-95' : 'bg-transparent'}`}>
+                <b className="shrink-0 text-[#7a3d8f]">{f.name}</b>
+                <span className="min-w-0 flex-1 truncate text-[#6b4b52]">{f.place}</span>
+                {f.same ? <span className="shrink-0 text-[10px] text-[#3d9b5a]">같이 있어요</span> : f.go ? <span className="shrink-0 text-[10px] text-[#c0587a]">가기 ➜</span> : null}
+              </button>
+            ))}
+          </div>
+        )}
         {open && !on && (
           <div className="pointer-events-auto flex w-full flex-col gap-2 rounded-2xl bg-white/95 p-2.5 shadow-lg">
             <label className="text-xs font-bold text-[#6b4b52]">닉네임

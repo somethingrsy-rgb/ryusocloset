@@ -111,7 +111,15 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
   const fenceAtRef = useRef<(x: number, z: number, r?: 0 | 1) => void>(() => {})
   /** 꾹 눌러 끌고 있는 울타리(있으면 지도 옮기기를 멈춘다) */
   const fenceDragRef = useRef(false)
-  const endPlacing = () => { setPlacing(false); setMoving(null); setPickedFence(null) }
+  /** 살지 물어보는 울타리 자리 */
+  const [buyFence, setBuyFence] = useState<{ x: number; z: number; r: 0 | 1 } | null>(null)
+  const confirmFence = () => {
+    const f = buyFence
+    setBuyFence(null)
+    if (!f) return
+    if (actFarm({ type: 'fence', x: f.x, z: f.z, r: f.r }) === 'saved') { playCoin(); setNotice(`울타리 한 칸 설치 · -${FENCE_PRICE}코인`) } else setNotice(getFarm().coins < FENCE_PRICE ? '코인이 모자라요' : '여기에는 이미 울타리가 있어요')
+  }
+  const endPlacing = () => { setPlacing(false); setMoving(null); setPickedFence(null); setBuyFence(null) }
   // 🦅 위(배치 모드)에서는 하늘 위에서 농장을 지도처럼 내려다본다: 두 손가락·휠·＋/－ 로 확대, 끌어서 옮긴다
   const viewRef = useRef({ x: 9, z: -3, h: 40 })
   const zoomBy = (k: number) => { const v = viewRef.current; v.h = Math.max(VIEW_MIN, Math.min(VIEW_MAX, v.h * k)); if (placingRef.current) world.current?.setOverhead({ ...v }) }
@@ -517,7 +525,9 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
         return
       }
       if (getFarm().coins < FENCE_PRICE) { setNotice('코인이 모자라요'); return }
-      if (actFarm({ type: 'fence', x: X, z: Z, r }) === 'saved') { playCoin(); setNotice(`울타리 한 칸 설치 · -${FENCE_PRICE}코인`) } else setNotice('여기에는 이미 울타리가 있어요')
+      if (getFarm().fences.some(([fx2, fz2, fr]) => fx2 === X && fz2 === Z && fr === r)) { setNotice('여기에는 이미 울타리가 있어요'); return }
+      // 살지 먼저 물어본다(아래 창에서 「사기」를 누르면 설치)
+      playTap(); setBuyFence({ x: X, z: Z, r })
     }
     fenceLine(-fx, fz0, fx, fz0); fenceLine(-fx, fz1, fx, fz1, 0); fenceLine(-fx, fz0, -fx, fz1); fenceLine(fx, fz0, fx, fz1)
     // 옆 울타리 밭 울타리(앞에 문)
@@ -860,6 +870,17 @@ export function Farm3D({ outfit, tweaks, onExit, arrive = false, onCafe, onKitch
       {notice && <p role="status" className="absolute top-14 left-1/2 z-20 m-0 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-center text-sm font-bold whitespace-nowrap shadow">{notice}</p>}
       {!ready && <p className="absolute inset-0 z-20 m-0 flex items-center justify-center text-sm font-bold text-[#3d6b2f]">농장을 만드는 중…</p>}
       {!placing && <BossHud ui={bossUi} done={bossDone} onGo={() => bossRef.current?.go()} onZap={() => bossRef.current?.zapWeapon()} onRest={() => bossRef.current?.rest()} onCloseDone={() => setBossDone(null)} />}
+      {/* 울타리 사기: 살지 물어본다 */}
+      {buyFence && placing && (
+        <div role="dialog" aria-label="울타리 사기" className="absolute top-1/3 left-1/2 z-30 flex w-max max-w-[96%] -translate-x-1/2 flex-col items-center gap-2 rounded-3xl bg-white/95 p-3 shadow-lg">
+          <p className="m-0 text-sm font-extrabold text-[#6b4a2b]">🪵 울타리 한 칸을 {FENCE_PRICE} <CoinIcon /> 에 살까요?</p>
+          <p className="m-0 text-xs font-bold text-black/50">지금 <CoinIcon /> {farm.coins} · {buyFence.r ? '↕ 세로' : '↔ 가로'}</p>
+          <div className="flex gap-2">
+            <button onClick={confirmFence} className="h-10 rounded-full bg-[#5cc46a] px-5 text-sm font-black text-white shadow">사기</button>
+            <button onClick={() => { playTap(); setBuyFence(null) }} className="h-10 rounded-full bg-[#f3e6ea] px-5 text-sm font-bold">아니요</button>
+          </div>
+        </div>
+      )}
       {/* 카페 길을 넘어갈 때 하얗게 */}
       <div aria-hidden className="pointer-events-none absolute inset-0 z-30 bg-white transition-opacity duration-500" style={{ opacity: fade ? 1 : 0 }} />
       {/* 아직 못 산 밭: 코인으로 사기 */}
