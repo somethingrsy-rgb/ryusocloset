@@ -14,11 +14,12 @@ export interface Transport {
   onPlayers(cb: (players: Record<string, PlayerState>) => void): void
   onChat(cb: (msgs: ChatMsg[]) => void): void
   /** 같이 사냥하는 대왕 몬스터(없으면 null) */
-  onBoss(cb: (boss: Boss | null) => void): void
+  /** 같이 사냥하는 대왕 몬스터(장소마다 하나: walk·farm·cafe) */
+  onBosses(cb: (bosses: Record<string, Boss>) => void): void
   /** 대왕 몬스터에게 마법 한 번(동시에 여럿이 쳐도 하나도 빠지지 않게) */
-  hitBoss(id: string, power: number): void
+  hitBoss(room: string, id: string, power: number): void
   /** 새 대왕 몬스터를 낸다(없거나 풀리고 조금 지났을 때만, 여럿이 동시에 해도 하나만) */
-  spawnBoss(next: Omit<Boss, 't'>): void
+  spawnBoss(room: string, next: Omit<Boss, 't'>): void
   /** 내 집을 친구들에게 연다(방 꾸밈을 올린다, 접속이 끊기면 닫힌다) / 닫는다 */
   openHome(home: Omit<Home, 't'>): void
   closeHome(): void

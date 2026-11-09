@@ -1,4 +1,4 @@
-/** Firebase Realtime Database 로 하는 연결. 경로: lobby/players/{uid}(지금 있는 곳 room 포함), lobby/chat/{id}, lobby/boss(같이 사냥하는 대왕 몬스터) (규칙은 database.rules.json).
+/** Firebase Realtime Database 로 하는 연결. 경로: lobby/players/{uid}(지금 있는 곳 room 포함), lobby/chat/{id}, lobby/bosses/{장소}(같이 사냥하는 대왕 몬스터) (규칙은 database.rules.json).
  *  한 번 들어가면 카페·농장·산책·다른 탭 어디에 있든 같이 놀기에 남아 있고 채팅은 모두와 한다 */
 import { child, get, limitToLast, onDisconnect, onValue, push, query, ref, remove, runTransaction, serverTimestamp, set, update, type Database, type DatabaseReference, type Unsubscribe } from 'firebase/database'
 import { connect } from './firebase'
@@ -11,7 +11,7 @@ export function firebaseTransport(): Transport {
   let bossRef: DatabaseReference | null = null
   let db: Database | null = null
   let uid = ''
-  let bossCb: (b: Boss | null) => void = () => {}
+  let bossCb: (b: Record<string, Boss>) => void = () => {}
   let last: Record<string, unknown> = {}
   let playersCb: (p: Record<string, PlayerState>) => void = () => {}
   let chatCb: (m: ChatMsg[]) => void = () => {}
@@ -49,8 +49,8 @@ export function firebaseTransport(): Transport {
         })
         chatCb(out)
       }))
-      bossRef = ref(db, 'lobby/boss')
-      off.push(onValue(bossRef, (s) => bossCb(saneBoss(s.val()))))
+      bossRef = ref(db, 'lobby/bosses')
+      off.push(onValue(bossRef, (s) => { const out: Record<string, Boss> = {}; s.forEach((c) => { const b = saneBoss(c.val()); if (b && c.key) out[c.key] = b }); bossCb(out) }))
       return { uid: user.uid, full: false }
     },
     update(part) {
@@ -62,15 +62,15 @@ export function firebaseTransport(): Transport {
       if (!chatRef || !me) return
       push(chatRef, { uid: me.key, name, text, t: serverTimestamp(), ...(home ? { home: me.key } : {}) }).catch(() => {})
     },
-    hitBoss(id, power) {
+    hitBoss(room, id, power) {
       if (!bossRef || !me) return
       // 트랜잭션: 여럿이 동시에 쳐도 서로 덮어쓰지 않고 차례로 깎인다
-      runTransaction(bossRef, (cur) => { const b = bossHit(saneBoss(cur), id, power); return b ? { ...b, t: serverTimestamp() } : undefined }).catch(() => {})
+      runTransaction(child(bossRef, room), (cur) => { const b = bossHit(saneBoss(cur), id, power); return b ? { ...b, t: serverTimestamp() } : undefined }).catch(() => {})
     },
-    spawnBoss(next) {
+    spawnBoss(room, next) {
       if (!bossRef || !me) return
       const now = Date.now() + skew
-      runTransaction(bossRef, (cur) => (bossCanRespawn(saneBoss(cur), now) ? { ...next, t: serverTimestamp() } : undefined)).catch(() => {})
+      runTransaction(child(bossRef, room), (cur) => (bossCanRespawn(saneBoss(cur), now) ? { ...next, t: serverTimestamp() } : undefined)).catch(() => {})
     },
     openHome(home) {
       if (!db || !uid) return
@@ -110,7 +110,7 @@ export function firebaseTransport(): Transport {
     },
     onPlayers(cb) { playersCb = cb },
     onChat(cb) { chatCb = cb },
-    onBoss(cb) { bossCb = cb },
+    onBosses(cb) { bossCb = cb },
     offset: () => skew,
   }
 }

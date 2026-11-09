@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { SPARKLE_IMG } from './Sparkle'
 import { attachMultiplayer } from './remotePlayers3d'
+import { MONSTERS, loadDex, nextStageIn, stageOf } from '../lib/monsters'
 import { HUD_BUSY, mpDock } from './MultiplayerBar'
-import { BOSS_MAX, bossCanRespawn } from '../lib/mp/core'
-import { getMp, hitBoss, serverNow, spawnBoss, subscribeMp } from '../lib/mp/session'
+import { getMp, subscribeMp } from '../lib/mp/session'
+import { attachBoss, type BossHunt } from './bossHunt3d'
 import { EXTRA_ANIMALS, animal3dAspect, animal3dUrl, walkingAway } from '../lib/animals3d'
 import * as THREE from 'three'
 import { CALL_ANIMALS } from '../lib/animalCalls'
@@ -31,41 +32,6 @@ const WALK_TREES = [
   { img: 'cafe/3d/tree_yellow.webp', aspect: 824 / 866, h: 4.2 },
   { img: 'cafe/3d/tree_orange.webp', aspect: 827 / 865, h: 4.2 },
 ] as const
-/** 마법에 걸린 몬스터(무서운 얼굴 → 마법이 풀리면 귀여운 얼굴). 그림 크기(가로·세로), stage = 몇 단계부터 나오는지 */
-const MONSTERS: { id: string; name: string; size: readonly [number, number]; stage: number }[] = [
-  { id: 'dino', name: '아기 공룡', size: [909, 1205], stage: 0 },
-  { id: 'blob', name: '별더듬이', size: [1059, 1181], stage: 0 },
-  { id: 'fluff', name: '복슬이', size: [1140, 1201], stage: 0 },
-  { id: 'bat', name: '보라 박쥐', size: [1214, 1192], stage: 0 },
-  { id: 'goblin', name: '초록 뿔이', size: [996, 1072], stage: 0 },
-  { id: 'bunny', name: '분홍 토끼', size: [250, 301], stage: 1 },
-  { id: 'penguin', name: '왕관 펭귄', size: [262, 309], stage: 1 },
-  { id: 'lion', name: '해님 사자', size: [267, 307], stage: 1 },
-  { id: 'sheep', name: '구름 양', size: [269, 295], stage: 1 },
-  { id: 'sprout', name: '새싹 몽이', size: [249, 301], stage: 1 },
-  { id: 'puppy', name: '점박이 강아지', size: [345, 307], stage: 2 },
-  { id: 'owl', name: '무지개 부엉이', size: [283, 309], stage: 2 },
-  { id: 'hedgehog', name: '도토리 고슴도치', size: [293, 305], stage: 2 },
-  { id: 'jelly', name: '별 해파리', size: [264, 307], stage: 2 },
-  { id: 'mushroom', name: '딸기 버섯', size: [286, 309], stage: 2 },
-  { id: 'fox', name: '바람 여우', size: [287, 314], stage: 3 },
-  { id: 'polar', name: '눈꽃 곰', size: [289, 312], stage: 3 },
-  { id: 'dragon', name: '꼬마 용', size: [309, 319], stage: 3 },
-  { id: 'lotus', name: '연꽃 요정', size: [260, 318], stage: 3 },
-  { id: 'golem', name: '수정 골렘', size: [296, 319], stage: 3 },
-  { id: 'angel', name: '구름 천사', size: [323, 314], stage: 4 },
-  { id: 'peach', name: '복숭아 콩이', size: [234, 310], stage: 4 },
-  { id: 'otter', name: '튜브 수달', size: [271, 298], stage: 4 },
-  { id: 'unicorn', name: '무지개 유니콘', size: [262, 314], stage: 4 },
-  { id: 'pudding', name: '푸딩 몬', size: [288, 308], stage: 4 },
-]
-/** 단계: 몬스터를 이만큼 구하면 다음 다섯 마리가 나오기 시작한다 */
-const STAGE_AT = [0, 10, 25, 45, 70]
-const stageOf = (rescued: number) => STAGE_AT.filter((n) => rescued >= n).length - 1
-const nextStageIn = (rescued: number) => { const n = STAGE_AT.find((x) => x > rescued); return n === undefined ? null : n - rescued }
-/** 같이 사냥으로 마법을 풀어 준 대왕 몬스터 도감(이 기기에 저장) */
-const DEX_KEY = 'ryuso.walk.bossDex'
-const loadDex = (): string[] => { try { const v = JSON.parse(localStorage.getItem(DEX_KEY) ?? '[]'); return Array.isArray(v) ? v.filter((x) => typeof x === 'string' && MONSTERS.some((m) => m.id === x)) : [] } catch { return [] } }
 /** 몬스터 마법 풀기: 마법봉으로 이만큼 톡톡 */
 const HITS = 10
 /** 마법이 풀린 몬스터가 하는 고마운 말 */
@@ -129,9 +95,7 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
   const [bossDone, setBossDone] = useState<{ type: number; friends: string[]; isNew: boolean } | null>(null)
   const [dex, setDex] = useState(loadDex)
   const [showDex, setShowDex] = useState(false)
-  const addDexRef = useRef<(id: string) => boolean>(() => false)
-  addDexRef.current = (id) => { const cur = loadDex(); if (cur.includes(id)) return false; const next = [...cur, id]; try { localStorage.setItem(DEX_KEY, JSON.stringify(next)) } catch { /* 이번만 */ } setDex(next); return true }
-  const bossFight = useRef(false)
+  const bossRef = useRef<BossHunt | null>(null)
   const goBossRef = useRef<() => void>(() => {})
   const restBossRef = useRef<() => void>(() => {})
   // 마법 풀기가 시작되면 같이 놀기 말하는 줄을 닫는다(아래 ✨ 단추를 가리지 않게)
@@ -176,9 +140,10 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
         const hs = houseOf.get(o)
         if (hs) { w.walkTo(hs.x, hs.z, () => enterHouse(hs), 0.6); return }
         // 몬스터: 마법 풀기 중이면 마법봉으로 톡, 아니면 가서 마법 풀기 시작
-        if (o === bossDoll.root) { if (bossFight.current) zapRef.current(); else if (battleRef.current === null) goBossRef.current(); return }
+        const bh = bossRef.current
+        if (bh?.owns(o)) { if (bh.fighting()) zapRef.current(); else if (battleRef.current === null) bh.go(); return }
         const mk = monOf.get(o)
-        if (mk !== undefined && !bossFight.current) {
+        if (mk !== undefined && !(bossRef.current?.fighting() ?? false)) {
           if (battleRef.current === mk) zapRef.current()
           else if (battleRef.current === null) { const m = monsters[mk]; w.walkTo(m.x, m.z, () => startBattle(mk), 2.4) }
           return
@@ -242,12 +207,21 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
 
     // 집: 길가에 여행 집 그림(물약 가게·보라 궁전·분홍 성·과자 집)
     // 집마다 들어가면 2D 산책과 같은 장소(집 안)로: 분홍 성은 우리집(내 방), 나머지는 테마 장소
-    const HOUSE_PLACE = [{ place: 'halloween', name: '물약 가게' }, { place: 'palace', name: '보라 궁전' }, { place: MY_ROOM_ID, name: '우리집' }, { place: 'christmas', name: '과자 집' }]
-    const houses = [0.15, 0.38, 0.62, 0.85].map((u, k) => {
+    // 집 일곱 채: 처음 서 있는 곳 가까이에 길 양쪽으로 번갈아 모여 있다(마을처럼, 카페 노점 자리는 비우고)
+    const HOUSE_PLACE = [
+      { place: MY_ROOM_ID, name: '우리집', art: HOUSE_ART[2] },
+      { place: 'halloween', name: '물약 가게', art: HOUSE_ART[0] },
+      { place: 'valentine', name: '하트 성', art: { img: 'travel/3d/house_heart.webp', aspect: 778 / 1024 } },
+      { place: 'palace', name: '보라 궁전', art: HOUSE_ART[1] },
+      { place: 'alice', name: '시계 토끼집', art: { img: 'travel/3d/house_clock.webp', aspect: 924 / 1024 } },
+      { place: 'christmas', name: '과자 집', art: HOUSE_ART[3] },
+      { place: 'winter', name: '달빛 성', art: { img: 'travel/3d/house_moon.webp', aspect: 820 / 1024 } },
+    ]
+    const houses = [0.12, 0.17, 0.22, 0.36, 0.41, 0.46, 0.51].map((u, k) => {
       const p = curve.getPointAt(u), t = curve.getTangentAt(u)
       const nd = new THREE.Vector3(-t.z, 0, t.x).normalize().multiplyScalar(k % 2 ? 1 : -1)
       const hx = p.x + nd.x * 6.5, hz = p.z + nd.z * 6.5
-      const art = HOUSE_ART[k % HOUSE_ART.length]
+      const art = HOUSE_PLACE[k].art
       // 길에서 집 문 앞까지 흙길(집 밑까지 이어서 끊기지 않게)
       // 산책길 가장자리에서 시작(덤불이 산책길 위에 놓이지 않게)
       w.addCurvePath([[p.x + nd.x * 1.5, p.z + nd.z * 1.5], [p.x + nd.x * 3.2 + t.x * 0.8, p.z + nd.z * 3.2 + t.z * 0.8], [hx, hz]], 2.2, 'start')
@@ -467,24 +441,7 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
       } })
     }
 
-    // ── 같이 사냥하는 대왕 몬스터 ──
-    // 서버(같이 놀기)에 하나만 있다: 없거나 풀리고 10초 지나면 누군가(먼저 한 사람) 길가 어딘가에 새로 낸다
-    const BH = MH * 1.7
-    const bossDoll = w.paperDoll(monTex(MONSTERS[0].id, 'angry'), BH, 1)
-    bossDoll.root.visible = false
-    w.pickables.push(bossDoll.root)
-    const bs = { id: '', type: 0, hp: 0, max: BOSS_MAX, x: 0, z: 0, shake: 0, spin: -1, happy: false, t: 0, cool: false, mine: 0 }
-    const myHits = new Set<string>()
-    let spawnTry = -1e9, uiKey = ''
-    const bossOn = () => bossDoll.root.visible && bs.hp > 0
-    const startBossFight = () => {
-      if (!bossOn() || battleRef.current !== null || talking.current !== null) return
-      bossFight.current = true; bs.cool = false
-      playOrder()
-      w.walkTo(w.me.x, w.me.z)
-    }
-    goBossRef.current = () => { if (bossOn()) w.walkTo(bs.x, bs.z, startBossFight, 5) }
-    restBossRef.current = () => { bossFight.current = false; bs.cool = true }
+    // ── 같이 사냥하는 대왕 몬스터(bossHunt3d: 농장·카페와 같은 것) ──
     const bossSpot = () => {
       for (let i = 0; i < 40; i++) {
         const s = samples[Math.floor(Math.random() * samples.length)], a = Math.random() * Math.PI * 2, d = 3 + Math.random() * 4
@@ -493,88 +450,22 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
       }
       return { x: samples[0].x, z: samples[0].z }
     }
-    const nearFriends = (x: number, z: number, r: number) => { const mp = getMp(); return Object.entries(mp.players).filter(([uid, p]) => uid !== mp.uid && p.room === 'walk' && Math.hypot(p.x - x, p.z - z) < r).map(([, p]) => p) }
-    const bossTo = () => new THREE.Vector3(bs.x, BH * 0.5, bs.z)
+    const boss = attachBoss(w, 'walk', {
+      spot: bossSpot,
+      canFight: () => battleRef.current === null && talking.current === null,
+      onUi: setBossUi,
+      onDone: (d) => { setDex(loadDex()); setBossDone(d) },
+    })
+    bossRef.current = boss
+    goBossRef.current = boss.go
+    restBossRef.current = boss.rest
     const zapLocal = zapRef.current
     zapRef.current = () => {
-      if (!bossFight.current) { zapLocal(); return }
+      if (!boss.fighting()) { zapLocal(); return }
       swing = 1
-      if (!bossOn()) return
       const wp = WEAPON_BY_ID[wandRef.current] ?? WANDS[0]
       if (!wpTex.has(wp.fx)) wpTex.set(wp.fx, w.texOf(wp.fx === '✨' ? assetUrl(SPARKLE_IMG) : emojiCanvas(wp.fx)))
-      const ft = wpTex.get(wp.fx)!, id = bs.id, from = new THREE.Vector3(w.me.x, 1.4, w.me.z), to = bossTo()
-      playTap()
-      fx.push({ sp: spark(ft, from, 0.6 + wp.power * 0.2), v: new THREE.Vector3(), life: 0, max: 0.35, from, to, onHit: () => {
-        for (let i = 0; i < 3 + wp.power * 2; i++) fx.push({ sp: spark(i % 2 ? ft : fxTex[0], to, 0.5), v: new THREE.Vector3((Math.random() - 0.5) * 3, 1 + Math.random() * 2, (Math.random() - 0.5) * 3), life: 0, max: 0.6 })
-        if (id !== bs.id || bs.hp <= 0) return
-        myHits.add(id); bs.mine += wp.power; bs.shake = 0.3
-        hitBoss(id, wp.power)
-      } })
-    }
-    const bossFrame = (dt: number, now: number) => {
-      const mp = getMp(), b = mp.status === 'on' ? mp.boss : null
-      if (mp.status === 'on' && bossCanRespawn(b, serverNow()) && now - spawnTry > 3000) {
-        spawnTry = now
-        spawnBoss({ id: Math.random().toString(36).slice(2, 10), type: Math.floor(Math.random() * MONSTERS.length), ...bossSpot(), hp: BOSS_MAX, max: BOSS_MAX })
-      }
-      // 마법이 풀리고 6초 지나면 사라졌다가 새로 나온다
-      const show = !!b && (b.hp > 0 || serverNow() - b.t < 6000)
-      bossDoll.root.visible = show
-      if (!b || !show) { if (bossFight.current) bossFight.current = false; bs.hp = 0; if (uiKey) { uiKey = ''; setBossUi(null) } return }
-      const mat = bossDoll.doll.material as THREE.MeshBasicMaterial
-      if (b.id !== bs.id) {
-        const info = MONSTERS[b.type % MONSTERS.length]
-        Object.assign(bs, { id: b.id, type: b.type % MONSTERS.length, hp: b.hp, max: b.max, x: b.x, z: b.z, spin: -1, happy: b.hp <= 0, cool: false, mine: 0 })
-        mat.map = monTex(info.id, b.hp > 0 ? 'angry' : 'happy'); mat.needsUpdate = true
-        bossDoll.body.scale.set(info.size[0] / info.size[1], 1, 1)
-        bossDoll.root.position.set(b.x, 0, b.z)
-      } else if (b.hp < bs.hp) {
-        // 깎인 만큼: 내가 친 것 말고는 친구가 친 것 → 친구 쪽에서 반짝이가 날아온다
-        const dec = bs.hp - b.hp, mine = Math.min(dec, bs.mine)
-        bs.mine -= mine; bs.shake = 0.3
-        if (dec > mine) {
-          const fr = nearFriends(bs.x, bs.z, 14).sort((p, q) => Math.hypot(p.x - bs.x, p.z - bs.z) - Math.hypot(q.x - bs.x, q.z - bs.z))[0]
-          const a = Math.random() * Math.PI * 2, from = fr ? new THREE.Vector3(fr.x, 1.4, fr.z) : new THREE.Vector3(bs.x + Math.cos(a) * 3, 1.4, bs.z + Math.sin(a) * 3)
-          fx.push({ sp: spark(fxTex[2], from, 0.7), v: new THREE.Vector3(), life: 0, max: 0.35, from, to: bossTo() })
-        }
-        bs.hp = b.hp
-        if (b.hp <= 0 && !bs.happy) {
-          // 다 같이 마법을 풀었다: 빙글 돌며 웃는 얼굴로, 친 사람은 코인
-          bs.spin = 0
-          playServe()
-          const to = bossTo()
-          for (let i = 0; i < 36; i++) { const a = (i / 36) * Math.PI * 2; fx.push({ sp: spark(fxTex[i % 3], to.clone(), 0.8), v: new THREE.Vector3(Math.cos(a) * 4.5, 2 + Math.random() * 3, Math.sin(a) * 4.5), life: 0, max: 1.8 }) }
-          if (myHits.has(b.id)) {
-            actFarm({ type: 'earn', amount: 30 })
-            const names = nearFriends(bs.x, bs.z, 16).map((p) => p.name), type = bs.type
-            const isNew = addDexRef.current(MONSTERS[type].id)
-            window.setTimeout(() => setBossDone({ type, friends: names, isNew }), 1000)
-          }
-          bossFight.current = false
-        }
-      }
-      bs.t += dt
-      const dMe = Math.hypot(w.me.x - bs.x, w.me.z - bs.z)
-      if (bs.cool && dMe > 10) bs.cool = false
-      if (bossFight.current && dMe > 10) bossFight.current = false
-      if (!bossFight.current && !bs.cool && bs.hp > 0 && battleRef.current === null && talking.current === null && dMe < 5.5) startBossFight()
-      // 움직임: 제자리에서 통통, 맞으면 흔들, 풀리면 빙글
-      w.face(bossDoll, w.me.x < bs.x ? -1 : 1)
-      let sx = 0
-      if (bs.shake > 0) { bs.shake -= dt; sx = Math.sin(bs.shake * 60) * 0.25 }
-      bossDoll.body.position.set(sx, Math.abs(Math.sin(bs.t * (bs.happy ? 3 : 2))) * (bs.happy ? 0.25 : 0.1), 0)
-      if (bs.spin >= 0) {
-        bs.spin += dt / 0.9
-        const u = Math.min(1, bs.spin), ease = 1 - Math.pow(1 - u, 3)
-        if (u >= 0.3 && !bs.happy) { bs.happy = true; mat.map = monTex(MONSTERS[bs.type].id, 'happy'); mat.needsUpdate = true }
-        if (bs.spin >= 1) { bs.spin = -1; bossDoll.root.scale.setScalar(1) }
-        else { bossDoll.body.rotation.y += ease * Math.PI * 6; bossDoll.body.position.y += Math.sin(u * Math.PI) * 0.9; bossDoll.root.scale.setScalar(1 + Math.sin(u * Math.PI) * 0.15) }
-      }
-      // 화면 글(바뀔 때만 React 로)
-      const friendsNow = nearFriends(bs.x, bs.z, 12).map((p) => p.name)
-      const far = bossFight.current ? 0 : Math.max(1, Math.round(dMe / 5) * 5)
-      const key = `${bs.id}|${b.hp}|${far}|${bossFight.current}|${friendsNow.join(',')}`
-      if (key !== uiKey) { uiKey = key; setBossUi(b.hp > 0 ? { type: bs.type, hp: b.hp, max: b.max, far, fight: bossFight.current, friends: friendsNow } : null) }
+      boss.zap(wp.power, wpTex.get(wp.fx))
     }
 
     let helpBk: number | null = null, helpers: typeof friends = []
@@ -593,7 +484,7 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
         m.t += dt
         if (m.cool && Math.hypot(w.me.x - m.x, w.me.z - m.z) > 6) m.cool = false // 도망갔다가 멀어지면 다시 만날 수 있다
         const dMe = Math.hypot(w.me.x - m.x, w.me.z - m.z)
-        if (!m.freed && !m.cool && bk === null && !bossFight.current && talking.current === null && dMe < 3.2) startBattle(m.k)
+        if (!m.freed && !m.cool && bk === null && !(bossRef.current?.fighting() ?? false) && talking.current === null && dMe < 3.2) startBattle(m.k)
         // 너무 멀어진 몬스터, 풀어 주고 한참 지난 몬스터는 아바타 둘레 다른 곳에 새 몬스터로
         if (bk !== m.k && m.spin < 0 && (dMe > 45 || (m.freed && now - m.freedAt > 20000 && dMe > 12))) spawn(m)
         // 돌아다니기: 제 자리 둘레를 천천히(마법 풀기 중인 몬스터는 멈춘다)
@@ -632,9 +523,8 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
           }
         }
       }
-      bossFrame(dt, now)
       // 마법봉은 전투 중에만 아바타 손에
-      const armed = bk !== null || bossFight.current
+      const armed = bk !== null || (bossRef.current?.fighting() ?? false)
       wandSp.visible = armed
       if (armed) {
         const id = wandRef.current

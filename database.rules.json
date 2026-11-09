@@ -81,35 +81,6 @@
           }
         }
       },
-      "boss": {
-        ".read": "auth != null",
-        ".write": "auth != null && newData.exists()",
-        ".validate": "newData.hasChildren(['id', 'type', 'x', 'z', 'hp', 'max', 't']) && ((data.exists() && data.child('hp').val() > 0 && newData.child('id').val() === data.child('id').val() && newData.child('type').val() === data.child('type').val() && newData.child('x').val() === data.child('x').val() && newData.child('z').val() === data.child('z').val() && newData.child('max').val() === data.child('max').val() && newData.child('hp').val() < data.child('hp').val() && newData.child('hp').val() >= data.child('hp').val() - 3) || ((!data.exists() || (data.child('hp').val() === 0 && now - data.child('t').val() > 8000)) && newData.child('id').val() !== data.child('id').val() && newData.child('hp').val() === newData.child('max').val()))",
-        "id": {
-          ".validate": "newData.isString() && newData.val().length >= 4 && newData.val().length <= 24"
-        },
-        "type": {
-          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 40"
-        },
-        "x": {
-          ".validate": "newData.isNumber() && newData.val() >= -200 && newData.val() <= 200"
-        },
-        "z": {
-          ".validate": "newData.isNumber() && newData.val() >= -200 && newData.val() <= 200"
-        },
-        "hp": {
-          ".validate": "newData.isNumber() && newData.val() >= 0"
-        },
-        "max": {
-          ".validate": "newData.isNumber() && newData.val() >= 10 && newData.val() <= 60"
-        },
-        "t": {
-          ".validate": "newData.val() === now"
-        },
-        "$other": {
-          ".validate": false
-        }
-      },
       "homes": {
         ".read": "auth != null",
         "$uid": {
@@ -153,6 +124,37 @@
             "$other": {
               ".validate": false
             }
+          }
+        }
+      },
+      "bosses": {
+        ".read": "auth != null",
+        "$room": {
+          ".write": "auth != null && newData.exists()",
+          ".validate": "($room === 'walk' || $room === 'farm' || $room === 'cafe') && newData.hasChildren(['id', 'type', 'x', 'z', 'hp', 'max', 't']) && ((data.exists() && data.child('hp').val() > 0 && newData.child('id').val() === data.child('id').val() && newData.child('type').val() === data.child('type').val() && newData.child('x').val() === data.child('x').val() && newData.child('z').val() === data.child('z').val() && newData.child('max').val() === data.child('max').val() && newData.child('hp').val() < data.child('hp').val() && newData.child('hp').val() >= data.child('hp').val() - 3) || ((!data.exists() || (data.child('hp').val() === 0 && now - data.child('t').val() > 8000)) && newData.child('id').val() !== data.child('id').val() && newData.child('hp').val() === newData.child('max').val()))",
+          "id": {
+            ".validate": "newData.isString() && newData.val().length >= 4 && newData.val().length <= 24"
+          },
+          "type": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 40"
+          },
+          "x": {
+            ".validate": "newData.isNumber() && newData.val() >= -200 && newData.val() <= 200"
+          },
+          "z": {
+            ".validate": "newData.isNumber() && newData.val() >= -200 && newData.val() <= 200"
+          },
+          "hp": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "max": {
+            ".validate": "newData.isNumber() && newData.val() >= 10 && newData.val() <= 60"
+          },
+          "t": {
+            ".validate": "newData.val() === now"
+          },
+          "$other": {
+            ".validate": false
           }
         }
       }
