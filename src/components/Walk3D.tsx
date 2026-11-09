@@ -658,9 +658,7 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
       {/* 같이 사냥: 대왕 몬스터 */}
       {mpStatus === 'on' && bossUi && !battle && !talk && (() => {
         const m = MONSTERS[bossUi.type], pct = Math.round((1 - bossUi.hp / bossUi.max) * 100), wi = WEAPON_BY_ID[wand]
-        return bossUi.away ? (
-          <p role="status" className="absolute top-14 right-2 z-20 m-0 rounded-2xl bg-white/95 px-2.5 py-1.5 text-xs font-extrabold whitespace-nowrap text-[#7a3d8f] shadow">👑 대왕 몬스터는 지금 {bossUi.away === 'walk' ? '🌳 산책' : bossUi.away === 'farm' ? '🌱 농장' : '☕ 카페'}에 있어요<br /><span className="text-[#c0587a]">친구 목록에서 그곳으로 가요</span></p>
-        ) : bossUi.fight ? (
+        return bossUi.fight ? (
           <>
             <div role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-72 max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center shadow">
               <p className="m-0 text-sm font-extrabold text-[#7a3d8f]">👑 대왕 {m.name} · 다 같이 마법 풀기!</p>
