@@ -11,6 +11,7 @@ import { TravelScene } from './TravelScene'
 
 // 놀이 화면(축구·달리기·별비·점프·수학·영어)은 처음 열 때 받는다
 const StarRainWalk = lazy(() => import('./StarRainWalk').then((m) => ({ default: m.StarRainWalk })))
+const RaceGame = lazy(() => import('./RaceGame').then((m) => ({ default: m.RaceGame })))
 const RunnerGame = lazy(() => import('./RunnerGame').then((m) => ({ default: m.RunnerGame })))
 const JumpPuzzle = lazy(() => import('./JumpPuzzle').then((m) => ({ default: m.JumpPuzzle })))
 const FlagGame = lazy(() => import('./FlagGame').then((m) => ({ default: m.FlagGame })))
@@ -65,12 +66,13 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   const [jump, setJump] = useState(false)
   const [flags, setFlags] = useState(false)
   const [soccer, setSoccer] = useState(false)
+  const [race, setRace] = useState(false)
   // 산책 탭은 처음부터 3D 산책(✕ 를 누르면 게임 탭으로)
   const [walk3d, setWalk3d] = useState(() => takeWalkNext() || walkTab)
   /** 3D 산책에서 집에 들어갔으면, 집에서 나올 때 다시 3D 산책으로 */
   const [backToWalk, setBackToWalk] = useState(false)
   // 전체 화면(여행 도감 숨김): 놀이 화면들, 3D 산책, 3D 산책에서 들어간 집 안(가로 화면만)
-  useEffect(() => { onFull?.(math || speaking || jump || soccer || flags || walk3d || (runner && wide) || (backToWalk && wide)); return () => onFull?.(false) }, [math, speaking, jump, soccer, flags, walk3d, runner, wide, backToWalk, onFull])
+  useEffect(() => { onFull?.(math || speaking || jump || soccer || race || flags || walk3d || (runner && wide) || (backToWalk && wide)); return () => onFull?.(false) }, [math, speaking, jump, soccer, race, flags, walk3d, runner, wide, backToWalk, onFull])
 
   const game = useGame()
   const ver = useItemsVersion()
@@ -78,11 +80,12 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   const assign = useMemo(currentAssignment, [ver])
   const [scene, setScene] = useState<string | null>(initialPlaceId)
   // 마을과 집 안에서는 배경 음악이 이어지고, 게임 화면(별비·수학·점프·영어)에서는 끈다
-  const walking = !starRain && !runner && !math && !jump && !speaking && !soccer && !flags && !walk3d
+  const walking = !starRain && !runner && !math && !jump && !speaking && !soccer && !race && !flags && !walk3d
   useEffect(() => { if (!walking) return; startBgm('room'); return stopBgm }, [walking])
 
   if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onExit={() => { if (walkTab && onLeaveWalk) onLeaveWalk(); else setWalk3d(false) }} onGo={onGo} onEnter={(id) => { travelTo(id); setScene(id); setBackToWalk(true); setWalk3d(false) }} /></Suspense>
   if (flags) return <Suspense fallback={null}><FlagGame onExit={() => setFlags(false)} /></Suspense>
+  if (race) return <Suspense fallback={null}><RaceGame onExit={() => setRace(false)} /></Suspense>
   if (soccer) return <Suspense fallback={null}><SoccerGame onExit={() => setSoccer(false)} /></Suspense>
   if (runner) return <Suspense fallback={null}><RunnerGame outfit={outfit} tweaks={tweaks} onExit={() => setRunner(false)} /></Suspense>
   if (starRain) return <Suspense fallback={null}><StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} /></Suspense>
@@ -99,6 +102,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
         <button className={actionButton} aria-label="수학 놀이터" onClick={() => setMath(true)}>{label(lang === 'ko' ? '수학' : 'Math')}</button>
         <button className={actionButton} aria-label="점프 퍼즐" onClick={() => setJump(true)}>{label(lang === 'ko' ? '점프' : 'Jump')}</button>
         <button className={actionButton} aria-label="축구" onClick={() => setSoccer(true)}>{label(lang === 'ko' ? '축구' : 'Soccer')}</button>
+        <button className={actionButton} aria-label="자동차 레이스" onClick={() => setRace(true)}>{label(lang === 'ko' ? '레이스' : 'Race')}</button>
         <button className={actionButton} aria-label={lang === 'ko' ? '국기 게임' : 'Flag quiz'} onClick={() => setFlags(true)}>{label(lang === 'ko' ? '국기' : 'Flags')}</button>
         {onRoom && <button className={actionButton} aria-label="방꾸미기" onClick={onRoom}>{label(lang === 'ko' ? '방꾸미기' : 'Room')}</button>}
       </>}
