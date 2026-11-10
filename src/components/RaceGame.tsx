@@ -16,8 +16,8 @@ const THEMES: { id: RaceTheme; ico: string; name: string }[] = [
   { id: 'candy', ico: '🍭', name: '사탕 나라' },
 ]
 const CAR_KEY = 'ryuso.race.car'
-const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트 차' }, { id: 'cloud', name: '구름 차' }, { id: 'pumpkin', name: '마차' }]
-const readCar = (): RaceCar => { try { const v = localStorage.getItem(CAR_KEY); return v === 'cloud' || v === 'pumpkin' ? v : 'heart' } catch { return 'heart' } }
+const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트 차' }, { id: 'cloud', name: '구름 차' }, { id: 'pumpkin', name: '마차' }, { id: 'bunny', name: '토끼 버스' }]
+const readCar = (): RaceCar => { try { const v = localStorage.getItem(CAR_KEY); return v === 'cloud' || v === 'pumpkin' || v === 'bunny' ? v : 'heart' } catch { return 'heart' } }
 const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' ? v : 'meadow' } catch { return 'meadow' } }
 
 const img = (name: string) => assetUrl(`race/${name}.webp`)
