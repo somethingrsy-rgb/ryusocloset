@@ -89,20 +89,27 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     // 길가: 장소마다 다른 나무(뒤로 지나가면 앞으로 옮겨 다시 쓴다) + 응원하는 곰 + 표지판
     const sideX = ROAD_W / 2 + 3
     const spriteOf = (tex: THREE.Texture, w: number, h: number, y: number) => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }))); sp.scale.set(w, h, 1); sp.position.y = y; return sp }
+    // [그림 이름, 높이, 가로세로 비율] — 높이 대비 폭은 spriteOf(w, h) 순서에 맞춰 아래에서 곱한다
+    const CANDY_BIG: [string, number, number][] = [['cd_cotton_pink', 4.4, 0.85], ['cd_lolli_a', 4.4, 0.74], ['cd_cotton_blue', 4.4, 0.81], ['prop_lollipop', 4.8, 0.65], ['cd_lolli_b', 4.4, 0.74]]
     const props = Array.from({ length: PROPS }, (_, i) => {
       const side = i % 2 ? 1 : -1, x = side * (sideX + (i % 3) * 2.2), z = -i * PROP_GAP
       const big = 0.9 + (i % 3) * 0.2
       const o = th.prop === 'tree' ? (i % 4 === 1 ? spriteOf(art('prop_tree2'), 4.7 * big, 4.4 * big, 2.2 * big) : spriteOf(art('prop_tree'), 4.6 * big, 4.2 * big, 2.1 * big))
-        : th.prop === 'xmas' ? spriteOf(art('prop_xmas'), 3.4 * big, 4.7 * big, 2.35 * big) : spriteOf(art('prop_lollipop'), 3.1 * big, 4.8 * big, 2.4 * big)
+        : th.prop === 'xmas' ? spriteOf(art('prop_xmas'), 3.4 * big, 4.7 * big, 2.35 * big) : (() => { const [img, h, asp] = CANDY_BIG[i % CANDY_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
       o.position.x = x; o.position.z = z; scene.add(o)
       return { o, k: i }
     })
-    // 응원 구경꾼(곰·토끼·풍선·가로등)과 길가 꽃: 같은 자리를 돌려 쓴다
-    const CHEERS = 12, CHEER_GAP = 40
-    // 토끼·꽃무더기·꽃나무 그림은 초원에서만 쓴다(눈 나라·사탕 나라에는 나오지 않는다)
-    const meadow = theme === 'meadow'
-    const CHEER: [string, number, number][] = [['prop_bear', 2.6, 1.04], ['prop_balloons', 3.2, 0.68], ...(meadow ? [['prop_bunny', 3.0, 0.83] as [string, number, number]] : [['prop_bear2', 2.6, 1.08] as [string, number, number]]), ['prop_lamp', 3.8, 0.44], ['prop_bear2', 2.6, 1.08], ['prop_balloons', 3.2, 0.68]]
+    // 길가 구경거리: 그림마다 쓰는 곳이 정해져 있다(초원: 토끼·꽃무더기 / 사탕 나라: 곰·풍선·사탕 나라 모음 / 눈 나라: 크리스마스 나무만)
+    // [그림 이름, 높이, 가로세로 비율]
+    type Art = [string, number, number]
+    const meadow = theme === 'meadow', candy = theme === 'candy'
+    const CHEER: Art[] = meadow ? [['prop_bunny', 3.0, 0.83]] : candy ? [
+      ['prop_bear', 2.6, 1.04], ['cd_castle', 4.6, 0.92], ['prop_balloons', 3.2, 0.68], ['cd_lamp_a', 3.8, 0.54], ['cd_cakehouse', 3.6, 0.93], ['cd_cart', 2.8, 0.94],
+      ['cd_ginger', 3.2, 1.0], ['cd_lamp_b', 3.8, 0.51], ['cd_fountain', 2.8, 1.05], ['prop_lamp', 3.8, 0.44], ['cd_umbrella', 2.6, 1.09], ['cd_cupcake', 2.4, 0.86],
+      ['cd_bench', 1.9, 1.32], ['cd_sign', 2.6, 0.93], ['cd_fence', 1.6, 1.77], ['prop_balloons', 3.2, 0.68],
+    ] : []
     const signTex = art('prop_sign')
+    const CHEERS = CHEER.length ? 12 : 0, CHEER_GAP = 40
     const cheers = Array.from({ length: CHEERS }, (_, i) => {
       const [img, h, asp] = CHEER[i % CHEER.length]
       const o = spriteOf(art(img), h * asp, h, h / 2)
@@ -110,11 +117,15 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       scene.add(o)
       return { o, k: i }
     })
-    const FLOWERS = 14, FLOWER_GAP = 17
-    const flowerTex = art('prop_flowers')
-    const flowers = Array.from({ length: meadow ? FLOWERS : 0 }, (_, i) => {
-      const o = spriteOf(flowerTex, 1.7, 1.1, 0.55)
-      o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + 0.9 + (i % 3) * 0.5), 0.55, -8 - i * FLOWER_GAP)
+    const GROUND: Art[] = meadow ? [['prop_flowers', 1.1, 1.55]] : candy ? [
+      ['cd_bush', 1.2, 1.52], ['cd_gummy', 1.0, 1.5], ['cd_candy', 0.9, 1.5], ['cd_peppermint', 1.0, 1.03], ['cd_jelly', 1.1, 0.98], ['cd_gummybear', 1.3, 0.81],
+      ['cd_heartcookie', 1.0, 1.08], ['cd_starface', 1.1, 0.99],
+    ] : []
+    const FLOWERS = GROUND.length ? 14 : 0, FLOWER_GAP = 17
+    const flowers = Array.from({ length: FLOWERS }, (_, i) => {
+      const [img, h, asp] = GROUND[i % GROUND.length]
+      const o = spriteOf(art(img), h * asp, h, h / 2)
+      o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + 0.9 + (i % 3) * 0.5), h / 2, -8 - i * FLOWER_GAP)
       scene.add(o)
       return { o, k: i }
     })
