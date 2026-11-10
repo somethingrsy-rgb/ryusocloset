@@ -1,11 +1,12 @@
 import { useEffect, useRef, type MutableRefObject } from 'react'
 import * as THREE from 'three'
 import { LANE_W, LAP, LAPS, itemsBetween, type ItemKind, type Race } from '../lib/race'
+import { assetUrl } from '../lib/items'
 import { createStage, cuteTree } from './stage3d'
 
 /**
  * 자동차 레이스 3D 무대: 차 뒤에서 따라가며 본다. 길은 앞(-z)으로 뻗고 차는 +z 에서 -z 로 달린다.
- * 그림(public/race/)이 아직 없어서 차·아이템·길가는 임시 도형이다. 그림이 오면 이 파일의 car/itemMesh 만 그림 판으로 바꾸면 된다.
+ * 부스터·바나나·반짝이·먼지는 public/race/ 그림, 아직 그림이 없는 차·별·물웅덩이·길가는 임시 도형이다(그림이 오면 car/itemMesh 만 바꾸면 된다).
  */
 const ROAD_W = LANE_W * 3 + 0.8
 const TREES = 20, TREE_GAP = 11
@@ -84,18 +85,29 @@ export function Race3D({ live }: { live: MutableRefObject<Race> }) {
     scene.add(shadow)
 
     // 아이템 임시 도형
-    const mats: Record<ItemKind, THREE.Material> = { star: lambert(0xffd54a), boost: lambert(0xff6fa5), banana: lambert(0xffe45c), puddle: keep(new THREE.MeshBasicMaterial({ color: 0x7ec8ff, transparent: true, opacity: 0.85 })) }
-    const geos: Record<ItemKind, THREE.BufferGeometry> = {
-      star: keep(new THREE.OctahedronGeometry(0.5)), boost: keep(new THREE.ConeGeometry(0.45, 1.1, 10)),
-      banana: keep(new THREE.TorusGeometry(0.4, 0.14, 8, 14, Math.PI * 1.3)), puddle: keep(new THREE.CircleGeometry(0.85, 20)),
-    }
+    const mats = { star: lambert(0xffd54a), puddle: keep(new THREE.MeshBasicMaterial({ color: 0x7ec8ff, transparent: true, opacity: 0.85 })) }
+    const geos = { star: keep(new THREE.OctahedronGeometry(0.5)), puddle: keep(new THREE.CircleGeometry(0.85, 20)) }
+    // 그림 판(항상 카메라를 본다): 부스터 코인·바나나
+    const art = (name: string) => s.texOf(assetUrl(`race/${name}.webp`))
+    const spriteOf = (tex: THREE.Texture, w: number, h: number, y: number) => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }))); sp.scale.set(w, h, 1); sp.position.y = y; return sp }
+    const boostTex = art('item_boost'), bananaTex = art('item_banana')
     const itemMesh = (kind: ItemKind) => {
-      const m = new THREE.Mesh(geos[kind], mats[kind])
-      if (kind === 'puddle') { m.rotation.x = -Math.PI / 2; m.position.y = 0.05 } else if (kind === 'banana') { m.rotation.x = Math.PI / 2.2; m.position.y = 0.45 } else m.position.y = 0.85
+      if (kind === 'boost' || kind === 'banana') {
+        const g = new THREE.Group(), sp = kind === 'boost' ? spriteOf(boostTex, 1.5, 1.5, 1.0) : spriteOf(bananaTex, 1.6, 1.1, 0.6)
+        g.add(sp); g.userData.kind = kind; g.userData.m = sp
+        return g
+      }
+      const m = new THREE.Mesh(geos[kind as 'star' | 'puddle'], mats[kind as 'star' | 'puddle'])
+      if (kind === 'puddle') { m.rotation.x = -Math.PI / 2; m.position.y = 0.05 } else m.position.y = 0.85
       const g = new THREE.Group(); g.add(m); g.userData.kind = kind; g.userData.m = m
       return g
     }
     const shown = new Map<number, THREE.Group>()
+
+    // 효과: 별·부스터를 먹으면 반짝이, 미끄러지면 먼지, 부스터 중에는 불꽃(차 뒤)
+    const sparkleSp = spriteOf(art('fx_sparkle'), 2.6, 2.0, 1.6), dustSp = spriteOf(art('fx_dust'), 2.4, 1.5, 0.9)
+    sparkleSp.visible = dustSp.visible = false
+    scene.add(sparkleSp, dustSp)
 
     let t = 0
     s.onFrame((dt) => {
@@ -114,6 +126,8 @@ export function Race3D({ live }: { live: MutableRefObject<Race> }) {
       // 카메라: 차 뒤에서 조금 옆으로 따라간다(속도가 빠를수록 살짝 멀어진다)
       s.view.target.set(cx * 0.6, 0.9, cz - 3.2)
       s.view.dist = 10.5 + Math.min(1.5, r.speed / 25) + (r.boost > 0 ? 1.2 : 0)
+      sparkleSp.visible = r.sparkle > 0; sparkleSp.position.set(cx, 1.7 + (0.6 - r.sparkle) * 0.8, cz - 0.5)
+      dustSp.visible = r.dust > 0; dustSp.position.set(cx, 1.0, cz - 0.3); dustSp.scale.setScalar(1 + (0.7 - r.dust) * 1.2)
       // 나무
       const period = TREES * TREE_GAP
       for (const tr of trees) { const base = -tr.k * TREE_GAP; tr.t.position.z = base + period * Math.floor((cz + 25 - base) / period) }
@@ -124,7 +138,8 @@ export function Race3D({ live }: { live: MutableRefObject<Race> }) {
         want.add(it.id)
         let g = shown.get(it.id)
         if (!g) { g = itemMesh(it.kind); g.position.set(it.lane * LANE_W, 0, -it.d); scene.add(g); shown.set(it.id, g) }
-        if (it.kind === 'star' || it.kind === 'boost') (g.userData.m as THREE.Mesh).rotation.y = t * 3
+        if (it.kind === 'star') (g.userData.m as THREE.Mesh).rotation.y = t * 3
+        else if (it.kind === 'boost') (g.userData.m as THREE.Sprite).position.y = 1.0 + Math.sin(t * 4 + it.id) * 0.12
       }
       for (const [id, g] of shown) if (!want.has(id)) { scene.remove(g); shown.delete(id) }
     })
