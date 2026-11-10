@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type Race, LAP, LAPS, TIME_LIMIT, itemsBetween, lapOf, newRace, rewardStars, setBrake, steer, stepRace, timeLeft } from './race'
+import { glide, rankNow, type Race, LAP, LAPS, TIME_LIMIT, itemsBetween, lapOf, newRace, rewardStars, setBrake, steer, stepRace, timeLeft } from './race'
 
 const run = (r: ReturnType<typeof newRace>, sec: number, dt = 0.05) => { for (let i = 0; i < sec / dt && r.phase !== 'done'; i++) r = stepRace(r, dt); return r }
 
@@ -71,5 +71,23 @@ describe('자동차 레이스', () => {
     const r = { ...newRace(1), d: LAP + 5, t: 12.2 }
     expect(lapOf(r)).toBe(2); expect(timeLeft(r)).toBe(48)
     expect(lapOf({ ...r, d: LAP * LAPS })).toBe(LAPS)
+  })
+  it('옆 칸으로 갈 땐 한 번에 튀지 않고 미끄러지듯 가서 칸에 멈춘다', () => {
+    let x = 0, vx = 0, maxStep = 0
+    for (let i = 0; i < 40; i++) { const [nx, nv] = glide(x, vx, 1, 1 / 60); maxStep = Math.max(maxStep, Math.abs(nx - x)); x = nx; vx = nv }
+    expect(maxStep).toBeLessThan(0.07); expect(x).toBeGreaterThan(0.4); expect(x).toBeLessThan(1.1)
+    for (let i = 0; i < 90; i++) { const [nx, nv] = glide(x, vx, 1, 1 / 60); x = nx; vx = nv }
+    expect(Math.abs(x - 1)).toBeLessThan(0.01); expect(Math.abs(vx)).toBeLessThan(0.05)
+  })
+  it('컴퓨터 친구는 최대 3대, 모두 결승선까지 달리고 별 순위 선물을 준다', () => {
+    expect(newRace(1).rivals.length).toBe(0); expect(rankNow(newRace(1))).toBe(0)
+    expect(newRace(1, [0, 1, 2, 3, 4]).rivals.length).toBe(3)
+    let r = newRace(5, [0, 1, 2])
+    for (let i = 0; i < 4000 && r.phase !== 'done'; i++) r = stepRace(r, 0.05)
+    expect(r.phase).toBe('done'); expect(r.rank).toBeGreaterThanOrEqual(1); expect(r.rank).toBeLessThanOrEqual(4)
+    expect(r.rivals.every((v) => v.d > 100 && v.d < LAP * LAPS + 400)).toBe(true)
+    expect(rewardStars({ ...r, rank: 1, stars: 0, finish: 'laps' })).toBe(6); expect(rewardStars({ ...r, rank: 4, stars: 0, finish: 'laps' })).toBe(3)
+    // 혼자 달릴 땐 순위 선물이 없다
+    expect(rewardStars({ ...r, rivals: [], rank: 0, stars: 0, finish: 'laps' })).toBe(3)
   })
 })
