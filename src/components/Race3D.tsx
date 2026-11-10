@@ -91,22 +91,26 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const spriteOf = (tex: THREE.Texture, w: number, h: number, y: number) => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }))); sp.scale.set(w, h, 1); sp.position.y = y; return sp }
     // [그림 이름, 높이, 가로세로 비율] — 높이 대비 폭은 spriteOf(w, h) 순서에 맞춰 아래에서 곱한다
     const CANDY_BIG: [string, number, number][] = [['cd_cotton_pink', 4.4, 0.85], ['cd_lolli_a', 4.4, 0.74], ['cd_cotton_blue', 4.4, 0.81], ['prop_lollipop', 4.8, 0.65], ['cd_lolli_b', 4.4, 0.74]]
+    const SNOW_BIG: [string, number, number][] = [['prop_xmas', 4.7, 0.72], ['sn_pine', 4.0, 1.03], ['sn_pinelit', 4.0, 1.01], ['prop_xmas', 4.7, 0.72], ['sn_bare', 4.0, 1.07]]
     const props = Array.from({ length: PROPS }, (_, i) => {
       const side = i % 2 ? 1 : -1, x = side * (sideX + (i % 3) * 2.2), z = -i * PROP_GAP
       const big = 0.9 + (i % 3) * 0.2
       const o = th.prop === 'tree' ? (i % 4 === 1 ? spriteOf(art('prop_tree2'), 4.7 * big, 4.4 * big, 2.2 * big) : spriteOf(art('prop_tree'), 4.6 * big, 4.2 * big, 2.1 * big))
-        : th.prop === 'xmas' ? spriteOf(art('prop_xmas'), 3.4 * big, 4.7 * big, 2.35 * big) : (() => { const [img, h, asp] = CANDY_BIG[i % CANDY_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
+        : th.prop === 'xmas' ? (() => { const [img, h, asp] = SNOW_BIG[i % SNOW_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })() : (() => { const [img, h, asp] = CANDY_BIG[i % CANDY_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
       o.position.x = x; o.position.z = z; scene.add(o)
       return { o, k: i }
     })
-    // 길가 구경거리: 그림마다 쓰는 곳이 정해져 있다(초원: 토끼·꽃무더기 / 사탕 나라: 곰·풍선·사탕 나라 모음 / 눈 나라: 크리스마스 나무만)
+    // 길가 구경거리: 그림마다 쓰는 곳이 정해져 있다(초원: 토끼·꽃무더기 / 사탕 나라: 곰·풍선·사탕 나라 모음 / 눈 나라: 눈 나라 모음·크리스마스 나무)
     // [그림 이름, 높이, 가로세로 비율]
     type Art = [string, number, number]
-    const meadow = theme === 'meadow', candy = theme === 'candy'
+    const meadow = theme === 'meadow', candy = theme === 'candy', snow = theme === 'snow'
     const CHEER: Art[] = meadow ? [['prop_bunny', 3.0, 0.83]] : candy ? [
       ['prop_bear', 2.6, 1.04], ['cd_castle', 4.6, 0.92], ['prop_balloons', 3.2, 0.68], ['cd_lamp_a', 3.8, 0.54], ['cd_cakehouse', 3.6, 0.93], ['cd_cart', 2.8, 0.94],
       ['cd_ginger', 3.2, 1.0], ['cd_lamp_b', 3.8, 0.51], ['cd_fountain', 2.8, 1.05], ['prop_lamp', 3.8, 0.44], ['cd_umbrella', 2.6, 1.09], ['cd_cupcake', 2.4, 0.86],
       ['cd_bench', 1.9, 1.32], ['cd_sign', 2.6, 0.93], ['cd_fence', 1.6, 1.77], ['prop_balloons', 3.2, 0.68],
+    ] : snow ? [
+      ['sn_snowman', 3.0, 1.06], ['sn_igloo', 3.0, 1.36], ['sn_lamp', 3.8, 0.64], ['sn_castle', 4.6, 1.2], ['sn_bunnyman', 2.4, 0.97], ['sn_fountain', 2.8, 1.21],
+      ['sn_sign', 2.8, 0.92], ['sn_sled', 1.8, 1.36], ['sn_snowman', 3.0, 1.06], ['sn_gifts', 2.2, 1.23], ['sn_bench', 1.9, 1.56], ['sn_fence', 1.5, 1.95],
     ] : []
     const signTex = art('prop_sign')
     const CHEERS = CHEER.length ? 12 : 0, CHEER_GAP = 40
@@ -120,6 +124,8 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const GROUND: Art[] = meadow ? [['prop_flowers', 1.1, 1.55]] : candy ? [
       ['cd_bush', 1.2, 1.52], ['cd_gummy', 1.0, 1.5], ['cd_candy', 0.9, 1.5], ['cd_peppermint', 1.0, 1.03], ['cd_jelly', 1.1, 0.98], ['cd_gummybear', 1.3, 0.81],
       ['cd_heartcookie', 1.0, 1.08], ['cd_starface', 1.1, 0.99],
+    ] : snow ? [
+      ['sn_rock', 1.3, 1.59], ['sn_holly', 1.3, 1.35], ['sn_iceplant', 1.5, 1.15], ['sn_crystal', 1.4, 1.15], ['sn_flake', 1.2, 0.96], ['sn_gifts', 1.2, 1.23],
     ] : []
     const FLOWERS = GROUND.length ? 14 : 0, FLOWER_GAP = 17
     const flowers = Array.from({ length: FLOWERS }, (_, i) => {
