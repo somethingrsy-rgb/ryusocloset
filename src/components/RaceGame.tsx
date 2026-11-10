@@ -16,8 +16,8 @@ const THEMES: { id: RaceTheme; ico: string; name: string }[] = [
   { id: 'candy', ico: '🍭', name: '사탕 나라' },
 ]
 const CAR_KEY = 'ryuso.race.car'
-const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트 차' }, { id: 'cloud', name: '구름 차' }, { id: 'pumpkin', name: '마차' }, { id: 'bunny', name: '토끼 버스' }]
-const readCar = (): RaceCar => { try { const v = localStorage.getItem(CAR_KEY); return v === 'cloud' || v === 'pumpkin' || v === 'bunny' ? v : 'heart' } catch { return 'heart' } }
+const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트' }, { id: 'cloud', name: '구름' }, { id: 'pumpkin', name: '마차' }, { id: 'bunny', name: '토끼' }, { id: 'star', name: '별' }]
+const readCar = (): RaceCar => { try { const v = localStorage.getItem(CAR_KEY); return v === 'cloud' || v === 'pumpkin' || v === 'bunny' || v === 'star' ? v : 'heart' } catch { return 'heart' } }
 const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' ? v : 'meadow' } catch { return 'meadow' } }
 
 const img = (name: string) => assetUrl(`race/${name}.webp`)
@@ -131,7 +131,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
             <div role="radiogroup" aria-label="내 차" className="flex w-full gap-2">
               {CARS.map((c) => (
                 <button key={c.id} role="radio" aria-checked={car === c.id} onClick={() => pickCar(c.id)}
-                  className={`flex flex-1 items-center justify-center gap-1 rounded-2xl border-2 py-1 text-xs font-black ${car === c.id ? 'border-[#ff8fab] bg-[#fff0f5] text-[#c0587a]' : 'border-transparent bg-[#f6eef8] text-[#7a3d8f]'}`}>
+                  className={`flex min-w-0 flex-1 flex-col items-center justify-center rounded-2xl border-2 py-1 text-[11px] font-black whitespace-nowrap ${car === c.id ? 'border-[#ff8fab] bg-[#fff0f5] text-[#c0587a]' : 'border-transparent bg-[#f6eef8] text-[#7a3d8f]'}`}>
                   <img src={img(`car_${c.id}_straight`)} alt="" className="h-9 w-auto" />{c.name}
                 </button>
               ))}
