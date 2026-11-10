@@ -43,6 +43,9 @@ export interface Race {
   boost: number
   slow: number
   brake: boolean
+  /** 별·부스터를 먹은 뒤 반짝이가 보이는 남은 시간 / 미끄러진 뒤 먼지가 보이는 남은 시간(그림용) */
+  sparkle: number
+  dust: number
   stars: number
   /** 먹은 아이템(그림에서 지우려고) */
   taken: number[]
@@ -53,7 +56,7 @@ export interface Race {
 }
 
 export const newRace = (seed = Math.floor(Math.random() * 1e6)): Race => ({
-  seed, phase: 'count', count: COUNTDOWN, t: 0, d: 0, lane: 0, x: 0, speed: 0, boost: 0, slow: 0, brake: false, stars: 0, taken: [], events: [], finish: null,
+  seed, phase: 'count', count: COUNTDOWN, t: 0, d: 0, lane: 0, x: 0, speed: 0, boost: 0, slow: 0, brake: false, sparkle: 0, dust: 0, stars: 0, taken: [], events: [], finish: null,
 })
 
 /** 같은 (칸 번호, 씨앗, 용도)면 늘 같은 0~1 수 */
@@ -93,7 +96,7 @@ export const setBrake = (r: Race, on: boolean): Race => (r.brake === on ? r : { 
 export function stepRace(r: Race, dt: number): Race {
   if (r.phase === 'done') return r
   const events: RaceEvent[] = []
-  let { count, t, d, speed, boost, slow, stars } = r
+  let { count, t, d, speed, boost, slow, stars, sparkle, dust } = r
   let phase: Race['phase'] = r.phase, finish: Race['finish'] = r.finish
   const taken = [...r.taken]
   // 옆으로 부드럽게
@@ -105,20 +108,20 @@ export function stepRace(r: Race, dt: number): Race {
     return { ...r, count, phase, x, events }
   }
   t += dt
-  boost = Math.max(0, boost - dt); slow = Math.max(0, slow - dt)
+  boost = Math.max(0, boost - dt); slow = Math.max(0, slow - dt); sparkle = Math.max(0, sparkle - dt); dust = Math.max(0, dust - dt)
   const want = CRUISE * (r.brake ? BRAKE_K : 1) * (boost > 0 ? BOOST_K : 1) * (slow > 0 ? SLOW_K : 1)
   speed = speed < want ? Math.min(want, speed + ACCEL * dt) : Math.max(want, speed - ACCEL * 1.5 * dt)
   const prev = d
   d += speed * dt
   for (const it of itemsBetween(prev, d, r.seed)) {
     if (Math.abs(it.lane - x) >= REACH) continue
-    if (it.kind === 'star') { stars++; taken.push(it.id); events.push('star') }
-    else if (it.kind === 'boost') { boost = BOOST_T; slow = 0; taken.push(it.id); events.push('boost') }
-    else { slow = SLOW_T; boost = 0; events.push('slip') }
+    if (it.kind === 'star') { stars++; sparkle = 0.5; taken.push(it.id); events.push('star') }
+    else if (it.kind === 'boost') { boost = BOOST_T; slow = 0; sparkle = 0.6; taken.push(it.id); events.push('boost') }
+    else { slow = SLOW_T; boost = 0; dust = 0.7; events.push('slip') }
   }
   if (d >= LAP * LAPS) { phase = 'done'; finish = 'laps'; d = LAP * LAPS }
   else if (t >= TIME_LIMIT) { phase = 'done'; finish = 'time' }
-  return { ...r, phase, count, t, d, x, speed, boost, slow, stars, taken: taken.slice(-60), events, finish }
+  return { ...r, phase, count, t, d, x, speed, boost, slow, sparkle, dust, stars, taken: taken.slice(-60), events, finish }
 }
 
 /** 지금 몇 바퀴째(1부터) */
