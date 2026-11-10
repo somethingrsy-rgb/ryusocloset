@@ -165,7 +165,7 @@ export function HomeVisit({ outfit, tweaks }: { outfit: Outfit; tweaks: Tweaks }
           <button onClick={() => { playServe(); setHearts((h) => h + 1); say(myHouse ? `💖 ${hostName}네 방 정말 예뻐요!` : `💖 ${title} 정말 멋져요!`) }} className={`${btn} bg-[#ff8fab] text-white`}>💖 칭찬</button>
         </>}
       </div>
-      {picking && <FoodPicker onClose={() => setPicking(false)} onPick={(m) => { setPicking(false); playTap(); putFood(m, Math.max(8, Math.min(92, pos.x + (Math.random() < 0.5 ? -9 : 9))), Math.max(minY + 4, Math.min(maxY - 1, pos.y + (Math.random() - 0.5) * 6))) }} />}
+      {picking && <FoodPicker onClose={() => setPicking(false)} onPick={(m) => { setPicking(false); playTap(); putFood(m, Math.max(8, Math.min(92, pos.x + (Math.random() < 0.5 ? -18 : 18))), Math.max(minY + 4, Math.min(maxY - 1, pos.y + (Math.random() - 0.5) * 6))) }} />}
     </div>
   )
 }

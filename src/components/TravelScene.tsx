@@ -170,7 +170,7 @@ export function TravelScene({ placeId, assign, outfit, tweaks, onExit, onWear, o
     playServe()
   }
   const [picking, setPicking] = useState(false)
-  const putFoodNear = (m: string) => putFood(m, Math.max(8, Math.min(92, posRef.current.x + (Math.random() < 0.5 ? -9 : 9))), Math.max(minY + 4, Math.min(layout ? 97 : WALK_BOUNDS.maxY, posRef.current.y + (Math.random() - 0.5) * 6)))
+  const putFoodNear = (m: string) => putFood(m, Math.max(8, Math.min(92, posRef.current.x + (Math.random() < 0.5 ? -18 : 18))), Math.max(minY + 4, Math.min(layout ? 97 : WALK_BOUNDS.maxY, posRef.current.y + (Math.random() - 0.5) * 6)))
   const [myEat, setMyEat] = useState<string | null>(null)
   useEffect(() => { if (!myEat) return; const t = setTimeout(() => setMyEat(null), 4000); return () => clearTimeout(t) }, [myEat])
   const pendingEat = useRef<Food | null>(null)

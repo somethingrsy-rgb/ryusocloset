@@ -1318,5 +1318,155 @@
     "baseWidth": 620,
     "x": 543,
     "y": 900
+  },
+  {
+    "id": "furniture_cafe_counter",
+    "group": "furniture",
+    "name": {
+      "ko": "딸기 카운터",
+      "en": "Strawberry counter"
+    },
+    "image": "assets/room/furniture_cafe_counter.webp",
+    "thumb": "assets/room/thumbs/furniture_cafe_counter.webp",
+    "w": 365,
+    "h": 232,
+    "baseWidth": 380,
+    "x": 700,
+    "y": 1260
+  },
+  {
+    "id": "furniture_cafe_showcase",
+    "group": "furniture",
+    "name": {
+      "ko": "케이크 진열장",
+      "en": "Cake showcase"
+    },
+    "image": "assets/room/furniture_cafe_showcase.webp",
+    "thumb": "assets/room/thumbs/furniture_cafe_showcase.webp",
+    "w": 329,
+    "h": 310,
+    "baseWidth": 330,
+    "x": 380,
+    "y": 1260
+  },
+  {
+    "id": "furniture_cafe_table",
+    "group": "furniture",
+    "name": {
+      "ko": "체크 테이블",
+      "en": "Gingham table"
+    },
+    "image": "assets/room/furniture_cafe_table.webp",
+    "thumb": "assets/room/thumbs/furniture_cafe_table.webp",
+    "w": 363,
+    "h": 256,
+    "baseWidth": 360,
+    "x": 560,
+    "y": 1300
+  },
+  {
+    "id": "furniture_cafe_chair",
+    "group": "furniture",
+    "name": {
+      "ko": "체크 의자",
+      "en": "Gingham chair"
+    },
+    "image": "assets/room/furniture_cafe_chair.webp",
+    "thumb": "assets/room/thumbs/furniture_cafe_chair.webp",
+    "w": 218,
+    "h": 329,
+    "baseWidth": 200,
+    "x": 800,
+    "y": 1300
+  },
+  {
+    "id": "furniture_cafe_register",
+    "group": "furniture",
+    "name": {
+      "ko": "딸기 계산대",
+      "en": "Strawberry register"
+    },
+    "image": "assets/room/furniture_cafe_register.webp",
+    "thumb": "assets/room/thumbs/furniture_cafe_register.webp",
+    "w": 295,
+    "h": 274,
+    "baseWidth": 220,
+    "x": 700,
+    "y": 1100
+  },
+  {
+    "id": "furniture_cafe_menuboard",
+    "group": "furniture",
+    "name": {
+      "ko": "메뉴판",
+      "en": "Menu board"
+    },
+    "image": "assets/room/furniture_cafe_menuboard.webp",
+    "thumb": "assets/room/thumbs/furniture_cafe_menuboard.webp",
+    "w": 255,
+    "h": 342,
+    "baseWidth": 240,
+    "x": 200,
+    "y": 1320
+  },
+  {
+    "id": "wall_cafe_teaset",
+    "group": "wall",
+    "name": {
+      "ko": "찻잔 선반",
+      "en": "Tea shelf"
+    },
+    "image": "assets/room/wall_cafe_teaset.webp",
+    "thumb": "assets/room/thumbs/wall_cafe_teaset.webp",
+    "w": 357,
+    "h": 215,
+    "baseWidth": 300,
+    "x": 560,
+    "y": 560
+  },
+  {
+    "id": "light_cafe_lamp",
+    "group": "light",
+    "name": {
+      "ko": "분홍 조명",
+      "en": "Pink lamp"
+    },
+    "image": "assets/room/light_cafe_lamp.webp",
+    "thumb": "assets/room/thumbs/light_cafe_lamp.webp",
+    "w": 290,
+    "h": 331,
+    "baseWidth": 260,
+    "x": 543,
+    "y": 340
+  },
+  {
+    "id": "furniture_cafe_flowers",
+    "group": "furniture",
+    "name": {
+      "ko": "데이지 꽃병",
+      "en": "Daisy vase"
+    },
+    "image": "assets/room/furniture_cafe_flowers.webp",
+    "thumb": "assets/room/thumbs/furniture_cafe_flowers.webp",
+    "w": 252,
+    "h": 311,
+    "baseWidth": 190,
+    "x": 880,
+    "y": 1330
+  },
+  {
+    "id": "wall_cafe_sign",
+    "group": "wall",
+    "name": {
+      "ko": "딸기 카페 간판",
+      "en": "Strawberry café sign"
+    },
+    "image": "assets/room/wall_cafe_sign.webp",
+    "thumb": "assets/room/thumbs/wall_cafe_sign.webp",
+    "w": 245,
+    "h": 320,
+    "baseWidth": 230,
+    "x": 860,
+    "y": 520
   }
 ]
