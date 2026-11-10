@@ -98,7 +98,9 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     })
     // 응원 구경꾼(곰·토끼·풍선·가로등)과 길가 꽃: 같은 자리를 돌려 쓴다
     const CHEERS = 12, CHEER_GAP = 40
-    const CHEER: [string, number, number][] = [['prop_bear', 2.6, 1.04], ['prop_balloons', 3.2, 0.68], ['prop_bunny', 3.0, 0.83], ['prop_lamp', 3.8, 0.44], ['prop_bear2', 2.6, 1.08], ['prop_balloons', 3.2, 0.68]]
+    // 토끼·꽃무더기·꽃나무 그림은 초원에서만 쓴다(눈 나라·사탕 나라에는 나오지 않는다)
+    const meadow = theme === 'meadow'
+    const CHEER: [string, number, number][] = [['prop_bear', 2.6, 1.04], ['prop_balloons', 3.2, 0.68], ...(meadow ? [['prop_bunny', 3.0, 0.83] as [string, number, number]] : [['prop_bear2', 2.6, 1.08] as [string, number, number]]), ['prop_lamp', 3.8, 0.44], ['prop_bear2', 2.6, 1.08], ['prop_balloons', 3.2, 0.68]]
     const signTex = art('prop_sign')
     const cheers = Array.from({ length: CHEERS }, (_, i) => {
       const [img, h, asp] = CHEER[i % CHEER.length]
@@ -109,7 +111,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     })
     const FLOWERS = 14, FLOWER_GAP = 17
     const flowerTex = art('prop_flowers')
-    const flowers = Array.from({ length: FLOWERS }, (_, i) => {
+    const flowers = Array.from({ length: meadow ? FLOWERS : 0 }, (_, i) => {
       const o = spriteOf(flowerTex, 1.7, 1.1, 0.55)
       o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + 0.9 + (i % 3) * 0.5), 0.55, -8 - i * FLOWER_GAP)
       scene.add(o)
