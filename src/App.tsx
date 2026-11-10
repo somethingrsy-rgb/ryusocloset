@@ -1,5 +1,6 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { FriendTab, HomeVisitGate, MultiplayerBar } from './components/MultiplayerBar'
+import { getMp, subscribeMp } from './lib/mp/session'
 import { setArrival } from './lib/farmCafeLink'
 import { BackgroundPicker } from './components/BackgroundPicker'
 import { AddItemModal } from './components/AddItemModal'
@@ -386,6 +387,9 @@ export default function App() {
   const [room3d, setRoom3d] = useState(() => { try { return localStorage.getItem('ryuso.room.3d') === '1' } catch { return false } })
   const toggleRoom3d = () => { const v = !room3d; setRoom3d(v); try { localStorage.setItem('ryuso.room.3d', v ? '1' : '0') } catch { /* 이번만 */ } }
   const full = (mode === 'travel' || mode === 'walk') && travelFull
+  // 친구 집에 놀러 가 있으면 옆 칸(옷장·도감)을 숨기고 집 화면을 넓게
+  const visiting = useSyncExternalStore(subscribeMp, () => getMp().visiting) !== null
+  const wideMain = full || visiting
   const handleFull = useCallback((v: boolean) => setTravelFull(v), [])
   const split = wide && mode !== 'farm' && mode !== 'cafe' && mode !== 'kitchen' && mode !== 'shop' && mode !== 'walk'
 
@@ -442,7 +446,7 @@ export default function App() {
         </header>
 
         <div className={`flex min-h-0 flex-1 gap-2 ${split ? 'flex-row' : 'flex-col'}`}>
-          <div className={split ? `relative h-full flex-none ${full ? 'w-full' : mode === 'room' || mode === 'travel' ? 'w-[65%]' : 'w-[58%]'}` : 'relative min-h-0 flex-1'}>
+          <div className={split ? `relative h-full flex-none ${wideMain ? 'w-full' : mode === 'room' || mode === 'travel' ? 'w-[65%]' : 'w-[58%]'}` : 'relative min-h-0 flex-1'}>
             <Suspense fallback={null}>
             {mode === 'shop' ? (
               <ShopModal onClose={() => setMode(shopFrom.current)} onWear={wearFound} outfit={outfit} tweaks={tweaks} />
@@ -516,7 +520,7 @@ export default function App() {
             <MultiplayerBar outfit={outfit} lift={mode === 'room'} onGo={(to) => { setTravelPreview(null); setSelection(null); setMode(to) }} />
           </div>
 
-        <aside hidden={mode === 'farm' || mode === 'cafe' || mode === 'kitchen' || mode === 'shop' || mode === 'walk' || full} className={`flex ${split ? 'min-w-0 flex-1' : 'h-[40dvh] shrink-0'} flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
+        <aside hidden={mode === 'farm' || mode === 'cafe' || mode === 'kitchen' || mode === 'shop' || mode === 'walk' || wideMain} className={`flex ${split ? 'min-w-0 flex-1' : 'h-[40dvh] shrink-0'} flex-col overflow-hidden rounded-3xl bg-white/90 shadow-lg ring-1 ring-black/5`}>
           <div id="adjustment-controls" className="shrink-0" />
           {mode === 'travel' ? (
             <TravelBook outfit={outfit} onToggle={(id) => { const it = ITEM_BY_ID[id]; if (it) onToggle(it) }} />
