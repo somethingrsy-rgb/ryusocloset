@@ -7,6 +7,15 @@ import { playCloud, playGold, playHop, playStar, playTap, playWin, startBgm, sto
 
 // three.js 가 커서 레이스를 열 때만 받는다
 const Race3D = lazy(() => import('./Race3D').then((m) => ({ default: m.Race3D })))
+import type { RaceTheme } from './Race3D'
+
+const THEME_KEY = 'ryuso.race.theme'
+const THEMES: { id: RaceTheme; ico: string; name: string }[] = [
+  { id: 'meadow', ico: '🌳', name: '초원' },
+  { id: 'snow', ico: '❄️', name: '눈 나라' },
+  { id: 'candy', ico: '🍭', name: '사탕 나라' },
+]
+const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' ? v : 'meadow' } catch { return 'meadow' } }
 
 const img = (name: string) => assetUrl(`race/${name}.webp`)
 const roundBtn = 'pointer-events-auto h-24 w-24 active:scale-90 drop-shadow-lg'
@@ -19,6 +28,8 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   const [oops, setOops] = useState(0)
   const [paid, setPaid] = useState(0)
   const [paused, setPaused] = useState(false)
+  const [theme, setTheme] = useState<RaceTheme>(readTheme)
+  const pickTheme = (t: RaceTheme) => { setTheme(t); playTap(); try { localStorage.setItem(THEME_KEY, t) } catch { /* 저장 못 해도 이번 판은 그 장소 */ } }
   const saved = useRef(false)
 
   // 달리는 동안 노래
@@ -68,7 +79,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   const oopsOn = useOops(oops)
   return (
     <section aria-label="자동차 레이스" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none">
-      {phase !== 'intro' && <Suspense fallback={null}><Race3D live={live} /></Suspense>}
+      {phase !== 'intro' && <Suspense fallback={null}><Race3D live={live} theme={theme} /></Suspense>}
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#c0587a] shadow">🏎️ 자동차 레이스</span>
@@ -113,6 +124,14 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
             <p className="m-0 text-5xl">🏎️</p>
             <p className="m-0 text-xl font-black text-[#c0587a]">자동차 레이스</p>
             <p className="m-0 text-sm leading-snug font-bold text-[#6b4b52]">◀ ▶ 를 눌러서 옆 칸으로 가요.<br />⭐ 별은 모으고, 🚀 부스터는 빨라져요.<br />🍌 바나나와 💧 물웅덩이는 살짝 느려져요.<br />{LAPS}바퀴를 달리거나 {TIME_LIMIT}초가 되면 끝이에요!</p>
+            <div role="radiogroup" aria-label="달릴 곳" className="flex w-full gap-2">
+              {THEMES.map((t) => (
+                <button key={t.id} role="radio" aria-checked={theme === t.id} onClick={() => pickTheme(t.id)}
+                  className={`flex flex-1 flex-col items-center rounded-2xl border-2 py-1.5 text-xs font-black ${theme === t.id ? 'border-[#ff8fab] bg-[#fff0f5] text-[#c0587a]' : 'border-transparent bg-[#f6eef8] text-[#7a3d8f]'}`}>
+                  <span className="text-2xl leading-none">{t.ico}</span>{t.name}
+                </button>
+              ))}
+            </div>
             <button onClick={start} className="min-h-12 w-full rounded-full bg-gradient-to-r from-[#ff8fab] to-[#c58bff] text-lg font-black text-white shadow-lg active:scale-95">출발하기!</button>
           </div>
         </div>
