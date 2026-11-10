@@ -3,8 +3,6 @@ import * as THREE from 'three'
 import { LANE_W, LAP, LAPS, itemsBetween, type ItemKind, type Race } from '../lib/race'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { animal3dAspect, animal3dUrl } from '../lib/animals3d'
-import { renderFigure } from '../lib/exportPng'
-import type { Outfit, Tweaks } from '../lib/types'
 import { assetUrl } from '../lib/items'
 import { createStage } from './stage3d'
 
@@ -41,7 +39,7 @@ const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | 'xmas
   candy: { sky: 0xffc9e3, prop: 'lollipop' },
 }
 
-export function Race3D({ live, theme, car: carId, outfit, tweaks }: { live: MutableRefObject<Race>; theme: RaceTheme; car: RaceCar; outfit: Outfit; tweaks: Tweaks }) {
+export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Race>; theme: RaceTheme; car: RaceCar }) {
   const host = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = host.current
@@ -167,28 +165,6 @@ export function Race3D({ live, theme, car: carId, outfit, tweaks }: { live: Muta
     }
     const mine = buildCar(carId)
     const car = mine.group
-    // 운전하는 아바타(차 안에 앉은 모습: 위쪽만 보이고 아래는 차 속으로 사라진다)
-    const avatarSp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ transparent: true, depthWrite: false, opacity: 0 })))
-    avatarSp.center.set(0.5, 0.5); avatarSp.position.set(0, mine.h * (SEAT[carId] + 0.03), 0.3)
-    car.add(avatarSp)
-    let alive = true
-    renderFigure(outfit, tweaks).then((cv) => {
-      if (!alive) return
-      // 머리와 어깨만 작게(앞모습뿐이라 뒤돌아 웃는 모습): 머리 위쪽 3분의 1을 잘라 쓴다
-      const w = cv.width, h = cv.height, sx = w * 0.22, sw = w * 0.56, sh = h * 0.34
-      const bust = document.createElement('canvas'); bust.width = Math.round(sw); bust.height = Math.round(sh)
-      const g = bust.getContext('2d')!
-      g.drawImage(cv, sx, 0, sw, sh, 0, 0, bust.width, bust.height)
-      // 거의 투명한 얼룩(네모 테두리처럼 보임)을 지우고, 아래쪽은 부드럽게 사라지게(차 속에 앉은 느낌)
-      const px = g.getImageData(0, 0, bust.width, bust.height), dd = px.data
-      for (let i = 3; i < dd.length; i += 4) if (dd[i] < 40) dd[i] = 0
-      g.putImageData(px, 0, 0)
-      g.globalCompositeOperation = 'destination-in'
-      const grad = g.createLinearGradient(0, 0, 0, bust.height); grad.addColorStop(0, '#000'); grad.addColorStop(0.8, '#000'); grad.addColorStop(1, 'rgba(0,0,0,0)')
-      g.fillStyle = grad; g.fillRect(0, 0, bust.width, bust.height)
-      avatarSp.material.map = s.texOf(bust); avatarSp.material.opacity = 1; avatarSp.material.needsUpdate = true
-      const bh = mine.h * 0.34; avatarSp.scale.set(bh * (bust.width / bust.height), bh, 1)
-    }).catch(() => {})
     // 컴퓨터 친구 차: 내 차가 아닌 차들을 돌려 쓰고, 동물 친구가 운전한다
     const others = ALL_CARS.filter((c) => c !== carId)
     const rivalCars = live.current.rivals.map((rv, i) => {
@@ -272,7 +248,7 @@ export function Race3D({ live, theme, car: carId, outfit, tweaks }: { live: Muta
       }
       for (const [id, g] of shown) if (!want.has(id)) { scene.remove(g); shown.delete(id) }
     })
-    return () => { alive = false; s.dispose() }
-  }, [live, theme, carId, outfit, tweaks])
+    return () => s.dispose()
+  }, [live, theme, carId])
   return <div ref={host} aria-hidden className="absolute inset-0" />
 }

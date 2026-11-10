@@ -3,7 +3,6 @@ import { assetUrl } from '../lib/items'
 import { isRestoring } from '../lib/restoreGuard'
 import { LAPS, MAX_RIVALS, TIME_LIMIT, lapOf, newRace, rankNow, rewardStars, setBrake, steer, stepRace, timeLeft, type Race } from '../lib/race'
 import { CALL_ANIMALS } from '../lib/animalCalls'
-import type { Outfit, Tweaks } from '../lib/types'
 import { earnStars } from '../lib/shop'
 import { playCloud, playGold, playHop, playStar, playTap, playWin, startBgm, stopBgm } from '../lib/sound'
 
@@ -30,7 +29,7 @@ const img = (name: string) => assetUrl(`race/${name}.webp`)
 const roundBtn = 'pointer-events-auto h-24 w-24 active:scale-90 drop-shadow-lg'
 
 /** 자동차 레이스(혼자 달리기): 차는 저절로 달리고, ◀ ▶ 로 옆 칸으로 옮긴다. 별을 모으고 부스터로 빨라지며, 바나나·물웅덩이는 잠깐 느려질 뿐 혼나지 않는다 */
-export function RaceGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks: Tweaks; onExit: () => void }) {
+export function RaceGame({ onExit }: { onExit: () => void }) {
   const [phase, setPhase] = useState<'intro' | 'playing' | 'done'>('intro')
   const [race, setRace] = useState<Race>(() => newRace())
   const live = useRef(race)
@@ -98,7 +97,7 @@ export function RaceGame({ outfit, tweaks, onExit }: { outfit: Outfit; tweaks: T
   const oopsOn = useOops(oops)
   return (
     <section aria-label="자동차 레이스" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none">
-      {phase !== 'intro' && <Suspense fallback={null}><Race3D live={live} theme={theme} car={car} outfit={outfit} tweaks={tweaks} /></Suspense>}
+      {phase !== 'intro' && <Suspense fallback={null}><Race3D live={live} theme={theme} car={car} /></Suspense>}
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#c0587a] shadow">🏎️ 자동차 레이스</span>

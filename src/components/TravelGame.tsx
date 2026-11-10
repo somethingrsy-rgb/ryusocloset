@@ -85,7 +85,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
 
   if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onExit={() => { if (walkTab && onLeaveWalk) onLeaveWalk(); else setWalk3d(false) }} onGo={onGo} onEnter={(id) => { travelTo(id); setScene(id); setBackToWalk(true); setWalk3d(false) }} /></Suspense>
   if (flags) return <Suspense fallback={null}><FlagGame onExit={() => setFlags(false)} /></Suspense>
-  if (race) return <Suspense fallback={null}><RaceGame outfit={outfit} tweaks={tweaks} onExit={() => setRace(false)} /></Suspense>
+  if (race) return <Suspense fallback={null}><RaceGame onExit={() => setRace(false)} /></Suspense>
   if (soccer) return <Suspense fallback={null}><SoccerGame onExit={() => setSoccer(false)} /></Suspense>
   if (runner) return <Suspense fallback={null}><RunnerGame outfit={outfit} tweaks={tweaks} onExit={() => setRunner(false)} /></Suspense>
   if (starRain) return <Suspense fallback={null}><StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} /></Suspense>
