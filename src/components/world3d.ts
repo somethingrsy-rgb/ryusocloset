@@ -80,6 +80,8 @@ export interface World {
   setOverhead: (o: { x: number; z: number; h: number } | null) => void
   /** 카메라 높이(0 = 아바타 뒤 낮게, 1 = 위에서 내려다보기). 위아래로 끌어도 바뀐다 */
   tilt: { value: number }
+  /** 지금 카메라 방향(다시 열 때 이어서 보려고) */
+  getYaw: () => number
   /** 카메라 거리 배율(작을수록 크게 보인다): 두 손가락 벌리기·휠로 바뀐다 */
   zoom: { value: number }
   zoomBy: (k: number) => void
@@ -442,7 +444,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   frame = requestAnimationFrame(tick)
 
   return {
-    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addCastleGate, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables, setOverhead: (o) => { overhead = o }, tilt, zoom, zoomBy,
+    scene, camera, ground, rnd, me, obstacles, keep, lambert, texOf, paperDoll, addTree, addProp, addCastleGate, addPath, addCurvePath, setAvatar, walkTo, face, screenSide, pushOut, pickables, setOverhead: (o) => { overhead = o }, tilt, getYaw: () => yaw, zoom, zoomBy,
     onFrame: (fn) => { frameFns.push(fn) },
     dispose: () => {
       cancelAnimationFrame(frame)

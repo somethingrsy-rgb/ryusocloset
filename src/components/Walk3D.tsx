@@ -27,6 +27,8 @@ import { ANIMAL_H, HOUSE_ART, createWorld, showBack, signCanvas, emojiCanvas, ty
  * 땅을 누르면 그곳으로 걷고, 끌면 둘레를 돈다. 길에 반짝이(✨)가 있으면 가서 줍고, 친구를 누르면 다가가서 이야기한다.
  */
 const WORLD = 70
+/** 마지막으로 산책하던 자리·방향(앱을 켜 둔 동안 기억) */
+let lastWalk: { x: number; z: number; yaw: number } | null = null
 /** 집 가운데에서 이만큼 안에 들어오면 들어갈지 묻는다(집 크기 반지름 2.5 + 둘레) */
 const HOUSE_NEAR = 5
 /** 산책 마을 나무: 초록·노랑·주황 꽃나무(카페·농장의 그 나무) */
@@ -108,7 +110,7 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
     const friendOf = new Map<THREE.Object3D, number>()
     const friends: { animal: number; doll: Doll; x: number; z: number; tx: number; tz: number; wait: number; dir: 1 | -1; t: number }[] = []
     const w = createWorld(el, {
-      bounds: WORLD, start: { x: 0, z: 0 }, yaw: startYaw(), grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
+      bounds: WORLD, start: { x: 0, z: 0 }, yaw: lastWalk?.yaw ?? startYaw(), grass: assetUrl('cafe/3d/grass.webp'), onReady: () => setReady(true),
       // 친구를 누르면 그 친구 앞까지 걸어가서 이야기를 시작한다
       onPick: (o) => {
         // 길가 카페·노점을 누르면 문 앞까지 걸어가서 그쪽으로
@@ -148,6 +150,8 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
     const curve = loopCurve()
     const samples = curve.getSpacedPoints(240)
     w.me.x = samples[20].x; w.me.z = samples[20].z
+    // 전에 산책하던 자리에서 이어서(집에 들어갔다 나오거나 다른 탭에 다녀와도 처음으로 돌아가지 않게)
+    if (lastWalk) { w.me.x = lastWalk.x; w.me.z = lastWalk.z }
     const roadW = 3.4
     const pos: number[] = [], idx: number[] = [], uv: number[] = []
     let along = 0
@@ -210,6 +214,8 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
     const houseOf = new Map(houses.map((h) => [h.doll.root as THREE.Object3D, h]))
     let entering = false
     let asked: (typeof houses)[number] | null = null, declined: (typeof houses)[number] | null = null
+    // 집에서 막 나왔으면 그 집 앞이라 바로 다시 묻지 않는다(멀어졌다 오면 다시 묻는다)
+    declined = houses.find((h) => Math.hypot(w.me.x - h.hx, w.me.z - h.hz) < HOUSE_NEAR + 1) ?? null
     answerHouseRef.current = (yes) => { const h = asked; if (!h) return; if (yes) { w.walkTo(w.me.x, w.me.z); enterHouse(h) } else declined = h; asked = null; setAskHouse(null) }
     /** 집에 들어간다: 가까이 있는 동물 친구들에게 「우리집에 놀러 가자!」 하고 같이 들어간다 */
     const enterHouse = (h: (typeof houses)[number]) => {
@@ -598,7 +604,7 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
         }
       }
     })
-    return () => { detachMp(); w.dispose(); world.current = null }
+    return () => { lastWalk = { x: w.me.x, z: w.me.z, yaw: w.getYaw() }; detachMp(); w.dispose(); world.current = null }
   }, [])
 
   // 옷이 바뀌면 아바타 그림을 다시 그려 판에 붙인다
