@@ -16,21 +16,28 @@ const GROUND_TILE = 10
 const PROPS = 20, PROP_GAP = 11
 
 export type RaceTheme = 'meadow' | 'snow' | 'candy'
+export type RaceCar = 'heart' | 'cloud'
+/** 자동차 그림 크기(픽셀): 같은 눈금으로 줄여서 똑바로·왼쪽·오른쪽 크기가 서로 맞는다. 1픽셀 = CAR_K 장면 단위 */
+const CAR_PX: Record<RaceCar, Record<'straight' | 'left' | 'right', [number, number]>> = {
+  heart: { straight: [457, 414], left: [512, 408], right: [485, 379] },
+  cloud: { straight: [477, 369], left: [492, 392], right: [504, 403] },
+}
+const CAR_K = 4.3 / 457
 /** 장소마다 하늘색(하늘 그림 아래·안개), 길가 소품 */
-const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | null }> = {
+const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | 'xmas' }> = {
   meadow: { sky: 0xc9ecff, prop: 'tree' },
-  snow: { sky: 0xdad6f6, prop: null },
+  snow: { sky: 0xdad6f6, prop: 'xmas' },
   candy: { sky: 0xffc9e3, prop: 'lollipop' },
 }
 
-export function Race3D({ live, theme }: { live: MutableRefObject<Race>; theme: RaceTheme }) {
+export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Race>; theme: RaceTheme; car: RaceCar }) {
   const host = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = host.current
     if (!el) return
     const th = THEMES[theme]
     const s = createStage(el, { sky: th.sky, fog: [60, 170], shadows: false, view: { yaw: 0, pitch: 0.36, dist: 10.5, target: [0, 0.9, 0] }, fov: (w, h) => (w < h ? 66 : 48) })
-    const { scene, keep, lambert } = s
+    const { scene, keep } = s
     s.camera.far = 600
     s.camera.updateProjectionMatrix()
     const art = (name: string) => s.texOf(assetUrl(`race/${name}.webp`))
@@ -79,59 +86,61 @@ export function Race3D({ live, theme }: { live: MutableRefObject<Race>; theme: R
     // 길가: 장소마다 다른 나무(뒤로 지나가면 앞으로 옮겨 다시 쓴다) + 응원하는 곰 + 표지판
     const sideX = ROAD_W / 2 + 3
     const spriteOf = (tex: THREE.Texture, w: number, h: number, y: number) => { const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }))); sp.scale.set(w, h, 1); sp.position.y = y; return sp }
-    const pineTrunk = keep(new THREE.CylinderGeometry(0.22, 0.3, 1.2, 8)), pineTrunkMat = keep(new THREE.MeshBasicMaterial({ color: 0xa88a6a }))
-    const pineCone = keep(new THREE.ConeGeometry(1, 1, 12)), pineMats = [0xdcebff, 0xeaf3ff, 0xf7fbff].map((c) => keep(new THREE.MeshBasicMaterial({ color: c })))
     const props = Array.from({ length: PROPS }, (_, i) => {
       const side = i % 2 ? 1 : -1, x = side * (sideX + (i % 3) * 2.2), z = -i * PROP_GAP
-      if (th.prop) {
-        const big = 0.9 + (i % 3) * 0.2
-        const o = th.prop === 'tree' ? spriteOf(art('prop_tree'), 4.6 * big, 4.2 * big, 2.1 * big) : spriteOf(art('prop_lollipop'), 3.1 * big, 4.8 * big, 2.4 * big)
-        o.position.x = x; o.position.z = z; scene.add(o)
-        return { o, k: i }
-      }
-      // 그림이 없는 눈 나라: 눈 덮인 소나무(뿔 세 개를 쌓는다. 그림자 없이 밝게)
-      const o = new THREE.Group(), sc = 0.9 + (i % 3) * 0.2
-      const trunk = new THREE.Mesh(pineTrunk, pineTrunkMat); trunk.position.y = 0.5; o.add(trunk)
-      ;[[1.9, 1.5, 2.2], [1.5, 1.3, 3.3], [1.1, 1.1, 4.3]].forEach(([r, h, y], j) => { const c = new THREE.Mesh(pineCone, pineMats[j]); c.scale.set(r, h, r); c.position.y = y - 0.2; o.add(c) })
-      o.position.set(x, 0, z); o.scale.setScalar(sc); scene.add(o)
+      const big = 0.9 + (i % 3) * 0.2
+      const o = th.prop === 'tree' ? (i % 4 === 1 ? spriteOf(art('prop_tree2'), 4.7 * big, 4.4 * big, 2.2 * big) : spriteOf(art('prop_tree'), 4.6 * big, 4.2 * big, 2.1 * big))
+        : th.prop === 'xmas' ? spriteOf(art('prop_xmas'), 3.4 * big, 4.7 * big, 2.35 * big) : spriteOf(art('prop_lollipop'), 3.1 * big, 4.8 * big, 2.4 * big)
+      o.position.x = x; o.position.z = z; scene.add(o)
       return { o, k: i }
     })
-    const BEARS = 8, BEAR_GAP = 62
-    const bearTex = art('prop_bear'), signTex = art('prop_sign')
-    const bears = Array.from({ length: BEARS }, (_, i) => {
-      const o = spriteOf(bearTex, 2.6, 2.5, 1.25)
-      o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + 1.6), 1.25, -30 - i * BEAR_GAP)
+    // 응원 구경꾼(곰·토끼·풍선·가로등)과 길가 꽃: 같은 자리를 돌려 쓴다
+    const CHEERS = 12, CHEER_GAP = 40
+    const CHEER: [string, number, number][] = [['prop_bear', 2.6, 1.04], ['prop_balloons', 3.2, 0.68], ['prop_bunny', 3.0, 0.83], ['prop_lamp', 3.8, 0.44], ['prop_bear2', 2.6, 1.08], ['prop_balloons', 3.2, 0.68]]
+    const signTex = art('prop_sign')
+    const cheers = Array.from({ length: CHEERS }, (_, i) => {
+      const [img, h, asp] = CHEER[i % CHEER.length]
+      const o = spriteOf(art(img), h * asp, h, h / 2)
+      o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + 1.7), h / 2, -30 - i * CHEER_GAP)
+      scene.add(o)
+      return { o, k: i }
+    })
+    const FLOWERS = 14, FLOWER_GAP = 17
+    const flowerTex = art('prop_flowers')
+    const flowers = Array.from({ length: FLOWERS }, (_, i) => {
+      const o = spriteOf(flowerTex, 1.7, 1.1, 0.55)
+      o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + 0.9 + (i % 3) * 0.5), 0.55, -8 - i * FLOWER_GAP)
       scene.add(o)
       return { o, k: i }
     })
     for (let k = 0; k <= LAPS; k++) { const o = spriteOf(signTex, 2.3, 2.1, 1.05); o.position.set(-(ROAD_W / 2 + 1.5), 1.05, -k * LAP - 4); scene.add(o) }
 
-    // 차: 임시 도형(몸통·바퀴·운전하는 아이 머리)
+    // 차: 그림 판 세 장(똑바로·왼쪽·오른쪽). 옆 칸으로 옮겨 가는 동안은 그쪽을 보는 그림으로 바꾼다
     const car = new THREE.Group()
-    const body = new THREE.Mesh(keep(new THREE.BoxGeometry(1.3, 0.55, 2.0)), lambert(0xff8fb1)); body.position.y = 0.55
-    const cab = new THREE.Mesh(keep(new THREE.BoxGeometry(0.95, 0.5, 0.9)), lambert(0xffc2d6)); cab.position.set(0, 1.05, 0.15)
-    const head = new THREE.Mesh(keep(new THREE.SphereGeometry(0.3, 12, 10)), lambert(0xffe0c8)); head.position.set(0, 1.5, 0.15)
-    const wheelGeo = keep(new THREE.CylinderGeometry(0.32, 0.32, 0.25, 14)), wheelMat = lambert(0x4a3d52)
-    const wheels = [[-0.72, 0.8], [0.72, 0.8], [-0.72, -0.7], [0.72, -0.7]].map(([wx, wz]) => { const w = new THREE.Mesh(wheelGeo, wheelMat); w.rotation.z = Math.PI / 2; w.position.set(wx, 0.32, wz); return w })
-    car.add(body, cab, head, ...wheels)
+    const carSp = (['straight', 'left', 'right'] as const).map((v) => {
+      const [pw, ph] = CAR_PX[carId][v]
+      const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: art(`car_${carId}_${v}`), transparent: true, depthWrite: false })))
+      sp.center.set(0.5, 0.05); sp.scale.set(pw * CAR_K, ph * CAR_K, 1); sp.visible = v === 'straight'
+      car.add(sp); return sp
+    })
     scene.add(car)
     const shadow = new THREE.Mesh(keep(new THREE.CircleGeometry(1, 20)), keep(new THREE.MeshBasicMaterial({ color: 0x3c4a2a, transparent: true, opacity: 0.25, depthWrite: false })))
-    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.04; shadow.scale.set(0.95, 1.3, 1)
+    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.04; shadow.scale.set(1.8, 2.0, 1)
     scene.add(shadow)
 
     // 아이템 임시 도형
-    const mats = { star: lambert(0xffd54a), puddle: keep(new THREE.MeshBasicMaterial({ color: 0x7ec8ff, transparent: true, opacity: 0.85 })) }
-    const geos = { star: keep(new THREE.OctahedronGeometry(0.5)), puddle: keep(new THREE.CircleGeometry(0.85, 20)) }
+    const mats = { puddle: keep(new THREE.MeshBasicMaterial({ color: 0x7ec8ff, transparent: true, opacity: 0.85 })) }
+    const geos = { puddle: keep(new THREE.CircleGeometry(0.85, 20)) }
     // 그림 판(항상 카메라를 본다): 부스터 로켓·바나나
-    const boostTex = art('item_boost'), bananaTex = art('item_banana')
+    const boostTex = art('item_boost'), bananaTex = art('item_banana'), starTex = art('item_star')
     const itemMesh = (kind: ItemKind) => {
-      if (kind === 'boost' || kind === 'banana') {
-        const g = new THREE.Group(), sp = kind === 'boost' ? spriteOf(boostTex, 1.3, 1.65, 1.0) : spriteOf(bananaTex, 1.6, 1.1, 0.6)
+      if (kind === 'boost' || kind === 'banana' || kind === 'star') {
+        const g = new THREE.Group(), sp = kind === 'boost' ? spriteOf(boostTex, 1.3, 1.65, 1.0) : kind === 'star' ? spriteOf(starTex, 1.0, 1.0, 0.9) : spriteOf(bananaTex, 1.6, 1.1, 0.6)
         g.add(sp); g.userData.kind = kind; g.userData.m = sp
         return g
       }
-      const m = new THREE.Mesh(geos[kind as 'star' | 'puddle'], mats[kind as 'star' | 'puddle'])
-      if (kind === 'puddle') { m.rotation.x = -Math.PI / 2; m.position.y = 0.05 } else m.position.y = 0.85
+      const m = new THREE.Mesh(geos.puddle, mats.puddle)
+      m.rotation.x = -Math.PI / 2; m.position.y = 0.05
       const g = new THREE.Group(); g.add(m); g.userData.kind = kind; g.userData.m = m
       return g
     }
@@ -150,23 +159,24 @@ export function Race3D({ live, theme }: { live: MutableRefObject<Race>; theme: R
       grass.position.z = cz; grass.position.x = cx * 0; road.position.z = cz - 60
       gTex.offset.y = -cz / GROUND_TILE; rt.offset.y = -cz / ROAD_TILE
       sky.position.x = cx * 0.6; sky.position.z = cz - SKY_Z
-      // 차: 옆으로 가면 살짝 기울고, 느려질 땐 흔들, 달릴 땐 통통
-      car.position.set(cx, Math.abs(Math.sin(t * 14)) * 0.04 * Math.min(1, r.speed / 20), cz)
-      car.rotation.z = (r.lane - r.x) * -0.18
-      car.rotation.y = (r.lane - r.x) * 0.25
+      // 차: 옆 칸으로 가는 동안은 그쪽 그림, 달릴 땐 통통, 미끄러지면 빙글 흔들
+      const turn = r.lane - r.x, dir = turn < -0.25 ? 1 : turn > 0.25 ? 2 : 0
+      carSp.forEach((sp, i) => { sp.visible = i === dir })
+      car.position.set(cx, Math.abs(Math.sin(t * 14)) * 0.05 * Math.min(1, r.speed / 20), cz)
+      carSp[dir].material.rotation = r.slow > 0 ? Math.sin(t * 30) * 0.22 : 0
       shadow.position.x = cx; shadow.position.z = cz
-      if (r.slow > 0) car.rotation.y += Math.sin(t * 30) * 0.25
-      wheels.forEach((w) => { w.rotation.x = (r.d * 3) % (Math.PI * 2) })
       // 카메라: 차 뒤에서 조금 옆으로 따라간다(속도가 빠를수록 살짝 멀어진다)
-      s.view.target.set(cx * 0.6, 0.9, cz - 3.2)
-      s.view.dist = 10.5 + Math.min(1.5, r.speed / 25) + (r.boost > 0 ? 1.2 : 0)
-      sparkleSp.visible = r.sparkle > 0; sparkleSp.position.set(cx, 1.7 + (0.6 - r.sparkle) * 0.8, cz - 0.5)
-      dustSp.visible = r.dust > 0; dustSp.position.set(cx, 1.0, cz - 0.3); dustSp.scale.setScalar(1 + (0.7 - r.dust) * 1.2)
+      s.view.target.set(cx * 0.6, 1.4, cz - 3.6)
+      s.view.dist = 13.5 + Math.min(1.5, r.speed / 25) + (r.boost > 0 ? 1.2 : 0)
+      sparkleSp.visible = r.sparkle > 0; sparkleSp.position.set(cx, 2.2 + (0.6 - r.sparkle) * 0.8, cz - 0.5)
+      dustSp.visible = r.dust > 0; dustSp.position.set(cx, 1.2, cz - 0.3); dustSp.scale.setScalar(1 + (0.7 - r.dust) * 1.2)
       // 나무
       const period = PROPS * PROP_GAP
       for (const tr of props) { const base = -tr.k * PROP_GAP; tr.o.position.z = base + period * Math.floor((cz + 25 - base) / period) }
-      const bp = BEARS * BEAR_GAP
-      for (const b of bears) { const base = -30 - b.k * BEAR_GAP; b.o.position.z = base + bp * Math.floor((cz + 25 - base) / bp) }
+      const cp = CHEERS * CHEER_GAP
+      for (const c of cheers) { const base = -30 - c.k * CHEER_GAP; c.o.position.z = base + cp * Math.floor((cz + 25 - base) / cp) }
+      const fp = FLOWERS * FLOWER_GAP
+      for (const f of flowers) { const base = -8 - f.k * FLOWER_GAP; f.o.position.z = base + fp * Math.floor((cz + 25 - base) / fp) }
       // 아이템
       const want = new Set<number>()
       for (const it of itemsBetween(r.d - 20, r.d + 110, r.seed)) {
@@ -174,12 +184,12 @@ export function Race3D({ live, theme }: { live: MutableRefObject<Race>; theme: R
         want.add(it.id)
         let g = shown.get(it.id)
         if (!g) { g = itemMesh(it.kind); g.position.set(it.lane * LANE_W, 0, -it.d); scene.add(g); shown.set(it.id, g) }
-        if (it.kind === 'star') (g.userData.m as THREE.Mesh).rotation.y = t * 3
+        if (it.kind === 'star') (g.userData.m as THREE.Sprite).position.y = 0.9 + Math.sin(t * 5 + it.id) * 0.1
         else if (it.kind === 'boost') (g.userData.m as THREE.Sprite).position.y = 1.0 + Math.sin(t * 4 + it.id) * 0.12
       }
       for (const [id, g] of shown) if (!want.has(id)) { scene.remove(g); shown.delete(id) }
     })
     return () => s.dispose()
-  }, [live, theme])
+  }, [live, theme, carId])
   return <div ref={host} aria-hidden className="absolute inset-0" />
 }
