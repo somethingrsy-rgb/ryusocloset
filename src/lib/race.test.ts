@@ -49,7 +49,7 @@ describe('자동차 레이스', () => {
   it('두 바퀴를 다 달리면 끝나고 별을 받는다', () => {
     const r = run(newRace(9), 200)
     expect(r.phase).toBe('done')
-    expect(r.finish).toBe('laps'); expect(r.d).toBe(LAP * LAPS)
+    expect(r.finish).toBe('laps'); expect(r.d).toBeGreaterThan(LAP * LAPS)
     expect(r.t).toBeLessThan(TIME_LIMIT)
     expect(rewardStars(r)).toBeGreaterThanOrEqual(3)
   })
@@ -59,6 +59,13 @@ describe('자동차 레이스', () => {
     expect(r.phase).toBe('done'); expect(r.finish).toBe('time')
     expect(rewardStars(r)).toBe(1)
     expect(rewardStars(newRace())).toBe(0)
+  })
+  it('결승선을 지나도 바로 멈추지 않고 잠깐 더 달린다', () => {
+    let r: Race = { ...newRace(9), phase: 'run', count: 0, d: LAP * LAPS - 1, speed: 30 }
+    r = stepRace(r, 0.1); r = stepRace(r, 0.1); r = stepRace(r, 0.1)
+    expect(r.finish).toBe('laps'); expect(r.phase).toBe('run'); expect(r.d).toBeGreaterThan(LAP * LAPS)
+    const t0 = r.t; r = run(r, 3)
+    expect(r.phase).toBe('done'); expect(r.t).toBe(t0)
   })
   it('바퀴와 남은 시간을 센다', () => {
     const r = { ...newRace(1), d: LAP + 5, t: 12.2 }
