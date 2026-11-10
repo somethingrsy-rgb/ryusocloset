@@ -5,6 +5,13 @@ import { connect } from './firebase'
 import { MAX_PLAYERS, bossCanRespawn, bossHit, saneBoss, saneFood, sanePlayer, type Boss, type ChatMsg, type Food, type Home, type PlayerState } from './core'
 import type { Transport } from './transport'
 
+/** 서버가 쓰기를 거절하면(대개 Firebase 콘솔의 보안 규칙이 예전 것일 때) 화면에 알린다: MultiplayerBar 가 듣는다 */
+export const MP_DENIED = 'ryuso:mp-denied'
+const denied = (what: string) => (e: unknown) => {
+  const msg = e instanceof Error ? e.message : String(e)
+  if (/permission/i.test(msg) && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(MP_DENIED, { detail: what }))
+}
+
 export function firebaseTransport(): Transport {
   let me: DatabaseReference | null = null
   let chatRef: DatabaseReference | null = null
@@ -60,23 +67,23 @@ export function firebaseTransport(): Transport {
     },
     chat(name, text, home) {
       if (!chatRef || !me) return
-      push(chatRef, { uid: me.key, name, text, t: serverTimestamp(), ...(home ? { home: me.key } : {}) }).catch(() => {})
+      push(chatRef, { uid: me.key, name, text, t: serverTimestamp(), ...(home ? { home: me.key } : {}) }).catch(denied('채팅'))
     },
     hitBoss(room, id, power) {
       if (!bossRef || !me) return
       // 트랜잭션: 여럿이 동시에 쳐도 서로 덮어쓰지 않고 차례로 깎인다
-      runTransaction(child(bossRef, room), (cur) => { const b = bossHit(saneBoss(cur), id, power); return b ? { ...b, t: serverTimestamp() } : undefined }).catch(() => {})
+      runTransaction(child(bossRef, room), (cur) => { const b = bossHit(saneBoss(cur), id, power); return b ? { ...b, t: serverTimestamp() } : undefined }).catch(denied('대왕 몬스터'))
     },
     spawnBoss(room, next) {
       if (!bossRef || !me) return
       const now = Date.now() + skew
-      runTransaction(child(bossRef, room), (cur) => (bossCanRespawn(saneBoss(cur), now) ? { ...next, t: serverTimestamp() } : undefined)).catch(() => {})
+      runTransaction(child(bossRef, room), (cur) => (bossCanRespawn(saneBoss(cur), now) ? { ...next, t: serverTimestamp() } : undefined)).catch(denied('대왕 몬스터'))
     },
     openHome(home) {
       if (!db || !uid) return
       const r = ref(db, `lobby/homes/${uid}`)
       onDisconnect(r).remove().catch(() => {})
-      set(r, { ...home, t: serverTimestamp() }).catch(() => {})
+      set(r, { ...home, t: serverTimestamp() }).catch(denied('집 열기'))
     },
     closeHome() {
       if (!db || !uid) return
@@ -93,7 +100,7 @@ export function firebaseTransport(): Transport {
     },
     addFood(host, food) {
       if (!db) return
-      push(ref(db, `lobby/food/${host}`), { ...food, t: serverTimestamp() }).catch(() => {})
+      push(ref(db, `lobby/food/${host}`), { ...food, t: serverTimestamp() }).catch(denied('간식'))
     },
     eatFood(host, id) {
       if (!db) return

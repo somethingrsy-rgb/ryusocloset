@@ -145,6 +145,10 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
   useEffect(() => { if (!open) return; const t = setTimeout(() => setOpen(false), IDLE_MS); return () => clearTimeout(t) }, [open, used])
   // 놀이 화면이 바쁠 때(몬스터 마법 풀기 시작 등) 대화 줄을 닫아서 아래 단추를 가리지 않게
   useEffect(() => { const f = () => { setChatOpen(false); setOpen(false); setHistory(false); setAskLeave(false) }; window.addEventListener(HUD_BUSY, f); return () => window.removeEventListener(HUD_BUSY, f) }, [])
+  // 서버가 쓰기를 거절했을 때(보안 규칙이 예전 것): 무엇이 안 됐는지 알려 준다
+  const [deniedWhat, setDeniedWhat] = useState<string | null>(null)
+  useEffect(() => { const f = (e: Event) => setDeniedWhat((e as CustomEvent<string>).detail); window.addEventListener('ryuso:mp-denied', f); return () => window.removeEventListener('ryuso:mp-denied', f) }, [])
+  useEffect(() => { if (!deniedWhat) return; const t = setTimeout(() => setDeniedWhat(null), 8000); return () => clearTimeout(t) }, [deniedWhat])
   // 친구가 보낸 집 초대(최근 것 하나): 「놀러 가기」 카드
   const [dismissed, setDismissed] = useState<string | null>(null)
   const invite = mp.status === 'on' ? [...mp.chat].reverse().find((c) => c.home && c.uid !== mp.uid && Date.now() - c.t < INVITE_MS) : undefined
@@ -170,6 +174,7 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
   const say1 = (t: string) => { say(t); touch() }
   return (
     <>
+      {deniedWhat && <p role="alert" className="pointer-events-none absolute inset-x-2 top-16 z-[70] mx-auto w-fit max-w-full rounded-2xl bg-[#fff1f4] px-3 py-2 text-center text-xs font-bold text-[#c04a5a] shadow-lg ring-1 ring-[#f0c6cd]">⚠️ {deniedWhat}을(를) 서버에 저장하지 못했어요<br />Firebase 콘솔에서 보안 규칙(database.rules.json)을 다시 게시해 주세요</p>}
       {mine && !in3d && <MyBubble key={mine.id} text={mine.text} onShown={setBubbleShown} />}
       {/* 대화 단추(같이 놀기 중엔 늘): 🎤 바로 말해서 보내기 · 💬 글로 쓰기. 아래쪽 놀이 단추와 겹치지 않게 왼쪽 가운데 */}
       {on && !chatOpen && (
