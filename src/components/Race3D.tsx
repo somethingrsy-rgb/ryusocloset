@@ -16,11 +16,12 @@ const GROUND_TILE = 10
 const PROPS = 20, PROP_GAP = 11
 
 export type RaceTheme = 'meadow' | 'snow' | 'candy'
-export type RaceCar = 'heart' | 'cloud'
+export type RaceCar = 'heart' | 'cloud' | 'pumpkin'
 /** 자동차 그림 크기(픽셀): 같은 눈금으로 줄여서 똑바로·왼쪽·오른쪽 크기가 서로 맞는다. 1픽셀 = CAR_K 장면 단위 */
 const CAR_PX: Record<RaceCar, Record<'straight' | 'left' | 'right', [number, number]>> = {
   heart: { straight: [457, 414], left: [512, 408], right: [485, 379] },
   cloud: { straight: [477, 369], left: [492, 392], right: [504, 403] },
+  pumpkin: { straight: [418, 525], left: [482, 537], right: [482, 537] },
 }
 const CAR_K = 4.3 / 457
 /** 장소마다 하늘색(하늘 그림 아래·안개), 길가 소품 */
