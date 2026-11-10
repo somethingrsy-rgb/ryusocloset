@@ -9,7 +9,8 @@ import type { Transport } from './transport'
 export const MP_DENIED = 'ryuso:mp-denied'
 const denied = (what: string) => (e: unknown) => {
   const msg = e instanceof Error ? e.message : String(e)
-  if (/permission/i.test(msg) && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(MP_DENIED, { detail: what }))
+  // 규칙 거절(permission)이든 다른 실패(연결 끊김 등)든 조용히 넘기지 않고 화면에 알린다
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(MP_DENIED, { detail: { what, rules: /permission/i.test(msg), msg: msg.slice(0, 80) } }))
 }
 
 export function firebaseTransport(): Transport {
