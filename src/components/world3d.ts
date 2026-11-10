@@ -493,6 +493,25 @@ export function signCanvas(line1: string, line2: string) {
   return c
 }
 
+/** 집 이름표: 파스텔 리본 알약(이모지 + 방 이름). color는 집마다 다른 파스텔 */
+export function nameTagCanvas(emoji: string, name: string, color: string) {
+  const c = document.createElement('canvas')
+  c.width = 512; c.height = 128
+  const g = c.getContext('2d')!
+  g.textBaseline = 'middle'
+  g.font = 'bold 44px "Apple SD Gothic Neo","Noto Sans KR",sans-serif'
+  const tw = g.measureText(name).width
+  const w = Math.min(496, tw + 44 + 78), x = (512 - w) / 2
+  g.shadowColor = 'rgba(90,60,70,0.28)'; g.shadowBlur = 10; g.shadowOffsetY = 4
+  g.fillStyle = color; g.strokeStyle = '#fff'; g.lineWidth = 8
+  g.beginPath(); g.roundRect(x, 18, w, 88, 44); g.fill(); g.shadowColor = 'transparent'; g.stroke()
+  g.font = '42px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'
+  g.textAlign = 'left'; g.fillText(emoji, x + 24, 64)
+  g.font = 'bold 44px "Apple SD Gothic Neo","Noto Sans KR",sans-serif'
+  g.fillStyle = '#6b4b52'; g.fillText(name, x + 24 + 58, 64)
+  return c
+}
+
 /** 앞모습·뒷모습 그림이 있는 종이 인형(root.userData.tex = [앞, 뒤])을 뒷모습/앞모습으로 */
 export function showBack(d: Doll, back: boolean) {
   const t = d.root.userData.tex as THREE.Texture[] | undefined

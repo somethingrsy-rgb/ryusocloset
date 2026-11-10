@@ -20,7 +20,7 @@ import { getMeet, talkFor, type Talk } from '../lib/meet'
 import { playOrder, playServe, playTap } from '../lib/sound'
 import type { Outfit, Tweaks } from '../lib/types'
 import { cafeShopSprite, stallSprite } from './viewSprite3d'
-import { ANIMAL_H, HOUSE_ART, createWorld, showBack, signCanvas, emojiCanvas, type Doll, type World } from './world3d'
+import { ANIMAL_H, HOUSE_ART, createWorld, showBack, signCanvas, nameTagCanvas, emojiCanvas, type Doll, type World } from './world3d'
 
 /**
  * 3D 산책: 마을은 3D(길·나무·집·꽃·구름)이고, 아바타와 동물 친구는 지금 그림을 세운 '종이 인형'이다.
@@ -191,13 +191,13 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
     // 집마다 들어가면 2D 산책과 같은 장소(집 안)로: 분홍 성은 우리집(내 방), 나머지는 테마 장소
     // 집 일곱 채: 처음 서 있는 곳 가까이에 길 양쪽으로 번갈아 모여 있다(마을처럼, 카페 노점 자리는 비우고)
     const HOUSE_PLACE = [
-      { place: MY_ROOM_ID, name: '우리집', art: HOUSE_ART[2] },
-      { place: 'halloween', name: '물약 가게', art: HOUSE_ART[0] },
-      { place: 'valentine', name: '하트 성', art: { img: 'travel/3d/house_heart.webp', aspect: 778 / 1024 } },
-      { place: 'palace', name: '보라 궁전', art: HOUSE_ART[1] },
-      { place: 'alice', name: '시계 토끼집', art: { img: 'travel/3d/house_clock.webp', aspect: 924 / 1024 } },
-      { place: 'christmas', name: '과자 집', art: HOUSE_ART[3] },
-      { place: 'winter', name: '달빛 성', art: { img: 'travel/3d/house_moon.webp', aspect: 820 / 1024 } },
+      { place: MY_ROOM_ID, name: '내 방', tag: '🏠', color: '#ffe0ea', art: HOUSE_ART[2] },
+      { place: 'halloween', name: '핼러윈', tag: '🎃', color: '#ffe3c2', art: HOUSE_ART[0] },
+      { place: 'valentine', name: '밸런타인데이', tag: '💝', color: '#ffd1de', art: { img: 'travel/3d/house_heart.webp', aspect: 778 / 1024 } },
+      { place: 'palace', name: '궁전', tag: '👑', color: '#e6d9ff', art: HOUSE_ART[1] },
+      { place: 'alice', name: '앨리스', tag: '🫖', color: '#d7ecff', art: { img: 'travel/3d/house_clock.webp', aspect: 924 / 1024 } },
+      { place: 'christmas', name: '크리스마스', tag: '🎄', color: '#d8f2d9', art: HOUSE_ART[3] },
+      { place: 'winter', name: '겨울왕국', tag: '❄️', color: '#dcf3fb', art: { img: 'travel/3d/house_moon.webp', aspect: 820 / 1024 } },
     ]
     const houses = [0.12, 0.17, 0.22, 0.36, 0.41, 0.46, 0.51].map((u, k) => {
       const p = curve.getPointAt(u), t = curve.getTangentAt(u)
@@ -209,6 +209,12 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
       w.addCurvePath([[p.x + nd.x * 1.5, p.z + nd.z * 1.5], [p.x + nd.x * 3.2 + t.x * 0.8, p.z + nd.z * 3.2 + t.z * 0.8], [hx, hz]], 2.2, 'start')
       const d = w.addProp(art.img, hx, hz, 6, art.aspect, 2.5)
       w.pickables.push(d.root)
+      // 지붕 위에 떠 있는 이름표(항상 카메라를 보고, 멀리서는 작게 보인다)
+      const hp = HOUSE_PLACE[k]
+      const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: w.texOf(nameTagCanvas(hp.tag, hp.name, hp.color)), transparent: true, depthWrite: false }))
+      tag.scale.set(4.4, 1.1, 1)
+      tag.position.set(hx, 6.9, hz)
+      w.scene.add(tag)
       return { ...HOUSE_PLACE[k], doll: d, x: hx - nd.x * 3, z: hz - nd.z * 3, hx, hz }
     })
     const houseOf = new Map(houses.map((h) => [h.doll.root as THREE.Object3D, h]))
