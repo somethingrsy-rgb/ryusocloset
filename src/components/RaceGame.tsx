@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
+import { assetUrl } from '../lib/items'
 import { isRestoring } from '../lib/restoreGuard'
 import { LAPS, TIME_LIMIT, lapOf, newRace, rewardStars, setBrake, steer, stepRace, timeLeft, type Race } from '../lib/race'
 import { earnStars } from '../lib/shop'
@@ -7,7 +8,8 @@ import { playCloud, playGold, playHop, playStar, playTap, playWin, startBgm, sto
 // three.js 가 커서 레이스를 열 때만 받는다
 const Race3D = lazy(() => import('./Race3D').then((m) => ({ default: m.Race3D })))
 
-const roundBtn = 'pointer-events-auto flex h-20 w-20 items-center justify-center rounded-full border-4 border-white/90 bg-[#ff8fab] text-4xl font-black text-white shadow-xl active:scale-90'
+const img = (name: string) => assetUrl(`race/${name}.webp`)
+const roundBtn = 'pointer-events-auto h-24 w-24 active:scale-90 drop-shadow-lg'
 
 /** 자동차 레이스(혼자 달리기): 차는 저절로 달리고, ◀ ▶ 로 옆 칸으로 옮긴다. 별을 모으고 부스터로 빨라지며, 바나나·물웅덩이는 잠깐 느려질 뿐 혼나지 않는다 */
 export function RaceGame({ onExit }: { onExit: () => void }) {
@@ -79,18 +81,28 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
         <button aria-label="닫기" onClick={() => { playTap(); onExit() }} className="pointer-events-auto h-10 w-10 rounded-full bg-white/95 text-lg font-bold shadow">✕</button>
       </div>
 
-      {counting && <p aria-live="assertive" className="pointer-events-none absolute inset-x-0 top-1/3 z-20 m-0 text-center text-8xl font-black text-white [text-shadow:0_4px_12px_rgba(192,88,122,0.7)]">{Math.ceil(race.count)}</p>}
-      {phase === 'playing' && race.phase === 'run' && race.t < 1 && <p className="pointer-events-none absolute inset-x-0 top-1/3 z-20 m-0 text-center text-6xl font-black text-white [text-shadow:0_4px_12px_rgba(192,88,122,0.7)]">출발! 🚦</p>}
+      {counting && (
+        <div aria-live="assertive" className="pointer-events-none absolute inset-x-0 top-[14%] z-20 flex flex-col items-center gap-1">
+          <img src={img(race.count > 2 ? 'light_red' : race.count > 1 ? 'light_yellow' : 'light_yellow')} alt="" className="h-24 drop-shadow-lg" />
+          <p className="m-0 text-7xl font-black text-white [text-shadow:0_4px_12px_rgba(192,88,122,0.7)]">{Math.ceil(race.count)}</p>
+        </div>
+      )}
+      {phase === 'playing' && race.phase === 'run' && race.t < 1 && (
+        <div className="pointer-events-none absolute inset-x-0 top-[14%] z-20 flex flex-col items-center gap-1">
+          <img src={img('light_green')} alt="" className="h-24 drop-shadow-lg" />
+          <p className="m-0 text-5xl font-black text-white [text-shadow:0_4px_12px_rgba(192,88,122,0.7)]">출발!</p>
+        </div>
+      )}
       {oopsOn && <p role="status" className="pointer-events-none absolute inset-x-0 top-[28%] z-20 m-0 text-center text-5xl font-black text-white [text-shadow:0_3px_10px_rgba(80,60,120,0.7)]">앗! 😮 다시 달려요!</p>}
-      {phase === 'playing' && race.boost > 0 && <p className="pointer-events-none absolute inset-x-0 top-[28%] z-20 m-0 text-center text-4xl font-black text-[#ffe45c] [text-shadow:0_3px_10px_rgba(192,88,122,0.8)]">🚀 부우웅!</p>}
+      {phase === 'playing' && race.boost > 0 && <div className="pointer-events-none absolute inset-x-0 top-[26%] z-20 flex items-center justify-center gap-2"><img src={img('fx_boost')} alt="" className="h-16 drop-shadow-lg" /><p className="m-0 text-4xl font-black text-[#ffe45c] [text-shadow:0_3px_10px_rgba(192,88,122,0.8)]">부우웅!</p></div>}
 
       {phase === 'playing' && (
         <div className="pointer-events-none absolute inset-x-3 bottom-4 z-20 flex items-end justify-between">
-          <button aria-label="왼쪽으로" onPointerDown={() => go(-1)} className={roundBtn}>◀</button>
+          <button aria-label="왼쪽으로" onPointerDown={() => go(-1)} className={roundBtn}><img src={img('btn_left')} alt="" draggable={false} className="h-full w-full" /></button>
           <div className="flex flex-col items-center gap-3">
             <button aria-label="브레이크(누르고 있는 동안)" onPointerDown={() => brake(true)} onPointerUp={() => brake(false)} onPointerCancel={() => brake(false)} onPointerLeave={() => brake(false)}
-              className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full border-4 border-white/90 bg-[#b9a6f0] text-xl text-white shadow-lg active:scale-90">✋</button>
-            <button aria-label="오른쪽으로" onPointerDown={() => go(1)} className={roundBtn}>▶</button>
+              className="pointer-events-auto h-16 w-16 active:scale-90 drop-shadow-lg"><img src={img('btn_brake')} alt="" draggable={false} className="h-full w-full" /></button>
+            <button aria-label="오른쪽으로" onPointerDown={() => go(1)} className={roundBtn}><img src={img('btn_right')} alt="" draggable={false} className="h-full w-full" /></button>
           </div>
         </div>
       )}
@@ -109,7 +121,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
       {phase === 'done' && (
         <div role="dialog" aria-label="레이스 끝" className="absolute inset-0 z-30 flex items-center justify-center bg-black/25 p-4">
           <div className="flex w-full max-w-sm flex-col items-center gap-2 rounded-3xl bg-white p-5 text-center shadow-xl">
-            <p className="m-0 text-5xl">{race.finish === 'laps' ? '🏆' : '🌟'}</p>
+            <img src={img(race.finish === 'laps' ? 'trophy' : 'medal_4')} alt="" className="h-28 drop-shadow-lg" />
             <p className="m-0 text-xl font-black text-[#c0587a]">{race.finish === 'laps' ? '결승선 통과!' : '시간 끝! 잘 달렸어요'}</p>
             <p className="m-0 text-sm font-bold text-[#6b4b52]">모은 별 ⭐ {race.stars}개 · 받은 별 ⭐ {paid || rewardStars(race)}개</p>
             <div className="mt-1 flex w-full gap-2">
