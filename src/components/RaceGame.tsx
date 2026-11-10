@@ -7,7 +7,7 @@ import { playCloud, playGold, playHop, playStar, playTap, playWin, startBgm, sto
 
 // three.js 가 커서 레이스를 열 때만 받는다
 const Race3D = lazy(() => import('./Race3D').then((m) => ({ default: m.Race3D })))
-import type { RaceTheme } from './Race3D'
+import type { RaceCar, RaceTheme } from './Race3D'
 
 const THEME_KEY = 'ryuso.race.theme'
 const THEMES: { id: RaceTheme; ico: string; name: string }[] = [
@@ -15,6 +15,9 @@ const THEMES: { id: RaceTheme; ico: string; name: string }[] = [
   { id: 'snow', ico: '❄️', name: '눈 나라' },
   { id: 'candy', ico: '🍭', name: '사탕 나라' },
 ]
+const CAR_KEY = 'ryuso.race.car'
+const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트 차' }, { id: 'cloud', name: '구름 차' }]
+const readCar = (): RaceCar => { try { return localStorage.getItem(CAR_KEY) === 'cloud' ? 'cloud' : 'heart' } catch { return 'heart' } }
 const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' ? v : 'meadow' } catch { return 'meadow' } }
 
 const img = (name: string) => assetUrl(`race/${name}.webp`)
@@ -29,6 +32,8 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   const [paid, setPaid] = useState(0)
   const [paused, setPaused] = useState(false)
   const [theme, setTheme] = useState<RaceTheme>(readTheme)
+  const [car, setCar] = useState<RaceCar>(readCar)
+  const pickCar = (c: RaceCar) => { setCar(c); playTap(); try { localStorage.setItem(CAR_KEY, c) } catch { /* 저장 못 해도 이번 판은 그 차 */ } }
   const pickTheme = (t: RaceTheme) => { setTheme(t); playTap(); try { localStorage.setItem(THEME_KEY, t) } catch { /* 저장 못 해도 이번 판은 그 장소 */ } }
   const saved = useRef(false)
 
@@ -79,7 +84,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   const oopsOn = useOops(oops)
   return (
     <section aria-label="자동차 레이스" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none">
-      {phase !== 'intro' && <Suspense fallback={null}><Race3D live={live} theme={theme} /></Suspense>}
+      {phase !== 'intro' && <Suspense fallback={null}><Race3D live={live} theme={theme} car={car} /></Suspense>}
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#c0587a] shadow">🏎️ 자동차 레이스</span>
@@ -119,11 +124,18 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
       )}
 
       {phase === 'intro' && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#fdf3f6] p-4">
-          <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl bg-white p-5 text-center shadow-xl">
-            <p className="m-0 text-5xl">🏎️</p>
-            <p className="m-0 text-xl font-black text-[#c0587a]">자동차 레이스</p>
-            <p className="m-0 text-sm leading-snug font-bold text-[#6b4b52]">◀ ▶ 를 눌러서 옆 칸으로 가요.<br />⭐ 별은 모으고, 🚀 부스터는 빨라져요.<br />🍌 바나나와 💧 물웅덩이는 살짝 느려져요.<br />{LAPS}바퀴를 달리거나 {TIME_LIMIT}초가 되면 끝이에요!</p>
+        <div className="absolute inset-0 z-30 flex items-start justify-center overflow-y-auto bg-[#fdf3f6] p-3">
+          <div className="my-auto flex w-full max-w-sm flex-col items-center gap-2 rounded-3xl bg-white p-4 text-center shadow-xl">
+            <p className="m-0 text-xl font-black text-[#c0587a]">🏎️ 자동차 레이스</p>
+            <p className="m-0 text-sm leading-snug font-bold text-[#6b4b52]">◀ ▶ 로 옆 칸에 가요. ⭐ 별은 모으고 🚀 부스터는 빨라져요.<br />🍌 바나나와 💧 물웅덩이는 살짝 느려져요. {LAPS}바퀴 또는 {TIME_LIMIT}초면 끝!</p>
+            <div role="radiogroup" aria-label="내 차" className="flex w-full gap-2">
+              {CARS.map((c) => (
+                <button key={c.id} role="radio" aria-checked={car === c.id} onClick={() => pickCar(c.id)}
+                  className={`flex flex-1 items-center justify-center gap-1 rounded-2xl border-2 py-1 text-xs font-black ${car === c.id ? 'border-[#ff8fab] bg-[#fff0f5] text-[#c0587a]' : 'border-transparent bg-[#f6eef8] text-[#7a3d8f]'}`}>
+                  <img src={img(`car_${c.id}_straight`)} alt="" className="h-10 w-auto" />{c.name}
+                </button>
+              ))}
+            </div>
             <div role="radiogroup" aria-label="달릴 곳" className="flex w-full gap-2">
               {THEMES.map((t) => (
                 <button key={t.id} role="radio" aria-checked={theme === t.id} onClick={() => pickTheme(t.id)}
