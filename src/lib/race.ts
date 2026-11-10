@@ -16,6 +16,8 @@ export const TIME_LIMIT = 60
 /** 한 칸 너비(장면 단위) */
 export const LANE_W = 1.7
 export const COUNTDOWN = 3
+/** 결승선을 지나고 천천히 달리는 시간(초) */
+export const COAST_T = 2
 const CRUISE = 30
 const BOOST_K = 1.6, BOOST_T = 2
 const SLOW_K = 0.5, SLOW_T = 1.5
@@ -51,12 +53,14 @@ export interface Race {
   taken: number[]
   /** 이번 프레임에 일어난 일(소리·말풍선용) */
   events: RaceEvent[]
+  /** 결승선을 지난 뒤 지나간 시간(초): 바로 멈추지 않고 선을 지나 천천히 달리게 한다 */
+  after: number
   /** 끝난 이유 */
   finish: null | 'laps' | 'time'
 }
 
 export const newRace = (seed = Math.floor(Math.random() * 1e6)): Race => ({
-  seed, phase: 'count', count: COUNTDOWN, t: 0, d: 0, lane: 0, x: 0, speed: 0, boost: 0, slow: 0, brake: false, sparkle: 0, dust: 0, stars: 0, taken: [], events: [], finish: null,
+  seed, phase: 'count', count: COUNTDOWN, t: 0, d: 0, lane: 0, x: 0, speed: 0, boost: 0, slow: 0, brake: false, sparkle: 0, dust: 0, stars: 0, taken: [], events: [], after: 0, finish: null,
 })
 
 /** 같은 (칸 번호, 씨앗, 용도)면 늘 같은 0~1 수 */
@@ -102,6 +106,12 @@ export function stepRace(r: Race, dt: number): Race {
   // 옆으로 부드럽게
   const target = r.lane
   const x = r.x + Math.max(-1, Math.min(1, (target - r.x) * STEER * dt))
+  // 결승선을 지났으면: 놀라지 않게 천천히 줄여 가며 선 너머까지 달리고, 아이템은 건드리지 않는다
+  if (r.finish === 'laps') {
+    const after = r.after + dt
+    const speed = Math.max(8, r.speed - 18 * dt)
+    return { ...r, x, after, speed, d: r.d + speed * dt, phase: after >= COAST_T ? 'done' : 'run', events: [], sparkle: Math.max(0, r.sparkle - dt), dust: Math.max(0, r.dust - dt), boost: 0, slow: 0 }
+  }
   if (phase === 'count') {
     count -= dt
     if (count <= 0) { phase = 'run'; count = 0 }
@@ -119,9 +129,9 @@ export function stepRace(r: Race, dt: number): Race {
     else if (it.kind === 'boost') { boost = BOOST_T; slow = 0; sparkle = 0.6; taken.push(it.id); events.push('boost') }
     else { slow = SLOW_T; boost = 0; dust = 0.7; events.push('slip') }
   }
-  if (d >= LAP * LAPS) { phase = 'done'; finish = 'laps'; d = LAP * LAPS }
+  if (d >= LAP * LAPS) finish = 'laps'
   else if (t >= TIME_LIMIT) { phase = 'done'; finish = 'time' }
-  return { ...r, phase, count, t, d, x, speed, boost, slow, sparkle, dust, stars, taken: taken.slice(-60), events, finish }
+  return { ...r, phase, count, t, d, x, after: 0, speed, boost, slow, sparkle, dust, stars, taken: taken.slice(-60), events, finish }
 }
 
 /** 지금 몇 바퀴째(1부터) */

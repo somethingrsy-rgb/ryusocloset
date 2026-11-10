@@ -109,6 +109,12 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
           <p className="m-0 text-5xl font-black text-white [text-shadow:0_4px_12px_rgba(192,88,122,0.7)]">출발!</p>
         </div>
       )}
+      {phase === 'playing' && race.finish === 'laps' && (
+        <div className="pointer-events-none absolute inset-x-0 top-[14%] z-20 flex flex-col items-center gap-1">
+          <img src={img('trophy')} alt="" className="h-20 drop-shadow-lg" />
+          <p className="m-0 text-5xl font-black text-white [text-shadow:0_4px_12px_rgba(192,88,122,0.7)]">결승선 통과!</p>
+        </div>
+      )}
       {oopsOn && <p role="status" className="pointer-events-none absolute inset-x-0 top-[28%] z-20 m-0 text-center text-5xl font-black text-white [text-shadow:0_3px_10px_rgba(80,60,120,0.7)]">앗! 😮 다시 달려요!</p>}
       {phase === 'playing' && race.boost > 0 && <div className="pointer-events-none absolute inset-x-0 top-[26%] z-20 flex items-center justify-center gap-2"><img src={img('fx_boost')} alt="" className="h-16 drop-shadow-lg" /><p className="m-0 text-4xl font-black text-[#ffe45c] [text-shadow:0_3px_10px_rgba(192,88,122,0.8)]">부우웅!</p></div>}
 

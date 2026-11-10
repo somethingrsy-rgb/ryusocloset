@@ -70,19 +70,21 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     // 바퀴 시작·끝 줄(땅에 깐 체크무늬)과 결승 아치(세워 둔 그림, 가운데는 비어 있어서 차가 지나간다)
     const lineTex = art('startline'), archTex = art('arch')
     const lineW = LANE_W * 3 + 0.6
-    const lineGeo = keep(new THREE.PlaneGeometry(lineW, lineW * (115 / 768)))
+    const lineGeo = keep(new THREE.PlaneGeometry(lineW, lineW * (115 / 768) * 1.8))
     const lineMat = keep(new THREE.MeshBasicMaterial({ map: lineTex, transparent: true, depthWrite: false }))
     const ARCH_W = ROAD_W + 4.5
     const archGeo = keep(new THREE.PlaneGeometry(ARCH_W, ARCH_W * (574 / 768)))
     const archMat = keep(new THREE.MeshBasicMaterial({ map: archTex, transparent: true, alphaTest: 0.35, side: THREE.DoubleSide }))
+    // 출발 문은 차 앞 14칸에 한 번만(차가 선 위에서 시작하면 선이 차에 가려 겹쳐 보였다). 바퀴·결승 문은 거리 그대로
+    const gateZ = (k: number) => (k === 0 ? -14 : -k * LAP)
     for (let k = 0; k <= LAPS; k++) {
       const m = new THREE.Mesh(lineGeo, lineMat)
       m.rotation.x = -Math.PI / 2
-      m.position.set(0, 0.04, -k * LAP)
+      m.position.set(0, 0.04, gateZ(k))
       m.renderOrder = 1
       scene.add(m)
       const arch = new THREE.Mesh(archGeo, archMat)
-      arch.position.set(0, ARCH_W * (574 / 768) / 2 - 0.2, -k * LAP - (k === 0 ? 12 : 0))
+      arch.position.set(0, ARCH_W * (574 / 768) / 2 - 0.2, gateZ(k))
       scene.add(arch)
     }
 
@@ -135,7 +137,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       scene.add(o)
       return { o, k: i }
     })
-    for (let k = 0; k <= LAPS; k++) { const o = spriteOf(signTex, 2.3, 2.1, 1.05); o.position.set(-(ROAD_W / 2 + 1.5), 1.05, -k * LAP - 4); scene.add(o) }
+    for (let k = 0; k <= LAPS; k++) { const o = spriteOf(signTex, 2.3, 2.1, 1.05); o.position.set(-(ROAD_W / 2 + 1.5), 1.05, gateZ(k) + 9); scene.add(o) }
 
     // 차: 그림 판 세 장(똑바로·왼쪽·오른쪽). 옆 칸으로 옮겨 가는 동안은 그쪽을 보는 그림으로 바꾼다
     const car = new THREE.Group()
