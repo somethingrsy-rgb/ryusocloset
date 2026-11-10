@@ -54,8 +54,9 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
 
     // 먼 하늘: 하늘 그림을 멀리 세워 두고 늘 카메라를 따라온다(언덕 아랫단이 땅 끝과 만나게)
     const skyTex = art(`sky_${theme}`)
+    skyTex.wrapS = THREE.RepeatWrapping; skyTex.repeat.set(2, 1)
     const SKY_H = 110, SKY_Z = 230
-    const sky = new THREE.Mesh(keep(new THREE.PlaneGeometry(SKY_H * 3, SKY_H)), keep(new THREE.MeshBasicMaterial({ map: skyTex, fog: false, depthWrite: false })))
+    const sky = new THREE.Mesh(keep(new THREE.PlaneGeometry(SKY_H * 6, SKY_H)), keep(new THREE.MeshBasicMaterial({ map: skyTex, fog: false, depthWrite: false })))
     sky.position.y = SKY_H * 0.25 + 1
     sky.renderOrder = -1
     scene.add(sky)
@@ -158,10 +159,11 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       return { group, sp, h: CAR_PX[id].straight[1] * CAR_K * k }
     }
     const lean = (c: ReturnType<typeof buildCar>, vx: number, slip: number, fade = 1) => {
-      const l = Math.max(-1, Math.min(1, vx / 2.2))
-      c.sp[0].material.opacity = (1 - Math.abs(l) * 0.9) * fade
-      c.sp[1].material.opacity = (l < 0 ? -l : 0) * fade; c.sp[2].material.opacity = (l > 0 ? l : 0) * fade
-      c.sp.forEach((m) => { m.material.rotation = slip + l * -0.07 })
+      const l = Math.max(-1, Math.min(1, vx / 1.6)), m = Math.abs(l)
+      // 똑바로 그림은 옆 그림이 거의 다 덮일 때까지 그대로 둔다(둘 다 반투명해지면 차가 사라지는 것처럼 보인다)
+      c.sp[0].material.opacity = Math.min(1, (1 - m) / 0.15) * fade
+      c.sp[1].material.opacity = (l < 0 ? m : 0) * fade; c.sp[2].material.opacity = (l > 0 ? m : 0) * fade
+      c.sp.forEach((x) => { x.material.rotation = slip + l * -0.07 })
     }
     const mine = buildCar(carId)
     const car = mine.group
