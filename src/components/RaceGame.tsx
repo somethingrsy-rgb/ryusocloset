@@ -96,7 +96,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   const counting = phase === 'playing' && race.phase === 'count'
   const oopsOn = useOops(oops)
   return (
-    <section aria-label="자동차 레이스" className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none">
+    <section aria-label="자동차 레이스" onContextMenu={(e) => e.preventDefault()} className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none [-webkit-touch-callout:none] [&_img]:pointer-events-none [&_img]:select-none [&_img]:[-webkit-touch-callout:none] [&_button]:[-webkit-touch-callout:none] [&_button]:touch-manipulation">
       {phase !== 'intro' && <Suspense fallback={null}><Race3D live={live} theme={theme} car={car} /></Suspense>}
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
