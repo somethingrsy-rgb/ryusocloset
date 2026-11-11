@@ -188,7 +188,7 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
         </div>
       )}
       {/* 초대장 카드 + 들어가기 칸(「친구」 단추로 연다) */}
-      <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: mp.visiting ? '5.5rem' : '3.75rem' }}>
+      <div className="pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5" style={{ top: mp.visiting ? '5.5rem' : '40%' }}>
         {/* 친구들이 지금 어디 있는지: 누르면 그곳으로 */}
         {open && on && (
           <div role="list" aria-label="친구 위치" className="pointer-events-auto flex w-full flex-col gap-1 rounded-2xl bg-white/95 p-2 shadow-lg">
