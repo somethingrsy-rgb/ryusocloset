@@ -233,7 +233,7 @@ export function stepRace(r: Race, dt: number): Race {
   d += speed * dt
   for (const it of itemsBetween(prev, d, r.seed, r.lanes)) {
     if (Math.abs(it.lane - x) >= REACH) continue
-    if (it.kind === 'star') { stars++; gauge = Math.min(GAUGE_MAX, gauge + 1); sparkle = 0.5; taken.push(it.id); events.push('star') }
+    if (it.kind === 'star') { stars++; gauge = Math.min(GAUGE_MAX, gauge + 1); taken.push(it.id); events.push('star') }
     else if (it.kind === 'boost') { boost = BOOST_T; slow = 0; sparkle = 0.6; taken.push(it.id); events.push('boost') }
     else { slow = SLOW_T; boost = 0; dust = 0.7; events.push('slip') }
   }
