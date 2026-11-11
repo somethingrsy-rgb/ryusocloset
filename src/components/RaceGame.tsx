@@ -3,7 +3,7 @@ import { assetUrl } from '../lib/items'
 import { isRestoring } from '../lib/restoreGuard'
 import { LAPS, MAX_RIVALS, TIME_LIMIT, applyNetReport, lapOf, newNetRace, newRace, rankNow, rewardStars, setHold, steer, stepRace, useBoost, GAUGE_MAX, timeLeft, type Race } from '../lib/race'
 import { earnStars } from '../lib/shop'
-import { firebaseReady } from '../lib/mp/config'
+import { multiplayerAvailable } from '../lib/mp/config'
 import { savedName } from '../lib/mp/session'
 import type { RaceRoom, RoomSnap } from '../lib/mp/raceNet'
 import { playCloud, playGold, playHop, playStar, playTap, playWin, startBgm, stopBgm } from '../lib/sound'
@@ -159,7 +159,8 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   const oopsOn = useOops(oops)
   return (
     <section aria-label="자동차 레이스" onContextMenu={(e) => e.preventDefault()} className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none [-webkit-touch-callout:none] [&_img]:pointer-events-none [&_img]:select-none [&_img]:[-webkit-touch-callout:none] [&_button]:[-webkit-touch-callout:none] [&_button]:touch-manipulation">
-      {phase !== 'intro' && <Suspense fallback={null}><Race3D live={live} theme={theme} car={car} /></Suspense>}
+      {/* 대기실에서는 3D 를 만들지 않는다: 만들어 두면 낡은 판(3칸·친구 없음)을 그대로 쓰게 된다. 판마다 새로 만든다 */}
+      {(phase === 'playing' || phase === 'done') && <Suspense fallback={null}><Race3D key={race.seed} live={live} theme={theme} car={car} /></Suspense>}
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#c0587a] shadow">🏎️ 자동차 레이스</span>
@@ -241,7 +242,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
               ))}
             </div>
             <button onClick={start} className="min-h-12 w-full rounded-full bg-gradient-to-r from-[#ff8fab] to-[#c58bff] text-lg font-black text-white shadow-lg active:scale-95">출발하기!</button>
-            {firebaseReady && <button disabled={online} onClick={openLobby} className="min-h-11 w-full rounded-full bg-[#fff0f5] text-base font-black text-[#c0587a] ring-2 ring-[#ffc2d4] disabled:opacity-60 active:scale-95">{online ? '방을 찾는 중…' : '👫 친구랑 같이 달리기'}</button>}
+            {multiplayerAvailable && <button disabled={online} onClick={openLobby} className="min-h-11 w-full rounded-full bg-[#fff0f5] text-base font-black text-[#c0587a] ring-2 ring-[#ffc2d4] disabled:opacity-60 active:scale-95">{online ? '방을 찾는 중…' : '👫 친구랑 같이 달리기'}</button>}
             {netMsg && <p role="alert" className="m-0 text-xs font-bold text-[#d0587a]">{netMsg}</p>}
           </div>
         </div>

@@ -5,6 +5,7 @@
  */
 import { onDisconnect, onValue, ref, remove, serverTimestamp, set, get, update, type Database } from 'firebase/database'
 import { connect } from './firebase'
+import { localTest } from './config'
 
 export const RACE_ROOMS = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6'] as const
 export const RACE_MAX = 4
@@ -63,8 +64,39 @@ export interface RaceRoom {
   leave(): void
 }
 
+/** 시험용(주소에 ?mp=local): 같은 브라우저의 탭끼리만 BroadcastChannel 로 같은 방을 쓴다. Firebase 없이 두 화면으로 확인할 때 */
+async function joinLocal(name: string, car: string, onRoom: (room: RoomSnap) => void): Promise<RaceRoom> {
+  const ch = new BroadcastChannel('ryuso-race-local')
+  const uid = `L${Math.random().toString(36).slice(2, 8)}`
+  const players: Record<string, RacePlayer> = {}
+  let meta: RaceMeta | null = null
+  const me: RacePlayer = { name: name.slice(0, 12) || '친구', car, d: 0, x: 0, speed: 0, fin: null, t: Date.now() }
+  const say = (m: unknown) => ch.postMessage(m)
+  const push = () => onRoom({ meta, players: { ...players } })
+  ch.onmessage = (e) => {
+    const m = e.data as { type: string; uid?: string; p?: RacePlayer; meta?: RaceMeta | null }
+    if (m.type === 'who') { say({ type: 'p', uid, p: me }); if (meta?.host === uid) say({ type: 'meta', meta }) }
+    else if (m.type === 'p' && m.uid && m.p) { players[m.uid] = m.p; push() }
+    else if (m.type === 'meta') { meta = m.meta ?? null; push() }
+    else if (m.type === 'bye' && m.uid) { delete players[m.uid]; if (meta && meta.host === m.uid) meta = null; push() }
+  }
+  say({ type: 'who' })
+  await new Promise((r) => setTimeout(r, 350))
+  const host = !meta
+  if (host) { meta = { host: uid, seed: Math.floor(Math.random() * 900000) + 100, startAt: 0, t: Date.now() }; say({ type: 'meta', meta }) }
+  players[uid] = me; say({ type: 'p', uid, p: me }); push()
+  return {
+    uid, room: 'local', host,
+    report: (m) => { Object.assign(me, m, { t: Date.now() }); players[uid] = me; say({ type: 'p', uid, p: me }) },
+    start: () => { if (host && meta) { meta = { ...meta, startAt: Date.now() + START_LEAD + 2000 }; say({ type: 'meta', meta }); push() } },
+    offset: () => 0,
+    leave: () => { say({ type: 'bye', uid }); ch.close() },
+  }
+}
+
 /** 방에 들어간다(자리가 없으면 null). onRoom 은 방 소식이 바뀔 때마다 */
 export async function joinRaceRoom(name: string, car: string, onRoom: (room: RoomSnap) => void): Promise<RaceRoom | null> {
+  if (localTest) return joinLocal(name, car, onRoom)
   const { user, db } = await connect()
   const root = ref(db as Database, 'lobby/race')
   let skew = 0
