@@ -93,7 +93,12 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
       const net = await joinRaceRoom(savedName() || '친구', car, onRoom)
       if (!net) { setNetMsg('지금은 방이 꽉 찼어요. 조금 뒤에 다시 해 봐요'); setOnline(false); return }
       netRef.current = net; setPhase('lobby')
-    } catch { setNetMsg('연결하지 못했어요. 인터넷을 확인해 주세요'); setOnline(false) }
+    } catch (e) {
+      // 왜 안 됐는지 알려 준다: 서버 규칙이 새 것이 아니면 규칙 안내, 아니면 오류 이름을 보여 준다
+      const msg = e instanceof Error ? `${(e as { code?: string }).code ?? ''} ${e.message}`.trim() : String(e)
+      setNetMsg(/permission/i.test(msg) ? '서버 규칙이 아직 새 것이 아니에요. Firebase 콘솔에서 규칙을 다시 게시해 주세요 (PERMISSION_DENIED)' : `연결하지 못했어요 · ${msg.slice(0, 90)}`)
+      setOnline(false)
+    }
   }
   const exitLobby = () => { playTap(); leaveNet(); setPhase('intro') }
   // 달리는 동안 0.15초마다 내 소식을 보낸다(거리·옆 자리·속도만)
