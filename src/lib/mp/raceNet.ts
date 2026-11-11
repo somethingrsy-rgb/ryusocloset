@@ -94,14 +94,17 @@ async function joinLocal(name: string, car: string, onRoom: (room: RoomSnap) => 
   }
 }
 
+/** 어느 단계에서 실패했는지 오류 글에 붙인다(규칙 거부가 어디서 났는지 알 수 있게) */
+const step = async <T>(name: string, p: PromiseLike<T>): Promise<T> => { try { return await p } catch (e) { const err = e instanceof Error ? e : new Error(String(e)); err.message = `[${name}] ${err.message}`; throw err } }
+
 /** 방에 들어간다(자리가 없으면 null). onRoom 은 방 소식이 바뀔 때마다 */
 export async function joinRaceRoom(name: string, car: string, onRoom: (room: RoomSnap) => void): Promise<RaceRoom | null> {
   if (localTest) return joinLocal(name, car, onRoom)
-  const { user, db } = await connect()
+  const { user, db } = await step('로그인', connect())
   const root = ref(db as Database, 'lobby/race')
   let skew = 0
   const offOff = onValue(ref(db, '.info/serverTimeOffset'), (s) => { skew = Number(s.val()) || 0 })
-  const all = (await get(root)).val() as Record<string, { meta?: unknown; players?: Record<string, unknown> }> | null
+  const all = (await step('방 목록 읽기', get(root))).val() as Record<string, { meta?: unknown; players?: Record<string, unknown> }> | null
   const rooms: Record<string, RoomSnap> = {}
   for (const [id, v] of Object.entries(all ?? {})) {
     const players: Record<string, RacePlayer> = {}
@@ -116,13 +119,13 @@ export async function joinRaceRoom(name: string, car: string, onRoom: (room: Roo
   if (pick.create) {
     // 오래된 방이 남아 있으면 지우고 내가 방장이 된다
     await remove(roomRef).catch(() => {})
-    await set(metaRef, { host: user.uid, seed: Math.floor(Math.random() * 900000) + 100, startAt: 0, t: serverTimestamp() })
+    await step('방 만들기', set(metaRef, { host: user.uid, seed: Math.floor(Math.random() * 900000) + 100, startAt: 0, t: serverTimestamp() }))
     onDisconnect(roomRef).remove().catch(() => {})
   } else {
     onDisconnect(meRef).remove().catch(() => {})
   }
   const first = { name: name.slice(0, 12) || '친구', car, d: 0, x: 0, speed: 0, fin: null as number | null }
-  await set(meRef, { ...first, t: serverTimestamp() })
+  await step('내 자리 쓰기', set(meRef, { ...first, t: serverTimestamp() }))
   const off = onValue(roomRef, (s) => {
     const v = s.val() as { meta?: unknown; players?: Record<string, unknown> } | null
     const players: Record<string, RacePlayer> = {}
