@@ -200,7 +200,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       g.fillStyle = me ? '#e0567f' : '#5b3a7a'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(name, 192, 49)
       const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: s.texOf(cv), transparent: true, depthWrite: false })))
       // 번호판 자리(차 뒤쪽 아래 범퍼)에 작게: 시야를 가리지 않는다
-      sp.scale.set(1.25, 0.31, 1); sp.position.set(0, c.h * 0.16, 0.05)
+      sp.scale.set(2.5, 0.62, 1); sp.position.set(0, c.h * 0.17, 0.05)
       c.group.add(sp); sp.renderOrder = 200; return sp
     }
     const mine = buildCar(carId)
