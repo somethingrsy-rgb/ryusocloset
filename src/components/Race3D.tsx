@@ -2,7 +2,7 @@ import { useEffect, useRef, type MutableRefObject } from 'react'
 import * as THREE from 'three'
 import { LANE_W, LAP, LAPS, itemsBetween, type ItemKind, type Race } from '../lib/race'
 import { CALL_ANIMALS } from '../lib/animalCalls'
-import { animal3dAspect, animal3dUrl } from '../lib/animals3d'
+import { animal3dUrl } from '../lib/animals3d'
 import { assetUrl } from '../lib/items'
 import { createStage } from './stage3d'
 
@@ -35,7 +35,15 @@ const CAR_K = 4.3 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
 export const ALL_CARS: RaceCar[] = ['heart', 'cloud', 'pumpkin', 'bunny', 'star']
 /** 운전석 자리(차 그림 높이 대비, 바닥에서부터): 이 자리에 운전하는 얼굴이 앉는다 */
-const SEAT: Record<RaceCar, number> = { heart: 0.56, cloud: 0.6, pumpkin: 0.5, bunny: 0.5, star: 0.58 }
+/** 동물이 앉는 자리: [가운데 x, 폭, 차 몸이 가리기 시작하는 선 [(x0,y0),(x1,y1)]] — 모두 차 그림 크기에 대한 비율 */
+type Seat = [number, number, [[number, number], [number, number]]]
+const SEAT_AT: Record<RaceCar, Record<'straight' | 'left' | 'right', Seat>> = {
+  heart: { straight: [.50, .30, [[0, .50], [1, .50]]], left: [.50, .22, [[0, .47], [1, .47]]], right: [.52, .22, [[0, .48], [1, .48]]] },
+  cloud: { straight: [.50, .28, [[0, .43], [1, .43]]], left: [.50, .24, [[0, .42], [1, .42]]], right: [.48, .24, [[0, .40], [1, .40]]] },
+  pumpkin: { straight: [.50, .24, [[0, .55], [1, .55]]], left: [.50, .20, [[0, .62], [1, .62]]], right: [.52, .20, [[0, .63], [1, .63]]] },
+  bunny: { straight: [.50, .26, [[0, .62], [1, .62]]], left: [.28, .16, [[0, .60], [1, .60]]], right: [.68, .16, [[0, .60], [1, .60]]] },
+  star: { straight: [.50, .26, [[0, .33], [1, .33]]], left: [.47, .20, [[0, .42], [1, .47]]], right: [.53, .20, [[0, .47], [1, .42]]] },
+}
 /** 장소마다 하늘색(하늘 그림 아래·안개), 길가 소품 */
 const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | 'xmas' }> = {
   meadow: { sky: 0xc9ecff, prop: 'tree' },
@@ -176,12 +184,31 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const car = mine.group
     // 컴퓨터 친구 차: 내 차가 아닌 차들을 돌려 쓰고, 동물 친구가 운전한다
     const others = ALL_CARS.filter((c) => c !== carId)
+    let alive = true
     const rivalCars = live.current.rivals.map((rv, i) => {
       const id = others[i % others.length], c = buildCar(id, 0.92, true)
       const img = CALL_ANIMALS[rv.animal % CALL_ANIMALS.length].img
-      const a = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: s.texOf(animal3dUrl(img)), transparent: true, depthWrite: false })))
-      const ah = c.h * 0.42; a.scale.set(ah * animal3dAspect(img), ah, 1); a.position.set(0, c.h * SEAT[id], 0.3)
-      c.group.add(a)
+      // 동물 친구(뒷모습)를 차 그림에 겹쳐 그린다: 운전석 앞 선 아래는 차 몸이 가리니까 차 속에 쏙 앉은 모습이 된다
+      const views = ['straight', 'left', 'right'] as const
+      const load = (src: string) => new Promise<HTMLImageElement>((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src })
+      Promise.all([load(animal3dUrl(img, true)), ...views.map((v) => load(assetUrl(`race/car_${id}_${v}.webp`)))]).then(([an, ...cars]) => {
+        if (!alive) return
+        views.forEach((v, k) => {
+          const car = cars[k], W = car.width, H = car.height
+          const [hx, hw, [[x0, y0], [x1, y1]]] = SEAT_AT[id][v]
+          const cv = document.createElement('canvas'); cv.width = W; cv.height = H
+          const g = cv.getContext('2d')!
+          g.drawImage(car, 0, 0)
+          const cutY = (xf: number) => (y0 + (y1 - y0) * (xf - x0) / (x1 - x0)) * H
+          const aw = hw * W * 1.15, ah = aw * an.height / an.width, cx = hx * W, cy = cutY(hx)
+          // 선 위쪽만 보이게 자르고(왼쪽 위 → 오른쪽 위 비스듬한 선도 그대로), 동물은 선 아래 3분의 1이 차 속으로 들어가게
+          g.save(); g.beginPath(); g.moveTo(0, 0); g.lineTo(W, 0); g.lineTo(W, cutY(1)); g.lineTo(0, cutY(0)); g.closePath(); g.clip()
+          g.translate(cx, cy + 0.3 * ah); g.rotate(v === 'left' ? -0.1 : v === 'right' ? 0.1 : 0)
+          g.drawImage(an, -aw / 2, -ah, aw, ah)
+          g.restore()
+          c.sp[k].material.map = s.texOf(cv); c.sp[k].material.needsUpdate = true
+        })
+      }).catch(() => {})
       return c
     })
     const shadow = new THREE.Mesh(keep(new THREE.CircleGeometry(1, 20)), keep(new THREE.MeshBasicMaterial({ color: 0x3c4a2a, transparent: true, opacity: 0.25, depthWrite: false })))
@@ -257,7 +284,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       }
       for (const [id, g] of shown) if (!want.has(id)) { scene.remove(g); shown.delete(id) }
     })
-    return () => s.dispose()
+    return () => { alive = false; s.dispose() }
   }, [live, theme, carId])
   return <div ref={host} aria-hidden className="absolute inset-0" />
 }
