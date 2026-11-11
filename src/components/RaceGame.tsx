@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { assetUrl } from '../lib/items'
 import { isRestoring } from '../lib/restoreGuard'
-import { LAPS, MAX_RIVALS, TIME_LIMIT, lapOf, newRace, rankNow, rewardStars, setBrake, steer, stepRace, timeLeft, type Race } from '../lib/race'
+import { LAPS, MAX_RIVALS, TIME_LIMIT, lapOf, newRace, rankNow, rewardStars, setBrake, setHold, steer, stepRace, timeLeft, type Race } from '../lib/race'
 import { CALL_ANIMALS } from '../lib/animalCalls'
 import { earnStars } from '../lib/shop'
 import { playCloud, playGold, playHop, playStar, playTap, playWin, startBgm, stopBgm } from '../lib/sound'
@@ -79,16 +79,14 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
 
   const start = () => { const fresh = newRace(undefined, pickAnimals(friends)); live.current = fresh; setRace(fresh); saved.current = false; setPaid(0); setOops(0); setPaused(false); setPhase('playing'); playTap() }
   const go = (dir: -1 | 1) => { if (phase !== 'playing' || paused) return; live.current = steer(live.current, dir); playHop() }
-  /** 단추를 누르고 있는 동안은 0.3초마다 한 칸씩 이어서 미끄러진다 */
-  const holdRef = useRef<number | null>(null)
-  const holdStop = () => { if (holdRef.current !== null) { clearInterval(holdRef.current); holdRef.current = null } }
-  const holdStart = (dir: -1 | 1) => { holdStop(); go(dir); holdRef.current = window.setInterval(() => go(dir), 300) }
-  useEffect(() => holdStop, [])
-  const lastKey = useRef(0)
+  /** 단추를 누르고 있는 동안은 칸에 걸리지 않고 쭉 미끄러진다(손을 떼면 그 자리에서 멈춘다) */
+  const holdOn = (dir: -1 | 1) => { go(dir); if (phase === 'playing' && !paused) live.current = setHold(live.current, dir) }
+  const holdOff = (dir?: -1 | 1) => { if (dir === undefined || live.current.hold === dir) live.current = setHold(live.current, 0) }
+  useEffect(() => { if (phase !== 'playing' || paused) holdOff() })
   const brake = (on: boolean) => { live.current = setBrake(live.current, on) }
   useEffect(() => {
-    const down = (e: KeyboardEvent) => { const now = Date.now(); const ok = !e.repeat || now - lastKey.current > 300; if (ok) lastKey.current = now; if (e.key === 'ArrowLeft' || e.key === 'a') { if (ok) go(-1) } else if (e.key === 'ArrowRight' || e.key === 'd') { if (ok) go(1) } else if (e.key === 'ArrowDown' || e.key === 's') brake(true) }
-    const up = (e: KeyboardEvent) => { if (e.key === 'ArrowDown' || e.key === 's') brake(false) }
+    const down = (e: KeyboardEvent) => { if (e.repeat) return; if (e.key === 'ArrowLeft' || e.key === 'a') holdOn(-1); else if (e.key === 'ArrowRight' || e.key === 'd') holdOn(1); else if (e.key === 'ArrowDown' || e.key === 's') brake(true) }
+    const up = (e: KeyboardEvent) => { if (e.key === 'ArrowLeft' || e.key === 'a') holdOff(-1); else if (e.key === 'ArrowRight' || e.key === 'd') holdOff(1); else if (e.key === 'ArrowDown' || e.key === 's') brake(false) }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
   })
@@ -134,11 +132,11 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
 
       {phase === 'playing' && (
         <div className="pointer-events-none absolute inset-x-3 bottom-4 z-20 flex items-end justify-between">
-          <button aria-label="왼쪽으로" onPointerDown={() => holdStart(-1)} onPointerUp={holdStop} onPointerCancel={holdStop} onPointerLeave={holdStop} className={roundBtn}><img src={img('btn_left')} alt="" draggable={false} className="h-full w-full" /></button>
+          <button aria-label="왼쪽으로" onPointerDown={() => holdOn(-1)} onPointerUp={() => holdOff(-1)} onPointerCancel={() => holdOff(-1)} onPointerLeave={() => holdOff(-1)} className={roundBtn}><img src={img('btn_left')} alt="" draggable={false} className="h-full w-full" /></button>
           <div className="flex flex-col items-center gap-3">
             <button aria-label="브레이크(누르고 있는 동안)" onPointerDown={() => brake(true)} onPointerUp={() => brake(false)} onPointerCancel={() => brake(false)} onPointerLeave={() => brake(false)}
               className="pointer-events-auto h-16 w-16 active:scale-90 drop-shadow-lg"><img src={img('btn_brake')} alt="" draggable={false} className="h-full w-full" /></button>
-            <button aria-label="오른쪽으로" onPointerDown={() => holdStart(1)} onPointerUp={holdStop} onPointerCancel={holdStop} onPointerLeave={holdStop} className={roundBtn}><img src={img('btn_right')} alt="" draggable={false} className="h-full w-full" /></button>
+            <button aria-label="오른쪽으로" onPointerDown={() => holdOn(1)} onPointerUp={() => holdOff(1)} onPointerCancel={() => holdOff(1)} onPointerLeave={() => holdOff(1)} className={roundBtn}><img src={img('btn_right')} alt="" draggable={false} className="h-full w-full" /></button>
           </div>
         </div>
       )}

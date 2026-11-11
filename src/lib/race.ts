@@ -25,6 +25,8 @@ const SLOW_K = 0.5, SLOW_T = 1.5
 const BRAKE_K = 0.6
 const ACCEL = 40
 /** 옆으로 미끄러지는 느낌: 용수철처럼 목표 칸으로 다가가며 속도가 부드럽게 붙고 줄어든다(부딪히지 않고 미끄러지듯) */
+/** 톡 한 번에 옮기는 칸 / 누르고 있을 때 칸 수 per 초(칸에 걸리지 않고 쭉 간다) */
+const TAP_STEP = 0.5, HOLD_SPEED = 3.4
 const SPRING = 70, DAMP = 2 * Math.sqrt(SPRING) * 0.92
 export function glide(x: number, vx: number, target: number, dt: number, limit = 1.2): [number, number] {
   const v = vx + (SPRING * (target - x) - DAMP * vx) * dt
@@ -63,6 +65,8 @@ export interface Race {
   d: number
   /** 가려는 칸 / 지금 옆 위치(-1~1, 부드럽게 옮겨 간다) */
   lane: Lane
+  /** 단추를 누르고 있는 방향(-1 왼쪽, 1 오른쪽, 0 안 누름): 누르고 있는 동안 목표 자리가 칸에 걸리지 않고 쭉 미끄러진다 */
+  hold: -1 | 0 | 1
   x: number
   /** 옆으로 움직이는 속도(칸/초): 차가 기우는 모양에 쓴다 */
   vx: number
@@ -93,7 +97,7 @@ export interface Race {
 const START_LANES = [-2, 2, 1]
 export const halfLanes = (r: { lanes: number }) => (r.lanes - 1) / 2
 export const newRace = (seed = Math.floor(Math.random() * 1e6), animals: number[] = []): Race => ({
-  seed, lanes: animals.length ? 5 : 3, phase: 'count', count: COUNTDOWN, t: 0, d: 0, lane: 0, x: 0, vx: 0, speed: 0, boost: 0, slow: 0, brake: false, sparkle: 0, dust: 0, stars: 0, taken: [], events: [], after: 0, finish: null,
+  seed, lanes: animals.length ? 5 : 3, phase: 'count', count: COUNTDOWN, t: 0, d: 0, lane: 0, hold: 0, x: 0, vx: 0, speed: 0, boost: 0, slow: 0, brake: false, sparkle: 0, dust: 0, stars: 0, taken: [], events: [], after: 0, finish: null,
   rivals: animals.slice(0, MAX_RIVALS).map((animal, i) => ({ id: i, animal, d: i === 2 ? 8 : 0, x: START_LANES[i], vx: 0, lane: START_LANES[i], speed: 0, boost: 0, slow: 0, skill: 0.95 + ((seed >>> (i * 3)) % 9) * 0.011, fin: null })),
   rank: 0,
 })
@@ -126,9 +130,11 @@ export function itemsBetween(from: number, to: number, seed: number, lanes: 3 | 
 /** 옆 칸으로(-1 왼쪽, 1 오른쪽). 끝 칸에서는 그대로 */
 export function steer(r: Race, dir: -1 | 1): Race {
   if (r.phase === 'done') return r
-  const h = halfLanes(r), lane = Math.max(-h, Math.min(h, r.lane + dir))
+  /** 한 번 톡: 반 칸쯤 옮긴다(이어서 누르고 있으면 setHold 가 계속 밀어 준다) */
+  const h = halfLanes(r), lane = Math.max(-h, Math.min(h, r.lane + dir * TAP_STEP))
   return lane === r.lane ? r : { ...r, lane }
 }
+export const setHold = (r: Race, dir: -1 | 0 | 1): Race => (r.hold === dir ? r : { ...r, hold: dir })
 export const setBrake = (r: Race, on: boolean): Race => (r.brake === on ? r : { ...r, brake: on })
 
 /** 컴퓨터 친구 한 대가 dt 초 달린다(me 는 내 차: 너무 앞서거나 뒤처지면 조금 따라잡고 봐주며 가까이 달리게) */
@@ -175,17 +181,19 @@ export function stepRace(r: Race, dt: number): Race {
   let phase: Race['phase'] = r.phase, finish: Race['finish'] = r.finish
   const taken = [...r.taken]
   // 옆으로 부드럽게
-  const [x, vx] = glide(r.x, r.vx, r.lane, dt, halfLanes(r) + 0.2)
+  const hl = halfLanes(r)
+  const lane = r.hold ? Math.max(-hl, Math.min(hl, r.lane + r.hold * HOLD_SPEED * dt)) : r.lane
+  const [x, vx] = glide(r.x, r.vx, lane, dt, hl + 0.2)
   // 결승선을 지났으면: 놀라지 않게 천천히 줄여 가며 선 너머까지 달리고, 아이템은 건드리지 않는다
   if (r.finish === 'laps') {
     const after = r.after + dt
     const speed = Math.max(8, r.speed - 18 * dt)
-    return { ...r, x, vx, after, speed, d: r.d + speed * dt, phase: after >= COAST_T ? 'done' : 'run', events: [], sparkle: Math.max(0, r.sparkle - dt), dust: Math.max(0, r.dust - dt), boost: 0, slow: 0, rivals: stepRivals(r, dt, true) }
+    return { ...r, lane, x, vx, after, speed, d: r.d + speed * dt, phase: after >= COAST_T ? 'done' : 'run', events: [], sparkle: Math.max(0, r.sparkle - dt), dust: Math.max(0, r.dust - dt), boost: 0, slow: 0, rivals: stepRivals(r, dt, true) }
   }
   if (phase === 'count') {
     count -= dt
     if (count <= 0) { phase = 'run'; count = 0 }
-    return { ...r, count, phase, x, vx, events, rivals: stepRivals(r, dt, false) }
+    return { ...r, lane, count, phase, x, vx, events, rivals: stepRivals(r, dt, false) }
   }
   t += dt
   boost = Math.max(0, boost - dt); slow = Math.max(0, slow - dt); sparkle = Math.max(0, sparkle - dt); dust = Math.max(0, dust - dt)
@@ -203,7 +211,7 @@ export function stepRace(r: Race, dt: number): Race {
   let rank = r.rank
   if (d >= LAP * LAPS) { finish = 'laps'; rank = rankNow({ ...r, d, rivals }) }
   else if (t >= TIME_LIMIT) { phase = 'done'; finish = 'time'; rank = rankNow({ ...r, d, rivals }) }
-  return { ...r, rivals, rank, vx, phase, count, t, d, x, after: 0, speed, boost, slow, sparkle, dust, stars, taken: taken.slice(-60), events, finish }
+  return { ...r, lane, rivals, rank, vx, phase, count, t, d, x, after: 0, speed, boost, slow, sparkle, dust, stars, taken: taken.slice(-60), events, finish }
 }
 
 /** 지금 몇 바퀴째(1부터) */
