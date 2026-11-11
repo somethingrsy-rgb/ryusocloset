@@ -21,11 +21,12 @@ const THEMES: { id: RaceTheme; ico: string; name: string }[] = [
   { id: 'meadow', ico: '🌳', name: '초원' },
   { id: 'snow', ico: '❄️', name: '눈 나라' },
   { id: 'candy', ico: '🍭', name: '사탕 나라' },
+  { id: 'fruit', ico: '🍓', name: '과일 마을' },
 ]
 const CAR_KEY = 'ryuso.race.car'
 const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트' }, { id: 'cloud', name: '구름' }, { id: 'blue', name: '파랑' }, { id: 'bunny', name: '토끼' }, { id: 'star', name: '별' }]
 const readCar = (): RaceCar => { try { const v = localStorage.getItem(CAR_KEY); return v === 'cloud' || v === 'blue' || v === 'bunny' || v === 'star' ? v : 'heart' } catch { return 'heart' } }
-const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' ? v : 'meadow' } catch { return 'meadow' } }
+const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' || v === 'fruit' ? v : 'meadow' } catch { return 'meadow' } }
 
 const img = (name: string) => assetUrl(`race/${name}.webp`)
 const roundBtn = 'pointer-events-auto h-24 w-24 active:scale-90 drop-shadow-lg'
