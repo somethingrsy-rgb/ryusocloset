@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom'
 import { listen, speechSupported } from '../lib/mp/speech'
 import { assetUrl } from '../lib/items'
 import { playTap } from '../lib/sound'
+import { setRaceInvite } from '../lib/raceInvite'
 import { getAvatar } from '../lib/avatars'
 import { multiplayerAvailable } from '../lib/mp/config'
 import { MAX_CHAT, MAX_NAME, MAX_PLAYERS } from '../lib/mp/core'
@@ -103,7 +104,7 @@ function MyBubble({ text, onShown }: { text: string; onShown: (v: boolean) => vo
 const FADE_MS = 8000
 const IDLE_MS = 20000
 
-export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit; /** 화면 아래 왼쪽에 큰 단추가 있는 화면(방)이면 말하는 줄을 그 위로 올린다 */ lift?: boolean; /** 친구 목록에서 장소를 누르면 그 3D 장소(탭)로 */ onGo?: (to: 'cafe' | 'farm' | 'walk') => void }) {
+export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit; /** 화면 아래 왼쪽에 큰 단추가 있는 화면(방)이면 말하는 줄을 그 위로 올린다 */ lift?: boolean; /** 친구 목록에서 장소를 누르면 그 3D 장소(탭)로 */ onGo?: (to: 'cafe' | 'farm' | 'walk' | 'travel') => void }) {
   const mp = useSyncExternalStore(subscribeMp, getMp)
   const open = useSyncExternalStore(subscribePanel, getPanel)
   const setOpen = (v: boolean | ((o: boolean) => boolean)) => setPanel(typeof v === 'function' ? v(getPanel()) : v)
@@ -153,6 +154,9 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
   const [dismissed, setDismissed] = useState<string | null>(null)
   const invite = mp.status === 'on' ? [...mp.chat].reverse().find((c) => c.home && c.uid !== mp.uid && Date.now() - c.t < INVITE_MS) : undefined
   const showInvite = invite && invite.id !== dismissed && mp.visiting !== invite.home && !!mp.players[invite.uid]
+  // 친구가 보낸 자동차 레이스 초대(최근 것 하나): 「수락」하면 레이스 화면을 열어 그 방으로 바로 연결, 「거절」하면 닫는다
+  const raceInv = mp.status === 'on' ? [...mp.chat].reverse().find((c) => c.race && c.uid !== mp.uid && Date.now() - c.t < INVITE_MS) : undefined
+  const showRaceInv = raceInv && raceInv.id !== dismissed && !showInvite && !!mp.players[raceInv.uid]
   const look = { avatar: getAvatar().id, outfit: outfit as Record<string, string> }
   const lookKey = JSON.stringify(look)
   // 옷을 갈아입으면 다른 사람 화면에도
@@ -228,6 +232,17 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
             </div>
           </div>
       </div>
+      )}
+      {showRaceInv && raceInv && (
+        <div className="pointer-events-none absolute inset-x-0 z-[61] flex justify-center" style={{ top: '30%' }}>
+          <div role="dialog" aria-label="레이스 초대장" className="pointer-events-auto flex w-[min(17rem,calc(100%-1rem))] flex-col gap-1.5 rounded-2xl border-2 border-[#ffc2d4] bg-white/97 p-2.5 shadow-lg">
+            <p className="m-0 text-xs leading-snug font-bold text-[#6b4b52]">🏎️ <b className="text-[#7a3d8f]">{raceInv.name}</b>의 초대<br /><span className="text-[#c04a5a]">「자동차 레이스 같이할래?」</span></p>
+            <div className="flex gap-1.5">
+              <button onClick={() => { setDismissed(raceInv.id); leaveVisit(); setRaceInvite(raceInv.race!, raceInv.name); onGo?.('travel') }} className="h-9 flex-1 rounded-full bg-[#ff8fab] text-sm font-black text-white">수락</button>
+              <button onClick={() => { setDismissed(raceInv.id); say(`🏎️ ${raceInv.name}, 고마워! 다음에 같이 달리자`) }} className="h-9 flex-1 rounded-full bg-[#f3e6ea] text-sm font-bold text-[#6b4b52]">거절</button>
+            </div>
+          </div>
+        </div>
       )}
       {/* 화면 아래: 사라지는 대화 + 말하는 줄 한 줄 */}
       {on && (

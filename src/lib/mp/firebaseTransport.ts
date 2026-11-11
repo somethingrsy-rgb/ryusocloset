@@ -2,7 +2,7 @@
  *  한 번 들어가면 카페·농장·산책·다른 탭 어디에 있든 같이 놀기에 남아 있고 채팅은 모두와 한다 */
 import { child, get, limitToLast, onDisconnect, onValue, push, query, ref, remove, runTransaction, serverTimestamp, set, update, type Database, type DatabaseReference, type Unsubscribe } from 'firebase/database'
 import { connect } from './firebase'
-import { MAX_PLAYERS, bossCanRespawn, bossHit, saneBoss, saneFood, sanePlayer, type Boss, type ChatMsg, type Food, type Home, type PlayerState } from './core'
+import { MAX_PLAYERS, raceRoomOf, bossCanRespawn, bossHit, saneBoss, saneFood, sanePlayer, type Boss, type ChatMsg, type Food, type Home, type PlayerState } from './core'
 import type { Transport } from './transport'
 
 /** 서버가 쓰기를 거절하면(대개 Firebase 콘솔의 보안 규칙이 예전 것일 때) 화면에 알린다: MultiplayerBar 가 듣는다 */
@@ -53,7 +53,7 @@ export function firebaseTransport(): Transport {
         const out: ChatMsg[] = []
         s.forEach((c) => {
           const v = c.val() as Record<string, unknown>
-          if (c.key && typeof v?.text === 'string' && typeof v.uid === 'string') out.push({ id: c.key, uid: v.uid, name: typeof v.name === 'string' ? v.name : '친구', text: v.text, t: Number(v.t) || 0, ...(v.home === v.uid ? { home: v.uid } : {}) })
+          if (c.key && typeof v?.text === 'string' && typeof v.uid === 'string') out.push({ id: c.key, uid: v.uid, name: typeof v.name === 'string' ? v.name : '친구', text: v.text, t: Number(v.t) || 0, ...(v.home === v.uid ? { home: v.uid } : {}), ...(raceRoomOf(v.race) ? { race: raceRoomOf(v.race) } : {}) })
         })
         chatCb(out)
       }))
@@ -66,9 +66,9 @@ export function firebaseTransport(): Transport {
       Object.assign(last, part)
       update(me, { ...part, t: serverTimestamp() }).catch(() => {})
     },
-    chat(name, text, home) {
+    chat(name, text, home, race) {
       if (!chatRef || !me) return
-      push(chatRef, { uid: me.key, name, text, t: serverTimestamp(), ...(home ? { home: me.key } : {}) }).catch(denied('채팅'))
+      push(chatRef, { uid: me.key, name, text, t: serverTimestamp(), ...(home ? { home: me.key } : {}), ...(race ? { race } : {}) }).catch(denied('채팅'))
     },
     hitBoss(room, id, power) {
       if (!bossRef || !me) return

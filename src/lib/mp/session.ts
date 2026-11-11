@@ -86,6 +86,8 @@ export function setWhere(room: Where, host: string | null = null) {
   lastSent = { ...pos, at: performance.now() }
 }
 export function say(text: string, home = false) { const t = cleanChat(text); if (t && tr) tr.chat(myName, t, home) }
+/** 같이 레이스할 친구들에게 초대를 보낸다(방 번호를 담은 채팅 한 줄) */
+export function sayRace(room: string) { if (tr) tr.chat(myName, '🏎️ 자동차 레이스 같이할래?', false, room) }
 export const playerCount = () => Object.keys(state.players).length
 export { MAX_PLAYERS }
 /** 대왕 몬스터에게 마법 한 번 / 새로 내기(같이 놀기 중일 때만) */

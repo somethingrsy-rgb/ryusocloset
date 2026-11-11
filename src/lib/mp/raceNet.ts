@@ -103,7 +103,8 @@ async function joinLocal(name: string, car: string, onRoom: (room: RoomSnap) => 
 const step = async <T>(name: string, p: PromiseLike<T>): Promise<T> => { try { return await p } catch (e) { const err = e instanceof Error ? e : new Error(String(e)); err.message = `[${name}] ${err.message}`; throw err } }
 
 /** 방에 들어간다(자리가 없으면 null). onRoom 은 방 소식이 바뀔 때마다 */
-export async function joinRaceRoom(name: string, car: string, onRoom: (room: RoomSnap) => void): Promise<RaceRoom | null> {
+/** prefer: 초대받은 방 번호(그 방이 아직 대기 중이고 자리가 있으면 거기로, 아니면 오류) */
+export async function joinRaceRoom(name: string, car: string, onRoom: (room: RoomSnap) => void, prefer?: string): Promise<RaceRoom | null> {
   if (localTest) return joinLocal(name, car, onRoom)
   const { user, db } = await step('로그인', connect())
   const root = ref(db as Database, 'lobby/race')
@@ -116,7 +117,12 @@ export async function joinRaceRoom(name: string, car: string, onRoom: (room: Roo
     for (const [u, p] of Object.entries(v.players ?? {})) { const sp = sanePlayer(p); if (sp) players[u] = sp }
     rooms[id] = { meta: saneMeta(v.meta), players }
   }
-  const candidates = pickRooms(rooms, Date.now() + skew)
+  let candidates = pickRooms(rooms, Date.now() + skew)
+  if (prefer) {
+    const r = rooms[prefer]
+    if (!(r?.meta && r.meta.startAt === 0 && Object.keys(r.players).length < RACE_MAX)) { offOff(); throw new Error('초대한 방이 이미 출발했거나 꽉 찼어요') }
+    candidates = [{ room: prefer, create: false }]
+  }
   if (!candidates.length) { offOff(); return null }
   // 후보를 차례로 시도한다: 방 만들기가 서버에 막히면(남은 데이터) 다음 후보로
   let pick = candidates[0], lastErr: unknown = null, ready = false

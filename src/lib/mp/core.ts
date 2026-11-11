@@ -18,8 +18,10 @@ export const STALE_MS = 15000
 
 export interface Look { avatar: string; outfit: Record<string, string> }
 export interface PlayerState { name: string; room: Where; /** room 이 home 일 때 그 집 주인 uid */ host?: string; /** 지금 먹고 있는 음식(메뉴 id) */ eat?: string; x: number; z: number; dir: 1 | -1; moving: boolean; look: Look; t: number }
-export interface ChatMsg { id: string; uid: string; name: string; text: string; t: number; /** 집 초대면 그 집 주인 uid(= 보낸 사람) */ home?: string }
+export interface ChatMsg { id: string; uid: string; name: string; text: string; t: number; /** 집 초대면 그 집 주인 uid(= 보낸 사람) */ home?: string; /** 자동차 레이스 초대면 그 방 번호(r1~r6) */ race?: string }
 
+/** 레이스 방 번호로 쓸 수 있는 글인지(시험용 local 포함) */
+export const raceRoomOf = (v: unknown) => (typeof v === 'string' && /^(r[1-6]|local)$/.test(v) ? v : undefined)
 export const cleanName = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, MAX_NAME) : '')
 export const cleanChat = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, MAX_CHAT) : '')
 
