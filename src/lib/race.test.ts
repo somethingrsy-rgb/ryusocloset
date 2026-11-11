@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { glide, rankNow, type Race, LAP, LAPS, TIME_LIMIT, itemsBetween, lapOf, newRace, rewardStars, setBrake, steer, stepRace, timeLeft } from './race'
+import { setHold, glide, rankNow, type Race, LAP, LAPS, TIME_LIMIT, itemsBetween, lapOf, newRace, rewardStars, setBrake, steer, stepRace, timeLeft } from './race'
 
 const run = (r: ReturnType<typeof newRace>, sec: number, dt = 0.05) => { for (let i = 0; i < sec / dt && r.phase !== 'done'; i++) r = stepRace(r, dt); return r }
 
@@ -101,5 +101,18 @@ describe('자동차 레이스', () => {
     const lanes5 = new Set(itemsBetween(0, 6000, 3, 5).map((i) => i.lane)), lanes3 = new Set(itemsBetween(0, 6000, 3).map((i) => i.lane))
     expect([...lanes5].sort((a, b) => a - b)).toEqual([-2, -1, 0, 1, 2]); expect([...lanes3].sort((a, b) => a - b)).toEqual([-1, 0, 1])
     expect(newRace(1, [0, 1, 2]).rivals.map((v) => v.lane)).toEqual([-2, 2, 1])
+  })
+  it('단추를 누르고 있으면 칸에 걸리지 않고 쭉 가고, 떼면 그 자리에서 멈춘다', () => {
+    let r: Race = { ...newRace(1, [0]), phase: 'run', count: 0 }
+    r = setHold(steer(r, 1), 1)
+    for (let i = 0; i < 6; i++) r = stepRace(r, 0.05)
+    expect(r.lane).toBeGreaterThan(1.2); expect(r.lane).toBeLessThan(2); expect(r.x).toBeGreaterThan(0.5)
+    expect(Number.isInteger(r.lane)).toBe(false)
+    for (let i = 0; i < 40; i++) r = stepRace(r, 0.05)
+    expect(r.lane).toBe(2)
+    r = setHold(r, -1); for (let i = 0; i < 6; i++) r = stepRace(r, 0.05)
+    r = setHold(r, 0); const stay = r.lane
+    for (let i = 0; i < 20; i++) r = stepRace(r, 0.05)
+    expect(r.lane).toBe(stay)
   })
 })

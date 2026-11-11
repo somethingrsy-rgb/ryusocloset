@@ -85,23 +85,27 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     scene.add(road)
 
     // 바퀴 시작·끝 줄(땅에 깐 체크무늬)과 결승 아치(세워 둔 그림, 가운데는 비어 있어서 차가 지나간다)
-    const lineTex = art('startline'), archTex = art('arch')
-    const lineW = LANE_W * LANES + 0.6
-    const lineGeo = keep(new THREE.PlaneGeometry(lineW, lineW * (115 / 768) * 1.8))
-    const lineMat = keep(new THREE.MeshBasicMaterial({ map: lineTex, transparent: true, depthWrite: false }))
-    const ARCH_W = ROAD_W + 4.5
-    const archGeo = keep(new THREE.PlaneGeometry(ARCH_W, ARCH_W * (574 / 768)))
-    const archMat = keep(new THREE.MeshBasicMaterial({ map: archTex, transparent: true, alphaTest: 0.35, side: THREE.DoubleSide }))
-    // 출발 문은 차 앞 14칸에 한 번만(차가 선 위에서 시작하면 선이 차에 가려 겹쳐 보였다). 바퀴·결승 문은 거리 그대로
+    // 땅에 깐 체크 줄(얇고 납작하게, 차와 아치 아래에 그려서 차 위로 올라오지 않는다)과 세워 둔 아치
+    const archTex = art('arch'), lineTex = art('startline')
+    const lineW = LANE_W * LANES + 0.8
+    // 반듯하게 편 체크무늬 그림(세 줄)을 땅에 납작하게 깐다: 폭에 비해 얇게, 차와 아치보다 먼저 그려서 차 아래로
+    const lineGeo = keep(new THREE.PlaneGeometry(lineW, 1.7))
+    const lineMat = keep(new THREE.MeshBasicMaterial({ map: lineTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }))
+    const ARCH_W = ROAD_W + 3
+    const archGeo = keep(new THREE.PlaneGeometry(ARCH_W, ARCH_W * (538 / 768)))
+    // 아치는 차보다 먼저 그린다(차가 아치 밑을 지날 때 반쪽으로 잘려 보이지 않게)
+    const archMat = keep(new THREE.MeshBasicMaterial({ map: archTex, transparent: true, depthWrite: false, side: THREE.DoubleSide }))
+    // 출발 문은 차 앞 14칸에 한 번만. 바퀴·결승 문은 거리 그대로
     const gateZ = (k: number) => (k === 0 ? -14 : -k * LAP)
     for (let k = 0; k <= LAPS; k++) {
       const m = new THREE.Mesh(lineGeo, lineMat)
       m.rotation.x = -Math.PI / 2
       m.position.set(0, 0.04, gateZ(k))
-      m.renderOrder = 1
+      m.renderOrder = -0.6
       scene.add(m)
       const arch = new THREE.Mesh(archGeo, archMat)
-      arch.position.set(0, ARCH_W * (574 / 768) / 2 - 0.2, gateZ(k))
+      arch.renderOrder = -0.5
+      arch.position.set(0, ARCH_W * (538 / 768) / 2 - 0.2, gateZ(k))
       scene.add(arch)
     }
 
