@@ -64,7 +64,8 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
 
     // 먼 하늘: 하늘 그림을 멀리 세워 두고 늘 카메라를 따라온다(언덕 아랫단이 땅 끝과 만나게)
     const skyTex = art(`sky_${theme}`)
-    skyTex.wrapS = THREE.RepeatWrapping; skyTex.repeat.set(2, 1)
+    // 세로 화면: 하늘 그림 한 장 그대로. 가로 화면: 같은 그림을 좌우로 거울처럼 이어 붙여 넓힌다(이음매가 안 보인다)
+    skyTex.wrapS = THREE.MirroredRepeatWrapping
     const SKY_H = 110, SKY_Z = 230
     const sky = new THREE.Mesh(keep(new THREE.PlaneGeometry(SKY_H * 6, SKY_H)), keep(new THREE.MeshBasicMaterial({ map: skyTex, fog: false, depthWrite: false })))
     sky.position.y = SKY_H * 0.25 + 1
@@ -219,6 +220,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     sparkleSp.visible = dustSp.visible = false
     scene.add(sparkleSp, dustSp)
 
+    let skyWide: boolean | null = null
     let t = 0, camX = 0
     s.onFrame((dt) => {
       t += dt
@@ -226,6 +228,8 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       const cz = -r.d, cx = r.x * LANE_W
       grass.position.z = cz; grass.position.x = cx * 0; road.position.z = cz - 60
       gTex.offset.y = -cz / GROUND_TILE; rt.offset.y = -cz / ROAD_TILE
+      const sz = s.size(), wide = sz.w > sz.h
+      if (wide !== skyWide) { skyWide = wide; skyTex.repeat.set(wide ? 2 : 1, 1); skyTex.needsUpdate = true; sky.scale.x = wide ? 1 : 0.5 }
       sky.position.x = cx * 0.6; sky.position.z = cz - SKY_Z
       // 차: 옆 칸으로 가는 동안은 그쪽 그림, 달릴 땐 통통, 미끄러지면 빙글 흔들
       car.position.set(cx, Math.abs(Math.sin(t * 14)) * 0.05 * Math.min(1, r.speed / 20), cz)
