@@ -2,6 +2,7 @@ import { useEffect, useRef, type MutableRefObject } from 'react'
 import * as THREE from 'three'
 import { LANE_W, LAP, LAPS, itemsBetween, type ItemKind, type Race } from '../lib/race'
 import { assetUrl } from '../lib/items'
+import { savedName } from '../lib/mp/session'
 import { createStage } from './stage3d'
 
 /**
@@ -177,7 +178,21 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       c.sp[1].material.opacity = (l < 0 ? m : 0) * fade; c.sp[2].material.opacity = (l > 0 ? m : 0) * fade
       c.sp.forEach((x) => { x.material.rotation = slip + l * -0.07 })
     }
+    // 차 위 닉네임표: 알약 모양 글자판(내 이름은 분홍, 친구는 연보라). 늘 카메라를 본다
+    const nameTag = (c: ReturnType<typeof buildCar>, name: string, me: boolean) => {
+      const cv = document.createElement('canvas'); cv.width = 384; cv.height = 96
+      const g = cv.getContext('2d')!
+      g.font = 'bold 44px "Apple SD Gothic Neo","Noto Sans KR",sans-serif'
+      const w = Math.min(372, g.measureText(name).width + 48), x = (384 - w) / 2
+      g.fillStyle = me ? '#ff8fab' : '#e6d9ff'; g.strokeStyle = '#ffffff'; g.lineWidth = 7
+      g.beginPath(); g.roundRect(x, 10, w, 76, 38); g.fill(); g.stroke()
+      g.fillStyle = me ? '#ffffff' : '#5b3a7a'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(name, 192, 49)
+      const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: s.texOf(cv), transparent: true, depthWrite: false })))
+      sp.scale.set(2.6, 0.65, 1); sp.position.set(0, c.h + 0.55, 0)
+      c.group.add(sp); sp.renderOrder = 200; return sp
+    }
     const mine = buildCar(carId)
+    nameTag(mine, savedName() || '나', true)
     const car = mine.group
     // 컴퓨터 친구 차: 내가 고른 차가 아닌 다른 차들을 돌려 쓴다(차 그림에 운전자가 이미 타 있다)
     // 내가 고른 차를 뺀 나머지 4대 중에서 판마다 무작위로(같은 판이면 같은 차) 골라 태운다
@@ -186,6 +201,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const rivalCars = live.current.rivals.map((_rv, i) => {
       const nc = live.current.rivals[i]?.net?.car as RaceCar | undefined
       const id = nc && nc in CAR_PX ? nc : others[i % others.length], c = buildCar(id, 0.92)
+      nameTag(c, live.current.rivals[i]?.net?.name ?? `친구${i + 1}`, false)
       return c
     })
     const shadow = new THREE.Mesh(keep(new THREE.CircleGeometry(1, 20)), keep(new THREE.MeshBasicMaterial({ color: 0x3c4a2a, transparent: true, opacity: 0.25, depthWrite: false })))
@@ -216,6 +232,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     scene.add(sparkleSp, dustSp)
 
     let skyWide: boolean | null = null
+    const drawRank = new Map<number, number>()
     let t = 0, camX = 0
     s.onFrame((dt) => {
       t += dt
@@ -255,6 +272,11 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       for (const c of cheers) { const base = -30 - c.k * CHEER_GAP; c.o.position.z = base + cp * Math.floor((cz + 25 - base) / cp); c.o.visible = !nearGate(c.o.position.z) }
       const fp = FLOWERS * FLOWER_GAP
       for (const f of flowers) { const base = -8 - f.k * FLOWER_GAP; f.o.position.z = base + fp * Math.floor((cz + 25 - base) / fp); f.o.visible = !nearGate(f.o.position.z) }
+      // 겹친 차 그리는 순서: 반투명 그림은 카메라 거리로 정렬되는데, 두 차가 나란히 겹치면 순서가 프레임마다 뒤집혀 탁탁 튄다.
+      // 그래서 순서를 직접 정한다(앞서 달리는 차를 먼저 그림). 거리가 0.8 안쪽으로 비슷하면 직전 순서를 그대로 둔다.
+      const cars = [{ c: mine, d: r.d, k: 0 }, ...r.rivals.map((rv, i) => ({ c: rivalCars[i], d: rv.d, k: i + 1 })).filter((x) => x.c)]
+      cars.sort((a, b) => (Math.abs(a.d - b.d) < 0.8 ? (drawRank.get(a.k) ?? a.k) - (drawRank.get(b.k) ?? b.k) : b.d - a.d))
+      cars.forEach((x, idx) => { drawRank.set(x.k, idx); x.c.sp.forEach((m) => { m.renderOrder = 10 + idx * 3 }) })
       // 아이템
       const want = new Set<number>()
       for (const it of itemsBetween(r.d - 20, r.d + 110, r.seed, r.lanes)) {
