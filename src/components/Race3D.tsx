@@ -31,6 +31,7 @@ const CAR_PX: Record<RaceCar, Record<'straight' | 'left' | 'right', [number, num
 const DRIVER_PX: Partial<Record<RaceCar, Record<'straight' | 'left' | 'right', [number, number]>>> = {
   pumpkin: { straight: [418, 531], left: [482, 518], right: [482, 546] },
   star: { straight: [493, 504], left: [532, 485], right: [532, 439] },
+  bunny: { straight: [434, 538], left: [498, 539], right: [491, 535] },
 }
 const CAR_K = 4.3 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
