@@ -118,8 +118,8 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const SNOW_BIG: [string, number, number][] = [['prop_xmas', 4.7, 0.72], ['sn_pine', 4.0, 1.03], ['sn_pinelit', 4.0, 1.01], ['prop_xmas', 4.7, 0.72], ['sn_bare', 4.0, 1.07]]
     // 과일 마을: 레몬·오렌지·초록 나무와 딸기집·사과집을 번갈아 [그림, 높이, 가로세로 비율]
     const FRUIT_BIG: [string, number, number][] = [['fr_tree_green', 4.4, 0.93], ['fr_tree_lemon', 4.4, 0.95], ['fr_tree_orange', 4.4, 0.95], ['fr_strawhouse', 3.8, 1.04], ['fr_tree_orange', 4.4, 0.95], ['fr_tree_lemon', 4.4, 0.95], ['fr_applehouse', 3.8, 1.01], ['fr_tree_green', 4.4, 0.93]]
-    // 바닷속 마을: 큰 길가 자리는 큰 구경거리로 [그림, 높이, 가로세로 비율] (산호 큰 소품 그림이 오면 여기 추가)
-    const SEA_BIG: [string, number, number][] = [['sea_shellhouse', 4.4, 1.03], ['sea_conch', 4.4, 1.04], ['sea_submarine', 4.0, 1.07], ['sea_shellhouse', 4.4, 1.03], ['sea_octopus', 4.0, 0.99], ['sea_conch', 4.4, 1.04], ['sea_chest', 3.6, 1.18]]
+    // 바닷속 마을: 큰 길가 자리는 산호 5종에 조개집·소라집·잠수함을 섞는다 [그림, 높이, 가로세로 비율]
+    const SEA_BIG: [string, number, number][] = [['sea_coral_pink', 4.2, 0.93], ['sea_coral_purple', 3.8, 1.04], ['sea_shellhouse', 4.2, 1.03], ['sea_coral_kelp', 4.4, 0.92], ['sea_coral_anemone', 3.6, 1.06], ['sea_conch', 4.2, 1.04], ['sea_coral_brain', 3.6, 1.03], ['sea_submarine', 3.8, 1.07]]
     const props = Array.from({ length: PROPS }, (_, i) => {
       const side = i % 2 ? 1 : -1, x = side * (sideX + (i % 3) * 2.2), z = -i * PROP_GAP
       const big = 0.9 + (i % 3) * 0.2
