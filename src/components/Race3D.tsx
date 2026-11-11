@@ -93,7 +93,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const lineMat = keep(new THREE.MeshBasicMaterial({ map: lineTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }))
     const ARCH_W = ROAD_W + 3
     const archGeo = keep(new THREE.PlaneGeometry(ARCH_W, ARCH_W * (538 / 768)))
-    // 아치는 차보다 먼저 그린다(차가 아치 밑을 지날 때 반쪽으로 잘려 보이지 않게)
+    // 아치는 거리 순서로 그리고 깊이는 쓰지 않는다(차가 아치 밑을 지날 때 반쪽으로 잘리지 않게)
     const archMat = keep(new THREE.MeshBasicMaterial({ map: archTex, transparent: true, depthWrite: false, side: THREE.DoubleSide }))
     // 출발 문은 차 앞 14칸에 한 번만. 바퀴·결승 문은 거리 그대로
     const gateZ = (k: number) => (k === 0 ? -14 : -k * LAP)
@@ -104,7 +104,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       m.renderOrder = -0.6
       scene.add(m)
       const arch = new THREE.Mesh(archGeo, archMat)
-      arch.renderOrder = -0.5
+      // 아치도 다른 그림처럼 카메라 거리로 앞뒤가 정해지게 둔다(뒤에 있는 나무·구경꾼이 아치 위로 올라오지 않게). 차는 따로 순서를 정해 늘 위에 그린다
       arch.position.set(0, ARCH_W * (538 / 768) / 2 - 0.2, gateZ(k))
       scene.add(arch)
     }
