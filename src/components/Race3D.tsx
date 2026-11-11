@@ -184,7 +184,8 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const sd = live.current.seed
     const others = ALL_CARS.filter((c) => c !== carId).map((c, i) => ({ c, k: Math.sin(sd * 12.9898 + i * 78.233) })).sort((a, b) => a.k - b.k).map((x) => x.c)
     const rivalCars = live.current.rivals.map((_rv, i) => {
-      const id = others[i % others.length], c = buildCar(id, 0.92)
+      const nc = live.current.rivals[i]?.net?.car as RaceCar | undefined
+      const id = nc && nc in CAR_PX ? nc : others[i % others.length], c = buildCar(id, 0.92)
       return c
     })
     const shadow = new THREE.Mesh(keep(new THREE.CircleGeometry(1, 20)), keep(new THREE.MeshBasicMaterial({ color: 0x3c4a2a, transparent: true, opacity: 0.25, depthWrite: false })))

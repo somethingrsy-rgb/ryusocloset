@@ -1,8 +1,11 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { assetUrl } from '../lib/items'
 import { isRestoring } from '../lib/restoreGuard'
-import { LAPS, MAX_RIVALS, TIME_LIMIT, lapOf, newRace, rankNow, rewardStars, setBrake, setHold, steer, stepRace, timeLeft, type Race } from '../lib/race'
+import { LAPS, MAX_RIVALS, TIME_LIMIT, applyNetReport, lapOf, newNetRace, newRace, rankNow, rewardStars, setBrake, setHold, steer, stepRace, timeLeft, type Race } from '../lib/race'
 import { earnStars } from '../lib/shop'
+import { firebaseReady } from '../lib/mp/config'
+import { savedName } from '../lib/mp/session'
+import type { RaceRoom, RoomSnap } from '../lib/mp/raceNet'
 import { playCloud, playGold, playHop, playStar, playTap, playWin, startBgm, stopBgm } from '../lib/sound'
 
 // three.js 가 커서 레이스를 열 때만 받는다
@@ -29,7 +32,7 @@ const roundBtn = 'pointer-events-auto h-24 w-24 active:scale-90 drop-shadow-lg'
 
 /** 자동차 레이스(혼자 달리기): 차는 저절로 달리고, ◀ ▶ 로 옆 칸으로 옮긴다. 별을 모으고 부스터로 빨라지며, 바나나·물웅덩이는 잠깐 느려질 뿐 혼나지 않는다 */
 export function RaceGame({ onExit }: { onExit: () => void }) {
-  const [phase, setPhase] = useState<'intro' | 'playing' | 'done'>('intro')
+  const [phase, setPhase] = useState<'intro' | 'lobby' | 'playing' | 'done'>('intro')
   const [race, setRace] = useState<Race>(() => newRace())
   const live = useRef(race)
   const [oops, setOops] = useState(0)
@@ -43,6 +46,67 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   const pickTheme = (t: RaceTheme) => { setTheme(t); playTap(); try { localStorage.setItem(THEME_KEY, t) } catch { /* 저장 못 해도 이번 판은 그 장소 */ } }
   const saved = useRef(false)
 
+  // ── 같이 달리기(친구와 한 방에서): 방 소식은 raceNet(Firebase)이 주고받는다 ──
+  const netRef = useRef<RaceRoom | null>(null)
+  const [snap, setSnap] = useState<RoomSnap | null>(null)
+  const [netMsg, setNetMsg] = useState<string | null>(null)
+  const [online, setOnline] = useState(false)
+  const idOf = useRef<Record<string, number>>({})
+  const begunRef = useRef(false)
+  const startTimer = useRef<number | null>(null)
+  const carRef = useRef(car); carRef.current = car
+  const leaveNet = () => {
+    if (startTimer.current !== null) { clearTimeout(startTimer.current); startTimer.current = null }
+    netRef.current?.leave(); netRef.current = null; begunRef.current = false; setSnap(null); setOnline(false)
+  }
+  useEffect(() => leaveNet, [])
+  /** 방 소식이 올 때마다: 대기 중이면 명단을 보여 주고, 달리는 중이면 친구 차를 움직인다, 방장이 출발을 알리면 같이 시작 */
+  const onRoom = (room: RoomSnap) => {
+    setSnap(room)
+    const net = netRef.current
+    if (!net) return
+    if (!room.meta) { if (!begunRef.current) { setNetMsg('방이 닫혔어요'); leaveNet(); setPhase('intro') } return }
+    if (begunRef.current) {
+      for (const [u, p] of Object.entries(room.players)) {
+        const id = idOf.current[u]
+        if (u !== net.uid && id !== undefined) live.current = applyNetReport(live.current, id, p, Date.now())
+      }
+      return
+    }
+    if (room.meta.startAt > 0 && startTimer.current === null) {
+      const wait = Math.max(0, room.meta.startAt - (Date.now() + net.offset()))
+      const uids = Object.keys(room.players).sort()
+      startTimer.current = window.setTimeout(() => {
+        startTimer.current = null; begunRef.current = true
+        const mine = uids.indexOf(net.uid)
+        idOf.current = {}
+        const others = uids.filter((u) => u !== net.uid).map((u, i) => { idOf.current[u] = i; return { id: i, name: room.players[u]?.name ?? '친구', car: room.players[u]?.car ?? 'heart', slot: uids.indexOf(u) } })
+        const fresh = newNetRace(room.meta!.seed, Math.max(0, mine), others)
+        live.current = fresh; setRace(fresh); saved.current = false; setPaid(0); setOops(0); setPaused(false); setPhase('playing')
+      }, wait)
+    }
+  }
+  const openLobby = async () => {
+    playTap(); setNetMsg(null); setOnline(true)
+    try {
+      const { joinRaceRoom } = await import('../lib/mp/raceNet')
+      const net = await joinRaceRoom(savedName() || '친구', car, onRoom)
+      if (!net) { setNetMsg('지금은 방이 꽉 찼어요. 조금 뒤에 다시 해 봐요'); setOnline(false); return }
+      netRef.current = net; setPhase('lobby')
+    } catch { setNetMsg('연결하지 못했어요. 인터넷을 확인해 주세요'); setOnline(false) }
+  }
+  const exitLobby = () => { playTap(); leaveNet(); setPhase('intro') }
+  // 달리는 동안 0.15초마다 내 소식을 보낸다(거리·옆 자리·속도만)
+  useEffect(() => {
+    if (phase === 'intro' || phase === 'lobby') return
+    const net = netRef.current
+    if (!net) return
+    const t = window.setInterval(() => { const r = live.current; net.report({ name: savedName() || '친구', car: carRef.current, d: r.d, x: r.x, speed: r.speed, fin: r.finish === 'laps' ? r.t : null }) }, 150)
+    return () => clearInterval(t)
+  }, [phase])
+
+  // 레이스 화면에서는 대화 단추를 왼쪽 방향 단추 위로 올린다(겹치지 않게: index.css 의 body[data-race])
+  useEffect(() => { document.body.dataset.race = '1'; return () => { delete document.body.dataset.race } }, [])
   // 달리는 동안 노래
   useEffect(() => { if (phase !== 'playing' || paused) return; startBgm('run'); return stopBgm }, [phase, paused])
   // 다른 화면으로 가면 멈춘다
@@ -170,10 +234,33 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
               ))}
             </div>
             <button onClick={start} className="min-h-12 w-full rounded-full bg-gradient-to-r from-[#ff8fab] to-[#c58bff] text-lg font-black text-white shadow-lg active:scale-95">출발하기!</button>
+            {firebaseReady && <button disabled={online} onClick={openLobby} className="min-h-11 w-full rounded-full bg-[#fff0f5] text-base font-black text-[#c0587a] ring-2 ring-[#ffc2d4] disabled:opacity-60 active:scale-95">{online ? '방을 찾는 중…' : '👫 친구랑 같이 달리기'}</button>}
+            {netMsg && <p role="alert" className="m-0 text-xs font-bold text-[#d0587a]">{netMsg}</p>}
           </div>
         </div>
       )}
 
+      {phase === 'lobby' && snap && (
+        <div role="dialog" aria-label="같이 달리기 대기실" className="absolute inset-0 z-30 flex items-start justify-center overflow-y-auto bg-[#fdf3f6] p-3">
+          <div className="my-auto flex w-full max-w-sm flex-col items-center gap-2 rounded-3xl bg-white p-4 text-center shadow-xl">
+            <p className="m-0 text-xl font-black text-[#c0587a]">👫 같이 달리기</p>
+            <p className="m-0 text-xs font-bold text-[#6b4b52]">친구들이 모이면 방장이 출발해요 · {Object.keys(snap.players).length}/4명</p>
+            <ul className="m-0 flex w-full list-none flex-col gap-1.5 p-0">
+              {Object.entries(snap.players).sort(([a], [b]) => (a < b ? -1 : 1)).map(([u, p]) => (
+                <li key={u} className="flex items-center gap-2 rounded-2xl bg-[#f6eef8] px-3 py-1.5 text-left">
+                  <img src={img(`pick_${p.car}`)} alt="" className="h-10 w-auto" />
+                  <b className="flex-1 truncate text-sm text-[#7a3d8f]">{p.name}{u === netRef.current?.uid ? ' (나)' : ''}</b>
+                  {u === snap.meta?.host && <span className="text-[11px] font-black text-[#c0587a]">방장</span>}
+                </li>
+              ))}
+            </ul>
+            {netRef.current?.host
+              ? <button disabled={Object.keys(snap.players).length < 2} onClick={() => { playTap(); netRef.current?.start() }} className="min-h-12 w-full rounded-full bg-gradient-to-r from-[#ff8fab] to-[#c58bff] text-lg font-black text-white shadow-lg disabled:opacity-50 active:scale-95">{Object.keys(snap.players).length < 2 ? '친구를 기다려요…' : '출발!'}</button>
+              : <p className="m-0 text-sm font-black text-[#7a3d8f]">{snap.meta && snap.meta.startAt > 0 ? '곧 출발해요! 🚦' : '방장이 출발하길 기다려요…'}</p>}
+            <button onClick={exitLobby} className="min-h-11 w-full rounded-full bg-[#f3e6ea] text-sm font-bold text-[#6b4b52] active:scale-95">나가기</button>
+          </div>
+        </div>
+      )}
       {phase === 'done' && (
         <div role="dialog" aria-label="레이스 끝" className="absolute inset-0 z-30 flex items-center justify-center bg-black/25 p-4">
           <div className="flex w-full max-w-sm flex-col items-center gap-2 rounded-3xl bg-white p-5 text-center shadow-xl">
@@ -181,8 +268,8 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
             <p className="m-0 text-xl font-black text-[#c0587a]">{race.rivals.length ? `${race.rank}등! ${race.rank === 1 ? '최고예요 🎉' : '잘 달렸어요'}` : race.finish === 'laps' ? '결승선 통과!' : '시간 끝! 잘 달렸어요'}</p>
             <p className="m-0 text-sm font-bold text-[#6b4b52]">모은 별 ⭐ {race.stars}개 · 받은 별 ⭐ {paid || rewardStars(race)}개</p>
             <div className="mt-1 flex w-full gap-2">
-              <button onClick={start} className="min-h-12 flex-1 rounded-full bg-[#ff8fab] text-base font-black text-white shadow active:scale-95">한 번 더!</button>
-              <button onClick={() => { playTap(); onExit() }} className="min-h-12 flex-1 rounded-full bg-[#f3e6ea] text-base font-bold text-[#6b4b52] active:scale-95">나가기</button>
+              <button onClick={() => { if (netRef.current) { leaveNet(); setPhase('intro') } else start() }} className="min-h-12 flex-1 rounded-full bg-[#ff8fab] text-base font-black text-white shadow active:scale-95">한 번 더!</button>
+              <button onClick={() => { playTap(); leaveNet(); onExit() }} className="min-h-12 flex-1 rounded-full bg-[#f3e6ea] text-base font-bold text-[#6b4b52] active:scale-95">나가기</button>
             </div>
           </div>
         </div>
