@@ -24,7 +24,7 @@ const THEMES: { id: RaceTheme; ico: string; name: string }[] = [
   { id: 'fruit', ico: '🍓', name: '과일 마을' },
 ]
 const CAR_KEY = 'ryuso.race.car'
-const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트' }, { id: 'cloud', name: '구름' }, { id: 'blue', name: '파랑' }, { id: 'bunny', name: '토끼' }, { id: 'star', name: '별' }]
+const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트' }, { id: 'cloud', name: '구름' }, { id: 'blue', name: '파랑' }, { id: 'bunny', name: '번개' }, { id: 'star', name: '별' }]
 const readCar = (): RaceCar => { try { const v = localStorage.getItem(CAR_KEY); return v === 'cloud' || v === 'blue' || v === 'bunny' || v === 'star' ? v : 'heart' } catch { return 'heart' } }
 const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' || v === 'fruit' ? v : 'meadow' } catch { return 'meadow' } }
 
