@@ -1,10 +1,12 @@
-import { Suspense, lazy, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { assetUrl } from '../lib/items'
 import { isRestoring } from '../lib/restoreGuard'
 import { LAPS, MAX_RIVALS, TIME_LIMIT, applyNetReport, lapOf, newNetRace, newRace, rankNow, rewardStars, setHold, steer, stepRace, useBoost, GAUGE_MAX, timeLeft, type Race } from '../lib/race'
 import { earnStars } from '../lib/shop'
 import { multiplayerAvailable } from '../lib/mp/config'
-import { savedName } from '../lib/mp/session'
+import { getMp, sayRace, savedName, subscribeMp } from '../lib/mp/session'
+import { HUD_BUSY } from './MultiplayerBar'
+import { RACE_INVITE_EVENT, takeRaceInvite } from '../lib/raceInvite'
 import type { RaceRoom, RoomSnap } from '../lib/mp/raceNet'
 import { playCloud, playGold, playHop, playStar, playTap, playWin, startBgm, stopBgm } from '../lib/sound'
 
@@ -86,21 +88,27 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
       }, wait)
     }
   }
-  const openLobby = async () => {
+  const openLobby = async (prefer?: string) => {
     playTap(); setNetMsg(null); setOnline(true)
     try {
       const { joinRaceRoom } = await import('../lib/mp/raceNet')
-      const net = await joinRaceRoom(savedName() || '친구', car, onRoom)
+      const net = await joinRaceRoom(savedName() || '친구', car, onRoom, prefer)
       if (!net) { setNetMsg('지금은 방이 꽉 찼어요. 조금 뒤에 다시 해 봐요'); setOnline(false); return }
       netRef.current = net; setPhase('lobby')
     } catch (e) {
       // 왜 안 됐는지 알려 준다: 서버 규칙이 새 것이 아니면 규칙 안내, 아니면 오류 이름을 보여 준다
       const msg = e instanceof Error ? `${(e as { code?: string }).code ?? ''} ${e.message}`.trim() : String(e)
       const stepName = /\[([^\]]+)\]/.exec(msg)?.[1]
-      setNetMsg(/permission/i.test(msg) ? `서버가 거부했어요 · 단계: ${stepName ?? '알 수 없음'} (PERMISSION_DENIED). 이 글을 그대로 알려 주세요` : `연결하지 못했어요 · ${msg.slice(0, 90)}`)
+      setNetMsg(prefer && !/permission|\[/.test(msg) ? msg : /permission/i.test(msg) ? `서버가 거부했어요 · 단계: ${stepName ?? '알 수 없음'} (PERMISSION_DENIED). 이 글을 그대로 알려 주세요` : `연결하지 못했어요 · ${msg.slice(0, 90)}`)
       setOnline(false)
     }
   }
+  // 친구의 초대를 수락해서 들어왔거나, 레이스 시작 화면에 있는 동안 초대를 수락하면 그 방으로 바로 연결한다
+  const joinInvited = () => { if (phase !== 'intro' || online) return; const inv = takeRaceInvite(); if (inv) void openLobby(inv.room) }
+  const joinInvitedRef = useRef(joinInvited); joinInvitedRef.current = joinInvited
+  useEffect(() => { joinInvitedRef.current(); const f = () => joinInvitedRef.current(); window.addEventListener(RACE_INVITE_EVENT, f); return () => window.removeEventListener(RACE_INVITE_EVENT, f) }, [])
+  const mpOn = useSyncExternalStore(subscribeMp, () => getMp().status === 'on')
+  const [invited, setInvited] = useState(false)
   const exitLobby = () => { playTap(); leaveNet(); setPhase('intro') }
   // 달리는 동안 0.15초마다 내 소식을 보낸다(거리·옆 자리·속도만)
   useEffect(() => {
@@ -111,6 +119,8 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
     return () => clearInterval(t)
   }, [phase])
 
+  // 대기실·달리기에 들어가면 위쪽 「친구들은 지금 어디?」 칸이 화면을 덮지 않게 닫는다
+  useEffect(() => { if (phase !== 'intro') window.dispatchEvent(new Event(HUD_BUSY)) }, [phase])
   // 레이스 화면에서는 대화 단추를 왼쪽 방향 단추 위로 올린다(겹치지 않게: index.css 의 body[data-race])
   useEffect(() => { document.body.dataset.race = '1'; return () => { delete document.body.dataset.race } }, [])
   // 달리는 동안 노래
@@ -245,7 +255,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
               ))}
             </div>
             <button onClick={start} className="min-h-12 w-full rounded-full bg-gradient-to-r from-[#ff8fab] to-[#c58bff] text-lg font-black text-white shadow-lg active:scale-95">출발하기!</button>
-            {multiplayerAvailable && <button disabled={online} onClick={openLobby} className="min-h-11 w-full rounded-full bg-[#fff0f5] text-base font-black text-[#c0587a] ring-2 ring-[#ffc2d4] disabled:opacity-60 active:scale-95">{online ? '방을 찾는 중…' : '👫 친구랑 같이 달리기'}</button>}
+            {multiplayerAvailable && <button disabled={online} onClick={() => void openLobby()} className="min-h-11 w-full rounded-full bg-[#fff0f5] text-base font-black text-[#c0587a] ring-2 ring-[#ffc2d4] disabled:opacity-60 active:scale-95">{online ? '방을 찾는 중…' : '👫 친구랑 같이 달리기'}</button>}
             {netMsg && <p role="alert" className="m-0 text-xs font-bold text-[#d0587a]">{netMsg}</p>}
           </div>
         </div>
@@ -268,6 +278,11 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
             {netRef.current?.host
               ? <button disabled={Object.keys(snap.players).length < 2} onClick={() => { playTap(); netRef.current?.start() }} className="min-h-12 w-full rounded-full bg-gradient-to-r from-[#ff8fab] to-[#c58bff] text-lg font-black text-white shadow-lg disabled:opacity-50 active:scale-95">{Object.keys(snap.players).length < 2 ? '친구를 기다려요…' : '출발!'}</button>
               : <p className="m-0 text-sm font-black text-[#7a3d8f]">{snap.meta && snap.meta.startAt > 0 ? '곧 출발해요! 🚦' : '방장이 출발하길 기다려요…'}</p>}
+            {netRef.current && netRef.current.room !== '' && (
+              mpOn
+                ? <button onClick={() => { playTap(); sayRace(netRef.current!.room); setInvited(true); setTimeout(() => setInvited(false), 3000) }} className="min-h-11 w-full rounded-full bg-[#fff0f5] text-sm font-black text-[#c0587a] ring-2 ring-[#ffc2d4] active:scale-95">{invited ? '💌 초대를 보냈어요!' : '💌 친구 초대하기'}</button>
+                : <p className="m-0 text-[11px] font-bold text-[#6b4b52]">친구를 초대하려면 맨 위 <b>친구</b> 탭에서 같이 놀기에 먼저 들어가요</p>
+            )}
             <button onClick={exitLobby} className="min-h-11 w-full rounded-full bg-[#f3e6ea] text-sm font-bold text-[#6b4b52] active:scale-95">나가기</button>
           </div>
         </div>

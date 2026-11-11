@@ -78,6 +78,9 @@
           },
           "home": {
             ".validate": "newData.val() === auth.uid"
+          },
+          "race": {
+            ".validate": "newData.isString() && newData.val().matches(/^r[1-6]$/)"
           }
         }
       },

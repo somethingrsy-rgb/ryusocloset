@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { RACE_INVITE_EVENT, hasRaceInvite } from '../lib/raceInvite'
 import { takeWalkNext } from '../lib/farmCafeLink'
 import { startBgm, stopBgm } from '../lib/sound'
 import { currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from '../lib/game'
@@ -66,7 +67,8 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   const [jump, setJump] = useState(false)
   const [flags, setFlags] = useState(false)
   const [soccer, setSoccer] = useState(false)
-  const [race, setRace] = useState(false)
+  const [race, setRace] = useState(() => hasRaceInvite())
+  useEffect(() => { const f = () => setRace(true); window.addEventListener(RACE_INVITE_EVENT, f); return () => window.removeEventListener(RACE_INVITE_EVENT, f) }, [])
   // 산책 탭은 처음부터 3D 산책(✕ 를 누르면 게임 탭으로)
   const [walk3d, setWalk3d] = useState(() => takeWalkNext() || walkTab)
   /** 3D 산책에서 집에 들어갔으면, 집에서 나올 때 다시 3D 산책으로 */
