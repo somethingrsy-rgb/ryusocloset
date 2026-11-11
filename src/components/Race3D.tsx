@@ -220,7 +220,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const rivalCars = live.current.rivals.map((_rv, i) => {
       const nc = live.current.rivals[i]?.net?.car as RaceCar | undefined
       const id = nc && nc in CAR_PX ? nc : others[i % others.length], c = buildCar(id, 0.92)
-      nameTag(c, live.current.rivals[i]?.net?.name ?? `친구${i + 1}`, false)
+      nameTag(c, live.current.rivals[i]?.net?.name ?? `컴퓨터${i + 1}`, false)
       return c
     })
     const shadow = new THREE.Mesh(keep(new THREE.CircleGeometry(1, 20)), keep(new THREE.MeshBasicMaterial({ color: 0x3c4a2a, transparent: true, opacity: 0.25, depthWrite: false })))

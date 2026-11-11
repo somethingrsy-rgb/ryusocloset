@@ -232,7 +232,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
             <p className="m-0 text-xl font-black text-[#c0587a]">🏎️ 자동차 레이스</p>
             <p className="m-0 text-sm leading-snug font-bold text-[#6b4b52]">◀ ▶ 로 옆 칸에 가요. ⭐ 코인을 모으면 부스터 게이지가 차요. 가득 차면 🚀 단추로 빨라져요!<br />🍌 바나나와 💧 물웅덩이는 살짝 느려져요. {LAPS}바퀴 또는 {TIME_LIMIT}초면 끝!</p>
             <div role="radiogroup" aria-label="같이 달릴 친구" className="flex w-full items-center gap-1.5">
-              <span className="shrink-0 text-xs font-black text-[#7a3d8f]">🐾 친구 차</span>
+              <span className="shrink-0 text-xs font-black text-[#7a3d8f]">🤖 컴퓨터 차</span>
               {[0, 1, 2, 3].map((n) => (
                 <button key={n} role="radio" aria-checked={friends === n} onClick={() => pickFriends(n)}
                   className={`h-8 flex-1 rounded-full border-2 text-xs font-black ${friends === n ? 'border-[#ff8fab] bg-[#fff0f5] text-[#c0587a]' : 'border-transparent bg-[#f6eef8] text-[#7a3d8f]'}`}>{n === 0 ? '혼자' : `${n}명`}</button>
