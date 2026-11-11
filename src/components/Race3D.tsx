@@ -16,7 +16,7 @@ const ROAD_TILE = roadWidth(3) * (951 / 512)
 const GROUND_TILE = 10
 const PROPS = 20, PROP_GAP = 11
 
-export type RaceTheme = 'meadow' | 'snow' | 'candy' | 'fruit'
+export type RaceTheme = 'meadow' | 'snow' | 'candy' | 'fruit' | 'sea'
 export type RaceCar = 'heart' | 'cloud' | 'blue' | 'bunny' | 'star'
 /** 자동차 그림 크기(픽셀): 같은 눈금으로 줄여서 똑바로·왼쪽·오른쪽 크기가 서로 맞는다. 1픽셀 = CAR_K 장면 단위 */
 const CAR_PX: Record<RaceCar, Record<'straight' | 'left' | 'right', [number, number]>> = {
@@ -39,11 +39,12 @@ const CAR_K = 4.3 * 0.7 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
 export const ALL_CARS: RaceCar[] = ['heart', 'cloud', 'blue', 'bunny', 'star']
 /** 장소마다 하늘색(하늘 그림 아래·안개), 길가 소품 */
-const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | 'xmas' | 'fruit' }> = {
+const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | 'xmas' | 'fruit' | 'sea' }> = {
   meadow: { sky: 0xc9ecff, prop: 'tree' },
   snow: { sky: 0xdad6f6, prop: 'xmas' },
   candy: { sky: 0xffc9e3, prop: 'lollipop' },
   fruit: { sky: 0xffd6c4, prop: 'fruit' },
+  sea: { sky: 0x9fe6ef, prop: 'sea' },
 }
 
 export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Race>; theme: RaceTheme; car: RaceCar }) {
@@ -117,11 +118,14 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const SNOW_BIG: [string, number, number][] = [['prop_xmas', 4.7, 0.72], ['sn_pine', 4.0, 1.03], ['sn_pinelit', 4.0, 1.01], ['prop_xmas', 4.7, 0.72], ['sn_bare', 4.0, 1.07]]
     // 과일 마을: 레몬·오렌지·초록 나무와 딸기집·사과집을 번갈아 [그림, 높이, 가로세로 비율]
     const FRUIT_BIG: [string, number, number][] = [['fr_tree_green', 4.4, 0.93], ['fr_tree_lemon', 4.4, 0.95], ['fr_tree_orange', 4.4, 0.95], ['fr_strawhouse', 3.8, 1.04], ['fr_tree_orange', 4.4, 0.95], ['fr_tree_lemon', 4.4, 0.95], ['fr_applehouse', 3.8, 1.01], ['fr_tree_green', 4.4, 0.93]]
+    // 바닷속 마을: 큰 길가 자리는 큰 구경거리로 [그림, 높이, 가로세로 비율] (산호 큰 소품 그림이 오면 여기 추가)
+    const SEA_BIG: [string, number, number][] = [['sea_shellhouse', 4.4, 1.03], ['sea_conch', 4.4, 1.04], ['sea_submarine', 4.0, 1.07], ['sea_shellhouse', 4.4, 1.03], ['sea_octopus', 4.0, 0.99], ['sea_conch', 4.4, 1.04], ['sea_chest', 3.6, 1.18]]
     const props = Array.from({ length: PROPS }, (_, i) => {
       const side = i % 2 ? 1 : -1, x = side * (sideX + (i % 3) * 2.2), z = -i * PROP_GAP
       const big = 0.9 + (i % 3) * 0.2
       const o = th.prop === 'tree' ? (i % 4 === 1 ? spriteOf(art('prop_tree2'), 4.7 * big, 4.4 * big, 2.2 * big) : spriteOf(art('prop_tree'), 4.6 * big, 4.2 * big, 2.1 * big))
         : th.prop === 'fruit' ? (() => { const [img, h, asp] = FRUIT_BIG[i % FRUIT_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
+        : th.prop === 'sea' ? (() => { const [img, h, asp] = SEA_BIG[i % SEA_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
         : th.prop === 'xmas' ? (() => { const [img, h, asp] = SNOW_BIG[i % SNOW_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })() : (() => { const [img, h, asp] = CANDY_BIG[i % CANDY_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
       o.position.x = x; o.position.z = z; scene.add(o)
       return { o, k: i }
@@ -129,11 +133,14 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     // 길가 구경거리: 그림마다 쓰는 곳이 정해져 있다(초원: 토끼·꽃무더기 / 사탕 나라: 곰·풍선·사탕 나라 모음 / 눈 나라: 눈 나라 모음·크리스마스 나무)
     // [그림 이름, 높이, 가로세로 비율]
     type Art = [string, number, number]
-    const meadow = theme === 'meadow', candy = theme === 'candy', snow = theme === 'snow', fruit = theme === 'fruit'
+    const meadow = theme === 'meadow', candy = theme === 'candy', snow = theme === 'snow', fruit = theme === 'fruit', sea = theme === 'sea'
     const CHEER: Art[] = meadow ? [['prop_bunny', 3.0, 0.83]] : candy ? [
       ['prop_bear', 2.6, 1.04], ['cd_castle', 4.6, 0.92], ['prop_balloons', 3.2, 0.68], ['cd_lamp_a', 3.8, 0.54], ['cd_cakehouse', 3.6, 0.93], ['cd_cart', 2.8, 0.94],
       ['cd_ginger', 3.2, 1.0], ['cd_lamp_b', 3.8, 0.51], ['cd_fountain', 2.8, 1.05], ['prop_lamp', 3.8, 0.44], ['cd_umbrella', 2.6, 1.09], ['cd_cupcake', 2.4, 0.86],
       ['cd_bench', 1.9, 1.32], ['cd_sign', 2.6, 0.93], ['cd_fence', 1.6, 1.77], ['prop_balloons', 3.2, 0.68],
+    ] : sea ? [
+      ['sea_turtlelamp', 3.8, 0.77], ['sea_clambench', 1.9, 1.18], ['sea_starsign', 3.2, 0.64], ['sea_pearlbridge', 1.8, 1.69], ['sea_bubblecart', 2.8, 0.89], ['sea_jellyballoon', 3.4, 0.83],
+      ['sea_urchin', 3.0, 0.9], ['sea_turtlelamp', 3.8, 0.77], ['sea_chest', 2.4, 1.18], ['sea_octopus', 3.0, 0.99], ['sea_starsign', 3.2, 0.64], ['sea_clambench', 1.9, 1.18],
     ] : fruit ? [
       ['fr_pinefountain', 2.8, 1.03], ['fr_orangelamp', 3.8, 0.66], ['fr_fruitstand', 3.0, 1.03], ['fr_melonbench', 1.9, 1.38], ['fr_peachhouse', 3.4, 1.04], ['fr_lemoncart', 2.8, 0.9],
       ['fr_cherrysign', 3.2, 0.68], ['fr_kiwiparasol', 2.8, 0.96], ['fr_grapeballoon', 3.4, 0.67], ['fr_bananabridge', 1.8, 1.75], ['fr_orangelamp', 3.8, 0.66], ['fr_strawhouse', 3.0, 1.04],
@@ -159,7 +166,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     ] : snow ? [
       ['sn_rock', 1.3, 1.59], ['sn_holly', 1.3, 1.35], ['sn_iceplant', 1.5, 1.15], ['sn_crystal', 1.4, 1.15], ['sn_flake', 1.2, 0.96], ['sn_gifts', 1.2, 1.23],
     ] : []
-    const FLOWERS = GROUND.length ? (fruit ? 20 : 14) : 0, FLOWER_GAP = fruit ? 12 : 17
+    const FLOWERS = GROUND.length ? (fruit ? 20 : sea ? 12 : 14) : 0, FLOWER_GAP = fruit ? 12 : sea ? 20 : 17
     const flowers = Array.from({ length: FLOWERS }, (_, i) => {
       const [img, h, asp] = GROUND[i % GROUND.length]
       const o = spriteOf(art(img), h * asp, h, h / 2)
@@ -239,7 +246,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const shown = new Map<number, THREE.Group>()
 
     // 효과: 별·부스터를 먹으면 반짝이, 미끄러지면 먼지, 부스터 중에는 불꽃(차 뒤)
-    const sparkleSp = spriteOf(art('fx_sparkle'), 1.7, 1.3, 1.0), dustSp = spriteOf(art('fx_dust'), 2.4, 1.5, 0.9)
+    const sparkleSp = spriteOf(art('fx_sparkle'), 1.7, 1.3, 1.0), dustSp = spriteOf(art(theme === 'sea' ? 'fx_bubbles' : 'fx_dust'), 2.4, 1.5, 0.9)
     sparkleSp.visible = dustSp.visible = false
     // 반짝이·먼지는 차보다 카메라 쪽(차 뒤)에 두고 맨 위에 그린다: 차에 가려 안 보이던 것을 보이게
     sparkleSp.renderOrder = dustSp.renderOrder = 300

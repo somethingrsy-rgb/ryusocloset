@@ -21,14 +21,15 @@ const pickRivals = (n: number) => [...Array(n).keys()]
 const THEME_KEY = 'ryuso.race.theme'
 const THEMES: { id: RaceTheme; ico: string; name: string }[] = [
   { id: 'meadow', ico: '🌳', name: '초원' },
-  { id: 'snow', ico: '❄️', name: '눈 나라' },
-  { id: 'candy', ico: '🍭', name: '사탕 나라' },
-  { id: 'fruit', ico: '🍓', name: '과일 마을' },
+  { id: 'snow', ico: '❄️', name: '눈' },
+  { id: 'candy', ico: '🍭', name: '사탕' },
+  { id: 'fruit', ico: '🍓', name: '과일' },
+  { id: 'sea', ico: '🐠', name: '바닷속' },
 ]
 const CAR_KEY = 'ryuso.race.car'
 const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트' }, { id: 'cloud', name: '구름' }, { id: 'blue', name: '파랑' }, { id: 'bunny', name: '번개' }, { id: 'star', name: '별' }]
 const readCar = (): RaceCar => { try { const v = localStorage.getItem(CAR_KEY); return v === 'cloud' || v === 'blue' || v === 'bunny' || v === 'star' ? v : 'heart' } catch { return 'heart' } }
-const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' || v === 'fruit' ? v : 'meadow' } catch { return 'meadow' } }
+const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' || v === 'fruit' || v === 'sea' ? v : 'meadow' } catch { return 'meadow' } }
 
 const img = (name: string) => assetUrl(`race/${name}.webp`)
 const roundBtn = 'pointer-events-auto h-24 w-24 active:scale-90 drop-shadow-lg'
@@ -246,10 +247,10 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
                 </button>
               ))}
             </div>
-            <div role="radiogroup" aria-label="달릴 곳" className="flex w-full gap-2">
+            <div role="radiogroup" aria-label="달릴 곳" className="grid w-full grid-cols-5 gap-1.5">
               {THEMES.map((t) => (
                 <button key={t.id} role="radio" aria-checked={theme === t.id} onClick={() => pickTheme(t.id)}
-                  className={`flex flex-1 flex-col items-center rounded-2xl border-2 py-1.5 text-xs font-black ${theme === t.id ? 'border-[#ff8fab] bg-[#fff0f5] text-[#c0587a]' : 'border-transparent bg-[#f6eef8] text-[#7a3d8f]'}`}>
+                  className={`flex min-w-0 flex-col items-center rounded-2xl border-2 py-1 text-[11px] leading-tight font-black whitespace-nowrap ${theme === t.id ? 'border-[#ff8fab] bg-[#fff0f5] text-[#c0587a]' : 'border-transparent bg-[#f6eef8] text-[#7a3d8f]'}`}>
                   <span className="text-2xl leading-none">{t.ico}</span>{t.name}
                 </button>
               ))}
