@@ -43,6 +43,8 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   const pickTheme = (t: RaceTheme) => { setTheme(t); playTap(); try { localStorage.setItem(THEME_KEY, t) } catch { /* 저장 못 해도 이번 판은 그 장소 */ } }
   const saved = useRef(false)
 
+  // 레이스 화면에서는 대화 단추를 왼쪽 방향 단추 위로 올린다(겹치지 않게: index.css 의 body[data-race])
+  useEffect(() => { document.body.dataset.race = '1'; return () => { delete document.body.dataset.race } }, [])
   // 달리는 동안 노래
   useEffect(() => { if (phase !== 'playing' || paused) return; startBgm('run'); return stopBgm }, [phase, paused])
   // 다른 화면으로 가면 멈춘다
