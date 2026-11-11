@@ -96,7 +96,8 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
     } catch (e) {
       // 왜 안 됐는지 알려 준다: 서버 규칙이 새 것이 아니면 규칙 안내, 아니면 오류 이름을 보여 준다
       const msg = e instanceof Error ? `${(e as { code?: string }).code ?? ''} ${e.message}`.trim() : String(e)
-      setNetMsg(/permission/i.test(msg) ? '서버 규칙이 아직 새 것이 아니에요. Firebase 콘솔에서 규칙을 다시 게시해 주세요 (PERMISSION_DENIED)' : `연결하지 못했어요 · ${msg.slice(0, 90)}`)
+      const stepName = /\[([^\]]+)\]/.exec(msg)?.[1]
+      setNetMsg(/permission/i.test(msg) ? `서버가 거부했어요 · 단계: ${stepName ?? '알 수 없음'} (PERMISSION_DENIED). 이 글을 그대로 알려 주세요` : `연결하지 못했어요 · ${msg.slice(0, 90)}`)
       setOnline(false)
     }
   }
