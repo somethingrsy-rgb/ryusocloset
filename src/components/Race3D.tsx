@@ -1,8 +1,6 @@
 import { useEffect, useRef, type MutableRefObject } from 'react'
 import * as THREE from 'three'
 import { LANE_W, LAP, LAPS, itemsBetween, type ItemKind, type Race } from '../lib/race'
-import { CALL_ANIMALS } from '../lib/animalCalls'
-import { animal3dAspect, animal3dUrl } from '../lib/animals3d'
 import { assetUrl } from '../lib/items'
 import { createStage } from './stage3d'
 
@@ -38,8 +36,6 @@ const DRIVER_PX: Partial<Record<RaceCar, Record<'straight' | 'left' | 'right', [
 const CAR_K = 4.3 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
 export const ALL_CARS: RaceCar[] = ['heart', 'cloud', 'pumpkin', 'bunny', 'star']
-/** 운전석 자리(차 그림 높이 대비, 바닥에서부터): 이 자리에 운전하는 얼굴이 앉는다 */
-const SEAT: Record<RaceCar, number> = { heart: 0.56, cloud: 0.6, pumpkin: 0.5, bunny: 0.5, star: 0.58 }
 /** 장소마다 하늘색(하늘 그림 아래·안개), 길가 소품 */
 const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | 'xmas' }> = {
   meadow: { sky: 0xc9ecff, prop: 'tree' },
@@ -162,17 +158,17 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     for (let k = 0; k <= LAPS; k++) { const o = spriteOf(signTex, 2.3, 2.1, 1.05); o.position.set(-(ROAD_W / 2 + 1.5), 1.05, gateZ(k) + 9); scene.add(o) }
 
     // 차: 그림 판 세 장(똑바로·왼쪽·오른쪽)을 겹쳐 두고, 옆으로 움직이는 속도에 따라 서서히 섞는다(뚝 바뀌지 않고 미끄러지듯)
-    const buildCar = (id: RaceCar, k = 1, rival = false) => {
+    const buildCar = (id: RaceCar, k = 1) => {
       const group = new THREE.Group()
       const sp = (['straight', 'left', 'right'] as const).map((v) => {
-        const drv = !rival && DRIVER_PX[id]
+        const drv = DRIVER_PX[id]
         const [pw, ph] = (drv ? drv : CAR_PX[id])[v]
         const m = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: art(`${drv ? 'car_d' : 'car'}_${id}_${v}`), transparent: true, depthWrite: false })))
         m.center.set(0.5, 0.05); m.scale.set(pw * CAR_K * k, ph * CAR_K * k, 1)
         group.add(m); return m
       })
       scene.add(group)
-      return { group, sp, h: ((!rival && DRIVER_PX[id]) || CAR_PX[id]).straight[1] * CAR_K * k }
+      return { group, sp, h: (DRIVER_PX[id] || CAR_PX[id]).straight[1] * CAR_K * k }
     }
     const lean = (c: ReturnType<typeof buildCar>, vx: number, slip: number, fade = 1) => {
       const l = Math.max(-1, Math.min(1, vx / 1.6)), m = Math.abs(l)
@@ -183,14 +179,10 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     }
     const mine = buildCar(carId)
     const car = mine.group
-    // 컴퓨터 친구 차: 내 차가 아닌 차들을 돌려 쓰고, 동물 친구가 운전한다
+    // 컴퓨터 친구 차: 내가 고른 차가 아닌 다른 차들을 돌려 쓴다(차 그림에 운전자가 이미 타 있다)
     const others = ALL_CARS.filter((c) => c !== carId)
-    const rivalCars = live.current.rivals.map((rv, i) => {
-      const id = others[i % others.length], c = buildCar(id, 0.92, true)
-      const img = CALL_ANIMALS[rv.animal % CALL_ANIMALS.length].img
-      const a = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: s.texOf(animal3dUrl(img)), transparent: true, depthWrite: false })))
-      const ah = c.h * 0.42; a.scale.set(ah * animal3dAspect(img), ah, 1); a.position.set(0, c.h * SEAT[id], 0.3)
-      c.group.add(a)
+    const rivalCars = live.current.rivals.map((_rv, i) => {
+      const id = others[i % others.length], c = buildCar(id, 0.92)
       return c
     })
     const shadow = new THREE.Mesh(keep(new THREE.CircleGeometry(1, 20)), keep(new THREE.MeshBasicMaterial({ color: 0x3c4a2a, transparent: true, opacity: 0.25, depthWrite: false })))
