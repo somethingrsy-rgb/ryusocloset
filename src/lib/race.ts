@@ -50,6 +50,8 @@ export interface Rival {
   skill: number
   /** 결승선을 지난 시간(초), 아직이면 null */
   fin: number | null
+  /** 같이 달리기: 친구(사람)의 차. 서버에서 받은 위치로 움직인다(컴퓨터가 달리지 않는다) */
+  net?: { name: string; car: string; /** 마지막으로 받은 거리·옆 자리·속도 */ td: number; tx: number; ts: number; /** 마지막으로 받은 시각(서버 ms) */ seen: number }
 }
 
 export interface Race {
@@ -139,6 +141,12 @@ export const setBrake = (r: Race, on: boolean): Race => (r.brake === on ? r : { 
 
 /** 컴퓨터 친구 한 대가 dt 초 달린다(me 는 내 차: 너무 앞서거나 뒤처지면 조금 따라잡고 봐주며 가까이 달리게) */
 function stepRival(v: Rival, me: Race, dt: number, running: boolean): Rival {
+  if (v.net) {
+    // 사람 친구: 마지막으로 받은 자리로 부드럽게 따라가고, 다음 소식이 올 때까지는 받은 속도로 앞으로 간다
+    const k = Math.min(1, dt * 8), td = v.net.td + v.net.ts * dt
+    const d = v.d + (td - v.d) * k + (v.net.ts * dt) * (1 - k), x = v.x + (v.net.tx - v.x) * k
+    return { ...v, d, x, vx: (x - v.x) / Math.max(dt, 1e-3), speed: v.net.ts, net: { ...v.net, td } }
+  }
   // 2초마다 칸을 다시 고른다: 바나나·물웅덩이는 대개 피하고, 부스터가 있으면 가끔 그쪽으로
   const win = Math.floor(me.t / 2)
   let lane = v.lane
@@ -170,6 +178,21 @@ function stepRival(v: Rival, me: Race, dt: number, running: boolean): Rival {
   return { ...v, lane, x, vx, d, speed, boost, slow, fin: v.fin === null && d >= LAP * LAPS ? me.t : v.fin }
 }
 const stepRivals = (r: Race, dt: number, running: boolean) => r.rivals.map((v) => stepRival(v, r, dt, running))
+/** 같이 달리기 판: 서버가 정한 씨앗을 모두 같이 쓰고(같은 길), 길은 늘 5칸, 사람 친구 차는 서버 소식으로 움직인다. slot 은 출발 자리 번호 */
+export const NET_SLOTS = [-2, -1, 1, 2]
+export function newNetRace(seed: number, mySlot: number, others: { id: number; name: string; car: string; slot: number }[]): Race {
+  const base = newRace(seed, [])
+  const me = NET_SLOTS[mySlot] ?? 0
+  return {
+    ...base, lanes: 5, lane: me, x: me,
+    rivals: others.map((o) => ({ id: o.id, animal: 0, d: 0, x: NET_SLOTS[o.slot] ?? 0, vx: 0, lane: NET_SLOTS[o.slot] ?? 0, speed: 0, boost: 0, slow: 0, skill: 1, fin: null, net: { name: o.name, car: o.car, td: 0, tx: NET_SLOTS[o.slot] ?? 0, ts: 0, seen: 0 } })),
+  }
+}
+/** 서버에서 친구 소식이 왔을 때 그 친구 차에 알려 준다(fin 은 결승선을 지난 달린 시간, 아직이면 null) */
+export function applyNetReport(r: Race, id: number, rep: { d: number; x: number; speed: number; fin: number | null }, now: number): Race {
+  if (!r.rivals.some((v) => v.id === id && v.net)) return r
+  return { ...r, rivals: r.rivals.map((v) => (v.id === id && v.net ? { ...v, fin: v.fin ?? rep.fin, net: { ...v.net, td: rep.d, tx: rep.x, ts: rep.speed, seen: now } } : v)) }
+}
 /** 내 순위: 결승선을 먼저 지났거나 더 앞에 있는 친구 수 + 1 */
 export const rankNow = (r: Race) => r.rivals.length ? 1 + r.rivals.filter((v) => v.fin !== null || v.d > r.d).length : 0
 

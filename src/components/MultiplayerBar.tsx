@@ -178,7 +178,7 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
       {mine && !in3d && <MyBubble key={mine.id} text={mine.text} onShown={setBubbleShown} />}
       {/* 대화 단추(같이 놀기 중엔 늘): 🎤 바로 말해서 보내기 · 💬 글로 쓰기. 아래쪽 놀이 단추와 겹치지 않게 왼쪽 가운데 */}
       {on && !chatOpen && (
-        <div className="pointer-events-none absolute left-2 z-[60] flex flex-col items-start gap-2" style={{ top: '58%' }}>
+        <div className="mp-chat-col pointer-events-none absolute left-2 z-[60] flex flex-col items-start gap-2" style={{ top: '58%' }}>
           {speechSupported && (
             <button aria-label={hearing ? '듣는 중 · 누르면 멈춰요' : '말로 채팅하기'} onClick={() => { mic(); touch() }}
               className={`pointer-events-auto h-12 w-12 rounded-full text-2xl shadow-lg ${hearing ? 'animate-pulse bg-[#ff5c8a] text-white' : 'bg-white/95'}`}>🎤</button>
