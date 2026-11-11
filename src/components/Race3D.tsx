@@ -180,7 +180,9 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const mine = buildCar(carId)
     const car = mine.group
     // 컴퓨터 친구 차: 내가 고른 차가 아닌 다른 차들을 돌려 쓴다(차 그림에 운전자가 이미 타 있다)
-    const others = ALL_CARS.filter((c) => c !== carId)
+    // 내가 고른 차를 뺀 나머지 4대 중에서 판마다 무작위로(같은 판이면 같은 차) 골라 태운다
+    const sd = live.current.seed
+    const others = ALL_CARS.filter((c) => c !== carId).map((c, i) => ({ c, k: Math.sin(sd * 12.9898 + i * 78.233) })).sort((a, b) => a.k - b.k).map((x) => x.c)
     const rivalCars = live.current.rivals.map((_rv, i) => {
       const id = others[i % others.length], c = buildCar(id, 0.92)
       return c

@@ -2,7 +2,6 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { assetUrl } from '../lib/items'
 import { isRestoring } from '../lib/restoreGuard'
 import { LAPS, MAX_RIVALS, TIME_LIMIT, lapOf, newRace, rankNow, rewardStars, setBrake, setHold, steer, stepRace, timeLeft, type Race } from '../lib/race'
-import { CALL_ANIMALS } from '../lib/animalCalls'
 import { earnStars } from '../lib/shop'
 import { playCloud, playGold, playHop, playStar, playTap, playWin, startBgm, stopBgm } from '../lib/sound'
 
@@ -12,8 +11,8 @@ import type { RaceCar, RaceTheme } from './Race3D'
 
 const RIVAL_KEY = 'ryuso.race.rivals'
 const readRivals = (): number => { try { const n = Number(localStorage.getItem(RIVAL_KEY) ?? MAX_RIVALS); return Number.isInteger(n) && n >= 0 && n <= MAX_RIVALS ? n : MAX_RIVALS } catch { return MAX_RIVALS } }
-/** 같이 달릴 동물 친구를 무작위로 n마리 */
-const pickAnimals = (n: number) => [...CALL_ANIMALS.keys()].sort(() => Math.random() - 0.5).slice(0, n)
+/** 컴퓨터 친구 n대(번호만 센다: 어떤 차를 탈지는 레이스 화면이 정한다) */
+const pickRivals = (n: number) => [...Array(n).keys()]
 const THEME_KEY = 'ryuso.race.theme'
 const THEMES: { id: RaceTheme; ico: string; name: string }[] = [
   { id: 'meadow', ico: '🌳', name: '초원' },
@@ -77,7 +76,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
     if (stars > 0 && !isRestoring() && earnStars(stars)) setPaid(stars)
   }, [phase])
 
-  const start = () => { const fresh = newRace(undefined, pickAnimals(friends)); live.current = fresh; setRace(fresh); saved.current = false; setPaid(0); setOops(0); setPaused(false); setPhase('playing'); playTap() }
+  const start = () => { const fresh = newRace(undefined, pickRivals(friends)); live.current = fresh; setRace(fresh); saved.current = false; setPaid(0); setOops(0); setPaused(false); setPhase('playing'); playTap() }
   const go = (dir: -1 | 1) => { if (phase !== 'playing' || paused) return; live.current = steer(live.current, dir); playHop() }
   /** 단추를 누르고 있는 동안은 칸에 걸리지 않고 쭉 미끄러진다(손을 떼면 그 자리에서 멈춘다) */
   const holdOn = (dir: -1 | 1) => { go(dir); if (phase === 'playing' && !paused) live.current = setHold(live.current, dir) }
