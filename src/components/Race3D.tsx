@@ -239,8 +239,10 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const shown = new Map<number, THREE.Group>()
 
     // 효과: 별·부스터를 먹으면 반짝이, 미끄러지면 먼지, 부스터 중에는 불꽃(차 뒤)
-    const sparkleSp = spriteOf(art('fx_sparkle'), 2.6, 2.0, 1.6), dustSp = spriteOf(art('fx_dust'), 2.4, 1.5, 0.9)
+    const sparkleSp = spriteOf(art('fx_sparkle'), 1.7, 1.3, 1.0), dustSp = spriteOf(art('fx_dust'), 2.4, 1.5, 0.9)
     sparkleSp.visible = dustSp.visible = false
+    // 반짝이·먼지는 차보다 카메라 쪽(차 뒤)에 두고 맨 위에 그린다: 차에 가려 안 보이던 것을 보이게
+    sparkleSp.renderOrder = dustSp.renderOrder = 300
     scene.add(sparkleSp, dustSp)
 
     let skyWide: boolean | null = null
@@ -273,8 +275,8 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       camX += (cx * 0.6 - camX) * Math.min(1, dt * 6)
       s.view.target.set(camX, 1.0, cz - 3.2)
       s.view.dist = 11 + (LANES - 3) * 1.6 + Math.min(1.5, r.speed / 25) + (r.boost > 0 ? 1.2 : 0)
-      sparkleSp.visible = r.sparkle > 0; sparkleSp.position.set(cx, 1.6 + (0.6 - r.sparkle) * 0.6, cz - 0.5)
-      dustSp.visible = r.dust > 0; dustSp.position.set(cx, 0.9, cz - 0.3); dustSp.scale.setScalar(1 + (0.7 - r.dust) * 1.2)
+      sparkleSp.visible = r.sparkle > 0; sparkleSp.position.set(cx, 0.55 + (0.6 - r.sparkle) * 0.5, cz + 1.0)
+      dustSp.visible = r.dust > 0; dustSp.position.set(cx, 0.5, cz + 0.9); dustSp.scale.setScalar(0.7 + Math.max(0, 0.7 - r.dust) * 0.9)
       // 나무
       const period = PROPS * PROP_GAP
       // 출발·결승 아치 앞뒤 18칸에는 나무·구경꾼·꽃을 두지 않는다(아치와 겹쳐 보이지 않게)
