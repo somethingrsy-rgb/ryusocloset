@@ -33,20 +33,25 @@ export function saneMeta(v: unknown): RaceMeta | null {
   return { host: r.host, seed: Math.floor(num(r.seed, 0, 999999)), startAt: num(r.startAt, 0, 1e15), t: num(r.t, 0, 1e15) }
 }
 
-/** 어느 방에 들어갈까: 대기 중이고 자리가 있고 소식이 신선한 방 중 가장 작은 번호, 없으면 빈 방 */
-export function pickRoom(rooms: Record<string, RoomSnap | undefined>, now: number): { room: string; create: boolean } | null {
+/**
+ * 들어갈 방 후보를 좋은 순서로 늘어놓는다.
+ * 1) 대기 중이고 자리가 있고 소식이 신선한 방(들어가기) → 2) 비어 있는 방(만들기) → 3) 방장 소식이 10분 넘게 끊긴 방(만들기)
+ * → 4) 방장 정보(meta)가 없이 찌꺼기만 남은 방(마지막 수단: 새 규칙이 아니면 서버가 막는다)
+ * 방 만들기가 서버에 막히면 다음 후보로 넘어간다(전에 남은 데이터 때문에 막히는 경우)
+ */
+export function pickRooms(rooms: Record<string, RoomSnap | undefined>, now: number): { room: string; create: boolean }[] {
+  const out: { room: string; create: boolean }[] = []
   for (const id of RACE_ROOMS) {
     const r = rooms[id]
-    if (!r || !r.meta) continue
-    const fresh = now - r.meta.t < STALE_MS * 4 && r.meta.startAt === 0
-    if (fresh && Object.keys(r.players).length < RACE_MAX) return { room: id, create: false }
+    if (r?.meta && now - r.meta.t < STALE_MS * 4 && r.meta.startAt === 0 && Object.keys(r.players).length < RACE_MAX) out.push({ room: id, create: false })
   }
-  for (const id of RACE_ROOMS) {
-    const r = rooms[id]
-    if (!r || !r.meta || now - r.meta.t > 600000) return { room: id, create: true }
-  }
-  return null
+  for (const id of RACE_ROOMS) if (!rooms[id]) out.push({ room: id, create: true })
+  for (const id of RACE_ROOMS) { const r = rooms[id]; if (r?.meta && now - r.meta.t > 600000) out.push({ room: id, create: true }) }
+  for (const id of RACE_ROOMS) { const r = rooms[id]; if (r && !r.meta) out.push({ room: id, create: true }) }
+  return out
 }
+/** 첫 후보(테스트·간단히 쓸 때) */
+export const pickRoom = (rooms: Record<string, RoomSnap | undefined>, now: number) => pickRooms(rooms, now)[0] ?? null
 
 /** 사람들의 출발 자리(칸 순서): uid 를 글자 순으로 늘어놓은 번호. 모두의 화면에서 같다 */
 export const slotOf = (uids: string[], uid: string) => [...uids].sort().indexOf(uid)
@@ -111,19 +116,26 @@ export async function joinRaceRoom(name: string, car: string, onRoom: (room: Roo
     for (const [u, p] of Object.entries(v.players ?? {})) { const sp = sanePlayer(p); if (sp) players[u] = sp }
     rooms[id] = { meta: saneMeta(v.meta), players }
   }
-  const pick = pickRoom(rooms, Date.now() + skew)
-  if (!pick) { offOff(); return null }
+  const candidates = pickRooms(rooms, Date.now() + skew)
+  if (!candidates.length) { offOff(); return null }
+  // 후보를 차례로 시도한다: 방 만들기가 서버에 막히면(남은 데이터) 다음 후보로
+  let pick = candidates[0], lastErr: unknown = null, ready = false
+  for (const c of candidates) {
+    pick = c
+    const metaRef0 = ref(db, `lobby/race/${c.room}/meta`)
+    if (!c.create) { ready = true; break }
+    try {
+      await remove(ref(db, `lobby/race/${c.room}`)).catch(() => {})
+      await step('방 만들기', set(metaRef0, { host: user.uid, seed: Math.floor(Math.random() * 900000) + 100, startAt: 0, t: serverTimestamp() }))
+      ready = true; break
+    } catch (e) { lastErr = e }
+  }
+  if (!ready) { offOff(); throw lastErr }
   const roomRef = ref(db, `lobby/race/${pick.room}`)
   const meRef = ref(db, `lobby/race/${pick.room}/players/${user.uid}`)
   const metaRef = ref(db, `lobby/race/${pick.room}/meta`)
-  if (pick.create) {
-    // 오래된 방이 남아 있으면 지우고 내가 방장이 된다
-    await remove(roomRef).catch(() => {})
-    await step('방 만들기', set(metaRef, { host: user.uid, seed: Math.floor(Math.random() * 900000) + 100, startAt: 0, t: serverTimestamp() }))
-    onDisconnect(roomRef).remove().catch(() => {})
-  } else {
-    onDisconnect(meRef).remove().catch(() => {})
-  }
+  if (pick.create) onDisconnect(roomRef).remove().catch(() => {})
+  else onDisconnect(meRef).remove().catch(() => {})
   const first = { name: name.slice(0, 12) || '친구', car, d: 0, x: 0, speed: 0, fin: null as number | null }
   await step('내 자리 쓰기', set(meRef, { ...first, t: serverTimestamp() }))
   const off = onValue(roomRef, (s) => {
@@ -132,13 +144,15 @@ export async function joinRaceRoom(name: string, car: string, onRoom: (room: Roo
     for (const [u, p] of Object.entries(v?.players ?? {})) { const sp = sanePlayer(p); if (sp) players[u] = sp }
     onRoom({ meta: saneMeta(v?.meta), players })
   })
+  // 방장은 대기하는 동안 15초마다 소식을 새로 써서, 오래 기다려도 다른 사람이 들어올 수 있게 한다
+  const beat = pick.create ? window.setInterval(() => { update(metaRef, { t: serverTimestamp() }).catch(() => {}) }, 15000) : 0
   return {
     uid: user.uid, room: pick.room, host: pick.create,
     report: (m) => { update(meRef, { ...m, fin: m.fin, t: serverTimestamp() }).catch(() => {}) },
-    start: () => { if (pick.create) update(metaRef, { startAt: Date.now() + skew + START_LEAD + 2000, t: serverTimestamp() }).catch(() => {}) },
+    start: () => { if (pick.create) { clearInterval(beat) } if (pick.create) update(metaRef, { startAt: Date.now() + skew + START_LEAD + 2000, t: serverTimestamp() }).catch(() => {}) },
     offset: () => skew,
     leave: () => {
-      off(); offOff()
+      off(); offOff(); if (beat) clearInterval(beat)
       if (pick.create) { onDisconnect(roomRef).cancel().catch(() => {}); remove(roomRef).catch(() => {}) }
       else { onDisconnect(meRef).cancel().catch(() => {}); remove(meRef).catch(() => {}) }
     },

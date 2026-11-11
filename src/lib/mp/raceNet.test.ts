@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { RACE_MAX, STALE_MS, pickRoom, saneMeta, sanePlayer, slotOf, type RoomSnap } from './raceNet'
+import { RACE_MAX, STALE_MS, pickRoom, pickRooms, saneMeta, sanePlayer, slotOf, type RoomSnap } from './raceNet'
 import { applyNetReport, newNetRace, rankNow, stepRace } from '../race'
 
 const pl = (n: number) => Object.fromEntries(Array.from({ length: n }, (_, i) => [`u${i}`, { name: `n${i}`, car: 'heart', d: 0, x: 0, speed: 0, fin: null, t: 1 }]))
@@ -13,7 +13,9 @@ describe('같이 달리기 방 고르기', () => {
     expect(pickRoom({ r1: room(2, 9999) }, 5000)).toEqual({ room: 'r2', create: true })
     // 소식이 끊긴 방에는 들어가지 않고(규칙상 10분이 지나야 덮어쓸 수 있어서) 다른 빈 방을 쓴다
     expect(pickRoom({ r1: room(1, 0, 1000) }, 1000 + STALE_MS * 4 + 1)).toEqual({ room: 'r2', create: true })
-    expect(pickRoom({ r1: room(1, 0, 1000) }, 1000 + 600001)).toEqual({ room: 'r1', create: true })
+    // 10분 넘게 끊긴 방도 쓸 수 있지만, 빈 방이 있으면 빈 방을 먼저 쓴다
+    expect(pickRoom({ r1: room(1, 0, 1000) }, 1000 + 600001)).toEqual({ room: 'r2', create: true })
+    expect(pickRooms({ r1: room(1, 0, 1000) }, 1000 + 600001).some((c) => c.room === 'r1' && c.create)).toBe(true)
     const full = Object.fromEntries(['r1', 'r2', 'r3', 'r4', 'r5', 'r6'].map((r) => [r, room(RACE_MAX, 9999, 4900)]))
     expect(pickRoom(full, 5000)).toBeNull()
   })
@@ -26,6 +28,19 @@ describe('같이 달리기 방 고르기', () => {
   it('출발 자리는 모두의 화면에서 같다', () => {
     const uids = ['zed', 'amy', 'kim']
     expect(slotOf(uids, 'amy')).toBe(0); expect(slotOf(uids, 'kim')).toBe(1); expect(slotOf(uids, 'zed')).toBe(2)
+  })
+})
+
+describe('방 후보 순서', () => {
+  it('남은 찌꺼기 방은 뒤로 미루고, 빈 방을 먼저 만든다', () => {
+    const junk: RoomSnap = { meta: null, players: pl(1) }
+    const list = pickRooms({ r1: junk, r2: room(2, 0, 1000) }, 1000 + 5000)
+    expect(list[0]).toEqual({ room: 'r2', create: false })
+    expect(list[1]).toEqual({ room: 'r3', create: true })
+    expect(list[list.length - 1]).toEqual({ room: 'r1', create: true })
+    expect(pickRooms({ r1: room(1, 0, 1000) }, 1000 + 700000)[0]).toEqual({ room: 'r2', create: true })
+    const all = Object.fromEntries(['r1','r2','r3','r4','r5','r6'].map((r) => [r, room(RACE_MAX, 9999, 4900)]))
+    expect(pickRooms(all, 5000)).toEqual([])
   })
 })
 
