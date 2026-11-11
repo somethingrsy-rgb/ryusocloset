@@ -251,6 +251,18 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     // 반짝이·먼지는 차보다 카메라 쪽(차 뒤)에 두고 맨 위에 그린다: 차에 가려 안 보이던 것을 보이게
     sparkleSp.renderOrder = dustSp.renderOrder = 300
     scene.add(sparkleSp, dustSp)
+    // 바닷속 거품 3가지(바닷속에서만): ① 부스터 중 차 뒤로 계속 퍼지는 거품 ② 별 코인을 먹을 때 톡 올라오는 거품 ③ 화면에 천천히 떠다니는 거품
+    const bubOn = theme === 'sea'
+    const bubTex = bubOn ? art('fx_bubbles') : null
+    type Bub = { sp: THREE.Sprite; life: number; max: number; vx: number; vy: number; s0: number }
+    const bubbles: Bub[] = []
+    const addBub = (x: number, y: number, z: number, size: number, max: number, vx: number, vy: number, op: number) => {
+      const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: bubTex!, transparent: true, depthWrite: false, opacity: op })))
+      sp.renderOrder = 290; sp.scale.setScalar(size); sp.position.set(x, y, z); scene.add(sp)
+      bubbles.push({ sp, life: max, max, vx, vy, s0: size })
+    }
+    let lastStars = 0, boostAcc = 0, ambAcc = 0
+    const rnd = (a: number, b: number) => a + Math.random() * (b - a)
 
     let skyWide: boolean | null = null
     const drawRank = new Map<number, number>()
@@ -282,6 +294,22 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       camX += (cx * 0.6 - camX) * Math.min(1, dt * 6)
       s.view.target.set(camX, 1.0, cz - 3.2)
       s.view.dist = 11 + (LANES - 3) * 1.6 + Math.min(1.5, r.speed / 25) + (r.boost > 0 ? 1.2 : 0)
+      if (bubOn) {
+        // ① 부스터 중: 0.06초마다 차 뒤에서 작은 거품이 옆으로 퍼지며 올라간다
+        if (r.boost > 0) { boostAcc += dt; while (boostAcc > 0.06) { boostAcc -= 0.06; addBub(cx + rnd(-0.8, 0.8), rnd(0.5, 1.0), cz + rnd(0.3, 0.9), rnd(0.25, 0.5), rnd(0.7, 1.1), rnd(-0.7, 0.7), rnd(0.8, 1.6), 0.85) } } else boostAcc = 0
+        // ② 별 코인을 먹었으면(별 수가 늘었으면) 차 앞쪽에서 거품 몇 개가 톡 올라온다
+        if (r.stars > lastStars) { for (let k = 0; k < 6; k++) addBub(cx + rnd(-0.6, 0.6), rnd(1.0, 1.6), cz + rnd(-0.8, 0.0), rnd(0.25, 0.5), rnd(0.6, 0.9), rnd(-0.5, 0.5), rnd(1.4, 2.4), 0.95) }
+        lastStars = r.stars
+        // ③ 떠다니는 거품: 길 양옆 멀리서 천천히 올라가며 사라진다(적게, 시야를 가리지 않게)
+        ambAcc += dt; while (ambAcc > 0.5) { ambAcc -= 0.5; const side = Math.random() < 0.5 ? -1 : 1; addBub(cx + side * rnd(3, 9), rnd(0.2, 2.5), cz - rnd(4, 22), rnd(0.4, 0.9), rnd(3, 5), rnd(-0.1, 0.1), rnd(0.25, 0.5), 0.55) }
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+          const b = bubbles[i]; b.life -= dt
+          if (b.life <= 0) { scene.remove(b.sp); bubbles.splice(i, 1); continue }
+          const k = b.life / b.max
+          b.sp.position.x += b.vx * dt; b.sp.position.y += b.vy * dt
+          b.sp.material.opacity = Math.min(0.95, k * 1.6) * (b.s0 < 0.7 && b.max > 2 ? 0.6 : 1)
+        }
+      }
       sparkleSp.visible = r.sparkle > 0; sparkleSp.position.set(cx, 0.55 + (0.6 - r.sparkle) * 0.5, cz + 1.0)
       dustSp.visible = r.dust > 0; dustSp.position.set(cx, 0.5, cz + 0.9); dustSp.scale.setScalar(0.7 + Math.max(0, 0.7 - r.dust) * 0.9)
       // 나무
