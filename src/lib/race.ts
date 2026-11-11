@@ -4,7 +4,8 @@
  * - 별 코인은 모이고, 부스터는 잠깐 빨라지고, 바나나·물웅덩이는 잠깐 느려진다. 부딪혀도 점수를 깎거나 혼내지 않는다.
  * - 아이템 자리는 거리(d)와 씨앗(seed)만으로 정해진다: 같은 씨앗이면 누구에게나 같은 길(같이 놀기에서 그대로 쓴다).
  */
-export type Lane = -1 | 0 | 1
+/** 칸 번호: 3칸이면 -1~1, 5칸이면 -2~2 */
+export type Lane = number
 export type ItemKind = 'star' | 'boost' | 'banana' | 'puddle'
 export interface RaceItem { id: number; d: number; lane: Lane; kind: ItemKind }
 export type RaceEvent = 'star' | 'boost' | 'slip'
@@ -25,9 +26,9 @@ const BRAKE_K = 0.6
 const ACCEL = 40
 /** 옆으로 미끄러지는 느낌: 용수철처럼 목표 칸으로 다가가며 속도가 부드럽게 붙고 줄어든다(부딪히지 않고 미끄러지듯) */
 const SPRING = 70, DAMP = 2 * Math.sqrt(SPRING) * 0.92
-export function glide(x: number, vx: number, target: number, dt: number): [number, number] {
+export function glide(x: number, vx: number, target: number, dt: number, limit = 1.2): [number, number] {
   const v = vx + (SPRING * (target - x) - DAMP * vx) * dt
-  return [Math.max(-1.2, Math.min(1.2, x + v * dt)), v]
+  return [Math.max(-limit, Math.min(limit, x + v * dt)), v]
 }
 /** 컴퓨터 친구 차 */
 export const MAX_RIVALS = 3
@@ -51,6 +52,8 @@ export interface Rival {
 
 export interface Race {
   seed: number
+  /** 길 칸 수: 혼자는 3칸, 친구와 함께는 5칸 */
+  lanes: 3 | 5
   phase: 'count' | 'run' | 'done'
   /** 남은 카운트다운(초) */
   count: number
@@ -86,9 +89,12 @@ export interface Race {
 }
 
 /** animals: 같이 달릴 동물 친구 번호들(최대 3). 비우면 혼자 달린다 */
+/** 친구 차가 서는 첫 칸(5칸 길 기준) */
+const START_LANES = [-2, 2, 1]
+export const halfLanes = (r: { lanes: number }) => (r.lanes - 1) / 2
 export const newRace = (seed = Math.floor(Math.random() * 1e6), animals: number[] = []): Race => ({
-  seed, phase: 'count', count: COUNTDOWN, t: 0, d: 0, lane: 0, x: 0, vx: 0, speed: 0, boost: 0, slow: 0, brake: false, sparkle: 0, dust: 0, stars: 0, taken: [], events: [], after: 0, finish: null,
-  rivals: animals.slice(0, MAX_RIVALS).map((animal, i) => ({ id: i, animal, d: i === 2 ? 8 : 0, x: i === 0 ? -1 : i === 1 ? 1 : 0, vx: 0, lane: (i === 0 ? -1 : i === 1 ? 1 : 0) as Lane, speed: 0, boost: 0, slow: 0, skill: 0.95 + ((seed >>> (i * 3)) % 9) * 0.011, fin: null })),
+  seed, lanes: animals.length ? 5 : 3, phase: 'count', count: COUNTDOWN, t: 0, d: 0, lane: 0, x: 0, vx: 0, speed: 0, boost: 0, slow: 0, brake: false, sparkle: 0, dust: 0, stars: 0, taken: [], events: [], after: 0, finish: null,
+  rivals: animals.slice(0, MAX_RIVALS).map((animal, i) => ({ id: i, animal, d: i === 2 ? 8 : 0, x: START_LANES[i], vx: 0, lane: START_LANES[i], speed: 0, boost: 0, slow: 0, skill: 0.95 + ((seed >>> (i * 3)) % 9) * 0.011, fin: null })),
   rank: 0,
 })
 
@@ -101,13 +107,13 @@ function rand(seg: number, seed: number, k: number): number {
 }
 
 /** (from, to] 거리 안의 아이템. 별은 세 개씩 줄지어 나온다 */
-export function itemsBetween(from: number, to: number, seed: number): RaceItem[] {
+export function itemsBetween(from: number, to: number, seed: number, lanes: 3 | 5 = 3): RaceItem[] {
   const out: RaceItem[] = []
   const s0 = Math.max(0, Math.floor((from - FIRST - 14) / SEG)), s1 = Math.floor((to - FIRST) / SEG)
   for (let s = s0; s <= s1; s++) {
     const d0 = FIRST + s * SEG
     const u = rand(s, seed, 0)
-    const lane = (Math.floor(rand(s, seed, 1) * 3) - 1) as Lane
+    const lane = Math.floor(rand(s, seed, 1) * lanes) - (lanes - 1) / 2
     const add = (k: number, d: number, kind: ItemKind) => { if (d > from && d <= to) out.push({ id: s * 10 + k, d, lane, kind }) }
     if (u < 0.45) { add(0, d0, 'star'); add(1, d0 + 6, 'star'); add(2, d0 + 12, 'star') }
     else if (u < 0.6) add(0, d0, 'boost')
@@ -120,7 +126,7 @@ export function itemsBetween(from: number, to: number, seed: number): RaceItem[]
 /** 옆 칸으로(-1 왼쪽, 1 오른쪽). 끝 칸에서는 그대로 */
 export function steer(r: Race, dir: -1 | 1): Race {
   if (r.phase === 'done') return r
-  const lane = Math.max(-1, Math.min(1, r.lane + dir)) as Lane
+  const h = halfLanes(r), lane = Math.max(-h, Math.min(h, r.lane + dir))
   return lane === r.lane ? r : { ...r, lane }
 }
 export const setBrake = (r: Race, on: boolean): Race => (r.brake === on ? r : { ...r, brake: on })
@@ -131,15 +137,16 @@ function stepRival(v: Rival, me: Race, dt: number, running: boolean): Rival {
   const win = Math.floor(me.t / 2)
   let lane = v.lane
   if (running && me.t > 0.5) {
-    const ahead = itemsBetween(v.d, v.d + 45, me.seed)
+    const h = halfLanes(me), all = Array.from({ length: me.lanes }, (_, i) => i - h)
+    const ahead = itemsBetween(v.d, v.d + 45, me.seed, me.lanes)
     const bad = ahead.some((it) => (it.kind === 'banana' || it.kind === 'puddle') && it.lane === lane)
-    const pick = Math.floor(rand(win, me.seed, 11 + v.id) * 3) - 1
-    if (bad && rand(win, me.seed, 21 + v.id) < 0.8) lane = ([-1, 0, 1] as Lane[]).find((l) => !ahead.some((it) => (it.kind === 'banana' || it.kind === 'puddle') && it.lane === l)) ?? lane
-    else if (rand(win, me.seed, 31 + v.id) < 0.35) lane = pick as Lane
+    const pick = Math.floor(rand(win, me.seed, 11 + v.id) * me.lanes) - h
+    if (bad && rand(win, me.seed, 21 + v.id) < 0.8) lane = all.find((l) => !ahead.some((it) => (it.kind === 'banana' || it.kind === 'puddle') && it.lane === l)) ?? lane
+    else if (rand(win, me.seed, 31 + v.id) < 0.35) lane = pick
     const boost = ahead.find((it) => it.kind === 'boost')
     if (boost && rand(win, me.seed, 41 + v.id) < 0.5) lane = boost.lane
   }
-  const [x, vx] = glide(v.x, v.vx, lane, dt)
+  const [x, vx] = glide(v.x, v.vx, lane, dt, halfLanes(me) + 0.2)
   if (!running) return { ...v, lane, x, vx }
   let { boost, slow } = v
   boost = Math.max(0, boost - dt); slow = Math.max(0, slow - dt)
@@ -149,7 +156,7 @@ function stepRival(v: Rival, me: Race, dt: number, running: boolean): Rival {
   const speed = v.speed < want ? Math.min(want, v.speed + ACCEL * dt) : Math.max(want, v.speed - ACCEL * 1.5 * dt)
   const prev = v.d, d = v.d + speed * dt
   if (v.fin === null) {
-    for (const it of itemsBetween(prev, d, me.seed)) {
+    for (const it of itemsBetween(prev, d, me.seed, me.lanes)) {
       if (Math.abs(it.lane - x) >= REACH) continue
       if (it.kind === 'boost') { boost = BOOST_T; slow = 0 } else if (it.kind !== 'star') { slow = SLOW_T; boost = 0 }
     }
@@ -168,7 +175,7 @@ export function stepRace(r: Race, dt: number): Race {
   let phase: Race['phase'] = r.phase, finish: Race['finish'] = r.finish
   const taken = [...r.taken]
   // 옆으로 부드럽게
-  const [x, vx] = glide(r.x, r.vx, r.lane, dt)
+  const [x, vx] = glide(r.x, r.vx, r.lane, dt, halfLanes(r) + 0.2)
   // 결승선을 지났으면: 놀라지 않게 천천히 줄여 가며 선 너머까지 달리고, 아이템은 건드리지 않는다
   if (r.finish === 'laps') {
     const after = r.after + dt
@@ -186,7 +193,7 @@ export function stepRace(r: Race, dt: number): Race {
   speed = speed < want ? Math.min(want, speed + ACCEL * dt) : Math.max(want, speed - ACCEL * 1.5 * dt)
   const prev = d
   d += speed * dt
-  for (const it of itemsBetween(prev, d, r.seed)) {
+  for (const it of itemsBetween(prev, d, r.seed, r.lanes)) {
     if (Math.abs(it.lane - x) >= REACH) continue
     if (it.kind === 'star') { stars++; sparkle = 0.5; taken.push(it.id); events.push('star') }
     else if (it.kind === 'boost') { boost = BOOST_T; slow = 0; sparkle = 0.6; taken.push(it.id); events.push('boost') }

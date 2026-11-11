@@ -90,4 +90,16 @@ describe('자동차 레이스', () => {
     // 혼자 달릴 땐 순위 선물이 없다
     expect(rewardStars({ ...r, rivals: [], rank: 0, stars: 0, finish: 'laps' })).toBe(3)
   })
+  it('혼자는 3칸, 친구와 함께는 5칸 길이다', () => {
+    expect(newRace(1).lanes).toBe(3); expect(newRace(1, [0]).lanes).toBe(5)
+    let r = newRace(1, [0, 1]); for (let i = 0; i < 5; i++) r = steer(r, 1)
+    expect(r.lane).toBe(2)
+    for (let i = 0; i < 9; i++) r = steer(r, -1)
+    expect(r.lane).toBe(-2)
+    let s = newRace(1); for (let i = 0; i < 5; i++) s = steer(s, 1)
+    expect(s.lane).toBe(1)
+    const lanes5 = new Set(itemsBetween(0, 6000, 3, 5).map((i) => i.lane)), lanes3 = new Set(itemsBetween(0, 6000, 3).map((i) => i.lane))
+    expect([...lanes5].sort((a, b) => a - b)).toEqual([-2, -1, 0, 1, 2]); expect([...lanes3].sort((a, b) => a - b)).toEqual([-1, 0, 1])
+    expect(newRace(1, [0, 1, 2]).rivals.map((v) => v.lane)).toEqual([-2, 2, 1])
+  })
 })

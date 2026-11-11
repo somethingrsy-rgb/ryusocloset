@@ -10,10 +10,10 @@ import { createStage } from './stage3d'
  * 자동차 레이스 3D 무대: 차 뒤에서 따라가며 본다. 길은 앞(-z)으로 뻗고 차는 +z 에서 -z 로 달린다.
  * 부스터·바나나·반짝이·먼지는 public/race/ 그림, 아직 그림이 없는 차·별·물웅덩이·길가는 임시 도형이다(그림이 오면 car/itemMesh 만 바꾸면 된다).
  */
-/** 길(연석 포함) 너비: 아스팔트가 세 칸(LANE_W*3)이 되도록 그림 비율(410/560)에 맞춘다 */
-const ROAD_W = LANE_W * 3 * (560 / 410)
+/** 길(연석 포함) 너비: 아스팔트가 칸 수만큼(LANE_W*칸)이 되도록 그림 비율(연석 150px, 칸마다 137px)에 맞춘다 */
+const roadWidth = (lanes: number) => LANE_W * lanes + (150 / 410) * LANE_W * 3
 /** 길 그림 한 장이 덮는 길이(그림 비율 유지) */
-const ROAD_TILE = ROAD_W * (951 / 512)
+const ROAD_TILE = roadWidth(3) * (951 / 512)
 const GROUND_TILE = 10
 const PROPS = 20, PROP_GAP = 11
 
@@ -26,6 +26,10 @@ const CAR_PX: Record<RaceCar, Record<'straight' | 'left' | 'right', [number, num
   pumpkin: { straight: [418, 525], left: [482, 537], right: [482, 537] },
   bunny: { straight: [434, 538], left: [498, 538], right: [491, 535] },
   star: { straight: [493, 430], left: [532, 374], right: [532, 374] },
+}
+/** 운전하는 아이가 그림에 들어 있는 차(내 차일 때만 쓴다. 친구 차는 빈 그림 + 동물) */
+const DRIVER_PX: Partial<Record<RaceCar, Record<'straight' | 'left' | 'right', [number, number]>>> = {
+  pumpkin: { straight: [418, 531], left: [482, 518], right: [482, 546] },
 }
 const CAR_K = 4.3 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
@@ -45,6 +49,8 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const el = host.current
     if (!el) return
     const th = THEMES[theme]
+    const LANES = live.current.lanes
+    const ROAD_W = roadWidth(LANES)
     const s = createStage(el, { sky: th.sky, fog: [60, 170], shadows: false, view: { yaw: 0, pitch: 0.36, dist: 10.5, target: [0, 0.9, 0] }, fov: (w, h) => (w < h ? 66 : 48) })
     const { scene, keep } = s
     s.camera.far = 600
@@ -67,7 +73,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const grass = new THREE.Mesh(keep(new THREE.PlaneGeometry(500, 500)), keep(new THREE.MeshBasicMaterial({ map: gTex })))
     grass.rotation.x = -Math.PI / 2
     scene.add(grass)
-    const rt = rep(art(`road_${theme}`))
+    const rt = rep(art(LANES === 5 ? `road5_${theme}` : `road_${theme}`))
     rt.repeat.set(1, 260 / ROAD_TILE)
     const road = new THREE.Mesh(keep(new THREE.PlaneGeometry(ROAD_W, 260)), keep(new THREE.MeshBasicMaterial({ map: rt })))
     road.rotation.x = -Math.PI / 2
@@ -76,7 +82,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
 
     // 바퀴 시작·끝 줄(땅에 깐 체크무늬)과 결승 아치(세워 둔 그림, 가운데는 비어 있어서 차가 지나간다)
     const lineTex = art('startline'), archTex = art('arch')
-    const lineW = LANE_W * 3 + 0.6
+    const lineW = LANE_W * LANES + 0.6
     const lineGeo = keep(new THREE.PlaneGeometry(lineW, lineW * (115 / 768) * 1.8))
     const lineMat = keep(new THREE.MeshBasicMaterial({ map: lineTex, transparent: true, depthWrite: false }))
     const ARCH_W = ROAD_W + 4.5
@@ -147,16 +153,17 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     for (let k = 0; k <= LAPS; k++) { const o = spriteOf(signTex, 2.3, 2.1, 1.05); o.position.set(-(ROAD_W / 2 + 1.5), 1.05, gateZ(k) + 9); scene.add(o) }
 
     // 차: 그림 판 세 장(똑바로·왼쪽·오른쪽)을 겹쳐 두고, 옆으로 움직이는 속도에 따라 서서히 섞는다(뚝 바뀌지 않고 미끄러지듯)
-    const buildCar = (id: RaceCar, k = 1) => {
+    const buildCar = (id: RaceCar, k = 1, rival = false) => {
       const group = new THREE.Group()
       const sp = (['straight', 'left', 'right'] as const).map((v) => {
-        const [pw, ph] = CAR_PX[id][v]
-        const m = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: art(`car_${id}_${v}`), transparent: true, depthWrite: false })))
+        const drv = !rival && DRIVER_PX[id]
+        const [pw, ph] = (drv ? drv : CAR_PX[id])[v]
+        const m = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: art(`${drv ? 'car_d' : 'car'}_${id}_${v}`), transparent: true, depthWrite: false })))
         m.center.set(0.5, 0.05); m.scale.set(pw * CAR_K * k, ph * CAR_K * k, 1)
         group.add(m); return m
       })
       scene.add(group)
-      return { group, sp, h: CAR_PX[id].straight[1] * CAR_K * k }
+      return { group, sp, h: ((!rival && DRIVER_PX[id]) || CAR_PX[id]).straight[1] * CAR_K * k }
     }
     const lean = (c: ReturnType<typeof buildCar>, vx: number, slip: number, fade = 1) => {
       const l = Math.max(-1, Math.min(1, vx / 1.6)), m = Math.abs(l)
@@ -170,7 +177,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     // 컴퓨터 친구 차: 내 차가 아닌 차들을 돌려 쓰고, 동물 친구가 운전한다
     const others = ALL_CARS.filter((c) => c !== carId)
     const rivalCars = live.current.rivals.map((rv, i) => {
-      const id = others[i % others.length], c = buildCar(id, 0.92)
+      const id = others[i % others.length], c = buildCar(id, 0.92, true)
       const img = CALL_ANIMALS[rv.animal % CALL_ANIMALS.length].img
       const a = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: s.texOf(animal3dUrl(img)), transparent: true, depthWrite: false })))
       const ah = c.h * 0.42; a.scale.set(ah * animal3dAspect(img), ah, 1); a.position.set(0, c.h * SEAT[id], 0.3)
@@ -228,7 +235,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       // 카메라: 차 뒤에서 조금 옆으로 따라간다(속도가 빠를수록 살짝 멀어진다)
       camX += (cx * 0.6 - camX) * Math.min(1, dt * 6)
       s.view.target.set(camX, 1.4, cz - 3.6)
-      s.view.dist = 13.5 + Math.min(1.5, r.speed / 25) + (r.boost > 0 ? 1.2 : 0)
+      s.view.dist = 13.5 + (LANES - 3) * 1.6 + Math.min(1.5, r.speed / 25) + (r.boost > 0 ? 1.2 : 0)
       sparkleSp.visible = r.sparkle > 0; sparkleSp.position.set(cx, 2.2 + (0.6 - r.sparkle) * 0.8, cz - 0.5)
       dustSp.visible = r.dust > 0; dustSp.position.set(cx, 1.2, cz - 0.3); dustSp.scale.setScalar(1 + (0.7 - r.dust) * 1.2)
       // 나무
@@ -240,7 +247,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       for (const f of flowers) { const base = -8 - f.k * FLOWER_GAP; f.o.position.z = base + fp * Math.floor((cz + 25 - base) / fp) }
       // 아이템
       const want = new Set<number>()
-      for (const it of itemsBetween(r.d - 20, r.d + 110, r.seed)) {
+      for (const it of itemsBetween(r.d - 20, r.d + 110, r.seed, r.lanes)) {
         if (r.taken.includes(it.id)) continue
         want.add(it.id)
         let g = shown.get(it.id)
