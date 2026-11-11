@@ -22,14 +22,14 @@ const CAR_PX: Record<RaceCar, Record<'straight' | 'left' | 'right', [number, num
   heart: { straight: [457, 414], left: [512, 408], right: [485, 379] },
   cloud: { straight: [477, 369], left: [492, 392], right: [504, 403] },
   blue: { straight: [493, 561], left: [532, 497], right: [532, 500] },
-  bunny: { straight: [434, 538], left: [498, 538], right: [491, 535] },
+  bunny: { straight: [493, 488], left: [532, 488], right: [532, 499] },
   star: { straight: [493, 430], left: [532, 374], right: [532, 374] },
 }
 /** 운전하는 아이가 그림에 들어 있는 차(내 차일 때만 쓴다. 친구 차는 빈 그림 + 동물) */
 const DRIVER_PX: Partial<Record<RaceCar, Record<'straight' | 'left' | 'right', [number, number]>>> = {
   blue: { straight: [493, 561], left: [532, 497], right: [532, 500] },
   star: { straight: [493, 504], left: [532, 485], right: [532, 439] },
-  bunny: { straight: [434, 538], left: [498, 539], right: [491, 535] },
+  bunny: { straight: [493, 488], left: [532, 488], right: [532, 499] },
   cloud: { straight: [477, 440], left: [492, 432], right: [504, 406] },
   heart: { straight: [457, 414], left: [512, 409], right: [485, 427] },
 }
