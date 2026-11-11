@@ -34,7 +34,8 @@ const DRIVER_PX: Partial<Record<RaceCar, Record<'straight' | 'left' | 'right', [
   cloud: { straight: [477, 440], left: [492, 432], right: [504, 406] },
   heart: { straight: [457, 414], left: [512, 409], right: [485, 427] },
 }
-const CAR_K = 4.3 / 457
+/** 차 크기(이전보다 70%) */
+const CAR_K = 4.3 * 0.7 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
 export const ALL_CARS: RaceCar[] = ['heart', 'cloud', 'blue', 'bunny', 'star']
 /** 장소마다 하늘색(하늘 그림 아래·안개), 길가 소품 */
@@ -194,11 +195,12 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       const g = cv.getContext('2d')!
       g.font = 'bold 44px "Apple SD Gothic Neo","Noto Sans KR",sans-serif'
       const w = Math.min(372, g.measureText(name).width + 48), x = (384 - w) / 2
-      g.fillStyle = me ? '#ff8fab' : '#e6d9ff'; g.strokeStyle = '#ffffff'; g.lineWidth = 7
+      g.fillStyle = me ? '#ffffff' : '#e6d9ff'; g.strokeStyle = me ? '#ff8fab' : '#ffffff'; g.lineWidth = 7
       g.beginPath(); g.roundRect(x, 10, w, 76, 38); g.fill(); g.stroke()
-      g.fillStyle = me ? '#ffffff' : '#5b3a7a'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(name, 192, 49)
+      g.fillStyle = me ? '#e0567f' : '#5b3a7a'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(name, 192, 49)
       const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: s.texOf(cv), transparent: true, depthWrite: false })))
-      sp.scale.set(2.6, 0.65, 1); sp.position.set(0, c.h + 0.55, 0)
+      // 번호판 자리(차 뒤쪽 아래 범퍼)에 작게: 시야를 가리지 않는다
+      sp.scale.set(1.25, 0.31, 1); sp.position.set(0, c.h * 0.16, 0.05)
       c.group.add(sp); sp.renderOrder = 200; return sp
     }
     const mine = buildCar(carId)
@@ -215,7 +217,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       return c
     })
     const shadow = new THREE.Mesh(keep(new THREE.CircleGeometry(1, 20)), keep(new THREE.MeshBasicMaterial({ color: 0x3c4a2a, transparent: true, opacity: 0.25, depthWrite: false })))
-    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.04; shadow.scale.set(1.8, 2.0, 1)
+    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.04; shadow.scale.set(1.26, 1.4, 1)
     scene.add(shadow)
 
     // 아이템 임시 도형
@@ -269,10 +271,10 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       shadow.position.x = cx; shadow.position.z = cz
       // 카메라: 차 뒤에서 조금 옆으로 따라간다(속도가 빠를수록 살짝 멀어진다)
       camX += (cx * 0.6 - camX) * Math.min(1, dt * 6)
-      s.view.target.set(camX, 1.4, cz - 3.6)
-      s.view.dist = 13.5 + (LANES - 3) * 1.6 + Math.min(1.5, r.speed / 25) + (r.boost > 0 ? 1.2 : 0)
-      sparkleSp.visible = r.sparkle > 0; sparkleSp.position.set(cx, 2.2 + (0.6 - r.sparkle) * 0.8, cz - 0.5)
-      dustSp.visible = r.dust > 0; dustSp.position.set(cx, 1.2, cz - 0.3); dustSp.scale.setScalar(1 + (0.7 - r.dust) * 1.2)
+      s.view.target.set(camX, 1.0, cz - 3.2)
+      s.view.dist = 11 + (LANES - 3) * 1.6 + Math.min(1.5, r.speed / 25) + (r.boost > 0 ? 1.2 : 0)
+      sparkleSp.visible = r.sparkle > 0; sparkleSp.position.set(cx, 1.6 + (0.6 - r.sparkle) * 0.6, cz - 0.5)
+      dustSp.visible = r.dust > 0; dustSp.position.set(cx, 0.9, cz - 0.3); dustSp.scale.setScalar(1 + (0.7 - r.dust) * 1.2)
       // 나무
       const period = PROPS * PROP_GAP
       // 출발·결승 아치 앞뒤 18칸에는 나무·구경꾼·꽃을 두지 않는다(아치와 겹쳐 보이지 않게)
