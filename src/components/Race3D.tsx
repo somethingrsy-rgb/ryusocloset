@@ -34,6 +34,8 @@ const DRIVER_PX: Partial<Record<RaceCar, Record<'straight' | 'left' | 'right', [
   cloud: { straight: [477, 440], left: [492, 432], right: [504, 406] },
   heart: { straight: [457, 414], left: [512, 409], right: [485, 427] },
 }
+/** 모든 차가 비슷한 크기로 보이게 맞추는 기준 넓이(픽셀², 다섯 차 똑바로 그림 넓이의 평균쯤) */
+const CAR_AREA = 237000
 /** 차 크기(이전보다 70%) */
 const CAR_K = 4.3 * 0.7 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
@@ -182,8 +184,11 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     for (let k = 0; k <= LAPS; k++) { const o = spriteOf(signTex, 2.3, 2.1, 1.05); o.position.set(-(ROAD_W / 2 + 1.5), 1.05, gateZ(k) + 9); scene.add(o) }
 
     // 차: 그림 판 세 장(똑바로·왼쪽·오른쪽)을 겹쳐 두고, 옆으로 움직이는 속도에 따라 서서히 섞는다(뚝 바뀌지 않고 미끄러지듯)
-    const buildCar = (id: RaceCar, k = 1) => {
+    const buildCar = (id: RaceCar, k0 = 1) => {
       const group = new THREE.Group()
+      // 차마다 그림 크기가 달라서(하트 차는 낮고 작고, 파랑·번개 차는 높다) 그림이 차지하는 넓이를 같게 맞춘다
+      const px0 = (DRIVER_PX[id] || CAR_PX[id]).straight
+      const k = k0 * Math.sqrt(CAR_AREA / (px0[0] * px0[1]))
       const sp = (['straight', 'left', 'right'] as const).map((v) => {
         const drv = DRIVER_PX[id]
         const [pw, ph] = (drv ? drv : CAR_PX[id])[v]
