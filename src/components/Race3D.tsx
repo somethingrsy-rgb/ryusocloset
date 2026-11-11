@@ -248,11 +248,13 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       dustSp.visible = r.dust > 0; dustSp.position.set(cx, 1.2, cz - 0.3); dustSp.scale.setScalar(1 + (0.7 - r.dust) * 1.2)
       // 나무
       const period = PROPS * PROP_GAP
-      for (const tr of props) { const base = -tr.k * PROP_GAP; tr.o.position.z = base + period * Math.floor((cz + 25 - base) / period) }
+      // 출발·결승 아치 앞뒤 18칸에는 나무·구경꾼·꽃을 두지 않는다(아치와 겹쳐 보이지 않게)
+      const nearGate = (z: number) => { for (let k = 0; k <= LAPS; k++) if (Math.abs(z - gateZ(k)) < 18) return true; return false }
+      for (const tr of props) { const base = -tr.k * PROP_GAP; tr.o.position.z = base + period * Math.floor((cz + 25 - base) / period); tr.o.visible = !nearGate(tr.o.position.z) }
       const cp = CHEERS * CHEER_GAP
-      for (const c of cheers) { const base = -30 - c.k * CHEER_GAP; c.o.position.z = base + cp * Math.floor((cz + 25 - base) / cp) }
+      for (const c of cheers) { const base = -30 - c.k * CHEER_GAP; c.o.position.z = base + cp * Math.floor((cz + 25 - base) / cp); c.o.visible = !nearGate(c.o.position.z) }
       const fp = FLOWERS * FLOWER_GAP
-      for (const f of flowers) { const base = -8 - f.k * FLOWER_GAP; f.o.position.z = base + fp * Math.floor((cz + 25 - base) / fp) }
+      for (const f of flowers) { const base = -8 - f.k * FLOWER_GAP; f.o.position.z = base + fp * Math.floor((cz + 25 - base) / fp); f.o.visible = !nearGate(f.o.position.z) }
       // 아이템
       const want = new Set<number>()
       for (const it of itemsBetween(r.d - 20, r.d + 110, r.seed, r.lanes)) {
