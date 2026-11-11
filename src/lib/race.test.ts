@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { setHold, glide, rankNow, type Race, LAP, LAPS, TIME_LIMIT, itemsBetween, lapOf, newRace, rewardStars, setBrake, steer, stepRace, timeLeft } from './race'
+import { setHold, glide, rankNow, type Race, LAP, LAPS, TIME_LIMIT, itemsBetween, lapOf, newRace, rewardStars, useBoost, GAUGE_MAX, steer, stepRace, timeLeft } from './race'
 
 const run = (r: ReturnType<typeof newRace>, sec: number, dt = 0.05) => { for (let i = 0; i < sec / dt && r.phase !== 'done'; i++) r = stepRace(r, dt); return r }
 
@@ -31,7 +31,7 @@ describe('자동차 레이스', () => {
     const star = items.find((i) => i.kind === 'star')!, boost = items.find((i) => i.kind === 'boost')!, banana = items.find((i) => i.kind === 'banana')!
     const at = (it: typeof star) => ({ ...newRace(3), phase: 'run' as const, count: 0, d: it.d - 0.5, x: it.lane, lane: it.lane, speed: 30 })
     const s = stepRace(at(star), 0.1)
-    expect(s.stars).toBe(1); expect(s.taken).toContain(star.id); expect(s.events).toEqual(['star'])
+    expect(s.stars).toBe(1); expect(s.gauge).toBe(1); expect(s.taken).toContain(star.id); expect(s.events).toEqual(['star'])
     const b = stepRace(at(boost), 0.1)
     expect(b.boost).toBeGreaterThan(0); expect(b.events).toEqual(['boost'])
     const n = stepRace(at(banana), 0.1)
@@ -40,10 +40,9 @@ describe('자동차 레이스', () => {
     const other = { ...at(star), x: star.lane === 1 ? -1 : 1, lane: (star.lane === 1 ? -1 : 1) as -1 | 1 }
     expect(stepRace(other, 0.1).stars).toBe(0)
   })
-  it('브레이크는 느리게 하고, 부스터는 빠르게 한다', () => {
+  it('부스터는 빠르게 한다', () => {
     const base: Race = { ...newRace(5), phase: 'run', count: 0 }
     const v = (r: Race) => run(r, 1).speed
-    expect(v(setBrake(base, true))).toBeLessThan(v(base))
     expect(v({ ...base, boost: 2 })).toBeGreaterThan(v(base))
   })
   it('두 바퀴를 다 달리면 끝나고 별을 받는다', () => {
@@ -114,5 +113,20 @@ describe('자동차 레이스', () => {
     r = setHold(r, 0); const stay = r.lane
     for (let i = 0; i < 20; i++) r = stepRace(r, 0.05)
     expect(r.lane).toBe(stay)
+  })
+  it('코인을 먹으면 부스터 게이지가 차고, 가득 차야만 단추로 쓸 수 있고, 별(돈)은 따로 주지 않는다', () => {
+    const run = (g: number): Race => ({ ...newRace(1), phase: 'run', count: 0, gauge: g, speed: 30 })
+    expect(useBoost(run(GAUGE_MAX - 1))).toEqual(run(GAUGE_MAX - 1))
+    const b = useBoost(run(GAUGE_MAX))
+    expect(b.gauge).toBe(0); expect(b.boost).toBeGreaterThan(2); expect(b.events).toEqual(['boost'])
+    expect(useBoost({ ...run(GAUGE_MAX), phase: 'count' }).boost).toBe(0)
+    const fast = stepRace(b, 1).speed, slow = stepRace(run(0), 1).speed
+    expect(fast).toBeGreaterThan(slow)
+    // 코인을 많이 먹어도 별 선물은 그대로(끝까지 달리면 3개)
+    expect(rewardStars({ ...run(0), phase: 'done', finish: 'laps', stars: 50 })).toBe(3)
+    // 게이지는 가득 차면 더 쌓이지 않는다
+    const star = itemsBetween(0, 3000, 3).find((i) => i.kind === 'star')!
+    const full = stepRace({ ...run(GAUGE_MAX), seed: 3, d: star.d - 0.5, x: star.lane, lane: star.lane }, 0.1)
+    expect(full.gauge).toBe(GAUGE_MAX)
   })
 })

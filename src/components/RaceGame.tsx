@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { assetUrl } from '../lib/items'
 import { isRestoring } from '../lib/restoreGuard'
-import { LAPS, MAX_RIVALS, TIME_LIMIT, applyNetReport, lapOf, newNetRace, newRace, rankNow, rewardStars, setBrake, setHold, steer, stepRace, timeLeft, type Race } from '../lib/race'
+import { LAPS, MAX_RIVALS, TIME_LIMIT, applyNetReport, lapOf, newNetRace, newRace, rankNow, rewardStars, setHold, steer, stepRace, useBoost, GAUGE_MAX, timeLeft, type Race } from '../lib/race'
 import { earnStars } from '../lib/shop'
 import { firebaseReady } from '../lib/mp/config'
 import { savedName } from '../lib/mp/session'
@@ -23,8 +23,8 @@ const THEMES: { id: RaceTheme; ico: string; name: string }[] = [
   { id: 'candy', ico: '🍭', name: '사탕 나라' },
 ]
 const CAR_KEY = 'ryuso.race.car'
-const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트' }, { id: 'cloud', name: '구름' }, { id: 'pumpkin', name: '마차' }, { id: 'bunny', name: '토끼' }, { id: 'star', name: '별' }]
-const readCar = (): RaceCar => { try { const v = localStorage.getItem(CAR_KEY); return v === 'cloud' || v === 'pumpkin' || v === 'bunny' || v === 'star' ? v : 'heart' } catch { return 'heart' } }
+const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트' }, { id: 'cloud', name: '구름' }, { id: 'blue', name: '파랑' }, { id: 'bunny', name: '토끼' }, { id: 'star', name: '별' }]
+const readCar = (): RaceCar => { try { const v = localStorage.getItem(CAR_KEY); return v === 'cloud' || v === 'blue' || v === 'bunny' || v === 'star' ? v : 'heart' } catch { return 'heart' } }
 const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' ? v : 'meadow' } catch { return 'meadow' } }
 
 const img = (name: string) => assetUrl(`race/${name}.webp`)
@@ -146,10 +146,11 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   const holdOn = (dir: -1 | 1) => { go(dir); if (phase === 'playing' && !paused) live.current = setHold(live.current, dir) }
   const holdOff = (dir?: -1 | 1) => { if (dir === undefined || live.current.hold === dir) live.current = setHold(live.current, 0) }
   useEffect(() => { if (phase !== 'playing' || paused) holdOff() })
-  const brake = (on: boolean) => { live.current = setBrake(live.current, on) }
+  /** 부스터 단추: 게이지가 가득 찼을 때만 쓴다 */
+  const boostNow = () => { if (phase !== 'playing' || paused) return; const next = useBoost(live.current); if (next !== live.current) { live.current = next; playGold() } }
   useEffect(() => {
-    const down = (e: KeyboardEvent) => { if (e.repeat) return; if (e.key === 'ArrowLeft' || e.key === 'a') holdOn(-1); else if (e.key === 'ArrowRight' || e.key === 'd') holdOn(1); else if (e.key === 'ArrowDown' || e.key === 's') brake(true) }
-    const up = (e: KeyboardEvent) => { if (e.key === 'ArrowLeft' || e.key === 'a') holdOff(-1); else if (e.key === 'ArrowRight' || e.key === 'd') holdOff(1); else if (e.key === 'ArrowDown' || e.key === 's') brake(false) }
+    const down = (e: KeyboardEvent) => { if (e.repeat) return; if (e.key === 'ArrowLeft' || e.key === 'a') holdOn(-1); else if (e.key === 'ArrowRight' || e.key === 'd') holdOn(1); else if (e.key === 'ArrowDown' || e.key === 's' || e.key === ' ') boostNow() }
+    const up = (e: KeyboardEvent) => { if (e.key === 'ArrowLeft' || e.key === 'a') holdOff(-1); else if (e.key === 'ArrowRight' || e.key === 'd') holdOff(1); }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
   })
@@ -163,7 +164,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
         <div className="flex items-center gap-1.5">
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#c0587a] shadow">🏎️ 자동차 레이스</span>
           {phase === 'playing' && <>
-            <span aria-label="모은 별" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#b8860b] shadow">⭐ {race.stars}</span>
+            <span aria-label="부스터 게이지" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#b8860b] shadow">⭐ {race.gauge}/{GAUGE_MAX}</span>
             <span aria-label="바퀴" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#7a3d8f] shadow">🏁 {lapOf(race)}/{LAPS}</span>
             {race.rivals.length > 0 && <span aria-label="내 순위" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#d0587a] shadow">🏅 {(race.finish && race.rank) || rankNow(race)}등</span>}
             <span aria-label="남은 시간" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b9b] shadow">⏱ {timeLeft(race)}</span>
@@ -197,8 +198,14 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
         <div className="pointer-events-none absolute inset-x-3 bottom-4 z-20 flex items-end justify-between">
           <button aria-label="왼쪽으로" onPointerDown={() => holdOn(-1)} onPointerUp={() => holdOff(-1)} onPointerCancel={() => holdOff(-1)} onPointerLeave={() => holdOff(-1)} className={roundBtn}><img src={img('btn_left')} alt="" draggable={false} className="h-full w-full" /></button>
           <div className="flex flex-col items-center gap-3">
-            <button aria-label="브레이크(누르고 있는 동안)" onPointerDown={() => brake(true)} onPointerUp={() => brake(false)} onPointerCancel={() => brake(false)} onPointerLeave={() => brake(false)}
-              className="pointer-events-auto h-16 w-16 active:scale-90 drop-shadow-lg"><img src={img('btn_brake')} alt="" draggable={false} className="h-full w-full" /></button>
+            {/* 부스터 단추: 둘레에 게이지가 차오르고, 가득 차면 반짝이며 누를 수 있다 */}
+            <button aria-label={race.gauge >= GAUGE_MAX ? '부스터 쓰기' : `부스터 게이지 ${race.gauge}/${GAUGE_MAX}`} onPointerDown={boostNow}
+              className={`pointer-events-auto relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full border-4 border-white/90 shadow-lg active:scale-90 ${race.gauge >= GAUGE_MAX ? 'animate-pulse' : ''}`}
+              style={{ background: `conic-gradient(#ffb300 ${(race.gauge / GAUGE_MAX) * 360}deg, rgba(255,255,255,0.55) 0)` }}>
+              <span className={`flex h-[3.4rem] w-[3.4rem] items-center justify-center rounded-full ${race.gauge >= GAUGE_MAX ? 'bg-[#fff0f5]' : 'bg-white/90 grayscale'}`}>
+                <img src={img('item_boost')} alt="" draggable={false} className="h-11 w-auto" />
+              </span>
+            </button>
             <button aria-label="오른쪽으로" onPointerDown={() => holdOn(1)} onPointerUp={() => holdOff(1)} onPointerCancel={() => holdOff(1)} onPointerLeave={() => holdOff(1)} className={roundBtn}><img src={img('btn_right')} alt="" draggable={false} className="h-full w-full" /></button>
           </div>
         </div>
@@ -208,7 +215,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
         <div className="absolute inset-0 z-30 flex items-start justify-center overflow-y-auto bg-[#fdf3f6] p-3">
           <div className="my-auto flex w-full max-w-sm flex-col items-center gap-2 rounded-3xl bg-white p-4 text-center shadow-xl">
             <p className="m-0 text-xl font-black text-[#c0587a]">🏎️ 자동차 레이스</p>
-            <p className="m-0 text-sm leading-snug font-bold text-[#6b4b52]">◀ ▶ 로 옆 칸에 가요. ⭐ 별은 모으고 🚀 부스터는 빨라져요.<br />🍌 바나나와 💧 물웅덩이는 살짝 느려져요. {LAPS}바퀴 또는 {TIME_LIMIT}초면 끝!</p>
+            <p className="m-0 text-sm leading-snug font-bold text-[#6b4b52]">◀ ▶ 로 옆 칸에 가요. ⭐ 코인을 모으면 부스터 게이지가 차요. 가득 차면 🚀 단추로 빨라져요!<br />🍌 바나나와 💧 물웅덩이는 살짝 느려져요. {LAPS}바퀴 또는 {TIME_LIMIT}초면 끝!</p>
             <div role="radiogroup" aria-label="같이 달릴 친구" className="flex w-full items-center gap-1.5">
               <span className="shrink-0 text-xs font-black text-[#7a3d8f]">🐾 친구 차</span>
               {[0, 1, 2, 3].map((n) => (
@@ -266,7 +273,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
           <div className="flex w-full max-w-sm flex-col items-center gap-2 rounded-3xl bg-white p-5 text-center shadow-xl">
             <img src={img(race.rivals.length ? `medal_${Math.min(4, Math.max(1, race.rank))}` : race.finish === 'laps' ? 'trophy' : 'medal_4')} alt="" className="h-28 drop-shadow-lg" />
             <p className="m-0 text-xl font-black text-[#c0587a]">{race.rivals.length ? `${race.rank}등! ${race.rank === 1 ? '최고예요 🎉' : '잘 달렸어요'}` : race.finish === 'laps' ? '결승선 통과!' : '시간 끝! 잘 달렸어요'}</p>
-            <p className="m-0 text-sm font-bold text-[#6b4b52]">모은 별 ⭐ {race.stars}개 · 받은 별 ⭐ {paid || rewardStars(race)}개</p>
+            <p className="m-0 text-sm font-bold text-[#6b4b52]">받은 별 ⭐ {paid || rewardStars(race)}개</p>
             <div className="mt-1 flex w-full gap-2">
               <button onClick={() => { if (netRef.current) { leaveNet(); setPhase('intro') } else start() }} className="min-h-12 flex-1 rounded-full bg-[#ff8fab] text-base font-black text-white shadow active:scale-95">한 번 더!</button>
               <button onClick={() => { playTap(); leaveNet(); onExit() }} className="min-h-12 flex-1 rounded-full bg-[#f3e6ea] text-base font-bold text-[#6b4b52] active:scale-95">나가기</button>
