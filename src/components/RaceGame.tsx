@@ -35,7 +35,6 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   const [phase, setPhase] = useState<'intro' | 'lobby' | 'playing' | 'done'>('intro')
   const [race, setRace] = useState<Race>(() => newRace())
   const live = useRef(race)
-  const [oops, setOops] = useState(0)
   const [paid, setPaid] = useState(0)
   const [paused, setPaused] = useState(false)
   const [theme, setTheme] = useState<RaceTheme>(readTheme)
@@ -82,7 +81,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
         idOf.current = {}
         const others = uids.filter((u) => u !== net.uid).map((u, i) => { idOf.current[u] = i; return { id: i, name: room.players[u]?.name ?? '친구', car: room.players[u]?.car ?? 'heart', slot: uids.indexOf(u) } })
         const fresh = newNetRace(room.meta!.seed, Math.max(0, mine), others)
-        live.current = fresh; setRace(fresh); saved.current = false; setPaid(0); setOops(0); setPaused(false); setPhase('playing')
+        live.current = fresh; setRace(fresh); saved.current = false; setPaid(0); setPaused(false); setPhase('playing')
       }, wait)
     }
   }
@@ -128,7 +127,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
     const tick = (now: number) => {
       const dt = Math.min(0.05, Math.max(0, (now - prev) / 1000)); prev = now
       const next = stepRace(live.current, dt)
-      for (const e of next.events) { if (e === 'star') playStar(); else if (e === 'boost') playGold(); else { playCloud(); setOops((n) => n + 1) } }
+      for (const e of next.events) { if (e === 'star') playStar(); else if (e === 'boost') playGold(); else playCloud() }
       live.current = { ...next, events: [] }
       setRace(live.current)
       if (next.phase === 'done') { setPhase('done'); return }
@@ -146,7 +145,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
     if (stars > 0 && !isRestoring() && earnStars(stars)) setPaid(stars)
   }, [phase])
 
-  const start = () => { const fresh = newRace(undefined, pickRivals(friends)); live.current = fresh; setRace(fresh); saved.current = false; setPaid(0); setOops(0); setPaused(false); setPhase('playing'); playTap() }
+  const start = () => { const fresh = newRace(undefined, pickRivals(friends)); live.current = fresh; setRace(fresh); saved.current = false; setPaid(0); setPaused(false); setPhase('playing'); playTap() }
   const go = (dir: -1 | 1) => { if (phase !== 'playing' || paused) return; live.current = steer(live.current, dir); playHop() }
   /** 단추를 누르고 있는 동안은 칸에 걸리지 않고 쭉 미끄러진다(손을 떼면 그 자리에서 멈춘다) */
   const holdOn = (dir: -1 | 1) => { go(dir); if (phase === 'playing' && !paused) live.current = setHold(live.current, dir) }
@@ -162,7 +161,6 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   })
 
   const counting = phase === 'playing' && race.phase === 'count'
-  const oopsOn = useOops(oops)
   return (
     <section aria-label="자동차 레이스" onContextMenu={(e) => e.preventDefault()} className="relative h-full overflow-hidden rounded-3xl bg-[#bfe6ff] select-none [-webkit-touch-callout:none] [&_img]:pointer-events-none [&_img]:select-none [&_img]:[-webkit-touch-callout:none] [&_button]:[-webkit-touch-callout:none] [&_button]:touch-manipulation">
       {/* 대기실에서는 3D 를 만들지 않는다: 만들어 두면 낡은 판(3칸·친구 없음)을 그대로 쓰게 된다. 판마다 새로 만든다 */}
@@ -198,8 +196,6 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
           <p className="m-0 text-5xl font-black text-white [text-shadow:0_4px_12px_rgba(192,88,122,0.7)]">결승선 통과!</p>
         </div>
       )}
-      {oopsOn && <p role="status" className="pointer-events-none absolute inset-x-0 top-[28%] z-20 m-0 text-center text-5xl font-black text-white [text-shadow:0_3px_10px_rgba(80,60,120,0.7)]">앗! 😮 다시 달려요!</p>}
-      {phase === 'playing' && race.boost > 0 && <div className="pointer-events-none absolute inset-x-0 top-[26%] z-20 flex items-center justify-center gap-2"><img src={img('fx_boost')} alt="" className="h-16 drop-shadow-lg" /><p className="m-0 text-4xl font-black text-[#ffe45c] [text-shadow:0_3px_10px_rgba(192,88,122,0.8)]">부우웅!</p></div>}
 
       {phase === 'playing' && (
         <div className="pointer-events-none absolute inset-x-3 bottom-4 z-20 flex items-end justify-between">
@@ -297,9 +293,3 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
   )
 }
 
-/** 「앗!」은 1.2초만 보인다 */
-function useOops(n: number) {
-  const [on, setOn] = useState(false)
-  useEffect(() => { if (!n) return; setOn(true); const t = setTimeout(() => setOn(false), 1200); return () => clearTimeout(t) }, [n])
-  return on
-}
