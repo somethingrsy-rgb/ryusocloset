@@ -16,7 +16,7 @@ const ROAD_TILE = roadWidth(3) * (951 / 512)
 const GROUND_TILE = 10
 const PROPS = 20, PROP_GAP = 11
 
-export type RaceTheme = 'meadow' | 'snow' | 'candy'
+export type RaceTheme = 'meadow' | 'snow' | 'candy' | 'fruit'
 export type RaceCar = 'heart' | 'cloud' | 'blue' | 'bunny' | 'star'
 /** 자동차 그림 크기(픽셀): 같은 눈금으로 줄여서 똑바로·왼쪽·오른쪽 크기가 서로 맞는다. 1픽셀 = CAR_K 장면 단위 */
 const CAR_PX: Record<RaceCar, Record<'straight' | 'left' | 'right', [number, number]>> = {
@@ -38,10 +38,11 @@ const CAR_K = 4.3 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
 export const ALL_CARS: RaceCar[] = ['heart', 'cloud', 'blue', 'bunny', 'star']
 /** 장소마다 하늘색(하늘 그림 아래·안개), 길가 소품 */
-const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | 'xmas' }> = {
+const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | 'xmas' | 'fruit' }> = {
   meadow: { sky: 0xc9ecff, prop: 'tree' },
   snow: { sky: 0xdad6f6, prop: 'xmas' },
   candy: { sky: 0xffc9e3, prop: 'lollipop' },
+  fruit: { sky: 0xffd6c4, prop: 'fruit' },
 }
 
 export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Race>; theme: RaceTheme; car: RaceCar }) {
@@ -113,10 +114,13 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     // [그림 이름, 높이, 가로세로 비율] — 높이 대비 폭은 spriteOf(w, h) 순서에 맞춰 아래에서 곱한다
     const CANDY_BIG: [string, number, number][] = [['cd_cotton_pink', 4.4, 0.85], ['cd_lolli_a', 4.4, 0.74], ['cd_cotton_blue', 4.4, 0.81], ['prop_lollipop', 4.8, 0.65], ['cd_lolli_b', 4.4, 0.74]]
     const SNOW_BIG: [string, number, number][] = [['prop_xmas', 4.7, 0.72], ['sn_pine', 4.0, 1.03], ['sn_pinelit', 4.0, 1.01], ['prop_xmas', 4.7, 0.72], ['sn_bare', 4.0, 1.07]]
+    // 과일 마을: 레몬·오렌지·초록 나무와 딸기집·사과집을 번갈아 [그림, 높이, 가로세로 비율]
+    const FRUIT_BIG: [string, number, number][] = [['fr_tree_green', 4.4, 0.93], ['fr_tree_lemon', 4.4, 0.95], ['fr_tree_orange', 4.4, 0.95], ['fr_strawhouse', 3.8, 1.04], ['fr_tree_orange', 4.4, 0.95], ['fr_tree_lemon', 4.4, 0.95], ['fr_applehouse', 3.8, 1.01], ['fr_tree_green', 4.4, 0.93]]
     const props = Array.from({ length: PROPS }, (_, i) => {
       const side = i % 2 ? 1 : -1, x = side * (sideX + (i % 3) * 2.2), z = -i * PROP_GAP
       const big = 0.9 + (i % 3) * 0.2
       const o = th.prop === 'tree' ? (i % 4 === 1 ? spriteOf(art('prop_tree2'), 4.7 * big, 4.4 * big, 2.2 * big) : spriteOf(art('prop_tree'), 4.6 * big, 4.2 * big, 2.1 * big))
+        : th.prop === 'fruit' ? (() => { const [img, h, asp] = FRUIT_BIG[i % FRUIT_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
         : th.prop === 'xmas' ? (() => { const [img, h, asp] = SNOW_BIG[i % SNOW_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })() : (() => { const [img, h, asp] = CANDY_BIG[i % CANDY_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
       o.position.x = x; o.position.z = z; scene.add(o)
       return { o, k: i }
@@ -124,11 +128,14 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     // 길가 구경거리: 그림마다 쓰는 곳이 정해져 있다(초원: 토끼·꽃무더기 / 사탕 나라: 곰·풍선·사탕 나라 모음 / 눈 나라: 눈 나라 모음·크리스마스 나무)
     // [그림 이름, 높이, 가로세로 비율]
     type Art = [string, number, number]
-    const meadow = theme === 'meadow', candy = theme === 'candy', snow = theme === 'snow'
+    const meadow = theme === 'meadow', candy = theme === 'candy', snow = theme === 'snow', fruit = theme === 'fruit'
     const CHEER: Art[] = meadow ? [['prop_bunny', 3.0, 0.83]] : candy ? [
       ['prop_bear', 2.6, 1.04], ['cd_castle', 4.6, 0.92], ['prop_balloons', 3.2, 0.68], ['cd_lamp_a', 3.8, 0.54], ['cd_cakehouse', 3.6, 0.93], ['cd_cart', 2.8, 0.94],
       ['cd_ginger', 3.2, 1.0], ['cd_lamp_b', 3.8, 0.51], ['cd_fountain', 2.8, 1.05], ['prop_lamp', 3.8, 0.44], ['cd_umbrella', 2.6, 1.09], ['cd_cupcake', 2.4, 0.86],
       ['cd_bench', 1.9, 1.32], ['cd_sign', 2.6, 0.93], ['cd_fence', 1.6, 1.77], ['prop_balloons', 3.2, 0.68],
+    ] : fruit ? [
+      ['fr_pinefountain', 2.8, 1.03], ['fr_orangelamp', 3.8, 0.66], ['fr_fruitstand', 3.0, 1.03], ['fr_melonbench', 1.9, 1.38], ['fr_peachhouse', 3.4, 1.04], ['fr_lemoncart', 2.8, 0.9],
+      ['fr_cherrysign', 3.2, 0.68], ['fr_kiwiparasol', 2.8, 0.96], ['fr_grapeballoon', 3.4, 0.67], ['fr_bananabridge', 1.8, 1.75], ['fr_orangelamp', 3.8, 0.66], ['fr_strawhouse', 3.0, 1.04],
     ] : snow ? [
       ['sn_snowman', 3.0, 1.06], ['sn_igloo', 3.0, 1.36], ['sn_lamp', 3.8, 0.64], ['sn_castle', 4.6, 1.2], ['sn_bunnyman', 2.4, 0.97], ['sn_fountain', 2.8, 1.21],
       ['sn_sign', 2.8, 0.92], ['sn_sled', 1.8, 1.36], ['sn_snowman', 3.0, 1.06], ['sn_gifts', 2.2, 1.23], ['sn_bench', 1.9, 1.56], ['sn_fence', 1.5, 1.95],
@@ -145,6 +152,8 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const GROUND: Art[] = meadow ? [['prop_flowers', 1.1, 1.55]] : candy ? [
       ['cd_bush', 1.2, 1.52], ['cd_gummy', 1.0, 1.5], ['cd_candy', 0.9, 1.5], ['cd_peppermint', 1.0, 1.03], ['cd_jelly', 1.1, 0.98], ['cd_gummybear', 1.3, 0.81],
       ['cd_heartcookie', 1.0, 1.08], ['cd_starface', 1.1, 0.99],
+    ] : fruit ? [
+      ['fg_strawbush', 1.2, 1.34], ['fg_blueberry', 1.1, 1.35], ['fg_orangeslice', 0.9, 1.58], ['fg_melonslice', 1.1, 1.1], ['fg_cherry', 1.1, 1.06], ['fg_flowers', 0.9, 1.7], ['fg_pineapple', 1.3, 0.73],
     ] : snow ? [
       ['sn_rock', 1.3, 1.59], ['sn_holly', 1.3, 1.35], ['sn_iceplant', 1.5, 1.15], ['sn_crystal', 1.4, 1.15], ['sn_flake', 1.2, 0.96], ['sn_gifts', 1.2, 1.23],
     ] : []
