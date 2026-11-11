@@ -231,6 +231,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       lean(mine, r.vx, r.slow > 0 ? Math.sin(t * 30) * 0.22 : 0)
       r.rivals.forEach((rv, i) => {
         const c = rivalCars[i]
+        if (!c) return // 친구 차 그림이 아직 없으면 건너뛴다(여기서 오류가 나면 화면 전체가 멈춘다)
         c.group.position.set(rv.x * LANE_W, Math.abs(Math.sin(t * 14 + i)) * 0.05 * Math.min(1, rv.speed / 20), -rv.d)
         // 내 차 뒤로 처진 친구는 카메라 앞을 가리지 않게 서서히 사라진다
         const fade = Math.max(0, Math.min(1, (rv.d - r.d + 7) / 4))
