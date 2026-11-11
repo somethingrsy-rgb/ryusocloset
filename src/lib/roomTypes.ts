@@ -49,6 +49,8 @@ export interface Placed {
   flip: boolean
   /** 겹치는 순서 조절: 기본 순서에 더하는 값 (없으면 기본). 앞으로/뒤로 버튼이 정한다 */
   zb?: number
+  /** 기울기(도, 시계 방향). 없으면 0 */
+  rot?: number
 }
 
 export interface AvatarPlacement {
@@ -57,6 +59,7 @@ export interface AvatarPlacement {
   scale: number
   flip: boolean
   zb?: number
+  rot?: number
 }
 
 export interface RoomState {
