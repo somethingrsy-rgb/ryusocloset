@@ -152,11 +152,12 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
                   className={`h-8 flex-1 rounded-full border-2 text-xs font-black ${friends === n ? 'border-[#ff8fab] bg-[#fff0f5] text-[#c0587a]' : 'border-transparent bg-[#f6eef8] text-[#7a3d8f]'}`}>{n === 0 ? '혼자' : `${n}명`}</button>
               ))}
             </div>
+            <img key={car} src={img(`pick_${car}`)} alt={`${CARS.find((c) => c.id === car)?.name} 차`} className="h-32 w-auto drop-shadow-lg [animation:pop-in_.25s_ease-out]" />
             <div role="radiogroup" aria-label="내 차" className="flex w-full gap-2">
               {CARS.map((c) => (
                 <button key={c.id} role="radio" aria-checked={car === c.id} onClick={() => pickCar(c.id)}
                   className={`flex min-w-0 flex-1 flex-col items-center justify-center rounded-2xl border-2 py-1 text-[11px] font-black whitespace-nowrap ${car === c.id ? 'border-[#ff8fab] bg-[#fff0f5] text-[#c0587a]' : 'border-transparent bg-[#f6eef8] text-[#7a3d8f]'}`}>
-                  <img src={img(`car_${c.id}_straight`)} alt="" className="h-9 w-auto" />{c.name}
+                  <img src={img(`pick_${c.id}`)} alt="" className="h-12 w-auto" />{c.name}
                 </button>
               ))}
             </div>
