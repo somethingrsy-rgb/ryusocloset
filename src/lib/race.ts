@@ -107,6 +107,36 @@ export const newRace = (seed = Math.floor(Math.random() * 1e6), animals: number[
   rank: 0,
 })
 
+/**
+ * 휘는 길(보이기만): 길 가운데가 거리 d 에서 옆으로 얼마나 휘었는지(장면 단위, +는 오른쪽).
+ * 직선 구간과 왼쪽·오른쪽 커브 구간이 이어지고, 씨앗(seed)이 같으면 모두의 화면에서 같은 곳이 휜다.
+ * 차는 늘 곧게 달리고, 화면에서는 멀리 있는 길과 소품을 (curveAt(그곳) - curveAt(내 거리))만큼 옆으로 옮겨 길이 휘어 보이게 한다.
+ * 출발 근처(CURVE_START 전)와 결승 근처는 곧아서 아치가 똑바로 서 있다.
+ */
+export const CURVE_START = 90, CURVE_SEG = 150
+/** 한 구간이 만드는 최대 휘어짐(옆으로 이만큼 휘는 정도) */
+const CURVE_AMP = 14
+/** 구간 번호 s 의 휘어짐 방향·세기: 0(직선)·±(커브). 자주 휘게 4분의 3은 커브 */
+export function curveKind(seg: number, seed: number): number {
+  if (seg < 0) return 0
+  const u = rand(seg, seed, 77)
+  if (u < 0.25) return 0
+  const dir = rand(seg, seed, 78) < 0.5 ? -1 : 1
+  return dir * (0.55 + 0.45 * rand(seg, seed, 79))
+}
+/** 길 가운데의 옆 자리(거리 d, 씨앗). 구간마다 부드럽게(코사인) 휘었다가 다시 펴지고, 앞 구간의 휘어짐 위에 쌓지 않아서 늘 제자리로 돌아온다 */
+export function curveAt(d: number, seed: number): number {
+  if (d < CURVE_START) return 0
+  const x = (d - CURVE_START) / CURVE_SEG
+  const seg = Math.floor(x), f = x - seg
+  // 구간 안에서 0 → 최대 → 0 (0.5 - 0.5cos). 도착선 바로 앞은 곧게
+  const bump = 0.5 - 0.5 * Math.cos(f * Math.PI * 2)
+  const end = Math.max(0, Math.min(1, (LAP * LAPS - 40 - d) / 60))
+  return curveKind(seg, seed) * CURVE_AMP * bump * end
+}
+/** 길의 방향이 바뀌는 정도(기울기): 차가 커브에서 살짝 기울어 보이게 */
+export const curveSlope = (d: number, seed: number) => (curveAt(d + 2, seed) - curveAt(d - 2, seed)) / 4
+
 /** 같은 (칸 번호, 씨앗, 용도)면 늘 같은 0~1 수 */
 function rand(seg: number, seed: number, k: number): number {
   let h = (seg * 374761393 + seed * 668265263 + k * 2246822519) >>> 0

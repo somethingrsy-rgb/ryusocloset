@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { setHold, glide, rankNow, type Race, LAP, LAPS, TIME_LIMIT, itemsBetween, lapOf, newRace, rewardStars, useBoost, GAUGE_MAX, steer, stepRace, timeLeft } from './race'
+import { curveAt, curveKind, curveSlope, CURVE_START, CURVE_SEG, setHold, glide, rankNow, type Race, LAP, LAPS, TIME_LIMIT, itemsBetween, lapOf, newRace, rewardStars, useBoost, GAUGE_MAX, steer, stepRace, timeLeft } from './race'
 
 const run = (r: ReturnType<typeof newRace>, sec: number, dt = 0.05) => { for (let i = 0; i < sec / dt && r.phase !== 'done'; i++) r = stepRace(r, dt); return r }
 
@@ -128,5 +128,23 @@ describe('자동차 레이스', () => {
     const star = itemsBetween(0, 3000, 3).find((i) => i.kind === 'star')!
     const full = stepRace({ ...run(GAUGE_MAX), seed: 3, d: star.d - 0.5, x: star.lane, lane: star.lane }, 0.1)
     expect(full.gauge).toBe(GAUGE_MAX)
+  })
+  it('휘는 길: 출발·결승 근처는 곧고, 같은 씨앗이면 같고, 자주 휘고, 부드럽게 이어진다', () => {
+    for (let d = 0; d <= CURVE_START; d += 10) expect(Math.abs(curveAt(d, 5))).toBe(0)
+    expect(Math.abs(curveAt(LAP * LAPS, 5))).toBe(0); expect(Math.abs(curveAt(LAP * LAPS - 20, 5))).toBe(0)
+    expect(curveAt(500, 7)).toBe(curveAt(500, 7))
+    let curvy = 0, total = 0, maxStep = 0, maxAbs = 0
+    for (let seed = 1; seed <= 20; seed++) {
+      let prev = curveAt(CURVE_START, seed)
+      for (let d = CURVE_START; d < LAP * LAPS; d += 1) { const c = curveAt(d, seed); maxStep = Math.max(maxStep, Math.abs(c - prev)); maxAbs = Math.max(maxAbs, Math.abs(c)); prev = c }
+      for (let seg = 0; seg < 9; seg++) { total++; if (curveKind(seg, seed) !== 0) curvy++ }
+    }
+    expect(curvy / total).toBeGreaterThan(0.6)     // 자주 휜다
+    expect(maxStep).toBeLessThan(0.5)              // 1칸마다 옆으로 0.5 이상 튀지 않는다(부드럽다)
+    expect(maxAbs).toBeLessThanOrEqual(14.01)
+    // 왼쪽·오른쪽이 모두 나온다
+    const signs = new Set<number>(); for (let seg = 0; seg < 30; seg++) signs.add(Math.sign(curveKind(seg, 3)))
+    expect(signs.has(-1) && signs.has(1)).toBe(true)
+    expect(Math.abs(curveSlope(CURVE_START + CURVE_SEG * 0.25, 4)) + Math.abs(curveSlope(CURVE_START + CURVE_SEG * 1.25, 4))).toBeGreaterThan(0)
   })
 })

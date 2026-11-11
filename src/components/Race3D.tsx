@@ -1,6 +1,6 @@
 import { useEffect, useRef, type MutableRefObject } from 'react'
 import * as THREE from 'three'
-import { LANE_W, LAP, LAPS, itemsBetween, type ItemKind, type Race } from '../lib/race'
+import { LANE_W, LAP, LAPS, curveAt, curveSlope, itemsBetween, type ItemKind, type Race } from '../lib/race'
 import { assetUrl } from '../lib/items'
 import { savedName } from '../lib/mp/session'
 import { createStage } from './stage3d'
@@ -34,6 +34,8 @@ const DRIVER_PX: Partial<Record<RaceCar, Record<'straight' | 'left' | 'right', [
   cloud: { straight: [477, 440], left: [492, 432], right: [504, 406] },
   heart: { straight: [457, 414], left: [512, 409], right: [485, 427] },
 }
+/** 모든 차가 비슷한 크기로 보이게 맞추는 기준 넓이(픽셀², 다섯 차 똑바로 그림 넓이의 평균쯤) */
+const CAR_AREA = 237000
 /** 차 크기(이전보다 70%) */
 const CAR_K = 4.3 * 0.7 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
@@ -80,8 +82,13 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     scene.add(grass)
     const rt = rep(art(LANES === 5 ? `road5_${theme}` : `road_${theme}`))
     rt.repeat.set(1, 260 / ROAD_TILE)
-    const road = new THREE.Mesh(keep(new THREE.PlaneGeometry(ROAD_W, 260)), keep(new THREE.MeshBasicMaterial({ map: rt })))
+    // 길은 앞으로 길게 뻗은 판을 잘게(세로 90조각) 나눠, 조각마다 옆으로 옮겨서 휘어 보이게 한다
+    const ROAD_SEG = 90, ROAD_LEN = 260
+    const road = new THREE.Mesh(keep(new THREE.PlaneGeometry(ROAD_W, ROAD_LEN, 1, ROAD_SEG)), keep(new THREE.MeshBasicMaterial({ map: rt })))
     road.rotation.x = -Math.PI / 2
+    const roadPos = road.geometry.attributes.position as THREE.BufferAttribute
+    const roadRows = ROAD_SEG + 1
+    const roadBaseY = Array.from({ length: roadRows }, (_, i) => roadPos.getY(i * 2)) // 판 안의 앞뒤 자리(−130~130): 정점은 행마다 2개(왼·오른)
     road.position.y = 0.02
     scene.add(road)
 
@@ -118,8 +125,8 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const SNOW_BIG: [string, number, number][] = [['prop_xmas', 4.7, 0.72], ['sn_pine', 4.0, 1.03], ['sn_pinelit', 4.0, 1.01], ['prop_xmas', 4.7, 0.72], ['sn_bare', 4.0, 1.07]]
     // 과일 마을: 레몬·오렌지·초록 나무와 딸기집·사과집을 번갈아 [그림, 높이, 가로세로 비율]
     const FRUIT_BIG: [string, number, number][] = [['fr_tree_green', 4.4, 0.93], ['fr_tree_lemon', 4.4, 0.95], ['fr_tree_orange', 4.4, 0.95], ['fr_strawhouse', 3.8, 1.04], ['fr_tree_orange', 4.4, 0.95], ['fr_tree_lemon', 4.4, 0.95], ['fr_applehouse', 3.8, 1.01], ['fr_tree_green', 4.4, 0.93]]
-    // 바닷속 마을: 큰 길가 자리는 큰 구경거리로 [그림, 높이, 가로세로 비율] (산호 큰 소품 그림이 오면 여기 추가)
-    const SEA_BIG: [string, number, number][] = [['sea_shellhouse', 4.4, 1.03], ['sea_conch', 4.4, 1.04], ['sea_submarine', 4.0, 1.07], ['sea_shellhouse', 4.4, 1.03], ['sea_octopus', 4.0, 0.99], ['sea_conch', 4.4, 1.04], ['sea_chest', 3.6, 1.18]]
+    // 바닷속 마을: 큰 길가 자리는 산호 5종에 조개집·소라집·잠수함을 섞는다 [그림, 높이, 가로세로 비율]
+    const SEA_BIG: [string, number, number][] = [['sea_coral_pink', 4.2, 0.93], ['sea_coral_purple', 3.8, 1.04], ['sea_shellhouse', 4.2, 1.03], ['sea_coral_kelp', 4.4, 0.92], ['sea_coral_anemone', 3.6, 1.06], ['sea_conch', 4.2, 1.04], ['sea_coral_brain', 3.6, 1.03], ['sea_submarine', 3.8, 1.07]]
     const props = Array.from({ length: PROPS }, (_, i) => {
       const side = i % 2 ? 1 : -1, x = side * (sideX + (i % 3) * 2.2), z = -i * PROP_GAP
       const big = 0.9 + (i % 3) * 0.2
@@ -128,7 +135,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
         : th.prop === 'sea' ? (() => { const [img, h, asp] = SEA_BIG[i % SEA_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
         : th.prop === 'xmas' ? (() => { const [img, h, asp] = SNOW_BIG[i % SNOW_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })() : (() => { const [img, h, asp] = CANDY_BIG[i % CANDY_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
       o.position.x = x; o.position.z = z; scene.add(o)
-      return { o, k: i }
+      return { o, k: i, x0: x }
     })
     // 길가 구경거리: 그림마다 쓰는 곳이 정해져 있다(초원: 토끼·꽃무더기 / 사탕 나라: 곰·풍선·사탕 나라 모음 / 눈 나라: 눈 나라 모음·크리스마스 나무)
     // [그림 이름, 높이, 가로세로 비율]
@@ -155,7 +162,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       const o = spriteOf(art(img), h * asp, h, h / 2)
       o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + 1.7), h / 2, -30 - i * CHEER_GAP)
       scene.add(o)
-      return { o, k: i }
+      return { o, k: i, x0: o.position.x }
     })
     const GROUND: Art[] = meadow ? [['prop_flowers', 1.1, 1.55]] : candy ? [
       ['cd_bush', 1.2, 1.52], ['cd_gummy', 1.0, 1.5], ['cd_candy', 0.9, 1.5], ['cd_peppermint', 1.0, 1.03], ['cd_jelly', 1.1, 0.98], ['cd_gummybear', 1.3, 0.81],
@@ -172,13 +179,16 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       const o = spriteOf(art(img), h * asp, h, h / 2)
       o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + (fruit ? 2.3 : 0.9) + (i % 3) * 0.5), h / 2, -8 - i * FLOWER_GAP)
       scene.add(o)
-      return { o, k: i }
+      return { o, k: i, x0: o.position.x }
     })
     for (let k = 0; k <= LAPS; k++) { const o = spriteOf(signTex, 2.3, 2.1, 1.05); o.position.set(-(ROAD_W / 2 + 1.5), 1.05, gateZ(k) + 9); scene.add(o) }
 
     // 차: 그림 판 세 장(똑바로·왼쪽·오른쪽)을 겹쳐 두고, 옆으로 움직이는 속도에 따라 서서히 섞는다(뚝 바뀌지 않고 미끄러지듯)
-    const buildCar = (id: RaceCar, k = 1) => {
+    const buildCar = (id: RaceCar, k0 = 1) => {
       const group = new THREE.Group()
+      // 차마다 그림 크기가 달라서(하트 차는 낮고 작고, 파랑·번개 차는 높다) 그림이 차지하는 넓이를 같게 맞춘다
+      const px0 = (DRIVER_PX[id] || CAR_PX[id]).straight
+      const k = k0 * Math.sqrt(CAR_AREA / (px0[0] * px0[1]))
       const sp = (['straight', 'left', 'right'] as const).map((v) => {
         const drv = DRIVER_PX[id]
         const [pw, ph] = (drv ? drv : CAR_PX[id])[v]
@@ -220,7 +230,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const rivalCars = live.current.rivals.map((_rv, i) => {
       const nc = live.current.rivals[i]?.net?.car as RaceCar | undefined
       const id = nc && nc in CAR_PX ? nc : others[i % others.length], c = buildCar(id, 0.92)
-      nameTag(c, live.current.rivals[i]?.net?.name ?? `친구${i + 1}`, false)
+      nameTag(c, live.current.rivals[i]?.net?.name ?? `컴퓨터${i + 1}`, false)
       return c
     })
     const shadow = new THREE.Mesh(keep(new THREE.CircleGeometry(1, 20)), keep(new THREE.MeshBasicMaterial({ color: 0x3c4a2a, transparent: true, opacity: 0.25, depthWrite: false })))
@@ -251,6 +261,18 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     // 반짝이·먼지는 차보다 카메라 쪽(차 뒤)에 두고 맨 위에 그린다: 차에 가려 안 보이던 것을 보이게
     sparkleSp.renderOrder = dustSp.renderOrder = 300
     scene.add(sparkleSp, dustSp)
+    // 바닷속 거품 3가지(바닷속에서만): ① 부스터 중 차 뒤로 계속 퍼지는 거품 ② 별 코인을 먹을 때 톡 올라오는 거품 ③ 화면에 천천히 떠다니는 거품
+    const bubOn = theme === 'sea'
+    const bubTex = bubOn ? art('fx_bubbles') : null
+    type Bub = { sp: THREE.Sprite; life: number; max: number; vx: number; vy: number; s0: number }
+    const bubbles: Bub[] = []
+    const addBub = (x: number, y: number, z: number, size: number, max: number, vx: number, vy: number, op: number) => {
+      const sp = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: bubTex!, transparent: true, depthWrite: false, opacity: op })))
+      sp.renderOrder = 290; sp.scale.setScalar(size); sp.position.set(x, y, z); scene.add(sp)
+      bubbles.push({ sp, life: max, max, vx, vy, s0: size })
+    }
+    let lastStars = 0, boostAcc = 0, ambAcc = 0
+    const rnd = (a: number, b: number) => a + Math.random() * (b - a)
 
     let skyWide: boolean | null = null
     const drawRank = new Map<number, number>()
@@ -260,17 +282,28 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       const r = live.current
       const cz = -r.d, cx = r.x * LANE_W
       grass.position.z = cz; grass.position.x = cx * 0; road.position.z = cz - 60
+      // 휘는 길: 판의 각 가로줄을 (그 자리의 길 휘어짐 − 내 자리의 휘어짐)만큼 옆으로 옮긴다
+      const c0 = curveAt(r.d, r.seed)
+      const curveX = (d: number) => curveAt(d, r.seed) - c0
+      for (let i = 0; i < roadRows; i++) {
+        // 눕힌 판의 +y 가 앞쪽(−z)이고 판 가운데는 내 앞 60 에 있다: 행의 앞쪽 거리 = 내 거리 + 60 + (판 안의 y)
+        const dd = r.d + 60 + roadBaseY[i]
+        const ox = curveX(dd)
+        roadPos.setX(i * 2, -ROAD_W / 2 + ox); roadPos.setX(i * 2 + 1, ROAD_W / 2 + ox)
+      }
+      roadPos.needsUpdate = true
       gTex.offset.y = -cz / GROUND_TILE; rt.offset.y = -cz / ROAD_TILE
       const sz = s.size(), wide = sz.w > sz.h
       if (wide !== skyWide) { skyWide = wide; skyTex.repeat.set(wide ? 2 : 1, 1); skyTex.needsUpdate = true; sky.scale.x = wide ? 1 : 0.5 }
-      sky.position.x = cx * 0.6; sky.position.z = cz - SKY_Z
+      // 하늘은 길이 휘는 반대쪽으로 아주 조금 밀어서, 커브를 돌 때 먼 풍경이 함께 도는 느낌을 준다
+      sky.position.x = cx * 0.6 - curveSlope(r.d + 40, r.seed) * 35; sky.position.z = cz - SKY_Z
       // 차: 옆 칸으로 가는 동안은 그쪽 그림, 달릴 땐 통통, 미끄러지면 빙글 흔들
       car.position.set(cx, Math.abs(Math.sin(t * 14)) * 0.05 * Math.min(1, r.speed / 20), cz)
       lean(mine, r.vx, r.slow > 0 ? Math.sin(t * 30) * 0.22 : 0)
       r.rivals.forEach((rv, i) => {
         const c = rivalCars[i]
         if (!c) return // 친구 차 그림이 아직 없으면 건너뛴다(여기서 오류가 나면 화면 전체가 멈춘다)
-        c.group.position.set(rv.x * LANE_W, Math.abs(Math.sin(t * 14 + i)) * 0.05 * Math.min(1, rv.speed / 20), -rv.d)
+        c.group.position.set(rv.x * LANE_W + curveX(rv.d), Math.abs(Math.sin(t * 14 + i)) * 0.05 * Math.min(1, rv.speed / 20), -rv.d)
         // 내 차 뒤로 처진 친구는 카메라 앞을 가리지 않게 서서히 사라진다
         const fade = Math.max(0, Math.min(1, (rv.d - r.d + 7) / 4))
         c.group.visible = fade > 0.02
@@ -280,19 +313,36 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       shadow.position.x = cx; shadow.position.z = cz
       // 카메라: 차 뒤에서 조금 옆으로 따라간다(속도가 빠를수록 살짝 멀어진다)
       camX += (cx * 0.6 - camX) * Math.min(1, dt * 6)
+      // 카메라는 차 뒤에 그대로 둔다(옮기면 차가 화면 옆으로 밀려난다). 커브는 길·소품이 휘는 것만으로 보인다
       s.view.target.set(camX, 1.0, cz - 3.2)
       s.view.dist = 11 + (LANES - 3) * 1.6 + Math.min(1.5, r.speed / 25) + (r.boost > 0 ? 1.2 : 0)
+      if (bubOn) {
+        // ① 부스터 중: 0.06초마다 차 뒤에서 작은 거품이 옆으로 퍼지며 올라간다
+        if (r.boost > 0) { boostAcc += dt; while (boostAcc > 0.06) { boostAcc -= 0.06; addBub(cx + rnd(-0.8, 0.8), rnd(0.5, 1.0), cz + rnd(0.3, 0.9), rnd(0.25, 0.5), rnd(0.7, 1.1), rnd(-0.7, 0.7), rnd(0.8, 1.6), 0.85) } } else boostAcc = 0
+        // ② 별 코인을 먹었으면(별 수가 늘었으면) 차 앞쪽에서 거품 몇 개가 톡 올라온다
+        if (r.stars > lastStars) { for (let k = 0; k < 6; k++) addBub(cx + rnd(-0.6, 0.6), rnd(1.0, 1.6), cz + rnd(-0.8, 0.0), rnd(0.25, 0.5), rnd(0.6, 0.9), rnd(-0.5, 0.5), rnd(1.4, 2.4), 0.95) }
+        lastStars = r.stars
+        // ③ 떠다니는 거품: 길 양옆 멀리서 천천히 올라가며 사라진다(적게, 시야를 가리지 않게)
+        ambAcc += dt; while (ambAcc > 0.5) { ambAcc -= 0.5; const side = Math.random() < 0.5 ? -1 : 1; addBub(cx + side * rnd(3, 9), rnd(0.2, 2.5), cz - rnd(4, 22), rnd(0.4, 0.9), rnd(3, 5), rnd(-0.1, 0.1), rnd(0.25, 0.5), 0.55) }
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+          const b = bubbles[i]; b.life -= dt
+          if (b.life <= 0) { scene.remove(b.sp); bubbles.splice(i, 1); continue }
+          const k = b.life / b.max
+          b.sp.position.x += b.vx * dt; b.sp.position.y += b.vy * dt
+          b.sp.material.opacity = Math.min(0.95, k * 1.6) * (b.s0 < 0.7 && b.max > 2 ? 0.6 : 1)
+        }
+      }
       sparkleSp.visible = r.sparkle > 0; sparkleSp.position.set(cx, 0.55 + (0.6 - r.sparkle) * 0.5, cz + 1.0)
       dustSp.visible = r.dust > 0; dustSp.position.set(cx, 0.5, cz + 0.9); dustSp.scale.setScalar(0.7 + Math.max(0, 0.7 - r.dust) * 0.9)
       // 나무
       const period = PROPS * PROP_GAP
       // 출발·결승 아치 앞뒤 18칸에는 나무·구경꾼·꽃을 두지 않는다(아치와 겹쳐 보이지 않게)
       const nearGate = (z: number) => { for (let k = 0; k <= LAPS; k++) if (Math.abs(z - gateZ(k)) < 18) return true; return false }
-      for (const tr of props) { const base = -tr.k * PROP_GAP; tr.o.position.z = base + period * Math.floor((cz + 25 - base) / period); tr.o.visible = !nearGate(tr.o.position.z) }
+      for (const tr of props) { const base = -tr.k * PROP_GAP; tr.o.position.z = base + period * Math.floor((cz + 25 - base) / period); tr.o.position.x = tr.x0 + curveX(-tr.o.position.z); tr.o.visible = !nearGate(tr.o.position.z) }
       const cp = CHEERS * CHEER_GAP
-      for (const c of cheers) { const base = -30 - c.k * CHEER_GAP; c.o.position.z = base + cp * Math.floor((cz + 25 - base) / cp); c.o.visible = !nearGate(c.o.position.z) }
+      for (const c of cheers) { const base = -30 - c.k * CHEER_GAP; c.o.position.z = base + cp * Math.floor((cz + 25 - base) / cp); c.o.position.x = c.x0 + curveX(-c.o.position.z); c.o.visible = !nearGate(c.o.position.z) }
       const fp = FLOWERS * FLOWER_GAP
-      for (const f of flowers) { const base = -8 - f.k * FLOWER_GAP; f.o.position.z = base + fp * Math.floor((cz + 25 - base) / fp); f.o.visible = !nearGate(f.o.position.z) }
+      for (const f of flowers) { const base = -8 - f.k * FLOWER_GAP; f.o.position.z = base + fp * Math.floor((cz + 25 - base) / fp); f.o.position.x = f.x0 + curveX(-f.o.position.z); f.o.visible = !nearGate(f.o.position.z) }
       // 겹친 차 그리는 순서: 반투명 그림은 카메라 거리로 정렬되는데, 두 차가 나란히 겹치면 순서가 프레임마다 뒤집혀 탁탁 튄다.
       // 그래서 순서를 직접 정한다(앞서 달리는 차를 먼저 그림). 거리가 0.8 안쪽으로 비슷하면 직전 순서를 그대로 둔다.
       const cars = [{ c: mine, d: r.d, k: 0 }, ...r.rivals.map((rv, i) => ({ c: rivalCars[i], d: rv.d, k: i + 1 })).filter((x) => x.c)]
@@ -305,6 +355,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
         want.add(it.id)
         let g = shown.get(it.id)
         if (!g) { g = itemMesh(it.kind); g.position.set(it.lane * LANE_W, 0, -it.d); scene.add(g); shown.set(it.id, g) }
+        g.position.x = it.lane * LANE_W + curveX(it.d)
         if (it.kind === 'star') (g.userData.m as THREE.Sprite).position.y = 0.9 + Math.sin(t * 5 + it.id) * 0.1
         else if (it.kind === 'boost') (g.userData.m as THREE.Sprite).position.y = 1.0 + Math.sin(t * 4 + it.id) * 0.12
       }
