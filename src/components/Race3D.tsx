@@ -30,6 +30,7 @@ const CAR_PX: Record<RaceCar, Record<'straight' | 'left' | 'right', [number, num
 /** 운전하는 아이가 그림에 들어 있는 차(내 차일 때만 쓴다. 친구 차는 빈 그림 + 동물) */
 const DRIVER_PX: Partial<Record<RaceCar, Record<'straight' | 'left' | 'right', [number, number]>>> = {
   pumpkin: { straight: [418, 531], left: [482, 518], right: [482, 546] },
+  star: { straight: [493, 504], left: [532, 485], right: [532, 439] },
 }
 const CAR_K = 4.3 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
