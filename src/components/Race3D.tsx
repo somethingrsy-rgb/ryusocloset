@@ -153,15 +153,16 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       ['cd_bush', 1.2, 1.52], ['cd_gummy', 1.0, 1.5], ['cd_candy', 0.9, 1.5], ['cd_peppermint', 1.0, 1.03], ['cd_jelly', 1.1, 0.98], ['cd_gummybear', 1.3, 0.81],
       ['cd_heartcookie', 1.0, 1.08], ['cd_starface', 1.1, 0.99],
     ] : fruit ? [
-      ['fg_strawbush', 1.2, 1.34], ['fg_blueberry', 1.1, 1.35], ['fg_orangeslice', 0.9, 1.58], ['fg_melonslice', 1.1, 1.1], ['fg_cherry', 1.1, 1.06], ['fg_flowers', 0.9, 1.7], ['fg_pineapple', 1.3, 0.73],
+      // 과일 마을 바닥 과일은 눈에 확 띄게 크게(수박·오렌지·딸기 등 높이 2.4~3.2)
+      ['fg_strawbush', 2.6, 1.34], ['fg_blueberry', 2.4, 1.35], ['fg_orangeslice', 2.0, 1.58], ['fg_melonslice', 2.8, 1.1], ['fg_cherry', 2.6, 1.06], ['fg_flowers', 1.6, 1.7], ['fg_pineapple', 3.2, 0.73],
     ] : snow ? [
       ['sn_rock', 1.3, 1.59], ['sn_holly', 1.3, 1.35], ['sn_iceplant', 1.5, 1.15], ['sn_crystal', 1.4, 1.15], ['sn_flake', 1.2, 0.96], ['sn_gifts', 1.2, 1.23],
     ] : []
-    const FLOWERS = GROUND.length ? 14 : 0, FLOWER_GAP = 17
+    const FLOWERS = GROUND.length ? (fruit ? 20 : 14) : 0, FLOWER_GAP = fruit ? 12 : 17
     const flowers = Array.from({ length: FLOWERS }, (_, i) => {
       const [img, h, asp] = GROUND[i % GROUND.length]
       const o = spriteOf(art(img), h * asp, h, h / 2)
-      o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + 0.9 + (i % 3) * 0.5), h / 2, -8 - i * FLOWER_GAP)
+      o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + (fruit ? 2.3 : 0.9) + (i % 3) * 0.5), h / 2, -8 - i * FLOWER_GAP)
       scene.add(o)
       return { o, k: i }
     })
