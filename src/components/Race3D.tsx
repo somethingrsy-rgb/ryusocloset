@@ -16,18 +16,18 @@ const GROUND_TILE = 10
 const PROPS = 20, PROP_GAP = 11
 
 export type RaceTheme = 'meadow' | 'snow' | 'candy'
-export type RaceCar = 'heart' | 'cloud' | 'pumpkin' | 'bunny' | 'star'
+export type RaceCar = 'heart' | 'cloud' | 'blue' | 'bunny' | 'star'
 /** 자동차 그림 크기(픽셀): 같은 눈금으로 줄여서 똑바로·왼쪽·오른쪽 크기가 서로 맞는다. 1픽셀 = CAR_K 장면 단위 */
 const CAR_PX: Record<RaceCar, Record<'straight' | 'left' | 'right', [number, number]>> = {
   heart: { straight: [457, 414], left: [512, 408], right: [485, 379] },
   cloud: { straight: [477, 369], left: [492, 392], right: [504, 403] },
-  pumpkin: { straight: [418, 525], left: [482, 537], right: [482, 537] },
+  blue: { straight: [493, 561], left: [532, 497], right: [532, 500] },
   bunny: { straight: [434, 538], left: [498, 538], right: [491, 535] },
   star: { straight: [493, 430], left: [532, 374], right: [532, 374] },
 }
 /** 운전하는 아이가 그림에 들어 있는 차(내 차일 때만 쓴다. 친구 차는 빈 그림 + 동물) */
 const DRIVER_PX: Partial<Record<RaceCar, Record<'straight' | 'left' | 'right', [number, number]>>> = {
-  pumpkin: { straight: [418, 531], left: [482, 518], right: [482, 546] },
+  blue: { straight: [493, 561], left: [532, 497], right: [532, 500] },
   star: { straight: [493, 504], left: [532, 485], right: [532, 439] },
   bunny: { straight: [434, 538], left: [498, 539], right: [491, 535] },
   cloud: { straight: [477, 440], left: [492, 432], right: [504, 406] },
@@ -35,7 +35,7 @@ const DRIVER_PX: Partial<Record<RaceCar, Record<'straight' | 'left' | 'right', [
 }
 const CAR_K = 4.3 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
-export const ALL_CARS: RaceCar[] = ['heart', 'cloud', 'pumpkin', 'bunny', 'star']
+export const ALL_CARS: RaceCar[] = ['heart', 'cloud', 'blue', 'bunny', 'star']
 /** 장소마다 하늘색(하늘 그림 아래·안개), 길가 소품 */
 const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | 'xmas' }> = {
   meadow: { sky: 0xc9ecff, prop: 'tree' },

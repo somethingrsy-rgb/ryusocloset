@@ -21,8 +21,10 @@ export const COUNTDOWN = 3
 export const COAST_T = 2
 const CRUISE = 30
 const BOOST_K = 1.6, BOOST_T = 2
+/** 게이지가 가득 차는 코인 수 / 단추로 쓴 부스터가 도는 시간(초) */
+export const GAUGE_MAX = 5
+export const GAUGE_BOOST_T = 3
 const SLOW_K = 0.5, SLOW_T = 1.5
-const BRAKE_K = 0.6
 const ACCEL = 40
 /** 옆으로 미끄러지는 느낌: 용수철처럼 목표 칸으로 다가가며 속도가 부드럽게 붙고 줄어든다(부딪히지 않고 미끄러지듯) */
 /** 톡 한 번에 옮기는 칸 / 누르고 있을 때 칸 수 per 초(칸에 걸리지 않고 쭉 간다) */
@@ -75,7 +77,8 @@ export interface Race {
   speed: number
   boost: number
   slow: number
-  brake: boolean
+  /** 부스터 게이지: 별 코인을 먹으면 한 칸씩 차고, 가득 차면 부스터 단추로 쓴다(코인은 돈이 아니라 게이지 충전) */
+  gauge: number
   /** 별·부스터를 먹은 뒤 반짝이가 보이는 남은 시간 / 미끄러진 뒤 먼지가 보이는 남은 시간(그림용) */
   sparkle: number
   dust: number
@@ -99,7 +102,7 @@ export interface Race {
 const START_LANES = [-2, 2, 1]
 export const halfLanes = (r: { lanes: number }) => (r.lanes - 1) / 2
 export const newRace = (seed = Math.floor(Math.random() * 1e6), animals: number[] = []): Race => ({
-  seed, lanes: animals.length ? 5 : 3, phase: 'count', count: COUNTDOWN, t: 0, d: 0, lane: 0, hold: 0, x: 0, vx: 0, speed: 0, boost: 0, slow: 0, brake: false, sparkle: 0, dust: 0, stars: 0, taken: [], events: [], after: 0, finish: null,
+  seed, lanes: animals.length ? 5 : 3, phase: 'count', count: COUNTDOWN, t: 0, d: 0, lane: 0, hold: 0, x: 0, vx: 0, speed: 0, boost: 0, slow: 0, gauge: 0, sparkle: 0, dust: 0, stars: 0, taken: [], events: [], after: 0, finish: null,
   rivals: animals.slice(0, MAX_RIVALS).map((animal, i) => ({ id: i, animal, d: i === 2 ? 8 : 0, x: START_LANES[i], vx: 0, lane: START_LANES[i], speed: 0, boost: 0, slow: 0, skill: 0.95 + ((seed >>> (i * 3)) % 9) * 0.011, fin: null })),
   rank: 0,
 })
@@ -137,7 +140,11 @@ export function steer(r: Race, dir: -1 | 1): Race {
   return lane === r.lane ? r : { ...r, lane }
 }
 export const setHold = (r: Race, dir: -1 | 0 | 1): Race => (r.hold === dir ? r : { ...r, hold: dir })
-export const setBrake = (r: Race, on: boolean): Race => (r.brake === on ? r : { ...r, brake: on })
+/** 부스터를 쓴다: 게이지가 가득 찼을 때만. 3초 동안 빨라지고 게이지는 비어 다시 모은다 */
+export function useBoost(r: Race): Race {
+  if (r.phase !== 'run' || r.gauge < GAUGE_MAX || r.finish) return r
+  return { ...r, gauge: 0, boost: GAUGE_BOOST_T, slow: 0, sparkle: 0.6, events: [...r.events, 'boost'] }
+}
 
 /** 컴퓨터 친구 한 대가 dt 초 달린다(me 는 내 차: 너무 앞서거나 뒤처지면 조금 따라잡고 봐주며 가까이 달리게) */
 function stepRival(v: Rival, me: Race, dt: number, running: boolean): Rival {
@@ -200,7 +207,7 @@ export const rankNow = (r: Race) => r.rivals.length ? 1 + r.rivals.filter((v) =>
 export function stepRace(r: Race, dt: number): Race {
   if (r.phase === 'done') return r
   const events: RaceEvent[] = []
-  let { count, t, d, speed, boost, slow, stars, sparkle, dust } = r
+  let { count, t, d, speed, boost, slow, stars, sparkle, dust, gauge } = r
   let phase: Race['phase'] = r.phase, finish: Race['finish'] = r.finish
   const taken = [...r.taken]
   // 옆으로 부드럽게
@@ -220,13 +227,13 @@ export function stepRace(r: Race, dt: number): Race {
   }
   t += dt
   boost = Math.max(0, boost - dt); slow = Math.max(0, slow - dt); sparkle = Math.max(0, sparkle - dt); dust = Math.max(0, dust - dt)
-  const want = CRUISE * (r.brake ? BRAKE_K : 1) * (boost > 0 ? BOOST_K : 1) * (slow > 0 ? SLOW_K : 1)
+  const want = CRUISE * (boost > 0 ? BOOST_K : 1) * (slow > 0 ? SLOW_K : 1)
   speed = speed < want ? Math.min(want, speed + ACCEL * dt) : Math.max(want, speed - ACCEL * 1.5 * dt)
   const prev = d
   d += speed * dt
   for (const it of itemsBetween(prev, d, r.seed, r.lanes)) {
     if (Math.abs(it.lane - x) >= REACH) continue
-    if (it.kind === 'star') { stars++; sparkle = 0.5; taken.push(it.id); events.push('star') }
+    if (it.kind === 'star') { stars++; gauge = Math.min(GAUGE_MAX, gauge + 1); sparkle = 0.5; taken.push(it.id); events.push('star') }
     else if (it.kind === 'boost') { boost = BOOST_T; slow = 0; sparkle = 0.6; taken.push(it.id); events.push('boost') }
     else { slow = SLOW_T; boost = 0; dust = 0.7; events.push('slip') }
   }
@@ -234,7 +241,7 @@ export function stepRace(r: Race, dt: number): Race {
   let rank = r.rank
   if (d >= LAP * LAPS) { finish = 'laps'; rank = rankNow({ ...r, d, rivals }) }
   else if (t >= TIME_LIMIT) { phase = 'done'; finish = 'time'; rank = rankNow({ ...r, d, rivals }) }
-  return { ...r, lane, rivals, rank, vx, phase, count, t, d, x, after: 0, speed, boost, slow, sparkle, dust, stars, taken: taken.slice(-60), events, finish }
+  return { ...r, lane, rivals, rank, vx, phase, count, t, d, x, after: 0, speed, boost, slow, sparkle, dust, stars, gauge, taken: taken.slice(-60), events, finish }
 }
 
 /** 지금 몇 바퀴째(1부터) */
@@ -242,10 +249,10 @@ export const lapOf = (r: Race) => Math.min(LAPS, Math.floor(r.d / LAP) + 1)
 /** 남은 시간(초) */
 export const timeLeft = (r: Race) => Math.max(0, Math.ceil(TIME_LIMIT - r.t))
 
-/** 끝나고 받는 별: 모은 별(최대 12) + 두 바퀴를 다 달리면 3, 시간이 다 되어도 1. 꼴등이어도 늘 받는다 */
+/** 끝나고 받는 별: 두 바퀴를 다 달리면 3, 시간이 다 되어도 1(+ 친구와 달렸으면 순위 선물). 코인은 돈으로 주지 않는다. 꼴등이어도 늘 받는다 */
 export function rewardStars(r: Race): number {
   if (r.phase !== 'done') return 0
   // 친구와 달렸으면 순위 선물: 1등 3개, 2등 2개, 3등 1개(꼴등도 위의 별은 그대로 받는다)
   const bonus = r.rivals.length ? Math.max(0, 4 - r.rank) : 0
-  return Math.min(12, r.stars) + (r.finish === 'laps' ? 3 : 1) + bonus
+  return (r.finish === 'laps' ? 3 : 1) + bonus
 }

@@ -195,7 +195,7 @@
                 ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12"
               },
               "car": {
-                ".validate": "newData.val() === 'heart' || newData.val() === 'cloud' || newData.val() === 'pumpkin' || newData.val() === 'bunny' || newData.val() === 'star'"
+                ".validate": "newData.val() === 'heart' || newData.val() === 'cloud' || newData.val() === 'blue' || newData.val() === 'bunny' || newData.val() === 'star'"
               },
               "d": {
                 ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5000"
