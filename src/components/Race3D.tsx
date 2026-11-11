@@ -1,6 +1,6 @@
 import { useEffect, useRef, type MutableRefObject } from 'react'
 import * as THREE from 'three'
-import { LANE_W, LAP, LAPS, itemsBetween, type ItemKind, type Race } from '../lib/race'
+import { LANE_W, LAP, LAPS, curveAt, curveSlope, itemsBetween, type ItemKind, type Race } from '../lib/race'
 import { assetUrl } from '../lib/items'
 import { savedName } from '../lib/mp/session'
 import { createStage } from './stage3d'
@@ -80,8 +80,13 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     scene.add(grass)
     const rt = rep(art(LANES === 5 ? `road5_${theme}` : `road_${theme}`))
     rt.repeat.set(1, 260 / ROAD_TILE)
-    const road = new THREE.Mesh(keep(new THREE.PlaneGeometry(ROAD_W, 260)), keep(new THREE.MeshBasicMaterial({ map: rt })))
+    // 길은 앞으로 길게 뻗은 판을 잘게(세로 90조각) 나눠, 조각마다 옆으로 옮겨서 휘어 보이게 한다
+    const ROAD_SEG = 90, ROAD_LEN = 260
+    const road = new THREE.Mesh(keep(new THREE.PlaneGeometry(ROAD_W, ROAD_LEN, 1, ROAD_SEG)), keep(new THREE.MeshBasicMaterial({ map: rt })))
     road.rotation.x = -Math.PI / 2
+    const roadPos = road.geometry.attributes.position as THREE.BufferAttribute
+    const roadRows = ROAD_SEG + 1
+    const roadBaseY = Array.from({ length: roadRows }, (_, i) => roadPos.getY(i * 2)) // 판 안의 앞뒤 자리(−130~130): 정점은 행마다 2개(왼·오른)
     road.position.y = 0.02
     scene.add(road)
 
@@ -128,7 +133,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
         : th.prop === 'sea' ? (() => { const [img, h, asp] = SEA_BIG[i % SEA_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
         : th.prop === 'xmas' ? (() => { const [img, h, asp] = SNOW_BIG[i % SNOW_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })() : (() => { const [img, h, asp] = CANDY_BIG[i % CANDY_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
       o.position.x = x; o.position.z = z; scene.add(o)
-      return { o, k: i }
+      return { o, k: i, x0: x }
     })
     // 길가 구경거리: 그림마다 쓰는 곳이 정해져 있다(초원: 토끼·꽃무더기 / 사탕 나라: 곰·풍선·사탕 나라 모음 / 눈 나라: 눈 나라 모음·크리스마스 나무)
     // [그림 이름, 높이, 가로세로 비율]
@@ -155,7 +160,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       const o = spriteOf(art(img), h * asp, h, h / 2)
       o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + 1.7), h / 2, -30 - i * CHEER_GAP)
       scene.add(o)
-      return { o, k: i }
+      return { o, k: i, x0: o.position.x }
     })
     const GROUND: Art[] = meadow ? [['prop_flowers', 1.1, 1.55]] : candy ? [
       ['cd_bush', 1.2, 1.52], ['cd_gummy', 1.0, 1.5], ['cd_candy', 0.9, 1.5], ['cd_peppermint', 1.0, 1.03], ['cd_jelly', 1.1, 0.98], ['cd_gummybear', 1.3, 0.81],
@@ -172,7 +177,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       const o = spriteOf(art(img), h * asp, h, h / 2)
       o.position.set((i % 2 ? 1 : -1) * (ROAD_W / 2 + (fruit ? 2.3 : 0.9) + (i % 3) * 0.5), h / 2, -8 - i * FLOWER_GAP)
       scene.add(o)
-      return { o, k: i }
+      return { o, k: i, x0: o.position.x }
     })
     for (let k = 0; k <= LAPS; k++) { const o = spriteOf(signTex, 2.3, 2.1, 1.05); o.position.set(-(ROAD_W / 2 + 1.5), 1.05, gateZ(k) + 9); scene.add(o) }
 
@@ -272,17 +277,28 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       const r = live.current
       const cz = -r.d, cx = r.x * LANE_W
       grass.position.z = cz; grass.position.x = cx * 0; road.position.z = cz - 60
+      // 휘는 길: 판의 각 가로줄을 (그 자리의 길 휘어짐 − 내 자리의 휘어짐)만큼 옆으로 옮긴다
+      const c0 = curveAt(r.d, r.seed)
+      const curveX = (d: number) => curveAt(d, r.seed) - c0
+      for (let i = 0; i < roadRows; i++) {
+        // 눕힌 판의 +y 가 앞쪽(−z)이고 판 가운데는 내 앞 60 에 있다: 행의 앞쪽 거리 = 내 거리 + 60 + (판 안의 y)
+        const dd = r.d + 60 + roadBaseY[i]
+        const ox = curveX(dd)
+        roadPos.setX(i * 2, -ROAD_W / 2 + ox); roadPos.setX(i * 2 + 1, ROAD_W / 2 + ox)
+      }
+      roadPos.needsUpdate = true
       gTex.offset.y = -cz / GROUND_TILE; rt.offset.y = -cz / ROAD_TILE
       const sz = s.size(), wide = sz.w > sz.h
       if (wide !== skyWide) { skyWide = wide; skyTex.repeat.set(wide ? 2 : 1, 1); skyTex.needsUpdate = true; sky.scale.x = wide ? 1 : 0.5 }
-      sky.position.x = cx * 0.6; sky.position.z = cz - SKY_Z
+      // 하늘은 길이 휘는 반대쪽으로 아주 조금 밀어서, 커브를 돌 때 먼 풍경이 함께 도는 느낌을 준다
+      sky.position.x = cx * 0.6 - curveSlope(r.d + 40, r.seed) * 35; sky.position.z = cz - SKY_Z
       // 차: 옆 칸으로 가는 동안은 그쪽 그림, 달릴 땐 통통, 미끄러지면 빙글 흔들
       car.position.set(cx, Math.abs(Math.sin(t * 14)) * 0.05 * Math.min(1, r.speed / 20), cz)
       lean(mine, r.vx, r.slow > 0 ? Math.sin(t * 30) * 0.22 : 0)
       r.rivals.forEach((rv, i) => {
         const c = rivalCars[i]
         if (!c) return // 친구 차 그림이 아직 없으면 건너뛴다(여기서 오류가 나면 화면 전체가 멈춘다)
-        c.group.position.set(rv.x * LANE_W, Math.abs(Math.sin(t * 14 + i)) * 0.05 * Math.min(1, rv.speed / 20), -rv.d)
+        c.group.position.set(rv.x * LANE_W + curveX(rv.d), Math.abs(Math.sin(t * 14 + i)) * 0.05 * Math.min(1, rv.speed / 20), -rv.d)
         // 내 차 뒤로 처진 친구는 카메라 앞을 가리지 않게 서서히 사라진다
         const fade = Math.max(0, Math.min(1, (rv.d - r.d + 7) / 4))
         c.group.visible = fade > 0.02
@@ -292,6 +308,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       shadow.position.x = cx; shadow.position.z = cz
       // 카메라: 차 뒤에서 조금 옆으로 따라간다(속도가 빠를수록 살짝 멀어진다)
       camX += (cx * 0.6 - camX) * Math.min(1, dt * 6)
+      // 카메라는 차 뒤에 그대로 둔다(옮기면 차가 화면 옆으로 밀려난다). 커브는 길·소품이 휘는 것만으로 보인다
       s.view.target.set(camX, 1.0, cz - 3.2)
       s.view.dist = 11 + (LANES - 3) * 1.6 + Math.min(1.5, r.speed / 25) + (r.boost > 0 ? 1.2 : 0)
       if (bubOn) {
@@ -316,11 +333,11 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       const period = PROPS * PROP_GAP
       // 출발·결승 아치 앞뒤 18칸에는 나무·구경꾼·꽃을 두지 않는다(아치와 겹쳐 보이지 않게)
       const nearGate = (z: number) => { for (let k = 0; k <= LAPS; k++) if (Math.abs(z - gateZ(k)) < 18) return true; return false }
-      for (const tr of props) { const base = -tr.k * PROP_GAP; tr.o.position.z = base + period * Math.floor((cz + 25 - base) / period); tr.o.visible = !nearGate(tr.o.position.z) }
+      for (const tr of props) { const base = -tr.k * PROP_GAP; tr.o.position.z = base + period * Math.floor((cz + 25 - base) / period); tr.o.position.x = tr.x0 + curveX(-tr.o.position.z); tr.o.visible = !nearGate(tr.o.position.z) }
       const cp = CHEERS * CHEER_GAP
-      for (const c of cheers) { const base = -30 - c.k * CHEER_GAP; c.o.position.z = base + cp * Math.floor((cz + 25 - base) / cp); c.o.visible = !nearGate(c.o.position.z) }
+      for (const c of cheers) { const base = -30 - c.k * CHEER_GAP; c.o.position.z = base + cp * Math.floor((cz + 25 - base) / cp); c.o.position.x = c.x0 + curveX(-c.o.position.z); c.o.visible = !nearGate(c.o.position.z) }
       const fp = FLOWERS * FLOWER_GAP
-      for (const f of flowers) { const base = -8 - f.k * FLOWER_GAP; f.o.position.z = base + fp * Math.floor((cz + 25 - base) / fp); f.o.visible = !nearGate(f.o.position.z) }
+      for (const f of flowers) { const base = -8 - f.k * FLOWER_GAP; f.o.position.z = base + fp * Math.floor((cz + 25 - base) / fp); f.o.position.x = f.x0 + curveX(-f.o.position.z); f.o.visible = !nearGate(f.o.position.z) }
       // 겹친 차 그리는 순서: 반투명 그림은 카메라 거리로 정렬되는데, 두 차가 나란히 겹치면 순서가 프레임마다 뒤집혀 탁탁 튄다.
       // 그래서 순서를 직접 정한다(앞서 달리는 차를 먼저 그림). 거리가 0.8 안쪽으로 비슷하면 직전 순서를 그대로 둔다.
       const cars = [{ c: mine, d: r.d, k: 0 }, ...r.rivals.map((rv, i) => ({ c: rivalCars[i], d: rv.d, k: i + 1 })).filter((x) => x.c)]
@@ -333,6 +350,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
         want.add(it.id)
         let g = shown.get(it.id)
         if (!g) { g = itemMesh(it.kind); g.position.set(it.lane * LANE_W, 0, -it.d); scene.add(g); shown.set(it.id, g) }
+        g.position.x = it.lane * LANE_W + curveX(it.d)
         if (it.kind === 'star') (g.userData.m as THREE.Sprite).position.y = 0.9 + Math.sin(t * 5 + it.id) * 0.1
         else if (it.kind === 'boost') (g.userData.m as THREE.Sprite).position.y = 1.0 + Math.sin(t * 4 + it.id) * 0.12
       }
