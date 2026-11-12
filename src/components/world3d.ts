@@ -127,7 +127,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   ground.receiveShadow = true
   ground.visible = !opts.bare
   scene.add(ground)
-  if (!grassTex) {
+  if (!grassTex && !opts.bare) {
   const patchGeo = keep(new THREE.CircleGeometry(1, 20))
   for (let i = 0; i < 40; i++) {
     const p = new THREE.Mesh(patchGeo, lambert(rnd() < 0.5 ? 0x9edb76 : 0x84c860))

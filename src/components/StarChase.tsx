@@ -171,6 +171,8 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
   const evSeen = useRef(0), sayShown = useRef<Record<string, { n: number; k: number; t: number }>>({}), lastSend = useRef(0), sentPos = useRef({ x: 99, y: 99 })
   const inRange = useRef(false), cdFrac = useRef(0), clock = useRef('')
   const roundSeen = useRef(-1), paid = useRef(-1)
+  const [arrows, setArrows] = useState<{ x: number; y: number; rot: number; color: string }[]>([])
+  const arrowSig = useRef('')
   const [hud, setHud] = useState({ range: false, cd: 0, left: 0, count: 0, hint: false })
 
   useEffect(() => {
@@ -217,6 +219,7 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
         const ss = sayShown.current[u]
         return { slot: i, x: p.x, y: p.y, mine: u === r?.uid, say: ss && t - ss.t < 2000 ? SAYS[ss.k] ?? null : null }
       }).filter((x): x is NonNullable<typeof x> => !!x)
+      if (scene) { const sg = scene.arrows.map((a) => `${Math.round(a.x * 40)},${Math.round(a.y * 40)},${Math.round(a.rot * 8)}`).join(';'); if (sg !== arrowSig.current) { arrowSig.current = sg; setArrows(scene.arrows.map((a) => ({ ...a }))) } }
       scene?.frame({ players: pls, stars, me: meRef.current, fx: anims.current.map((a) => ({ k: a.k, x: a.x, y: a.y, u: (t - a.t0) / (a.k === 'fly' ? 800 : 350) })), calm, now: t })
     }
     raf = requestAnimationFrame(loop)
@@ -262,10 +265,11 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
 
   /* ───── 화면 ───── */
   const frame = 'absolute inset-0 z-30 flex flex-col overflow-hidden rounded-3xl text-[#3b2a63] ring-1 ring-black/5'
-  const bgStyle = { backgroundImage: `url(${assetUrl('starchase/sky.webp')})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+  const bgStyle = { backgroundColor: '#c79bea' }
+  const sky = <><div aria-hidden className="pointer-events-none absolute inset-0 bg-cover bg-center portrait:hidden" style={{ backgroundImage: `url(${assetUrl('starchase/sky_land.webp')})` }} /><div aria-hidden className="pointer-events-none absolute inset-0 hidden bg-cover bg-center portrait:block" style={{ backgroundImage: `url(${assetUrl('starchase/sky_port.webp')})` }} /></>
   const panel = 'rounded-3xl bg-[#fff8ec]/95 p-4 shadow-xl ring-2 ring-[#cdb8f2]'
   const btn = 'min-h-12 rounded-full border-0 px-5 text-base font-black shadow-md active:scale-95 disabled:opacity-50'
-  const hills = <img aria-hidden src={assetUrl('starchase/hills.webp')} alt="" draggable={false} className="pointer-events-none absolute inset-x-0 bottom-0 h-[70%] w-full object-cover object-bottom" />
+  const hills = <>{sky}<img aria-hidden src={assetUrl('starchase/hills.webp')} alt="" draggable={false} className="pointer-events-none absolute inset-x-0 bottom-0 w-full object-cover object-bottom" /></>
 
   if (screen === 'menu') return (
     <div className={frame} style={bgStyle}>
@@ -310,12 +314,16 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
               <p className="m-0 text-base font-black">우리 방 <span className="rounded-full bg-[#efe5ff] px-3 py-0.5 text-lg tracking-widest">{room?.room.toUpperCase()}</span></p>
               <button onClick={() => { try { navigator.clipboard?.writeText(room?.room.replace(/\D/g, '') ?? '') } catch { /* 복사 못 해도 괜찮다 */ } }} aria-label="방 번호 복사" className="min-h-9 rounded-full bg-white px-3 text-xs font-bold ring-1 ring-[#cdb8f2]">📋 복사</button>
             </div>
-            <div className="grid grid-cols-4 gap-1.5 [@media(max-width:380px)]:grid-cols-2">
+            <div className="grid grid-cols-4 gap-1.5 [@media(max-width:380px)]:grid-cols-2 [@media(max-height:420px)]:mx-auto [@media(max-height:420px)]:max-w-[26rem] [@media(max-height:420px)]:gap-1">
               {Array.from({ length: STAR_MAX }, (_, i) => {
                 const u = slotOrder[i], p = u ? players[u] : null
-                return <div key={i} className={`flex min-h-[5.2rem] flex-col items-center justify-center gap-0.5 rounded-2xl p-1.5 text-center ${p ? 'bg-white' : 'bg-white/50'}`} style={p ? { boxShadow: `0 0 0 2px ${COLORS[i]}` } : undefined}>
-                  <span className="text-xl" style={{ color: COLORS[i] }}>{SHAPES[i]}</span>
-                  {p ? <><span className="max-w-full truncate text-xs font-black">{p.name}{u === me ? ' (나)' : ''}</span><span className="text-[11px] font-bold">{u === meta?.host ? '👑 방장' : p.ready ? '✅ 준비 완료' : '⏳ 준비 중'}</span></> : <span className="text-[11px] font-bold text-black/45">친구 기다리는 중</span>}
+                const hue = [0, 130, 230, 290][i]
+                return <div key={i} className={`relative aspect-[1100/1430] min-w-0 ${p ? '' : 'opacity-60'}`}>
+                  <img aria-hidden src={assetUrl('starchase/card.webp')} alt="" draggable={false} className="absolute inset-0 h-full w-full" style={{ filter: `hue-rotate(${hue}deg)` }} />
+                  <span aria-hidden className="absolute right-[8%] top-[4%] flex h-[23%] w-[23%] items-center justify-center text-lg font-black" style={{ color: COLORS[i] }}>{SHAPES[i]}</span>
+                  <div className="absolute inset-x-[10%] bottom-[8%] flex flex-col items-center gap-0.5 text-center">
+                    {p ? <><span className="max-w-full truncate text-xs font-black">{p.name}{u === me ? ' (나)' : ''}</span><span className="rounded-full bg-white/80 px-1.5 text-[11px] font-bold">{u === meta?.host ? '👑 방장' : p.ready ? '✅ 준비 완료' : '⏳ 준비 중'}</span></> : <span className="text-[11px] font-bold text-black/50">친구 기다리는 중</span>}
+                  </div>
                 </div>
               })}
             </div>
@@ -340,16 +348,17 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
   const done = !!res || phase === 'done'
   return (
     <div className={frame} style={bgStyle}>
-      {hills}
+      {sky}
       <div ref={box} className="relative z-10 min-h-0 flex-1 touch-none select-none">
         <div ref={stage} role="img" aria-label="별 잡기 놀이터" className="absolute inset-0" />
+        {arrows.map((a, i) => <span key={i} aria-hidden className="pointer-events-none absolute z-[5] flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow ring-2" style={{ left: `${a.x * 100}%`, top: `${a.y * 100}%`, color: a.color, boxShadow: `0 0 0 2px ${a.color}` }}><span style={{ display: 'inline-block', transform: `rotate(${a.rot}rad)`, fontSize: 18, lineHeight: 1 }}>➤</span></span>)}
         {hud.count > 0 && <p aria-live="assertive" className="pointer-events-none absolute inset-0 m-0 flex items-center justify-center text-[6rem] font-black text-white [font-family:Jua,sans-serif] [text-shadow:0_4px_0_#7a5cc0,0_0_20px_rgba(122,92,192,.6)]">{hud.count}</p>}
         {myIn && !done && hud.count === 0 && <p aria-live="polite" className="pointer-events-none absolute left-1/2 bottom-3 m-0 w-[min(19rem,calc(100%-16rem))] -translate-x-1/2 rounded-full bg-[#fff8ec]/95 px-3 py-1.5 text-center text-xs font-black text-[#3b2a63] shadow ring-2 ring-[#cdb8f2] portrait:bottom-40 portrait:w-[min(19rem,calc(100%-2rem))] sm:text-sm">{hud.hint ? '⭐ 지금 잡아!' : '⭐ 친구와 반대편에서 다가가요!'}</p>}
         {/* 위쪽 HUD */}
         <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col gap-1 px-2 pt-[max(.5rem,env(safe-area-inset-top))]">
           <div className="flex items-start justify-between gap-2">
-            <span aria-label="모은 별" className="flex h-14 w-[8.3rem] items-center gap-1 pl-[3.4rem] pr-2 text-sm font-black text-[#3b2a63] drop-shadow" style={{ backgroundImage: `url(${assetUrl('starchase/ui_bar_gold.webp')})`, backgroundSize: '100% 100%' }}><span className="whitespace-nowrap">별 {caught} / {target}</span></span>
-            <span aria-label="남은 시간" className="flex h-14 w-[8.3rem] items-center pl-[3.4rem] text-lg font-black text-[#3b2a63] drop-shadow" style={{ backgroundImage: `url(${assetUrl('starchase/ui_bar_clock.webp')})`, backgroundSize: '100% 100%' }}>{fmt(done ? 0 : hud.count ? CFG.seconds * 1000 : hud.left)}</span>
+            <span aria-label="모은 별" className="flex h-14 w-[8.3rem] items-center gap-1 pl-[3.4rem] pr-2 text-sm font-black text-[#3b2a63] drop-shadow" style={{ backgroundImage: `url(${assetUrl('starchase/pill_star.webp')})`, backgroundSize: '100% 100%' }}><span className="whitespace-nowrap">별 {caught} / {target}</span></span>
+            <span aria-label="남은 시간" className="flex h-14 w-[8.3rem] items-center pl-[3.4rem] text-lg font-black text-[#3b2a63] drop-shadow" style={{ backgroundImage: `url(${assetUrl('starchase/pill_clock.webp')})`, backgroundSize: '100% 100%' }}>{fmt(done ? 0 : hud.count ? CFG.seconds * 1000 : hud.left)}</span>
             <div className="pointer-events-auto flex gap-1.5">
               <button aria-label="설정" onClick={() => setSettings(true)} className="h-12 w-12 border-0 bg-transparent bg-contain bg-no-repeat p-0 drop-shadow-md active:scale-95" style={{ backgroundImage: `url(${assetUrl('starchase/ui_gear.webp')})` }} />
             </div>
@@ -370,17 +379,17 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
         {/* 조작 */}
         {myIn && !done && <>
           <div ref={padRef} role="group" aria-label="이동 조이스틱" onPointerDown={(e) => { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); padMove(e) }} onPointerMove={(e) => { if (e.buttons || e.pointerType === 'touch') padMove(e) }} onPointerUp={padEnd} onPointerCancel={padEnd} onLostPointerCapture={padEnd}
-            className="absolute left-3 flex h-32 w-32 items-center justify-center rounded-full bg-white/45 shadow-inner ring-2 ring-white/70 backdrop-blur-sm [@media(max-height:420px)]:h-28 [@media(max-height:420px)]:w-28" style={{ bottom: 'max(.75rem, env(safe-area-inset-bottom))' }}>
-            <span aria-hidden className="h-14 w-14 rounded-full bg-white shadow-lg ring-2 ring-[#cdb8f2]" style={{ transform: `translate(${stick.x * 36}px, ${stick.y * 36}px)` }} />
+            className="absolute left-3 flex h-32 w-32 items-center justify-center bg-contain bg-center bg-no-repeat drop-shadow-lg [@media(max-height:420px)]:h-28 [@media(max-height:420px)]:w-28" style={{ bottom: 'max(.75rem, env(safe-area-inset-bottom))', backgroundImage: `url(${assetUrl('starchase/joy.webp')})` }}>
+            <span aria-hidden className="h-14 w-14 bg-contain bg-no-repeat drop-shadow-md" style={{ backgroundImage: `url(${assetUrl('starchase/knob.webp')})`, transform: `translate(${stick.x * 30}px, ${stick.y * 30}px)` }} />
           </div>
-          <button aria-label="잡기" onPointerDown={(e) => { e.preventDefault(); doCatch() }} className={`absolute right-3 h-[5.5rem] w-[5.5rem] border-0 bg-transparent bg-contain bg-no-repeat p-0 drop-shadow-xl transition-transform active:scale-95 ${hud.cd > 0 ? 'opacity-60 grayscale-[.4]' : hud.range ? 'scale-110' : ''}`} style={{ bottom: 'max(1.6rem, calc(env(safe-area-inset-bottom) + .9rem))', backgroundImage: `url(${assetUrl(hud.range && hud.cd <= 0 ? 'starchase/ui_catch_glow.webp' : 'starchase/ui_catch.webp')})` }}>
+          <button aria-label="잡기" onPointerDown={(e) => { e.preventDefault(); doCatch() }} className={`absolute right-3 h-[5.5rem] w-[5.5rem] border-0 bg-transparent bg-contain bg-no-repeat p-0 drop-shadow-xl transition-transform active:scale-95 ${hud.cd > 0 ? 'opacity-60 grayscale-[.4]' : hud.range ? 'scale-110' : ''}`} style={{ bottom: 'max(1.6rem, calc(env(safe-area-inset-bottom) + .9rem))', backgroundImage: `url(${assetUrl(hud.range && hud.cd <= 0 ? 'starchase/catch_glow.webp' : 'starchase/catch.webp')})` }}>
             <span className="sr-only">잡기</span>
             {hud.cd > 0 && <span aria-hidden className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(rgba(255,255,255,.6) ${hud.cd * 360}deg, transparent 0)` }} />}
           </button>
           <span aria-hidden className="pointer-events-none absolute right-3 w-[5.5rem] text-center text-sm font-black text-white [text-shadow:0_2px_0_#7a5cc0,0_0_8px_rgba(0,0,0,.4)]" style={{ bottom: 'max(.3rem, env(safe-area-inset-bottom))' }}>잡기</span>
           <div className="absolute right-[6.5rem] flex flex-col items-end gap-1" style={{ bottom: 'max(.75rem, env(safe-area-inset-bottom))' }}>
             {chat && SAYS.map((s, k) => <button key={k} onClick={() => sayIt(k)} className="min-h-10 rounded-full bg-white/95 px-3 text-sm font-black shadow ring-2 ring-[#cdb8f2]">{s}</button>)}
-            <button aria-label="빠른 말" aria-expanded={chat} onClick={() => setChat((v) => !v)} className="h-12 w-12 border-0 bg-transparent bg-contain bg-no-repeat p-0 drop-shadow-md active:scale-95" style={{ backgroundImage: `url(${assetUrl('starchase/ui_chat.webp')})` }} />
+            <button aria-label="빠른 말" aria-expanded={chat} onClick={() => setChat((v) => !v)} className="h-12 w-12 border-0 bg-transparent bg-contain bg-no-repeat p-0 drop-shadow-md active:scale-95" style={{ backgroundImage: `url(${assetUrl('starchase/chat.webp')})` }} />
           </div>
         </>}
       </div>
@@ -389,7 +398,10 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
         <div role="dialog" aria-label="결과" className="absolute inset-0 z-20 flex items-center justify-center bg-[#2a1a5e]/45 p-3">
           <div className={`${panel} flex max-h-full w-full max-w-sm flex-col items-center gap-2 overflow-y-auto text-center`}>
             <p className="m-0 text-2xl font-black [font-family:Jua,'Noto_Sans_KR',sans-serif]">{win ? '우리가 해냈어! 🎉' : `별을 ${caught}개 모았어!`}</p>
-            <div aria-hidden className="flex flex-wrap justify-center gap-1 text-2xl">{Array.from({ length: target }, (_, i) => <span key={i} className={i < caught ? (win && !calm ? 'animate-bounce' : '') : 'opacity-25 grayscale'} style={{ animationDelay: `${i * 60}ms` }}>⭐</span>)}</div>
+            <div aria-hidden className="relative w-full max-w-[16rem] overflow-hidden rounded-2xl bg-gradient-to-b from-[#6a4bb5] to-[#9b6fd6] p-2">
+              <img src={assetUrl(`starchase/${['c_bear', 'c_swan', 'c_lion', 'c_dipper', 'c_scorpion', 'c_w'][(meta?.round ?? 0) % 6]}.webp`)} alt="" draggable={false} className="w-full object-contain mix-blend-screen" style={{ opacity: win ? 1 : 0.35 + 0.5 * (caught / Math.max(1, target)), filter: win ? undefined : 'saturate(.6)' }} />
+              <div className="absolute inset-x-0 bottom-1 flex flex-wrap justify-center gap-0.5 text-base">{Array.from({ length: target }, (_, i) => <span key={i} className={i < caught ? (win && !calm ? 'animate-bounce' : '') : 'opacity-30 grayscale'} style={{ animationDelay: `${i * 60}ms` }}>⭐</span>)}</div>
+            </div>
             <p className="m-0 text-sm font-bold text-[#6b5a99]">{win ? '별자리를 완성했어요!' : '다음에는 더 모아봐요!'}</p>
             <div className="flex flex-wrap justify-center gap-1">{part.map((u, i) => shapeChip(u, i))}</div>
             {myIn && !practice && <p className="m-0 text-xs font-bold text-[#7a5cc0]">⭐ {win ? 20 : Math.min(10, caught * 2)}개 받았어요</p>}

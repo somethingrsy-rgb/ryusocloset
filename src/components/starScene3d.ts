@@ -1,6 +1,6 @@
 /**
- * 도망간 별을 잡아라 3D 무대: 카페·농장과 같은 풀밭 세계(createWorld)에 내 아바타(옷 입은 종이 인형)가 걷고,
- * 별은 얼굴 있는 별 그림이 통통 떠다닌다. 카메라는 위에서 비스듬히 내려다보는 고정 시점.
+ * 도망간 별을 잡아라 3D 무대(카페·농장처럼 땅 위를 걷는 느낌): 내 캐릭터 뒤에서 낮게 따라가는 카메라, 끝없는 풀밭 타일,
+ * 흙길·나무·덤불·꽃·돌·가로등·울타리(부딪힘 없는 장식), 먼 언덕. 하늘은 화면 뒤 배경 그림이다.
  * 규칙·판정은 하지 않고, 받은 좌표(필드 x,y → 세계 x,z)를 그리기만 한다.
  */
 import * as THREE from 'three'
@@ -19,22 +19,10 @@ export interface SceneFrame {
   calm: boolean
   now: number
 }
-export interface StarScene { setLook(slot: number, cv: HTMLCanvasElement): void; frame(f: SceneFrame): void; dispose(): void }
+/** 화면 밖에 있는 별·친구를 가리키는 화살표(화면 비율 0~1 좌표와 방향 각도) */
+export interface EdgeArrow { x: number; y: number; rot: number; color: string }
+export interface StarScene { setLook(slot: number, cv: HTMLCanvasElement): void; frame(f: SceneFrame): void; arrows: EdgeArrow[]; dispose(): void }
 
-function starCanvas(mode: number) {
-  const c = document.createElement('canvas'); c.width = c.height = 256
-  const g = c.getContext('2d')!; g.translate(128, 136)
-  const r = 84
-  g.shadowColor = 'rgba(255,225,110,.95)'; g.shadowBlur = mode === 2 ? 14 : 30
-  g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = i % 2 ? r * 0.5 : r * 1.15; g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) }
-  g.closePath(); g.fillStyle = mode === 2 ? '#ffec80' : '#ffd84a'; g.fill(); g.shadowBlur = 0; g.lineJoin = 'round'; g.lineWidth = 8; g.strokeStyle = '#e8a91e'; g.stroke()
-  g.fillStyle = '#6b3b1e'
-  if (mode === 2) { g.beginPath(); g.arc(-r * 0.28, -2, r * 0.13, 0, 7); g.arc(r * 0.28, -2, r * 0.13, 0, 7); g.fill(); g.beginPath(); g.arc(0, r * 0.3, r * 0.12, 0, 7); g.fill() }
-  else { g.lineWidth = 6; g.strokeStyle = '#6b3b1e'; g.beginPath(); g.arc(-r * 0.28, 0, r * 0.12, Math.PI * 1.1, Math.PI * 1.9); g.moveTo(r * 0.28 + r * 0.12, 0); g.arc(r * 0.28, 0, r * 0.12, Math.PI * 1.1, Math.PI * 1.9); g.stroke(); g.beginPath(); g.arc(0, r * 0.1, r * 0.2, 0.2, Math.PI - 0.2); g.stroke() }
-  g.fillStyle = 'rgba(255,130,150,.65)'; g.beginPath(); g.arc(-r * 0.52, r * 0.22, r * 0.13, 0, 7); g.arc(r * 0.52, r * 0.22, r * 0.13, 0, 7); g.fill()
-  if (mode >= 1) { g.fillStyle = '#c04a5a'; g.font = '900 64px sans-serif'; g.textAlign = 'center'; g.fillText('!', 0, -r * 1.2 + 10) } // 놀람 느낌표
-  return c
-}
 function glyphCanvas(text: string, color: string) {
   const c = document.createElement('canvas'); c.width = c.height = 96
   const g = c.getContext('2d')!; g.fillStyle = '#fff'; g.beginPath(); g.arc(48, 48, 42, 0, 7); g.fill(); g.lineWidth = 7; g.strokeStyle = color; g.stroke()
@@ -44,19 +32,6 @@ function bubbleCanvas(text: string) {
   const c = document.createElement('canvas'); c.width = 320; c.height = 96
   const g = c.getContext('2d')!; g.fillStyle = 'rgba(255,255,255,.97)'; g.strokeStyle = '#cdb8f2'; g.lineWidth = 6
   g.beginPath(); g.roundRect(6, 6, 308, 68, 30); g.fill(); g.stroke(); g.fillStyle = '#3b2a63'; g.font = '800 40px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 160, 42); return c
-}
-function fieldCanvas(grass: HTMLImageElement | null) {
-  const W = 1024, H = 768, c = document.createElement('canvas'); c.width = W; c.height = H
-  const g = c.getContext('2d')!
-  // 풀 무늬를 깔고 가장자리를 부드럽게 지운다(언덕 그림 위에 놓여도 경계가 튀지 않게)
-  if (grass && grass.complete && grass.naturalWidth) { const pat = g.createPattern(grass, 'repeat'); if (pat) { pat.setTransform(new DOMMatrix().scale(0.32)); g.fillStyle = pat } } else g.fillStyle = '#6aa58a'
-  g.fillRect(0, 0, W, H)
-  g.globalCompositeOperation = 'destination-in'
-  const m = g.createRadialGradient(W / 2, H / 2, H * 0.30, W / 2, H / 2, H * 0.5); m.addColorStop(0, 'rgba(0,0,0,.9)'); m.addColorStop(1, 'rgba(0,0,0,0)')
-  g.save(); g.translate(W / 2, H / 2); g.scale(W / H, 1); g.translate(-W / 2, -H / 2); g.fillStyle = m; g.fillRect(0, 0, W, H); g.restore()
-  g.globalCompositeOperation = 'source-over'
-  g.lineWidth = 8; g.strokeStyle = 'rgba(255,255,255,.7)'; g.setLineDash([34, 26]); g.beginPath(); g.roundRect(W * 0.09, H * 0.09, W * 0.82, H * 0.82, 80); g.stroke()
-  return c
 }
 function zoneCanvas() {
   const c = document.createElement('canvas'); c.width = c.height = 256
@@ -69,103 +44,141 @@ function glowCanvas() {
 }
 
 export function createStarScene(el: HTMLElement): StarScene {
-  const w: World = createWorld(el, { bounds: 30, start: { x: 0, z: 0 }, seed: 11, grass: assetUrl('starchase/grass.webp'), bare: true })
-  // 풀밭 무대: 뒤 배경(하늘·언덕 그림) 위에 얹힌다
-  const grassImg = new Image(); grassImg.src = assetUrl('starchase/grass.webp')
-  const fieldTex = new THREE.CanvasTexture(fieldCanvas(null)); fieldTex.colorSpace = THREE.SRGBColorSpace; w.keep(fieldTex)
-  grassImg.onload = () => { fieldTex.image = fieldCanvas(grassImg); fieldTex.needsUpdate = true }
-  const field = new THREE.Mesh(w.keep(new THREE.PlaneGeometry(CFG.w * 1.5, CFG.h * 1.5)), w.keep(new THREE.MeshBasicMaterial({ map: fieldTex, transparent: true, depthWrite: false })))
-  field.rotation.x = -Math.PI / 2; field.position.y = 0.03; w.scene.add(field)
-
-  const starTex = [0, 1, 2].map((m) => w.texOf(starCanvas(m)))
-  const glowTex = w.texOf(glowCanvas())
-  const stars = new Map<number, { d: Doll; ring: THREE.Mesh; glow: THREE.Sprite; x: number; z: number }>()
-  const ringGeo = w.keep(new THREE.RingGeometry(0.9, 1.05, 40))
-  const mkRing = (color: number, op: number) => { const m = new THREE.Mesh(ringGeo, w.keep(new THREE.MeshBasicMaterial({ color, transparent: true, opacity: op, depthWrite: false, side: THREE.DoubleSide }))); m.rotation.x = -Math.PI / 2; m.position.y = 0.05; m.renderOrder = 2; w.scene.add(m); return m }
-  const starDoll = (m: number) => { const d = w.paperDoll(starTex[m], 1.5, 1); d.root.scale.setScalar(KS); return d }
-  // 친구 인형(자리마다)
-  const KS = 2.0, KA = 1.9 // 화면에서 잘 보이게 별·아바타를 조금 키운다
-  const blank = document.createElement('canvas'); blank.width = 8; blank.height = 8
-  type Kid = { d: Doll; ring: THREE.Mesh; tag: THREE.Sprite; arrow: THREE.Sprite; bub: THREE.Sprite; bubText: string; x: number; z: number; px: number; pz: number; dir: 1 | -1 }
-  const kids: (Kid | null)[] = [null, null, null, null]
-  const sprite = (cv: HTMLCanvasElement, sx: number, sy: number) => { const s = new THREE.Sprite(w.keep(new THREE.SpriteMaterial({ map: w.texOf(cv), transparent: true, depthWrite: false }))); s.scale.set(sx, sy, 1); s.renderOrder = 8; w.scene.add(s); return s }
-  const kid = (slot: number): Kid => {
-    let k = kids[slot]; if (k) return k
-    const d = w.paperDoll(w.texOf(blank), AVATAR_H, 1024 / 1536, FEET); d.root.scale.setScalar(KA)
-    const ring = mkRing(parseInt(SLOT_COLORS[slot].slice(1), 16), 0.95); ring.scale.set(0.9, 0.9, 0.9)
-    const tag = sprite(glyphCanvas(SLOT_SHAPES[slot], SLOT_COLORS[slot]), 0.9, 0.9)
-    const arrow = sprite(glyphCanvas('▼', SLOT_COLORS[slot]), 0.7, 0.7)
-    const bub = new THREE.Sprite(w.keep(new THREE.SpriteMaterial({ transparent: true, depthWrite: false }))); bub.scale.set(3.2, 0.96, 1); bub.renderOrder = 9; bub.visible = false; w.scene.add(bub)
-    k = { d, ring, tag, arrow, bub, bubText: '', x: 0, z: 0, px: 99, pz: 99, dir: 1 }; kids[slot] = k; return k
-  }
-  const catchRing = new THREE.Mesh(w.keep(new THREE.PlaneGeometry(CFG.catchR * 2, CFG.catchR * 2)), w.keep(new THREE.MeshBasicMaterial({ map: w.texOf(zoneCanvas()), transparent: true, depthWrite: false }))); catchRing.rotation.x = -Math.PI / 2; catchRing.position.y = 0.05; catchRing.renderOrder = 2; w.scene.add(catchRing)
-  const fxPool: Doll[] = [], fxRing: THREE.Mesh[] = []
-  const t0 = performance.now()
-  let pending: SceneFrame | null = null
-  // 세계가 그리기 직전에 부른다(그래야 카메라를 우리가 정한 대로 둘 수 있다)
-  w.onFrame(() => { if (pending) apply(pending) })
-
-  return {
-    setLook: (slot, cv) => { const m = kid(slot).d.doll.material as THREE.MeshBasicMaterial; m.map = w.texOf(cv); m.needsUpdate = true },
-    frame: (f) => { pending = f },
-    dispose: () => w.dispose(),
-  }
-  function apply(f: SceneFrame) {
-    {
-      // 카메라: 앞쪽 위에서 비스듬히(그림 속 구도). 필드가 화면 폭과 높이에 맞게 거리를 정한다
-      const cam = w.camera, tanH = Math.tan((cam.fov * Math.PI) / 360), el = 0.95
-      const D = Math.min(90, Math.max(((CFG.w + 2) / 2) / (tanH * cam.aspect * 0.95), ((CFG.h * Math.sin(el) + 1.5) / 2) / (tanH * 0.9)))
-      cam.position.set(0, Math.sin(el) * D, 0.6 + Math.cos(el) * D); cam.lookAt(0, 0, 0.6)
-      w.me.x = f.me.x; w.me.z = f.me.y // 나무 가림 처리가 내 자리를 보게
-      const t = (f.now - t0) / 1000
-      // 별
-      const seen = new Set<number>()
-      for (const s of f.stars) {
-        seen.add(s.id)
-        let o = stars.get(s.id)
-        if (!o) { const d = starDoll(0); const glow = new THREE.Sprite(w.keep(new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }))); glow.scale.set(5, 5, 1); glow.renderOrder = 3; w.scene.add(glow); o = { d, ring: mkRing(0xffffff, 0.9), glow, x: s.x, z: s.y }; stars.set(s.id, o) }
-        const mat = o.d.doll.material as THREE.MeshBasicMaterial
-        if (mat.map !== starTex[s.m]) { mat.map = starTex[s.m]; mat.needsUpdate = true }
-        o.d.root.position.set(s.x, 0, s.y)
-        o.d.body.position.y = 0.9 + (s.m === 2 ? Math.sin(t * 14) * 0.04 : Math.abs(Math.sin(t * 4 + s.id)) * 0.35)
-        w.face(o.d, 1); o.d.body.rotation.x = -0.2
-        o.glow.position.set(s.x, KS * (o.d.body.position.y + 0.7), s.y + 0.2); o.glow.material.opacity = s.m === 2 ? 0.55 : 0.9
-        o.ring.visible = s.m === 2; o.ring.position.set(s.x, 0.06, s.y); o.ring.scale.setScalar(1.6 + Math.sin(t * 8) * 0.08)
-      }
-      for (const [id, o] of stars) if (!seen.has(id)) { w.scene.remove(o.d.root); w.scene.remove(o.ring); w.scene.remove(o.glow); stars.delete(id) }
-      // 친구
-      const used = new Set<number>()
-      for (const p of f.players) {
-        used.add(p.slot); const k = kid(p.slot)
-        const moved = Math.hypot(p.x - k.px, p.y - k.pz) > 0.004; if (p.x - k.px) k.dir = p.x - k.px > 0 ? 1 : -1
-        k.px = p.x; k.pz = p.y
-        k.d.root.visible = true; k.d.root.position.set(p.x, 0, p.y)
-        k.d.body.position.y = moved ? Math.abs(Math.sin(t * 9)) * 0.12 : 0
-        w.face(k.d, k.dir)
-        k.ring.visible = true; k.ring.position.set(p.x, 0.06, p.y)
-        k.tag.visible = true; k.tag.position.set(p.x, 0.35, p.y + 1.25)
-        k.arrow.visible = p.mine; k.arrow.position.set(p.x, AVATAR_H * KA + 1.15 + Math.sin(t * 5) * 0.12, p.y)
-        const text = p.say ?? ''
-        if (text !== k.bubText) { k.bubText = text; k.bub.visible = !!text; if (text) { const m = k.bub.material; m.map?.dispose(); m.map = new THREE.CanvasTexture(bubbleCanvas(text)); m.map.colorSpace = THREE.SRGBColorSpace; m.needsUpdate = true } }
-        k.bub.position.set(p.x, AVATAR_H * KA + 2.1, p.y)
-        if (p.mine) { catchRing.position.set(p.x, 0.07, p.y); catchRing.visible = true }
-      }
-      kids.forEach((k, i) => { if (k && !used.has(i)) { k.d.root.visible = false; k.ring.visible = false; k.tag.visible = false; k.arrow.visible = false; k.bub.visible = false } })
-      if (!f.players.some((p) => p.mine)) catchRing.visible = false
-      // 잡은 별이 하늘로 올라가고, 헛손질은 둥근 물결
-      let nd = 0, nr = 0
-      for (const e of f.fx) {
-        if (e.k === 'fly') {
-          const d = (fxPool[nd] ??= starDoll(0)); nd++
-          d.root.visible = true; d.root.position.set(e.x, 0, e.y)
-          d.body.position.y = 0.9 + e.u * (f.calm ? 1.5 : 7); d.body.scale.setScalar(Math.max(0.05, f.calm ? 1 - e.u * 0.5 : 1 + e.u * 0.3 - e.u * e.u * 1.2)); w.face(d, 1)
-        } else {
-          const r = (fxRing[nr] ??= mkRing(0xffffff, 0.8)); nr++
-          r.visible = true; r.position.set(e.x, 0.08, e.y); r.scale.setScalar(0.5 + e.u * 1.3); (r.material as THREE.MeshBasicMaterial).opacity = 0.8 * (1 - e.u)
-        }
-      }
-      for (let i = nd; i < fxPool.length; i++) fxPool[i].root.visible = false
-      for (let i = nr; i < fxRing.length; i++) fxRing[i].visible = false
+  const w: World = createWorld(el, { bounds: 60, start: { x: 0, z: 0 }, seed: 11, bare: true })
+  const scene = w.scene, cam = w.camera
+  scene.fog = new THREE.Fog(0x74c2a8, 38, 82)
+  const hw = CFG.w / 2, hh = CFG.h / 2
+  const tex = (name: string, rep?: [number, number]) => { const t = w.texOf(assetUrl(`starchase/${name}.webp`)); if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]) } return t }
+  // 끝없는 풀밭: 발밑이 흘러가 보이게 큰 판에 타일을 반복
+  const grass = tex('grass', [300 / 7, 300 / 7])
+  const ground = new THREE.Mesh(w.keep(new THREE.PlaneGeometry(300, 300)), w.keep(new THREE.MeshLambertMaterial({ map: grass })))
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.01; scene.add(ground)
+  // 흙길(앞뒤로 길게): 세로 타일을 반복. 길 한쪽에 풀 가장자리가 있다
+  const pathTex = tex('path', [1, 160 / 10.8])
+  const path = new THREE.Mesh(w.keep(new THREE.PlaneGeometry(5, 160)), w.keep(new THREE.MeshBasicMaterial({ map: pathTex, transparent: true, depthWrite: false })))
+  path.rotation.x = -Math.PI / 2; path.rotation.z = 0.06; path.position.set(5.5, 0.02, -30); path.renderOrder = -1; scene.add(path)
+  // 먼 언덕: 늘 카메라 앞 먼 곳에 세워 두는 그림(땅 끝과 만나게)
+  const hillsMat = w.keep(new THREE.MeshBasicMaterial({ map: tex('hills'), transparent: true, depthWrite: false, fog: false }))
+  const hills = new THREE.Mesh(w.keep(new THREE.PlaneGeometry(1, 216 / 1600)), hillsMat); hills.renderOrder = -2; scene.add(hills)
+  // 장식(부딪히지 않음): 필드 안쪽은 비워 두고 바깥과 길가에 흩뿌린다
+  const rnd = w.rnd
+  const clear = (x: number, z: number, m: number) => Math.abs(x) < hw + m && Math.abs(z) < hh + m
+  const put = (img: string, aspect: number, h: number, n: number, zr: [number, number], xr: number, margin: number, r = 0.4) => {
+    for (let i = 0; i < n; i++) {
+      const x = (rnd() * 2 - 1) * xr, z = zr[0] + rnd() * (zr[1] - zr[0]); if (clear(x, z, margin)) continue
+      w.addProp(`starchase/${img}.webp`, x, z, h * (0.85 + rnd() * 0.4), aspect, r)
     }
   }
+  put('tree_green', 420 / 448, 6.2, 34, [-75, 35], 48, 1.5, 0.8); put('tree_purple', 420 / 459, 6.2, 22, [-75, 35], 48, 1.5, 0.8)
+  put('bush', 300 / 253, 2.0, 30, [-70, 32], 46, 0.5); put('flowers', 260 / 208, 1.3, 40, [-70, 32], 46, -1)
+  put('rock', 300 / 204, 1.6, 12, [-70, 32], 46, -1); put('lamp', 300 / 324, 5.0, 8, [-70, 32], 40, 1.2); put('fence', 300 / 210, 2.0, 8, [-70, 32], 40, 1.2)
+
+  const AH = AVATAR_H
+  const KA = 1.5
+  const glowTex = w.texOf(glowCanvas())
+  const starTex = ['star_idle', 'star_flee', 'star_scared'].map((n) => tex(n))
+  const starAspect = [320 / 298, 320 / 267, 320 / 351]
+  const STAR_H = AH * KA * 0.52
+  const burstTex = tex('burst')
+  const mkRing = (color: number, op: number) => { const m = new THREE.Mesh(w.keep(new THREE.RingGeometry(0.9, 1.05, 40)), w.keep(new THREE.MeshBasicMaterial({ color, transparent: true, opacity: op, depthWrite: false, side: THREE.DoubleSide }))); m.rotation.x = -Math.PI / 2; m.position.y = 0.05; m.renderOrder = 2; scene.add(m); return m }
+  const stars = new Map<number, { d: Doll[]; ring: THREE.Mesh; glow: THREE.Sprite }>()
+  const newStar = () => {
+    const d = starTex.map((t, i) => { const q = w.paperDoll(t, STAR_H, starAspect[i]); if (i) q.root.children[0].visible = false; return q })
+    const glow = new THREE.Sprite(w.keep(new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }))); glow.scale.set(STAR_H * 1.7, STAR_H * 1.7, 1); glow.renderOrder = 3; scene.add(glow)
+    return { d, ring: mkRing(0xffffff, 0.9), glow }
+  }
+  const blank = document.createElement('canvas'); blank.width = 8; blank.height = 8
+  type Kid = { d: Doll; ring: THREE.Mesh; tag: THREE.Sprite; arrow: THREE.Sprite; bub: THREE.Sprite; bubText: string; px: number; pz: number; dir: 1 | -1 }
+  const kids: (Kid | null)[] = [null, null, null, null]
+  const sprite = (cv: HTMLCanvasElement, sx: number, sy: number) => { const s = new THREE.Sprite(w.keep(new THREE.SpriteMaterial({ map: w.texOf(cv), transparent: true, depthWrite: false }))); s.scale.set(sx, sy, 1); s.renderOrder = 8; scene.add(s); return s }
+  const kid = (slot: number): Kid => {
+    let k = kids[slot]; if (k) return k
+    const d = w.paperDoll(w.texOf(blank), AH, 1024 / 1536, FEET); d.root.scale.setScalar(KA)
+    const ring = mkRing(parseInt(SLOT_COLORS[slot].slice(1), 16), 0.95); ring.scale.set(1.1, 1.1, 1.1)
+    const tag = sprite(glyphCanvas(SLOT_SHAPES[slot], SLOT_COLORS[slot]), 1.1, 1.1)
+    const arrow = sprite(glyphCanvas('▼', SLOT_COLORS[slot]), 0.9, 0.9)
+    const bub = new THREE.Sprite(w.keep(new THREE.SpriteMaterial({ transparent: true, depthWrite: false }))); bub.scale.set(4, 1.2, 1); bub.renderOrder = 9; bub.visible = false; scene.add(bub)
+    k = { d, ring, tag, arrow, bub, bubText: '', px: 99, pz: 99, dir: 1 }; kids[slot] = k; return k
+  }
+  const catchRing = new THREE.Mesh(w.keep(new THREE.PlaneGeometry(CFG.catchR * 2, CFG.catchR * 2)), w.keep(new THREE.MeshBasicMaterial({ map: w.texOf(zoneCanvas()), transparent: true, depthWrite: false }))); catchRing.rotation.x = -Math.PI / 2; catchRing.position.y = 0.05; catchRing.renderOrder = 2; scene.add(catchRing)
+  const fxStar: Doll[] = [], fxRing: THREE.Mesh[] = [], fxBurst: THREE.Sprite[] = []
+  const t0 = performance.now()
+  let pending: SceneFrame | null = null
+  const out: StarScene = { setLook: (slot, cv) => { const m = kid(slot).d.doll.material as THREE.MeshBasicMaterial; m.map = w.texOf(cv); m.needsUpdate = true }, frame: (f) => { pending = f }, arrows: [], dispose: () => w.dispose() }
+  w.onFrame((dt) => { if (pending) apply(pending, dt) })
+  let camX = 0, camZ = 0, init = false
+  const v3 = new THREE.Vector3()
+  const edge = (x: number, y: number, z: number, color: string) => {
+    v3.set(x, y, z).project(cam)
+    const behind = v3.z > 1
+    let nx = behind ? -v3.x : v3.x, ny = behind ? -v3.y : v3.y
+    if (!behind && Math.abs(nx) <= 0.94 && Math.abs(ny) <= 0.86) return
+    const k = Math.max(Math.abs(nx) / 0.9, Math.abs(ny) / 0.8) || 1; nx /= k; ny /= k
+    out.arrows.push({ x: (nx + 1) / 2, y: (1 - ny) / 2, rot: Math.atan2(-ny, nx), color })
+  }
+  function apply(f: SceneFrame, dt: number) {
+    const t = (f.now - t0) / 1000
+    // 카메라: 내 뒤 낮은 곳에서 부드럽게 따라온다(캐릭터가 화면 아래쪽 1/3에 오게 조금 앞을 본다)
+    if (!init) { camX = f.me.x; camZ = f.me.y; init = true }
+    const kc = 1 - Math.exp(-dt * 5); camX += (f.me.x - camX) * kc; camZ += (f.me.y - camZ) * kc
+    const portrait = cam.aspect < 1
+    const dist = portrait ? 12.5 : 10.5, height = portrait ? 6.8 : 5.6, ahead = portrait ? 7.5 : 5.5
+    cam.position.set(camX, height, camZ + dist); cam.lookAt(camX, 1.2, camZ - ahead)
+    w.me.x = f.me.x; w.me.z = f.me.y
+    // 먼 언덕: 카메라 앞 75 지점에 폭을 화면에 맞춰 세운다
+    const D = 75, visW = 2 * D * Math.tan((cam.fov * Math.PI) / 360) * cam.aspect * 1.25
+    hills.scale.set(visW, visW, 1); hills.position.set(camX, (visW * 216 / 1600) / 2 - 1.2, camZ - D)
+    // 별
+    out.arrows = []
+    const seen = new Set<number>()
+    for (const s of f.stars) {
+      seen.add(s.id)
+      let o = stars.get(s.id); if (!o) { o = newStar(); stars.set(s.id, o) }
+      const by = (s.m === 2 ? Math.sin(t * 14) * 0.04 : Math.abs(Math.sin(t * 4 + s.id)) * 0.35) + STAR_H * 0.08
+      o.d.forEach((q, i) => { q.root.visible = i === s.m; q.root.position.set(s.x, 0, s.y); q.body.position.y = by; w.face(q, s.m === 1 && f.stars.length ? (Math.cos(t + s.id) > 0 ? 1 : -1) : 1) })
+      o.glow.position.set(s.x, by + STAR_H * 0.5, s.y + 0.2); o.glow.material.opacity = s.m === 2 ? 0.3 : 0.55
+      o.ring.visible = s.m === 2; o.ring.position.set(s.x, 0.06, s.y); o.ring.scale.setScalar(1.7 + Math.sin(t * 8) * 0.08)
+      edge(s.x, STAR_H * 0.5, s.y, '#ffd84a')
+    }
+    for (const [id, o] of stars) if (!seen.has(id)) { o.d.forEach((q) => scene.remove(q.root)); scene.remove(o.ring); scene.remove(o.glow); stars.delete(id) }
+    // 친구
+    const used = new Set<number>()
+    for (const p of f.players) {
+      used.add(p.slot); const k = kid(p.slot)
+      const moved = Math.hypot(p.x - k.px, p.y - k.pz) > 0.004; if (p.x - k.px) k.dir = p.x - k.px > 0 ? 1 : -1
+      k.px = p.x; k.pz = p.y
+      k.d.root.visible = true; k.d.root.position.set(p.x, 0, p.y)
+      k.d.body.position.y = moved ? Math.abs(Math.sin(t * 9)) * 0.12 : 0
+      w.face(k.d, k.dir)
+      k.ring.visible = true; k.ring.position.set(p.x, 0.06, p.y)
+      k.tag.visible = true; k.tag.position.set(p.x, 0.4, p.y + 1.5)
+      k.arrow.visible = p.mine; k.arrow.position.set(p.x, AH * KA + 1.0 + Math.sin(t * 5) * 0.12, p.y)
+      const text = p.say ?? ''
+      if (text !== k.bubText) { k.bubText = text; k.bub.visible = !!text; if (text) { const m = k.bub.material; m.map?.dispose(); m.map = new THREE.CanvasTexture(bubbleCanvas(text)); m.map.colorSpace = THREE.SRGBColorSpace; m.needsUpdate = true } }
+      k.bub.position.set(p.x, AH * KA + 2.0, p.y)
+      if (p.mine) catchRing.position.set(p.x, 0.07, p.y); else edge(p.x, AH, p.y, SLOT_COLORS[p.slot])
+    }
+    kids.forEach((k, i) => { if (k && !used.has(i)) { k.d.root.visible = false; k.ring.visible = false; k.tag.visible = false; k.arrow.visible = false; k.bub.visible = false } })
+    catchRing.visible = f.players.some((p) => p.mine)
+    // 잡은 별: 폭죽이 터지고 별이 하늘로 올라간다. 헛손질은 둥근 물결
+    let nd = 0, nr = 0, nb = 0
+    for (const e of f.fx) {
+      if (e.k === 'fly') {
+        const d = (fxStar[nd] ??= w.paperDoll(starTex[0], STAR_H, starAspect[0])); nd++
+        d.root.visible = true; d.root.position.set(e.x, 0, e.y)
+        d.body.position.y = STAR_H * 0.5 + e.u * (f.calm ? 1.5 : 9); d.body.scale.setScalar(Math.max(0.05, f.calm ? 1 - e.u * 0.5 : 1 + e.u * 0.3 - e.u * e.u * 1.3)); w.face(d, 1)
+        if (e.u < 0.45) {
+          const b = (fxBurst[nb] ??= (() => { const sp = new THREE.Sprite(w.keep(new THREE.SpriteMaterial({ map: burstTex, transparent: true, depthWrite: false }))); sp.renderOrder = 9; scene.add(sp); return sp })()); nb++
+          b.visible = true; b.position.set(e.x, STAR_H * 0.6, e.y + 0.3); const sc = STAR_H * (1.2 + e.u * 3.5); b.scale.set(sc, sc, 1); b.material.opacity = 1 - e.u / 0.45
+        }
+      } else {
+        const r = (fxRing[nr] ??= mkRing(0xffffff, 0.8)); nr++
+        r.visible = true; r.position.set(e.x, 0.08, e.y); r.scale.setScalar(0.5 + e.u * 1.3); (r.material as THREE.MeshBasicMaterial).opacity = 0.8 * (1 - e.u)
+      }
+    }
+    for (let i = nd; i < fxStar.length; i++) fxStar[i].root.visible = false
+    for (let i = nr; i < fxRing.length; i++) fxRing[i].visible = false
+    for (let i = nb; i < fxBurst.length; i++) fxBurst[i].visible = false
+  }
+  return out
 }
