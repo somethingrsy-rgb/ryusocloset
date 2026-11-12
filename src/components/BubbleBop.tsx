@@ -101,10 +101,13 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
       // 화면 크기에 맞춰 16×12 칸 놀이판을 놓는다(가로 화면은 가운데, 세로 화면은 위쪽)
       const portrait = H > W
       const sc = portrait ? W / COLS : Math.min(W / COLS, H / ROWS)
-      const ox = (W - sc * COLS) / 2, oy = portrait ? 64 : (H - sc * ROWS) / 2
+      // 세로 화면: 위 알약과 아래 버튼 사이를 가득 채우도록 위아래로 늘린다(최대 2.3배), 그림 크기는 조금만 키운다
+      const topPad = 64, botPad = 150
+      const K = portrait ? Math.max(1, Math.min(2.3, (H - topPad - botPad) / (ROWS * sc))) : 1, S = 1 + (K - 1) * 0.5
+      const ox = (W - sc * COLS) / 2, oy = portrait ? topPad : (H - sc * ROWS) / 2
       const g = c.getContext('2d'); if (!g) return
-      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H); g.translate(ox, oy); g.scale(sc, sc)
-      draw(g, s, imgs.current, t / 1000, fx.current)
+      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H); g.translate(ox, oy); g.scale(sc, sc * K)
+      draw(g, s, imgs.current, t / 1000, fx.current, K, S)
       const sig = `${s.score}|${s.lives}|${s.level}|${s.foes.length + s.bubbles.filter((x) => x.foe).length}|${s.stars}|${s.phase}`
       if (sig !== hudSig) {
         hudSig = sig; setHud({ score: s.score, lives: s.lives, level: s.level + 1, foes: s.foes.length + s.bubbles.filter((x) => x.foe).length, stars: s.stars })
@@ -192,38 +195,44 @@ function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: 
   g.fillStyle = gr; g.beginPath(); g.roundRect(x + 0.03, y + 0.03, w - 0.06, h - 0.06, r); g.fill()
   g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 0.05; g.stroke()
 }
-function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { k: string; x: number; y: number; t: number }[]) {
-  // 벽과 바닥(보라 블록), 발판(분홍 윗면의 둥근 판)
+/** 세로 화면에서 놀이판을 위아래로 늘려도 그림이 찌그러지지 않게: 놓는 자리만 늘리고(K) 그림 크기는 그대로(S 배) */
+function at(g: CanvasRenderingContext2D, x: number, y: number, K: number, S: number, fn: () => void) { g.save(); g.translate(x, y); g.scale(S, S / K); fn(); g.restore() }
+function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { k: string; x: number; y: number; t: number; text?: string }[], K = 1, S = 1) {
   const set = im.sets[s.level % 3]; if (!set) return
   const th = set.theme, foesIm = set.foes
+  // 벽과 바닥, 발판(둥근 판): 위아래로 K 배 늘어난 칸
   for (let r = 0; r < ROWS; r++) { block(g, 0, r, 1, 1, th.wall[0], th.wall[1]); block(g, COLS - 1, r, 1, 1, th.wall[0], th.wall[1]) }
   for (let c = 1; c < COLS - 1; c++) block(g, c, ROWS - 1, 1, 1, th.wall[0], th.wall[1])
   for (let r = 0; r < ROWS - 1; r++) { let c = 1; while (c < COLS - 1) { if (!s.grid[r][c]) { c++; continue } let e = c; while (e + 1 < COLS - 1 && s.grid[r][e + 1]) e++; block(g, c, r, e - c + 1, 0.62, th.plat[0], th.plat[1], 0.3); c = e + 1 } }
   // 과일
-  for (const f of s.fruits) { const i = set.fruit[f.kind]; if (ready(i)) { const h = 0.9, w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = f.t > 9 && Math.floor(t * 8) % 2 ? 0.4 : 1; g.drawImage(i, f.x - w / 2, f.y - h, w, h); g.globalAlpha = 1 } }
-  // 별 친구
-  for (const f of s.foes) { const v = foesIm[f.id % Math.max(1, foesIm.length)]; const i = v ? (f.mad ? v.mad : v.walk) : null; if (ready(i)) { const h = v.h * (f.mad ? 1.1 : 1), w = h * i.naturalWidth / i.naturalHeight, bob = f.on ? Math.abs(Math.sin(t * 8 + f.id)) * 0.12 : 0; g.save(); g.translate(f.x, f.y - bob); g.scale(f.dir > 0 ? -1 : 1, 1); g.drawImage(i, -w / 2, -h, w, h); g.restore() } }
-  // 거품(갇힌 별 친구는 안에서 놀란 얼굴)
-  for (const b of s.bubbles) {
+  for (const f of s.fruits) { const i = set.fruit[f.kind]; if (ready(i)) at(g, f.x, f.y, K, S, () => {
+    const h = 1.15, w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = f.t > 9 && Math.floor(t * 8) % 2 ? 0.4 : 1
+    g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(0, -h / 2, h * 0.62, 0, 7); g.fill() // 눈에 띄게 하얀 빛 동그라미
+    g.drawImage(i, -w / 2, -h + Math.sin(t * 6 + f.id) * 0.06, w, h); g.globalAlpha = 1 }) }
+  // 친구들
+  for (const f of s.foes) { const v = foesIm[f.id % Math.max(1, foesIm.length)]; const i = v ? (f.mad ? v.mad : v.walk) : null; if (ready(i)) at(g, f.x, f.y, K, S, () => {
+    const h = v.h * (f.mad ? 1.1 : 1), w = h * i.naturalWidth / i.naturalHeight, bob = f.on ? Math.abs(Math.sin(t * 8 + f.id)) * 0.12 : 0
+    g.translate(0, -bob); g.scale(f.dir > 0 ? -1 : 1, 1); g.drawImage(i, -w / 2, -h, w, h) }) }
+  // 거품(갇힌 친구는 안에서 놀란 얼굴)
+  for (const b of s.bubbles) at(g, b.x, b.y, K, S, () => {
     const r = b.foe ? 0.85 : 0.5, wob = 1 + Math.sin(t * 6 + b.id) * 0.04
-    if (b.foe) { const v = foesIm[b.foe.id % Math.max(1, foesIm.length)]; const i = v ? v.trapped : null; if (ready(i)) { const h = Math.min(1.1, v.h * 0.85), w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = b.life < 2 && Math.floor(t * 8) % 2 ? 0.5 : 1; g.drawImage(i, b.x - w / 2, b.y - h * 0.55, w, h); g.globalAlpha = 1 } }
-    const gr = g.createRadialGradient(b.x - r * 0.3, b.y - r * 0.3, r * 0.1, b.x, b.y, r)
+    if (b.foe) { const v = foesIm[b.foe.id % Math.max(1, foesIm.length)]; const i = v ? v.trapped : null; if (ready(i)) { const h = Math.min(1.1, v.h * 0.85), w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = b.life < 2 && Math.floor(t * 8) % 2 ? 0.5 : 1; g.drawImage(i, -w / 2, -h * 0.55, w, h); g.globalAlpha = 1 } }
+    const gr = g.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r)
     gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(0.7, 'rgba(190,230,255,.22)'); gr.addColorStop(1, 'rgba(200,170,255,.55)')
-    g.fillStyle = gr; g.beginPath(); g.ellipse(b.x, b.y, r * wob, r / wob, 0, 0, 7); g.fill()
-    g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 0.05; g.stroke()
-  }
+    g.fillStyle = gr; g.beginPath(); g.ellipse(0, 0, r * wob, r / wob, 0, 0, 7); g.fill()
+    g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 0.05; g.stroke() })
   // 나(내 아바타)
   const p = s.p, me = im.me
-  if (!(p.inv > 0 && Math.floor(t * 10) % 2)) {
+  if (!(p.inv > 0 && Math.floor(t * 10) % 2)) at(g, p.x, p.y, K, S, () => {
     const H = 1.95, W = H * 1024 / 1536
-    g.fillStyle = 'rgba(60,30,100,.25)'; g.beginPath(); g.ellipse(p.x, p.y, 0.5, 0.14, 0, 0, 7); g.fill()
-    if (ready(me)) { const bob = p.on && Math.abs(p.vx) > 0.1 ? Math.abs(Math.sin(t * 14)) * 0.1 : 0; g.save(); g.translate(p.x, p.y - bob); g.scale(p.dir > 0 ? 1 : -1, 1); g.drawImage(me, -W / 2, -H * (1504 / 1536), W, H); g.restore() }
-    else { g.fillStyle = '#ff8fab'; g.beginPath(); g.ellipse(p.x, p.y - 0.65, 0.35, 0.65, 0, 0, 7); g.fill() }
-  }
+    g.fillStyle = 'rgba(60,30,100,.25)'; g.beginPath(); g.ellipse(0, 0, 0.5, 0.14, 0, 0, 7); g.fill()
+    if (ready(me)) { const bob = p.on && Math.abs(p.vx) > 0.1 ? Math.abs(Math.sin(t * 14)) * 0.1 : 0; g.translate(0, -bob); g.scale(p.dir > 0 ? 1 : -1, 1); g.drawImage(me, -W / 2, -H * (1504 / 1536), W, H) }
+    else { g.fillStyle = '#ff8fab'; g.beginPath(); g.ellipse(0, -0.65, 0.35, 0.65, 0, 0, 7); g.fill() } })
   // 효과
-  for (const f of fx) {
+  for (const f of fx) at(g, f.x, f.y, K, S, () => {
+    if (f.k === 'pts') { const u2 = f.t / 1.1; g.globalAlpha = 1 - u2 * u2; g.font = '900 0.7px sans-serif'; g.textAlign = 'center'; g.lineWidth = 0.14; g.strokeStyle = '#7a5cc0'; g.fillStyle = '#fff'; g.strokeText(f.text ?? '', 0, -u2 * 1.2); g.fillText(f.text ?? '', 0, -u2 * 1.2); g.globalAlpha = 1; return }
     const u = f.t / 0.6
-    if (f.k === 'burst' && ready(im.burst)) { const h = 1.5 + u * 1.5; g.globalAlpha = 1 - u; g.drawImage(im.burst, f.x - h / 2, f.y - h / 2, h, h); g.globalAlpha = 1 }
-    else { g.strokeStyle = `rgba(255,255,255,${1 - u})`; g.lineWidth = 0.08; g.beginPath(); g.arc(f.x, f.y, 0.4 + u * 0.9, 0, 7); g.stroke() }
-  }
+    if (f.k === 'burst' && ready(im.burst)) { const h = 1.5 + u * 1.5; g.globalAlpha = 1 - u; g.drawImage(im.burst, -h / 2, -h / 2, h, h); g.globalAlpha = 1 }
+    else { g.strokeStyle = `rgba(255,255,255,${1 - u})`; g.lineWidth = 0.08; g.beginPath(); g.arc(0, 0, 0.4 + u * 0.9, 0, 7); g.stroke() }
+  })
 }
