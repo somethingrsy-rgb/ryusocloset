@@ -84,6 +84,9 @@
           },
           "jump": {
             ".validate": "newData.isString() && newData.val().matches(/^j[1-4]$/)"
+          },
+          "star": {
+            ".validate": "newData.isString() && newData.val().matches(/^s1$/)"
           }
         }
       },

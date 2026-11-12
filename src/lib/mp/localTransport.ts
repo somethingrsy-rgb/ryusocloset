@@ -48,8 +48,8 @@ export function localTransport(): Transport {
       return { uid, full: false }
     },
     update(part) { Object.assign(state, part); players[uid] = { ...(sanePlayer({ ...state, t: Date.now() }) as PlayerState) }; send() },
-    chat(name, text, home, race, jump) {
-      const msg: ChatMsg = { id: `${Date.now()}-${uid}`, uid, name, text, t: Date.now(), ...(home ? { home: uid } : {}), ...(race ? { race } : {}), ...(jump ? { jump } : {}) }
+    chat(name, text, home, race, jump, star) {
+      const msg: ChatMsg = { id: `${Date.now()}-${uid}`, uid, name, text, t: Date.now(), ...(home ? { home: uid } : {}), ...(race ? { race } : {}), ...(jump ? { jump } : {}), ...(star ? { star } : {}) }
       chat.push(msg); chatCb(chat.slice(-30))
       ch?.postMessage({ type: 'chat', uid, msg })
     },
