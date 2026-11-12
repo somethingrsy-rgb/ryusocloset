@@ -6,13 +6,13 @@
 export const CFG = {
   w: 24, h: 18, // 플레이 영역(월드 유닛), 가운데가 (0,0)
   avatarR: 0.4, walk: 3.2,
-  starR: 0.35, wander: 1.0, flee: 2.5, cornered: 0.55,
-  fleeIn: 4, fleeOut: 5, fleeHold: 0.5, // 4 안에 들어오면 도주, 5 밖으로 0.5초 벗어나야 풀림
+  starR: 0.35, wander: 0.8, flee: 1.7, cornered: 0.3, // 쉽게: 내 걷기(3.2)보다 훨씬 느리게
+  fleeIn: 3, fleeOut: 4, fleeHold: 0.5, // 4 안에 들어오면 도주, 5 밖으로 0.5초 벗어나야 풀림
   edge: 1.2,
-  surroundDist: 2.8, surroundDeg: 110, surroundOn: 0.35, surroundMin: 1.2, surroundOff: 0.5,
-  catchR: 1.2, catchCd: 1.2,
+  surroundDist: 4, surroundDeg: 90, surroundOn: 0.2, surroundMin: 2, surroundOff: 0.5, // 쉽게: 더 멀리서, 더 넓은 각도로도 포위 인정
+  catchR: 1.8, catchCd: 0.8,
   maxActive: 3, respawn: 2, spawnFromPlayer0: 4, spawnFromPlayer: 2,
-  seconds: 180, target: { 2: 6, 3: 8, 4: 10 } as Record<number, number>,
+  seconds: 240, target: { 2: 4, 3: 6, 4: 8 } as Record<number, number>,
 }
 export const targetFor = (n: number) => CFG.target[Math.max(2, Math.min(4, n))]
 
