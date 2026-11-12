@@ -8,10 +8,10 @@ export const SOLID = '#=?ulrLRefxy' // 땅, 벽돌, 물음표(쓰기 전·후), 
 export const levelWidth = 64
 
 export interface Foe { id: number; x: number; y: number; vy: number; dir: 1 | -1; alive: boolean; squash: number }
-/** 하트 약병: 물음표에서 나와 길을 따라 도망간다. 잡아서 먹으면 몸이 커진다 */
-export interface Item { id: number; x: number; y: number; vy: number; dir: 1 | -1; t: number }
+/** 하트 약병: 물음표에서 튀어나와 그 자리(블록 위)에 가만히 있다. 먹으면 몸이 커진다 */
+export interface Item { id: number; x: number; y: number; vy: number; dir: 1 | -1; t: number; vx?: number }
 export interface Room { rows: string[][]; foes: Foe[]; w: number; items: Item[] }
-export interface Player { x: number; y: number; vx: number; vy: number; on: boolean; dir: 1 | -1; inv: number; big: boolean }
+export interface Player { x: number; y: number; vx: number; vy: number; on: boolean; dir: 1 | -1; inv: number; big: boolean; dj: boolean /* 공중에서 두 번째 점프를 이미 썼나 */ }
 export interface State {
   level: number; room: 'main' | 'bonus'; main: Room; bonus: Room; p: Player; ret: { col: number; row: number }
   flagX: number; score: number; coins: number; lives: number; phase: 'play' | 'clear' | 'won' | 'over'; t: number; stars: number; fade: number; prevJump: boolean; prevDown: boolean; clearT: number; qHits: number; nextId: number
@@ -61,7 +61,7 @@ function bonusRoom(): Room {
 
 export function newRun(level: number, keep?: Pick<State, 'score' | 'coins' | 'lives' | 'stars'>): State {
   const sp = SPECS[level % SPECS.length]
-  return { level, room: 'main', main: build(sp), bonus: bonusRoom(), p: { x: 2.5, y: 10, vx: 0, vy: 0, on: true, dir: 1, inv: 0, big: false }, ret: { col: 0, row: 0 }, flagX: sp.w - 3.5,
+  return { level, room: 'main', main: build(sp), bonus: bonusRoom(), p: { x: 2.5, y: 10, vx: 0, vy: 0, on: true, dir: 1, inv: 0, big: false, dj: false }, ret: { col: 0, row: 0 }, flagX: sp.w - 3.5,
     score: keep?.score ?? 0, coins: keep?.coins ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', t: 0, stars: keep?.stars ?? 0, fade: 0, prevJump: false, prevDown: false, clearT: 0, qHits: 0, nextId: 1 }
 }
 
@@ -93,7 +93,11 @@ function sub(s: State, inp: Input, dt: number, ev: Ev[]) {
   p.inv = Math.max(0, p.inv - dt)
   const mv = (inp.right ? 1 : 0) - (inp.left ? 1 : 0)
   p.vx = mv * CFG.walk; if (mv) p.dir = mv > 0 ? 1 : -1
-  if (inp.jump && !s.prevJump && p.on) { p.vy = -CFG.jump; p.on = false; ev.push({ k: 'jump', x: p.x, y: p.y }) }
+  if (p.on) p.dj = false
+  if (inp.jump && !s.prevJump) {
+    if (p.on) { p.vy = -CFG.jump; p.on = false; ev.push({ k: 'jump', x: p.x, y: p.y }) }
+    else if (!p.dj) { p.dj = true; p.vy = -CFG.jump * 0.95; ev.push({ k: 'jump', x: p.x, y: p.y }) } // 공중에서 한 번 더 뛴다(더블 점프)
+  }
   if (!inp.jump && p.vy < -5) p.vy = -5 // 짧게 누르면 낮게 뛴다
   s.prevJump = inp.jump
   // 파이프로 들어가기(아래 버튼, 파이프 위에 서 있을 때)
@@ -116,23 +120,18 @@ function sub(s: State, inp: Input, dt: number, ev: Ev[]) {
       p.y = r + 1 + ph; p.vy = 0
       if (ch === '?') {
         R.rows[r][c] = 'u'; s.qHits++
-        // 세 번에 한 번(1·4·7번째)은 하트 약병이 튀어나와 도망가고, 나머지는 코인
-        if (s.qHits % 3 === 1) { R.items.push({ id: s.nextId++, x: c + 0.5, y: r, vy: -9, dir: p.x < c + 0.5 ? 1 : -1, t: 0 }); ev.push({ k: 'potion', x: c + 0.5, y: r }) }
+        // 세 번에 한 번(1·4·7번째)은 하트 약병이 옆으로 튀어나와 아래 땅에 내려앉아 그 자리에 있고, 나머지는 코인
+        if (s.qHits % 3 === 1) { R.items.push({ id: s.nextId++, x: c + 0.5, y: r, vy: -9, dir: p.x < c + 0.5 ? 1 : -1, t: 0, vx: (p.x < c + 0.5 ? 1 : -1) * 2.6 }); ev.push({ k: 'potion', x: c + 0.5, y: r }) }
         else { s.score += 10; s.coins++; ev.push({ k: 'coin', x: c + 0.5, y: r }) }
       }
       else if (ch === '=') { R.rows[r][c] = '.'; s.score += 5; ev.push({ k: 'break', x: c + 0.5, y: r }) } else ev.push({ k: 'bump', x: c + 0.5, y: r })
       break } } } }
-  // 하트 약병: 플레이어에게서 멀어지는 쪽으로 도망가고, 벽·낭떠러지 앞에서는 돌아선다(그래서 구석에 몰면 잡을 수 있다)
+  // 하트 약병: 튀어나온 뒤 블록 위에 내려앉아 그 자리에 있다(도망가지 않는다)
   for (const it of [...R.items]) {
     it.t += dt
-    if (it.t > 25) { R.items.splice(R.items.indexOf(it), 1); continue }
-    const dx = it.x - p.x
-    if (it.vy === 0 && Math.abs(dx) < 7) it.dir = dx >= 0 ? 1 : -1
-    if (solid(tileAt(R, Math.floor(it.x + it.dir * 0.45), Math.floor(it.y - 0.5))) || it.x < 0.6 || it.x > R.w - 0.6) it.dir = (it.dir * -1) as 1 | -1
-    else if (it.vy === 0 && !solid(tileAt(R, Math.floor(it.x + it.dir * 0.5), Math.round(it.y)))) it.dir = (it.dir * -1) as 1 | -1
-    if (it.t > 0.35) it.x += it.dir * 3.6 * dt
+    if (it.vx) { if (solid(tileAt(R, Math.floor(it.x + Math.sign(it.vx) * 0.4), Math.floor(it.y - 0.5)))) it.vx = 0; else it.x += it.vx * dt }
     const iy0 = it.y; it.vy = Math.min(20, it.vy + CFG.g * dt); it.y += it.vy * dt
-    const ir = Math.floor(it.y + E); if (it.vy >= 0 && ir >= 0 && ir < ROWS && solid(tileAt(R, Math.floor(it.x), ir)) && iy0 <= ir + 1e-3) { it.y = ir; it.vy = 0 }
+    const ir = Math.floor(it.y + E); if (it.vy >= 0 && ir >= 0 && ir < ROWS && solid(tileAt(R, Math.floor(it.x), ir)) && iy0 <= ir + 1e-3) { it.y = ir; it.vy = 0; it.vx = 0 }
     if (it.y > ROWS + 4) { R.items.splice(R.items.indexOf(it), 1); continue }
     if (it.t > 0.4 && Math.abs(p.x - it.x) < 0.75 && p.y - 0.1 > it.y - 1.2 && p.y - ph < it.y) {
       R.items.splice(R.items.indexOf(it), 1); s.score += 50

@@ -27,14 +27,21 @@ describe('별 모험 규칙', () => {
     s.qHits = 3; s.p.x = 34.5; s.p.y = 10; s.p.vy = 0; s.p.on = true
     run(s, none, 0.1); const ev3 = run(s, { ...none, jump: true }, 0.5); expect(ev3.some((e) => e.k === 'potion')).toBe(true)
   })
-  it('하트 약병은 플레이어에게서 멀어지는 쪽으로 도망가고, 낭떠러지 앞에서 돌아선다', () => {
-    const s = newRun(0); s.main.foes = []; s.p.inv = 99
-    s.main.items.push({ id: 1, x: 14.5, y: 10, vy: 0, dir: 1, t: 1 }); s.p.x = 12.8; s.p.y = 10
-    const x0 = 14.5; run(s, none, 1); expect(s.main.items[0].x).toBeGreaterThan(x0 + 1.5)
-    const t = newRun(0); t.main.foes = []; t.p.inv = 99; t.p.x = 21.5; t.p.y = 10 // 구덩이(18~20) 오른쪽 가장자리
-    t.main.items.push({ id: 1, x: 15.5, y: 10, vy: 0, dir: 1, t: 1 })
-    for (let i = 0; i < 60 * 6; i++) { step(t, none, 1 / 60); t.p.x = 21.5; t.p.y = 10; t.p.vy = 0 }
-    expect(t.main.items.length).toBe(1); expect(t.main.items[0].y).toBeCloseTo(10, 1)
+  it('하트 약병은 도망가지 않고, 튀어나온 뒤 아래 땅에 내려앉아 그 자리에 있다', () => {
+    const s = newRun(0); s.main.foes = []; s.p.x = 14.5; s.p.y = 10; s.p.inv = 99
+    run(s, { ...none, jump: true }, 0.5); expect(s.main.items.length).toBe(1)
+    s.p.x = 3; s.p.y = 10; s.p.vy = 0; s.p.on = true
+    run(s, none, 2); const a = s.main.items[0]; expect(a.y).toBeCloseTo(10, 1); expect(a.vy).toBe(0)
+    const x0 = a.x; s.p.x = a.x + 1.5; run(s, none, 0.05); s.p.x = a.x + 3; run(s, none, 3)
+    expect(Math.abs(s.main.items[0].x - x0)).toBeLessThan(0.01)
+  })
+  it('공중에서 한 번 더 뛸 수 있다(더블 점프), 세 번째는 안 된다', () => {
+    const peak = (taps: (i: number) => boolean) => { const t = newRun(0); t.main.foes = []; t.p.x = 3.5; let min = 99; for (let i = 0; i < 150; i++) { step(t, { ...none, jump: taps(i) }, 1 / 60); min = Math.min(min, t.p.y) } return min }
+    const hop = peak((i) => i < 6) // 짧은 점프 하나
+    const dbl = peak((i) => i < 6 || (i >= 14 && i < 40)) // 공중에서 한 번 더
+    const trip = peak((i) => i < 6 || (i >= 14 && i < 22) || (i >= 30 && i < 60)) // 세 번째 시도
+    expect(hop).toBeGreaterThan(7.8); expect(dbl).toBeLessThan(hop - 1.5)
+    expect(trip).toBeGreaterThan(dbl - 0.05)
   })
   it('하트 약병을 먹으면 커지고, 커지면서 제자리를 유지한다', () => {
     const s = newRun(0); s.main.foes = []; s.p.x = 6.5; s.p.y = 10
