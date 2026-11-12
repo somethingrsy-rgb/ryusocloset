@@ -129,10 +129,22 @@ export function curveAt(d: number, seed: number): number {
   if (d < CURVE_START) return 0
   const x = (d - CURVE_START) / CURVE_SEG
   const seg = Math.floor(x), f = x - seg
-  // 구간 안에서 0 → 최대 → 0 (0.5 - 0.5cos). 도착선 바로 앞은 곧게
+  // 구간 안에서 0 → 최대 → 0 (0.5 - 0.5cos)
   const bump = 0.5 - 0.5 * Math.cos(f * Math.PI * 2)
-  const end = Math.max(0, Math.min(1, (LAP * LAPS - 40 - d) / 60))
-  return curveKind(seg, seed) * CURVE_AMP * bump * end
+  return curveKind(seg, seed) * CURVE_AMP * bump * straightness(d)
+}
+/**
+ * 바퀴 선(800)과 결승선(1600) 앞뒤는 곧은 길: 선 앞 STRAIGHT_BEFORE 칸부터 선 뒤 STRAIGHT_AFTER 칸까지는 완전히 곧고,
+ * 그 바깥으로 STRAIGHT_FADE 칸 동안 서서히 휜다. 아치가 멀리서부터 똑바로 서 있고 움직여 보이지 않게 한다.
+ */
+export const STRAIGHT_BEFORE = 210, STRAIGHT_AFTER = 70, STRAIGHT_FADE = 60
+export function straightness(d: number): number {
+  let k = 1
+  for (let g = LAP; g <= LAP * LAPS; g += LAP) {
+    const dist = d < g - STRAIGHT_BEFORE ? g - STRAIGHT_BEFORE - d : d > g + STRAIGHT_AFTER ? d - g - STRAIGHT_AFTER : 0
+    k = Math.min(k, Math.max(0, Math.min(1, dist / STRAIGHT_FADE)))
+  }
+  return k
 }
 /** 길의 방향이 바뀌는 정도(기울기): 차가 커브에서 살짝 기울어 보이게 */
 export const curveSlope = (d: number, seed: number) => (curveAt(d + 2, seed) - curveAt(d - 2, seed)) / 4

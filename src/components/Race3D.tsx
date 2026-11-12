@@ -65,12 +65,16 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const rep = (t: THREE.Texture) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; return t }
 
     // 먼 하늘: 하늘 그림을 멀리 세워 두고 늘 카메라를 따라온다(언덕 아랫단이 땅 끝과 만나게)
-    const skyTex = art(`sky_${theme}`)
-    // 세로 화면: 하늘 그림 한 장 그대로. 가로 화면: 같은 그림을 좌우로 거울처럼 이어 붙여 넓힌다(이음매가 안 보인다)
-    skyTex.wrapS = THREE.MirroredRepeatWrapping
+    // 세로 화면은 기존 하늘 그림 한 장, 가로 화면은 따로 만든 넓은 하늘 그림 한 장(이어 붙이지 않는다). 화면 방향이 바뀌면 그림을 바꾼다
+    const skyPortrait = art(`sky_${theme}`), skyLand = art(`sky_${theme}_wide`)
     const SKY_H = 110, SKY_Z = 230
-    const sky = new THREE.Mesh(keep(new THREE.PlaneGeometry(SKY_H * 6, SKY_H)), keep(new THREE.MeshBasicMaterial({ map: skyTex, fog: false, depthWrite: false })))
-    sky.position.y = SKY_H * 0.25 + 1
+    const skyMat = keep(new THREE.MeshBasicMaterial({ map: skyPortrait, fog: false, depthWrite: false }))
+    const sky = new THREE.Mesh(keep(new THREE.PlaneGeometry(3, 1)), skyMat)
+    sky.scale.set(SKY_H * 3, SKY_H, 1)
+    // 하늘 그림 바닥에서 위로 30% 되는 곳(언덕이 땅과 만나는 자리)의 높이를 세로 화면 그대로(HORIZON_Y)로 고정하고, 크기만 바꾼다
+    const HORIZON_Y = (1 - 0.25 * SKY_H) + 0.3 * SKY_H
+    const placeSky = (h: number) => { sky.position.y = HORIZON_Y - 0.3 * h + h / 2 }
+    placeSky(SKY_H)
     sky.renderOrder = -1
     scene.add(sky)
 
@@ -104,16 +108,17 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     // 아치는 거리 순서로 그리고 깊이는 쓰지 않는다(차가 아치 밑을 지날 때 반쪽으로 잘리지 않게)
     const archMat = keep(new THREE.MeshBasicMaterial({ map: archTex, transparent: true, depthWrite: false, side: THREE.DoubleSide }))
     // 출발 문은 차 앞 14칸에 한 번만. 바퀴·결승 문은 거리 그대로
+    const gates: { o: THREE.Object3D; d: number }[] = []
     const gateZ = (k: number) => (k === 0 ? -14 : -k * LAP)
     for (let k = 0; k <= LAPS; k++) {
       const m = new THREE.Mesh(lineGeo, lineMat)
       m.rotation.x = -Math.PI / 2
-      m.position.set(0, 0.04, gateZ(k))
+      m.position.set(0, 0.04, gateZ(k)); gates.push({ o: m, d: -gateZ(k) })
       m.renderOrder = -0.6
       scene.add(m)
       const arch = new THREE.Mesh(archGeo, archMat)
       // 아치도 다른 그림처럼 카메라 거리로 앞뒤가 정해지게 둔다(뒤에 있는 나무·구경꾼이 아치 위로 올라오지 않게). 차는 따로 순서를 정해 늘 위에 그린다
-      arch.position.set(0, ARCH_W * (538 / 768) / 2 - 0.2, gateZ(k))
+      arch.position.set(0, ARCH_W * (538 / 768) / 2 - 0.2, gateZ(k)); gates.push({ o: arch, d: -gateZ(k) })
       scene.add(arch)
     }
 
@@ -274,7 +279,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     let lastStars = 0, boostAcc = 0, ambAcc = 0
     const rnd = (a: number, b: number) => a + Math.random() * (b - a)
 
-    let skyWide: boolean | null = null
+    let skyWide: number | null = null
     const drawRank = new Map<number, number>()
     let t = 0, camX = 0
     s.onFrame((dt) => {
@@ -285,6 +290,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       // 휘는 길: 판의 각 가로줄을 (그 자리의 길 휘어짐 − 내 자리의 휘어짐)만큼 옆으로 옮긴다
       const c0 = curveAt(r.d, r.seed)
       const curveX = (d: number) => curveAt(d, r.seed) - c0
+      for (const g of gates) g.o.position.x = curveX(g.d) // 아치·체크 줄도 길 가운데를 따라간다(곧은 구간이라 사실상 0)
       for (let i = 0; i < roadRows; i++) {
         // 눕힌 판의 +y 가 앞쪽(−z)이고 판 가운데는 내 앞 60 에 있다: 행의 앞쪽 거리 = 내 거리 + 60 + (판 안의 y)
         const dd = r.d + 60 + roadBaseY[i]
@@ -294,7 +300,15 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       roadPos.needsUpdate = true
       gTex.offset.y = -cz / GROUND_TILE; rt.offset.y = -cz / ROAD_TILE
       const sz = s.size(), wide = sz.w > sz.h
-      if (wide !== skyWide) { skyWide = wide; skyTex.repeat.set(wide ? 2 : 1, 1); skyTex.needsUpdate = true; sky.scale.x = wide ? 1 : 0.5 }
+      // 가로 화면은 그림이 화면 폭을 덮도록 키운다(보이는 폭 ≈ 2·거리·tan(시야/2)·가로세로비). 세로 화면은 기존 크기 그대로
+      const skyKey = wide ? Math.round((sz.w / sz.h) * 100) : -1
+      if (skyKey !== skyWide) {
+        skyWide = skyKey
+        const visW = 214.6 * (sz.w / sz.h)
+        const w = wide ? Math.max(SKY_H * 3, visW * 1.08) : SKY_H * 3, h = w / 3
+        skyMat.map = wide ? skyLand : skyPortrait; skyMat.needsUpdate = true
+        sky.scale.set(w, h, 1); placeSky(h)
+      }
       // 하늘은 길이 휘는 반대쪽으로 아주 조금 밀어서, 커브를 돌 때 먼 풍경이 함께 도는 느낌을 준다
       sky.position.x = cx * 0.6 - curveSlope(r.d + 40, r.seed) * 35; sky.position.z = cz - SKY_Z
       // 차: 옆 칸으로 가는 동안은 그쪽 그림, 달릴 땐 통통, 미끄러지면 빙글 흔들
