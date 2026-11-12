@@ -85,7 +85,7 @@ export function createStarScene(el: HTMLElement): StarScene {
   const stars = new Map<number, { d: Doll[]; ring: THREE.Mesh; glow: THREE.Sprite }>()
   const newStar = () => {
     const d = starTex.map((t, i) => { const q = w.paperDoll(t, STAR_H, starAspect[i]); if (i) q.root.children[0].visible = false; return q })
-    const glow = new THREE.Sprite(w.keep(new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }))); glow.scale.set(STAR_H * 1.7, STAR_H * 1.7, 1); glow.renderOrder = 3; scene.add(glow)
+    const glow = new THREE.Sprite(w.keep(new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }))); glow.scale.set(STAR_H * 1.7, STAR_H * 1.7, 1); glow.renderOrder = 0; scene.add(glow)
     return { d, ring: mkRing(0xffffff, 0.9), glow }
   }
   const blank = document.createElement('canvas'); blank.width = 8; blank.height = 8
@@ -137,7 +137,7 @@ export function createStarScene(el: HTMLElement): StarScene {
       let o = stars.get(s.id); if (!o) { o = newStar(); stars.set(s.id, o) }
       const by = (s.m === 2 ? Math.sin(t * 14) * 0.04 : Math.abs(Math.sin(t * 4 + s.id)) * 0.35) + STAR_H * 0.08
       o.d.forEach((q, i) => { q.root.visible = i === s.m; q.root.position.set(s.x, 0, s.y); q.body.position.y = by; w.face(q, s.m === 1 && f.stars.length ? (Math.cos(t + s.id) > 0 ? 1 : -1) : 1) })
-      o.glow.position.set(s.x, by + STAR_H * 0.5, s.y + 0.2); o.glow.material.opacity = s.m === 2 ? 0.3 : 0.55
+      o.glow.position.set(s.x, by + STAR_H * 0.5, s.y - 0.4); o.glow.material.opacity = s.m === 2 ? 0.7 + Math.sin(t * 10) * 0.15 : 0.5
       o.ring.visible = s.m === 2; o.ring.position.set(s.x, 0.06, s.y); o.ring.scale.setScalar(1.7 + Math.sin(t * 8) * 0.08)
       edge(s.x, STAR_H * 0.5, s.y, '#ffd84a')
     }
