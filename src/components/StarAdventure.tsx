@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { earnStars } from '../lib/shop'
-import { playCloud, playCoin, playHop, playLose, playPop, playTap, playWin, startBgm, stopBgm } from '../lib/sound'
+import { playCloud, playCoin, playHop, playLose, playPop, playStar, playTap, playWin, startBgm, stopBgm } from '../lib/sound'
 import { assetUrl } from '../lib/items'
 import { AVATARS, getAvatar } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
@@ -14,8 +14,18 @@ import { THEMES, monsterTheme, type FoeImgs, type Theme } from './gameThemes'
  * 규칙은 lib/starAdventure.ts(순수 함수), 여기는 그리기와 조작만. 단계마다 컨셉(별 나라·할로윈·몬스터 마을)이 돌아간다.
  */
 const load = (src: string) => { const i = new Image(); i.src = assetUrl(src); return i }
+/** 레이스 장소 6곳: 하늘 그림, 땅·관 색, 그 장소에 놓인 구경거리(레이스 길가 그림) */
+interface Place { id: string; ico: string; sky: string; ground: [string, string]; pipe: [string, string]; deco: [string, number][] }
+const PLACES: Place[] = [
+  { id: 'meadow', ico: '🌳', sky: 'race/sky_meadow.webp', ground: ['#8ed36a', '#5aa04a'], pipe: ['#7be07a', '#3f9a4a'], deco: [['prop_tree', 4.2], ['prop_bunny', 2.6], ['prop_tree2', 4.2], ['prop_flowers', 1.2]] },
+  { id: 'snow', ico: '❄️', sky: 'race/sky_snow.webp', ground: ['#f2f8ff', '#a9c9e8'], pipe: ['#8ec9f0', '#4a86c0'], deco: [['sn_pine', 4.2], ['sn_snowman', 2.8], ['sn_igloo', 2.8], ['sn_lamp', 3.8], ['sn_castle', 4.6]] },
+  { id: 'candy', ico: '🍭', sky: 'race/sky_candy.webp', ground: ['#ffc2dc', '#e88ab4'], pipe: ['#c58bff', '#8a5ad8'], deco: [['cd_lolli_a', 3.8], ['cd_cotton_pink', 4], ['cd_castle', 4.6], ['cd_cakehouse', 3.4], ['cd_lamp_a', 3.8]] },
+  { id: 'fruit', ico: '🍓', sky: 'race/sky_fruit.webp', ground: ['#ffc96a', '#e8903a'], pipe: ['#8fe06a', '#4aa04a'], deco: [['fr_tree_green', 4.2], ['fr_strawhouse', 3.4], ['fr_tree_lemon', 4.2], ['fr_applehouse', 3.4], ['fr_fruitstand', 2.8]] },
+  { id: 'sea', ico: '🐠', sky: 'race/sky_sea.webp', ground: ['#7fd6e0', '#3a9ab4'], pipe: ['#ff9a8a', '#d8605a'], deco: [['sea_coral_pink', 4], ['sea_shellhouse', 3.6], ['sea_turtlelamp', 3.6], ['sea_coral_purple', 3.6], ['sea_octopus', 2.8]] },
+  { id: 'halloween', ico: '🎃', sky: 'race/sky_halloween.webp', ground: ['#7a4fc0', '#3d2a6b'], pipe: ['#ff9a3d', '#c05a1a'], deco: [['hw_tree_green', 4.2], ['hw_pumpkin_house', 3.8], ['hw_castle', 4.6], ['hw_ghost', 3], ['hw_pumpkin_house', 3.8]] },
+]
 type Set = { theme: Theme; foes: FoeImgs }
-type Imgs = { sets: Set[]; me: HTMLCanvasElement | null }
+type Imgs = { sets: Set[]; me: HTMLCanvasElement | null; deco: HTMLImageElement[][] }
 const ready = (i: HTMLImageElement | HTMLCanvasElement | null): i is HTMLImageElement | HTMLCanvasElement => !!i && (i instanceof HTMLCanvasElement || (i.complete && i.naturalWidth > 0))
 
 export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit: Outfit }) {
@@ -28,7 +38,7 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
   const game = useRef<State>(newRun(0))
   const keys = useRef(new window.Set<string>())
   const touch = useRef({ left: false, right: false, jump: false, down: false })
-  const imgs = useRef<Imgs>({ sets: [], me: null })
+  const imgs = useRef<Imgs>({ sets: [], me: null, deco: PLACES.map((p) => p.deco.map(([n]) => load(`race/${n}.webp`))) })
   const paid = useRef(false)
   if (localTest) (window as unknown as { __sa?: () => State }).__sa = () => game.current // 시험용(?mp=local 에서만)
 
@@ -50,7 +60,7 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
   const onEvents = useCallback((ev: Ev[]) => {
     for (const e of ev) {
       if (e.k === 'jump') playHop(); else if (e.k === 'coin') playCoin(); else if (e.k === 'stomp' || e.k === 'break') playPop()
-      else if (e.k === 'bump') playTap(); else if (e.k === 'hit' || e.k === 'fall') playLose(); else if (e.k === 'pipe') playCloud(); else if (e.k === 'clear') playWin()
+      else if (e.k === 'grow') playStar(); else if (e.k === 'shrink') playLose(); else if (e.k === 'bump') playTap(); else if (e.k === 'hit' || e.k === 'fall') playLose(); else if (e.k === 'pipe') playCloud(); else if (e.k === 'clear') playWin()
     }
   }, [])
 
@@ -96,8 +106,8 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
     onPointerUp: () => { touch.current[k] = false }, onPointerCancel: () => { touch.current[k] = false }, onLostPointerCapture: () => { touch.current[k] = false },
     onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
   })
-  const theme = themes[(hud.level - 1) % themes.length]
-  const sky = <><div aria-hidden className="pointer-events-none absolute inset-0 bg-cover bg-center portrait:hidden" style={{ backgroundImage: `url(${assetUrl(theme.sky)})` }} /><div aria-hidden className="pointer-events-none absolute inset-0 hidden bg-cover bg-center portrait:block" style={{ backgroundImage: `url(${assetUrl(theme.id === 'star' ? 'starchase/sky_port.webp' : theme.sky)})` }} /></>
+  const place = PLACES[(hud.level - 1) % PLACES.length]
+  const sky = <div aria-hidden className="pointer-events-none absolute inset-0 bg-cover bg-bottom" style={{ backgroundImage: `url(${assetUrl(place.sky)})` }} />
   const btn = 'absolute border-0 bg-transparent bg-contain bg-center bg-no-repeat p-0 drop-shadow-lg active:scale-90 touch-none select-none'
   const bottom = 'max(.9rem, calc(env(safe-area-inset-bottom) + .5rem))'
 
@@ -109,7 +119,7 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
         <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-1 px-2 pt-[max(.5rem,env(safe-area-inset-top))]">
           <div className="flex min-w-0 items-center gap-1 whitespace-nowrap">
             <span aria-label="점수" className="flex h-11 w-[7.6rem] items-center pl-[2.9rem] text-sm font-black drop-shadow" style={{ backgroundImage: `url(${assetUrl('starchase/pill_star.webp')})`, backgroundSize: '100% 100%' }}>{hud.score}</span>
-            <span aria-label="단계·코인·목숨" className="flex h-9 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-black shadow ring-2 ring-[#cdb8f2]">{theme.id === 'halloween' ? '🎃' : theme.id === 'monster' ? '👾' : '⭐'} {hud.level}/{LEVELS} · 🪙{hud.coins} · <span className="text-[#e0567a]">♥</span>{hud.lives}</span>
+            <span aria-label="단계·코인·목숨" className="flex h-9 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-black shadow ring-2 ring-[#cdb8f2]">{place.ico} {hud.level}/{LEVELS} · 🪙{hud.coins} · <span className="text-[#e0567a]">♥</span>{hud.lives}</span>
           </div>
           <div className="pointer-events-auto flex gap-1.5">
             <button aria-label={paused ? '계속하기' : '잠깐 멈춤'} onClick={() => { playTap(); setPaused((v) => !v) }} className="h-11 w-11 rounded-full bg-white/95 text-lg font-black shadow ring-2 ring-[#cdb8f2]">{paused ? '▶' : 'Ⅱ'}</button>
@@ -130,7 +140,8 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
             <p className="m-0 text-xl font-black">🌟 별 모험</p>
             <ul className="m-0 flex list-none flex-col gap-1 p-0 text-left text-sm font-bold text-[#6b5a99]">
               <li>◀ ▶ <b>달리기</b> · ▲ <b>점프</b> (키보드: 화살표, 스페이스)</li>
-              <li>🪙 별 코인을 모으고, 블록은 아래에서 톡!</li>
+              <li>🪙 별 코인을 모아요. 계단과 높은 판을 타고 올라가면 위쪽 별도 먹을 수 있어요</li>
+              <li>❓ 물음표 블록을 아래에서 톡 치면 <b>몸이 커져요</b>! 커진 동안 친구에게 닿으면 원래 크기로 돌아와요(♥는 그대로)</li>
               <li>👣 친구는 <b>위에서 밟으면</b> 물리쳐요. 옆으로 닿으면 ♥가 줄어요</li>
               <li>🕳️ <b>▼ 표시가 있는 관 위에서 ▼ 버튼</b>을 누르면 보너스 방으로! (나오는 관에서 ▼ 를 누르면 돌아와요)</li>
               <li>🚩 깃발까지 가면 다음 단계예요</li>
@@ -169,21 +180,27 @@ function star(g: CanvasRenderingContext2D, x: number, y: number, r: number, sx: 
 }
 function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, cam: number, vis: number, H: number, oy: number, sc: number) {
   const set = im.sets[s.level % 3]; if (!set) return
-  const th = set.theme, R = s.room === 'main' ? s.main : s.bonus
+  const pl = PLACES[s.level % PLACES.length], R = s.room === 'main' ? s.main : s.bonus
   const c0 = Math.max(0, Math.floor(cam) - 1), c1 = Math.min(R.w - 1, Math.ceil(cam + vis) + 1)
   const below = Math.ceil((H - oy) / sc) - ROWS // 화면 아래까지 땅을 이어 그린다
+  // 그 장소의 구경거리(길가 그림): 땅이 있는 곳에만, 뒤쪽에 놓는다
+  if (s.room === 'main') for (let k = 0; k * 6.3 + 3 < R.w; k++) {
+    const x = 3 + k * 6.3 + ((k * 7) % 3) * 0.6, col = Math.floor(x); if (x < cam - 3 || x > cam + vis + 3 || R.rows[10][col] !== '#') continue
+    const [, h] = pl.deco[k % pl.deco.length], i = im.deco[s.level % PLACES.length][k % pl.deco.length]; if (!ready(i)) continue
+    const w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = 0.95; g.drawImage(i, x - w / 2, 10 - h, w, h); g.globalAlpha = 1
+  }
   for (let c = c0; c <= c1; c++) {
     for (let r = 0; r < ROWS; r++) {
       const ch = R.rows[r][c]
-      if (ch === '#') rr(g, c, r, 1, 1, th.wall[0], th.wall[1])
+      if (ch === '#') rr(g, c, r, 1, 1, pl.ground[0], pl.ground[1])
       else if (ch === '=') rr(g, c, r, 1, 1, '#d98a4a', '#9a5a2a', 0.12)
       else if (ch === '?' || ch === 'u') { rr(g, c, r, 1, 1, ch === '?' ? '#ffe27a' : '#b9b0c8', ch === '?' ? '#e8a91e' : '#8a8099', 0.15); if (ch === '?') { g.fillStyle = '#fff'; g.font = '900 0.8px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', c + 0.5, r + 0.55); g.textBaseline = 'alphabetic' } }
-      else if ('lrefxy'.includes(ch)) { const left = 'lex'.includes(ch); rr(g, c - (left ? 0.08 : 0), r, 1.08, 1, th.plat[0], th.plat[1], 0.14) ; if (ch === 'e' || ch === 'f' || ch === 'x' || ch === 'y') { g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '900 0.55px sans-serif'; g.textAlign = 'center'; if (ch === 'e' || ch === 'x') g.fillText('▼', c + 1, r + 0.7) } }
-      else if (ch === 'L' || ch === 'R') rr(g, c + (ch === 'L' ? 0.06 : 0), r, 0.94, 1.02, th.plat[1], th.plat[0], 0.06)
+      else if ('lrefxy'.includes(ch)) { const left = 'lex'.includes(ch); rr(g, c - (left ? 0.08 : 0), r, 1.08, 1, pl.pipe[0], pl.pipe[1], 0.14) ; if (ch === 'e' || ch === 'f' || ch === 'x' || ch === 'y') { g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '900 0.55px sans-serif'; g.textAlign = 'center'; if (ch === 'e' || ch === 'x') g.fillText('▼', c + 1, r + 0.7) } }
+      else if (ch === 'L' || ch === 'R') rr(g, c + (ch === 'L' ? 0.06 : 0), r, 0.94, 1.02, pl.pipe[1], pl.pipe[0], 0.06)
       else if (ch === 'o') star(g, c + 0.5, r + 0.5 + Math.sin(t * 4 + c) * 0.08, 0.38, Math.cos(t * 5 + c))
       else if (ch === 'F') { if (r === 2) { g.fillStyle = '#ff5f8f'; g.beginPath(); g.moveTo(c + 0.5, 2.1); g.lineTo(c + 2, 2.8); g.lineTo(c + 0.5, 3.5); g.fill() } g.fillStyle = '#fff'; g.fillRect(c + 0.42, r, 0.16, 1); g.strokeStyle = '#cdb8f2'; g.lineWidth = 0.04; g.strokeRect(c + 0.42, r, 0.16, 1) }
     }
-    if (R.rows[ROWS - 1][c] === '#' ) for (let k = 0; k < below; k++) rr(g, c, ROWS + k, 1, 1, th.wall[0], th.wall[1])
+    if (R.rows[ROWS - 1][c] === '#' ) for (let k = 0; k < below; k++) rr(g, c, ROWS + k, 1, 1, pl.ground[0], pl.ground[1])
   }
   // 별 친구
   for (const f of R.foes) {
@@ -196,7 +213,7 @@ function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, cam: n
   // 나
   const p = s.p, me = im.me
   if (!(p.inv > 0 && Math.floor(t * 10) % 2)) {
-    const Hh = 1.95, Ww = Hh * 1024 / 1536
+    const Hh = p.big ? 2.6 : 1.95, Ww = Hh * 1024 / 1536
     g.fillStyle = 'rgba(60,30,100,.25)'; g.beginPath(); g.ellipse(p.x, p.y, 0.5, 0.13, 0, 0, 7); g.fill()
     if (ready(me)) { const bob = p.on && Math.abs(p.vx) > 0.1 ? Math.abs(Math.sin(t * 14)) * 0.1 : 0; g.save(); g.translate(p.x, p.y - bob); g.scale(p.dir > 0 ? 1 : -1, 1); g.drawImage(me, -Ww / 2, -Hh * (1504 / 1536), Ww, Hh); g.restore() }
     else { g.fillStyle = '#ff8fab'; g.beginPath(); g.ellipse(p.x, p.y - 0.65, 0.35, 0.65, 0, 0, 7); g.fill() }

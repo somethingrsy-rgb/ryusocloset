@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CFG, newRun, step, type Input, type State } from './starAdventure'
+import { CFG, LEVELS, newRun, step, type Input, type State } from './starAdventure'
 
 const none: Input = { left: false, right: false, jump: false, down: false }
 const run = (s: State, inp: Input, sec: number) => { const ev = []; for (let t = 0; t < sec; t += 1 / 60) ev.push(...step(s, inp, 1 / 60)); return ev }
@@ -18,15 +18,30 @@ describe('별 모험 규칙', () => {
     const s = newRun(0); s.main.foes = []; s.p.x = 8; run(s, { ...none, right: true }, 2)
     expect(s.p.x).toBeLessThan(10 - 0.3 + 0.01) // 첫 파이프(칸 10)
   })
-  it('아래에서 물음표 블록을 치면 코인이 나온다', () => {
+  it('아래에서 물음표 블록을 치면 커지고, 이미 커졌으면 코인이 나온다', () => {
     const s = newRun(0); s.main.foes = []; s.p.x = 14.5; s.p.y = 10
     const ev = run(s, { ...none, jump: true }, 0.5)
-    expect(ev.some((e) => e.k === 'coin')).toBe(true); expect(s.coins).toBe(1); expect(s.main.rows[6][14]).toBe('u')
+    expect(ev.some((e) => e.k === 'grow')).toBe(true); expect(s.p.big).toBe(true); expect(s.p.x).toBeCloseTo(14.5, 1); run(s, none, 1.5); expect(s.p.x).toBeCloseTo(14.5, 1); expect(s.p.y).toBeCloseTo(10, 2); expect(s.p.big).toBe(true); expect(s.main.rows[6][14]).toBe('u')
+    const t = newRun(0); t.main.foes = []; t.p.big = true; t.p.x = 14.5; t.p.y = 10
+    const ev2 = run(t, { ...none, jump: true }, 0.5); expect(ev2.some((e) => e.k === 'coin')).toBe(true); expect(t.coins).toBe(1)
+  })
+  it('커진 상태에서 친구에게 닿으면 원래 크기로 돌아오고 ♥는 그대로, 한 번 더 닿으면 ♥가 줄어든다', () => {
+    const s = newRun(0); s.main.foes = [{ id: 1, x: 15.2, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]; s.p.x = 14.7; s.p.y = 10; s.p.big = true
+    const ev = run(s, none, 0.3); expect(ev.some((e) => e.k === 'shrink')).toBe(true); expect(s.p.big).toBe(false); expect(s.lives).toBe(CFG.lives); expect(s.p.inv).toBeGreaterThan(0)
+    s.p.inv = 0; s.p.y = 10; s.p.vy = 0; s.p.on = true; s.main.foes = [{ id: 2, x: s.p.x + 0.5, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]
+    run(s, none, 0.3); expect(s.lives).toBe(CFG.lives - 1)
+  })
+  it('별 친구는 낭떠러지 앞에서 돌아서서 떨어지지 않는다', () => {
+    for (const lv of [0, 1, 2]) {
+      const s = newRun(lv); s.p.inv = 99; s.p.x = 1.5; s.p.on = true
+      for (let i = 0; i < 60 * 40; i++) { step(s, none, 1 / 60); s.p.x = 1.5; s.p.y = 10; s.p.vy = 0 }
+      expect(s.main.foes.filter((f) => f.alive).length).toBe(s.main.foes.length)
+    }
   })
   it('별 친구를 위에서 밟으면 물리치고 튀어 오르고, 옆으로 닿으면 목숨이 줄어든다', () => {
-    const s = newRun(0); s.main.foes = [{ id: 1, x: 6.5, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]; s.p.x = 6.5; s.p.y = 8.5; s.p.vy = 4; s.p.on = false
+    const s = newRun(0); s.main.foes = [{ id: 1, x: 15.5, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]; s.p.x = 15.5; s.p.y = 8.5; s.p.vy = 4; s.p.on = false
     const ev = run(s, none, 0.2); expect(ev.some((e) => e.k === 'stomp')).toBe(true); expect(s.score).toBeGreaterThanOrEqual(100)
-    const t = newRun(0); t.main.foes = [{ id: 1, x: 6.2, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]; t.p.x = 5.7; t.p.y = 10
+    const t = newRun(0); t.main.foes = [{ id: 1, x: 15.2, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]; t.p.x = 14.7; t.p.y = 10
     const ev2 = run(t, none, 0.3); expect(ev2.some((e) => e.k === 'hit')).toBe(true); expect(t.lives).toBe(CFG.lives - 1); expect(t.p.inv).toBeGreaterThan(0)
   })
   it('파이프 위에서 아래를 누르면 보너스 방으로, 거기서 나오는 파이프로 돌아온다', () => {
@@ -46,8 +61,8 @@ describe('별 모험 규칙', () => {
     run(t, none, 2.5); expect(t.level).toBe(1)
   })
   it('목숨이 0이면 끝, 마지막 단계를 끝내면 승리', () => {
-    const s = newRun(0); s.lives = 1; s.main.foes = [{ id: 1, x: 6.2, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]; s.p.x = 5.7; s.p.y = 10
+    const s = newRun(0); s.lives = 1; s.main.foes = [{ id: 1, x: 15.2, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]; s.p.x = 14.7; s.p.y = 10
     run(s, none, 0.3); expect(s.phase).toBe('over')
-    const t = newRun(2); t.main.foes = []; t.p.x = t.flagX + 0.1; t.p.y = 10; run(t, none, 3); expect(t.phase).toBe('won'); expect(t.stars).toBe(25)
+    const t = newRun(LEVELS - 1); t.main.foes = []; t.p.x = t.flagX + 0.1; t.p.y = 10; run(t, none, 3); expect(t.phase).toBe('won'); expect(t.stars).toBe(25)
   })
 })
