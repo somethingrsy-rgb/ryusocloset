@@ -15,6 +15,7 @@ import { TravelScene } from './TravelScene'
 const StarRainWalk = lazy(() => import('./StarRainWalk').then((m) => ({ default: m.StarRainWalk })))
 const RaceGame = lazy(() => import('./RaceGame').then((m) => ({ default: m.RaceGame })))
 const RunnerGame = lazy(() => import('./RunnerGame').then((m) => ({ default: m.RunnerGame })))
+const StarAdventure = lazy(() => import('./StarAdventure').then((m) => ({ default: m.StarAdventure })))
 const BubbleBop = lazy(() => import('./BubbleBop').then((m) => ({ default: m.BubbleBop })))
 const StarChase = lazy(() => import('./StarChase').then((m) => ({ default: m.StarChase })))
 const JumpPuzzle = lazy(() => import('./JumpPuzzle').then((m) => ({ default: m.JumpPuzzle })))
@@ -72,6 +73,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   const [soccer, setSoccer] = useState(false)
   const [starChase, setStarChase] = useState(() => hasStarInvite())
   const [bubbleBop, setBubbleBop] = useState(false)
+  const [adventure, setAdventure] = useState(false)
   const [race, setRace] = useState(() => hasRaceInvite())
   useEffect(() => { const f = () => { if (hasRaceInvite()) setRace(true); else if (hasJumpInvite()) setJump(true); else if (hasStarInvite()) setStarChase(true) }; window.addEventListener(RACE_INVITE_EVENT, f); return () => window.removeEventListener(RACE_INVITE_EVENT, f) }, [])
   // 산책 탭은 처음부터 3D 산책(✕ 를 누르면 게임 탭으로)
@@ -79,7 +81,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   /** 3D 산책에서 집에 들어갔으면, 집에서 나올 때 다시 3D 산책으로 */
   const [backToWalk, setBackToWalk] = useState(false)
   // 전체 화면(여행 도감 숨김): 놀이 화면들, 3D 산책, 3D 산책에서 들어간 집 안(가로 화면만)
-  useEffect(() => { onFull?.(math || speaking || jump || starChase || bubbleBop || soccer || race || flags || walk3d || (runner && wide) || (backToWalk && wide)); return () => onFull?.(false) }, [math, speaking, jump, starChase, bubbleBop, soccer, race, flags, walk3d, runner, wide, backToWalk, onFull])
+  useEffect(() => { onFull?.(math || speaking || jump || starChase || bubbleBop || adventure || soccer || race || flags || walk3d || (runner && wide) || (backToWalk && wide)); return () => onFull?.(false) }, [math, speaking, jump, starChase, bubbleBop, adventure, soccer, race, flags, walk3d, runner, wide, backToWalk, onFull])
 
   const game = useGame()
   const ver = useItemsVersion()
@@ -87,7 +89,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   const assign = useMemo(currentAssignment, [ver])
   const [scene, setScene] = useState<string | null>(initialPlaceId)
   // 마을과 집 안에서는 배경 음악이 이어지고, 게임 화면(별비·수학·점프·영어)에서는 끈다
-  const walking = !starRain && !runner && !math && !jump && !starChase && !bubbleBop && !speaking && !soccer && !race && !flags && !walk3d
+  const walking = !starRain && !runner && !math && !jump && !starChase && !bubbleBop && !adventure && !speaking && !soccer && !race && !flags && !walk3d
   // 산책 노래(room)는 2D 산책 마을, 3D 산책, 별 잡기에서 이어서 나온다
   const roomSong = walking || walk3d || starChase
   useEffect(() => { if (!roomSong) return; startBgm('room'); return stopBgm }, [roomSong])
@@ -117,6 +119,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
         <button className={actionButton} aria-label={lang === 'ko' ? '국기 게임' : 'Flag quiz'} onClick={() => setFlags(true)}>{label(lang === 'ko' ? '국기' : 'Flags')}</button>
         <button className={multiButton} aria-label="도망간 별을 잡아라(친구와 같이 할 수 있어요)" onClick={() => setStarChase(true)}>{label(lang === 'ko' ? '별잡기' : 'Catch')}{multiplayerAvailable && <MultiBadge />}</button>
         <button className={actionButton} aria-label="별 거품" onClick={() => setBubbleBop(true)}>{label(lang === 'ko' ? '별거품' : 'Bubbles')}</button>
+        <button className={actionButton} aria-label="별 모험" onClick={() => setAdventure(true)}>{label(lang === 'ko' ? '별모험' : 'Adventure')}</button>
         {onRoom && <button className={actionButton} aria-label="방꾸미기" onClick={onRoom}>{label(lang === 'ko' ? '방꾸미기' : 'Room')}</button>}
       </>}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
@@ -125,6 +128,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
     {speaking && <SpeakingGame onClose={() => setSpeaking(false)} />}
     {math && <MathGame onClose={() => setMath(false)} />}
     {jump && <JumpPuzzle onClose={() => setJump(false)} />}
+    {adventure && <StarAdventure outfit={outfit} onClose={() => setAdventure(false)} />}
     {bubbleBop && <BubbleBop outfit={outfit} onClose={() => setBubbleBop(false)} />}
     {starChase && <StarChase outfit={outfit} onClose={() => setStarChase(false)} />}
     </Suspense>
