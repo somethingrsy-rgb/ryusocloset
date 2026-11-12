@@ -35,7 +35,7 @@ export interface State {
   score: number; lives: number; phase: 'play' | 'clear' | 'won' | 'over'; clearT: number; nextId: number; t: number; stars: number
 }
 export interface Input { left: boolean; right: boolean; jump: boolean; shoot: boolean }
-export type Ev = { k: 'jump' | 'shoot' | 'trap' | 'defeat' | 'pop' | 'fruit' | 'hit' | 'escape' | 'clear' | 'won' | 'over'; x?: number; y?: number }
+export type Ev = { k: 'jump' | 'shoot' | 'trap' | 'defeat' | 'pop' | 'fruit' | 'hit' | 'escape' | 'clear' | 'won' | 'over'; x?: number; y?: number; pts?: number }
 
 export const SPAWN = { x: 2.5, y: 11 }
 
@@ -133,7 +133,7 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
       s.bubbles.splice(s.bubbles.indexOf(b), 1)
       if (b.foe) {
         s.score += CFG.pts.foe; const kind = Math.floor(rnd() * CFG.pts.fruit.length)
-        s.fruits.push({ id: s.nextId++, x: b.x, y: Math.min(b.y + 0.5, ROWS - 1.2), vy: 0, kind, t: 0, pts: CFG.pts.fruit[kind] })
+        s.fruits.push({ id: s.nextId++, x: b.x, y: Math.min(b.y + 0.5, ROWS - 1.2), vy: -9, kind, t: 0, pts: CFG.pts.fruit[kind] }) // 톡 튀어 오른 뒤 떨어진다(터뜨린 순간 바로 먹히지 않게 잠깐 뒤부터 먹을 수 있다)
         ev.push({ k: 'defeat', x: b.x, y: b.y })
       } else { s.score += CFG.pts.bubble; ev.push({ k: 'pop', x: b.x, y: b.y }) }
     }
@@ -143,7 +143,7 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
     f.t += dt; const y0f = f.y; f.vy += CFG.g * 0.5 * dt; f.y += f.vy * dt
     const fb = { x: f.x, y: f.y, vy: f.vy, on: false }; land(s.grid, fb, y0f, 0.3); f.y = fb.y; f.vy = fb.vy
     if (f.t > CFG.fruitLife) { s.fruits.splice(s.fruits.indexOf(f), 1); continue }
-    if (near(p.x, p.y - 0.6, f.x, f.y - 0.4, 0.8, 0.95)) { s.score += f.pts; s.fruits.splice(s.fruits.indexOf(f), 1); ev.push({ k: 'fruit', x: f.x, y: f.y }) }
+    if (f.t > 0.5 && near(p.x, p.y - 0.6, f.x, f.y - 0.4, 0.8, 0.95)) { s.score += f.pts; s.fruits.splice(s.fruits.indexOf(f), 1); ev.push({ k: 'fruit', x: f.x, y: f.y, pts: f.pts }) }
   }
   // ── 부딪힘
   if (s.phase === 'play' && p.inv <= 0) for (const f of s.foes) if (near(p.x, p.y - 0.65, f.x, f.y - 0.55, 0.62, 0.85)) {

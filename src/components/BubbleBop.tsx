@@ -42,7 +42,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
   const game = useRef<State>(newGame())
   const keys = useRef(new Set<string>())
   const touch = useRef({ left: false, right: false, jump: false, shoot: false })
-  const fx = useRef<{ k: 'pop' | 'burst' | 'hit'; x: number; y: number; t: number }[]>([])
+  const fx = useRef<{ k: 'pop' | 'burst' | 'hit' | 'pts'; x: number; y: number; t: number; text?: string }[]>([])
   const imgs = useRef<Imgs>({ sets: [], burst: load('starchase/burst.webp'), me: null })
   const paid = useRef(false)
   if (localTest) (window as unknown as { __bb?: () => State }).__bb = () => game.current // 시험용(?mp=local 에서만)
@@ -75,7 +75,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
       else if (e.k === 'shoot') playTap()
       else if (e.k === 'trap' || e.k === 'pop') { playPop(); if (e.k === 'pop') fx.current.push({ k: 'pop', x: e.x!, y: e.y!, t: 0 }) }
       else if (e.k === 'defeat') { playPop(); fx.current.push({ k: 'burst', x: e.x!, y: e.y!, t: 0 }) }
-      else if (e.k === 'fruit') playCoin()
+      else if (e.k === 'fruit') { playCoin(); fx.current.push({ k: 'pts', x: e.x!, y: e.y! - 0.8, t: 0, text: `+${e.pts}` }) }
       else if (e.k === 'hit') { playLose(); fx.current.push({ k: 'hit', x: e.x!, y: e.y!, t: 0 }) }
       else if (e.k === 'clear') playWin()
     }
@@ -97,7 +97,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
         const inp: Input = { left: tc.left || k.has('ArrowLeft') || k.has('KeyA'), right: tc.right || k.has('ArrowRight') || k.has('KeyD'), jump: tc.jump || k.has('ArrowUp') || k.has('KeyW'), shoot: tc.shoot || k.has('Space') }
         onEvents(step(s, inp, dt))
       }
-      fx.current = fx.current.filter((f) => (f.t += dt) < 0.6)
+      fx.current = fx.current.filter((f) => (f.t += dt) < (f.k === 'pts' ? 1.1 : 0.6))
       // 화면 크기에 맞춰 16×12 칸 놀이판을 놓는다(가로 화면은 가운데, 세로 화면은 위쪽)
       const portrait = H > W
       const sc = portrait ? W / COLS : Math.min(W / COLS, H / ROWS)
@@ -192,7 +192,7 @@ function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: 
   g.fillStyle = gr; g.beginPath(); g.roundRect(x + 0.03, y + 0.03, w - 0.06, h - 0.06, r); g.fill()
   g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 0.05; g.stroke()
 }
-function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { k: string; x: number; y: number; t: number }[]) {
+function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { k: string; x: number; y: number; t: number; text?: string }[]) {
   // 벽과 바닥(보라 블록), 발판(분홍 윗면의 둥근 판)
   const set = im.sets[s.level % 3]; if (!set) return
   const th = set.theme, foesIm = set.foes
@@ -200,7 +200,9 @@ function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { 
   for (let c = 1; c < COLS - 1; c++) block(g, c, ROWS - 1, 1, 1, th.wall[0], th.wall[1])
   for (let r = 0; r < ROWS - 1; r++) { let c = 1; while (c < COLS - 1) { if (!s.grid[r][c]) { c++; continue } let e = c; while (e + 1 < COLS - 1 && s.grid[r][e + 1]) e++; block(g, c, r, e - c + 1, 0.62, th.plat[0], th.plat[1], 0.3); c = e + 1 } }
   // 과일
-  for (const f of s.fruits) { const i = set.fruit[f.kind]; if (ready(i)) { const h = 0.9, w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = f.t > 9 && Math.floor(t * 8) % 2 ? 0.4 : 1; g.drawImage(i, f.x - w / 2, f.y - h, w, h); g.globalAlpha = 1 } }
+  for (const f of s.fruits) { const i = set.fruit[f.kind]; if (ready(i)) { const h = 1.15, w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = f.t > 9 && Math.floor(t * 8) % 2 ? 0.4 : 1
+    g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(f.x, f.y - h / 2, h * 0.62, 0, 7); g.fill() // 눈에 띄게 하얀 빛 동그라미
+    g.drawImage(i, f.x - w / 2, f.y - h + Math.sin(t * 6 + f.id) * 0.06, w, h); g.globalAlpha = 1 } }
   // 별 친구
   for (const f of s.foes) { const v = foesIm[f.id % Math.max(1, foesIm.length)]; const i = v ? (f.mad ? v.mad : v.walk) : null; if (ready(i)) { const h = v.h * (f.mad ? 1.1 : 1), w = h * i.naturalWidth / i.naturalHeight, bob = f.on ? Math.abs(Math.sin(t * 8 + f.id)) * 0.12 : 0; g.save(); g.translate(f.x, f.y - bob); g.scale(f.dir > 0 ? -1 : 1, 1); g.drawImage(i, -w / 2, -h, w, h); g.restore() } }
   // 거품(갇힌 별 친구는 안에서 놀란 얼굴)
@@ -222,6 +224,7 @@ function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { 
   }
   // 효과
   for (const f of fx) {
+    if (f.k === 'pts') { const u2 = f.t / 1.1; g.globalAlpha = 1 - u2 * u2; g.font = '900 0.7px sans-serif'; g.textAlign = 'center'; g.lineWidth = 0.14; g.strokeStyle = '#7a5cc0'; g.fillStyle = '#fff'; g.strokeText(f.text ?? '', f.x, f.y - u2 * 1.2); g.fillText(f.text ?? '', f.x, f.y - u2 * 1.2); g.globalAlpha = 1; continue }
     const u = f.t / 0.6
     if (f.k === 'burst' && ready(im.burst)) { const h = 1.5 + u * 1.5; g.globalAlpha = 1 - u; g.drawImage(im.burst, f.x - h / 2, f.y - h / 2, h, h); g.globalAlpha = 1 }
     else { g.strokeStyle = `rgba(255,255,255,${1 - u})`; g.lineWidth = 0.08; g.beginPath(); g.arc(f.x, f.y, 0.4 + u * 0.9, 0, 7); g.stroke() }
