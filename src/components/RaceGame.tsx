@@ -33,7 +33,7 @@ const readCar = (): RaceCar => { try { const v = localStorage.getItem(CAR_KEY); 
 const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' || v === 'fruit' || v === 'sea' || v === 'halloween' ? v : 'meadow' } catch { return 'meadow' } }
 
 const img = (name: string) => assetUrl(`race/${name}.webp`)
-const HW_PILL = 'flex h-10 min-w-[5.6rem] items-center px-3 text-sm font-black text-[#3b2a63] drop-shadow'
+const HW_PILL = 'flex h-9 shrink-0 items-center whitespace-nowrap pr-2 text-xs font-black text-[#3b2a63] drop-shadow min-[400px]:h-10 min-[400px]:text-sm'
 const roundBtn = 'pointer-events-auto h-24 w-24 active:scale-90 drop-shadow-lg'
 
 /** 자동차 레이스(혼자 달리기): 차는 저절로 달리고, ◀ ▶ 로 옆 칸으로 옮긴다. 별을 모으고 부스터로 빨라지며, 바나나·물웅덩이는 잠깐 느려질 뿐 혼나지 않는다 */
@@ -180,12 +180,12 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
       {/* 대기실에서는 3D 를 만들지 않는다: 만들어 두면 낡은 판(3칸·친구 없음)을 그대로 쓰게 된다. 판마다 새로 만든다 */}
       {(phase === 'playing' || phase === 'done') && <Suspense fallback={null}><Race3D key={race.seed} live={live} theme={theme} car={car} /></Suspense>}
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
-        <div className="flex items-center gap-1.5">
+        <div className="flex min-w-0 items-center gap-1 whitespace-nowrap">
           {phase === 'playing' && <>
-            <span aria-label="부스터 게이지" className={theme === 'halloween' ? HW_PILL : 'rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#b8860b] shadow'} style={theme === 'halloween' ? { backgroundImage: `url(${assetUrl('starchase/pill_star.webp')})`, backgroundSize: '100% 100%' } : undefined}>{theme === 'halloween' ? <span className="pl-8">{race.gauge}/{GAUGE_MAX}</span> : <>⭐ {race.gauge}/{GAUGE_MAX}</>}</span>
-            <span aria-label="바퀴" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#7a3d8f] shadow">🏁 {lapOf(race)}/{LAPS}</span>
-            {race.rivals.length > 0 && <span aria-label="내 순위" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#d0587a] shadow">🏅 {(race.finish && race.rank) || rankNow(race)}등</span>}
-            <span aria-label="남은 시간" className={theme === 'halloween' ? HW_PILL : 'rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b9b] shadow'} style={theme === 'halloween' ? { backgroundImage: `url(${assetUrl('starchase/pill_clock.webp')})`, backgroundSize: '100% 100%' } : undefined}>{theme === 'halloween' ? <span className="pl-8">{timeLeft(race)}</span> : <>⏱ {timeLeft(race)}</>}</span>
+            <span aria-label="부스터 게이지" className={theme === 'halloween' ? HW_PILL : 'rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#b8860b] shadow'} style={theme === 'halloween' ? { backgroundImage: `url(${assetUrl('starchase/pill_star.webp')})`, backgroundSize: '100% 100%' } : undefined}>{theme === 'halloween' ? <span className="w-[5.2rem] pl-[2.1rem]">{race.gauge}/{GAUGE_MAX}</span> : <>⭐ {race.gauge}/{GAUGE_MAX}</>}</span>
+            <span aria-label="바퀴" className="shrink-0 rounded-full bg-white/90 px-2.5 py-1.5 text-sm font-black whitespace-nowrap text-[#7a3d8f] shadow">🏁 {lapOf(race)}/{LAPS}</span>
+            {race.rivals.length > 0 && <span aria-label="내 순위" className="shrink-0 rounded-full bg-white/90 px-2.5 py-1.5 text-sm font-black whitespace-nowrap text-[#d0587a] shadow">🏅 {(race.finish && race.rank) || rankNow(race)}등</span>}
+            <span aria-label="남은 시간" className={theme === 'halloween' ? HW_PILL : 'rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b9b] shadow'} style={theme === 'halloween' ? { backgroundImage: `url(${assetUrl('starchase/pill_clock.webp')})`, backgroundSize: '100% 100%' } : undefined}>{theme === 'halloween' ? <span className="w-[5.2rem] pl-[2.1rem]">{timeLeft(race)}</span> : <>⏱ {timeLeft(race)}</>}</span>
           </>}
         </div>
         <button aria-label="닫기" onClick={() => { playTap(); onExit() }} className="pointer-events-auto h-10 w-10 rounded-full bg-white/95 text-lg font-bold shadow">✕</button>
