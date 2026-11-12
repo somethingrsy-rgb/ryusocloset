@@ -119,8 +119,8 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
         {state === 'play' && <>
           <button aria-label="왼쪽으로" {...hold('left')} className={`${btn} left-3 h-[4.6rem] w-[4.6rem]`} style={{ bottom, backgroundImage: `url(${assetUrl('race/btn_left.webp')})` }} />
           <button aria-label="오른쪽으로" {...hold('right')} className={`${btn} left-[6.2rem] h-[4.6rem] w-[4.6rem]`} style={{ bottom, backgroundImage: `url(${assetUrl('race/btn_right.webp')})` }} />
-          <button aria-label="파이프로 들어가기(아래)" {...hold('down')} className={`${btn} right-[6.6rem] h-[3.6rem] w-[3.6rem]`} style={{ bottom, backgroundImage: `url(${assetUrl('starchase/knob.webp')})` }}><span className="text-xl font-black text-[#7a5cc0]">▼</span></button>
-          <button aria-label="점프" {...hold('jump')} className={`${btn} right-3 h-[5.4rem] w-[5.4rem]`} style={{ bottom, backgroundImage: `url(${assetUrl('starchase/catch.webp')})` }}><span className="text-3xl font-black text-[#7a5cc0]">▲</span></button>
+          <button aria-label="파이프로 들어가기(아래)" {...hold('down')} className={`${btn} right-[6.9rem] h-[4.2rem] w-[4.2rem]`} style={{ bottom, backgroundImage: `url(${assetUrl('starchase/btn_down.webp')})` }} />
+          <button aria-label="점프" {...hold('jump')} className={`${btn} right-3 h-[5.4rem] w-[5.4rem]`} style={{ bottom, backgroundImage: `url(${assetUrl('starchase/btn_up.webp')})` }} />
         </>}
         {paused && state === 'play' && <p role="status" className="pointer-events-none absolute inset-x-0 top-1/2 m-0 -translate-y-1/2 text-center text-3xl font-black text-white [text-shadow:0_3px_0_#7a5cc0]">잠깐 멈춤</p>}
       </div>
