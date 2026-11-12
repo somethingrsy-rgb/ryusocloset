@@ -3,33 +3,33 @@
  * 파이프(관)로 들어가 보너스 방에 다녀온 뒤 깃발까지 간다. 좌표는 칸 단위, y 는 발바닥 높이(아래로 갈수록 커진다).
  */
 export const ROWS = 12
-export const CFG = { hw: 0.32, ph: 1.3, g: 38, jump: 16, walk: 6.2, foe: 1.6, lives: 3, inv: 2, bounce: 11 }
+export const CFG = { hw: 0.32, ph: 1.3, bigPh: 1.7, g: 38, jump: 16, walk: 6.2, foe: 1.6, lives: 3, inv: 2, bounce: 11 }
 export const SOLID = '#=?ulrLRefxy' // 땅, 벽돌, 물음표(쓰기 전·후), 파이프
 export const levelWidth = 64
 
 export interface Foe { id: number; x: number; y: number; vy: number; dir: 1 | -1; alive: boolean; squash: number }
 export interface Room { rows: string[][]; foes: Foe[]; w: number }
-export interface Player { x: number; y: number; vx: number; vy: number; on: boolean; dir: 1 | -1; inv: number }
+export interface Player { x: number; y: number; vx: number; vy: number; on: boolean; dir: 1 | -1; inv: number; big: boolean }
 export interface State {
   level: number; room: 'main' | 'bonus'; main: Room; bonus: Room; p: Player; ret: { col: number; row: number }
   flagX: number; score: number; coins: number; lives: number; phase: 'play' | 'clear' | 'won' | 'over'; t: number; stars: number; fade: number; prevJump: boolean; prevDown: boolean; clearT: number
 }
 export interface Input { left: boolean; right: boolean; jump: boolean; down: boolean }
-export type Ev = { k: 'jump' | 'coin' | 'bump' | 'break' | 'stomp' | 'hit' | 'pipe' | 'clear' | 'won' | 'over' | 'fall'; x?: number; y?: number }
+export type Ev = { k: 'jump' | 'coin' | 'bump' | 'break' | 'stomp' | 'hit' | 'shrink' | 'grow' | 'pipe' | 'clear' | 'won' | 'over' | 'fall'; x?: number; y?: number }
 
-interface Spec { w: number; pits: [number, number][]; pipes: { c: number; h: number; enter?: boolean }[]; qs: [number, number][]; bricks: [number, number][]; plats: [number, number, number][]; coins: [number, number][]; foes: number[] }
+interface Spec { stairs?: [number, number][]; w: number; pits: [number, number][]; pipes: { c: number; h: number; enter?: boolean }[]; qs: [number, number][]; bricks: [number, number][]; plats: [number, number, number][]; coins: [number, number][]; foes: (number | [number, number])[] }
 const SPECS: Spec[] = [
   { w: 64, pits: [[18, 20], [44, 47]], pipes: [{ c: 10, h: 2 }, { c: 28, h: 3, enter: true }, { c: 38, h: 2 }, { c: 52, h: 3 }],
-    qs: [[14, 6], [16, 6], [34, 6], [56, 6]], bricks: [[15, 6], [17, 6], [33, 6], [35, 6]], plats: [[24, 5, 4]],
-    coins: [[21, 8], [22, 7], [23, 8], [41, 8], [42, 7], [43, 8], [45, 7], [46, 7]], foes: [13, 22, 32, 41, 50, 58] },
+    qs: [[14, 6], [16, 6], [34, 6], [56, 6]], bricks: [[15, 6], [17, 6], [33, 6], [35, 6]], plats: [[24, 5, 4], [8, 5, 5]], stairs: [[5, 9], [6, 9], [6, 8], [7, 9], [7, 8], [7, 7]],
+    coins: [[21, 8], [22, 7], [23, 8], [41, 8], [42, 7], [43, 8], [45, 7], [46, 7], [8, 4], [9, 4], [10, 4], [11, 4], [12, 4]], foes: [13, 22, 32, 41, 50, 58, [10, 5], [26, 5]] },
   { w: 64, pits: [[14, 17], [30, 33], [48, 51]], pipes: [{ c: 9, h: 2 }, { c: 22, h: 3, enter: true }, { c: 40, h: 3 }, { c: 56, h: 2 }],
-    qs: [[12, 6], [26, 6], [27, 6], [44, 6]], bricks: [[11, 6], [13, 6], [25, 6], [28, 6]], plats: [[34, 6, 5], [46, 6, 4]],
-    coins: [[15, 8], [16, 8], [31, 8], [32, 8], [49, 8], [50, 8], [35, 5], [36, 5]], foes: [12, 19, 27, 36, 43, 53, 59] },
+    qs: [[12, 6], [26, 6], [27, 6], [44, 6]], bricks: [[11, 6], [13, 6], [25, 6], [28, 6]], plats: [[34, 6, 5], [46, 6, 4], [8, 5, 3]], stairs: [[5, 9], [6, 9], [6, 8], [7, 9], [7, 8], [7, 7]],
+    coins: [[15, 8], [16, 8], [31, 8], [32, 8], [49, 8], [50, 8], [35, 5], [36, 5], [8, 4], [9, 4], [10, 4]], foes: [12, 19, 27, 36, 43, 53, 59, [9, 5], [36, 6]] },
   { w: 64, pits: [[12, 15], [26, 29], [38, 41], [50, 54]], pipes: [{ c: 8, h: 2 }, { c: 20, h: 3, enter: true }, { c: 33, h: 3 }, { c: 46, h: 2 }, { c: 58, h: 2 }],
-    qs: [[10, 6], [23, 6], [36, 6], [48, 6]], bricks: [[9, 6], [11, 6], [22, 6], [24, 6], [35, 6], [37, 6]], plats: [[27, 6, 3], [44, 6, 4], [51, 5, 3]],
-    coins: [[13, 8], [14, 8], [27, 8], [28, 8], [39, 8], [40, 8], [51, 7], [52, 7], [53, 7]], foes: [11, 18, 24, 31, 36, 44, 49, 56, 60] },
+    qs: [[10, 6], [23, 6], [36, 6], [48, 6]], bricks: [[9, 6], [11, 6], [22, 6], [24, 6], [35, 6], [37, 6]], plats: [[27, 6, 3], [44, 6, 4], [51, 5, 3], [8, 5, 3]], stairs: [[5, 9], [6, 9], [6, 8], [7, 9], [7, 8], [7, 7]],
+    coins: [[13, 8], [14, 8], [27, 8], [28, 8], [39, 8], [40, 8], [51, 7], [52, 7], [53, 7], [8, 4], [9, 4], [10, 4]], foes: [11, 18, 24, 31, 36, 44, 49, 56, 60, [9, 5], [45, 6]] },
 ]
-export const LEVELS = SPECS.length
+export const LEVELS = 6 // 레이스 장소 6곳(초원·눈·사탕·과일·바닷속·할로윈)을 차례로, 판 모양은 3가지를 돌려 쓴다
 
 function build(sp: Spec): Room {
   const rows = Array.from({ length: ROWS }, () => Array<string>(sp.w).fill('.'))
@@ -37,26 +37,29 @@ function build(sp: Spec): Room {
   for (const p of sp.pipes) { const top = 10 - p.h; for (let r = top; r < 10; r++) { const t = r === top; rows[r][p.c] = t ? (p.enter ? 'e' : 'l') : 'L'; rows[r][p.c + 1] = t ? (p.enter ? 'f' : 'r') : 'R' } }
   for (const [c, r] of sp.qs) rows[r][c] = '?'
   for (const [c, r] of sp.bricks) rows[r][c] = '='
+  for (const [c, r] of sp.stairs ?? []) rows[r][c] = '='
   for (const [r, c0, n] of sp.plats.map(([a, b, n]) => [b, a, n] as [number, number, number])) for (let c = c0; c < c0 + n; c++) rows[r][c] = '='
   for (const [c, r] of sp.coins) rows[r][c] = 'o'
   for (let r = 2; r < 10; r++) rows[r][sp.w - 4] = 'F'
-  const foes: Foe[] = sp.foes.map((c, i) => ({ id: i + 1, x: c + 0.5, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }))
+  const foes: Foe[] = sp.foes.map((f, i) => { const [c, r] = typeof f === 'number' ? [f, 10] : f; return { id: i + 1, x: c + 0.5, y: r, vy: 0, dir: -1 as const, alive: true, squash: 0 } })
   return { rows, foes, w: sp.w }
 }
 function bonusRoom(): Room {
   const w = 22, rows = Array.from({ length: ROWS }, () => Array<string>(w).fill('.'))
   for (let c = 0; c < w; c++) { rows[10][c] = '#'; rows[11][c] = '#'; rows[0][c] = '='; rows[1][c] = '=' }
-  for (let r = 0; r < ROWS; r++) { rows[r][0] = '='; }
+  for (let r = 0; r < ROWS; r++) rows[r][0] = '='
   rows[8][19] = 'x'; rows[8][20] = 'y'; rows[9][19] = 'L'; rows[9][20] = 'R'
-  // 별 코인 다발
-  for (let i = 0; i < 6; i++) { rows[8][4 + i * 2] = 'o'; rows[6][5 + i * 2] = 'o' }
-  for (let i = 0; i < 5; i++) rows[4][6 + i * 2] = 'o'
+  rows[9][8] = '='; rows[9][9] = '=' // 계단 → 높은 판으로 올라가 위쪽 별까지 먹을 수 있다
+  for (let c = 11; c <= 17; c++) rows[7][c] = '='
+  for (let c = 3; c <= 7; c++) rows[8][c] = 'o' // 바닥에서 먹는 별
+  for (let c = 11; c <= 17; c += 2) rows[6][c] = 'o' // 높은 판 위의 별
+  for (let c = 11; c <= 17; c++) if (c % 2) rows[4][c] = 'o' // 점프로 먹는 위쪽 별
   return { rows, foes: [], w }
 }
 
 export function newRun(level: number, keep?: Pick<State, 'score' | 'coins' | 'lives' | 'stars'>): State {
-  const sp = SPECS[level]
-  return { level, room: 'main', main: build(sp), bonus: bonusRoom(), p: { x: 2.5, y: 10, vx: 0, vy: 0, on: true, dir: 1, inv: 0 }, ret: { col: 0, row: 0 }, flagX: sp.w - 3.5,
+  const sp = SPECS[level % SPECS.length]
+  return { level, room: 'main', main: build(sp), bonus: bonusRoom(), p: { x: 2.5, y: 10, vx: 0, vy: 0, on: true, dir: 1, inv: 0, big: false }, ret: { col: 0, row: 0 }, flagX: sp.w - 3.5,
     score: keep?.score ?? 0, coins: keep?.coins ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', t: 0, stars: keep?.stars ?? 0, fade: 0, prevJump: false, prevDown: false, clearT: 0 }
 }
 
@@ -73,17 +76,18 @@ export function step(s: State, inp: Input, dt: number): Ev[] {
 }
 
 function hurt(s: State, ev: Ev[]) {
+  if (s.p.big) { s.p.big = false; s.p.inv = 1.5; ev.push({ k: 'shrink', x: s.p.x, y: s.p.y }); return } // 커진 상태면 원래 크기로 돌아올 뿐 ♥는 그대로
   s.lives--; ev.push({ k: 'hit', x: s.p.x, y: s.p.y })
   if (s.lives <= 0) { s.phase = 'over'; ev.push({ k: 'over' }); return }
   s.p.inv = CFG.inv
 }
-function respawn(s: State) { s.room = 'main'; s.p.x = 2.5; s.p.y = 10; s.p.vx = s.p.vy = 0; s.p.on = true; s.p.inv = CFG.inv }
+function respawn(s: State) { s.p.big = false; s.room = 'main'; s.p.x = 2.5; s.p.y = 10; s.p.vx = s.p.vy = 0; s.p.on = true; s.p.inv = CFG.inv }
 
 function sub(s: State, inp: Input, dt: number, ev: Ev[]) {
   if (s.phase === 'over' || s.phase === 'won') return
   s.t += dt; s.fade = Math.max(0, s.fade - dt)
   if (s.phase === 'clear') { s.clearT -= dt; if (s.clearT <= 0) { if (s.level + 1 >= LEVELS) { s.phase = 'won'; s.stars += 20; ev.push({ k: 'won' }) } else { const n = newRun(s.level + 1, s); Object.assign(s, n) } } return }
-  const R = roomOf(s), p = s.p, hw = CFG.hw, ph = CFG.ph
+  const R = roomOf(s), p = s.p, hw = CFG.hw, ph = p.big ? CFG.bigPh : CFG.ph
   p.inv = Math.max(0, p.inv - dt)
   const mv = (inp.right ? 1 : 0) - (inp.left ? 1 : 0)
   p.vx = mv * CFG.walk; if (mv) p.dir = mv > 0 ? 1 : -1
@@ -108,7 +112,7 @@ function sub(s: State, inp: Input, dt: number, ev: Ev[]) {
     if (p.vy >= 0) { const r = Math.floor(p.y + E); if (r >= 0 && r < ROWS) { for (let c = c0; c <= c1; c++) if (solid(tileAt(R, c, r)) && p.y - p.vy * dt <= r + 1e-3) { p.y = r; p.vy = 0; p.on = true; break } } }
     else { const r = Math.floor(p.y - ph); for (let c = c0; c <= c1; c++) { const ch = tileAt(R, c, r); if (r >= 0 && solid(ch)) {
       p.y = r + 1 + ph; p.vy = 0
-      if (ch === '?') { R.rows[r][c] = 'u'; s.score += 10; s.coins++; ev.push({ k: 'coin', x: c + 0.5, y: r }) }
+      if (ch === '?') { R.rows[r][c] = 'u'; if (!p.big) { p.big = true; p.y = r + 1 + CFG.bigPh; s.score += 50; ev.push({ k: 'grow', x: c + 0.5, y: r }) } else { s.score += 10; s.coins++; ev.push({ k: 'coin', x: c + 0.5, y: r }) } }
       else if (ch === '=') { R.rows[r][c] = '.'; s.score += 5; ev.push({ k: 'break', x: c + 0.5, y: r }) } else ev.push({ k: 'bump', x: c + 0.5, y: r })
       break } } } }
   // 별 코인
@@ -118,6 +122,7 @@ function sub(s: State, inp: Input, dt: number, ev: Ev[]) {
     if (!f.alive) { f.squash += dt; continue }
     const ahead = tileAt(R, Math.floor(f.x + f.dir * 0.45), Math.floor(f.y - 0.5))
     if (solid(ahead) || f.x < 0.6 || f.x > R.w - 0.6) f.dir = (f.dir * -1) as 1 | -1
+    if (f.vy === 0) { const fx = f.x + f.dir * 0.5; if (!solid(tileAt(R, Math.floor(fx), Math.round(f.y)))) f.dir = (f.dir * -1) as 1 | -1 } // 낭떠러지 앞에서 돌아선다(떨어져 혼자 죽지 않게)
     f.x += f.dir * CFG.foe * dt
     const y0 = f.y; f.vy = Math.min(20, f.vy + CFG.g * dt); f.y += f.vy * dt
     const r = Math.floor(f.y + E); if (f.vy >= 0 && r >= 0 && r < ROWS && solid(tileAt(R, Math.floor(f.x), r)) && y0 <= r + 1e-3) { f.y = r; f.vy = 0 }
