@@ -86,7 +86,9 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   const [scene, setScene] = useState<string | null>(initialPlaceId)
   // 마을과 집 안에서는 배경 음악이 이어지고, 게임 화면(별비·수학·점프·영어)에서는 끈다
   const walking = !starRain && !runner && !math && !jump && !starChase && !speaking && !soccer && !race && !flags && !walk3d
-  useEffect(() => { if (!walking) return; startBgm('room'); return stopBgm }, [walking])
+  // 산책 노래(room)는 2D 산책 마을, 3D 산책, 별 잡기에서 이어서 나온다
+  const roomSong = walking || walk3d || starChase
+  useEffect(() => { if (!roomSong) return; startBgm('room'); return stopBgm }, [roomSong])
 
   if (walk3d) return <Suspense fallback={null}><Walk3D outfit={outfit} tweaks={tweaks} onExit={() => { if (walkTab && onLeaveWalk) onLeaveWalk(); else setWalk3d(false) }} onGo={onGo} onEnter={(id) => { travelTo(id); setScene(id); setBackToWalk(true); setWalk3d(false) }} /></Suspense>
   if (flags) return <Suspense fallback={null}><FlagGame onExit={() => setFlags(false)} /></Suspense>
