@@ -11,7 +11,7 @@ import { localTest } from './config'
 export const STAR_ROOMS = ['s1', 's2', 's3', 's4'] as const
 export const STAR_MAX = 4
 export const STAR_STALE_MS = 60000
-export interface SPlayer { name: string; ready: boolean; x: number; y: number; cap: { n: number; r: number } | null; say: { k: number; n: number } | null; j: number }
+export interface SPlayer { name: string; look: string; ready: boolean; x: number; y: number; cap: { n: number; r: number } | null; say: { k: number; n: number } | null; j: number }
 export interface SMeta { host: string; phase: 'lobby' | 'play' | 'done'; round: number; target: number; startAt: number; endAt: number; part: string[]; t: number }
 export interface SStar { id: number; x: number; y: number; m: number }
 export interface SState { r: number; caught: number; res: 0 | 1 | 2; ev: { n: number; x: number; y: number } | null; acc: Record<string, number>; stars: SStar[] }
@@ -33,7 +33,7 @@ export function sanePlayers(v: unknown): Record<string, SPlayer> {
   for (const [u, raw] of Object.entries(obj(v))) {
     const p = obj(raw); if (typeof p.name !== 'string' || !p.name) continue
     const c = obj(p.cap), s = obj(p.say)
-    out[u] = { name: p.name.slice(0, 12), ready: p.ready === true, x: rng(p.x, -12, 12), y: rng(p.y, -9, 9), j: rng(p.j, 0, 1e15), cap: fin(c.n) !== null ? { n: rng(c.n, 0, 1e9), r: rng(c.r, 0, 99999) } : null, say: fin(s.k) !== null ? { k: rng(s.k, 0, 2), n: rng(s.n, 0, 1e9) } : null }
+    out[u] = { name: p.name.slice(0, 12), look: typeof p.look === 'string' ? p.look.slice(0, 900) : '', ready: p.ready === true, x: rng(p.x, -12, 12), y: rng(p.y, -9, 9), j: rng(p.j, 0, 1e15), cap: fin(c.n) !== null ? { n: rng(c.n, 0, 1e9), r: rng(c.r, 0, 99999) } : null, say: fin(s.k) !== null ? { k: rng(s.k, 0, 2), n: rng(s.n, 0, 1e9) } : null }
   }
   return out
 }
@@ -68,10 +68,10 @@ export function pickStarRooms(rooms: Record<string, StarSnap | undefined>, now: 
   return out
 }
 
-const blankMe = (name: string): SPlayer => ({ name: name.slice(0, 12) || '친구', ready: false, x: 0, y: 0, cap: null, say: null, j: Date.now() })
+const blankMe = (name: string, look = ''): SPlayer => ({ name: name.slice(0, 12) || '친구', look, ready: false, x: 0, y: 0, cap: null, say: null, j: Date.now() })
 
 /** 시험·연습용: practice 면 네트워크 없이 혼자, 아니면 같은 브라우저 탭끼리(BroadcastChannel) */
-async function joinLocal(name: string, onSnap: (s: StarSnap) => void, practice: boolean): Promise<StarRoom> {
+async function joinLocal(name: string, onSnap: (s: StarSnap) => void, practice: boolean, look = ''): Promise<StarRoom> {
   const ch = practice ? null : new BroadcastChannel('ryuso-star-local')
   const uid = `L${Math.random().toString(36).slice(2, 8)}`
   const players: Record<string, SPlayer> = {}
@@ -90,7 +90,7 @@ async function joinLocal(name: string, onSnap: (s: StarSnap) => void, practice: 
   if (!practice) await new Promise((r) => setTimeout(r, 350))
   const host = !meta
   if (host) { meta = { host: uid, phase: 'lobby', round: 0, target: 0, startAt: 0, endAt: 0, part: [], t: Date.now() }; say({ type: 'meta', meta }) }
-  players[uid] = blankMe(name); say({ type: 'p', uid, p: players[uid] }); push()
+  players[uid] = blankMe(name, look); say({ type: 'p', uid, p: players[uid] }); push()
   return {
     uid, room: practice ? 'practice' : 'local', host, now: () => Date.now(),
     patchMe: (p) => { players[uid] = { ...players[uid], ...p }; say({ type: 'p', uid, p: players[uid] }); push() },
@@ -101,8 +101,8 @@ async function joinLocal(name: string, onSnap: (s: StarSnap) => void, practice: 
 }
 
 /** 방에 들어간다. code: 친구 방 번호(1~4, 'S1' 같은 표기도 허용). create 면 새 방. 자리가 없으면 null */
-export async function joinStarRoom(name: string, onSnap: (s: StarSnap) => void, opts: { practice?: boolean; code?: string; create?: boolean } = {}): Promise<StarRoom | null> {
-  if (opts.practice || localTest) return joinLocal(name, onSnap, !!opts.practice)
+export async function joinStarRoom(name: string, onSnap: (s: StarSnap) => void, opts: { practice?: boolean; code?: string; create?: boolean; look?: string } = {}): Promise<StarRoom | null> {
+  if (opts.practice || localTest) return joinLocal(name, onSnap, !!opts.practice, opts.look)
   const { user, db } = await connect()
   let skew = 0
   const offOff = onValue(ref(db as Database, '.info/serverTimeOffset'), (s) => { skew = Number(s.val()) || 0 })
@@ -134,7 +134,7 @@ export async function joinStarRoom(name: string, onSnap: (s: StarSnap) => void, 
   if (!ready) { offOff(); throw lastErr }
   const base = `lobby/star/${pick.room}`
   const roomRef = ref(db, base), metaRef = ref(db, `${base}/meta`), stateRef = ref(db, `${base}/state`), meRef = ref(db, `${base}/players/${user.uid}`)
-  await step('내 자리 쓰기', set(meRef, { name: name.slice(0, 12) || '친구', ready: false, x: 0, y: 0, j: Date.now() + skew, t: serverTimestamp() }))
+  await step('내 자리 쓰기', set(meRef, { name: name.slice(0, 12) || '친구', look: (opts.look ?? '').slice(0, 900), ready: false, x: 0, y: 0, j: Date.now() + skew, t: serverTimestamp() }))
   onDisconnect(meRef).remove().catch(() => {})
   if (pick.create) onDisconnect(metaRef).remove().catch(() => {})
   const off = onValue(roomRef, (s) => onSnap(sanitizeStar(s.val())))
