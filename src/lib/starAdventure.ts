@@ -3,7 +3,7 @@
  * 파이프(관)로 들어가 보너스 방에 다녀온 뒤 깃발까지 간다. 좌표는 칸 단위, y 는 발바닥 높이(아래로 갈수록 커진다).
  */
 export const ROWS = 12
-export const CFG = { hw: 0.32, ph: 1.3, bigPh: 1.7, g: 38, jump: 16, walk: 6.2, foe: 1.6, lives: 3, inv: 2, bounce: 11 }
+export const CFG = { hw: 0.32, ph: 1.3, bigPh: 1.7, g: 38, jump: 16, walk: 6.2, foe: 1.6, lives: 5, inv: 2, bounce: 11 }
 export const SOLID = '#=?ulrLRefxy' // 땅, 벽돌, 물음표(쓰기 전·후), 파이프
 export const levelWidth = 64
 
