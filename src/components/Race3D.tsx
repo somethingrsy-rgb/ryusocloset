@@ -58,7 +58,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const th = THEMES[theme]
     const LANES = live.current.lanes
     const ROAD_W = roadWidth(LANES)
-    const s = createStage(el, { sky: th.sky, fog: [60, 170], shadows: false, view: { yaw: 0, pitch: 0.36, dist: 10.5, target: [0, 0.9, 0] }, fov: (w, h) => (w < h ? 66 : 48) })
+    const s = createStage(el, { sky: th.sky, fog: [60, 170], shadows: false, view: { yaw: 0, pitch: 0.36, dist: 10.5, target: [0, 0.9, 0] }, fov: (w, h) => (w < h ? 66 : 58) })
     const { scene, keep } = s
     s.camera.far = 600
     s.camera.updateProjectionMatrix()
@@ -69,9 +69,10 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const skyTex = art(`sky_${theme}`)
     // 세로 화면: 하늘 그림 한 장 그대로. 가로 화면: 같은 그림을 좌우로 거울처럼 이어 붙여 넓힌다(이음매가 안 보인다)
     skyTex.wrapS = THREE.MirroredRepeatWrapping
-    const SKY_H = 110, SKY_Z = 230
+    // 하늘 그림이 한 장 가득(성·달까지) 보이도록 작게 세운다: 그림 높이 60, 아래 28%쯤이 땅과 만나는 줄
+    const SKY_H = 60, SKY_Z = 230
     const sky = new THREE.Mesh(keep(new THREE.PlaneGeometry(SKY_H * 6, SKY_H)), keep(new THREE.MeshBasicMaterial({ map: skyTex, fog: false, depthWrite: false })))
-    sky.position.y = SKY_H * 0.25 + 1
+    sky.position.y = 4.6 - SKY_H * 0.28 + SKY_H / 2
     sky.renderOrder = -1
     scene.add(sky)
 
@@ -303,7 +304,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       roadPos.needsUpdate = true
       gTex.offset.y = -cz / GROUND_TILE; rt.offset.y = -cz / ROAD_TILE
       const sz = s.size(), wide = sz.w > sz.h
-      if (wide !== skyWide) { skyWide = wide; skyTex.repeat.set(wide ? 2 : 1, 1); skyTex.needsUpdate = true; sky.scale.x = wide ? 1 : 0.5 }
+      if (wide !== skyWide) { skyWide = wide; const pw = wide ? 640 : 260; skyTex.repeat.set(pw / (SKY_H * 3), 1); skyTex.needsUpdate = true; sky.scale.x = pw / (SKY_H * 6) }
       // 하늘은 길이 휘는 반대쪽으로 아주 조금 밀어서, 커브를 돌 때 먼 풍경이 함께 도는 느낌을 준다
       sky.position.x = cx * 0.6 - curveSlope(r.d + 40, r.seed) * 35; sky.position.z = cz - SKY_Z
       // 차: 옆 칸으로 가는 동안은 그쪽 그림, 달릴 땐 통통, 미끄러지면 빙글 흔들
