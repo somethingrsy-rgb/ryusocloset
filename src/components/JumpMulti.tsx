@@ -10,6 +10,7 @@ import { DARK, FILL, MARK } from './jumpStyle'
 
 const ANIMAL_KO = ['토끼', '강아지', '호랑이', '곰돌이', '고양이', '팬더']
 /** 자리마다 이름표 색(내 자리는 초록 테두리로 따로 표시) */
+const FLY_MS = 600 // 말이 뛰어넘는 시간
 const SEAT_COLOR = ['#ff8fab', '#7cc545', '#4aa6ea', '#f8b84a']
 
 /**
@@ -55,18 +56,37 @@ export function JumpMulti({ onClose, invite }: { onClose: () => void; invite?: s
   useEffect(() => { if (meta) sawMeta.current = true; else if (sawMeta.current && !started) setHostGone(true); else if (sawMeta.current && started) setHostGone(true) }, [meta, started])
 
   const moves = snap?.moves ?? []
+  // 화면에 보이는 수의 개수(새 수가 오면 말이 뛰는 동안 기다렸다가 하나씩 따라간다)
+  const [shown, setShown] = useState(0)
+  const [anim, setAnim] = useState<{ a: Action; color: number; gone: boolean } | null>(null)
+  const seenFirst = useRef(false)
   const state = useMemo(() => {
     if (!started || !meta) return null
     let s = newMState(meta.seed, order.length)
-    for (const a of moves) s = applyAction(s, a)
+    for (let i = 0; i < shown && i < moves.length; i++) s = applyAction(s, moves[i])
     return s
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started, meta?.seed, order.length, moves.length])
+  }, [started, meta?.seed, order.length, shown, moves.length])
+  const caughtUp = shown >= moves.length && !anim
   const mySeat = net ? order.indexOf(net.uid) : -1
-  const over = !!state && isMOver(state)
+  const over = !!state && caughtUp && isMOver(state)
   const seatName = (i: number) => (order[i] === 'cpu' ? ANIMAL_KO[meta?.cpus[i] ?? 0] : names.current[order[i]] ?? '친구')
   const seatAbsent = (i: number) => order[i] !== 'cpu' && !snap?.players[order[i]]
-  const lastJump = useMemo(() => { for (let i = moves.length - 1; i >= 0; i--) if (moves[i].fr !== undefined) return moves[i]; return null }, [moves.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  const lastJump = useMemo(() => { for (let i = Math.min(shown, moves.length) - 1; i >= 0; i--) if (moves[i].fr !== undefined) return moves[i]; return null }, [shown, moves.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 새 수 따라가기: 점프면 말이 날아가는 모습을 보여 주고, 아니면 바로 반영
+  useEffect(() => {
+    if (!state || anim) return
+    if (!seenFirst.current) { seenFirst.current = true; setShown(moves.length); return } // 늦게 들어온 사람은 지금 판을 바로 본다
+    if (shown >= moves.length) return
+    const a = moves[shown]
+    if (a.fr === undefined || a.fc === undefined || a.tr === undefined || a.tc === undefined) { setShown(shown + 1); return }
+    setAnim({ a, color: state.board[a.fr]?.[a.fc] ?? 1, gone: false })
+    const t1 = window.setTimeout(() => setAnim((x) => (x ? { ...x, gone: true } : x)), FLY_MS * 0.5)
+    const t2 = window.setTimeout(() => { setShown(shown + 1); setAnim(null) }, FLY_MS)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, shown, moves.length, !!anim])
 
   const say = (t: string) => { setMsg(t); window.setTimeout(() => setMsg(''), 1600) }
   // 수가 새로 오면 소리
@@ -78,7 +98,7 @@ export function JumpMulti({ onClose, invite }: { onClose: () => void; invite?: s
 
   // 방장: 컴퓨터 자리와 나간 친구 자리를 대신 둔다(차례마다 한 수씩, 천천히)
   useEffect(() => {
-    if (!net || !net.host || !state || !meta || over) return
+    if (!net || !net.host || !state || !meta || over || !caughtUp) return
     const seat = state.turn
     const cpuSeat = order[seat] === 'cpu' || seatAbsent(seat)
     if (!cpuSeat) return
@@ -90,7 +110,7 @@ export function JumpMulti({ onClose, invite }: { onClose: () => void; invite?: s
     }, state.chain ? 700 : 1300)
     return () => clearTimeout(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [net, state?.applied, state?.turn, moves.length, over, snap && Object.keys(snap.players).join()])
+  }, [net, state?.applied, state?.turn, moves.length, over, caughtUp, snap && Object.keys(snap.players).join()])
 
   // 끝나면 별을 한 번만 받는다
   useEffect(() => {
@@ -102,7 +122,7 @@ export function JumpMulti({ onClose, invite }: { onClose: () => void; invite?: s
   }, [over, state, mySeat])
 
   const tap = (r: number, c: number) => {
-    if (!state || over || !net || state.turn !== mySeat) return
+    if (!state || over || !net || state.turn !== mySeat || !caughtUp) return
     const v = state.board[r][c]
     if (v !== 0) {
       if (state.chain && (state.chain.r !== r || state.chain.c !== c)) return
@@ -114,7 +134,7 @@ export function JumpMulti({ onClose, invite }: { onClose: () => void; invite?: s
     if (!m) { say('그곳으로는 뛸 수 없어요'); return }
     net.send(moves.length, actionOf(mySeat, m)); setSel(null)
   }
-  const endTurn = () => { if (net && state && state.turn === mySeat && state.chain) { net.send(moves.length, { s: mySeat, e: 1 } as Action); setSel(null) } }
+  const endTurn = () => { if (caughtUp && net && state && state.turn === mySeat && state.chain) { net.send(moves.length, { s: mySeat, e: 1 } as Action); setSel(null) } }
   const leave = () => { netRef.current?.leave(); netRef.current = null; onClose() }
 
   const humans = snap ? Object.keys(snap.players).length : 0
@@ -209,15 +229,32 @@ export function JumpMulti({ onClose, invite }: { onClose: () => void; invite?: s
               const picked = sel && sel.r === r && sel.c === c
               const landed = lastJump && lastJump.tr === r && lastJump.tc === c
               const from = lastJump && lastJump.fr === r && lastJump.fc === c
+              const hid = anim && ((anim.a.fr === r && anim.a.fc === c) || (anim.gone && (anim.a.fr! + anim.a.tr!) / 2 === r && (anim.a.fc! + anim.a.tc!) / 2 === c))
               return (
                 <button key={`${r}-${c}`} role="gridcell" aria-label={v ? `${r + 1}-${c + 1} ${MARK[v - 1]}` : `${r + 1}-${c + 1}`} onClick={() => tap(r, c)}
                   className={`relative flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-lg border-0 p-[8%] ${v === 0 ? (from ? 'bg-[#e3efc9]' : 'bg-[#eef3e6]') : 'bg-[#f6f9f0]'}`}>
-                  {v !== 0 && (
+                  {v !== 0 && !hid && (
                     <span className={`flex h-full w-full items-center justify-center rounded-full text-[min(3.2vw,1.1rem)] font-black text-white/80 shadow-[inset_0_-3px_0_rgba(0,0,0,.18)] transition ${picked ? 'scale-110 ring-4 ring-[#213f35]' : ''} ${landed && !picked ? 'ring-4 ring-[#ffd84a]' : ''}`} style={{ background: FILL[v - 1], border: `2px solid ${DARK[v - 1]}` }}>{MARK[v - 1]}</span>
                   )}
                 </button>
               )
             }))}
+            {anim && (
+              <div aria-hidden className="pointer-events-none absolute inset-1.5 z-10">
+                <div
+                  className="jump-fly absolute aspect-square"
+                  style={{
+                    left: `calc(${anim.a.fc} * (100% + 3px) / ${SIZE})`, top: `calc(${anim.a.fr} * (100% + 3px) / ${SIZE})`, width: `calc((100% - ${(SIZE - 1) * 3}px) / ${SIZE})`,
+                    ['--tx' as string]: `calc(${anim.a.tc! - anim.a.fc!} * (100% + 3px))`, ['--ty' as string]: `calc(${anim.a.tr! - anim.a.fr!} * (100% + 3px))`,
+                    ['--mx' as string]: `calc(${(anim.a.tc! - anim.a.fc!) / 2} * (100% + 3px))`, ['--my' as string]: `calc(${(anim.a.tr! - anim.a.fr!) / 2} * (100% + 3px))`,
+                    animationDuration: `${FLY_MS}ms`,
+                  } as React.CSSProperties}
+                >
+                  <span className="absolute inset-[8%] flex items-center justify-center rounded-full text-[min(3.2vw,1.1rem)] font-black text-white/80 shadow-[inset_0_-3px_0_rgba(0,0,0,.18),0_6px_10px_rgba(0,0,0,.3)]" style={{ background: FILL[anim.color - 1], border: `2px solid ${DARK[anim.color - 1]}` }}>{MARK[anim.color - 1]}</span>
+                  {order[anim.a.s] === 'cpu' && <img src={assetUrl(`assets/jump/${ANIMALS[meta.cpus[anim.a.s] ?? 0]}.webp`)} alt="" draggable={false} className="absolute -top-[62%] left-1/2 w-[120%] -translate-x-1/2 object-contain drop-shadow-md" />}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
