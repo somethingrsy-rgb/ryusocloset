@@ -21,7 +21,7 @@ export interface SceneFrame {
 }
 /** 화면 밖에 있는 별·친구를 가리키는 화살표(화면 비율 0~1 좌표와 방향 각도) */
 export interface EdgeArrow { x: number; y: number; rot: number; color: string }
-export interface StarScene { setLook(slot: number, cv: HTMLCanvasElement): void; frame(f: SceneFrame): void; arrows: EdgeArrow[]; dispose(): void }
+export interface StarScene { setLook(slot: number, cv: HTMLCanvasElement): void; frame(f: SceneFrame): void; arrows: EdgeArrow[]; /** 화면 위 한 점(요소 안 0~1 비율)이 가리키는 땅의 자리(필드 좌표). 하늘이면 null */ pick(fx: number, fy: number): { x: number; y: number } | null; dispose(): void }
 
 function glyphCanvas(text: string, color: string) {
   const c = document.createElement('canvas'); c.width = c.height = 96
@@ -69,10 +69,10 @@ export function createStarScene(el: HTMLElement): StarScene {
       w.addProp(`starchase/${img}.webp`, x, z, h * (0.85 + rnd() * 0.4), aspect, r)
     }
   }
-  put('tree_green', 420 / 451, 6.2, 30, [-75, 35], 48, 1.5, 0.8); put('tree_dark', 420 / 440, 6.2, 14, [-75, 35], 48, 1.5, 0.8); put('tree_pink', 420 / 438, 6.2, 14, [-75, 35], 48, 1.5, 0.8)
-  put('bush', 360 / 216, 2.0, 30, [-70, 32], 46, 0.5); put('flowers', 371 / 279, 1.4, 40, [-70, 32], 46, -1)
+  put('tree_green', 368 / 378, 6.2, 34, [-75, 35], 48, 1.5, 0.8); put('tree_purple', 362 / 367, 6.2, 22, [-75, 35], 48, 1.5, 0.8)
+  put('bush', 367 / 286, 2.0, 30, [-70, 32], 46, 0.5); put('flowers', 371 / 279, 1.4, 40, [-70, 32], 46, -1)
   put('rock', 366 / 257, 1.6, 12, [-70, 32], 46, -1); put('lamp', 301 / 398, 5.0, 8, [-70, 32], 40, 1.2); put('fence', 370 / 243, 2.0, 8, [-70, 32], 40, 1.2)
-  put('castle', 460 / 574, 8.0, 3, [-75, 20], 44, 2.5, 1.8); put('shop', 460 / 543, 7.0, 3, [-75, 20], 44, 2.5, 1.8)
+  put('house', 371 / 395, 7.0, 4, [-75, 20], 44, 2.5, 1.5)
 
   const AH = AVATAR_H
   const KA = 1.5
@@ -105,7 +105,8 @@ export function createStarScene(el: HTMLElement): StarScene {
   const fxStar: Doll[] = [], fxRing: THREE.Mesh[] = [], fxBurst: THREE.Sprite[] = []
   const t0 = performance.now()
   let pending: SceneFrame | null = null
-  const out: StarScene = { setLook: (slot, cv) => { const m = kid(slot).d.doll.material as THREE.MeshBasicMaterial; m.map = w.texOf(cv); m.needsUpdate = true }, frame: (f) => { pending = f }, arrows: [], dispose: () => w.dispose() }
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hitPt = new THREE.Vector3()
+  const out: StarScene = { setLook: (slot, cv) => { const m = kid(slot).d.doll.material as THREE.MeshBasicMaterial; m.map = w.texOf(cv); m.needsUpdate = true }, frame: (f) => { pending = f }, arrows: [], pick: (fx, fy) => { ray.setFromCamera(ndc.set(fx * 2 - 1, -(fy * 2 - 1)), cam); const hit = ray.ray.intersectPlane(plane, hitPt); return hit ? { x: hit.x, y: hit.z } : null }, dispose: () => w.dispose() }
   w.onFrame((dt) => { if (pending) apply(pending, dt) })
   let camX = 0, camZ = 0, init = false
   const v3 = new THREE.Vector3()
