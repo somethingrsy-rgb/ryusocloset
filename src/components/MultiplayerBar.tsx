@@ -196,7 +196,7 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
       )}
       {/* 들어가기 칸·친구 위치(「친구」 단추로 연다): 아래(가로 화면은 오른쪽) 패널 맨 위에 넣어 캐릭터 화면을 가리지 않게. 그 패널이 안 보이는 탭에서는 예전처럼 화면 위에 띄운다 */}
       {(() => {
-        const card = <div className={dock ? 'pointer-events-none flex w-full flex-col items-start gap-1.5 px-3 pt-2' : 'pointer-events-none absolute left-2 z-[60] flex w-[min(15rem,calc(100%-1rem))] flex-col items-start gap-1.5'} style={dock ? undefined : { top: mp.visiting ? '5.5rem' : '40%' }}>
+        const card = <div className={dock ? 'pointer-events-none flex w-full flex-col items-start gap-1.5 px-3 pt-2' : 'pointer-events-none absolute right-2 z-[60] flex w-[min(13rem,calc(100%-1rem))] flex-col items-start gap-1.5'} style={dock ? undefined : { top: mp.visiting ? '5.5rem' : '7.5rem' }}>
         {/* 친구들이 지금 어디 있는지: 누르면 그곳으로 */}
         {open && on && (
           <div role="list" aria-label="친구 위치" className="pointer-events-auto flex w-full flex-col gap-1 rounded-2xl bg-white/95 p-2 shadow-lg">
