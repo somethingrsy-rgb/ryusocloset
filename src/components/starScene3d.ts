@@ -6,7 +6,7 @@
 import * as THREE from 'three'
 import { assetUrl } from '../lib/items'
 import { CFG } from '../lib/starChase'
-import { AVATAR_H, FEET, createWorld, type Doll, type World } from './world3d'
+import { AVATAR_H, FEET, createWorld, meadowTree, type Doll, type World } from './world3d'
 
 export const SLOT_COLORS = ['#ff8fab', '#5fc27a', '#4aa6ea', '#a77be8']
 export const SLOT_SHAPES = ['△', '◇', '□', '○']
@@ -69,7 +69,11 @@ export function createStarScene(el: HTMLElement): StarScene {
       w.addProp(`starchase/${img}.webp`, x, z, h * (0.85 + rnd() * 0.4), aspect, r)
     }
   }
-  put('tree_green', 368 / 378, 6.2, 34, [-75, 35], 48, 1.5, 0.8); put('tree_purple', 362 / 367, 6.2, 22, [-75, 35], 48, 1.5, 0.8)
+  // 나무는 카페·농장과 같은 그림(초록 대부분, 노랑·주황 조금)
+  for (let i = 0; i < 56; i++) {
+    const x = (rnd() * 2 - 1) * 48, z = -75 + rnd() * 110; if (clear(x, z, 1.5)) continue
+    w.addTree(x, z, 0.9 + rnd() * 0.5, meadowTree(rnd()))
+  }
   put('bush', 367 / 286, 2.0, 30, [-70, 32], 46, 0.5); put('flowers', 371 / 279, 1.4, 40, [-70, 32], 46, -1)
   put('rock', 366 / 257, 1.6, 12, [-70, 32], 46, -1); put('lamp', 301 / 398, 5.0, 8, [-70, 32], 40, 1.2); put('fence', 370 / 243, 2.0, 8, [-70, 32], 40, 1.2)
   put('house', 371 / 395, 7.0, 4, [-75, 20], 44, 2.5, 1.5)
