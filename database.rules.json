@@ -395,6 +395,9 @@
               },
               "$other": {
                 ".validate": false
+              },
+              "look": {
+                ".validate": "newData.isString() && newData.val().length <= 900"
               }
             }
           },

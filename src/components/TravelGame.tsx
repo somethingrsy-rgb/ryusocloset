@@ -120,7 +120,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
     {speaking && <SpeakingGame onClose={() => setSpeaking(false)} />}
     {math && <MathGame onClose={() => setMath(false)} />}
     {jump && <JumpPuzzle onClose={() => setJump(false)} />}
-    {starChase && <StarChase onClose={() => setStarChase(false)} />}
+    {starChase && <StarChase outfit={outfit} onClose={() => setStarChase(false)} />}
     </Suspense>
   </div>
 }

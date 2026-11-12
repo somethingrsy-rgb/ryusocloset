@@ -5,14 +5,17 @@ import { assetUrl } from '../lib/items'
 import { localTest, multiplayerAvailable } from '../lib/mp/config'
 import { savedName } from '../lib/mp/session'
 import { joinStarRoom, STAR_MAX, type SState, type StarRoom, type StarSnap } from '../lib/mp/starNet'
+import { createStarScene, SLOT_COLORS, SLOT_SHAPES, type StarScene } from './starScene3d'
+import { AVATARS, getAvatar } from '../lib/avatars'
+import { renderFigure } from '../lib/exportPng'
+import type { Outfit } from '../lib/types'
 import { CFG, applyCatch, fillStars, newRound, stepWalker, tick, type Round, type Who } from '../lib/starChase'
 
 /**
  * 도망간 별을 잡아라: 2~4명이 별의 양쪽으로 다가가 느려지게 하고, 가까운 친구가 「잡기」로 별을 모아 별자리를 완성한다(혼자는 연습).
  * 규칙·별 움직임은 lib/starChase.ts(순수 함수), 방 연결은 lib/mp/starNet.ts. 별과 잡기 판정은 방장 한 곳에서만 돌린다.
  */
-const SHAPES = ['△', '◇', '□', '○']
-const COLORS = ['#ff8fab', '#5fc27a', '#4aa6ea', '#a77be8']
+const SHAPES = SLOT_SHAPES, COLORS = SLOT_COLORS
 const SPAWN: [number, number][] = [[-3, 3], [3, 3], [-3, -3], [3, -3]]
 const SAYS = ['이쪽이야!', '같이 잡자!', '고마워!']
 const INTRO_KEY = 'ryuso.star.intro'
@@ -24,7 +27,7 @@ const fmt = (ms: number) => { const s = Math.max(0, Math.ceil(ms / 1000)); retur
 type Screen = 'menu' | 'room'
 interface Anim { k: 'fly' | 'miss'; x: number; y: number; t0: number }
 
-export function StarChase({ onClose }: { onClose: () => void }) {
+export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Outfit }) {
   const [screen, setScreen] = useState<Screen>('menu')
   const [snap, setSnap] = useState<StarSnap>({ meta: null, players: {}, state: null })
   const [room, setRoom] = useState<StarRoom | null>(null)
@@ -49,7 +52,7 @@ export function StarChase({ onClose }: { onClose: () => void }) {
     if (busy) return
     setBusy(true); setErr(''); seenMeta.current = false; setHostGone(false)
     try {
-      const r = await joinStarRoom(savedName() || '친구', (s) => { if (mounted.current) { if (s.meta) seenMeta.current = true; setSnap(s) } }, how)
+      const r = await joinStarRoom(savedName() || '친구', (s) => { if (mounted.current) { if (s.meta) seenMeta.current = true; setSnap(s) } }, { ...how, look: JSON.stringify({ avatar: getAvatar().id, outfit }) })
       if (!mounted.current) { r?.leave(); return }
       if (!r) { setErr('지금은 방이 꽉 찼어요. 조금 뒤에 다시 해 봐요'); setBusy(false); return }
       roomRef.current = r; setRoom(r); setPractice(!!how.practice); setScreen('room')
@@ -162,14 +165,13 @@ export function StarChase({ onClose }: { onClose: () => void }) {
 
   /* ───── 그리기·움직임 루프 ───── */
   const box = useRef<HTMLDivElement>(null)
-  const cvs = useRef<HTMLCanvasElement>(null)
-  const imgs = useRef<{ grass: HTMLImageElement | null }>({ grass: null })
+  const stage = useRef<HTMLDivElement>(null)
+  const sceneRef = useRef<StarScene | null>(null)
   const shown = useRef<{ pl: Record<string, { x: number; y: number }>; st: Record<number, { x: number; y: number }> }>({ pl: {}, st: {} })
   const evSeen = useRef(0), sayShown = useRef<Record<string, { n: number; k: number; t: number }>>({}), lastSend = useRef(0), sentPos = useRef({ x: 99, y: 99 })
   const inRange = useRef(false), cdFrac = useRef(0), clock = useRef('')
   const roundSeen = useRef(-1), paid = useRef(-1)
-  const [hud, setHud] = useState({ range: false, cd: 0, left: 0, count: 0 })
-  useEffect(() => { const g = new Image(); g.src = assetUrl('starchase/grass.webp'); imgs.current.grass = g }, [])
+  const [hud, setHud] = useState({ range: false, cd: 0, left: 0, count: 0, hint: false })
 
   useEffect(() => {
     if (screen !== 'room') return
@@ -178,13 +180,7 @@ export function StarChase({ onClose }: { onClose: () => void }) {
       raf = requestAnimationFrame(loop)
       const dt = Math.min(0.1, (t - prev) / 1000); prev = t
       const s = snapRef.current, m = s.meta, r = roomRef.current, st = s.state
-      const c = cvs.current, b = box.current; if (!c || !b) return
-      const W = b.clientWidth, H = b.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1)
-      if (c.width !== Math.round(W * dpr) || c.height !== Math.round(H * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr) }
-      const g = c.getContext('2d'); if (!g) return
-      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H)
-      const top = 74, sc = Math.min(W / CFG.w, (H - top - 8) / CFG.h), cx = W / 2, cy = top + (H - top) / 2
-      const X = (x: number) => cx + x * sc, Y = (y: number) => cy + y * sc
+      const scene = sceneRef.current
       const now = r ? r.now() : Date.now()
       const playing = !!m && m.phase === 'play' && now >= m.startAt && !!r && m.part.includes(r.uid)
       // 새 판이 시작되면 내 자리로
@@ -209,48 +205,45 @@ export function StarChase({ onClose }: { onClose: () => void }) {
       const near = stars.some((q) => Math.hypot(q.x - meRef.current.x, q.y - meRef.current.y) <= CFG.catchR)
       const cd = Math.max(0, 1 - (now - lastCatch.current) / (CFG.catchCd * 1000))
       const left = m && m.phase === 'play' ? Math.max(0, m.endAt - now) : 0, count = m && m.phase === 'play' && now < m.startAt ? Math.ceil((m.startAt - now) / 1000) : 0
-      const sig = `${near}|${Math.ceil(cd * 10)}|${Math.ceil(left / 1000)}|${count}`
-      if (sig !== clock.current && t - hudAt > 50) { clock.current = sig; hudAt = t; inRange.current = near; cdFrac.current = cd; setHud({ range: near, cd, left, count }) }
-      // 그림: 풀밭, 경계, 발밑 고리, 별, 친구
-      const R = 14 * Math.min(1, sc / 17) + 4
-      g.save(); g.beginPath(); g.roundRect(X(-CFG.w / 2), Y(-CFG.h / 2), CFG.w * sc, CFG.h * sc, 26); g.clip()
-      const pat = imgs.current.grass?.complete && imgs.current.grass.naturalWidth ? g.createPattern(imgs.current.grass, 'repeat') : null
-      g.globalAlpha = 0.9; g.fillStyle = pat ?? '#7cb06a'; if (pat) { const sz = 150 / imgs.current.grass!.naturalWidth; pat.setTransform(new DOMMatrix().scale(sz)) }; g.fillRect(X(-CFG.w / 2), Y(-CFG.h / 2), CFG.w * sc, CFG.h * sc); g.restore()
-      g.globalAlpha = 1; g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,.75)'; g.setLineDash([10, 8]); g.beginPath(); g.roundRect(X(-CFG.w / 2), Y(-CFG.h / 2), CFG.w * sc, CFG.h * sc, 26); g.stroke(); g.setLineDash([])
-      // 별
-      for (const q of stars) {
-        const px = X(q.x), py = Y(q.y), wob = q.m === 2 ? Math.sin(t / 60) * 1.5 : q.m === 1 ? Math.sin(t / 90) * 1 : 0
-        g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(px, py + R * 0.8, R * 0.8, R * 0.3, 0, 0, 7); g.fill()
-        if (q.m === 2) { g.strokeStyle = '#fff'; g.lineWidth = 3; g.setLineDash([6, 6]); g.lineDashOffset = -t / 40; g.beginPath(); g.arc(px, py + R * 0.5, R * 1.5, 0, 7); g.stroke(); g.setLineDash([]) }
-        const lift = q.m === 2 ? 0 : Math.abs(Math.sin(t / 220 + q.id)) * 4
-        drawStar(g, px + wob, py - lift, R * 1.05, q.m)
-        if (q.m === 2) { g.fillStyle = '#c04a5a'; g.font = '900 16px sans-serif'; g.textAlign = 'center'; g.fillText('!', px, py - R * 1.5 - 2) }
-        if (q.m === 2 && Math.hypot(q.x - meRef.current.x, q.y - meRef.current.y) <= CFG.catchR + 1.5) bubble(g, px, py - R * 2.3, '지금 잡아!')
-      }
-      // 친구들(아래쪽이 앞)
-      const order = part.map((u) => ({ u, p: u === r?.uid ? meRef.current : s.players[u] ? shown.current.pl[u] ?? s.players[u] : null })).filter((o): o is { u: string; p: { x: number; y: number } } => !!o.p).sort((a, b) => a.p.y - b.p.y)
-      for (const o of order) {
-        const i = part.indexOf(o.u), px = X(o.p.x), py = Y(o.p.y), mine = o.u === r?.uid, col = COLORS[i]
-        g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(px, py + R * 0.7, R * 0.9, R * 0.32, 0, 0, 7); g.fill()
-        g.strokeStyle = col; g.lineWidth = 3.5; g.setLineDash(mine ? [5, 4] : []); g.beginPath(); g.ellipse(px, py + R * 0.7, R * 1.2, R * 0.5, 0, 0, 7); g.stroke(); g.setLineDash([])
-        if (mine) { g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 2; g.beginPath(); g.arc(px, py, CFG.catchR * sc, 0, 7); g.stroke() }
-        drawKid(g, px, py - R * 0.2, R, col, SHAPES[i], mine)
-        const sy = s.players[o.u]?.say; if (sy) { const prevSay = sayShown.current[o.u]; if (!prevSay || prevSay.n !== sy.n) sayShown.current[o.u] = { n: sy.n, k: sy.k, t } }
-        const ss = sayShown.current[o.u]; if (ss && t - ss.t < 2000) bubble(g, px, py - R * 2.6, SAYS[ss.k] ?? '')
-      }
-      // 헛손질·날아가는 별
+      const hint = stars.some((q) => q.m === 2 && Math.hypot(q.x - meRef.current.x, q.y - meRef.current.y) <= CFG.catchR + 1.5)
+      const sig = `${near}|${hint}|${Math.ceil(cd * 10)}|${Math.ceil(left / 1000)}|${count}`
+      if (sig !== clock.current && t - hudAt > 50) { clock.current = sig; hudAt = t; inRange.current = near; cdFrac.current = cd; setHud({ range: near, cd, left, count, hint }) }
+      // 3D 무대에 그릴 것을 넘긴다
       anims.current = anims.current.filter((a) => t - a.t0 < (a.k === 'fly' ? 800 : 350))
-      for (const a of anims.current) {
-        const u = (t - a.t0) / (a.k === 'fly' ? 800 : 350)
-        if (a.k === 'miss') { g.strokeStyle = `rgba(255,255,255,${0.7 * (1 - u)})`; g.lineWidth = 3; g.beginPath(); g.arc(X(a.x), Y(a.y), CFG.catchR * sc * (0.4 + 0.6 * u), 0, 7); g.stroke() }
-        else { const tx = 60, ty = 40; const e = u * u * (3 - 2 * u); drawStar(g, X(a.x) + (tx - X(a.x)) * e, Y(a.y) + (ty - Y(a.y)) * e - Math.sin(u * Math.PI) * 30, R * (calm ? 1 : 1.05 * (1 - 0.4 * u)), 0) }
-      }
-      // 카운트다운 숫자
-      if (count > 0) { g.fillStyle = 'rgba(255,255,255,.92)'; g.font = '900 88px Jua, sans-serif'; g.textAlign = 'center'; g.fillText(String(count), W / 2, H / 2 + 20) }
+      const pls = part.map((u, i) => {
+        const p = u === r?.uid ? meRef.current : s.players[u] ? shown.current.pl[u] ?? s.players[u] : null
+        if (!p) return null
+        const sy = s.players[u]?.say; if (sy) { const prevSay = sayShown.current[u]; if (!prevSay || prevSay.n !== sy.n) sayShown.current[u] = { n: sy.n, k: sy.k, t } }
+        const ss = sayShown.current[u]
+        return { slot: i, x: p.x, y: p.y, mine: u === r?.uid, say: ss && t - ss.t < 2000 ? SAYS[ss.k] ?? null : null }
+      }).filter((x): x is NonNullable<typeof x> => !!x)
+      scene?.frame({ players: pls, stars, me: meRef.current, fx: anims.current.map((a) => ({ k: a.k, x: a.x, y: a.y, u: (t - a.t0) / (a.k === 'fly' ? 800 : 350) })), calm, now: t })
     }
     raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
   }, [screen, calm])
+
+  // 3D 무대(판 화면이 열려 있는 동안)와 친구들 옷 입은 인형
+  const playView = screen === 'room' && !hostGone && !(phase === 'lobby' && !practice)
+  useEffect(() => {
+    if (!playView || !stage.current) return
+    const sc = createStarScene(stage.current); sceneRef.current = sc; looksDone.current = {}
+    return () => { sc.dispose(); sceneRef.current = null }
+  }, [playView])
+  const looksDone = useRef<Record<number, string>>({})
+  const partKey = part.join(',')
+  const lookKey = part.map((u) => (u === me ? 'me' : snap.players[u]?.look ?? '')).join('|')
+  useEffect(() => {
+    if (!playView) return
+    part.forEach((u, i) => {
+      const raw = u === me ? JSON.stringify({ avatar: getAvatar().id, outfit }) : snap.players[u]?.look
+      if (!raw || looksDone.current[i] === raw) return
+      looksDone.current[i] = raw
+      let look: { avatar?: string; outfit?: Outfit } = {}; try { look = JSON.parse(raw) } catch { /* 모양을 못 읽으면 기본 모습 */ }
+      renderFigure(look.outfit ?? {}, {}, AVATARS.find((a) => a.id === look.avatar)).then((cv) => { if (sceneRef.current && looksDone.current[i] === raw) sceneRef.current.setLook(i, cv) }).catch(() => { delete looksDone.current[i] })
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playView, partKey, lookKey, outfit])
 
   /* ───── 결과 보상(한 판에 한 번) ───── */
   const st = snap.state
@@ -349,19 +342,26 @@ export function StarChase({ onClose }: { onClose: () => void }) {
     <div className={frame} style={bgStyle}>
       {hills}
       <div ref={box} className="relative z-10 min-h-0 flex-1 touch-none select-none">
-        <canvas ref={cvs} aria-label="별 잡기 놀이터" className="absolute inset-0 h-full w-full" />
+        <div ref={stage} role="img" aria-label="별 잡기 놀이터" className="absolute inset-0" />
+        {hud.count > 0 && <p aria-live="assertive" className="pointer-events-none absolute inset-0 m-0 flex items-center justify-center text-[6rem] font-black text-white [font-family:Jua,sans-serif] [text-shadow:0_4px_0_#7a5cc0,0_0_20px_rgba(122,92,192,.6)]">{hud.count}</p>}
+        {myIn && !done && hud.count === 0 && <p aria-live="polite" className="pointer-events-none absolute left-1/2 bottom-3 m-0 w-[min(19rem,calc(100%-16rem))] -translate-x-1/2 rounded-full bg-[#fff8ec]/95 px-3 py-1.5 text-center text-xs font-black text-[#3b2a63] shadow ring-2 ring-[#cdb8f2] portrait:bottom-40 portrait:w-[min(19rem,calc(100%-2rem))] sm:text-sm">{hud.hint ? '⭐ 지금 잡아!' : '⭐ 친구와 반대편에서 다가가요!'}</p>}
         {/* 위쪽 HUD */}
         <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col gap-1 px-2 pt-[max(.5rem,env(safe-area-inset-top))]">
           <div className="flex items-start justify-between gap-2">
-            <span aria-label="모은 별" className="flex h-10 items-center gap-1 rounded-full bg-[#fff8ec]/95 px-3 text-sm font-black shadow ring-2 ring-[#cdb8f2]">⭐ 별 {caught} / {target}{practice && <span className="ml-1 rounded-full bg-[#bfe8d0] px-1.5 text-[10px]">연습</span>}</span>
-            <span aria-label="남은 시간" className="flex h-10 items-center gap-1 rounded-full bg-[#fff8ec]/95 px-4 text-base font-black shadow ring-2 ring-[#cdb8f2]">⏱ {fmt(done ? 0 : hud.count ? CFG.seconds * 1000 : hud.left)}</span>
+            <span aria-label="모은 별" className="flex h-14 w-[8.3rem] items-center gap-1 pl-[3.4rem] pr-2 text-sm font-black text-[#3b2a63] drop-shadow" style={{ backgroundImage: `url(${assetUrl('starchase/ui_bar_gold.webp')})`, backgroundSize: '100% 100%' }}><span className="whitespace-nowrap">별 {caught} / {target}</span></span>
+            <span aria-label="남은 시간" className="flex h-14 w-[8.3rem] items-center pl-[3.4rem] text-lg font-black text-[#3b2a63] drop-shadow" style={{ backgroundImage: `url(${assetUrl('starchase/ui_bar_clock.webp')})`, backgroundSize: '100% 100%' }}>{fmt(done ? 0 : hud.count ? CFG.seconds * 1000 : hud.left)}</span>
             <div className="pointer-events-auto flex gap-1.5">
-              <button aria-label="설정" onClick={() => setSettings(true)} className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff8ec]/95 text-xl shadow ring-2 ring-[#cdb8f2]">⚙️</button>
+              <button aria-label="설정" onClick={() => setSettings(true)} className="h-12 w-12 border-0 bg-transparent bg-contain bg-no-repeat p-0 drop-shadow-md active:scale-95" style={{ backgroundImage: `url(${assetUrl('starchase/ui_gear.webp')})` }} />
             </div>
           </div>
-          <div className="flex items-center justify-between gap-2">
-            <div aria-hidden className="flex min-w-0 items-center gap-1.5 rounded-full bg-white/70 px-2 py-0.5">
-              {Array.from({ length: target }, (_, i) => <span key={i} className={`text-sm leading-none ${i < caught ? '' : 'font-black text-[#7a5cc0]'}`}>{i < caught ? '⭐' : '☆'}</span>)}
+          <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
+            <span>{practice && <span className="rounded-full bg-[#bfe8d0] px-2 py-0.5 text-[11px] font-black text-[#245a3d] shadow">연습 중</span>}</span>
+            <div aria-hidden className="relative flex items-center gap-2.5 px-3 py-1">
+              <span className="absolute inset-x-4 top-1/2 h-0.5 -translate-y-1/2 rounded bg-white/70" />
+              {Array.from({ length: target }, (_, i) => i < caught
+                ? <span key={i} className="relative text-base leading-none drop-shadow">⭐</span>
+                : <span key={i} className="relative h-3 w-3 rounded-full border-2 border-white bg-[#6a5ac8]" />)}
+              <span className="relative text-lg leading-none text-white [text-shadow:0_0_8px_#fff]">⬠</span>
             </div>
             <div className="flex min-w-0 flex-wrap justify-end gap-1">{part.map((u, i) => shapeChip(u, i))}</div>
           </div>
@@ -373,13 +373,14 @@ export function StarChase({ onClose }: { onClose: () => void }) {
             className="absolute left-3 flex h-32 w-32 items-center justify-center rounded-full bg-white/45 shadow-inner ring-2 ring-white/70 backdrop-blur-sm [@media(max-height:420px)]:h-28 [@media(max-height:420px)]:w-28" style={{ bottom: 'max(.75rem, env(safe-area-inset-bottom))' }}>
             <span aria-hidden className="h-14 w-14 rounded-full bg-white shadow-lg ring-2 ring-[#cdb8f2]" style={{ transform: `translate(${stick.x * 36}px, ${stick.y * 36}px)` }} />
           </div>
-          <button aria-label="잡기" onPointerDown={(e) => { e.preventDefault(); doCatch() }} className={`absolute right-3 flex h-[5.25rem] w-[5.25rem] flex-col items-center justify-center rounded-full border-0 text-base font-black text-[#6b4a00] shadow-xl active:scale-95 ${hud.cd > 0 ? 'bg-[#e9d9a6] opacity-80' : hud.range ? 'bg-gradient-to-b from-[#fff09a] to-[#ffc94a] ring-4 ring-white' : 'bg-gradient-to-b from-[#ffe27a] to-[#f4b73c]'}`} style={{ bottom: 'max(.75rem, env(safe-area-inset-bottom))' }}>
-            <span className="text-2xl leading-none">{hud.cd > 0 ? '⏳' : '🙌'}</span>잡기
-            {hud.cd > 0 && <span aria-hidden className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(rgba(255,255,255,.65) ${hud.cd * 360}deg, transparent 0)` }} />}
+          <button aria-label="잡기" onPointerDown={(e) => { e.preventDefault(); doCatch() }} className={`absolute right-3 h-[5.5rem] w-[5.5rem] border-0 bg-transparent bg-contain bg-no-repeat p-0 drop-shadow-xl transition-transform active:scale-95 ${hud.cd > 0 ? 'opacity-60 grayscale-[.4]' : hud.range ? 'scale-110' : ''}`} style={{ bottom: 'max(1.6rem, calc(env(safe-area-inset-bottom) + .9rem))', backgroundImage: `url(${assetUrl(hud.range && hud.cd <= 0 ? 'starchase/ui_catch_glow.webp' : 'starchase/ui_catch.webp')})` }}>
+            <span className="sr-only">잡기</span>
+            {hud.cd > 0 && <span aria-hidden className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(rgba(255,255,255,.6) ${hud.cd * 360}deg, transparent 0)` }} />}
           </button>
+          <span aria-hidden className="pointer-events-none absolute right-3 w-[5.5rem] text-center text-sm font-black text-white [text-shadow:0_2px_0_#7a5cc0,0_0_8px_rgba(0,0,0,.4)]" style={{ bottom: 'max(.3rem, env(safe-area-inset-bottom))' }}>잡기</span>
           <div className="absolute right-[6.5rem] flex flex-col items-end gap-1" style={{ bottom: 'max(.75rem, env(safe-area-inset-bottom))' }}>
             {chat && SAYS.map((s, k) => <button key={k} onClick={() => sayIt(k)} className="min-h-10 rounded-full bg-white/95 px-3 text-sm font-black shadow ring-2 ring-[#cdb8f2]">{s}</button>)}
-            <button aria-label="빠른 말" aria-expanded={chat} onClick={() => setChat((v) => !v)} className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff8ec]/95 text-xl shadow ring-2 ring-[#cdb8f2]">💬</button>
+            <button aria-label="빠른 말" aria-expanded={chat} onClick={() => setChat((v) => !v)} className="h-12 w-12 border-0 bg-transparent bg-contain bg-no-repeat p-0 drop-shadow-md active:scale-95" style={{ backgroundImage: `url(${assetUrl('starchase/ui_chat.webp')})` }} />
           </div>
         </>}
       </div>
@@ -447,31 +448,4 @@ function Intro({ onOk }: { onOk: () => void }) {
       </div>
     </div>
   )
-}
-
-/* ───── 캔버스 그림 도구 ───── */
-function drawStar(g: CanvasRenderingContext2D, x: number, y: number, r: number, mode: number) {
-  g.save(); g.translate(x, y); g.shadowColor = 'rgba(255,230,120,.9)'; g.shadowBlur = mode === 2 ? 6 : 14
-  g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = i % 2 ? r * 0.5 : r * 1.15; g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) }
-  g.closePath(); g.fillStyle = mode === 2 ? '#ffe566' : '#ffd84a'; g.fill(); g.lineJoin = 'round'; g.lineWidth = 2.5; g.strokeStyle = '#e8a91e'; g.stroke(); g.shadowBlur = 0
-  g.fillStyle = '#6b3b1e'; g.beginPath(); g.arc(-r * 0.28, 0, r * 0.1, 0, 7); g.arc(r * 0.28, 0, r * 0.1, 0, 7); g.fill()
-  g.strokeStyle = '#6b3b1e'; g.lineWidth = 1.6; g.beginPath(); if (mode === 2) g.arc(0, r * 0.28, r * 0.12, 0, 7); else g.arc(0, r * 0.12, r * 0.18, 0.15, Math.PI - 0.15); g.stroke()
-  g.fillStyle = 'rgba(255,140,160,.6)'; g.beginPath(); g.arc(-r * 0.5, r * 0.18, r * 0.12, 0, 7); g.arc(r * 0.5, r * 0.18, r * 0.12, 0, 7); g.fill()
-  g.restore()
-}
-function drawKid(g: CanvasRenderingContext2D, x: number, y: number, r: number, col: string, shape: string, mine: boolean) {
-  g.save(); g.translate(x, y)
-  g.fillStyle = col; g.beginPath(); g.arc(0, r * 0.25, r * 0.95, 0, 7); g.fill(); g.lineWidth = 2.5; g.strokeStyle = '#fff'; g.stroke()
-  g.fillStyle = '#ffe9d6'; g.beginPath(); g.arc(0, -r * 0.05, r * 0.72, 0, 7); g.fill()
-  g.fillStyle = '#4a3320'; g.beginPath(); g.arc(-r * 0.25, -r * 0.05, r * 0.09, 0, 7); g.arc(r * 0.25, -r * 0.05, r * 0.09, 0, 7); g.fill()
-  g.strokeStyle = '#4a3320'; g.lineWidth = 1.5; g.beginPath(); g.arc(0, r * 0.12, r * 0.18, 0.2, Math.PI - 0.2); g.stroke()
-  g.fillStyle = col; g.beginPath(); g.arc(0, -r * 0.55, r * 0.66, Math.PI, 0); g.fill()
-  g.fillStyle = '#fff'; g.font = `900 ${Math.round(r * 0.9)}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(shape, r * 0.8, -r * 0.9)
-  if (mine) { g.fillStyle = '#fff'; g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); g.moveTo(-r * 0.35, -r * 1.95); g.lineTo(r * 0.35, -r * 1.95); g.lineTo(0, -r * 1.4); g.closePath(); g.fill(); g.stroke() }
-  g.restore(); g.textBaseline = 'alphabetic'
-}
-function bubble(g: CanvasRenderingContext2D, x: number, y: number, text: string) {
-  g.save(); g.font = '800 13px sans-serif'; const w = g.measureText(text).width + 16
-  g.fillStyle = 'rgba(255,255,255,.96)'; g.strokeStyle = '#cdb8f2'; g.lineWidth = 2; g.beginPath(); g.roundRect(x - w / 2, y - 22, w, 24, 12); g.fill(); g.stroke()
-  g.fillStyle = '#3b2a63'; g.textAlign = 'center'; g.fillText(text, x, y - 5); g.restore()
 }

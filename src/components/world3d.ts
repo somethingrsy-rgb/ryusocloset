@@ -91,9 +91,10 @@ export interface World {
   dispose: () => void
 }
 
-export function createWorld(el: HTMLElement, opts: { bounds: number; start: Mover; /** 처음 카메라 방향(0 이면 -z 쪽을 본다) */ yaw?: number; /** 땅 무늬 그림 주소(없으면 연두색) */ grass?: string; seed?: number; sky?: number; onPick?: (o: THREE.Object3D) => void; /** 땅을 눌렀을 때(true 면 걷지 않는다) */ onGround?: (x: number, z: number) => boolean; /** 위아래로 끌어 위에서 내려다보기(농장만) */ tiltable?: boolean; onReady?: () => void }): World {
+export function createWorld(el: HTMLElement, opts: { bounds: number; start: Mover; /** 처음 카메라 방향(0 이면 -z 쪽을 본다) */ yaw?: number; /** 땅 무늬 그림 주소(없으면 연두색) */ grass?: string; seed?: number; sky?: number; onPick?: (o: THREE.Object3D) => void; /** 땅을 눌렀을 때(true 면 걷지 않는다) */ onGround?: (x: number, z: number) => boolean; /** 위아래로 끌어 위에서 내려다보기(농장만) */ tiltable?: boolean; onReady?: () => void; /** 하늘·땅·구름 없이 투명 배경(뒤의 그림 위에 얹는 무대) */ bare?: boolean }): World {
   const rnd = seeded(opts.seed ?? 7)
-  const renderer = new THREE.WebGLRenderer({ antialias: true })
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: !!opts.bare })
+  if (opts.bare) renderer.setClearColor(0x000000, 0)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.shadowMap.enabled = true
@@ -103,8 +104,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   Object.assign(dom.style, { display: 'block', touchAction: 'none', width: '100%', height: '100%' })
 
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color(opts.sky ?? 0xbfe6ff)
-  scene.fog = new THREE.Fog(0xd9f0ff, 35, 95)
+  if (!opts.bare) { scene.background = new THREE.Color(opts.sky ?? 0xbfe6ff); scene.fog = new THREE.Fog(0xd9f0ff, 35, 95) }
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 300)
   scene.add(new THREE.HemisphereLight(0xffffff, 0x88bb66, 1.6))
   const sun = new THREE.DirectionalLight(0xfff3d6, 1.6)
@@ -125,6 +125,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   const ground = new THREE.Mesh(keep(new THREE.PlaneGeometry(B * 3, B * 3)), grassTex ? keep(new THREE.MeshLambertMaterial({ map: grassTex })) : lambert(0x8fd16a))
   ground.rotation.x = -Math.PI / 2
   ground.receiveShadow = true
+  ground.visible = !opts.bare
   scene.add(ground)
   if (!grassTex) {
   const patchGeo = keep(new THREE.CircleGeometry(1, 20))
@@ -142,7 +143,7 @@ export function createWorld(el: HTMLElement, opts: { bounds: number; start: Move
   const cloudGeo = keep(new THREE.SphereGeometry(1, 12, 10))
   const cloudMat = keep(new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.35 }))
   const clouds: THREE.Group[] = []
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < (opts.bare ? 0 : 12); i++) {
     const c = new THREE.Group()
     for (let k = 0; k < 4; k++) {
       const b = new THREE.Mesh(cloudGeo, cloudMat)
