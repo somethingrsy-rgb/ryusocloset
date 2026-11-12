@@ -18,12 +18,29 @@ describe('별 모험 규칙', () => {
     const s = newRun(0); s.main.foes = []; s.p.x = 8; run(s, { ...none, right: true }, 2)
     expect(s.p.x).toBeLessThan(10 - 0.3 + 0.01) // 첫 파이프(칸 10)
   })
-  it('아래에서 물음표 블록을 치면 커지고, 이미 커졌으면 코인이 나온다', () => {
+  it('물음표는 세 번에 한 번 하트 약병이 나오고 나머지는 코인', () => {
     const s = newRun(0); s.main.foes = []; s.p.x = 14.5; s.p.y = 10
     const ev = run(s, { ...none, jump: true }, 0.5)
-    expect(ev.some((e) => e.k === 'grow')).toBe(true); expect(s.p.big).toBe(true); expect(s.p.x).toBeCloseTo(14.5, 1); run(s, none, 1.5); expect(s.p.x).toBeCloseTo(14.5, 1); expect(s.p.y).toBeCloseTo(10, 2); expect(s.p.big).toBe(true); expect(s.main.rows[6][14]).toBe('u')
-    const t = newRun(0); t.main.foes = []; t.p.big = true; t.p.x = 14.5; t.p.y = 10
-    const ev2 = run(t, { ...none, jump: true }, 0.5); expect(ev2.some((e) => e.k === 'coin')).toBe(true); expect(t.coins).toBe(1)
+    expect(ev.some((e) => e.k === 'potion')).toBe(true); expect(s.main.items.length).toBe(1); expect(s.p.big).toBe(false); expect(s.main.rows[6][14]).toBe('u')
+    s.p.x = 16.5; s.p.y = 10; s.p.vy = 0; s.p.on = true; s.p.inv = 99
+    run(s, none, 0.1); const ev2 = run(s, { ...none, jump: true }, 0.5); expect(ev2.some((e) => e.k === 'coin')).toBe(true); expect(s.coins).toBe(1)
+    s.qHits = 3; s.p.x = 34.5; s.p.y = 10; s.p.vy = 0; s.p.on = true
+    run(s, none, 0.1); const ev3 = run(s, { ...none, jump: true }, 0.5); expect(ev3.some((e) => e.k === 'potion')).toBe(true)
+  })
+  it('하트 약병은 플레이어에게서 멀어지는 쪽으로 도망가고, 낭떠러지 앞에서 돌아선다', () => {
+    const s = newRun(0); s.main.foes = []; s.p.inv = 99
+    s.main.items.push({ id: 1, x: 14.5, y: 10, vy: 0, dir: 1, t: 1 }); s.p.x = 12.8; s.p.y = 10
+    const x0 = 14.5; run(s, none, 1); expect(s.main.items[0].x).toBeGreaterThan(x0 + 1.5)
+    const t = newRun(0); t.main.foes = []; t.p.inv = 99; t.p.x = 21.5; t.p.y = 10 // 구덩이(18~20) 오른쪽 가장자리
+    t.main.items.push({ id: 1, x: 15.5, y: 10, vy: 0, dir: 1, t: 1 })
+    for (let i = 0; i < 60 * 6; i++) { step(t, none, 1 / 60); t.p.x = 21.5; t.p.y = 10; t.p.vy = 0 }
+    expect(t.main.items.length).toBe(1); expect(t.main.items[0].y).toBeCloseTo(10, 1)
+  })
+  it('하트 약병을 먹으면 커지고, 커지면서 제자리를 유지한다', () => {
+    const s = newRun(0); s.main.foes = []; s.p.x = 6.5; s.p.y = 10
+    s.main.items.push({ id: 1, x: 6.9, y: 10, vy: 0, dir: 1, t: 1 })
+    const ev = run(s, none, 0.1); expect(ev.some((e) => e.k === 'grow')).toBe(true); expect(s.p.big).toBe(true); expect(s.main.items.length).toBe(0)
+    run(s, none, 1); expect(s.p.y).toBeCloseTo(10, 2)
   })
   it('커진 상태에서 친구에게 닿으면 원래 크기로 돌아오고 ♥는 그대로, 한 번 더 닿으면 ♥가 줄어든다', () => {
     const s = newRun(0); s.main.foes = [{ id: 1, x: 15.2, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]; s.p.x = 14.7; s.p.y = 10; s.p.big = true
