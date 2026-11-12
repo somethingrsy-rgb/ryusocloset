@@ -157,6 +157,17 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
   // 친구가 보낸 자동차 레이스 초대(최근 것 하나): 「수락」하면 레이스 화면을 열어 그 방으로 바로 연결, 「거절」하면 닫는다
   const raceInv = mp.status === 'on' ? [...mp.chat].reverse().find((c) => (c.race || c.jump) && c.uid !== mp.uid && Date.now() - c.t < INVITE_MS) : undefined
   const showRaceInv = raceInv && raceInv.id !== dismissed && !showInvite && !!mp.players[raceInv.uid]
+  // 주방: 「만들 주문서를 골라요」 칸이 있으면 그 칸과 같은 폭으로 바로 위에 붙인다
+  const [orderBox, setOrderBox] = useState<{ left: number; width: number; bottom: number } | null>(null)
+  useEffect(() => {
+    const read = () => {
+      const el = document.querySelector('[data-order-box]'); const r = el?.getBoundingClientRect()
+      const next = r && r.width > 0 ? { left: Math.round(r.left), width: Math.round(r.width), bottom: Math.round(window.innerHeight - r.top + 8) } : null
+      setOrderBox((o) => (o && next && o.left === next.left && o.width === next.width && o.bottom === next.bottom) || (!o && !next) ? o : next)
+    }
+    read(); const id = window.setInterval(read, 400); window.addEventListener('resize', read)
+    return () => { clearInterval(id); window.removeEventListener('resize', read) }
+  }, [])
   // 패널 맨 위 자리(보이는 탭에서만)
   const [dock, setDock] = useState<HTMLElement | null>(null)
   useEffect(() => { const el = document.getElementById('adjustment-controls'); const ok = el && el.closest('aside')?.hasAttribute('hidden') === false ? el : null; if (ok !== dock) setDock(ok) })
@@ -196,7 +207,8 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
       )}
       {/* 들어가기 칸·친구 위치(「친구」 단추로 연다): 아래(가로 화면은 오른쪽) 패널 맨 위에 넣어 캐릭터 화면을 가리지 않게. 그 패널이 안 보이는 탭에서는 예전처럼 화면 위에 띄운다 */}
       {(() => {
-        const card = <div className={dock ? 'pointer-events-none flex w-full flex-col items-start gap-1.5 px-3 pt-2' : 'pointer-events-none absolute right-2 z-[60] flex w-[min(13rem,calc(100%-1rem))] flex-col items-start gap-1.5'} style={dock ? undefined : { top: mp.visiting ? '5.5rem' : '7.5rem' }}>
+        const cardStyle: React.CSSProperties | undefined = dock ? undefined : orderBox ? { position: 'fixed', left: orderBox.left, width: orderBox.width, bottom: orderBox.bottom } : { top: mp.visiting ? '5.5rem' : '7.5rem' }
+        const card = <div className={dock ? 'pointer-events-none flex w-full flex-col items-start gap-1.5 px-3 pt-2' : orderBox ? 'pointer-events-none z-[60] flex flex-col items-start gap-1.5 [&>*]:w-full' : 'pointer-events-none absolute right-2 z-[60] flex w-52 flex-col items-start gap-1.5 [&>*]:w-full'} style={cardStyle}>
         {/* 친구들이 지금 어디 있는지: 누르면 그곳으로 */}
         {open && on && (
           <div role="list" aria-label="친구 위치" className="pointer-events-auto flex w-full flex-col gap-1 rounded-2xl bg-white/95 p-2 shadow-lg">
