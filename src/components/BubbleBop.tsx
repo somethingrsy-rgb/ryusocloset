@@ -135,7 +135,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
         {state === 'play' && <>
           <button aria-label="왼쪽으로" {...hold('left')} className={`${btn} left-3 h-[4.6rem] w-[4.6rem]`} style={{ bottom, backgroundImage: `url(${assetUrl('race/btn_left.webp')})` }} />
           <button aria-label="오른쪽으로" {...hold('right')} className={`${btn} left-[6.2rem] h-[4.6rem] w-[4.6rem]`} style={{ bottom, backgroundImage: `url(${assetUrl('race/btn_right.webp')})` }} />
-          <button aria-label="점프" {...hold('jump')} className={`${btn} right-[6.4rem] h-[4.6rem] w-[4.6rem]`} style={{ bottom, backgroundImage: `url(${assetUrl('starchase/knob.webp')})` }}><span className="text-2xl font-black text-[#7a5cc0]">▲</span></button>
+          <button aria-label="점프" {...hold('jump')} className={`${btn} right-[6.4rem] h-[4.6rem] w-[4.6rem]`} style={{ bottom, backgroundImage: `url(${assetUrl('starchase/btn_up.webp')})` }} />
           <button aria-label="거품 쏘기" {...hold('shoot')} className={`${btn} right-3 h-[5.4rem] w-[5.4rem]`} style={{ bottom, backgroundImage: `url(${assetUrl('starchase/catch.webp')})` }} />
         </>}
         {paused && state === 'play' && <p role="status" className="pointer-events-none absolute inset-x-0 top-1/2 m-0 -translate-y-1/2 text-center text-3xl font-black text-white [text-shadow:0_3px_0_#7a5cc0]">잠깐 멈춤</p>}
