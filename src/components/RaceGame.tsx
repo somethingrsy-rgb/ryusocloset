@@ -179,7 +179,6 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
       {(phase === 'playing' || phase === 'done') && <Suspense fallback={null}><Race3D key={race.seed} live={live} theme={theme} car={car} /></Suspense>}
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
-          <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#c0587a] shadow">🏎️ 자동차 레이스</span>
           {phase === 'playing' && <>
             <span aria-label="부스터 게이지" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#b8860b] shadow">⭐ {race.gauge}/{GAUGE_MAX}</span>
             <span aria-label="바퀴" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#7a3d8f] shadow">🏁 {lapOf(race)}/{LAPS}</span>

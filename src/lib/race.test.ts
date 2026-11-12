@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { curveAt, curveKind, curveSlope, CURVE_START, CURVE_SEG, setHold, glide, rankNow, type Race, LAP, LAPS, TIME_LIMIT, itemsBetween, lapOf, newRace, rewardStars, useBoost, GAUGE_MAX, steer, stepRace, timeLeft } from './race'
+import { STRAIGHT_BEFORE, STRAIGHT_AFTER, straightness, curveAt, curveKind, curveSlope, CURVE_START, CURVE_SEG, setHold, glide, rankNow, type Race, LAP, LAPS, TIME_LIMIT, itemsBetween, lapOf, newRace, rewardStars, useBoost, GAUGE_MAX, steer, stepRace, timeLeft } from './race'
 
 const run = (r: ReturnType<typeof newRace>, sec: number, dt = 0.05) => { for (let i = 0; i < sec / dt && r.phase !== 'done'; i++) r = stepRace(r, dt); return r }
 
@@ -146,5 +146,14 @@ describe('자동차 레이스', () => {
     const signs = new Set<number>(); for (let seg = 0; seg < 30; seg++) signs.add(Math.sign(curveKind(seg, 3)))
     expect(signs.has(-1) && signs.has(1)).toBe(true)
     expect(Math.abs(curveSlope(CURVE_START + CURVE_SEG * 0.25, 4)) + Math.abs(curveSlope(CURVE_START + CURVE_SEG * 1.25, 4))).toBeGreaterThan(0)
+  })
+  it('바퀴 선과 결승선 앞 210칸·뒤 70칸은 완전히 곧은 길이다', () => {
+    for (const g of [LAP, LAP * LAPS]) {
+      for (let seed = 1; seed <= 30; seed++) for (let d = g - STRAIGHT_BEFORE; d <= g + STRAIGHT_AFTER; d += 5) expect(Math.abs(curveAt(d, seed))).toBe(0)
+      expect(straightness(g - STRAIGHT_BEFORE - 100)).toBe(1); expect(straightness(g - STRAIGHT_BEFORE)).toBe(0)
+    }
+    // 곧은 구간 사이에는 휘는 곳이 실제로 있다
+    let any = 0; for (let d = CURVE_START; d < LAP - STRAIGHT_BEFORE; d += 3) if (Math.abs(curveAt(d, 3)) > 1) any++
+    expect(any).toBeGreaterThan(20)
   })
 })
