@@ -3,7 +3,7 @@
  * 파이프(관)로 들어가 보너스 방에 다녀온 뒤 깃발까지 간다. 좌표는 칸 단위, y 는 발바닥 높이(아래로 갈수록 커진다).
  */
 export const ROWS = 12
-export const CFG = { hw: 0.32, ph: 1.3, bigPh: 1.7, g: 38, jump: 16, walk: 6.2, foe: 1.6, lives: 3, inv: 2, bounce: 11 }
+export const CFG = { hw: 0.32, ph: 1.3, bigPh: 1.7, g: 38, jump: 16, walk: 6.2, foe: 1.6, lives: 3 /* 한 단계에 목숨 3개, 새 단계가 시작되면 다시 3개로 채운다 */, inv: 2, bounce: 11 }
 export const SOLID = '#=?ulrLRefxy' // 땅, 벽돌, 물음표(쓰기 전·후), 파이프
 export const levelWidth = 64
 
@@ -86,7 +86,7 @@ function respawn(s: State) { s.p.big = false; s.room = 'main'; s.p.x = 2.5; s.p.
 function sub(s: State, inp: Input, dt: number, ev: Ev[]) {
   if (s.phase === 'over' || s.phase === 'won') return
   s.t += dt; s.fade = Math.max(0, s.fade - dt)
-  if (s.phase === 'clear') { s.clearT -= dt; if (s.clearT <= 0) { if (s.level + 1 >= LEVELS) { s.phase = 'won'; s.stars += 20; ev.push({ k: 'won' }) } else { const n = newRun(s.level + 1, s); Object.assign(s, n) } } return }
+  if (s.phase === 'clear') { s.clearT -= dt; if (s.clearT <= 0) { if (s.level + 1 >= LEVELS) { s.phase = 'won'; s.stars += 20; ev.push({ k: 'won' }) } else { const n = newRun(s.level + 1, { ...s, lives: CFG.lives }); Object.assign(s, n) } } return }
   const R = roomOf(s), p = s.p, hw = CFG.hw, ph = p.big ? CFG.bigPh : CFG.ph
   p.inv = Math.max(0, p.inv - dt)
   const mv = (inp.right ? 1 : 0) - (inp.left ? 1 : 0)
