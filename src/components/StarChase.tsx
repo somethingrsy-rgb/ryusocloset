@@ -3,7 +3,8 @@ import { earnStars } from '../lib/shop'
 import { playLose, playPop, playTap, playWin } from '../lib/sound'
 import { assetUrl } from '../lib/items'
 import { localTest, multiplayerAvailable } from '../lib/mp/config'
-import { savedName } from '../lib/mp/session'
+import { sayStar, savedName } from '../lib/mp/session'
+import { RACE_INVITE_EVENT, takeStarInvite } from '../lib/raceInvite'
 import { joinStarRoom, STAR_MAX, type SState, type StarRoom, type StarSnap } from '../lib/mp/starNet'
 import { createStarScene, SLOT_COLORS, SLOT_SHAPES, type StarScene } from './starScene3d'
 import { AVATARS, getAvatar } from '../lib/avatars'
@@ -33,8 +34,8 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
   const [room, setRoom] = useState<StarRoom | null>(null)
   const [practice, setPractice] = useState(false)
   const [err, setErr] = useState('')
+  const [invited, setInvited] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [code, setCode] = useState('')
   const [intro, setIntro] = useState(false)
   const [settings, setSettings] = useState(false)
   const [leaving, setLeaving] = useState(false)
@@ -54,7 +55,7 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
     try {
       const r = await joinStarRoom(savedName() || '친구', (s) => { if (mounted.current) { if (s.meta) seenMeta.current = true; setSnap(s) } }, { ...how, look: JSON.stringify({ avatar: getAvatar().id, outfit }) })
       if (!mounted.current) { r?.leave(); return }
-      if (!r) { setErr('지금은 방이 꽉 찼어요. 조금 뒤에 다시 해 봐요'); setBusy(false); return }
+      if (!r) { setErr('지금은 친구들이 놀고 있거나 방이 꽉 찼어요. 조금 뒤에 다시 해 봐요'); setBusy(false); return }
       roomRef.current = r; setRoom(r); setPractice(!!how.practice); setScreen('room')
       if (!hasKey(INTRO_KEY)) setIntro(true)
     } catch (e) { setErr(e instanceof Error ? e.message.replace(/^\[[^\]]+\]\s*/, '') || '연결하지 못했어요' : '연결하지 못했어요') }
@@ -63,6 +64,13 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
   }, [busy])
 
   if (localTest) (window as unknown as { __star?: () => unknown }).__star = () => ({ snap: snapRef.current, me: meRef.current }) // 시험용(?mp=local 에서만)
+  // 친구의 초대를 수락해서 열렸으면 바로 그 방으로 들어간다
+  useEffect(() => {
+    const go = () => { const inv = takeStarInvite(); if (inv) void enter({ code: inv.room }) }
+    const t = window.setTimeout(go, 30); window.addEventListener(RACE_INVITE_EVENT, go)
+    return () => { clearTimeout(t); window.removeEventListener(RACE_INVITE_EVENT, go) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const meta = snap.meta
   const me = room?.uid ?? ''
   const phase = meta?.phase ?? 'lobby'
@@ -278,13 +286,7 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
         <h2 className="m-0 text-center text-3xl font-black text-white [font-family:Jua,'Noto_Sans_KR',sans-serif] [text-shadow:0_3px_0_#7a5cc0,0_0_14px_rgba(255,255,255,.5)]">도망간 별을<br />잡아라 ⭐</h2>
         <p className="m-0 rounded-full bg-white/85 px-4 py-1 text-sm font-bold">함께 별자리를 완성해요</p>
         <div className={`${panel} flex w-full max-w-xs flex-col gap-2`}>
-          {multiplayerAvailable && <>
-            <button disabled={busy} onClick={() => enter({ create: true })} className={`${btn} bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-[#6b4a00]`}>🏠 방 만들기</button>
-            <div className="flex gap-2">
-              <input value={code} onChange={(e) => setCode(e.target.value.replace(/[^0-9sS]/g, '').slice(0, 2))} inputMode="numeric" aria-label="방 번호" placeholder="방 번호 (1~4)" className="h-12 min-w-0 flex-1 rounded-full border-2 border-[#cdb8f2] bg-white px-4 text-center text-base font-bold" />
-              <button disabled={busy || !code} onClick={() => enter({ code })} className={`${btn} shrink-0 bg-[#ff8fab] px-4 text-white`}>친구 방 참가</button>
-            </div>
-          </>}
+          {multiplayerAvailable && <button disabled={busy} onClick={() => enter({})} className={`${btn} bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-[#6b4a00]`}>👫 친구랑 같이 하기</button>}
           <button disabled={busy} onClick={() => enter({ practice: true })} className={`${btn} bg-[#bfe8d0] text-[#245a3d]`}>🎯 연습하기 <span className="text-xs font-bold">(혼자)</span></button>
           <button onClick={onClose} className={`${btn} bg-white text-[#6b5a99]`}>🏡 마을로</button>
           {busy && <p role="status" className="m-0 text-center text-sm font-bold text-[#7a5cc0]">연결하는 중…</p>}
@@ -311,8 +313,8 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
         <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-y-auto p-3 pt-[max(.75rem,env(safe-area-inset-top))]">
           <div className={`${panel} w-full max-w-md`}>
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="m-0 text-base font-black">우리 방 <span className="rounded-full bg-[#efe5ff] px-3 py-0.5 text-lg tracking-widest">{room?.room.toUpperCase()}</span></p>
-              <button onClick={() => { try { navigator.clipboard?.writeText(room?.room.replace(/\D/g, '') ?? '') } catch { /* 복사 못 해도 괜찮다 */ } }} aria-label="방 번호 복사" className="min-h-9 rounded-full bg-white px-3 text-xs font-bold ring-1 ring-[#cdb8f2]">📋 복사</button>
+              <p className="m-0 text-base font-black">⭐ 같이 놀 친구들</p>
+              <button onClick={() => { playTap(); sayStar(room?.room ?? 's1'); setInvited(true); window.setTimeout(() => setInvited(false), 3000) }} aria-label="친구 초대하기" className="min-h-10 rounded-full bg-[#fff0f5] px-3 text-xs font-black text-[#c0587a] ring-2 ring-[#ffc2d4] active:scale-95">{invited ? '💌 초대를 보냈어요!' : '💌 친구 초대하기'}</button>
             </div>
             <div className="grid grid-cols-4 gap-1.5 [@media(max-width:380px)]:grid-cols-2 [@media(max-height:420px)]:mx-auto [@media(max-height:420px)]:max-w-[26rem] [@media(max-height:420px)]:gap-1">
               {Array.from({ length: STAR_MAX }, (_, i) => {

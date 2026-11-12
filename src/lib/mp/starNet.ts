@@ -8,7 +8,7 @@ import { onDisconnect, onValue, ref, remove, serverTimestamp, set, get, update, 
 import { connect } from './firebase'
 import { localTest } from './config'
 
-export const STAR_ROOMS = ['s1', 's2', 's3', 's4'] as const
+export const STAR_ROOMS = ['s1'] as const /** 방은 하나뿐: 모두 같은 방에서 논다 */
 export const STAR_MAX = 4
 export const STAR_STALE_MS = 60000
 export interface SPlayer { name: string; look: string; ready: boolean; x: number; y: number; cap: { n: number; r: number } | null; say: { k: number; n: number } | null; j: number }
