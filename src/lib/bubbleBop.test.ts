@@ -64,6 +64,10 @@ describe('별 거품 규칙', () => {
     const t = newLevel(LEVELS.length - 1); t.foes = []; const ev2 = run(t, none, CFG.clearWait + 0.3)
     expect(ev2.some((e) => e.k === 'won').valueOf()).toBe(true); expect(t.phase).toBe('won'); expect(t.stars).toBe(25)
   })
+  it('새 단계가 시작되면 목숨이 다시 3개로 채워진다', () => {
+    const s = newLevel(0); s.foes = []; s.lives = 1; s.p.inv = 99
+    run(s, none, CFG.clearWait + 0.3); expect(s.level).toBe(1); expect(s.lives).toBe(CFG.lives); expect(CFG.lives).toBe(3)
+  })
   it('과일이 떨어져 발판 위에 서고, 먹으면 점수', () => {
     const s = newLevel(0); s.foes = []; s.p.inv = 99
     s.fruits.push({ id: 5, x: 7.5, y: 3, vy: 0, kind: 0, t: 0, pts: 100 })

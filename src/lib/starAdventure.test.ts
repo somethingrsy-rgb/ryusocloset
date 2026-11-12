@@ -60,6 +60,10 @@ describe('별 모험 규칙', () => {
     const ev2 = run(t, none, 0.1); expect(ev2.some((e) => e.k === 'clear')).toBe(true); expect(t.stars).toBe(5)
     run(t, none, 2.5); expect(t.level).toBe(1)
   })
+  it('새 단계가 시작되면 목숨이 다시 3개로 채워진다', () => {
+    const s = newRun(0); s.lives = 1; s.main.foes = []; s.p.x = s.flagX + 0.1; s.p.y = 10
+    run(s, none, 3); expect(s.level).toBe(1); expect(s.lives).toBe(CFG.lives); expect(CFG.lives).toBe(3)
+  })
   it('목숨이 0이면 끝, 마지막 단계를 끝내면 승리', () => {
     const s = newRun(0); s.lives = 1; s.main.foes = [{ id: 1, x: 15.2, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]; s.p.x = 14.7; s.p.y = 10
     run(s, none, 0.3); expect(s.phase).toBe('over')

@@ -8,7 +8,8 @@ export const CFG = {
   g: 32, jump: 16.5, walk: 6, // 중력·점프 힘·걷기 속도
   shootCd: 0.35, bubbleSpeed: 10, bubbleFly: 0.3, bubbleRise: 1.8, bubbleLife: 9, trapLife: 8,
   foeWalk: 1.6, foeMad: 3, foeJump: 13,
-  lives: 5, inv: 2.5, clearWait: 2.5, fruitLife: 12,
+  lives: 3, inv: 2.5, // 한 단계에 목숨 3개, 새 단계가 시작되면 다시 3개로 채운다
+  clearWait: 2.5, fruitLife: 12,
   pts: { foe: 100, bubble: 10, fruit: [100, 200, 300, 400, 500] },
 }
 
@@ -157,7 +158,7 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
     s.clearT -= dt
     if (s.clearT <= 0) {
       if (s.level + 1 >= LEVELS.length) { s.phase = 'won'; s.stars += 20; ev.push({ k: 'won' }) }
-      else { const n = newLevel(s.level + 1, s); s.level = n.level; s.grid = n.grid; s.p = { ...n.p, inv: 1.5 }; s.foes = n.foes; s.bubbles = []; s.fruits = []; s.phase = 'play'; s.nextId = n.nextId }
+      else { const n = newLevel(s.level + 1, s); s.level = n.level; s.grid = n.grid; s.lives = CFG.lives; s.p = { ...n.p, inv: 1.5 }; s.foes = n.foes; s.bubbles = []; s.fruits = []; s.phase = 'play'; s.nextId = n.nextId }
     }
   }
 }
