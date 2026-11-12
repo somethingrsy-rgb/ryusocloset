@@ -6,7 +6,7 @@
 import * as THREE from 'three'
 import { assetUrl } from '../lib/items'
 import { CFG } from '../lib/starChase'
-import { AVATAR_H, FEET, HOUSE_ART, createWorld, meadowTree, type Doll, type World } from './world3d'
+import { AVATAR_H, FEET, createWorld, type Doll, type World } from './world3d'
 
 export const SLOT_COLORS = ['#ff8fab', '#5fc27a', '#4aa6ea', '#a77be8']
 export const SLOT_SHAPES = ['△', '◇', '□', '○']
@@ -53,61 +53,26 @@ export function createStarScene(el: HTMLElement): StarScene {
   const grass = tex('grass', [300 / 7, 300 / 7])
   const ground = new THREE.Mesh(w.keep(new THREE.PlaneGeometry(300, 300)), w.keep(new THREE.MeshLambertMaterial({ map: grass })))
   ground.rotation.x = -Math.PI / 2; ground.position.y = -0.01; scene.add(ground)
+  // 흙길(앞뒤로 길게): 세로 타일을 반복. 길 한쪽에 풀 가장자리가 있다
+  const pathTex = tex('path', [1, 160 / 10.8])
+  const path = new THREE.Mesh(w.keep(new THREE.PlaneGeometry(5, 160)), w.keep(new THREE.MeshBasicMaterial({ map: pathTex, transparent: true, depthWrite: false })))
+  path.rotation.x = -Math.PI / 2; path.rotation.z = 0.06; path.position.set(5.5, 0.02, -30); path.renderOrder = -1; scene.add(path)
   // 먼 언덕: 늘 카메라 앞 먼 곳에 세워 두는 그림(땅 끝과 만나게)
   const hillsMat = w.keep(new THREE.MeshBasicMaterial({ map: tex('hills'), transparent: true, depthWrite: false, fog: false }))
   const hills = new THREE.Mesh(w.keep(new THREE.PlaneGeometry(1, 216 / 1600)), hillsMat); hills.renderOrder = -2; scene.add(hills)
-  // 산책 마을 그대로: 한 바퀴 이어진 흙길, 길가 집 일곱 채, 초록·노랑·주황 나무, 꽃 덤불, 꽃송이. (하늘과 잔디만 별잡기 것)
+  // 장식(부딪히지 않음): 필드 안쪽은 비워 두고 바깥과 길가에 흩뿌린다
   const rnd = w.rnd
   const clear = (x: number, z: number, m: number) => Math.abs(x) < hw + m && Math.abs(z) < hh + m
-  const curve = new THREE.CatmullRomCurve3(Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2, r = 30 + Math.sin(i * 2.3) * 4; return new THREE.Vector3(Math.cos(a) * r * 1.25, 0, Math.sin(a) * r) }), true)
-  const samples = curve.getSpacedPoints(240)
-  const roadW = 3.4
-  {
-    const pos: number[] = [], idx: number[] = [], uv: number[] = []
-    let along = 0
-    samples.forEach((p, i) => {
-      const t = curve.getTangentAt(i / (samples.length - 1)), n = new THREE.Vector3(-t.z, 0, t.x).normalize().multiplyScalar(roadW / 2)
-      pos.push(p.x + n.x, 0.02, p.z + n.z, p.x - n.x, 0.02, p.z - n.z)
-      if (i) along += p.distanceTo(samples[i - 1])
-      uv.push(0, along / roadW, 1, along / roadW)
-      if (i) { const a = (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2) }
-    })
-    const geo = w.keep(new THREE.BufferGeometry())
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals()
-    const dirt = w.texOf(assetUrl('cafe/3d/dirt.webp')); dirt.wrapS = dirt.wrapT = THREE.RepeatWrapping
-    scene.add(new THREE.Mesh(geo, w.keep(new THREE.MeshLambertMaterial({ map: dirt, side: THREE.DoubleSide }))))
-  }
-  const nearRoad = (x: number, z: number, d: number) => samples.some((p) => (p.x - x) ** 2 + (p.z - z) ** 2 < d * d)
-  HOUSE_ART.forEach((art, k) => {
-    for (const u of k === 0 ? [0.02, 0.5] : k === 1 ? [0.12, 0.62] : k === 2 ? [0.22, 0.72] : [0.32, 0.82]) {
-      const p = curve.getPointAt(u), t = curve.getTangentAt(u), sd = (k + (u > 0.4 ? 1 : 0)) % 2 ? 1 : -1
-      const hx = p.x + -t.z * sd * 6.5, hz = p.z + t.x * sd * 6.5
-      if (!clear(hx, hz, 2)) w.addProp(art.img, hx, hz, 6, art.aspect, 2.5)
+  const put = (img: string, aspect: number, h: number, n: number, zr: [number, number], xr: number, margin: number, r = 0.4) => {
+    for (let i = 0; i < n; i++) {
+      const x = (rnd() * 2 - 1) * xr, z = zr[0] + rnd() * (zr[1] - zr[0]); if (clear(x, z, margin)) continue
+      w.addProp(`starchase/${img}.webp`, x, z, h * (0.85 + rnd() * 0.4), aspect, r)
     }
-  })
-  let trees = 0
-  for (let i = 0; i < 500 && trees < 120; i++) {
-    const s0 = samples[Math.floor(rnd() * samples.length)], a = rnd() * Math.PI * 2, far = 6 + rnd() * 8
-    const [x, z] = i % 2 ? [s0.x + Math.cos(a) * far, s0.z + Math.sin(a) * far] : [(rnd() - 0.5) * 120, (rnd() - 0.5) * 100]
-    if (clear(x, z, 2) || nearRoad(x, z, 4.5) || w.obstacles.some((o) => (o.x - x) ** 2 + (o.z - z) ** 2 < 9)) continue
-    w.addTree(x, z, 0.8 + rnd() * 0.5, meadowTree(rnd())); trees++
   }
-  let bushes = 0
-  for (let i = 0; i < 400 && bushes < 70; i++) {
-    const s0 = samples[Math.floor(rnd() * samples.length)], a = rnd() * Math.PI * 2, far = 3.2 + rnd() * 4
-    const [x, z] = i % 3 ? [s0.x + Math.cos(a) * far, s0.z + Math.sin(a) * far] : [(rnd() - 0.5) * 120, (rnd() - 0.5) * 100]
-    if (nearRoad(x, z, 2.8) || w.obstacles.some((o) => (o.x - x) ** 2 + (o.z - z) ** 2 < (o.r + 1.4) ** 2)) continue
-    w.addProp('cafe/3d/bush.webp', x, z, 0.9 + rnd() * 0.4, 1024 / 616, 0.45); bushes++
-  }
-  {
-    const fl = new THREE.InstancedMesh(w.keep(new THREE.CylinderGeometry(0.11, 0.11, 0.04, 8)), w.keep(new THREE.MeshLambertMaterial({ color: 0xffffff })), 900)
-    const mtx = new THREE.Matrix4(), col = new THREE.Color(), colors = [0xff8fb1, 0xffd54a, 0xffffff, 0xc7a6ff, 0xff9e6b]
-    for (let i = 0; i < 900; i++) {
-      const sp = samples[Math.floor(rnd() * samples.length)], a = rnd() * Math.PI * 2, d = roadW / 2 + 0.6 + rnd() * 7, x = sp.x + Math.cos(a) * d, z = sp.z + Math.sin(a) * d
-      mtx.makeScale(0.6 + rnd() * 0.6, 1, 0.6 + rnd() * 0.6).setPosition(x, 0.04, z); fl.setMatrixAt(i, mtx); fl.setColorAt(i, col.setHex(colors[Math.floor(rnd() * colors.length)]))
-    }
-    scene.add(fl)
-  }
+  put('tree_green', 368 / 378, 6.2, 34, [-75, 35], 48, 1.5, 0.8); put('tree_purple', 362 / 367, 6.2, 22, [-75, 35], 48, 1.5, 0.8)
+  put('bush', 367 / 286, 2.0, 30, [-70, 32], 46, 0.5); put('flowers', 371 / 279, 1.4, 40, [-70, 32], 46, -1)
+  put('rock', 366 / 257, 1.6, 12, [-70, 32], 46, -1); put('lamp', 301 / 398, 5.0, 8, [-70, 32], 40, 1.2); put('fence', 370 / 243, 2.0, 8, [-70, 32], 40, 1.2)
+  put('house', 371 / 395, 7.0, 4, [-75, 20], 44, 2.5, 1.5)
 
   const AH = AVATAR_H
   const KA = 1.5
