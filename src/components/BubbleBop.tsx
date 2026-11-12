@@ -11,7 +11,21 @@ import { COLS, CFG, LEVELS, ROWS, newGame, step, type Ev, type Input, type State
  * 별 거품: 한 화면 발판 게임. 내 아바타가 거품을 뿜어 별 친구를 가두고, 터뜨리면 과일이 나온다.
  * 규칙은 lib/bubbleBop.ts(순수 함수), 여기는 그리기와 조작만.
  */
-const FRUITS = ['fg_cherry', 'fg_melonslice', 'fg_orangeslice', 'fg_pineapple', 'fg_blueberry']
+/** 판마다 컨셉 하나를 무작위로 고른다(섞지 않는다): 별 나라 / 할로윈 / 몬스터 마을 */
+interface Theme { id: 'star' | 'halloween' | 'monster'; name: string; sky: string; foes: { walk: string; trapped: string; mad: string; h: number }[]; treats: string[]; plat: [string, string]; wall: [string, string] }
+const MON_POOL = ['bat', 'blob', 'goblin', 'fluff', 'dino', 'dragon', 'jelly', 'golem']
+const THEMES: Theme[] = [
+  { id: 'star', name: '별 나라', sky: 'starchase/sky_land.webp', foes: [{ walk: 'starchase/star_idle.webp', trapped: 'starchase/star_scared.webp', mad: 'starchase/star_flee.webp', h: 1.2 }], treats: ['race/fg_cherry.webp', 'race/fg_melonslice.webp', 'race/fg_orangeslice.webp', 'race/fg_pineapple.webp', 'race/fg_blueberry.webp'], plat: ['#ff8fc0', '#8a5ad8'], wall: ['#9b79e0', '#6f4fb8'] },
+  { id: 'halloween', name: '할로윈', sky: 'race/sky_halloween.webp', foes: [{ walk: 'starchase/hw_ghost.webp', trapped: 'starchase/hw_ghost.webp', mad: 'starchase/hw_ghost.webp', h: 1.5 }, { walk: 'starchase/hw_pumpkin.webp', trapped: 'starchase/hw_pumpkin.webp', mad: 'starchase/hw_pumpkin.webp', h: 1.2 }], treats: ['race/cd_candy.webp', 'race/cd_cupcake.webp', 'race/cd_lolli_a.webp', 'race/cd_heartcookie.webp', 'race/cd_gummybear.webp'], plat: ['#ff9a3d', '#6a3fa8'], wall: ['#7a4fc0', '#3d2a6b'] },
+  { id: 'monster', name: '몬스터 마을', sky: 'starchase/sky_land.webp', foes: [], treats: ['race/fg_strawbush.webp', 'race/fg_blueberry.webp', 'race/fg_cherry.webp', 'race/fg_melonslice.webp', 'race/fg_pineapple.webp'], plat: ['#9be07a', '#3f9a6a'], wall: ['#6fbf8a', '#2f7a5a'] },
+]
+const pickTheme = (): Theme => {
+  const t = THEMES[Math.floor(Math.random() * THEMES.length)]
+  if (t.id !== 'monster') return t
+  const ids = [...MON_POOL].sort(() => Math.random() - 0.5).slice(0, 3)
+  return { ...t, foes: ids.map((id) => ({ walk: `travel/monster/${id}_angry.webp`, trapped: `travel/monster/${id}_happy.webp`, mad: `travel/monster/${id}_angry.webp`, h: 1.35 })) }
+}
+type FoeImgs = { walk: HTMLImageElement; trapped: HTMLImageElement; mad: HTMLImageElement; h: number }[]
 const INTRO_KEY = 'ryuso.bubble.intro'
 const setKey = (k: string) => { try { localStorage.setItem(k, '1') } catch { /* 저장 못 해도 괜찮다 */ } }
 const load = (src: string) => { const i = new Image(); i.src = assetUrl(src); return i }
@@ -20,6 +34,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
   const [state, setState] = useState<'intro' | 'play' | 'over' | 'won'>('intro')
   const [hud, setHud] = useState({ score: 0, lives: CFG.lives, level: 1, foes: 0, stars: 0 })
   const [paused, setPaused] = useState(false)
+  const [theme, setTheme] = useState<Theme>(() => pickTheme())
   const [, force] = useState(0)
   const box = useRef<HTMLDivElement>(null)
   const cvs = useRef<HTMLCanvasElement>(null)
@@ -27,10 +42,12 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
   const keys = useRef(new Set<string>())
   const touch = useRef({ left: false, right: false, jump: false, shoot: false })
   const fx = useRef<{ k: 'pop' | 'burst' | 'hit'; x: number; y: number; t: number }[]>([])
-  const imgs = useRef<{ star: HTMLImageElement[]; fruit: HTMLImageElement[]; burst: HTMLImageElement; me: HTMLCanvasElement | null }>({ star: ['star_idle', 'star_flee', 'star_scared'].map((n) => load(`starchase/${n}.webp`)), fruit: FRUITS.map((n) => load(`race/${n}.webp`)), burst: load('starchase/burst.webp'), me: null })
+  const imgs = useRef<Imgs>({ foes: [], fruit: [], burst: load('starchase/burst.webp'), me: null, theme: THEMES[0] })
   const paid = useRef(false)
 
-  const begin = useCallback(() => { game.current = newGame(); fx.current = []; paid.current = false; setState('play'); setPaused(false) }, [])
+  const begin = useCallback((fresh: boolean) => { if (fresh) setTheme(pickTheme()); game.current = newGame(); fx.current = []; paid.current = false; setState('play'); setPaused(false) }, [])
+  // 컨셉이 정해지면 그 그림을 불러온다
+  useEffect(() => { imgs.current.theme = theme; imgs.current.foes = theme.foes.map((f) => ({ walk: load(f.walk), trapped: load(f.trapped), mad: load(f.mad), h: f.h })); imgs.current.fruit = theme.treats.map(load) }, [theme])
   useEffect(() => { if (state !== 'play' || paused) return; startBgm('run'); return stopBgm }, [state, paused])
   useEffect(() => {
     const look = { avatar: getAvatar().id }
@@ -103,7 +120,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
     onPointerUp: () => { touch.current[k] = false }, onPointerCancel: () => { touch.current[k] = false }, onLostPointerCapture: () => { touch.current[k] = false },
     onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
   })
-  const sky = <><div aria-hidden className="pointer-events-none absolute inset-0 bg-cover bg-center portrait:hidden" style={{ backgroundImage: `url(${assetUrl('starchase/sky_land.webp')})` }} /><div aria-hidden className="pointer-events-none absolute inset-0 hidden bg-cover bg-center portrait:block" style={{ backgroundImage: `url(${assetUrl('starchase/sky_port.webp')})` }} /></>
+  const sky = <><div aria-hidden className="pointer-events-none absolute inset-0 bg-cover bg-center portrait:hidden" style={{ backgroundImage: `url(${assetUrl(theme.sky)})` }} /><div aria-hidden className="pointer-events-none absolute inset-0 hidden bg-cover bg-center portrait:block" style={{ backgroundImage: `url(${assetUrl(theme.id === 'star' ? 'starchase/sky_port.webp' : theme.sky)})` }} /></>
   const btn = 'absolute border-0 bg-transparent bg-contain bg-center bg-no-repeat p-0 drop-shadow-lg active:scale-90 touch-none select-none'
   const bottom = 'max(.9rem, calc(env(safe-area-inset-bottom) + .5rem))'
   const pill = (img: string) => ({ backgroundImage: `url(${assetUrl(img)})`, backgroundSize: '100% 100%' })
@@ -116,7 +133,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
         <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-1 px-2 pt-[max(.5rem,env(safe-area-inset-top))]">
           <div className="flex min-w-0 items-center gap-1 whitespace-nowrap">
             <span aria-label="점수" className="flex h-11 w-[7.6rem] items-center pl-[2.9rem] text-sm font-black drop-shadow" style={pill('starchase/pill_star.webp')}>{hud.score}</span>
-            <span aria-label="단계와 목숨" className="flex h-9 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-black shadow ring-2 ring-[#cdb8f2]">{hud.level}/{LEVELS.length}단계 · <span className="text-[#e0567a]">♥</span>{hud.lives}</span>
+            <span aria-label="단계와 목숨" className="flex h-9 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-black shadow ring-2 ring-[#cdb8f2]">{theme.id === 'halloween' ? '🎃' : theme.id === 'monster' ? '👾' : '⭐'} {hud.level}/{LEVELS.length}단계 · <span className="text-[#e0567a]">♥</span>{hud.lives}</span>
           </div>
           <div className="pointer-events-auto flex gap-1.5">
             <button aria-label={paused ? '계속하기' : '잠깐 멈춤'} onClick={() => { playTap(); setPaused((v) => !v) }} className="h-11 w-11 rounded-full bg-white/95 text-lg font-black shadow ring-2 ring-[#cdb8f2]">{paused ? '▶' : 'Ⅱ'}</button>
@@ -135,13 +152,14 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
         <div role="dialog" aria-label="놀이 방법" className="absolute inset-0 z-40 flex items-center justify-center bg-black/30 p-3">
           <div className="flex max-h-full w-full max-w-xs flex-col items-center gap-2 overflow-y-auto rounded-3xl bg-[#fff8ec] p-4 text-center shadow-xl ring-2 ring-[#cdb8f2]">
             <p className="m-0 text-xl font-black">🫧 별 거품</p>
+            <p className="m-0 text-sm font-black text-[#7a5cc0]">이번 판은 {theme.name}!</p>
             <ul className="m-0 flex list-none flex-col gap-1 p-0 text-left text-sm font-bold text-[#6b5a99]">
               <li>◀ ▶ <b>걷기</b> · ▲ <b>점프</b> (키보드: 화살표, 스페이스)</li>
-              <li>🫧 <b>거품</b>을 쏴서 별 친구를 가둬요</li>
+              <li>🫧 <b>거품</b>을 쏴서 친구들을 가둬요</li>
               <li>👣 갇힌 거품을 <b>몸으로 톡</b> 터뜨리면 과일이 나와요</li>
               <li>🍓 과일을 먹으면 점수! 별 친구에게 닿으면 ♥가 줄어요</li>
             </ul>
-            <button onClick={() => { setKey(INTRO_KEY); begin() }} className="min-h-12 w-full rounded-full bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-base font-black text-[#6b4a00] shadow-md">시작!</button>
+            <button onClick={() => { setKey(INTRO_KEY); begin(false) }} className="min-h-12 w-full rounded-full bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-base font-black text-[#6b4a00] shadow-md">시작!</button>
             <button onClick={onClose} className="min-h-11 w-full rounded-full bg-white text-sm font-black text-[#6b5a99] ring-2 ring-[#cdb8f2]">🏡 마을로</button>
           </div>
         </div>
@@ -153,7 +171,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
             <p className="m-0 text-sm font-bold text-[#6b5a99]">점수 {hud.score}점 · {state === 'won' ? `${LEVELS.length}단계 모두 끝!` : `${hud.level}단계까지 갔어요`}</p>
             {hud.stars > 0 && <p className="m-0 text-xs font-bold text-[#7a5cc0]">⭐ {hud.stars}개 받았어요</p>}
             <div className="flex flex-wrap justify-center gap-2">
-              <button onClick={() => { begin(); force((n) => n + 1) }} className="min-h-12 rounded-full bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] px-5 text-base font-black text-[#6b4a00] shadow-md">한 번 더</button>
+              <button onClick={() => { begin(true); force((n) => n + 1) }} className="min-h-12 rounded-full bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] px-5 text-base font-black text-[#6b4a00] shadow-md">한 번 더</button>
               <button onClick={onClose} className="min-h-12 rounded-full bg-white px-5 text-base font-black text-[#6b5a99] ring-2 ring-[#cdb8f2]">🏡 마을로</button>
             </div>
           </div>
@@ -164,7 +182,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
 }
 
 /* ───── 그리기 ───── */
-type Imgs = { star: HTMLImageElement[]; fruit: HTMLImageElement[]; burst: HTMLImageElement; me: HTMLCanvasElement | null }
+type Imgs = { foes: FoeImgs; fruit: HTMLImageElement[]; burst: HTMLImageElement; me: HTMLCanvasElement | null; theme: Theme }
 const ready = (i: HTMLImageElement | HTMLCanvasElement | null): i is HTMLImageElement | HTMLCanvasElement => !!i && (i instanceof HTMLCanvasElement || (i.complete && i.naturalWidth > 0))
 function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, top: string, bot: string, r = 0.22) {
   const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top); gr.addColorStop(1, bot)
@@ -173,17 +191,18 @@ function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: 
 }
 function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { k: string; x: number; y: number; t: number }[]) {
   // 벽과 바닥(보라 블록), 발판(분홍 윗면의 둥근 판)
-  for (let r = 0; r < ROWS; r++) { block(g, 0, r, 1, 1, '#9b79e0', '#6f4fb8'); block(g, COLS - 1, r, 1, 1, '#9b79e0', '#6f4fb8') }
-  for (let c = 1; c < COLS - 1; c++) block(g, c, ROWS - 1, 1, 1, '#b08ae8', '#6f4fb8')
-  for (let r = 0; r < ROWS - 1; r++) { let c = 1; while (c < COLS - 1) { if (!s.grid[r][c]) { c++; continue } let e = c; while (e + 1 < COLS - 1 && s.grid[r][e + 1]) e++; block(g, c, r, e - c + 1, 0.62, '#ff8fc0', '#8a5ad8', 0.3); c = e + 1 } }
+  const th = im.theme
+  for (let r = 0; r < ROWS; r++) { block(g, 0, r, 1, 1, th.wall[0], th.wall[1]); block(g, COLS - 1, r, 1, 1, th.wall[0], th.wall[1]) }
+  for (let c = 1; c < COLS - 1; c++) block(g, c, ROWS - 1, 1, 1, th.wall[0], th.wall[1])
+  for (let r = 0; r < ROWS - 1; r++) { let c = 1; while (c < COLS - 1) { if (!s.grid[r][c]) { c++; continue } let e = c; while (e + 1 < COLS - 1 && s.grid[r][e + 1]) e++; block(g, c, r, e - c + 1, 0.62, th.plat[0], th.plat[1], 0.3); c = e + 1 } }
   // 과일
   for (const f of s.fruits) { const i = im.fruit[f.kind]; if (ready(i)) { const h = 0.9, w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = f.t > 9 && Math.floor(t * 8) % 2 ? 0.4 : 1; g.drawImage(i, f.x - w / 2, f.y - h, w, h); g.globalAlpha = 1 } }
   // 별 친구
-  for (const f of s.foes) { const i = im.star[f.mad ? 1 : 0]; if (ready(i)) { const h = 1.2, w = h * i.naturalWidth / i.naturalHeight, bob = f.on ? Math.abs(Math.sin(t * 8 + f.id)) * 0.12 : 0; g.save(); g.translate(f.x, f.y - bob); g.scale(f.dir > 0 ? -1 : 1, 1); g.drawImage(i, -w / 2, -h, w, h); g.restore() } }
+  for (const f of s.foes) { const v = im.foes[f.id % Math.max(1, im.foes.length)]; const i = v ? (f.mad ? v.mad : v.walk) : null; if (ready(i)) { const h = v.h * (f.mad ? 1.1 : 1), w = h * i.naturalWidth / i.naturalHeight, bob = f.on ? Math.abs(Math.sin(t * 8 + f.id)) * 0.12 : 0; g.save(); g.translate(f.x, f.y - bob); g.scale(f.dir > 0 ? -1 : 1, 1); g.drawImage(i, -w / 2, -h, w, h); g.restore() } }
   // 거품(갇힌 별 친구는 안에서 놀란 얼굴)
   for (const b of s.bubbles) {
     const r = b.foe ? 0.85 : 0.5, wob = 1 + Math.sin(t * 6 + b.id) * 0.04
-    if (b.foe) { const i = im.star[2]; if (ready(i)) { const h = 1.0, w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = b.life < 2 && Math.floor(t * 8) % 2 ? 0.5 : 1; g.drawImage(i, b.x - w / 2, b.y - h * 0.55, w, h); g.globalAlpha = 1 } }
+    if (b.foe) { const v = im.foes[b.foe.id % Math.max(1, im.foes.length)]; const i = v ? v.trapped : null; if (ready(i)) { const h = Math.min(1.1, v.h * 0.85), w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = b.life < 2 && Math.floor(t * 8) % 2 ? 0.5 : 1; g.drawImage(i, b.x - w / 2, b.y - h * 0.55, w, h); g.globalAlpha = 1 } }
     const gr = g.createRadialGradient(b.x - r * 0.3, b.y - r * 0.3, r * 0.1, b.x, b.y, r)
     gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(0.7, 'rgba(190,230,255,.22)'); gr.addColorStop(1, 'rgba(200,170,255,.55)')
     g.fillStyle = gr; g.beginPath(); g.ellipse(b.x, b.y, r * wob, r / wob, 0, 0, 7); g.fill()

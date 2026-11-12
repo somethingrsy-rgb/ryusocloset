@@ -17,6 +17,9 @@ export const LEVELS: Level[] = [
   { plats: [[8, 1, 5], [8, 10, 14], [5, 4, 11], [2, 1, 5], [2, 10, 14]], foes: [[12, 8], [3, 2], [7, 5]] },
   { plats: [[8, 3, 12], [5, 1, 5], [5, 10, 14], [2, 5, 10]], foes: [[6, 8], [2, 5], [12, 5], [7, 2]] },
   { plats: [[9, 1, 4], [9, 11, 14], [6, 3, 12], [3, 1, 4], [3, 11, 14]], foes: [[2, 9], [13, 9], [7, 6], [2, 3], [13, 3]] },
+  { plats: [[9, 1, 6], [9, 9, 14], [6, 4, 11], [3, 1, 5], [3, 10, 14]], foes: [[3, 9], [12, 9], [7, 6], [3, 3], [12, 3]] },
+  { plats: [[8, 1, 3], [8, 6, 9], [8, 12, 14], [5, 3, 6], [5, 9, 12], [2, 1, 4], [2, 11, 14]], foes: [[2, 8], [13, 8], [7, 8], [4, 5], [10, 5]] },
+  { plats: [[9, 1, 5], [9, 10, 14], [6, 2, 6], [6, 9, 13], [3, 5, 10]], foes: [[3, 9], [12, 9], [4, 6], [11, 6], [7, 3], [6, 3]] },
 ]
 
 export interface Body { x: number; y: number; vx: number; vy: number; on: boolean }
@@ -91,7 +94,7 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
   // ── 별 친구
   for (const f of s.foes) {
     f.jumpT -= dt
-    const sp = f.mad ? CFG.foeMad : CFG.foeWalk
+    const sp = f.mad ? CFG.foeMad : CFG.foeWalk * (1 + 0.07 * s.level) // 단계가 올라갈수록 조금씩 빨라진다
     if (f.on) {
       const ax = f.x + f.dir * (hw + 0.15), r = Math.round(f.y)
       if (ax < 1.1 || ax > COLS - 1.1) f.dir = (f.dir * -1) as 1 | -1
