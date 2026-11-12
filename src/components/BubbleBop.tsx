@@ -12,7 +12,7 @@ import { COLS, CFG, LEVELS, ROWS, newGame, step, type Ev, type Input, type State
  * 별 거품: 한 화면 발판 게임. 내 아바타가 거품을 뿜어 별 친구를 가두고, 터뜨리면 과일이 나온다.
  * 규칙은 lib/bubbleBop.ts(순수 함수), 여기는 그리기와 조작만.
  */
-import { THEMES, monsterTheme, type FoeImgs, type Theme } from './gameThemes'
+import { PLACES, THEMES, monsterTheme, type FoeImgs, type Theme } from './gameThemes'
 const INTRO_KEY = 'ryuso.bubble.intro'
 const setKey = (k: string) => { try { localStorage.setItem(k, '1') } catch { /* 저장 못 해도 괜찮다 */ } }
 const load = (src: string) => { const i = new Image(); i.src = assetUrl(src); return i }
@@ -29,14 +29,13 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
   const keys = useRef(new Set<string>())
   const touch = useRef({ left: false, right: false, jump: false, shoot: false })
   const fx = useRef<{ k: 'pop' | 'burst' | 'hit'; x: number; y: number; t: number }[]>([])
-  const imgs = useRef<Imgs>({ sets: [], burst: load('starchase/burst.webp'), me: null })
+  const imgs = useRef<Imgs>({ sets: [], burst: load('starchase/burst.webp'), me: null, deco: PLACES.map((p) => p.deco.map(([n]) => load(`race/${n}.webp`))) })
   const paid = useRef(false)
   if (localTest) (window as unknown as { __bb?: () => State }).__bb = () => game.current // 시험용(?mp=local 에서만)
 
   const begin = useCallback((fresh: boolean) => { if (fresh) setThemes([THEMES[0], THEMES[1], monsterTheme()]); game.current = newGame(); fx.current = []; paid.current = false; setState('play'); setPaused(false) }, [])
   // 세 컨셉의 그림을 미리 불러 둔다
   useEffect(() => { imgs.current.sets = themes.map((th) => ({ theme: th, foes: th.foes.map((f) => ({ walk: load(f.walk), trapped: load(f.trapped), mad: load(f.mad), h: f.h })), fruit: th.treats.map(load) })) }, [themes])
-  const theme = themes[(hud.level - 1) % themes.length]
   useEffect(() => { if (state !== 'play' || paused) return; startBgm('run'); return stopBgm }, [state, paused])
   useEffect(() => {
     const look = { avatar: getAvatar().id }
@@ -112,7 +111,8 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
     onPointerUp: () => { touch.current[k] = false }, onPointerCancel: () => { touch.current[k] = false }, onLostPointerCapture: () => { touch.current[k] = false },
     onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
   })
-  const sky = <><div aria-hidden className="pointer-events-none absolute inset-0 bg-cover bg-center portrait:hidden" style={{ backgroundImage: `url(${assetUrl(theme.sky)})` }} /><div aria-hidden className="pointer-events-none absolute inset-0 hidden bg-cover bg-center portrait:block" style={{ backgroundImage: `url(${assetUrl(theme.id === 'star' ? 'starchase/sky_port.webp' : theme.sky)})` }} /></>
+  const place = PLACES[(hud.level - 1) % PLACES.length]
+  const sky = <div aria-hidden className="pointer-events-none absolute inset-0 bg-cover bg-bottom" style={{ backgroundImage: `url(${assetUrl(place.sky)})` }} />
   const btn = 'absolute border-0 bg-transparent bg-contain bg-center bg-no-repeat p-0 drop-shadow-lg active:scale-90 touch-none select-none'
   const bottom = 'max(.9rem, calc(env(safe-area-inset-bottom) + .5rem))'
   const pill = (img: string) => ({ backgroundImage: `url(${assetUrl(img)})`, backgroundSize: '100% 100%' })
@@ -125,7 +125,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
         <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-1 px-2 pt-[max(.5rem,env(safe-area-inset-top))]">
           <div className="flex min-w-0 items-center gap-1 whitespace-nowrap">
             <span aria-label="점수" className="flex h-11 w-[7.6rem] items-center pl-[2.9rem] text-sm font-black drop-shadow" style={pill('starchase/pill_star.webp')}>{hud.score}</span>
-            <span aria-label="단계와 목숨" className="flex h-9 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-black shadow ring-2 ring-[#cdb8f2]">{theme.id === 'halloween' ? '🎃' : theme.id === 'monster' ? '👾' : '⭐'} {hud.level}/{LEVELS.length}단계 · <span className="text-[#e0567a]">♥</span>{hud.lives}</span>
+            <span aria-label="단계와 목숨" className="flex h-9 items-center gap-1 rounded-full bg-white/90 px-3 text-sm font-black shadow ring-2 ring-[#cdb8f2]">{place.ico} {hud.level}/{LEVELS.length}단계 · <span className="text-[#e0567a]">♥</span>{hud.lives}</span>
           </div>
           <div className="pointer-events-auto flex gap-1.5">
             <button aria-label={paused ? '계속하기' : '잠깐 멈춤'} onClick={() => { playTap(); setPaused((v) => !v) }} className="h-11 w-11 rounded-full bg-white/95 text-lg font-black shadow ring-2 ring-[#cdb8f2]">{paused ? '▶' : 'Ⅱ'}</button>
@@ -174,7 +174,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
 }
 
 /* ───── 그리기 ───── */
-type Imgs = { sets: { theme: Theme; foes: FoeImgs; fruit: HTMLImageElement[] }[]; burst: HTMLImageElement; me: HTMLCanvasElement | null }
+type Imgs = { sets: { theme: Theme; foes: FoeImgs; fruit: HTMLImageElement[] }[]; burst: HTMLImageElement; me: HTMLCanvasElement | null; deco: HTMLImageElement[][] }
 const ready = (i: HTMLImageElement | HTMLCanvasElement | null): i is HTMLImageElement | HTMLCanvasElement => !!i && (i instanceof HTMLCanvasElement || (i.complete && i.naturalWidth > 0))
 function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, top: string, bot: string, r = 0.22) {
   const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top); gr.addColorStop(1, bot)
@@ -185,11 +185,14 @@ function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: 
 function at(g: CanvasRenderingContext2D, x: number, y: number, K: number, S: number, fn: () => void) { g.save(); g.translate(x, y); g.scale(S, S / K); fn(); g.restore() }
 function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { k: string; x: number; y: number; t: number; text?: string }[], K = 1, S = 1) {
   const set = im.sets[s.level % 3]; if (!set) return
-  const th = set.theme, foesIm = set.foes
+  const foesIm = set.foes, pl = PLACES[s.level % PLACES.length]
+  // 그 장소의 구경거리를 바닥 위 뒤쪽에 세운다(놀이판 가운데 빈 곳)
+  for (let k = 0; k < 3; k++) { const [, h] = pl.deco[k % pl.deco.length], i = im.deco[s.level % PLACES.length][k % pl.deco.length]; if (!ready(i)) continue
+    const w = h * 0.8 * i.naturalWidth / i.naturalHeight, x = 3.5 + k * 4.6 + ((k + s.level) % 2) * 0.8; g.globalAlpha = 0.9; g.drawImage(i, x - w / 2, ROWS - 1 - h * 0.8, w, h * 0.8); g.globalAlpha = 1 }
   // 벽과 바닥, 발판(둥근 판): 위아래로 K 배 늘어난 칸
-  for (let r = 0; r < ROWS; r++) { block(g, 0, r, 1, 1, th.wall[0], th.wall[1]); block(g, COLS - 1, r, 1, 1, th.wall[0], th.wall[1]) }
-  for (let c = 1; c < COLS - 1; c++) block(g, c, ROWS - 1, 1, 1, th.wall[0], th.wall[1])
-  for (let r = 0; r < ROWS - 1; r++) { let c = 1; while (c < COLS - 1) { if (!s.grid[r][c]) { c++; continue } let e = c; while (e + 1 < COLS - 1 && s.grid[r][e + 1]) e++; block(g, c, r, e - c + 1, 0.62, th.plat[0], th.plat[1], 0.3); c = e + 1 } }
+  for (let r = 0; r < ROWS; r++) { block(g, 0, r, 1, 1, pl.ground[0], pl.ground[1]); block(g, COLS - 1, r, 1, 1, pl.ground[0], pl.ground[1]) }
+  for (let c = 1; c < COLS - 1; c++) block(g, c, ROWS - 1, 1, 1, pl.ground[0], pl.ground[1])
+  for (let r = 0; r < ROWS - 1; r++) { let c = 1; while (c < COLS - 1) { if (!s.grid[r][c]) { c++; continue } let e = c; while (e + 1 < COLS - 1 && s.grid[r][e + 1]) e++; block(g, c, r, e - c + 1, 0.62, pl.pipe[0], pl.pipe[1], 0.3); c = e + 1 } }
   // 과일
   for (const f of s.fruits) { const i = set.fruit[f.kind]; if (ready(i)) at(g, f.x, f.y, K, S, () => {
     const h = 1.15, w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = f.t > 9 && Math.floor(t * 8) % 2 ? 0.4 : 1

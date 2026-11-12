@@ -7,23 +7,13 @@ import { renderFigure } from '../lib/exportPng'
 import { localTest } from '../lib/mp/config'
 import type { Outfit } from '../lib/types'
 import { CFG, LEVELS, ROWS, newRun, step, type Ev, type Input, type State } from '../lib/starAdventure'
-import { THEMES, monsterTheme, type FoeImgs, type Theme } from './gameThemes'
+import { PLACES, THEMES, monsterTheme, type FoeImgs, type Theme } from './gameThemes'
 
 /**
  * 별 모험: 옆으로 달리는 발판 게임. 내 아바타로 걷고 뛰어서 별 코인을 모으고, 별 친구를 밟고, 파이프로 들어가 보너스 방에 다녀온다.
  * 규칙은 lib/starAdventure.ts(순수 함수), 여기는 그리기와 조작만. 단계마다 컨셉(별 나라·할로윈·몬스터 마을)이 돌아간다.
  */
 const load = (src: string) => { const i = new Image(); i.src = assetUrl(src); return i }
-/** 레이스 장소 6곳: 하늘 그림, 땅·관 색, 그 장소에 놓인 구경거리(레이스 길가 그림) */
-interface Place { id: string; ico: string; sky: string; ground: [string, string]; pipe: [string, string]; deco: [string, number][] }
-const PLACES: Place[] = [
-  { id: 'meadow', ico: '🌳', sky: 'race/sky_meadow.webp', ground: ['#8ed36a', '#5aa04a'], pipe: ['#7be07a', '#3f9a4a'], deco: [['prop_tree', 4.2], ['prop_bunny', 2.6], ['prop_tree2', 4.2], ['prop_flowers', 1.2]] },
-  { id: 'snow', ico: '❄️', sky: 'race/sky_snow.webp', ground: ['#f2f8ff', '#a9c9e8'], pipe: ['#8ec9f0', '#4a86c0'], deco: [['sn_pine', 4.2], ['sn_snowman', 2.8], ['sn_igloo', 2.8], ['sn_lamp', 3.8], ['sn_castle', 4.6]] },
-  { id: 'candy', ico: '🍭', sky: 'race/sky_candy.webp', ground: ['#ffc2dc', '#e88ab4'], pipe: ['#c58bff', '#8a5ad8'], deco: [['cd_lolli_a', 3.8], ['cd_cotton_pink', 4], ['cd_castle', 4.6], ['cd_cakehouse', 3.4], ['cd_lamp_a', 3.8]] },
-  { id: 'fruit', ico: '🍓', sky: 'race/sky_fruit.webp', ground: ['#ffc96a', '#e8903a'], pipe: ['#8fe06a', '#4aa04a'], deco: [['fr_tree_green', 4.2], ['fr_strawhouse', 3.4], ['fr_tree_lemon', 4.2], ['fr_applehouse', 3.4], ['fr_fruitstand', 2.8]] },
-  { id: 'sea', ico: '🐠', sky: 'race/sky_sea.webp', ground: ['#7fd6e0', '#3a9ab4'], pipe: ['#ff9a8a', '#d8605a'], deco: [['sea_coral_pink', 4], ['sea_shellhouse', 3.6], ['sea_turtlelamp', 3.6], ['sea_coral_purple', 3.6], ['sea_octopus', 2.8]] },
-  { id: 'halloween', ico: '🎃', sky: 'race/sky_halloween.webp', ground: ['#7a4fc0', '#3d2a6b'], pipe: ['#ff9a3d', '#c05a1a'], deco: [['hw_tree_green', 4.2], ['hw_pumpkin_house', 3.8], ['hw_castle', 4.6], ['hw_ghost', 3], ['hw_pumpkin_house', 3.8]] },
-]
 type Set = { theme: Theme; foes: FoeImgs }
 type Imgs = { sets: Set[]; me: HTMLCanvasElement | null; deco: HTMLImageElement[][] }
 const ready = (i: HTMLImageElement | HTMLCanvasElement | null): i is HTMLImageElement | HTMLCanvasElement => !!i && (i instanceof HTMLCanvasElement || (i.complete && i.naturalWidth > 0))
