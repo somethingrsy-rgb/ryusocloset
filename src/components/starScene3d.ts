@@ -6,7 +6,7 @@
 import * as THREE from 'three'
 import { assetUrl } from '../lib/items'
 import { CFG } from '../lib/starChase'
-import { AVATAR_H, FEET, HOUSE_ART, createWorld, meadowTree, type Doll, type World } from './world3d'
+import { AVATAR_H, FEET, HOUSE_ART, TREE_ART, createWorld, type Doll, type World } from './world3d'
 
 export const SLOT_COLORS = ['#ff8fab', '#5fc27a', '#4aa6ea', '#a77be8']
 export const SLOT_SHAPES = ['△', '◇', '□', '○']
@@ -61,7 +61,7 @@ export function createStarScene(el: HTMLElement): StarScene {
   const clear = (x: number, z: number, m: number) => Math.abs(x) < hw + m && Math.abs(z) < hh + m
   const curve = new THREE.CatmullRomCurve3(Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2, r = 30 + Math.sin(i * 2.3) * 4; return new THREE.Vector3(Math.cos(a) * r * 1.25, 0, Math.sin(a) * r) }), true)
   const samples = curve.getSpacedPoints(240)
-  const roadW = 3.4
+  const roadW = 4.6, PATH_ASPECT = 512 / 1105 // 새 길 그림: 가장자리 풀 포함 폭
   {
     const pos: number[] = [], idx: number[] = [], uv: number[] = []
     let along = 0
@@ -69,13 +69,13 @@ export function createStarScene(el: HTMLElement): StarScene {
       const t = curve.getTangentAt(i / (samples.length - 1)), n = new THREE.Vector3(-t.z, 0, t.x).normalize().multiplyScalar(roadW / 2)
       pos.push(p.x + n.x, 0.02, p.z + n.z, p.x - n.x, 0.02, p.z - n.z)
       if (i) along += p.distanceTo(samples[i - 1])
-      uv.push(0, along / roadW, 1, along / roadW)
+      uv.push(0, (along * PATH_ASPECT) / roadW, 1, (along * PATH_ASPECT) / roadW)
       if (i) { const a = (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2) }
     })
     const geo = w.keep(new THREE.BufferGeometry())
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals()
-    const dirt = w.texOf(assetUrl('cafe/3d/dirt.webp')); dirt.wrapS = dirt.wrapT = THREE.RepeatWrapping
-    scene.add(new THREE.Mesh(geo, w.keep(new THREE.MeshLambertMaterial({ map: dirt, side: THREE.DoubleSide }))))
+    const dirt = tex('path'); dirt.wrapT = THREE.RepeatWrapping; dirt.wrapS = THREE.ClampToEdgeWrapping
+    const road = new THREE.Mesh(geo, w.keep(new THREE.MeshBasicMaterial({ map: dirt, transparent: true, alphaTest: 0.2, side: THREE.DoubleSide }))); road.renderOrder = -1; scene.add(road)
   }
   const nearRoad = (x: number, z: number, d: number) => samples.some((p) => (p.x - x) ** 2 + (p.z - z) ** 2 < d * d)
   HOUSE_ART.forEach((art, k) => {
@@ -90,7 +90,7 @@ export function createStarScene(el: HTMLElement): StarScene {
     const s0 = samples[Math.floor(rnd() * samples.length)], a = rnd() * Math.PI * 2, far = 6 + rnd() * 8
     const [x, z] = i % 2 ? [s0.x + Math.cos(a) * far, s0.z + Math.sin(a) * far] : [(rnd() - 0.5) * 120, (rnd() - 0.5) * 100]
     if (clear(x, z, 2) || nearRoad(x, z, 4.5) || w.obstacles.some((o) => (o.x - x) ** 2 + (o.z - z) ** 2 < 9)) continue
-    w.addTree(x, z, 0.8 + rnd() * 0.5, meadowTree(rnd())); trees++
+    const r0 = rnd(); w.addTree(x, z, 0.8 + rnd() * 0.5, r0 < 0.2 ? { img: 'starchase/tree_dark.webp', aspect: 420 / 440, h: 4.2 } : r0 < 0.4 ? { img: 'starchase/tree_pink.webp', aspect: 420 / 438, h: 4.2 } : TREE_ART[0]); trees++
   }
   let bushes = 0
   for (let i = 0; i < 400 && bushes < 70; i++) {
