@@ -29,19 +29,20 @@ const THEMES: { id: RaceTheme; ico: string; name: string }[] = [
 const CAR_KEY = 'ryuso.race.car'
 const CARS: { id: RaceCar; name: string }[] = [{ id: 'heart', name: '하트' }, { id: 'cloud', name: '구름' }, { id: 'blue', name: '파랑' }, { id: 'bunny', name: '번개' }, { id: 'star', name: '별' }]
 const readCar = (): RaceCar => { try { const v = localStorage.getItem(CAR_KEY); return v === 'cloud' || v === 'blue' || v === 'bunny' || v === 'star' ? v : 'heart' } catch { return 'heart' } }
-const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' || v === 'fruit' || v === 'sea' ? v : 'meadow' } catch { return 'meadow' } }
+const readTheme = (): RaceTheme => { try { const v = localStorage.getItem(THEME_KEY); return v === 'snow' || v === 'candy' || v === 'fruit' || v === 'sea' ? v : 'meadow' /* 할로윈은 따로 고르는 게임이라 저장하지 않는다 */ } catch { return 'meadow' } }
 
 const img = (name: string) => assetUrl(`race/${name}.webp`)
+const HW_PILL = 'flex h-10 min-w-[5.6rem] items-center px-3 text-sm font-black text-[#3b2a63] drop-shadow'
 const roundBtn = 'pointer-events-auto h-24 w-24 active:scale-90 drop-shadow-lg'
 
 /** 자동차 레이스(혼자 달리기): 차는 저절로 달리고, ◀ ▶ 로 옆 칸으로 옮긴다. 별을 모으고 부스터로 빨라지며, 바나나·물웅덩이는 잠깐 느려질 뿐 혼나지 않는다 */
-export function RaceGame({ onExit }: { onExit: () => void }) {
+export function RaceGame({ onExit, halloween = false }: { onExit: () => void; /** 할로윈 레이스: 별잡기와 같은 보라 노을 풍경으로 달린다(장소는 고정) */ halloween?: boolean }) {
   const [phase, setPhase] = useState<'intro' | 'lobby' | 'playing' | 'done'>('intro')
   const [race, setRace] = useState<Race>(() => newRace())
   const live = useRef(race)
   const [paid, setPaid] = useState(0)
   const [paused, setPaused] = useState(false)
-  const [theme, setTheme] = useState<RaceTheme>(readTheme)
+  const [theme, setTheme] = useState<RaceTheme>(() => (halloween ? 'halloween' : readTheme()))
   const [car, setCar] = useState<RaceCar>(readCar)
   const [friends, setFriends] = useState<number>(readRivals)
   const pickFriends = (n: number) => { setFriends(n); playTap(); try { localStorage.setItem(RIVAL_KEY, String(n)) } catch { /* 저장 못 해도 이번 판은 그대로 */ } }
@@ -180,10 +181,10 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           {phase === 'playing' && <>
-            <span aria-label="부스터 게이지" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#b8860b] shadow">⭐ {race.gauge}/{GAUGE_MAX}</span>
+            <span aria-label="부스터 게이지" className={halloween ? HW_PILL : 'rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#b8860b] shadow'} style={halloween ? { backgroundImage: `url(${assetUrl('starchase/pill_star.webp')})`, backgroundSize: '100% 100%' } : undefined}>{halloween ? <span className="pl-8">{race.gauge}/{GAUGE_MAX}</span> : <>⭐ {race.gauge}/{GAUGE_MAX}</>}</span>
             <span aria-label="바퀴" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#7a3d8f] shadow">🏁 {lapOf(race)}/{LAPS}</span>
             {race.rivals.length > 0 && <span aria-label="내 순위" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#d0587a] shadow">🏅 {(race.finish && race.rank) || rankNow(race)}등</span>}
-            <span aria-label="남은 시간" className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b9b] shadow">⏱ {timeLeft(race)}</span>
+            <span aria-label="남은 시간" className={halloween ? HW_PILL : 'rounded-full bg-white/90 px-3 py-1.5 text-sm font-black text-[#3d6b9b] shadow'} style={halloween ? { backgroundImage: `url(${assetUrl('starchase/pill_clock.webp')})`, backgroundSize: '100% 100%' } : undefined}>{halloween ? <span className="pl-8">{timeLeft(race)}</span> : <>⏱ {timeLeft(race)}</>}</span>
           </>}
         </div>
         <button aria-label="닫기" onClick={() => { playTap(); onExit() }} className="pointer-events-auto h-10 w-10 rounded-full bg-white/95 text-lg font-bold shadow">✕</button>
@@ -228,7 +229,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
       {phase === 'intro' && (
         <div className="absolute inset-0 z-30 flex items-start justify-center overflow-y-auto bg-[#fdf3f6] p-3">
           <div className="my-auto flex w-full max-w-sm flex-col items-center gap-2 rounded-3xl bg-white p-4 text-center shadow-xl">
-            <p className="m-0 text-xl font-black text-[#c0587a]">🏎️ 자동차 레이스</p>
+            <p className="m-0 text-xl font-black text-[#c0587a]">{halloween ? '🎃 할로윈' : '🏎️ 자동차 레이스'}</p>
             <p className="m-0 text-sm leading-snug font-bold text-[#6b4b52]">◀ ▶ 로 옆 칸에 가요. ⭐ 코인을 모으면 부스터 게이지가 차요. 가득 차면 🚀 단추로 빨라져요!<br />🍌 바나나와 💧 물웅덩이는 살짝 느려져요. {LAPS}바퀴 또는 {TIME_LIMIT}초면 끝!</p>
             <div role="radiogroup" aria-label="같이 달릴 친구" className="flex w-full items-center gap-1.5">
               <span className="shrink-0 text-xs font-black text-[#7a3d8f]">🤖 컴퓨터 차</span>
@@ -246,14 +247,14 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
                 </button>
               ))}
             </div>
-            <div role="radiogroup" aria-label="달릴 곳" className="grid w-full grid-cols-5 gap-1.5">
+            {!halloween && <div role="radiogroup" aria-label="달릴 곳" className="grid w-full grid-cols-5 gap-1.5">
               {THEMES.map((t) => (
                 <button key={t.id} role="radio" aria-checked={theme === t.id} onClick={() => pickTheme(t.id)}
                   className={`flex min-w-0 flex-col items-center rounded-2xl border-2 py-1 text-[11px] leading-tight font-black whitespace-nowrap ${theme === t.id ? 'border-[#ff8fab] bg-[#fff0f5] text-[#c0587a]' : 'border-transparent bg-[#f6eef8] text-[#7a3d8f]'}`}>
                   <span className="text-2xl leading-none">{t.ico}</span>{t.name}
                 </button>
               ))}
-            </div>
+            </div>}
             <button onClick={start} className="min-h-12 w-full rounded-full bg-gradient-to-r from-[#ff8fab] to-[#c58bff] text-lg font-black text-white shadow-lg active:scale-95">출발하기!</button>
             {multiplayerAvailable && <button disabled={online} onClick={() => void openLobby()} className="min-h-11 w-full rounded-full bg-[#fff0f5] text-base font-black text-[#c0587a] ring-2 ring-[#ffc2d4] disabled:opacity-60 active:scale-95">{online ? '방을 찾는 중…' : '👫 친구랑 같이 달리기'}</button>}
             {netMsg && <p role="alert" className="m-0 text-xs font-bold text-[#d0587a]">{netMsg}</p>}

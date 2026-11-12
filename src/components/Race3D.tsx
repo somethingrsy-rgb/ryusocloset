@@ -16,7 +16,7 @@ const ROAD_TILE = roadWidth(3) * (951 / 512)
 const GROUND_TILE = 10
 const PROPS = 20, PROP_GAP = 11
 
-export type RaceTheme = 'meadow' | 'snow' | 'candy' | 'fruit' | 'sea'
+export type RaceTheme = 'meadow' | 'snow' | 'candy' | 'fruit' | 'sea' | 'halloween'
 export type RaceCar = 'heart' | 'cloud' | 'blue' | 'bunny' | 'star'
 /** 자동차 그림 크기(픽셀): 같은 눈금으로 줄여서 똑바로·왼쪽·오른쪽 크기가 서로 맞는다. 1픽셀 = CAR_K 장면 단위 */
 const CAR_PX: Record<RaceCar, Record<'straight' | 'left' | 'right', [number, number]>> = {
@@ -41,12 +41,13 @@ const CAR_K = 4.3 * 0.7 / 457
 /** 친구 차로 쓰는 차 그림들(내 차는 빼고 돌려 쓴다) */
 export const ALL_CARS: RaceCar[] = ['heart', 'cloud', 'blue', 'bunny', 'star']
 /** 장소마다 하늘색(하늘 그림 아래·안개), 길가 소품 */
-const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | 'xmas' | 'fruit' | 'sea' }> = {
+const THEMES: Record<RaceTheme, { sky: number; prop: 'tree' | 'lollipop' | 'xmas' | 'fruit' | 'sea' | 'halloween' }> = {
   meadow: { sky: 0xc9ecff, prop: 'tree' },
   snow: { sky: 0xdad6f6, prop: 'xmas' },
   candy: { sky: 0xffc9e3, prop: 'lollipop' },
   fruit: { sky: 0xffd6c4, prop: 'fruit' },
   sea: { sky: 0x9fe6ef, prop: 'sea' },
+  halloween: { sky: 0xe2b3ea, prop: 'halloween' },
 }
 
 export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Race>; theme: RaceTheme; car: RaceCar }) {
@@ -128,10 +129,13 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     const FRUIT_BIG: [string, number, number][] = [['fr_tree_green', 4.4, 0.93], ['fr_tree_lemon', 4.4, 0.95], ['fr_tree_orange', 4.4, 0.95], ['fr_strawhouse', 3.8, 1.04], ['fr_tree_orange', 4.4, 0.95], ['fr_tree_lemon', 4.4, 0.95], ['fr_applehouse', 3.8, 1.01], ['fr_tree_green', 4.4, 0.93]]
     // 바닷속 마을: 큰 길가 자리는 산호 5종에 조개집·소라집·잠수함을 섞는다 [그림, 높이, 가로세로 비율]
     const SEA_BIG: [string, number, number][] = [['sea_coral_pink', 4.2, 0.93], ['sea_coral_purple', 3.8, 1.04], ['sea_shellhouse', 4.2, 1.03], ['sea_coral_kelp', 4.4, 0.92], ['sea_coral_anemone', 3.6, 1.06], ['sea_conch', 4.2, 1.04], ['sea_coral_brain', 3.6, 1.03], ['sea_submarine', 3.8, 1.07]]
+    // 할로윈: 별잡기와 같은 나무·호박 집·보라 성 [그림, 높이, 가로세로 비율]
+    const HW_BIG: [string, number, number][] = [['hw_tree_green', 4.4, 360 / 394], ['hw_tree_purple', 4.4, 366 / 389], ['hw_pumpkin_house', 4.0, 380 / 382], ['hw_tree_green', 4.4, 360 / 394], ['hw_castle', 4.8, 380 / 384], ['hw_tree_purple', 4.4, 366 / 389]]
     const props = Array.from({ length: PROPS }, (_, i) => {
       const side = i % 2 ? 1 : -1, x = side * (sideX + (i % 3) * 2.2), z = -i * PROP_GAP
       const big = 0.9 + (i % 3) * 0.2
-      const o = th.prop === 'tree' ? (i % 4 === 1 ? spriteOf(art('prop_tree2'), 4.7 * big, 4.4 * big, 2.2 * big) : spriteOf(art('prop_tree'), 4.6 * big, 4.2 * big, 2.1 * big))
+      const o = th.prop === 'halloween' ? (() => { const [img, h, asp] = HW_BIG[i % HW_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
+        : th.prop === 'tree' ? (i % 4 === 1 ? spriteOf(art('prop_tree2'), 4.7 * big, 4.4 * big, 2.2 * big) : spriteOf(art('prop_tree'), 4.6 * big, 4.2 * big, 2.1 * big))
         : th.prop === 'fruit' ? (() => { const [img, h, asp] = FRUIT_BIG[i % FRUIT_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
         : th.prop === 'sea' ? (() => { const [img, h, asp] = SEA_BIG[i % SEA_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
         : th.prop === 'xmas' ? (() => { const [img, h, asp] = SNOW_BIG[i % SNOW_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })() : (() => { const [img, h, asp] = CANDY_BIG[i % CANDY_BIG.length]; return spriteOf(art(img), h * big * asp, h * big, h * big / 2) })()
@@ -141,8 +145,11 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
     // 길가 구경거리: 그림마다 쓰는 곳이 정해져 있다(초원: 토끼·꽃무더기 / 사탕 나라: 곰·풍선·사탕 나라 모음 / 눈 나라: 눈 나라 모음·크리스마스 나무)
     // [그림 이름, 높이, 가로세로 비율]
     type Art = [string, number, number]
-    const meadow = theme === 'meadow', candy = theme === 'candy', snow = theme === 'snow', fruit = theme === 'fruit', sea = theme === 'sea'
-    const CHEER: Art[] = meadow ? [['prop_bunny', 3.0, 0.83]] : candy ? [
+    const meadow = theme === 'meadow', candy = theme === 'candy', snow = theme === 'snow', fruit = theme === 'fruit', sea = theme === 'sea', halloween = theme === 'halloween'
+    const CHEER: Art[] = halloween ? [
+      ['hw_ghost', 3.0, 380 / 381], ['hw_cauldron', 2.6, 380 / 364], ['hw_lamp', 3.8, 302 / 395], ['hw_pumpkin_house', 3.8, 380 / 382], ['hw_ghost', 3.0, 380 / 381], ['hw_fence', 1.6, 360 / 260],
+      ['hw_castle', 4.6, 380 / 384], ['hw_cauldron', 2.6, 380 / 364], ['hw_lamp', 3.8, 302 / 395], ['hw_ghost', 3.0, 380 / 381], ['hw_pumpkin_house', 3.8, 380 / 382], ['hw_fence', 1.6, 360 / 260],
+    ] : meadow ? [['prop_bunny', 3.0, 0.83]] : candy ? [
       ['prop_bear', 2.6, 1.04], ['cd_castle', 4.6, 0.92], ['prop_balloons', 3.2, 0.68], ['cd_lamp_a', 3.8, 0.54], ['cd_cakehouse', 3.6, 0.93], ['cd_cart', 2.8, 0.94],
       ['cd_ginger', 3.2, 1.0], ['cd_lamp_b', 3.8, 0.51], ['cd_fountain', 2.8, 1.05], ['prop_lamp', 3.8, 0.44], ['cd_umbrella', 2.6, 1.09], ['cd_cupcake', 2.4, 0.86],
       ['cd_bench', 1.9, 1.32], ['cd_sign', 2.6, 0.93], ['cd_fence', 1.6, 1.77], ['prop_balloons', 3.2, 0.68],
@@ -165,7 +172,7 @@ export function Race3D({ live, theme, car: carId }: { live: MutableRefObject<Rac
       scene.add(o)
       return { o, k: i, x0: o.position.x }
     })
-    const GROUND: Art[] = meadow ? [['prop_flowers', 1.1, 1.55]] : candy ? [
+    const GROUND: Art[] = halloween ? [['hw_bush', 1.2, 367 / 306], ['hw_flowers', 1.0, 362 / 306], ['hw_rock', 1.0, 358 / 269], ['hw_flowers', 1.0, 362 / 306]] : meadow ? [['prop_flowers', 1.1, 1.55]] : candy ? [
       ['cd_bush', 1.2, 1.52], ['cd_gummy', 1.0, 1.5], ['cd_candy', 0.9, 1.5], ['cd_peppermint', 1.0, 1.03], ['cd_jelly', 1.1, 0.98], ['cd_gummybear', 1.3, 0.81],
       ['cd_heartcookie', 1.0, 1.08], ['cd_starface', 1.1, 0.99],
     ] : fruit ? [
