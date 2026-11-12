@@ -686,7 +686,7 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
             </div>
           </>
         ) : (
-          <button onClick={() => { playTap(); goBossRef.current() }} className="absolute top-14 right-2 z-20 flex items-center whitespace-nowrap gap-1.5 rounded-2xl bg-white/95 px-2 py-1.5 text-left text-xs font-extrabold text-[#7a3d8f] shadow">
+          <button onClick={() => { playTap(); goBossRef.current() }} className="absolute top-14 right-2 z-20 flex w-52 items-center whitespace-nowrap gap-1.5 rounded-2xl bg-white/95 px-2 py-1.5 text-left text-xs font-extrabold text-[#7a3d8f] shadow">
             <img src={assetUrl(`travel/monster/${m.id}_angry.webp`)} alt="" className="h-9 w-9 shrink-0 object-contain" />
             <span>👑 대왕 몬스터 출현!{pct ? ` ${pct}%` : ''}<br /><span className="text-[#c0587a]">눌러서 가기 · {bossUi.far}걸음</span></span>
           </button>

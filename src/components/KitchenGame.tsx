@@ -413,7 +413,7 @@ export function KitchenGame({ outfit, tweaks, onGo }: { outfit: Outfit; tweaks: 
       </div>
 
       {/* 아래: 고른 주문서의 레시피 · 요리 단계 · 완성 */}
-      <div className={phoneP ? 'relative mt-auto w-full shrink-0 rounded-3xl bg-white/95 p-3 shadow-xl' : `absolute bottom-2 z-20 rounded-3xl bg-white/95 shadow-xl ${phoneL ? 'right-2 overflow-y-auto p-2.5' : 'inset-x-2 mx-auto max-w-md p-3'}`} style={phoneL ? { width: `calc(${SIDE} - 1rem)`, maxHeight: 'calc(100cqh - 9.5rem)' } : undefined}>
+      <div data-order-box className={phoneP ? 'relative mt-auto w-full shrink-0 rounded-3xl bg-white/95 p-3 shadow-xl' : `absolute bottom-2 z-20 rounded-3xl bg-white/95 shadow-xl ${phoneL ? 'right-2 overflow-y-auto p-2.5' : 'inset-x-2 mx-auto max-w-md p-3'}`} style={phoneL ? { width: `calc(${SIDE} - 1rem)`, maxHeight: 'calc(100cqh - 9.5rem)' } : undefined}>
         {done !== null && doneMenu ? (
           <div className="flex flex-col items-center gap-2 text-center">
             <p className="m-0 text-lg font-black text-[#c04a5a]">{tx.done(doneMenu[lang])}</p>
