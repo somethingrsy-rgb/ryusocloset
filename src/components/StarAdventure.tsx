@@ -7,7 +7,7 @@ import { renderFigure } from '../lib/exportPng'
 import { localTest } from '../lib/mp/config'
 import type { Outfit } from '../lib/types'
 import { CFG, LEVELS, ROWS, newRun, step, type Ev, type Input, type State } from '../lib/starAdventure'
-import { PLACES, THEMES, monsterTheme, type FoeImgs, type Theme } from './gameThemes'
+import { PLACES, SEA_FOES, SEA_LEVEL, THEMES, monsterTheme, type FoeImgs, type Theme } from './gameThemes'
 
 /**
  * 별 모험: 옆으로 달리는 발판 게임. 내 아바타로 걷고 뛰어서 별 코인을 모으고, 별 친구를 밟고, 파이프로 들어가 보너스 방에 다녀온다.
@@ -15,7 +15,7 @@ import { PLACES, THEMES, monsterTheme, type FoeImgs, type Theme } from './gameTh
  */
 const load = (src: string) => { const i = new Image(); i.src = assetUrl(src); return i }
 type Set = { theme: Theme; foes: FoeImgs }
-type Imgs = { sets: Set[]; me: HTMLCanvasElement | null; deco: HTMLImageElement[][] }
+type Imgs = { sets: Set[]; me: HTMLCanvasElement | null; deco: HTMLImageElement[][]; sea: FoeImgs }
 const ready = (i: HTMLImageElement | HTMLCanvasElement | null): i is HTMLImageElement | HTMLCanvasElement => !!i && (i instanceof HTMLCanvasElement || (i.complete && i.naturalWidth > 0))
 
 export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit: Outfit }) {
@@ -28,7 +28,7 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
   const game = useRef<State>(newRun(0))
   const keys = useRef(new window.Set<string>())
   const touch = useRef({ left: false, right: false, jump: false, down: false })
-  const imgs = useRef<Imgs>({ sets: [], me: null, deco: PLACES.map((p) => p.deco.map(([n]) => load(`race/${n}.webp`))) })
+  const imgs = useRef<Imgs>({ sets: [], me: null, sea: SEA_FOES.map((f) => ({ walk: load(f.walk), trapped: load(f.trapped), mad: load(f.mad), h: f.h })), deco: PLACES.map((p) => p.deco.map(([n]) => load(`race/${n}.webp`))) })
   const paid = useRef(false)
   if (localTest) (window as unknown as { __sa?: () => State }).__sa = () => game.current // 시험용(?mp=local 에서만)
 
@@ -196,7 +196,8 @@ function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, cam: n
   for (const f of R.foes) {
     if (f.x < cam - 2 || f.x > cam + vis + 2) continue
     if (!f.alive && f.squash > 0.5) continue
-    const v = set.foes[f.id % Math.max(1, set.foes.length)]; const i = v ? v.walk : null; if (!ready(i)) continue
+    const fl = s.level % PLACES.length === SEA_LEVEL ? im.sea : set.foes
+    const v = fl[f.id % Math.max(1, fl.length)]; const i = v ? v.walk : null; if (!ready(i)) continue
     const h = v.h * 0.95, w = h * i.naturalWidth / i.naturalHeight, k = f.alive ? 1 : Math.max(0.15, 1 - f.squash * 3)
     g.save(); g.translate(f.x, f.y); g.scale(f.dir > 0 ? -1 : 1, k); g.translate(0, f.alive ? -Math.abs(Math.sin(t * 8 + f.id)) * 0.1 : 0); g.drawImage(i, -w / 2, -h, w, h); g.restore()
   }

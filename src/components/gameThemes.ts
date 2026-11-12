@@ -25,3 +25,7 @@ export const PLACES: Place[] = [
   { id: 'sea', ico: '🐠', sky: 'race/sky_sea.webp', ground: ['#7fd6e0', '#3a9ab4'], pipe: ['#ff9a8a', '#d8605a'], deco: [['sea_coral_pink', 4], ['sea_shellhouse', 3.6], ['sea_turtlelamp', 3.6], ['sea_coral_purple', 3.6], ['sea_octopus', 2.8]] },
   { id: 'halloween', ico: '🎃', sky: 'race/sky_halloween.webp', ground: ['#7a4fc0', '#3d2a6b'], pipe: ['#ff9a3d', '#c05a1a'], deco: [['hw_tree_green', 4.2], ['hw_pumpkin_house', 3.8], ['hw_castle', 4.6], ['hw_ghost', 3], ['hw_pumpkin_house', 3.8]] },
 ]
+
+/** 바닷속 단계(레이스 장소 5번째)에서는 눈코입이 있는 바다 친구들이 괴물이다 */
+export const SEA_LEVEL = 4
+export const SEA_FOES: { walk: string; trapped: string; mad: string; h: number }[] = ['sea_turtle', 'sea_jelly', 'sea_clam', 'sea_whale', 'sea_clam2'].map((n) => ({ walk: `starchase/${n}.webp`, trapped: `starchase/${n}.webp`, mad: `starchase/${n}.webp`, h: 1.5 }))
