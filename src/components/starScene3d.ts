@@ -21,7 +21,7 @@ export interface SceneFrame {
 }
 /** 화면 밖에 있는 별·친구를 가리키는 화살표(화면 비율 0~1 좌표와 방향 각도) */
 export interface EdgeArrow { x: number; y: number; rot: number; color: string }
-export interface StarScene { setLook(slot: number, cv: HTMLCanvasElement): void; frame(f: SceneFrame): void; arrows: EdgeArrow[]; dispose(): void }
+export interface StarScene { setLook(slot: number, cv: HTMLCanvasElement): void; frame(f: SceneFrame): void; arrows: EdgeArrow[]; /** 화면 위 한 점(요소 안 0~1 비율)이 가리키는 땅의 자리(필드 좌표). 하늘이면 null */ pick(fx: number, fy: number): { x: number; y: number } | null; dispose(): void }
 
 function glyphCanvas(text: string, color: string) {
   const c = document.createElement('canvas'); c.width = c.height = 96
@@ -105,7 +105,8 @@ export function createStarScene(el: HTMLElement): StarScene {
   const fxStar: Doll[] = [], fxRing: THREE.Mesh[] = [], fxBurst: THREE.Sprite[] = []
   const t0 = performance.now()
   let pending: SceneFrame | null = null
-  const out: StarScene = { setLook: (slot, cv) => { const m = kid(slot).d.doll.material as THREE.MeshBasicMaterial; m.map = w.texOf(cv); m.needsUpdate = true }, frame: (f) => { pending = f }, arrows: [], dispose: () => w.dispose() }
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hitPt = new THREE.Vector3()
+  const out: StarScene = { setLook: (slot, cv) => { const m = kid(slot).d.doll.material as THREE.MeshBasicMaterial; m.map = w.texOf(cv); m.needsUpdate = true }, frame: (f) => { pending = f }, arrows: [], pick: (fx, fy) => { ray.setFromCamera(ndc.set(fx * 2 - 1, -(fy * 2 - 1)), cam); const hit = ray.ray.intersectPlane(plane, hitPt); return hit ? { x: hit.x, y: hit.z } : null }, dispose: () => w.dispose() }
   w.onFrame((dt) => { if (pending) apply(pending, dt) })
   let camX = 0, camZ = 0, init = false
   const v3 = new THREE.Vector3()

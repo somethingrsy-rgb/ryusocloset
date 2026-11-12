@@ -154,13 +154,19 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
       if (/^(KeyW|KeyA|KeyS|KeyD|Arrow(Up|Down|Left|Right))$/.test(e.code)) { e.preventDefault(); keys.current.add(e.code) }
     }
     const ku = (e: KeyboardEvent) => { keys.current.delete(e.code) }
-    const clear = () => { keys.current.clear(); input.current.jx = input.current.jy = 0; setStick({ x: 0, y: 0 }) }
+    const clear = () => { tapGo.current = null; keys.current.clear(); input.current.jx = input.current.jy = 0; setStick({ x: 0, y: 0 }) }
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku); window.addEventListener('blur', clear)
     document.addEventListener('visibilitychange', clear); window.addEventListener('touchcancel', clear)
     return () => { window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', clear); document.removeEventListener('visibilitychange', clear); window.removeEventListener('touchcancel', clear) }
   }, [doCatch])
   const [stick, setStick] = useState({ x: 0, y: 0 })
   const padRef = useRef<HTMLDivElement>(null)
+  const tapGo = useRef<{ x: number; y: number } | null>(null) // 화면을 눌러 정한 가고 싶은 자리
+  const tapTo = (e: React.PointerEvent) => {
+    const el = e.currentTarget as HTMLElement, r = el.getBoundingClientRect(), sc = sceneRef.current; if (!sc) return
+    const g = sc.pick((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height)
+    if (g) tapGo.current = { x: Math.max(-CFG.w / 2, Math.min(CFG.w / 2, g.x)), y: Math.max(-CFG.h / 2, Math.min(CFG.h / 2, g.y)) }
+  }
   const padMove = (e: React.PointerEvent) => {
     const el = padRef.current; if (!el) return
     const r = el.getBoundingClientRect(), R = r.width / 2
@@ -200,7 +206,10 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
       // 내 이동
       if (playing) {
         const k = keys.current; const kx = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0), ky = (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0) - (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0)
-        const ix = input.current.jx || kx, iy = input.current.jy || ky
+        let ix = input.current.jx || kx, iy = input.current.jy || ky
+        const tg = tapGo.current
+        if (ix || iy) tapGo.current = null   // 조이스틱·키보드를 쓰면 화면 터치 목표는 접는다
+        else if (tg) { const dx = tg.x - meRef.current.x, dy = tg.y - meRef.current.y, d = Math.hypot(dx, dy); if (d < 0.25) tapGo.current = null; else { ix = dx / d; iy = dy / d } }
         if (ix || iy) meRef.current = stepWalker(meRef.current, ix, iy, dt)
         if ((Math.abs(meRef.current.x - sentPos.current.x) > 0.02 || Math.abs(meRef.current.y - sentPos.current.y) > 0.02) && t - lastSend.current > 80) { lastSend.current = t; sentPos.current = { ...meRef.current }; r?.patchMe({ x: +meRef.current.x.toFixed(2), y: +meRef.current.y.toFixed(2) }) }
       }
@@ -352,7 +361,7 @@ export function StarChase({ onClose, outfit }: { onClose: () => void; outfit: Ou
     <div className={frame} style={bgStyle}>
       {sky}
       <div ref={box} className="relative z-10 min-h-0 flex-1 touch-none select-none">
-        <div ref={stage} role="img" aria-label="별 잡기 놀이터" className="absolute inset-0" />
+        <div ref={stage} role="img" aria-label="별 잡기 놀이터 (화면을 누르면 그쪽으로 가요)" className="absolute inset-0" onPointerDown={(e) => { if (myIn && !done) tapTo(e) }} onPointerMove={(e) => { if (e.buttons && myIn && !done) tapTo(e) }} />
         {arrows.map((a, i) => <span key={i} aria-hidden className="pointer-events-none absolute z-[5] flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow ring-2" style={{ left: `${a.x * 100}%`, top: `${a.y * 100}%`, color: a.color, boxShadow: `0 0 0 2px ${a.color}` }}><span style={{ display: 'inline-block', transform: `rotate(${a.rot}rad)`, fontSize: 18, lineHeight: 1 }}>➤</span></span>)}
         {hud.count > 0 && <p aria-live="assertive" className="pointer-events-none absolute inset-0 m-0 flex items-center justify-center text-[6rem] font-black text-white [font-family:Jua,sans-serif] [text-shadow:0_4px_0_#7a5cc0,0_0_20px_rgba(122,92,192,.6)]">{hud.count}</p>}
         {myIn && !done && hud.count === 0 && <p aria-live="polite" className="pointer-events-none absolute left-1/2 bottom-3 m-0 w-[min(19rem,calc(100%-16rem))] -translate-x-1/2 rounded-full bg-[#fff8ec]/95 px-3 py-1.5 text-center text-xs font-black text-[#3b2a63] shadow ring-2 ring-[#cdb8f2] portrait:bottom-40 portrait:w-[min(19rem,calc(100%-2rem))] sm:text-sm">{hud.hint ? '⭐ 지금 잡아!' : '⭐ 친구와 반대편에서 다가가요!'}</p>}
