@@ -81,6 +81,9 @@
           },
           "race": {
             ".validate": "newData.isString() && newData.val().matches(/^r[1-6]$/)"
+          },
+          "jump": {
+            ".validate": "newData.isString() && newData.val().matches(/^j[1-4]$/)"
           }
         }
       },
@@ -219,6 +222,90 @@
                 ".validate": false
               }
             }
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "jump": {
+        ".read": "auth != null",
+        "$room": {
+          ".validate": "$room.matches(/^j[1-4]$/)",
+          "meta": {
+            ".validate": "newData.hasChildren(['host','seed','started','t'])",
+            "host": {
+              ".validate": "newData.isString() && newData.val().length <= 64"
+            },
+            "seed": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999999"
+            },
+            "started": {
+              ".validate": "newData.isBoolean()"
+            },
+            "order": {
+              "$i": {
+                ".validate": "newData.isString() && newData.val().length <= 64 && $i.matches(/^[0-3]$/)"
+              }
+            },
+            "cpus": {
+              "$i": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5 && $i.matches(/^[0-3]$/)"
+              }
+            },
+            "t": {
+              ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+            },
+            "$other": {
+              ".validate": false
+            },
+            ".write": "auth != null && (!data.exists() || data.child('host').val() === auth.uid || now - data.child('t').val() > 600000)"
+          },
+          "players": {
+            "$uid": {
+              ".write": "auth != null && (auth.uid === $uid || (!newData.exists() && now - root.child('lobby/jump/'+$room+'/meta/t').val() > 600000))",
+              ".validate": "newData.hasChildren(['name','t'])",
+              "name": {
+                ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12"
+              },
+              "t": {
+                ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          },
+          "moves": {
+            "$n": {
+              ".validate": "$n.matches(/^[0-9]{1,4}$/) && newData.hasChildren(['s','t'])",
+              ".write": "auth != null && !data.exists() && newData.exists() && root.child('lobby/jump/'+$room+'/meta/started').val() === true && (root.child('lobby/jump/'+$room+'/meta/order/'+newData.child('s').val()).val() === auth.uid || (root.child('lobby/jump/'+$room+'/meta/host').val() === auth.uid && (root.child('lobby/jump/'+$room+'/meta/order/'+newData.child('s').val()).val() === 'cpu' || !root.child('lobby/jump/'+$room+'/players/'+root.child('lobby/jump/'+$room+'/meta/order/'+newData.child('s').val()).val()).exists())))",
+              "s": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3"
+              },
+              "fr": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 7"
+              },
+              "fc": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 7"
+              },
+              "tr": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 7"
+              },
+              "tc": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 7"
+              },
+              "e": {
+                ".validate": "newData.val() === 1"
+              },
+              "t": {
+                ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+              },
+              "$other": {
+                ".validate": false
+              }
+            },
+            ".write": "auth != null && !newData.exists() && (root.child('lobby/jump/'+$room+'/meta/host').val() === auth.uid || now - root.child('lobby/jump/'+$room+'/meta/t').val() > 600000)"
           },
           "$other": {
             ".validate": false

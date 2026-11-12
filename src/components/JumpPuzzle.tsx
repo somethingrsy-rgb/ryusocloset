@@ -6,6 +6,10 @@ import { assetUrl } from '../lib/items'
 import { ANIMALS, COLORS, MAX_CPUS, SIZE, STARS_PER_SET, WIN_BONUS, type Move, findMove, isOver, newVs, parseSaved, planCpuTurn, setsOf, vsCpuMove, vsEndTurn, vsHumanMove, vsResult, vsSkipCpu, type Level, type Pos, type Vs } from '../lib/jumpPuzzle'
 import { getAvatar } from '../lib/avatars'
 import { StarIcon } from './Icons'
+import { DARK, FILL, MARK } from './jumpStyle'
+import { JumpMulti } from './JumpMulti'
+import { multiplayerAvailable } from '../lib/mp/config'
+import { RACE_INVITE_EVENT, takeJumpInvite } from '../lib/raceInvite'
 
 const LEVEL_KEY = 'ryuso.jumppuzzle.level.v1'
 const LEVELS: Level[] = ['easy', 'normal', 'hard']
@@ -14,10 +18,6 @@ const CPUS_KEY = 'ryuso.jumppuzzle.cpus.v1'
 const loadCpus = () => { try { const n = Number(localStorage.getItem(CPUS_KEY)); return n >= 1 && n <= MAX_CPUS ? Math.floor(n) : 1 } catch { return 1 } }
 const STATE_KEY = 'ryuso.jumppuzzle.state.v1' // 하던 판(탭을 옮기거나 닫아도 이어서)
 const loadState = () => { try { return parseSaved(JSON.parse(localStorage.getItem(STATE_KEY) ?? 'null')) } catch { return null } }
-/** 다섯 색: 빨강·초록·파랑·주황·노랑 (색마다 가운데 무늬가 달라서 색을 구분하기 어려워도 알 수 있다) */
-const FILL = ['#ef5a3c', '#7cc545', '#4aa6ea', '#f28c28', '#f8d84a']
-const DARK = ['#b8381f', '#4f9526', '#2a78b8', '#b85f0c', '#c2a10c']
-const MARK = ['●', '▲', '■', '★', '◆']
 // 컴퓨터의 한 수를 슬로 모션으로 보여 준다: 0.5초 쉬고 → 1.4초 동안 말이 날아가 뛰어넘고(잡힌 말은 중간에 사라짐) → 도착하면 0.5초 쉰다
 const TURN_GAP_MS = 1100 // 차례가 바뀐 뒤, 동물이 말을 고르기 전에 잠깐 기다림(누구 차례인지 알아보도록)
 const CPU_PICK_MS = 900 // 동물이 움직일 말 위에 올라가 있는 시간
@@ -56,6 +56,9 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
   const { lang } = useI18n()
   const tx = T[lang]
   const [saved] = useState(loadState)
+  // 같이 하기: 「👫 친구랑 같이 하기」를 눌렀거나 친구의 초대를 수락했으면 같이 하기 화면으로(초대면 그 방으로 바로)
+  const [multi, setMulti] = useState<{ invite?: string } | null>(() => { const inv = takeJumpInvite(); return inv ? { invite: inv.room } : null })
+  useEffect(() => { const f = () => { const inv = takeJumpInvite(); if (inv) setMulti({ invite: inv.room }) }; window.addEventListener(RACE_INVITE_EVENT, f); return () => window.removeEventListener(RACE_INVITE_EVENT, f) }, [])
   const [round, setRound] = useState(0) // 새 판마다 올려서, 첫 차례가 컴퓨터여도 새 판에서 다시 시작되게 한다
   const [cpuCount, setCpuCount] = useState(() => saved?.vs.cpus.length ?? loadCpus())
   const [vs, setVs] = useState<Vs>(() => saved?.vs ?? newVs(Math.random, cpuCount))
@@ -162,6 +165,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
 
   const turnText = typeof vs.turn === 'number' ? tx.cpuTurn(cpuName(vs.turn)) : tx.myTurn // 화면 읽기용(위 큰 표시는 aria-hidden)
 
+  if (multi) return <JumpMulti invite={multi.invite} onClose={() => setMulti(null)} />
   return (
     <div className="absolute inset-0 z-30 flex flex-col overflow-hidden rounded-3xl bg-[#faf9f2] text-[#213f35] ring-1 ring-black/5">
       <div className="flex items-center justify-between gap-2 border-b border-[#e2e7dc] px-4 py-2">
@@ -185,6 +189,7 @@ export function JumpPuzzle({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         )}
+        {multiplayerAvailable && <button onClick={() => setMulti({})} className="min-h-9 rounded-full bg-[#fff0f5] px-4 text-xs font-black text-[#c0587a] ring-2 ring-[#ff8fab] active:scale-95">👫 친구랑 같이 하기</button>}
         <div className="flex w-full max-w-[44rem] landscape:max-w-none flex-col gap-1.5 rounded-2xl bg-white px-3 py-2 shadow-sm">
           <div className="flex items-center justify-between gap-2">
             <span className="flex w-[4.6rem] shrink-0 items-center gap-1 text-xs font-bold text-[#678071]"><FaceBadge className="h-6" />{tx.you}</span>

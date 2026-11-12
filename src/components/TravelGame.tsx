@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
-import { RACE_INVITE_EVENT, hasRaceInvite } from '../lib/raceInvite'
+import { RACE_INVITE_EVENT, hasJumpInvite, hasRaceInvite } from '../lib/raceInvite'
 import { takeWalkNext } from '../lib/farmCafeLink'
 import { startBgm, stopBgm } from '../lib/sound'
 import { currentAssignment, gameVersion, getGame, subscribeGame, travelTo } from '../lib/game'
@@ -7,7 +7,8 @@ import type { Outfit, Tweaks } from '../lib/types'
 import { useItemsVersion } from '../lib/useItemsVersion'
 import { useI18n } from '../i18n'
 import { OverWorld } from './OverWorld'
-import { PILL, PillText } from './pill'
+import { multiplayerAvailable } from '../lib/mp/config'
+import { MultiBadge, PILL, PILL_MULTI, PillText } from './pill'
 import { TravelScene } from './TravelScene'
 
 // 놀이 화면(축구·달리기·별비·점프·수학·영어)은 처음 열 때 받는다
@@ -64,11 +65,11 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   }, [])
   const [speaking, setSpeaking] = useState(false)
   const [math, setMath] = useState(false)
-  const [jump, setJump] = useState(false)
+  const [jump, setJump] = useState(() => hasJumpInvite())
   const [flags, setFlags] = useState(false)
   const [soccer, setSoccer] = useState(false)
   const [race, setRace] = useState(() => hasRaceInvite())
-  useEffect(() => { const f = () => setRace(true); window.addEventListener(RACE_INVITE_EVENT, f); return () => window.removeEventListener(RACE_INVITE_EVENT, f) }, [])
+  useEffect(() => { const f = () => { if (hasRaceInvite()) setRace(true); else if (hasJumpInvite()) setJump(true) }; window.addEventListener(RACE_INVITE_EVENT, f); return () => window.removeEventListener(RACE_INVITE_EVENT, f) }, [])
   // 산책 탭은 처음부터 3D 산책(✕ 를 누르면 게임 탭으로)
   const [walk3d, setWalk3d] = useState(() => takeWalkNext() || walkTab)
   /** 3D 산책에서 집에 들어갔으면, 집에서 나올 때 다시 3D 산책으로 */
@@ -93,6 +94,8 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   if (starRain) return <Suspense fallback={null}><StarRainWalk outfit={outfit} tweaks={tweaks} onExit={() => setStarRain(false)} /></Suspense>
 
   const actionButton = PILL
+  /** 친구와 같이 할 수 있는 게임(레이스·점프)은 분홍 테두리와 👫 배지로 구분한다 */
+  const multiButton = multiplayerAvailable ? PILL_MULTI : PILL // 같이 놀기를 쓸 수 없는 앱(설정 없음)에서는 표시하지 않는다
   const label = (text: string) => <PillText>{text}</PillText>
   return <div className="relative h-full">
     {scene ? <TravelScene paused={speaking} key={scene} placeId={scene} assign={assign} outfit={outfit} tweaks={tweaks} onExit={() => { setScene(null); if (backToWalk) { setBackToWalk(false); setWalk3d(true) } }} onWear={onWear} onDecorate={onDecorate} onKitchen={onKitchen} /> : <OverWorld
@@ -102,9 +105,9 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
         <button className={actionButton} aria-label="별비 산책" onClick={() => setStarRain(true)}>{label(lang === 'ko' ? '별비' : 'Stars')}</button>
         <button className={actionButton} aria-label="달려라 아바타" onClick={() => setRunner(true)}>{label(lang === 'ko' ? '달리기' : 'Run')}</button>
         <button className={actionButton} aria-label="수학 놀이터" onClick={() => setMath(true)}>{label(lang === 'ko' ? '수학' : 'Math')}</button>
-        <button className={actionButton} aria-label="점프 퍼즐" onClick={() => setJump(true)}>{label(lang === 'ko' ? '점프' : 'Jump')}</button>
+        <button className={multiButton} aria-label="점프 퍼즐(친구와 같이 할 수 있어요)" onClick={() => setJump(true)}>{label(lang === 'ko' ? '점프' : 'Jump')}{multiplayerAvailable && <MultiBadge />}</button>
         <button className={actionButton} aria-label="축구" onClick={() => setSoccer(true)}>{label(lang === 'ko' ? '축구' : 'Soccer')}</button>
-        <button className={actionButton} aria-label="자동차 레이스" onClick={() => setRace(true)}>{label(lang === 'ko' ? '레이스' : 'Race')}</button>
+        <button className={multiButton} aria-label="자동차 레이스(친구와 같이 할 수 있어요)" onClick={() => setRace(true)}>{label(lang === 'ko' ? '레이스' : 'Race')}{multiplayerAvailable && <MultiBadge />}</button>
         <button className={actionButton} aria-label={lang === 'ko' ? '국기 게임' : 'Flag quiz'} onClick={() => setFlags(true)}>{label(lang === 'ko' ? '국기' : 'Flags')}</button>
         {onRoom && <button className={actionButton} aria-label="방꾸미기" onClick={onRoom}>{label(lang === 'ko' ? '방꾸미기' : 'Room')}</button>}
       </>}

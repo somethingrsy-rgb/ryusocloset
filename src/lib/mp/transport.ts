@@ -9,7 +9,7 @@ export interface Transport {
   join(me: Omit<PlayerState, 't'>): Promise<{ uid: string; full: boolean }>
   update(me: PlayerPart): void
   /** home 이면 내 집 초대 글 */
-  chat(name: string, text: string, home?: boolean, race?: string): void
+  chat(name: string, text: string, home?: boolean, race?: string, jump?: string): void
   leave(): void
   onPlayers(cb: (players: Record<string, PlayerState>) => void): void
   onChat(cb: (msgs: ChatMsg[]) => void): void
