@@ -129,9 +129,9 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
           <div className="flex max-h-full w-full max-w-xs flex-col items-center gap-2 overflow-y-auto rounded-3xl bg-[#fff8ec] p-4 text-center shadow-xl ring-2 ring-[#cdb8f2]">
             <p className="m-0 text-xl font-black">🌟 별 모험</p>
             <ul className="m-0 flex list-none flex-col gap-1 p-0 text-left text-sm font-bold text-[#6b5a99]">
-              <li>◀ ▶ <b>달리기</b> · ▲ <b>점프</b> (키보드: 화살표, 스페이스)</li>
+              <li>◀ ▶ <b>달리기</b> · ▲ <b>점프</b> — 공중에서 한 번 더 누르면 <b>더블 점프</b>! (키보드: 화살표, 스페이스)</li>
               <li>🪙 별 코인을 모아요. 계단과 높은 판을 타고 올라가면 위쪽 별도 먹을 수 있어요</li>
-              <li>❓ 물음표 블록을 아래에서 톡! 코인이 나오고, 가끔 <b>하트 약병 💖</b>이 나와서 도망가요. 쫓아가서 먹으면 <b>몸이 커져요</b>! 커진 동안 친구에게 닿으면 원래 크기로 돌아와요(♥는 그대로)</li>
+              <li>❓ 물음표 블록을 아래에서 톡! 코인이 나오고, 가끔 <b>하트 약병 💖</b>이 나와서 땅에 내려앉아요. 주워 먹으면 <b>몸이 커져요</b>! 커진 동안 친구에게 닿으면 원래 크기로 돌아와요(♥는 그대로)</li>
               <li>👣 친구는 <b>위에서 밟으면</b> 물리쳐요. 옆으로 닿으면 ♥가 줄어요</li>
               <li>🕳️ <b>▼ 표시가 있는 관 위에서 ▼ 버튼</b>을 누르면 보너스 방으로! (나오는 관에서 ▼ 를 누르면 돌아와요)</li>
               <li>🚩 깃발까지 가면 다음 단계예요</li>
