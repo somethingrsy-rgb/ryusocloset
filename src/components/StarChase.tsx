@@ -1,0 +1,477 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { earnStars } from '../lib/shop'
+import { playLose, playPop, playTap, playWin } from '../lib/sound'
+import { assetUrl } from '../lib/items'
+import { localTest, multiplayerAvailable } from '../lib/mp/config'
+import { savedName } from '../lib/mp/session'
+import { joinStarRoom, STAR_MAX, type SState, type StarRoom, type StarSnap } from '../lib/mp/starNet'
+import { CFG, applyCatch, fillStars, newRound, stepWalker, tick, type Round, type Who } from '../lib/starChase'
+
+/**
+ * 도망간 별을 잡아라: 2~4명이 별의 양쪽으로 다가가 느려지게 하고, 가까운 친구가 「잡기」로 별을 모아 별자리를 완성한다(혼자는 연습).
+ * 규칙·별 움직임은 lib/starChase.ts(순수 함수), 방 연결은 lib/mp/starNet.ts. 별과 잡기 판정은 방장 한 곳에서만 돌린다.
+ */
+const SHAPES = ['△', '◇', '□', '○']
+const COLORS = ['#ff8fab', '#5fc27a', '#4aa6ea', '#a77be8']
+const SPAWN: [number, number][] = [[-3, 3], [3, 3], [-3, -3], [3, -3]]
+const SAYS = ['이쪽이야!', '같이 잡자!', '고마워!']
+const INTRO_KEY = 'ryuso.star.intro'
+const COUNTDOWN_MS = 3500
+const hasKey = (k: string) => { try { return !!localStorage.getItem(k) } catch { return false } }
+const setKey = (k: string) => { try { localStorage.setItem(k, '1') } catch { /* 저장 못 해도 괜찮다 */ } }
+const fmt = (ms: number) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}` }
+
+type Screen = 'menu' | 'room'
+interface Anim { k: 'fly' | 'miss'; x: number; y: number; t0: number }
+
+export function StarChase({ onClose }: { onClose: () => void }) {
+  const [screen, setScreen] = useState<Screen>('menu')
+  const [snap, setSnap] = useState<StarSnap>({ meta: null, players: {}, state: null })
+  const [room, setRoom] = useState<StarRoom | null>(null)
+  const [practice, setPractice] = useState(false)
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [code, setCode] = useState('')
+  const [intro, setIntro] = useState(false)
+  const [settings, setSettings] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+  const [calm, setCalm] = useState(() => hasKey('ryuso.star.calm'))
+  const [chat, setChat] = useState(false)
+  const [hostGone, setHostGone] = useState(false)
+  const [, force] = useState(0)
+  const roomRef = useRef<StarRoom | null>(null)
+  const snapRef = useRef(snap); snapRef.current = snap
+  const seenMeta = useRef(false)
+  const mounted = useRef(true)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; roomRef.current?.leave(); roomRef.current = null } }, [])
+
+  const enter = useCallback(async (how: { practice?: boolean; code?: string; create?: boolean }) => {
+    if (busy) return
+    setBusy(true); setErr(''); seenMeta.current = false; setHostGone(false)
+    try {
+      const r = await joinStarRoom(savedName() || '친구', (s) => { if (mounted.current) { if (s.meta) seenMeta.current = true; setSnap(s) } }, how)
+      if (!mounted.current) { r?.leave(); return }
+      if (!r) { setErr('지금은 방이 꽉 찼어요. 조금 뒤에 다시 해 봐요'); setBusy(false); return }
+      roomRef.current = r; setRoom(r); setPractice(!!how.practice); setScreen('room')
+      if (!hasKey(INTRO_KEY)) setIntro(true)
+    } catch (e) { setErr(e instanceof Error ? e.message.replace(/^\[[^\]]+\]\s*/, '') || '연결하지 못했어요' : '연결하지 못했어요') }
+    setBusy(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busy])
+
+  if (localTest) (window as unknown as { __star?: () => unknown }).__star = () => ({ snap: snapRef.current, me: meRef.current }) // 시험용(?mp=local 에서만)
+  const meta = snap.meta
+  const me = room?.uid ?? ''
+  const phase = meta?.phase ?? 'lobby'
+  const slotOrder = useMemo(() => Object.entries(snap.players).sort((a, b) => a[1].j - b[1].j || a[0].localeCompare(b[0])).map(([u]) => u), [snap.players])
+  const part = meta?.part ?? []
+  const myIn = !!room && part.includes(me)
+  const isHost = !!room?.host
+  useEffect(() => { if (screen === 'room' && !meta && seenMeta.current && !practice) setHostGone(true) }, [meta, screen, practice])
+
+  // 대기실로 돌아오면 준비 표시를 지운다
+  const lastPhase = useRef('lobby')
+  useEffect(() => { if (phase === 'lobby' && lastPhase.current !== 'lobby') room?.patchMe({ ready: false }); lastPhase.current = phase }, [phase, room])
+
+  /* ───── 방장: 한 판 시작 / 별 시뮬레이션 ───── */
+  const roundRef = useRef<{ r: Round; acc: Record<string, number>; lastReq: Record<string, number>; evN: number; ev: SState['ev']; lastWrite: number; last: number } | null>(null)
+  const meRef = useRef({ x: 0, y: 0 })
+  const whoList = (): Who[] => {
+    const m = snapRef.current.meta
+    return (m?.part ?? []).map((u) => (u === roomRef.current?.uid ? { uid: u, on: true, x: meRef.current.x, y: meRef.current.y } : { uid: u, on: !!snapRef.current.players[u], x: snapRef.current.players[u]?.x ?? 0, y: snapRef.current.players[u]?.y ?? 0 }))
+  }
+  const toState = (c: NonNullable<typeof roundRef.current>): SState => ({ r: c.r.id, caught: c.r.caught, res: c.r.res === 'win' ? 1 : c.r.res === 'lose' ? 2 : 0, ev: c.ev, acc: c.acc, stars: c.r.stars.map((s) => ({ id: s.id, x: +s.x.toFixed(2), y: +s.y.toFixed(2), m: s.mode === 'wander' ? 0 : s.mode === 'flee' ? 1 : 2 })) })
+  function startGame(r: StarRoom, solo = false) {
+    if (!r.host) return
+    const ids = solo ? [r.uid] : slotOrder.slice(0, STAR_MAX)
+    const secs = (localTest && Number(new URLSearchParams(location.search).get('sec'))) || CFG.seconds // 시험용: ?mp=local&sec=15
+    const startAt = r.now() + COUNTDOWN_MS, endAt = startAt + secs * 1000
+    const id = (snapRef.current.meta?.round ?? 0) + 1
+    const who: Who[] = ids.map((u, i) => ({ uid: u, on: true, x: SPAWN[i][0], y: SPAWN[i][1] }))
+    const rd = fillStars(newRound(id, ids.length, endAt), who, 0, Math.random, true)
+    roundRef.current = { r: rd, acc: {}, lastReq: {}, evN: 0, ev: null, lastWrite: 0, last: r.now() }
+    r.setMeta({ phase: 'play', round: id, target: rd.target, startAt, endAt, part: ids })
+    r.setState(toState(roundRef.current))
+  }
+  useEffect(() => {
+    if (!room || !room.host || phase !== 'play' || !meta) return
+    const iv = window.setInterval(() => {
+      const c = roundRef.current; if (!c || c.r.res || !roomRef.current) return
+      const now = room.now()
+      if (now < meta.startAt) { c.last = now; return }
+      const dt = Math.min(0.2, (now - c.last) / 1000); c.last = now
+      const who = whoList(); let changed = false
+      // 잡기 요청 처리(요청마다 한 번만): 위치·쿨다운·접속·라운드를 방장이 다시 확인한다
+      for (const [u, p] of Object.entries(snapRef.current.players)) {
+        const cap = p.cap; if (!cap || cap.n <= (c.acc[u] ?? 0)) continue
+        c.acc[u] = cap.n; changed = true
+        const w = who.find((x) => x.uid === u); if (!w) continue
+        const cd = (c.lastReq[u] ?? -1e9) + CFG.catchCd * 1000 - 150 - now
+        c.lastReq[u] = now
+        const res = applyCatch(c.r, { round: cap.r, cdLeft: cd }, w, now)
+        if (res.star) { c.r = res.round; c.ev = { n: ++c.evN, x: res.star.x, y: res.star.y } }
+      }
+      c.r = tick(c.r, who, dt, now, Math.random)
+      const over = !!c.r.res
+      if (over || changed || now - c.lastWrite >= 100) { c.lastWrite = now; room.setState(toState(c)) }
+      if (over) room.setMeta({ phase: 'done' })
+    }, 50)
+    return () => clearInterval(iv)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room, phase, meta?.round])
+
+  // 연습: 첫 안내를 닫은 뒤에 시작한다
+  useEffect(() => { if (practice && room && !intro && meta && meta.phase === 'lobby' && meta.round === 0) startGame(room, true) }, [practice, room, intro, meta?.phase, meta?.round]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ───── 입력 ───── */
+  const input = useRef({ jx: 0, jy: 0, kx: 0, ky: 0 })
+  const keys = useRef(new Set<string>())
+  const capSeq = useRef(Date.now() % 1e9)
+  const lastCatch = useRef(-1e9)
+  const anims = useRef<Anim[]>([])
+  const doCatch = useCallback(() => {
+    const r = roomRef.current, m = snapRef.current.meta; if (!r || !m || m.phase !== 'play' || !m.part.includes(r.uid)) return
+    const now = r.now(); if (now < m.startAt || now - lastCatch.current < CFG.catchCd * 1000) return
+    lastCatch.current = now; capSeq.current += 1
+    r.patchMe({ cap: { n: capSeq.current, r: m.round } }); playTap()
+    anims.current.push({ k: 'miss', x: meRef.current.x, y: meRef.current.y, t0: performance.now() })
+  }, [])
+  useEffect(() => {
+    const kd = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null; if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return
+      if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) doCatch(); return }
+      if (/^(KeyW|KeyA|KeyS|KeyD|Arrow(Up|Down|Left|Right))$/.test(e.code)) { e.preventDefault(); keys.current.add(e.code) }
+    }
+    const ku = (e: KeyboardEvent) => { keys.current.delete(e.code) }
+    const clear = () => { keys.current.clear(); input.current.jx = input.current.jy = 0; setStick({ x: 0, y: 0 }) }
+    window.addEventListener('keydown', kd); window.addEventListener('keyup', ku); window.addEventListener('blur', clear)
+    document.addEventListener('visibilitychange', clear); window.addEventListener('touchcancel', clear)
+    return () => { window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', clear); document.removeEventListener('visibilitychange', clear); window.removeEventListener('touchcancel', clear) }
+  }, [doCatch])
+  const [stick, setStick] = useState({ x: 0, y: 0 })
+  const padRef = useRef<HTMLDivElement>(null)
+  const padMove = (e: React.PointerEvent) => {
+    const el = padRef.current; if (!el) return
+    const r = el.getBoundingClientRect(), R = r.width / 2
+    let x = (e.clientX - r.left - R) / R, y = (e.clientY - r.top - R) / R
+    const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l }
+    if (l < 0.12) { x = 0; y = 0 }
+    input.current.jx = x; input.current.jy = y; setStick({ x, y })
+  }
+  const padEnd = () => { input.current.jx = input.current.jy = 0; setStick({ x: 0, y: 0 }) }
+
+  /* ───── 그리기·움직임 루프 ───── */
+  const box = useRef<HTMLDivElement>(null)
+  const cvs = useRef<HTMLCanvasElement>(null)
+  const imgs = useRef<{ grass: HTMLImageElement | null }>({ grass: null })
+  const shown = useRef<{ pl: Record<string, { x: number; y: number }>; st: Record<number, { x: number; y: number }> }>({ pl: {}, st: {} })
+  const evSeen = useRef(0), sayShown = useRef<Record<string, { n: number; k: number; t: number }>>({}), lastSend = useRef(0), sentPos = useRef({ x: 99, y: 99 })
+  const inRange = useRef(false), cdFrac = useRef(0), clock = useRef('')
+  const roundSeen = useRef(-1), paid = useRef(-1)
+  const [hud, setHud] = useState({ range: false, cd: 0, left: 0, count: 0 })
+  useEffect(() => { const g = new Image(); g.src = assetUrl('starchase/grass.webp'); imgs.current.grass = g }, [])
+
+  useEffect(() => {
+    if (screen !== 'room') return
+    let raf = 0, prev = performance.now(), hudAt = 0
+    const loop = (t: number) => {
+      raf = requestAnimationFrame(loop)
+      const dt = Math.min(0.1, (t - prev) / 1000); prev = t
+      const s = snapRef.current, m = s.meta, r = roomRef.current, st = s.state
+      const c = cvs.current, b = box.current; if (!c || !b) return
+      const W = b.clientWidth, H = b.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1)
+      if (c.width !== Math.round(W * dpr) || c.height !== Math.round(H * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr) }
+      const g = c.getContext('2d'); if (!g) return
+      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H)
+      const top = 74, sc = Math.min(W / CFG.w, (H - top - 8) / CFG.h), cx = W / 2, cy = top + (H - top) / 2
+      const X = (x: number) => cx + x * sc, Y = (y: number) => cy + y * sc
+      const now = r ? r.now() : Date.now()
+      const playing = !!m && m.phase === 'play' && now >= m.startAt && !!r && m.part.includes(r.uid)
+      // 새 판이 시작되면 내 자리로
+      if (m && m.phase === 'play' && roundSeen.current !== m.round && r) {
+        roundSeen.current = m.round; const i = Math.max(0, m.part.indexOf(r.uid)); meRef.current = { x: SPAWN[i][0], y: SPAWN[i][1] }; r.patchMe({ x: meRef.current.x, y: meRef.current.y, cap: null }); shown.current.st = {}; anims.current = []
+      }
+      // 내 이동
+      if (playing) {
+        const k = keys.current; const kx = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0), ky = (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0) - (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0)
+        const ix = input.current.jx || kx, iy = input.current.jy || ky
+        if (ix || iy) meRef.current = stepWalker(meRef.current, ix, iy, dt)
+        if ((Math.abs(meRef.current.x - sentPos.current.x) > 0.02 || Math.abs(meRef.current.y - sentPos.current.y) > 0.02) && t - lastSend.current > 80) { lastSend.current = t; sentPos.current = { ...meRef.current }; r?.patchMe({ x: +meRef.current.x.toFixed(2), y: +meRef.current.y.toFixed(2) }) }
+      }
+      // 들어온 소식 → 부드럽게 따라가기
+      const k1 = 1 - Math.exp(-dt * 14)
+      const part = m?.part ?? []
+      for (const u of part) { const p = s.players[u]; if (!p || u === r?.uid) continue; const o = shown.current.pl[u] ?? { x: p.x, y: p.y }; o.x += (p.x - o.x) * k1; o.y += (p.y - o.y) * k1; shown.current.pl[u] = o }
+      const stars = (st && m && st.r === m.round ? st.stars : []).map((q) => { const o = shown.current.st[q.id] ?? { x: q.x, y: q.y }; o.x += (q.x - o.x) * k1; o.y += (q.y - o.y) * k1; shown.current.st[q.id] = o; return { ...q, x: o.x, y: o.y } })
+      if (st && m && st.r === m.round && st.ev && st.ev.n > evSeen.current) { evSeen.current = st.ev.n; anims.current.push({ k: 'fly', x: st.ev.x, y: st.ev.y, t0: t }); playPop() }
+      if (m && m.phase === 'lobby') evSeen.current = 0
+      // 잡기 가능/쿨다운 표시
+      const near = stars.some((q) => Math.hypot(q.x - meRef.current.x, q.y - meRef.current.y) <= CFG.catchR)
+      const cd = Math.max(0, 1 - (now - lastCatch.current) / (CFG.catchCd * 1000))
+      const left = m && m.phase === 'play' ? Math.max(0, m.endAt - now) : 0, count = m && m.phase === 'play' && now < m.startAt ? Math.ceil((m.startAt - now) / 1000) : 0
+      const sig = `${near}|${Math.ceil(cd * 10)}|${Math.ceil(left / 1000)}|${count}`
+      if (sig !== clock.current && t - hudAt > 50) { clock.current = sig; hudAt = t; inRange.current = near; cdFrac.current = cd; setHud({ range: near, cd, left, count }) }
+      // 그림: 풀밭, 경계, 발밑 고리, 별, 친구
+      const R = 14 * Math.min(1, sc / 17) + 4
+      g.save(); g.beginPath(); g.roundRect(X(-CFG.w / 2), Y(-CFG.h / 2), CFG.w * sc, CFG.h * sc, 26); g.clip()
+      const pat = imgs.current.grass?.complete && imgs.current.grass.naturalWidth ? g.createPattern(imgs.current.grass, 'repeat') : null
+      g.globalAlpha = 0.9; g.fillStyle = pat ?? '#7cb06a'; if (pat) { const sz = 150 / imgs.current.grass!.naturalWidth; pat.setTransform(new DOMMatrix().scale(sz)) }; g.fillRect(X(-CFG.w / 2), Y(-CFG.h / 2), CFG.w * sc, CFG.h * sc); g.restore()
+      g.globalAlpha = 1; g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,.75)'; g.setLineDash([10, 8]); g.beginPath(); g.roundRect(X(-CFG.w / 2), Y(-CFG.h / 2), CFG.w * sc, CFG.h * sc, 26); g.stroke(); g.setLineDash([])
+      // 별
+      for (const q of stars) {
+        const px = X(q.x), py = Y(q.y), wob = q.m === 2 ? Math.sin(t / 60) * 1.5 : q.m === 1 ? Math.sin(t / 90) * 1 : 0
+        g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(px, py + R * 0.8, R * 0.8, R * 0.3, 0, 0, 7); g.fill()
+        if (q.m === 2) { g.strokeStyle = '#fff'; g.lineWidth = 3; g.setLineDash([6, 6]); g.lineDashOffset = -t / 40; g.beginPath(); g.arc(px, py + R * 0.5, R * 1.5, 0, 7); g.stroke(); g.setLineDash([]) }
+        const lift = q.m === 2 ? 0 : Math.abs(Math.sin(t / 220 + q.id)) * 4
+        drawStar(g, px + wob, py - lift, R * 1.05, q.m)
+        if (q.m === 2) { g.fillStyle = '#c04a5a'; g.font = '900 16px sans-serif'; g.textAlign = 'center'; g.fillText('!', px, py - R * 1.5 - 2) }
+        if (q.m === 2 && Math.hypot(q.x - meRef.current.x, q.y - meRef.current.y) <= CFG.catchR + 1.5) bubble(g, px, py - R * 2.3, '지금 잡아!')
+      }
+      // 친구들(아래쪽이 앞)
+      const order = part.map((u) => ({ u, p: u === r?.uid ? meRef.current : s.players[u] ? shown.current.pl[u] ?? s.players[u] : null })).filter((o): o is { u: string; p: { x: number; y: number } } => !!o.p).sort((a, b) => a.p.y - b.p.y)
+      for (const o of order) {
+        const i = part.indexOf(o.u), px = X(o.p.x), py = Y(o.p.y), mine = o.u === r?.uid, col = COLORS[i]
+        g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(px, py + R * 0.7, R * 0.9, R * 0.32, 0, 0, 7); g.fill()
+        g.strokeStyle = col; g.lineWidth = 3.5; g.setLineDash(mine ? [5, 4] : []); g.beginPath(); g.ellipse(px, py + R * 0.7, R * 1.2, R * 0.5, 0, 0, 7); g.stroke(); g.setLineDash([])
+        if (mine) { g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 2; g.beginPath(); g.arc(px, py, CFG.catchR * sc, 0, 7); g.stroke() }
+        drawKid(g, px, py - R * 0.2, R, col, SHAPES[i], mine)
+        const sy = s.players[o.u]?.say; if (sy) { const prevSay = sayShown.current[o.u]; if (!prevSay || prevSay.n !== sy.n) sayShown.current[o.u] = { n: sy.n, k: sy.k, t } }
+        const ss = sayShown.current[o.u]; if (ss && t - ss.t < 2000) bubble(g, px, py - R * 2.6, SAYS[ss.k] ?? '')
+      }
+      // 헛손질·날아가는 별
+      anims.current = anims.current.filter((a) => t - a.t0 < (a.k === 'fly' ? 800 : 350))
+      for (const a of anims.current) {
+        const u = (t - a.t0) / (a.k === 'fly' ? 800 : 350)
+        if (a.k === 'miss') { g.strokeStyle = `rgba(255,255,255,${0.7 * (1 - u)})`; g.lineWidth = 3; g.beginPath(); g.arc(X(a.x), Y(a.y), CFG.catchR * sc * (0.4 + 0.6 * u), 0, 7); g.stroke() }
+        else { const tx = 60, ty = 40; const e = u * u * (3 - 2 * u); drawStar(g, X(a.x) + (tx - X(a.x)) * e, Y(a.y) + (ty - Y(a.y)) * e - Math.sin(u * Math.PI) * 30, R * (calm ? 1 : 1.05 * (1 - 0.4 * u)), 0) }
+      }
+      // 카운트다운 숫자
+      if (count > 0) { g.fillStyle = 'rgba(255,255,255,.92)'; g.font = '900 88px Jua, sans-serif'; g.textAlign = 'center'; g.fillText(String(count), W / 2, H / 2 + 20) }
+    }
+    raf = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(raf)
+  }, [screen, calm])
+
+  /* ───── 결과 보상(한 판에 한 번) ───── */
+  const st = snap.state
+  const res = st && meta && st.r === meta.round ? st.res : 0
+  const caught = st?.caught ?? 0
+  useEffect(() => {
+    if (!res || !meta || !myIn || paid.current === meta.round) return
+    paid.current = meta.round
+    const n = res === 1 ? 20 : Math.min(10, caught * 2); if (!practice && n > 0) earnStars(n)
+    if (res === 1) playWin(); else playLose()
+  }, [res, meta, myIn, caught, practice])
+
+  const leave = () => { roomRef.current?.leave(); roomRef.current = null; setRoom(null); setSnap({ meta: null, players: {}, state: null }); setScreen('menu'); setLeaving(false); setSettings(false); setHostGone(false) }
+  const sayIt = (k: number) => { const t = Date.now(); if (t - lastSayAt.current < 3000) return; lastSayAt.current = t; room?.patchMe({ say: { k, n: t % 1e9 } }); setChat(false) }
+  const lastSayAt = useRef(0)
+
+  /* ───── 화면 ───── */
+  const frame = 'absolute inset-0 z-30 flex flex-col overflow-hidden rounded-3xl text-[#3b2a63] ring-1 ring-black/5'
+  const bgStyle = { backgroundImage: `url(${assetUrl('starchase/sky.webp')})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+  const panel = 'rounded-3xl bg-[#fff8ec]/95 p-4 shadow-xl ring-2 ring-[#cdb8f2]'
+  const btn = 'min-h-12 rounded-full border-0 px-5 text-base font-black shadow-md active:scale-95 disabled:opacity-50'
+  const hills = <img aria-hidden src={assetUrl('starchase/hills.webp')} alt="" draggable={false} className="pointer-events-none absolute inset-x-0 bottom-0 h-[70%] w-full object-cover object-bottom" />
+
+  if (screen === 'menu') return (
+    <div className={frame} style={bgStyle}>
+      {hills}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <h2 className="m-0 text-center text-3xl font-black text-white [font-family:Jua,'Noto_Sans_KR',sans-serif] [text-shadow:0_3px_0_#7a5cc0,0_0_14px_rgba(255,255,255,.5)]">도망간 별을<br />잡아라 ⭐</h2>
+        <p className="m-0 rounded-full bg-white/85 px-4 py-1 text-sm font-bold">함께 별자리를 완성해요</p>
+        <div className={`${panel} flex w-full max-w-xs flex-col gap-2`}>
+          {multiplayerAvailable && <>
+            <button disabled={busy} onClick={() => enter({ create: true })} className={`${btn} bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-[#6b4a00]`}>🏠 방 만들기</button>
+            <div className="flex gap-2">
+              <input value={code} onChange={(e) => setCode(e.target.value.replace(/[^0-9sS]/g, '').slice(0, 2))} inputMode="numeric" aria-label="방 번호" placeholder="방 번호 (1~4)" className="h-12 min-w-0 flex-1 rounded-full border-2 border-[#cdb8f2] bg-white px-4 text-center text-base font-bold" />
+              <button disabled={busy || !code} onClick={() => enter({ code })} className={`${btn} shrink-0 bg-[#ff8fab] px-4 text-white`}>친구 방 참가</button>
+            </div>
+          </>}
+          <button disabled={busy} onClick={() => enter({ practice: true })} className={`${btn} bg-[#bfe8d0] text-[#245a3d]`}>🎯 연습하기 <span className="text-xs font-bold">(혼자)</span></button>
+          <button onClick={onClose} className={`${btn} bg-white text-[#6b5a99]`}>🏡 마을로</button>
+          {busy && <p role="status" className="m-0 text-center text-sm font-bold text-[#7a5cc0]">연결하는 중…</p>}
+          {err && <p role="alert" className="m-0 text-center text-sm font-bold text-[#c04a5a]">⚠️ {err}</p>}
+        </div>
+      </div>
+    </div>
+  )
+
+  const players = snap.players
+  const shapeChip = (u: string, i: number) => <span key={u} className="flex min-w-0 items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-xs font-black shadow" style={{ boxShadow: `0 0 0 2px ${COLORS[i]}` }}><span style={{ color: COLORS[i] }}>{SHAPES[i]}</span><span className="max-w-[4.5rem] truncate">{players[u]?.name ?? '…'}</span>{!players[u] && <span title="연결이 끊겼어요" aria-label="연결이 끊겼어요">📶</span>}</span>
+
+  // 방장이 나감
+  if (hostGone) return <div className={frame} style={bgStyle}><div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-3 p-6"><div className={`${panel} text-center`}><p role="status" className="m-0 mb-3 text-base font-black">방장이 나가서 방이 닫혔어요</p><button onClick={leave} className={`${btn} bg-[#ff8fab] text-white`}>돌아가기</button></div></div></div>
+
+  // 대기실
+  if (phase === 'lobby' && !practice) {
+    const everyone = slotOrder.length >= 2 && slotOrder.every((u) => players[u]?.ready || u === meta?.host)
+    const myReady = !!players[me]?.ready
+    const reason = slotOrder.length < 2 ? '친구가 오면 시작할 수 있어요' : !everyone ? '모두 준비하면 시작할 수 있어요' : ''
+    return (
+      <div className={frame} style={bgStyle}>
+        {hills}
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-y-auto p-3 pt-[max(.75rem,env(safe-area-inset-top))]">
+          <div className={`${panel} w-full max-w-md`}>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="m-0 text-base font-black">우리 방 <span className="rounded-full bg-[#efe5ff] px-3 py-0.5 text-lg tracking-widest">{room?.room.toUpperCase()}</span></p>
+              <button onClick={() => { try { navigator.clipboard?.writeText(room?.room.replace(/\D/g, '') ?? '') } catch { /* 복사 못 해도 괜찮다 */ } }} aria-label="방 번호 복사" className="min-h-9 rounded-full bg-white px-3 text-xs font-bold ring-1 ring-[#cdb8f2]">📋 복사</button>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5 [@media(max-width:380px)]:grid-cols-2">
+              {Array.from({ length: STAR_MAX }, (_, i) => {
+                const u = slotOrder[i], p = u ? players[u] : null
+                return <div key={i} className={`flex min-h-[5.2rem] flex-col items-center justify-center gap-0.5 rounded-2xl p-1.5 text-center ${p ? 'bg-white' : 'bg-white/50'}`} style={p ? { boxShadow: `0 0 0 2px ${COLORS[i]}` } : undefined}>
+                  <span className="text-xl" style={{ color: COLORS[i] }}>{SHAPES[i]}</span>
+                  {p ? <><span className="max-w-full truncate text-xs font-black">{p.name}{u === me ? ' (나)' : ''}</span><span className="text-[11px] font-bold">{u === meta?.host ? '👑 방장' : p.ready ? '✅ 준비 완료' : '⏳ 준비 중'}</span></> : <span className="text-[11px] font-bold text-black/45">친구 기다리는 중</span>}
+                </div>
+              })}
+            </div>
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              {!isHost && <button onClick={() => room?.patchMe({ ready: !myReady })} className={`${btn} ${myReady ? 'bg-white text-[#6b5a99] ring-2 ring-[#cdb8f2]' : 'bg-[#ff8fab] text-white'}`}>{myReady ? '준비 취소' : '준비'}</button>}
+              {isHost && <button disabled={!everyone} onClick={() => room && startGame(room)} className={`${btn} bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-[#6b4a00]`}>▶ 시작하기</button>}
+              <button onClick={() => setLeaving(true)} className={`${btn} bg-white text-[#6b5a99]`}>나가기</button>
+            </div>
+            {isHost && reason && <p role="status" className="m-0 mt-2 text-center text-xs font-bold text-[#7a5cc0]">{reason}</p>}
+            {!isHost && <p className="m-0 mt-2 text-center text-xs font-bold text-[#7a5cc0]">방장이 시작하길 기다려요</p>}
+          </div>
+        </div>
+        {leaving && <Confirm onKeep={() => setLeaving(false)} onLeave={leave} />}
+        {intro && <Intro onOk={() => { setKey(INTRO_KEY); setIntro(false) }} />}
+      </div>
+    )
+  }
+
+  // 판(진행 중·결과)
+  const target = meta?.target ?? 0
+  const win = res === 1
+  const done = !!res || phase === 'done'
+  return (
+    <div className={frame} style={bgStyle}>
+      {hills}
+      <div ref={box} className="relative z-10 min-h-0 flex-1 touch-none select-none">
+        <canvas ref={cvs} aria-label="별 잡기 놀이터" className="absolute inset-0 h-full w-full" />
+        {/* 위쪽 HUD */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col gap-1 px-2 pt-[max(.5rem,env(safe-area-inset-top))]">
+          <div className="flex items-start justify-between gap-2">
+            <span aria-label="모은 별" className="flex h-10 items-center gap-1 rounded-full bg-[#fff8ec]/95 px-3 text-sm font-black shadow ring-2 ring-[#cdb8f2]">⭐ 별 {caught} / {target}{practice && <span className="ml-1 rounded-full bg-[#bfe8d0] px-1.5 text-[10px]">연습</span>}</span>
+            <span aria-label="남은 시간" className="flex h-10 items-center gap-1 rounded-full bg-[#fff8ec]/95 px-4 text-base font-black shadow ring-2 ring-[#cdb8f2]">⏱ {fmt(done ? 0 : hud.count ? CFG.seconds * 1000 : hud.left)}</span>
+            <div className="pointer-events-auto flex gap-1.5">
+              <button aria-label="설정" onClick={() => setSettings(true)} className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff8ec]/95 text-xl shadow ring-2 ring-[#cdb8f2]">⚙️</button>
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <div aria-hidden className="flex min-w-0 items-center gap-1.5 rounded-full bg-white/70 px-2 py-0.5">
+              {Array.from({ length: target }, (_, i) => <span key={i} className={`text-sm leading-none ${i < caught ? '' : 'font-black text-[#7a5cc0]'}`}>{i < caught ? '⭐' : '☆'}</span>)}
+            </div>
+            <div className="flex min-w-0 flex-wrap justify-end gap-1">{part.map((u, i) => shapeChip(u, i))}</div>
+          </div>
+          {!myIn && !done && (meta?.round ?? 0) > 0 && <p role="status" className="m-0 self-center rounded-full bg-white/90 px-3 py-1 text-xs font-black">👀 구경 중 · 다음 판부터 같이 해요</p>}
+        </div>
+        {/* 조작 */}
+        {myIn && !done && <>
+          <div ref={padRef} role="group" aria-label="이동 조이스틱" onPointerDown={(e) => { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); padMove(e) }} onPointerMove={(e) => { if (e.buttons || e.pointerType === 'touch') padMove(e) }} onPointerUp={padEnd} onPointerCancel={padEnd} onLostPointerCapture={padEnd}
+            className="absolute left-3 flex h-32 w-32 items-center justify-center rounded-full bg-white/45 shadow-inner ring-2 ring-white/70 backdrop-blur-sm [@media(max-height:420px)]:h-28 [@media(max-height:420px)]:w-28" style={{ bottom: 'max(.75rem, env(safe-area-inset-bottom))' }}>
+            <span aria-hidden className="h-14 w-14 rounded-full bg-white shadow-lg ring-2 ring-[#cdb8f2]" style={{ transform: `translate(${stick.x * 36}px, ${stick.y * 36}px)` }} />
+          </div>
+          <button aria-label="잡기" onPointerDown={(e) => { e.preventDefault(); doCatch() }} className={`absolute right-3 flex h-[5.25rem] w-[5.25rem] flex-col items-center justify-center rounded-full border-0 text-base font-black text-[#6b4a00] shadow-xl active:scale-95 ${hud.cd > 0 ? 'bg-[#e9d9a6] opacity-80' : hud.range ? 'bg-gradient-to-b from-[#fff09a] to-[#ffc94a] ring-4 ring-white' : 'bg-gradient-to-b from-[#ffe27a] to-[#f4b73c]'}`} style={{ bottom: 'max(.75rem, env(safe-area-inset-bottom))' }}>
+            <span className="text-2xl leading-none">{hud.cd > 0 ? '⏳' : '🙌'}</span>잡기
+            {hud.cd > 0 && <span aria-hidden className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(rgba(255,255,255,.65) ${hud.cd * 360}deg, transparent 0)` }} />}
+          </button>
+          <div className="absolute right-[6.5rem] flex flex-col items-end gap-1" style={{ bottom: 'max(.75rem, env(safe-area-inset-bottom))' }}>
+            {chat && SAYS.map((s, k) => <button key={k} onClick={() => sayIt(k)} className="min-h-10 rounded-full bg-white/95 px-3 text-sm font-black shadow ring-2 ring-[#cdb8f2]">{s}</button>)}
+            <button aria-label="빠른 말" aria-expanded={chat} onClick={() => setChat((v) => !v)} className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff8ec]/95 text-xl shadow ring-2 ring-[#cdb8f2]">💬</button>
+          </div>
+        </>}
+      </div>
+
+      {done && (
+        <div role="dialog" aria-label="결과" className="absolute inset-0 z-20 flex items-center justify-center bg-[#2a1a5e]/45 p-3">
+          <div className={`${panel} flex max-h-full w-full max-w-sm flex-col items-center gap-2 overflow-y-auto text-center`}>
+            <p className="m-0 text-2xl font-black [font-family:Jua,'Noto_Sans_KR',sans-serif]">{win ? '우리가 해냈어! 🎉' : `별을 ${caught}개 모았어!`}</p>
+            <div aria-hidden className="flex flex-wrap justify-center gap-1 text-2xl">{Array.from({ length: target }, (_, i) => <span key={i} className={i < caught ? (win && !calm ? 'animate-bounce' : '') : 'opacity-25 grayscale'} style={{ animationDelay: `${i * 60}ms` }}>⭐</span>)}</div>
+            <p className="m-0 text-sm font-bold text-[#6b5a99]">{win ? '별자리를 완성했어요!' : '다음에는 더 모아봐요!'}</p>
+            <div className="flex flex-wrap justify-center gap-1">{part.map((u, i) => shapeChip(u, i))}</div>
+            {myIn && !practice && <p className="m-0 text-xs font-bold text-[#7a5cc0]">⭐ {win ? 20 : Math.min(10, caught * 2)}개 받았어요</p>}
+            <div className="mt-1 flex flex-wrap justify-center gap-2">
+              {practice ? <button onClick={() => room && startGame(room, true)} className={`${btn} bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-[#6b4a00]`}>한 번 더</button>
+                : isHost ? <button onClick={() => room?.setMeta({ phase: 'lobby', part: [] })} className={`${btn} bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-[#6b4a00]`}>한 번 더</button>
+                : <p className="m-0 w-full text-xs font-bold text-[#7a5cc0]">방장이 「한 번 더」를 누르면 대기실로 가요</p>}
+              <button onClick={() => { leave(); onClose() }} className={`${btn} bg-white text-[#6b5a99]`}>🏡 마을로</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {settings && (
+        <div role="dialog" aria-label="설정" className="absolute inset-0 z-30 flex items-center justify-center bg-black/30 p-3" onClick={(e) => { if (e.target === e.currentTarget) setSettings(false) }}>
+          <div className={`${panel} flex w-full max-w-xs flex-col gap-2`}>
+            <p className="m-0 text-lg font-black">⚙️ 설정</p>
+            {!practice && <p className="m-0 rounded-xl bg-[#efe5ff] px-3 py-1.5 text-xs font-bold">설정을 열어도 시간은 계속 가요</p>}
+            <label className="flex min-h-12 items-center justify-between gap-2 text-sm font-bold">효과 줄이기<input type="checkbox" checked={calm} onChange={(e) => { setCalm(e.target.checked); try { e.target.checked ? localStorage.setItem('ryuso.star.calm', '1') : localStorage.removeItem('ryuso.star.calm') } catch { /* 저장 못 해도 괜찮다 */ } }} className="h-6 w-6" /></label>
+            <button onClick={() => { setSettings(false); setIntro(true) }} className={`${btn} bg-white text-[#6b5a99]`}>❓ 도움말</button>
+            <button onClick={() => { setSettings(false); setLeaving(true) }} className={`${btn} bg-[#ffd9e1] text-[#a33a55]`}>나가기</button>
+            <button onClick={() => setSettings(false)} className={`${btn} bg-[#ff8fab] text-white`}>계속 놀기</button>
+          </div>
+        </div>
+      )}
+      {leaving && <Confirm practice={practice} onKeep={() => setLeaving(false)} onLeave={leave} />}
+      {intro && <Intro onOk={() => { setKey(INTRO_KEY); setIntro(false); force((n) => n + 1) }} />}
+    </div>
+  )
+}
+
+function Confirm({ onKeep, onLeave, practice }: { onKeep: () => void; onLeave: () => void; practice?: boolean }) {
+  return (
+    <div role="dialog" aria-label="나가기" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3">
+      <div className="flex w-full max-w-xs flex-col gap-2 rounded-3xl bg-[#fff8ec] p-4 text-center shadow-xl ring-2 ring-[#cdb8f2]">
+        <p className="m-0 text-base font-black text-[#3b2a63]">{practice ? '연습을 그만할까요?' : '나갈까요?'}</p>
+        {!practice && <p className="m-0 text-sm font-bold text-[#6b5a99]">친구들은 계속 놀 수 있어요</p>}
+        <button onClick={onKeep} className="min-h-12 rounded-full bg-[#ff8fab] text-base font-black text-white shadow-md">계속 놀기</button>
+        <button onClick={onLeave} className="min-h-12 rounded-full bg-white text-base font-black text-[#6b5a99] ring-2 ring-[#cdb8f2]">나가기</button>
+      </div>
+    </div>
+  )
+}
+
+function Intro({ onOk }: { onOk: () => void }) {
+  return (
+    <div role="dialog" aria-label="놀이 방법" className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 p-3">
+      <div className="flex max-h-full w-full max-w-xs flex-col items-center gap-2 overflow-y-auto rounded-3xl bg-[#fff8ec] p-4 text-center shadow-xl ring-2 ring-[#cdb8f2]">
+        <div aria-hidden className="flex items-center gap-1 text-3xl">🧒<span className="text-2xl">➡️</span>⭐<span className="text-2xl">⬅️</span>🧒</div>
+        <p className="m-0 text-base font-black text-[#3b2a63]">친구와 반대편에서 다가가요!</p>
+        <ul className="m-0 flex list-none flex-col gap-1 p-0 text-left text-sm font-bold text-[#6b5a99]">
+          <li>🕹️ <b>이동</b>: 왼쪽 조이스틱 (키보드는 WASD·화살표)</li>
+          <li>🙌 <b>잡기</b>: 별이 가까이 오면 눌러요 (스페이스)</li>
+          <li>⭐ 양쪽에서 다가가면 별이 놀라서 느려져요!</li>
+        </ul>
+        <button onClick={onOk} className="min-h-12 w-full rounded-full bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-base font-black text-[#6b4a00] shadow-md">알겠어!</button>
+      </div>
+    </div>
+  )
+}
+
+/* ───── 캔버스 그림 도구 ───── */
+function drawStar(g: CanvasRenderingContext2D, x: number, y: number, r: number, mode: number) {
+  g.save(); g.translate(x, y); g.shadowColor = 'rgba(255,230,120,.9)'; g.shadowBlur = mode === 2 ? 6 : 14
+  g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = i % 2 ? r * 0.5 : r * 1.15; g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) }
+  g.closePath(); g.fillStyle = mode === 2 ? '#ffe566' : '#ffd84a'; g.fill(); g.lineJoin = 'round'; g.lineWidth = 2.5; g.strokeStyle = '#e8a91e'; g.stroke(); g.shadowBlur = 0
+  g.fillStyle = '#6b3b1e'; g.beginPath(); g.arc(-r * 0.28, 0, r * 0.1, 0, 7); g.arc(r * 0.28, 0, r * 0.1, 0, 7); g.fill()
+  g.strokeStyle = '#6b3b1e'; g.lineWidth = 1.6; g.beginPath(); if (mode === 2) g.arc(0, r * 0.28, r * 0.12, 0, 7); else g.arc(0, r * 0.12, r * 0.18, 0.15, Math.PI - 0.15); g.stroke()
+  g.fillStyle = 'rgba(255,140,160,.6)'; g.beginPath(); g.arc(-r * 0.5, r * 0.18, r * 0.12, 0, 7); g.arc(r * 0.5, r * 0.18, r * 0.12, 0, 7); g.fill()
+  g.restore()
+}
+function drawKid(g: CanvasRenderingContext2D, x: number, y: number, r: number, col: string, shape: string, mine: boolean) {
+  g.save(); g.translate(x, y)
+  g.fillStyle = col; g.beginPath(); g.arc(0, r * 0.25, r * 0.95, 0, 7); g.fill(); g.lineWidth = 2.5; g.strokeStyle = '#fff'; g.stroke()
+  g.fillStyle = '#ffe9d6'; g.beginPath(); g.arc(0, -r * 0.05, r * 0.72, 0, 7); g.fill()
+  g.fillStyle = '#4a3320'; g.beginPath(); g.arc(-r * 0.25, -r * 0.05, r * 0.09, 0, 7); g.arc(r * 0.25, -r * 0.05, r * 0.09, 0, 7); g.fill()
+  g.strokeStyle = '#4a3320'; g.lineWidth = 1.5; g.beginPath(); g.arc(0, r * 0.12, r * 0.18, 0.2, Math.PI - 0.2); g.stroke()
+  g.fillStyle = col; g.beginPath(); g.arc(0, -r * 0.55, r * 0.66, Math.PI, 0); g.fill()
+  g.fillStyle = '#fff'; g.font = `900 ${Math.round(r * 0.9)}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(shape, r * 0.8, -r * 0.9)
+  if (mine) { g.fillStyle = '#fff'; g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); g.moveTo(-r * 0.35, -r * 1.95); g.lineTo(r * 0.35, -r * 1.95); g.lineTo(0, -r * 1.4); g.closePath(); g.fill(); g.stroke() }
+  g.restore(); g.textBaseline = 'alphabetic'
+}
+function bubble(g: CanvasRenderingContext2D, x: number, y: number, text: string) {
+  g.save(); g.font = '800 13px sans-serif'; const w = g.measureText(text).width + 16
+  g.fillStyle = 'rgba(255,255,255,.96)'; g.strokeStyle = '#cdb8f2'; g.lineWidth = 2; g.beginPath(); g.roundRect(x - w / 2, y - 22, w, 24, 12); g.fill(); g.stroke()
+  g.fillStyle = '#3b2a63'; g.textAlign = 'center'; g.fillText(text, x, y - 5); g.restore()
+}
