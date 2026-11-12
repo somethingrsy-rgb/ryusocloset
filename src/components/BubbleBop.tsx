@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { earnStars } from '../lib/shop'
 import { playCoin, playHop, playLose, playPop, playTap, playWin, startBgm, stopBgm } from '../lib/sound'
 import { assetUrl } from '../lib/items'
+import { localTest } from '../lib/mp/config'
 import { AVATARS, getAvatar } from '../lib/avatars'
 import { renderFigure } from '../lib/exportPng'
 import type { Outfit } from '../lib/types'
@@ -11,7 +12,7 @@ import { COLS, CFG, LEVELS, ROWS, newGame, step, type Ev, type Input, type State
  * 별 거품: 한 화면 발판 게임. 내 아바타가 거품을 뿜어 별 친구를 가두고, 터뜨리면 과일이 나온다.
  * 규칙은 lib/bubbleBop.ts(순수 함수), 여기는 그리기와 조작만.
  */
-/** 판마다 컨셉 하나를 무작위로 고른다(섞지 않는다): 별 나라 / 할로윈 / 몬스터 마을 */
+/** 단계마다 컨셉이 돌아간다(섞지 않는다): 1단계 별 나라 → 2단계 할로윈 → 3단계 몬스터 마을 → 4단계 다시 별 나라 … */
 interface Theme { id: 'star' | 'halloween' | 'monster'; name: string; sky: string; foes: { walk: string; trapped: string; mad: string; h: number }[]; treats: string[]; plat: [string, string]; wall: [string, string] }
 const MON_POOL = ['bat', 'blob', 'goblin', 'fluff', 'dino', 'dragon', 'jelly', 'golem']
 const THEMES: Theme[] = [
@@ -19,11 +20,11 @@ const THEMES: Theme[] = [
   { id: 'halloween', name: '할로윈', sky: 'race/sky_halloween.webp', foes: [{ walk: 'starchase/hw_ghost.webp', trapped: 'starchase/hw_ghost.webp', mad: 'starchase/hw_ghost.webp', h: 1.5 }, { walk: 'starchase/hw_pumpkin.webp', trapped: 'starchase/hw_pumpkin.webp', mad: 'starchase/hw_pumpkin.webp', h: 1.2 }], treats: ['race/cd_candy.webp', 'race/cd_cupcake.webp', 'race/cd_lolli_a.webp', 'race/cd_heartcookie.webp', 'race/cd_gummybear.webp'], plat: ['#ff9a3d', '#6a3fa8'], wall: ['#7a4fc0', '#3d2a6b'] },
   { id: 'monster', name: '몬스터 마을', sky: 'starchase/sky_land.webp', foes: [], treats: ['race/fg_strawbush.webp', 'race/fg_blueberry.webp', 'race/fg_cherry.webp', 'race/fg_melonslice.webp', 'race/fg_pineapple.webp'], plat: ['#9be07a', '#3f9a6a'], wall: ['#6fbf8a', '#2f7a5a'] },
 ]
-const pickTheme = (): Theme => {
-  const t = THEMES[Math.floor(Math.random() * THEMES.length)]
-  if (t.id !== 'monster') return t
+/** 몬스터 마을의 몬스터 3마리(8종 중, 한 판 동안 같은 친구들) */
+const monsterTheme = (): Theme => {
+  const t = THEMES[2]
   const ids = [...MON_POOL].sort(() => Math.random() - 0.5).slice(0, 3)
-  return { ...t, foes: ids.map((id) => ({ walk: `travel/monster/${id}_angry.webp`, trapped: `travel/monster/${id}_happy.webp`, mad: `travel/monster/${id}_angry.webp`, h: 1.35 })) }
+  return { ...t, foes: ids.map((id) => ({ walk: `travel/monster/${id}_angry.webp`, trapped: `travel/monster/${id}_happy.webp`, mad: `travel/monster/${id}_angry.webp`, h: 1.5 })) }
 }
 type FoeImgs = { walk: HTMLImageElement; trapped: HTMLImageElement; mad: HTMLImageElement; h: number }[]
 const INTRO_KEY = 'ryuso.bubble.intro'
@@ -34,7 +35,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
   const [state, setState] = useState<'intro' | 'play' | 'over' | 'won'>('intro')
   const [hud, setHud] = useState({ score: 0, lives: CFG.lives, level: 1, foes: 0, stars: 0 })
   const [paused, setPaused] = useState(false)
-  const [theme, setTheme] = useState<Theme>(() => pickTheme())
+  const [themes, setThemes] = useState<Theme[]>(() => [THEMES[0], THEMES[1], monsterTheme()])
   const [, force] = useState(0)
   const box = useRef<HTMLDivElement>(null)
   const cvs = useRef<HTMLCanvasElement>(null)
@@ -42,12 +43,14 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
   const keys = useRef(new Set<string>())
   const touch = useRef({ left: false, right: false, jump: false, shoot: false })
   const fx = useRef<{ k: 'pop' | 'burst' | 'hit'; x: number; y: number; t: number }[]>([])
-  const imgs = useRef<Imgs>({ foes: [], fruit: [], burst: load('starchase/burst.webp'), me: null, theme: THEMES[0] })
+  const imgs = useRef<Imgs>({ sets: [], burst: load('starchase/burst.webp'), me: null })
   const paid = useRef(false)
+  if (localTest) (window as unknown as { __bb?: () => State }).__bb = () => game.current // 시험용(?mp=local 에서만)
 
-  const begin = useCallback((fresh: boolean) => { if (fresh) setTheme(pickTheme()); game.current = newGame(); fx.current = []; paid.current = false; setState('play'); setPaused(false) }, [])
-  // 컨셉이 정해지면 그 그림을 불러온다
-  useEffect(() => { imgs.current.theme = theme; imgs.current.foes = theme.foes.map((f) => ({ walk: load(f.walk), trapped: load(f.trapped), mad: load(f.mad), h: f.h })); imgs.current.fruit = theme.treats.map(load) }, [theme])
+  const begin = useCallback((fresh: boolean) => { if (fresh) setThemes([THEMES[0], THEMES[1], monsterTheme()]); game.current = newGame(); fx.current = []; paid.current = false; setState('play'); setPaused(false) }, [])
+  // 세 컨셉의 그림을 미리 불러 둔다
+  useEffect(() => { imgs.current.sets = themes.map((th) => ({ theme: th, foes: th.foes.map((f) => ({ walk: load(f.walk), trapped: load(f.trapped), mad: load(f.mad), h: f.h })), fruit: th.treats.map(load) })) }, [themes])
+  const theme = themes[(hud.level - 1) % themes.length]
   useEffect(() => { if (state !== 'play' || paused) return; startBgm('run'); return stopBgm }, [state, paused])
   useEffect(() => {
     const look = { avatar: getAvatar().id }
@@ -152,7 +155,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
         <div role="dialog" aria-label="놀이 방법" className="absolute inset-0 z-40 flex items-center justify-center bg-black/30 p-3">
           <div className="flex max-h-full w-full max-w-xs flex-col items-center gap-2 overflow-y-auto rounded-3xl bg-[#fff8ec] p-4 text-center shadow-xl ring-2 ring-[#cdb8f2]">
             <p className="m-0 text-xl font-black">🫧 별 거품</p>
-            <p className="m-0 text-sm font-black text-[#7a5cc0]">이번 판은 {theme.name}!</p>
+            <p className="m-0 text-sm font-black text-[#7a5cc0]">단계마다 별 나라 → 할로윈 → 몬스터 마을이 돌아가요!</p>
             <ul className="m-0 flex list-none flex-col gap-1 p-0 text-left text-sm font-bold text-[#6b5a99]">
               <li>◀ ▶ <b>걷기</b> · ▲ <b>점프</b> (키보드: 화살표, 스페이스)</li>
               <li>🫧 <b>거품</b>을 쏴서 친구들을 가둬요</li>
@@ -182,7 +185,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
 }
 
 /* ───── 그리기 ───── */
-type Imgs = { foes: FoeImgs; fruit: HTMLImageElement[]; burst: HTMLImageElement; me: HTMLCanvasElement | null; theme: Theme }
+type Imgs = { sets: { theme: Theme; foes: FoeImgs; fruit: HTMLImageElement[] }[]; burst: HTMLImageElement; me: HTMLCanvasElement | null }
 const ready = (i: HTMLImageElement | HTMLCanvasElement | null): i is HTMLImageElement | HTMLCanvasElement => !!i && (i instanceof HTMLCanvasElement || (i.complete && i.naturalWidth > 0))
 function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, top: string, bot: string, r = 0.22) {
   const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top); gr.addColorStop(1, bot)
@@ -191,18 +194,19 @@ function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: 
 }
 function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { k: string; x: number; y: number; t: number }[]) {
   // 벽과 바닥(보라 블록), 발판(분홍 윗면의 둥근 판)
-  const th = im.theme
+  const set = im.sets[s.level % 3]; if (!set) return
+  const th = set.theme, foesIm = set.foes
   for (let r = 0; r < ROWS; r++) { block(g, 0, r, 1, 1, th.wall[0], th.wall[1]); block(g, COLS - 1, r, 1, 1, th.wall[0], th.wall[1]) }
   for (let c = 1; c < COLS - 1; c++) block(g, c, ROWS - 1, 1, 1, th.wall[0], th.wall[1])
   for (let r = 0; r < ROWS - 1; r++) { let c = 1; while (c < COLS - 1) { if (!s.grid[r][c]) { c++; continue } let e = c; while (e + 1 < COLS - 1 && s.grid[r][e + 1]) e++; block(g, c, r, e - c + 1, 0.62, th.plat[0], th.plat[1], 0.3); c = e + 1 } }
   // 과일
-  for (const f of s.fruits) { const i = im.fruit[f.kind]; if (ready(i)) { const h = 0.9, w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = f.t > 9 && Math.floor(t * 8) % 2 ? 0.4 : 1; g.drawImage(i, f.x - w / 2, f.y - h, w, h); g.globalAlpha = 1 } }
+  for (const f of s.fruits) { const i = set.fruit[f.kind]; if (ready(i)) { const h = 0.9, w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = f.t > 9 && Math.floor(t * 8) % 2 ? 0.4 : 1; g.drawImage(i, f.x - w / 2, f.y - h, w, h); g.globalAlpha = 1 } }
   // 별 친구
-  for (const f of s.foes) { const v = im.foes[f.id % Math.max(1, im.foes.length)]; const i = v ? (f.mad ? v.mad : v.walk) : null; if (ready(i)) { const h = v.h * (f.mad ? 1.1 : 1), w = h * i.naturalWidth / i.naturalHeight, bob = f.on ? Math.abs(Math.sin(t * 8 + f.id)) * 0.12 : 0; g.save(); g.translate(f.x, f.y - bob); g.scale(f.dir > 0 ? -1 : 1, 1); g.drawImage(i, -w / 2, -h, w, h); g.restore() } }
+  for (const f of s.foes) { const v = foesIm[f.id % Math.max(1, foesIm.length)]; const i = v ? (f.mad ? v.mad : v.walk) : null; if (ready(i)) { const h = v.h * (f.mad ? 1.1 : 1), w = h * i.naturalWidth / i.naturalHeight, bob = f.on ? Math.abs(Math.sin(t * 8 + f.id)) * 0.12 : 0; g.save(); g.translate(f.x, f.y - bob); g.scale(f.dir > 0 ? -1 : 1, 1); g.drawImage(i, -w / 2, -h, w, h); g.restore() } }
   // 거품(갇힌 별 친구는 안에서 놀란 얼굴)
   for (const b of s.bubbles) {
     const r = b.foe ? 0.85 : 0.5, wob = 1 + Math.sin(t * 6 + b.id) * 0.04
-    if (b.foe) { const v = im.foes[b.foe.id % Math.max(1, im.foes.length)]; const i = v ? v.trapped : null; if (ready(i)) { const h = Math.min(1.1, v.h * 0.85), w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = b.life < 2 && Math.floor(t * 8) % 2 ? 0.5 : 1; g.drawImage(i, b.x - w / 2, b.y - h * 0.55, w, h); g.globalAlpha = 1 } }
+    if (b.foe) { const v = foesIm[b.foe.id % Math.max(1, foesIm.length)]; const i = v ? v.trapped : null; if (ready(i)) { const h = Math.min(1.1, v.h * 0.85), w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = b.life < 2 && Math.floor(t * 8) % 2 ? 0.5 : 1; g.drawImage(i, b.x - w / 2, b.y - h * 0.55, w, h); g.globalAlpha = 1 } }
     const gr = g.createRadialGradient(b.x - r * 0.3, b.y - r * 0.3, r * 0.1, b.x, b.y, r)
     gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(0.7, 'rgba(190,230,255,.22)'); gr.addColorStop(1, 'rgba(200,170,255,.55)')
     g.fillStyle = gr; g.beginPath(); g.ellipse(b.x, b.y, r * wob, r / wob, 0, 0, 7); g.fill()
