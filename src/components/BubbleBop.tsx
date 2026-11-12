@@ -24,7 +24,7 @@ const THEMES: Theme[] = [
 const monsterTheme = (): Theme => {
   const t = THEMES[2]
   const ids = [...MON_POOL].sort(() => Math.random() - 0.5).slice(0, 3)
-  return { ...t, foes: ids.map((id) => ({ walk: `travel/monster/${id}_angry.webp`, trapped: `travel/monster/${id}_happy.webp`, mad: `travel/monster/${id}_angry.webp`, h: 2.0 })) }
+  return { ...t, foes: ids.map((id) => ({ walk: `travel/monster/${id}_angry.webp`, trapped: `travel/monster/${id}_happy.webp`, mad: `travel/monster/${id}_angry.webp`, h: 1.5 })) }
 }
 type FoeImgs = { walk: HTMLImageElement; trapped: HTMLImageElement; mad: HTMLImageElement; h: number }[]
 const INTRO_KEY = 'ryuso.bubble.intro'
