@@ -8,14 +8,16 @@ export const SOLID = '#=?ulrLRefxy' // 땅, 벽돌, 물음표(쓰기 전·후), 
 export const levelWidth = 64
 
 export interface Foe { id: number; x: number; y: number; vy: number; dir: 1 | -1; alive: boolean; squash: number }
-export interface Room { rows: string[][]; foes: Foe[]; w: number }
+/** 하트 약병: 물음표에서 나와 길을 따라 도망간다. 잡아서 먹으면 몸이 커진다 */
+export interface Item { id: number; x: number; y: number; vy: number; dir: 1 | -1; t: number }
+export interface Room { rows: string[][]; foes: Foe[]; w: number; items: Item[] }
 export interface Player { x: number; y: number; vx: number; vy: number; on: boolean; dir: 1 | -1; inv: number; big: boolean }
 export interface State {
   level: number; room: 'main' | 'bonus'; main: Room; bonus: Room; p: Player; ret: { col: number; row: number }
-  flagX: number; score: number; coins: number; lives: number; phase: 'play' | 'clear' | 'won' | 'over'; t: number; stars: number; fade: number; prevJump: boolean; prevDown: boolean; clearT: number
+  flagX: number; score: number; coins: number; lives: number; phase: 'play' | 'clear' | 'won' | 'over'; t: number; stars: number; fade: number; prevJump: boolean; prevDown: boolean; clearT: number; qHits: number; nextId: number
 }
 export interface Input { left: boolean; right: boolean; jump: boolean; down: boolean }
-export type Ev = { k: 'jump' | 'coin' | 'bump' | 'break' | 'stomp' | 'hit' | 'shrink' | 'grow' | 'pipe' | 'clear' | 'won' | 'over' | 'fall'; x?: number; y?: number }
+export type Ev = { k: 'jump' | 'coin' | 'bump' | 'break' | 'stomp' | 'hit' | 'shrink' | 'grow' | 'potion' | 'pipe' | 'clear' | 'won' | 'over' | 'fall'; x?: number; y?: number }
 
 interface Spec { stairs?: [number, number][]; w: number; pits: [number, number][]; pipes: { c: number; h: number; enter?: boolean }[]; qs: [number, number][]; bricks: [number, number][]; plats: [number, number, number][]; coins: [number, number][]; foes: (number | [number, number])[] }
 const SPECS: Spec[] = [
@@ -42,7 +44,7 @@ function build(sp: Spec): Room {
   for (const [c, r] of sp.coins) rows[r][c] = 'o'
   for (let r = 2; r < 10; r++) rows[r][sp.w - 4] = 'F'
   const foes: Foe[] = sp.foes.map((f, i) => { const [c, r] = typeof f === 'number' ? [f, 10] : f; return { id: i + 1, x: c + 0.5, y: r, vy: 0, dir: -1 as const, alive: true, squash: 0 } })
-  return { rows, foes, w: sp.w }
+  return { rows, foes, w: sp.w, items: [] }
 }
 function bonusRoom(): Room {
   const w = 22, rows = Array.from({ length: ROWS }, () => Array<string>(w).fill('.'))
@@ -54,13 +56,13 @@ function bonusRoom(): Room {
   for (let c = 3; c <= 7; c++) rows[8][c] = 'o' // 바닥에서 먹는 별
   for (let c = 11; c <= 17; c += 2) rows[6][c] = 'o' // 높은 판 위의 별
   for (let c = 11; c <= 17; c++) if (c % 2) rows[4][c] = 'o' // 점프로 먹는 위쪽 별
-  return { rows, foes: [], w }
+  return { rows, foes: [], w, items: [] }
 }
 
 export function newRun(level: number, keep?: Pick<State, 'score' | 'coins' | 'lives' | 'stars'>): State {
   const sp = SPECS[level % SPECS.length]
   return { level, room: 'main', main: build(sp), bonus: bonusRoom(), p: { x: 2.5, y: 10, vx: 0, vy: 0, on: true, dir: 1, inv: 0, big: false }, ret: { col: 0, row: 0 }, flagX: sp.w - 3.5,
-    score: keep?.score ?? 0, coins: keep?.coins ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', t: 0, stars: keep?.stars ?? 0, fade: 0, prevJump: false, prevDown: false, clearT: 0 }
+    score: keep?.score ?? 0, coins: keep?.coins ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', t: 0, stars: keep?.stars ?? 0, fade: 0, prevJump: false, prevDown: false, clearT: 0, qHits: 0, nextId: 1 }
 }
 
 const roomOf = (s: State) => (s.room === 'main' ? s.main : s.bonus)
@@ -112,9 +114,31 @@ function sub(s: State, inp: Input, dt: number, ev: Ev[]) {
     if (p.vy >= 0) { const r = Math.floor(p.y + E); if (r >= 0 && r < ROWS) { for (let c = c0; c <= c1; c++) if (solid(tileAt(R, c, r)) && p.y - p.vy * dt <= r + 1e-3) { p.y = r; p.vy = 0; p.on = true; break } } }
     else { const r = Math.floor(p.y - ph); for (let c = c0; c <= c1; c++) { const ch = tileAt(R, c, r); if (r >= 0 && solid(ch)) {
       p.y = r + 1 + ph; p.vy = 0
-      if (ch === '?') { R.rows[r][c] = 'u'; if (!p.big) { p.big = true; p.y = r + 1 + CFG.bigPh; s.score += 50; ev.push({ k: 'grow', x: c + 0.5, y: r }) } else { s.score += 10; s.coins++; ev.push({ k: 'coin', x: c + 0.5, y: r }) } }
+      if (ch === '?') {
+        R.rows[r][c] = 'u'; s.qHits++
+        // 세 번에 한 번(1·4·7번째)은 하트 약병이 튀어나와 도망가고, 나머지는 코인
+        if (s.qHits % 3 === 1) { R.items.push({ id: s.nextId++, x: c + 0.5, y: r, vy: -9, dir: p.x < c + 0.5 ? 1 : -1, t: 0 }); ev.push({ k: 'potion', x: c + 0.5, y: r }) }
+        else { s.score += 10; s.coins++; ev.push({ k: 'coin', x: c + 0.5, y: r }) }
+      }
       else if (ch === '=') { R.rows[r][c] = '.'; s.score += 5; ev.push({ k: 'break', x: c + 0.5, y: r }) } else ev.push({ k: 'bump', x: c + 0.5, y: r })
       break } } } }
+  // 하트 약병: 플레이어에게서 멀어지는 쪽으로 도망가고, 벽·낭떠러지 앞에서는 돌아선다(그래서 구석에 몰면 잡을 수 있다)
+  for (const it of [...R.items]) {
+    it.t += dt
+    if (it.t > 25) { R.items.splice(R.items.indexOf(it), 1); continue }
+    const dx = it.x - p.x
+    if (it.vy === 0 && Math.abs(dx) < 7) it.dir = dx >= 0 ? 1 : -1
+    if (solid(tileAt(R, Math.floor(it.x + it.dir * 0.45), Math.floor(it.y - 0.5))) || it.x < 0.6 || it.x > R.w - 0.6) it.dir = (it.dir * -1) as 1 | -1
+    else if (it.vy === 0 && !solid(tileAt(R, Math.floor(it.x + it.dir * 0.5), Math.round(it.y)))) it.dir = (it.dir * -1) as 1 | -1
+    if (it.t > 0.35) it.x += it.dir * 3.6 * dt
+    const iy0 = it.y; it.vy = Math.min(20, it.vy + CFG.g * dt); it.y += it.vy * dt
+    const ir = Math.floor(it.y + E); if (it.vy >= 0 && ir >= 0 && ir < ROWS && solid(tileAt(R, Math.floor(it.x), ir)) && iy0 <= ir + 1e-3) { it.y = ir; it.vy = 0 }
+    if (it.y > ROWS + 4) { R.items.splice(R.items.indexOf(it), 1); continue }
+    if (it.t > 0.4 && Math.abs(p.x - it.x) < 0.75 && p.y - 0.1 > it.y - 1.2 && p.y - ph < it.y) {
+      R.items.splice(R.items.indexOf(it), 1); s.score += 50
+      if (!p.big) { p.big = true; ev.push({ k: 'grow', x: it.x, y: it.y }) } else ev.push({ k: 'coin', x: it.x, y: it.y })
+    }
+  }
   // 별 코인
   for (let r = Math.floor(p.y - ph); r <= Math.floor(p.y); r++) for (let c = Math.floor(p.x - 0.5); c <= Math.floor(p.x + 0.5); c++) if (tileAt(R, c, r) === 'o' && Math.abs(c + 0.5 - p.x) < 0.8 && Math.abs(r + 0.5 - (p.y - 0.65)) < 1) { R.rows[r][c] = '.'; s.score += 10; s.coins++; ev.push({ k: 'coin', x: c + 0.5, y: r + 0.5 }) }
   // 별 친구

@@ -15,7 +15,7 @@ import { PLACES, THEMES, monsterTheme, type FoeImgs, type Theme } from './gameTh
  */
 const load = (src: string) => { const i = new Image(); i.src = assetUrl(src); return i }
 type Set = { theme: Theme; foes: FoeImgs }
-type Imgs = { sets: Set[]; me: HTMLCanvasElement | null; deco: HTMLImageElement[][] }
+type Imgs = { sets: Set[]; me: HTMLCanvasElement | null; deco: HTMLImageElement[][]; potion: HTMLImageElement }
 const ready = (i: HTMLImageElement | HTMLCanvasElement | null): i is HTMLImageElement | HTMLCanvasElement => !!i && (i instanceof HTMLCanvasElement || (i.complete && i.naturalWidth > 0))
 
 export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit: Outfit }) {
@@ -28,7 +28,7 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
   const game = useRef<State>(newRun(0))
   const keys = useRef(new window.Set<string>())
   const touch = useRef({ left: false, right: false, jump: false, down: false })
-  const imgs = useRef<Imgs>({ sets: [], me: null, deco: PLACES.map((p) => p.deco.map(([n]) => load(`race/${n}.webp`))) })
+  const imgs = useRef<Imgs>({ sets: [], me: null, potion: load('starchase/heart_potion.webp'), deco: PLACES.map((p) => p.deco.map(([n]) => load(`race/${n}.webp`))) })
   const paid = useRef(false)
   if (localTest) (window as unknown as { __sa?: () => State }).__sa = () => game.current // 시험용(?mp=local 에서만)
 
@@ -50,7 +50,7 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
   const onEvents = useCallback((ev: Ev[]) => {
     for (const e of ev) {
       if (e.k === 'jump') playHop(); else if (e.k === 'coin') playCoin(); else if (e.k === 'stomp' || e.k === 'break') playPop()
-      else if (e.k === 'grow') playStar(); else if (e.k === 'shrink') playLose(); else if (e.k === 'bump') playTap(); else if (e.k === 'hit' || e.k === 'fall') playLose(); else if (e.k === 'pipe') playCloud(); else if (e.k === 'clear') playWin()
+      else if (e.k === 'potion') playPop(); else if (e.k === 'grow') playStar(); else if (e.k === 'shrink') playLose(); else if (e.k === 'bump') playTap(); else if (e.k === 'hit' || e.k === 'fall') playLose(); else if (e.k === 'pipe') playCloud(); else if (e.k === 'clear') playWin()
     }
   }, [])
 
@@ -131,7 +131,7 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
             <ul className="m-0 flex list-none flex-col gap-1 p-0 text-left text-sm font-bold text-[#6b5a99]">
               <li>◀ ▶ <b>달리기</b> · ▲ <b>점프</b> (키보드: 화살표, 스페이스)</li>
               <li>🪙 별 코인을 모아요. 계단과 높은 판을 타고 올라가면 위쪽 별도 먹을 수 있어요</li>
-              <li>❓ 물음표 블록을 아래에서 톡 치면 <b>몸이 커져요</b>! 커진 동안 친구에게 닿으면 원래 크기로 돌아와요(♥는 그대로)</li>
+              <li>❓ 물음표 블록을 아래에서 톡! 코인이 나오고, 가끔 <b>하트 약병 💖</b>이 나와서 도망가요. 쫓아가서 먹으면 <b>몸이 커져요</b>! 커진 동안 친구에게 닿으면 원래 크기로 돌아와요(♥는 그대로)</li>
               <li>👣 친구는 <b>위에서 밟으면</b> 물리쳐요. 옆으로 닿으면 ♥가 줄어요</li>
               <li>🕳️ <b>▼ 표시가 있는 관 위에서 ▼ 버튼</b>을 누르면 보너스 방으로! (나오는 관에서 ▼ 를 누르면 돌아와요)</li>
               <li>🚩 깃발까지 가면 다음 단계예요</li>
@@ -199,6 +199,13 @@ function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, cam: n
     const v = set.foes[f.id % Math.max(1, set.foes.length)]; const i = v ? v.walk : null; if (!ready(i)) continue
     const h = v.h * 0.95, w = h * i.naturalWidth / i.naturalHeight, k = f.alive ? 1 : Math.max(0.15, 1 - f.squash * 3)
     g.save(); g.translate(f.x, f.y); g.scale(f.dir > 0 ? -1 : 1, k); g.translate(0, f.alive ? -Math.abs(Math.sin(t * 8 + f.id)) * 0.1 : 0); g.drawImage(i, -w / 2, -h, w, h); g.restore()
+  }
+  // 하트 약병: 하얀 빛 동그라미와 함께 통통 튀며 도망간다
+  for (const it of R.items) {
+    const i = im.potion; if (!ready(i)) continue
+    const h = 1.15, w = h * i.naturalWidth / i.naturalHeight, bob = it.vy === 0 ? Math.abs(Math.sin(t * 9)) * 0.18 : 0
+    g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(it.x, it.y - h / 2 - bob, h * 0.65, 0, 7); g.fill()
+    g.save(); g.translate(it.x, it.y - bob); g.scale(it.dir > 0 ? 1 : -1, 1); g.drawImage(i, -w / 2, -h, w, h); g.restore()
   }
   // 나
   const p = s.p, me = im.me
