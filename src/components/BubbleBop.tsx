@@ -219,7 +219,7 @@ function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { 
   if (bo) {
     const v = foesIm[bo.kindId % Math.max(1, foesIm.length)], i = v ? v.walk : null // 작은 몬스터들 중 하나가 커진 모습
     if (ready(i)) at(g, bo.x, bo.y, K, S, () => {
-      const h = 3.4, w = h * i.naturalWidth / i.naturalHeight, shake = bo.hurt > 0 ? Math.sin(t * 60) * 0.12 : 0
+      const h = Math.max(3.4, (v?.h ?? 1.5) * 1.7), w = h * i.naturalWidth / i.naturalHeight, shake = bo.hurt > 0 ? Math.sin(t * 60) * 0.12 : 0
       g.fillStyle = 'rgba(60,30,100,.25)'; g.beginPath(); g.ellipse(0, 0, w * 0.4, 0.2, 0, 0, 7); g.fill()
       g.globalAlpha = bo.hurt > 0 && Math.floor(t * 14) % 2 ? 0.45 : 1
       g.translate(shake, -Math.abs(Math.sin(t * 5)) * 0.1); g.scale(bo.dir > 0 ? -1 : 1, 1); g.drawImage(i, -w / 2, -h, w, h); g.globalAlpha = 1
