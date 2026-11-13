@@ -59,6 +59,9 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
       if (e.k === 'jump') playHop()
       else if (e.k === 'shoot') playTap()
       else if (e.k === 'trap' || e.k === 'pop') { playPop(); if (e.k === 'pop') fx.current.push({ k: 'pop', x: e.x!, y: e.y!, t: 0 }) }
+      else if (e.k === 'bossHit') { playPop(); fx.current.push({ k: 'pop', x: e.x!, y: e.y!, t: 0 }) }
+      else if (e.k === 'bossStomp') { playHop(); fx.current.push({ k: 'burst', x: e.x!, y: e.y!, t: 0 }) }
+      else if (e.k === 'bossDown') { playWin(); fx.current.push({ k: 'burst', x: e.x!, y: e.y!, t: 0 }) }
       else if (e.k === 'defeat') { playPop(); fx.current.push({ k: 'burst', x: e.x!, y: e.y!, t: 0 }) }
       else if (e.k === 'fruit') playCoin()
       else if (e.k === 'hit') { playLose(); fx.current.push({ k: 'hit', x: e.x!, y: e.y!, t: 0 }) }
@@ -149,6 +152,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
               <li>◀ ▶ <b>걷기</b> · ▲ <b>점프</b> (키보드: 화살표, 스페이스)</li>
               <li>🫧 <b>거품</b>을 쏴서 친구들을 가둬요</li>
               <li>👣 갇힌 거품을 <b>몸으로 톡</b> 터뜨리면 과일이 나와요</li>
+              <li>👑 3·6·9단계에는 <b>대왕 몬스터</b>! 거품을 여러 번 맞히거나, 뛰어올라 <b>머리를 콩!</b> 밟으면 체력이 닳아요</li>
               <li>🍓 과일을 먹으면 점수! 별 친구에게 닿으면 ♥가 줄어요</li>
             </ul>
             <button onClick={() => { setKey(INTRO_KEY); begin(false) }} className="min-h-12 w-full rounded-full bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-base font-black text-[#6b4a00] shadow-md">시작!</button>
@@ -210,6 +214,23 @@ function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { 
     gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(0.7, 'rgba(190,230,255,.22)'); gr.addColorStop(1, 'rgba(200,170,255,.55)')
     g.fillStyle = gr; g.beginPath(); g.ellipse(0, 0, r * wob, r / wob, 0, 0, 7); g.fill()
     g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 0.05; g.stroke() })
+  // 대왕 몬스터(맞으면 깜빡이고, 위에 체력 막대)
+  const bo = s.boss
+  if (bo) {
+    const v = foesIm[0], i = v ? v.walk : null
+    if (ready(i)) at(g, bo.x, bo.y, K, S, () => {
+      const h = 3.4, w = h * i.naturalWidth / i.naturalHeight, shake = bo.hurt > 0 ? Math.sin(t * 60) * 0.12 : 0
+      g.fillStyle = 'rgba(60,30,100,.25)'; g.beginPath(); g.ellipse(0, 0, w * 0.4, 0.2, 0, 0, 7); g.fill()
+      g.globalAlpha = bo.hurt > 0 && Math.floor(t * 14) % 2 ? 0.45 : 1
+      g.translate(shake, -Math.abs(Math.sin(t * 5)) * 0.1); g.scale(bo.dir > 0 ? -1 : 1, 1); g.drawImage(i, -w / 2, -h, w, h); g.globalAlpha = 1
+    })
+    at(g, bo.x, bo.y, K, S, () => {
+      const bw = 3.2, bh = 0.34, y = -3.9
+      g.fillStyle = 'rgba(255,255,255,.9)'; g.beginPath(); g.roundRect(-bw / 2 - 0.08, y - 0.08, bw + 0.16, bh + 0.16, 0.2); g.fill()
+      const r = Math.max(0, bo.hp / bo.max); g.fillStyle = r > 0.5 ? '#5fc27a' : r > 0.25 ? '#ffb02e' : '#e0567a'; g.beginPath(); g.roundRect(-bw / 2, y, bw * r, bh, 0.16); g.fill()
+    })
+    if (bo.age < 2.5) at(g, COLS / 2, 3.2, K, S, () => { g.globalAlpha = Math.min(1, (2.5 - bo.age) * 2); g.font = '900 1.1px sans-serif'; g.textAlign = 'center'; g.lineWidth = 0.22; g.strokeStyle = '#7a5cc0'; g.fillStyle = '#fff'; g.strokeText('대왕 몬스터!', 0, 0); g.fillText('대왕 몬스터!', 0, 0); g.globalAlpha = 1 })
+  }
   // 나(내 아바타)
   const p = s.p, me = im.me
   if (!(p.inv > 0 && Math.floor(t * 10) % 2)) at(g, p.x, p.y, K, S, () => {
