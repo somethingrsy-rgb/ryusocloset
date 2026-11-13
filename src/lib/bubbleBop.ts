@@ -31,8 +31,8 @@ export interface Foe extends Body { id: number; dir: 1 | -1; mad: boolean; jumpT
 export interface Player extends Body { dir: 1 | -1; inv: number; cd: number; prevJump: boolean }
 export interface Bubble { id: number; x: number; y: number; vx: number; vy: number; t: number; life: number; foe: Foe | null }
 export interface Fruit { id: number; x: number; y: number; vy: number; kind: number; t: number; pts: number }
-/** 대왕 몬스터: 3·6·9단계에 나온다. 거품에 맞으면 체력 1, 머리를 위에서 밟으면(콩!) 체력 2가 닳는다 */
-export interface Boss { x: number; y: number; dir: 1 | -1; hp: number; max: number; hurt: number; age: number }
+/** 대왕 몬스터: 3·6·9단계에 작은 몬스터들(3마리)과 함께 나오고, 그중 한 종류가 커진 모습이다. 거품에 맞으면 체력 1, 머리를 위에서 밟으면(콩!) 체력 2가 닳는다 */
+export interface Boss { x: number; y: number; dir: 1 | -1; hp: number; max: number; hurt: number; age: number; /** 이 판의 작은 몬스터 중 어느 친구(번호)가 커진 모습인지 */ kindId: number }
 export const BOSS_LEVELS: Record<number, number> = { 2: 6, 5: 8, 8: 10 } // 단계 번호(0부터) → 체력
 export const BOSS = { hw: 1.05, h: 2.6, walk: 1.4, madWalk: 2.4, hurtT: 0.55, stomp: 2, bounce: 13 }
 export interface State {
@@ -57,7 +57,7 @@ export function newLevel(n: number, keep?: Pick<State, 'score' | 'lives' | 'star
   const lv = LEVELS[n]
   let id = 1
   const bhp = BOSS_LEVELS[n]
-  return { level: n, grid: buildGrid(lv), p: newPlayer(), foes: bhp ? [] : lv.foes.map((f) => mkFoe(id++, f)), boss: bhp ? { x: COLS - 4, y: ROWS - 1, dir: -1, hp: bhp, max: bhp, hurt: 0, age: 0 } : null, bubbles: [], fruits: [], score: keep?.score ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', clearT: 0, nextId: id, t: 0, stars: keep?.stars ?? 0 }
+  return { level: n, grid: buildGrid(lv), p: newPlayer(), foes: (bhp ? lv.foes.slice(0, 3) : lv.foes).map((f) => mkFoe(id++, f)), boss: bhp ? { x: COLS - 4, y: ROWS - 1, dir: -1, hp: bhp, max: bhp, hurt: 0, age: 0, kindId: 1 + (n % 3) } : null, bubbles: [], fruits: [], score: keep?.score ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', clearT: 0, nextId: id, t: 0, stars: keep?.stars ?? 0 }
 }
 export const newGame = () => newLevel(0)
 

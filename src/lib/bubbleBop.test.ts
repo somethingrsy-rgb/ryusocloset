@@ -74,34 +74,41 @@ describe('별 거품 규칙', () => {
     run(s, none, 1); expect(s.fruits[0].y).toBeCloseTo(5, 2)
     s.p.x = 7.5; s.p.y = 5; s.p.on = true; run(s, none, 0.1); expect(s.score).toBe(100)
   })
-  it('3·6·9단계에는 대왕 몬스터가 나오고 작은 친구는 없다', () => {
-    for (const lv of [2, 5, 8]) { const g = newLevel(lv); expect(g.boss?.hp).toBe(BOSS_LEVELS[lv]); expect(g.foes.length).toBe(0) }
+  it('3·6·9단계에는 대왕 몬스터가 작은 몬스터 3마리와 함께 나오고, 그중 한 종류가 커진 모습이다', () => {
+    for (const lv of [2, 5, 8]) { const g = newLevel(lv); expect(g.boss?.hp).toBe(BOSS_LEVELS[lv]); expect(g.foes.length).toBe(3); expect(g.foes.some((f) => f.id === g.boss!.kindId)).toBe(true) }
     for (const lv of [0, 1, 3, 4]) expect(newLevel(lv).boss).toBeNull()
   })
   it('대왕 몬스터는 거품에 맞을 때마다 체력이 1 닳고, 거품은 터진다', () => {
-    const s = newLevel(2); s.p.inv = 99; s.boss!.x = 8; s.boss!.dir = 1; s.p.x = 4.5; s.p.dir = 1
+    const s = newLevel(2); s.foes = []; s.p.inv = 99; s.boss!.x = 8; s.boss!.dir = 1; s.p.x = 4.5; s.p.dir = 1
     const hp0 = s.boss!.hp
     const ev = run(s, { ...none, shoot: true }, 0.5)
     expect(ev.some((e) => e.k === 'bossHit')).toBe(true); expect(s.boss!.hp).toBe(hp0 - 1)
     expect(s.boss!.hurt).toBeGreaterThan(0) // 맞은 직후에는 잠깐 안전
   })
   it('대왕 몬스터 머리를 위에서 밟으면(콩!) 체력 2가 닳고 튀어 오르며, 옆으로 닿으면 ♥가 줄어든다', () => {
-    const s = newLevel(2); const b = s.boss!; b.x = 8; b.dir = 1
+    const s = newLevel(2); s.foes = []; const b = s.boss!; b.x = 8; b.dir = 1
     s.p.x = 8; s.p.y = 11 - BOSS.h - 0.5; s.p.vy = 6; s.p.on = false; s.p.inv = 0
     const ev = run(s, none, 0.05)
     expect(ev.some((e) => e.k === 'bossStomp')).toBe(true); expect(b.hp).toBe(BOSS_LEVELS[2] - BOSS.stomp); expect(s.p.vy).toBeLessThan(0); expect(s.lives).toBe(CFG.lives)
-    const t = newLevel(2); t.boss!.x = 8; t.p.x = 7.2; t.p.y = 11; t.p.inv = 0
+    const t = newLevel(2); t.foes = []; t.boss!.x = 8; t.p.x = 7.2; t.p.y = 11; t.p.inv = 0
     run(t, none, 0.2); expect(t.lives).toBe(CFG.lives - 1)
   })
   it('대왕 몬스터를 쓰러뜨리면 과일이 나오고 단계가 끝난다', () => {
-    const s = newLevel(2); s.p.inv = 99; s.boss!.hp = 1; s.boss!.x = 8; s.boss!.dir = 1; s.p.x = 4.5
+    const s = newLevel(2); s.foes = []; s.p.inv = 99; s.boss!.hp = 1; s.boss!.x = 8; s.boss!.dir = 1; s.p.x = 4.5
     const ev = run(s, { ...none, shoot: true }, 0.5)
     expect(ev.some((e) => e.k === 'bossDown')).toBe(true); expect(s.boss).toBeNull(); expect(s.fruits.length).toBe(5); expect(s.score).toBeGreaterThanOrEqual(1000)
     run(s, none, 0.2); expect(s.phase === 'clear' || s.level === 3).toBe(true)
   })
   it('대왕 몬스터는 벽에서 돌아서고, 체력이 반 이하면 빨라진다', () => {
-    const s = newLevel(2); s.p.inv = 99; s.p.x = 1.5; const b = s.boss!
+    const s = newLevel(2); s.foes = []; s.p.inv = 99; s.p.x = 1.5; const b = s.boss!
     run(s, none, 12); expect(b.x).toBeGreaterThanOrEqual(1 + BOSS.hw - 1e-6); expect(b.x).toBeLessThanOrEqual(15 - BOSS.hw + 1e-6)
-    const t = newLevel(2); t.p.inv = 99; t.boss!.x = 6; t.boss!.dir = 1; t.boss!.hp = 2; const x0 = t.boss!.x; run(t, none, 1); expect(t.boss!.x - x0).toBeGreaterThan(BOSS.walk + 0.3)
+    const t = newLevel(2); t.foes = []; t.p.inv = 99; t.boss!.x = 6; t.boss!.dir = 1; t.boss!.hp = 2; const x0 = t.boss!.x; run(t, none, 1); expect(t.boss!.x - x0).toBeGreaterThan(BOSS.walk + 0.3)
+  })
+  it('작은 몬스터를 모두 없애도 대왕 몬스터가 남아 있으면 단계가 끝나지 않고, 둘 다 없애야 끝난다', () => {
+    const s = newLevel(2); s.p.inv = 99; s.foes = []
+    run(s, none, 0.3); expect(s.phase).toBe('play')
+    s.boss = null; run(s, none, 0.3); expect(s.phase).toBe('clear')
+    const t = newLevel(2); t.p.inv = 99; t.boss!.hp = 1; t.boss!.x = 8; t.p.x = 4.5; run(t, { ...none, shoot: true }, 0.5)
+    expect(t.boss).toBeNull(); expect(t.phase).toBe('play') // 작은 몬스터가 남아 있으면 아직
   })
 })
