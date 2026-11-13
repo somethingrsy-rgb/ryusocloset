@@ -15,7 +15,9 @@ jobs:
       - run: npm ci --prefix functions --omit=dev || npm install --prefix functions --omit=dev
       - name: Write service account key
         run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/sa.json"
+      - name: Check service account key (비밀 값은 출력하지 않음)
+        run: node -e "const k=require(process.env.RUNNER_TEMP+'/sa.json');console.log('type:',k.type,'project:',k.project_id,'account:',k.client_email)"
       - name: Deploy
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
-        run: npx --yes firebase-tools@13 deploy --only functions,database --project ryuso-game --non-interactive
+        run: npx --yes firebase-tools@latest deploy --only functions,database --project ryuso-game --non-interactive
