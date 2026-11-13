@@ -115,7 +115,9 @@ function sub(s: State, inp: Input, dt: number, ev: Ev[]) {
   p.x += p.vx * dt
   p.x = Math.max(hw, Math.min(R.w - hw, p.x))
   { const r0 = Math.floor(p.y - ph + E), r1 = Math.floor(p.y - E), c0 = Math.floor(p.x - hw + E), c1 = Math.floor(p.x + hw - E)
-    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) if (solid(tileAt(R, c, r))) { p.x = p.vx > 0 ? c - hw : c + 1 + hw; p.vx = 0; break } }
+    // 벽에 닿으면 온 방향의 반대로만 밀어낸다(처음 닿은 한 칸으로 끝낸다. 속도를 0으로 바꾼 뒤 다른 줄에서 또 밀면 관 반대편으로 순간이동했다)
+    const mvx = p.vx
+    if (mvx !== 0) hit: for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) if (solid(tileAt(R, c, r))) { p.x = mvx > 0 ? c - hw : c + 1 + hw; p.vx = 0; break hit } }
   // 위아래
   p.vy = Math.min(22, p.vy + CFG.g * dt); p.y += p.vy * dt; p.on = false
   { const c0 = Math.floor(p.x - hw + E), c1 = Math.floor(p.x + hw - E)
