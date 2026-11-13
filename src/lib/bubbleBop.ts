@@ -31,12 +31,16 @@ export interface Foe extends Body { id: number; dir: 1 | -1; mad: boolean; jumpT
 export interface Player extends Body { dir: 1 | -1; inv: number; cd: number; prevJump: boolean }
 export interface Bubble { id: number; x: number; y: number; vx: number; vy: number; t: number; life: number; foe: Foe | null }
 export interface Fruit { id: number; x: number; y: number; vy: number; kind: number; t: number; pts: number }
+/** 대왕 몬스터: 3·6·9단계에 나온다. 거품에 맞으면 체력 1, 머리를 위에서 밟으면(콩!) 체력 2가 닳는다 */
+export interface Boss { x: number; y: number; dir: 1 | -1; hp: number; max: number; hurt: number; age: number }
+export const BOSS_LEVELS: Record<number, number> = { 2: 6, 5: 8, 8: 10 } // 단계 번호(0부터) → 체력
+export const BOSS = { hw: 1.05, h: 2.6, walk: 1.4, madWalk: 2.4, hurtT: 0.55, stomp: 2, bounce: 13 }
 export interface State {
   level: number; grid: boolean[][]; p: Player; foes: Foe[]; bubbles: Bubble[]; fruits: Fruit[]
-  score: number; lives: number; phase: 'play' | 'clear' | 'won' | 'over'; clearT: number; nextId: number; t: number; stars: number
+  score: number; lives: number; phase: 'play' | 'clear' | 'won' | 'over'; clearT: number; nextId: number; t: number; stars: number; boss: Boss | null
 }
 export interface Input { left: boolean; right: boolean; jump: boolean; shoot: boolean }
-export type Ev = { k: 'jump' | 'shoot' | 'trap' | 'defeat' | 'pop' | 'fruit' | 'hit' | 'escape' | 'clear' | 'won' | 'over'; x?: number; y?: number }
+export type Ev = { k: 'jump' | 'shoot' | 'trap' | 'defeat' | 'pop' | 'fruit' | 'hit' | 'escape' | 'bossHit' | 'bossStomp' | 'bossDown' | 'clear' | 'won' | 'over'; x?: number; y?: number }
 
 export const SPAWN = { x: 2.5, y: 11 }
 
@@ -52,7 +56,8 @@ const mkFoe = (id: number, [c, r]: [number, number]): Foe => ({ id, x: c + 0.5, 
 export function newLevel(n: number, keep?: Pick<State, 'score' | 'lives' | 'stars'>): State {
   const lv = LEVELS[n]
   let id = 1
-  return { level: n, grid: buildGrid(lv), p: newPlayer(), foes: lv.foes.map((f) => mkFoe(id++, f)), bubbles: [], fruits: [], score: keep?.score ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', clearT: 0, nextId: id, t: 0, stars: keep?.stars ?? 0 }
+  const bhp = BOSS_LEVELS[n]
+  return { level: n, grid: buildGrid(lv), p: newPlayer(), foes: bhp ? [] : lv.foes.map((f) => mkFoe(id++, f)), boss: bhp ? { x: COLS - 4, y: ROWS - 1, dir: -1, hp: bhp, max: bhp, hurt: 0, age: 0 } : null, bubbles: [], fruits: [], score: keep?.score ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', clearT: 0, nextId: id, t: 0, stars: keep?.stars ?? 0 }
 }
 export const newGame = () => newLevel(0)
 
@@ -129,6 +134,11 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
     if (!b.foe) for (const f of s.foes) if (near(b.x, b.y, f.x, f.y - 0.55, 0.85, 0.9)) {
       s.foes.splice(s.foes.indexOf(f), 1); b.foe = f; b.vx = 0; b.vy = -CFG.bubbleRise * 0.8; b.life = CFG.trapLife; b.t = Math.max(b.t, CFG.bubbleFly); ev.push({ k: 'trap', x: b.x, y: b.y }); break
     }
+    // 대왕 몬스터에 맞으면 체력이 1 닳고 거품은 터진다
+    const bo = s.boss
+    if (bo && !b.foe && bo.hurt <= 0 && near(b.x, b.y, bo.x, bo.y - BOSS.h / 2, BOSS.hw + 0.4, BOSS.h / 2 + 0.3)) {
+      s.bubbles.splice(s.bubbles.indexOf(b), 1); bo.hp--; bo.hurt = BOSS.hurtT; s.score += 20; ev.push({ k: 'bossHit', x: b.x, y: b.y }); continue
+    }
     // 몸으로 터뜨린다(막 뿜은 거품은 잠깐 안전)
     if (b.t > 0.3 && near(p.x, p.y - CFG.ph / 2, b.x, b.y, 0.85, 1.05)) {
       s.bubbles.splice(s.bubbles.indexOf(b), 1)
@@ -146,6 +156,26 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
     if (f.t > CFG.fruitLife) { s.fruits.splice(s.fruits.indexOf(f), 1); continue }
     if (near(p.x, p.y - 0.6, f.x, f.y - 0.4, 0.8, 0.95)) { s.score += f.pts; s.fruits.splice(s.fruits.indexOf(f), 1); ev.push({ k: 'fruit', x: f.x, y: f.y }) }
   }
+  // ── 대왕 몬스터: 바닥을 왔다 갔다 걷고(체력이 반 이하면 화가 나서 빨라진다), 머리를 밟으면 체력이 닳고, 몸에 닿으면 ♥가 줄어든다
+  const bo = s.boss
+  if (bo) {
+    bo.age += dt; bo.hurt = Math.max(0, bo.hurt - dt)
+    const sp = bo.hp <= bo.max / 2 ? BOSS.madWalk : BOSS.walk
+    bo.x += bo.dir * sp * dt
+    if (bo.x < 1 + BOSS.hw) { bo.x = 1 + BOSS.hw; bo.dir = 1 } else if (bo.x > COLS - 1 - BOSS.hw) { bo.x = COLS - 1 - BOSS.hw; bo.dir = -1 }
+    const top = bo.y - BOSS.h
+    if (s.phase === 'play' && Math.abs(p.x - bo.x) < BOSS.hw + 0.15 && p.vy > 0 && p.y > top - 0.7 && p.y < top + 0.8 && bo.hurt <= 0) {
+      bo.hp -= BOSS.stomp; bo.hurt = BOSS.hurtT; p.vy = -BOSS.bounce; p.on = false; s.score += 50; ev.push({ k: 'bossStomp', x: bo.x, y: top })
+    } else if (s.phase === 'play' && p.inv <= 0 && Math.abs(p.x - bo.x) < BOSS.hw + 0.1 && p.y > top + 0.8 && p.y - CFG.ph < bo.y) {
+      s.lives--; ev.push({ k: 'hit', x: p.x, y: p.y })
+      if (s.lives <= 0) { s.phase = 'over'; ev.push({ k: 'over' }) } else { s.p = { ...newPlayer(), inv: CFG.inv, dir: p.dir } }
+    }
+    if (s.phase === 'play' && bo.hp <= 0) {
+      s.boss = null; s.score += 1000; s.stars += 5
+      for (let k = 0; k < 5; k++) s.fruits.push({ id: s.nextId++, x: bo.x - 2 + k, y: ROWS - 1, vy: -8 - k, kind: k % CFG.pts.fruit.length, t: 0, pts: CFG.pts.fruit[k % CFG.pts.fruit.length] })
+      ev.push({ k: 'bossDown', x: bo.x, y: bo.y - BOSS.h / 2 })
+    }
+  }
   // ── 부딪힘
   if (s.phase === 'play' && p.inv <= 0) for (const f of s.foes) if (near(p.x, p.y - 0.65, f.x, f.y - 0.55, 0.62, 0.85)) {
     s.lives--; ev.push({ k: 'hit', x: p.x, y: p.y })
@@ -153,12 +183,12 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
     break
   }
   // ── 단계 끝
-  if (s.phase === 'play' && s.foes.length === 0 && !s.bubbles.some((b) => b.foe)) { s.phase = 'clear'; s.clearT = CFG.clearWait; s.stars += 5; ev.push({ k: 'clear' }) }
+  if (s.phase === 'play' && s.foes.length === 0 && !s.boss && !s.bubbles.some((b) => b.foe)) { s.phase = 'clear'; s.clearT = CFG.clearWait; s.stars += 5; ev.push({ k: 'clear' }) }
   if (s.phase === 'clear') {
     s.clearT -= dt
     if (s.clearT <= 0) {
       if (s.level + 1 >= LEVELS.length) { s.phase = 'won'; s.stars += 20; ev.push({ k: 'won' }) }
-      else { const n = newLevel(s.level + 1, s); s.level = n.level; s.grid = n.grid; s.lives = CFG.lives; s.p = { ...n.p, inv: 1.5 }; s.foes = n.foes; s.bubbles = []; s.fruits = []; s.phase = 'play'; s.nextId = n.nextId }
+      else { const n = newLevel(s.level + 1, s); s.level = n.level; s.grid = n.grid; s.lives = CFG.lives; s.p = { ...n.p, inv: 1.5 }; s.foes = n.foes; s.boss = n.boss; s.bubbles = []; s.fruits = []; s.phase = 'play'; s.nextId = n.nextId }
     }
   }
 }
