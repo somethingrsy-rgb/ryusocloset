@@ -257,6 +257,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
               ))}
             </div>
             <button onClick={start} className="min-h-12 w-full rounded-full bg-gradient-to-r from-[#ff8fab] to-[#c58bff] text-lg font-black text-white shadow-lg active:scale-95">출발하기!</button>
+            <button onClick={() => { playTap(); onExit() }} className="min-h-11 w-full rounded-full bg-[#f3e6ea] text-base font-bold text-[#6b4b52] active:scale-95">🏡 마을로</button>
             {multiplayerAvailable && <button disabled={online} onClick={() => void openLobby()} className="min-h-11 w-full rounded-full bg-[#fff0f5] text-base font-black text-[#c0587a] ring-2 ring-[#ffc2d4] disabled:opacity-60 active:scale-95">{online ? '방을 찾는 중…' : '👫 친구랑 같이 달리기'}</button>}
             {netMsg && <p role="alert" className="m-0 text-xs font-bold text-[#d0587a]">{netMsg}</p>}
           </div>
@@ -297,7 +298,7 @@ export function RaceGame({ onExit }: { onExit: () => void }) {
             <p className="m-0 text-sm font-bold text-[#6b4b52]">받은 별 ⭐ {paid || rewardStars(race)}개</p>
             <div className="mt-1 flex w-full gap-2">
               <button onClick={() => { if (netRef.current) { leaveNet(); setPhase('intro') } else start() }} className="min-h-12 flex-1 rounded-full bg-[#ff8fab] text-base font-black text-white shadow active:scale-95">한 번 더!</button>
-              <button onClick={() => { playTap(); leaveNet(); onExit() }} className="min-h-12 flex-1 rounded-full bg-[#f3e6ea] text-base font-bold text-[#6b4b52] active:scale-95">나가기</button>
+              <button onClick={() => { playTap(); leaveNet(); onExit() }} className="min-h-12 flex-1 rounded-full bg-[#f3e6ea] text-base font-bold text-[#6b4b52] active:scale-95">🏡 마을로</button>
             </div>
           </div>
         </div>

@@ -33,6 +33,8 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
   if (localTest) (window as unknown as { __sa?: () => State }).__sa = () => game.current // 시험용(?mp=local 에서만)
 
   const begin = useCallback((fresh: boolean) => { if (fresh) setThemes([THEMES[0], THEMES[1], monsterTheme()]); game.current = newRun(0); paid.current = false; setState('play'); setPaused(false) }, [])
+  /** 이어서 하기: 쓰러진 그 단계를 목숨 3개로 다시 시작(점수·코인은 이어 가고, 이미 받은 ⭐는 다시 받지 않는다) */
+  const resume = useCallback(() => { const o = game.current; game.current = newRun(o.level, { score: o.score, coins: o.coins, lives: CFG.lives, stars: 0 }); paid.current = false; setState('play'); setPaused(false) }, [])
   useEffect(() => { imgs.current.sets = themes.map((th) => ({ theme: th, foes: th.foes.map((f) => ({ walk: load(f.walk), trapped: load(f.trapped), mad: load(f.mad), h: f.h })) })) }, [themes])
   useEffect(() => { renderFigure(outfit, {}, AVATARS.find((a) => a.id === getAvatar().id)).then((cv) => { imgs.current.me = cv }).catch(() => {}) }, [outfit])
   useEffect(() => { if (state !== 'play' || paused) return; startBgm('run'); return stopBgm }, [state, paused])
@@ -148,7 +150,8 @@ export function StarAdventure({ onClose, outfit }: { onClose: () => void; outfit
             <p className="m-0 text-sm font-bold text-[#6b5a99]">점수 {hud.score}점 · 코인 {hud.coins}개 · {state === 'won' ? `${LEVELS}단계 모두 끝!` : `${hud.level}단계까지 갔어요`}</p>
             {hud.stars > 0 && <p className="m-0 text-xs font-bold text-[#7a5cc0]">⭐ {hud.stars}개 받았어요</p>}
             <div className="flex flex-wrap justify-center gap-2">
-              <button onClick={() => begin(true)} className="min-h-12 rounded-full bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] px-5 text-base font-black text-[#6b4a00] shadow-md">한 번 더</button>
+              {state === 'over' && <button onClick={resume} className="min-h-12 rounded-full bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] px-5 text-base font-black text-[#6b4a00] shadow-md">▶ 이어서 하기 <span className="text-xs">({hud.level}단계)</span></button>}
+              <button onClick={() => begin(true)} className="min-h-12 rounded-full bg-[#ffe9f0] px-5 text-base font-black text-[#c0587a] ring-2 ring-[#ffc2d4]">{state === 'over' ? '🔄 처음부터' : '한 번 더'}</button>
               <button onClick={onClose} className="min-h-12 rounded-full bg-white px-5 text-base font-black text-[#6b5a99] ring-2 ring-[#cdb8f2]">🏡 마을로</button>
             </div>
           </div>
