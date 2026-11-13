@@ -111,4 +111,12 @@ describe('별 거품 규칙', () => {
     const t = newLevel(2); t.p.inv = 99; t.boss!.hp = 1; t.boss!.x = 8; t.p.x = 4.5; run(t, { ...none, shoot: true }, 0.5)
     expect(t.boss).toBeNull(); expect(t.phase).toBe('play') // 작은 몬스터가 남아 있으면 아직
   })
+  it('대왕 몬스터는 바닥에만 있지 않고 점프로 발판에 올라가 이곳저곳 다니며, 화면 밖이나 바닥 아래로 가지 않는다', () => {
+    for (const lv of [2, 5, 8]) {
+      const s = newLevel(lv); s.foes = []; s.p.inv = 99; const b = s.boss!
+      let minY = 99, maxY = 0, levels = new Set<number>()
+      for (let i = 0; i < 60 * 60; i++) { step(s, none, 1 / 60, rnd); minY = Math.min(minY, b.y); maxY = Math.max(maxY, b.y); if (b.on) levels.add(Math.round(b.y)); expect(b.x).toBeGreaterThanOrEqual(1 + BOSS.hw - 1e-6); expect(b.x).toBeLessThanOrEqual(15 - BOSS.hw + 1e-6) }
+      expect(minY).toBeLessThan(10); expect(maxY).toBeLessThanOrEqual(11 + 1e-6); expect(levels.size).toBeGreaterThanOrEqual(2)
+    }
+  })
 })
