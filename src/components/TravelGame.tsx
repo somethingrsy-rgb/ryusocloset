@@ -123,7 +123,7 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
         <button className={actionButton} aria-label={lang === 'ko' ? '국기 게임' : 'Flag quiz'} onClick={() => setFlags(true)}>{label(lang === 'ko' ? '국기' : 'Flags')}</button>
         <button className={multiButton} aria-label="도망간 별을 잡아라(친구와 같이 할 수 있어요)" onClick={() => setStarChase(true)}>{label(lang === 'ko' ? '별잡기' : 'Catch')}</button>
         <button className={multiButton} aria-label="별 거품(친구와 같이 할 수 있어요)" onClick={() => setBubbleBop(true)}>{label(lang === 'ko' ? '별거품' : 'Bubbles')}</button>
-        <button className={actionButton} aria-label="별 모험" onClick={() => setAdventure(true)}>{label(lang === 'ko' ? '별모험' : 'Adventure')}</button>
+        <button className={PILL_MULTI} aria-label="별 모험" onClick={() => setAdventure(true)}>{label(lang === 'ko' ? '별모험' : 'Adventure')}</button>
         {onRoom && <button className={actionButton} aria-label="방꾸미기" onClick={onRoom}>{label(lang === 'ko' ? '방꾸미기' : 'Room')}</button>}
       </>}
       onEnter={(id, chunk) => { travelTo(id, chunk); setScene(id) }}
