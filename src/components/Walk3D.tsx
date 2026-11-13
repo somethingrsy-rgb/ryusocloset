@@ -672,8 +672,9 @@ export function Walk3D({ outfit, tweaks, onExit, onGo, onEnter }: { outfit: Outf
         const m = MONSTERS[bossUi.type], pct = Math.round((1 - bossUi.hp / bossUi.max) * 100), wi = WEAPON_BY_ID[wand]
         return bossUi.fight ? (
           <>
-            <div role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-72 max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center shadow">
-              <p className="m-0 text-sm font-extrabold text-[#7a3d8f]">👑 대왕 {m.name} · 다 같이 마법 풀기!</p>
+            {/* 가로 화면에서는 가운데를 가리지 않게 「대왕 몬스터 출현!」 단추가 있던 오른쪽 위로 옮긴다 */}
+            <div role="status" className="absolute inset-x-2 top-14 z-20 mx-auto w-72 max-w-full rounded-2xl bg-white/95 px-3 py-2 text-center shadow landscape:inset-x-auto landscape:right-2 landscape:mx-0 landscape:w-52 landscape:px-2 landscape:py-1.5">
+              <p className="m-0 text-sm font-extrabold text-[#7a3d8f] landscape:text-xs">👑 대왕 {m.name} · 다 같이 마법 풀기!</p>
               <div aria-label={`마법 풀기 ${pct}%`} className="mt-1 h-3 overflow-hidden rounded-full bg-[#f3dbe6]"><div className="h-full rounded-full bg-gradient-to-r from-[#c58bff] to-[#ff8fab] transition-all" style={{ width: `${pct}%` }} /></div>
               <p className="m-0 mt-1 text-xs font-bold text-[#c0587a]">{bossUi.friends.length ? `🤝 ${bossUi.friends.join(', ')}와(과) 같이 싸우는 중` : '🐾 친구를 불러서 같이 풀어요!'}</p>
             </div>
