@@ -32,9 +32,9 @@ export interface Player extends Body { dir: 1 | -1; inv: number; cd: number; pre
 export interface Bubble { id: number; x: number; y: number; vx: number; vy: number; t: number; life: number; foe: Foe | null }
 export interface Fruit { id: number; x: number; y: number; vy: number; kind: number; t: number; pts: number }
 /** 대왕 몬스터: 3·6·9단계에 작은 몬스터들(3마리)과 함께 나오고, 그중 한 종류가 커진 모습이다. 거품에 맞으면 체력 1, 머리를 위에서 밟으면(콩!) 체력 2가 닳는다 */
-export interface Boss { x: number; y: number; dir: 1 | -1; hp: number; max: number; hurt: number; age: number; /** 이 판의 작은 몬스터 중 어느 친구(번호)가 커진 모습인지 */ kindId: number }
+export interface Boss { x: number; y: number; dir: 1 | -1; hp: number; max: number; hurt: number; age: number; /** 이 판의 작은 몬스터 중 어느 친구(번호)가 커진 모습인지 */ kindId: number; vx: number; vy: number; on: boolean; jumpT: number; dropT: number }
 export const BOSS_LEVELS: Record<number, number> = { 2: 6, 5: 8, 8: 10 } // 단계 번호(0부터) → 체력
-export const BOSS = { hw: 1.05, h: 2.6, walk: 1.4, madWalk: 2.4, hurtT: 0.55, stomp: 2, bounce: 13 }
+export const BOSS = { hw: 1.05, h: 2.6, walk: 1.4, madWalk: 2.4, hurtT: 0.55, stomp: 2, bounce: 13, jump: 17.5 }
 export interface State {
   level: number; grid: boolean[][]; p: Player; foes: Foe[]; bubbles: Bubble[]; fruits: Fruit[]
   score: number; lives: number; phase: 'play' | 'clear' | 'won' | 'over'; clearT: number; nextId: number; t: number; stars: number; boss: Boss | null
@@ -44,6 +44,8 @@ export type Ev = { k: 'jump' | 'shoot' | 'trap' | 'defeat' | 'pop' | 'fruit' | '
 
 export const SPAWN = { x: 2.5, y: 11 }
 
+/** 그 자리 바로 밑(발바닥 높이 칸)에 발판이 있나 */
+function tileUnder(grid: boolean[][], x: number, y: number) { const r = Math.round(y), c = Math.floor(x); return r >= ROWS - 1 || !!grid[r]?.[c] }
 function buildGrid(lv: Level): boolean[][] {
   const g = Array.from({ length: ROWS }, () => Array<boolean>(COLS).fill(false))
   for (let c = 0; c < COLS; c++) g[ROWS - 1][c] = true
@@ -57,7 +59,7 @@ export function newLevel(n: number, keep?: Pick<State, 'score' | 'lives' | 'star
   const lv = LEVELS[n]
   let id = 1
   const bhp = BOSS_LEVELS[n]
-  return { level: n, grid: buildGrid(lv), p: newPlayer(), foes: (bhp ? lv.foes.slice(0, 3) : lv.foes).map((f) => mkFoe(id++, f)), boss: bhp ? { x: COLS - 4, y: ROWS - 1, dir: -1, hp: bhp, max: bhp, hurt: 0, age: 0, kindId: 1 + (n % 3) } : null, bubbles: [], fruits: [], score: keep?.score ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', clearT: 0, nextId: id, t: 0, stars: keep?.stars ?? 0 }
+  return { level: n, grid: buildGrid(lv), p: newPlayer(), foes: (bhp ? lv.foes.slice(0, 3) : lv.foes).map((f) => mkFoe(id++, f)), boss: bhp ? { x: COLS - 4, y: ROWS - 1, dir: -1, hp: bhp, max: bhp, hurt: 0, age: 0, kindId: 1 + (n % 3), vx: 0, vy: 0, on: true, jumpT: 2.5, dropT: 4 } : null, bubbles: [], fruits: [], score: keep?.score ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', clearT: 0, nextId: id, t: 0, stars: keep?.stars ?? 0 }
 }
 export const newGame = () => newLevel(0)
 
@@ -161,8 +163,18 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
   if (bo) {
     bo.age += dt; bo.hurt = Math.max(0, bo.hurt - dt)
     const sp = bo.hp <= bo.max / 2 ? BOSS.madWalk : BOSS.walk
+    // 이곳저곳 다닌다: 발판 위를 걷다가 가장자리에서 돌아서거나(가끔은 그대로 내려가고), 가끔 크게 뛰어 위 발판으로 올라간다
+    bo.jumpT -= dt; bo.dropT -= dt
+    if (bo.on && bo.jumpT <= 0) { bo.vy = -BOSS.jump; bo.on = false; bo.jumpT = 2.4 + rnd() * 2.4; bo.dir = p.x >= bo.x ? 1 : -1 }
+    if (bo.on) {
+      const ahead = tileUnder(s.grid, bo.x + bo.dir * (BOSS.hw - 0.2), bo.y)
+      if (!ahead) { if (bo.dropT <= 0) { bo.dropT = 4 + rnd() * 3 } else bo.dir = (bo.dir * -1) as 1 | -1 } // 가장자리: 보통은 돌아서고, 가끔은 내려간다
+    }
     bo.x += bo.dir * sp * dt
     if (bo.x < 1 + BOSS.hw) { bo.x = 1 + BOSS.hw; bo.dir = 1 } else if (bo.x > COLS - 1 - BOSS.hw) { bo.x = COLS - 1 - BOSS.hw; bo.dir = -1 }
+    const by0 = bo.y; bo.vy = Math.min(22, bo.vy + CFG.g * dt); bo.y += bo.vy * dt
+    if (bo.y - BOSS.h < 0.3) { bo.y = BOSS.h + 0.3; if (bo.vy < 0) bo.vy = 0 } // 맨 위 칸 밖으로는 못 간다
+    land(s.grid, bo, by0, BOSS.hw * 0.8)
     const top = bo.y - BOSS.h
     if (s.phase === 'play' && Math.abs(p.x - bo.x) < BOSS.hw + 0.15 && p.vy > 0 && p.y > top - 0.7 && p.y < top + 0.8 && bo.hurt <= 0) {
       bo.hp -= BOSS.stomp; bo.hurt = BOSS.hurtT; p.vy = -BOSS.bounce; p.on = false; s.score += 50; ev.push({ k: 'bossStomp', x: bo.x, y: top })
