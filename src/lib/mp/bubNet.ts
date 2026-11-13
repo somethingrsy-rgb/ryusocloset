@@ -47,7 +47,11 @@ export const unpack = (s: string): string[][] => (s ? s.split(';').map((r) => r.
 export const num = (v: string | undefined, d = 0) => { const n = Number(v); return Number.isFinite(n) ? n : d }
 
 export interface BubRoom {
-  uid: string; room: string; host: boolean
+  uid: string; room: string
+  /** 지금 내가 방장인지(방장이 나가면 남은 친구가 이어받아 바뀔 수 있다) */
+  readonly host: boolean
+  /** 방장이 나간 방을 내가 이어받는다(방장 자리가 비었을 때만 서버가 허락한다) */
+  becomeHost(): void
   /** 서버 시각 기준 지금(ms) */
   now(): number
   /** 내 칸 고쳐 쓰기(위치·쏜 거품·준비) */
@@ -73,15 +77,16 @@ async function joinLocal(name: string, onSnap: (s: BubSnap) => void, look: strin
     else if (m.type === 'p' && m.uid && m.p) { players[m.uid] = m.p; push() }
     else if (m.type === 'meta') { meta = m.meta ?? null; push() }
     else if (m.type === 'state') { state = m.state ?? null; push() }
-    else if (m.type === 'bye' && m.uid) { delete players[m.uid]; if (meta?.host === m.uid) { meta = null; state = null } push() }
+    else if (m.type === 'bye' && m.uid) { delete players[m.uid]; if (Object.keys(players).length === 0) { meta = null; state = null } push() }
   }
   say({ type: 'who' })
   await new Promise((r) => setTimeout(r, 350))
-  const host = !meta
+  let host = !meta
   if (host) { meta = { host: uid, phase: 'lobby', round: 0, part: [], t: Date.now() }; say({ type: 'meta', meta }) }
   players[uid] = { name: name.slice(0, 12) || '친구', look, ready: false, p: '', sh: '', j: Date.now() }; say({ type: 'p', uid, p: players[uid] }); push()
   return {
-    uid, room: 'b1', host, now: () => Date.now(),
+    uid, room: 'b1', get host() { return host }, now: () => Date.now(),
+    becomeHost: () => { if (host || !meta || players[meta.host]) return; host = true; meta = { ...meta, host: uid, part: meta.part.filter((x) => x !== meta!.host && players[x]), t: Date.now() }; say({ type: 'meta', meta }); push() },
     patchMe: (p) => { players[uid] = { ...players[uid], ...p }; say({ type: 'p', uid, p: players[uid] }); push() },
     setMeta: (m) => { if (!host || !meta) return; meta = { ...meta, ...m, t: Date.now() }; say({ type: 'meta', meta }); push() },
     setState: (s) => { if (!host) return; state = s; say({ type: 'state', state }); push() },
@@ -96,10 +101,12 @@ export async function joinBubRoom(name: string, onSnap: (s: BubSnap) => void, op
   let skew = 0
   const offOff = onValue(ref(db as Database, '.info/serverTimeOffset'), (s) => { skew = Number(s.val()) || 0 })
   const cur = sanitizeBub((await get(ref(db, 'lobby/bub/b1'))).val())
-  const alive = !!cur.meta && Date.now() + skew - cur.meta.t < BUB_STALE_MS * 3
+  const hostHere = !!cur.meta && !!cur.players[cur.meta.host]
+  // 방장이 나가고 남은 친구가 있는 방은 이어받는 중이라 그대로 들어간다. 사람이 없거나, 방장이 있는데 알림이 오래 끊겼으면 새로 만든다
+  const alive = !!cur.meta && Object.keys(cur.players).length > 0 && (!hostHere || Date.now() + skew - cur.meta.t < BUB_STALE_MS * 3)
   let create = !cur.meta || !alive
   if (!create) {
-    if (cur.meta!.phase !== 'lobby') { offOff(); throw new Error('친구들이 지금 놀고 있어요. 끝나면 같이 해요') }
+    if (cur.meta!.phase !== 'lobby' && hostHere) { offOff(); throw new Error('친구들이 지금 놀고 있어요. 끝나면 같이 해요') }
     if (Object.keys(cur.players).length >= BUB_MAX) { offOff(); throw new Error('방이 4명으로 꽉 찼어요') }
   }
   const base = 'lobby/bub/b1'
@@ -112,11 +119,20 @@ export async function joinBubRoom(name: string, onSnap: (s: BubSnap) => void, op
   const roomRef = ref(db, base), metaRef = ref(db, `${base}/meta`), stateRef = ref(db, `${base}/state`), meRef = ref(db, `${base}/players/${user.uid}`)
   await step('내 자리 쓰기', set(meRef, { name: name.slice(0, 12) || '친구', look: (opts.look ?? '').slice(0, 900), ready: false, p: '', sh: '', j: Date.now() + skew, t: serverTimestamp() }))
   onDisconnect(meRef).remove().catch(() => {})
-  if (create) onDisconnect(metaRef).remove().catch(() => {})
-  const off = onValue(roomRef, (s) => onSnap(sanitizeBub(s.val())))
-  const beat = create ? window.setInterval(() => { update(metaRef, { t: serverTimestamp() }).catch(() => {}) }, 15000) : 0
+  let lastSnap: BubSnap = { meta: null, players: {}, state: null }
+  const off = onValue(roomRef, (s) => { lastSnap = sanitizeBub(s.val()); onSnap(lastSnap) })
+  let beat = 0
+  const startBeat = () => { if (!beat) beat = window.setInterval(() => { update(metaRef, { t: serverTimestamp() }).catch(() => {}) }, 15000) }
+  if (create) startBeat()
   return {
-    uid: user.uid, room: 'b1', host: create, now: () => Date.now() + skew,
+    uid: user.uid, room: 'b1', get host() { return create }, now: () => Date.now() + skew,
+    becomeHost: () => {
+      const m = lastSnap.meta
+      if (create || !m || lastSnap.players[m.host]) return
+      create = true; startBeat()
+      const part = m.part.filter((x) => x !== m.host && lastSnap.players[x])
+      update(metaRef, { host: user.uid, t: serverTimestamp(), part: Object.fromEntries(part.map((x) => [x, 1])) }).catch(() => { create = false })
+    },
     patchMe: (p) => { update(meRef, { ...p }).catch(() => {}) },
     setMeta: (m) => {
       if (!create) return
@@ -128,7 +144,8 @@ export async function joinBubRoom(name: string, onSnap: (s: BubSnap) => void, op
     leave: () => {
       off(); offOff(); if (beat) clearInterval(beat)
       onDisconnect(meRef).cancel().catch(() => {}); remove(meRef).catch(() => {})
-      if (create) { onDisconnect(metaRef).cancel().catch(() => {}); remove(stateRef).catch(() => {}); remove(metaRef).catch(() => {}) }
+      // 나 말고 남은 친구가 없으면 방을 지운다(있으면 그대로 두고, 남은 친구가 방장을 이어받는다)
+      if (!Object.keys(lastSnap.players).some((u) => u !== user.uid)) { remove(stateRef).catch(() => {}); remove(metaRef).catch(() => {}) }
     },
   }
 }
