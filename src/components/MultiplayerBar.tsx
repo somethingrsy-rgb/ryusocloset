@@ -12,6 +12,7 @@ import { playTap } from '../lib/sound'
 import { setBubInvite, setJumpInvite, setRaceInvite, setStarInvite } from '../lib/raceInvite'
 import { getAvatar } from '../lib/avatars'
 import { multiplayerAvailable } from '../lib/mp/config'
+import { disablePush, enablePush, pushPossible, pushWanted } from '../lib/push'
 import { MAX_CHAT, MAX_NAME, MAX_PLAYERS } from '../lib/mp/core'
 import { getMp, joinMp, leaveMp, leaveVisit, savedName, say, setLook, subscribeMp, visitHome } from '../lib/mp/session'
 import type { Outfit, Tweaks } from '../lib/types'
@@ -109,6 +110,11 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
   const open = useSyncExternalStore(subscribePanel, getPanel)
   const setOpen = (v: boolean | ((o: boolean) => boolean)) => setPanel(typeof v === 'function' ? v(getPanel()) : v)
   const [name, setName] = useState(savedName)
+  const [pushOn, setPushOn] = useState(pushWanted)
+  const [pushNote, setPushNote] = useState('')
+  // 알림을 켜 둔 기기는 들어갈 때마다 조용히 알림 주소를 새로 저장한다(주소가 바뀔 수 있어서)
+  const joined = mp.status === 'on'
+  useEffect(() => { if (joined && pushWanted()) void enablePush(false) }, [joined])
   const [text, setText] = useState('')
   // 말로 채팅: 🎤 를 누르고 말하면 글로 바뀌고, 말을 마치면 바로 보낸다
   const [hearing, setHearing] = useState(false)
@@ -214,6 +220,11 @@ export function MultiplayerBar({ outfit, lift = false, onGo }: { outfit: Outfit;
           <div role="list" aria-label="친구 위치" className="pointer-events-auto flex w-full flex-col gap-1 rounded-2xl bg-white/95 p-2 shadow-lg">
             <p className="m-0 text-xs font-black text-[#7a3d8f]">👥 친구들은 지금 어디?</p>
             {friendRows.length === 0 && <p className="m-0 text-xs font-bold text-black/45">아직 들어온 친구가 없어요</p>}
+            {pushPossible() && (
+              <button onClick={async () => { playTap(); if (pushOn) { await disablePush(); setPushOn(false); setPushNote('알림을 껐어요'); return } const r = await enablePush(); setPushOn(r === 'ok'); setPushNote(r === 'ok' ? '앱을 꺼도 메시지와 초대 알림이 와요' : r === 'denied' ? '알림이 막혀 있어요. 기기 설정에서 허용해 주세요' : r === 'unsupported' ? '이 기기에서는 알림을 쓸 수 없어요(아이폰은 홈 화면에 추가한 앱에서만 돼요)' : '알림을 켜지 못했어요') }}
+                className={`rounded-xl px-2 py-1.5 text-left text-xs font-black active:scale-95 ${pushOn ? 'bg-[#e7f6ec] text-[#3d9b5a]' : 'bg-[#fff0f5] text-[#c0587a]'}`}>{pushOn ? '🔔 알림 켜짐 (누르면 꺼요)' : '🔕 앱을 꺼도 알림 받기'}</button>
+            )}
+            {pushNote && <p role="status" className="m-0 text-[11px] font-bold text-[#6b4b52]">{pushNote}</p>}
             {friendRows.map((f) => (
               <button key={f.uid} role="listitem" disabled={!f.go} onClick={() => { if (f.go) { setOpen(false); f.go() } }}
                 className={`flex items-center gap-1.5 rounded-xl px-2 py-1 text-left text-xs font-bold ${f.go ? 'bg-[#f6eef8] active:scale-95' : 'bg-transparent'}`}>

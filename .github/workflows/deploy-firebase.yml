@@ -1,0 +1,21 @@
+name: Deploy Firebase (rules + functions)
+
+# 수동 실행(Actions 탭 → Run workflow). 저장소 Secret FIREBASE_SERVICE_ACCOUNT 에 서비스 계정 JSON 이 필요하다.
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --prefix functions --omit=dev || npm install --prefix functions --omit=dev
+      - name: Write service account key
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/sa.json"
+      - name: Deploy
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: npx --yes firebase-tools@13 deploy --only functions,database --project ryuso-game --non-interactive

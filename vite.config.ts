@@ -31,6 +31,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        importScripts: ['push-sw.js'], // 앱을 꺼도 오는 알림(public/push-sw.js)
         cleanupOutdatedCaches: true,
         // 앱 코드만 설치 때 한꺼번에 받는다 (그림 18MB 는 쓸 때 받아서 저장: 업데이트·새로고침이 가볍다)
         globPatterns: ['**/*.{js,css,html,json}', 'icons/*.png', 'assets/sfx/*.mp3'],
