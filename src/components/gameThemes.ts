@@ -37,4 +37,4 @@ export const FOE_SET = [0, 1, 2, 0, 0, 2]
 
 /** 눈 마을 단계(레이스 장소 3번째)에서는 크리스마을 난쟁이 7명이 괴물이다(대왕 몬스터는 빨강이) */
 export const SNOW_LEVEL = 2
-export const SNOW_FOES: { walk: string; trapped: string; mad: string; h: number }[] = ['red', 'green', 'pink', 'blue', 'purple', 'yellow', 'orange'].map((n) => ({ walk: `starchase/dwarf_${n}.webp`, trapped: `starchase/dwarf_${n}.webp`, mad: `starchase/dwarf_${n}.webp`, h: 2.4 })) // 난쟁이는 다른 괴물(1.5)보다 1.6배, 처음(1.6)보다 1.5배
+export const SNOW_FOES: { walk: string; trapped: string; mad: string; h: number }[] = ['red', 'green', 'pink', 'blue', 'purple', 'yellow', 'orange'].map((n) => ({ walk: `starchase/dwarf2_${n}.webp`, trapped: `starchase/dwarf2_${n}.webp`, mad: `starchase/dwarf2_${n}.webp`, h: 2.4 })) // 난쟁이는 다른 괴물(1.5)보다 1.6배, 처음(1.6)보다 1.5배
