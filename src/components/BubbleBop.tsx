@@ -186,9 +186,17 @@ function at(g: CanvasRenderingContext2D, x: number, y: number, K: number, S: num
 function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { k: string; x: number; y: number; t: number; text?: string }[], K = 1, S = 1) {
   const set = im.sets[FOE_SET[s.level % PLACES.length]]; if (!set) return
   const foesIm = s.level % PLACES.length === SEA_LEVEL ? im.sea : set.foes, pl = PLACES[s.level % PLACES.length]
-  // 그 장소의 구경거리를 바닥 위 뒤쪽에 세운다(놀이판 가운데 빈 곳)
-  for (let k = 0; k < 3; k++) { const [, h] = pl.deco[k % pl.deco.length], i = im.deco[s.level % PLACES.length][k % pl.deco.length]; if (!ready(i)) continue
-    const w = h * 0.8 * i.naturalWidth / i.naturalHeight, x = 3.5 + k * 4.6 + ((k + s.level) % 2) * 0.8; g.globalAlpha = 0.9; g.drawImage(i, x - w / 2, ROWS - 1 - h * 0.8, w, h * 0.8); g.globalAlpha = 1 }
+  // 그 장소의 구경거리를 바닥 뒤쪽에 세운다: 높이 2.2칸·폭 2.8칸 이하로 줄이고, 발판(아래쪽 3줄)과 겹치지 않는 자리로 비켜서 놓는다(자리가 없으면 안 그린다)
+  for (let k = 0; k < 3; k++) {
+    const [, h0] = pl.deco[k % pl.deco.length], i = im.deco[s.level % PLACES.length][k % pl.deco.length]; if (!ready(i)) continue
+    const asp = i.naturalWidth / i.naturalHeight, sz = Math.min(1, 2.2 / h0, 2.8 / (h0 * asp)) * 0.9, h = h0 * sz, w = h * asp
+    const x0 = 3.5 + k * 4.6 + ((k + s.level) % 2) * 0.8
+    const free = (x: number) => { if (x - w / 2 < 1.1 || x + w / 2 > COLS - 1.1) return false; for (let c = Math.floor(x - w / 2); c <= Math.floor(x + w / 2); c++) for (let r = ROWS - 1 - Math.ceil(h / K); r < ROWS - 1; r++) if (s.grid[r]?.[c]) return false; return true }
+    let x = NaN
+    for (const d of [0, 0.6, -0.6, 1.2, -1.2, 1.8, -1.8, 2.4, -2.4, 3, -3]) if (free(x0 + d)) { x = x0 + d; break }
+    if (Number.isNaN(x)) continue
+    g.save(); g.translate(x, ROWS - 1); g.scale(1, 1 / K); g.globalAlpha = 0.9; g.drawImage(i, -w / 2, -h, w, h); g.restore() // 세로 화면에서 판이 늘어나도 그림은 찌그러지지 않게
+  }
   // 벽과 바닥, 발판(둥근 판): 위아래로 K 배 늘어난 칸
   for (let r = 0; r < ROWS; r++) { block(g, 0, r, 1, 1, pl.ground[0], pl.ground[1]); block(g, COLS - 1, r, 1, 1, pl.ground[0], pl.ground[1]) }
   for (let c = 1; c < COLS - 1; c++) block(g, c, ROWS - 1, 1, 1, pl.ground[0], pl.ground[1])
