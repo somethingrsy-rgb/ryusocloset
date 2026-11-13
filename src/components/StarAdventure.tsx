@@ -196,7 +196,7 @@ function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, cam: n
       const ch = R.rows[r][c]
       if (ch === '#') rr(g, c, r, 1, 1, pl.ground[0], pl.ground[1])
       else if (ch === '=') rr(g, c, r, 1, 1, '#d98a4a', '#9a5a2a', 0.12)
-      else if (ch === '?' || ch === 'u') { rr(g, c, r, 1, 1, ch === '?' ? '#ffe27a' : '#b9b0c8', ch === '?' ? '#e8a91e' : '#8a8099', 0.15); if (ch === '?') { g.fillStyle = '#fff'; g.font = '900 0.8px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', c + 0.5, r + 0.55); g.textBaseline = 'alphabetic' } }
+      else if (ch === '?' || ch === 'u') { rr(g, c, r, 1, 1, ch === '?' ? '#ffe27a' : '#b9b0c8', ch === '?' ? '#e8a91e' : '#8a8099', 0.15); if (ch === '?') { g.fillStyle = '#fff'; g.font = '900 0.55px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillText('?', c + 0.5, r + 0.72); g.fillStyle = '#fff'; g.textBaseline = 'alphabetic' } }
       else if ('lrefxy'.includes(ch)) { const left = 'lex'.includes(ch); rr(g, c - (left ? 0.08 : 0), r, 1.08, 1, pl.pipe[0], pl.pipe[1], 0.14) ; if (ch === 'e' || ch === 'f' || ch === 'x' || ch === 'y') { g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '900 0.55px sans-serif'; g.textAlign = 'center'; if (ch === 'e' || ch === 'x') g.fillText('▼', c + 1, r + 0.7) } }
       else if (ch === 'L' || ch === 'R') rr(g, c + (ch === 'L' ? 0.06 : 0), r, 0.94, 1.02, pl.pipe[1], pl.pipe[0], 0.06)
       else if (ch === 'o') star(g, c + 0.5, r + 0.5 + Math.sin(t * 4 + c) * 0.08, 0.38, Math.cos(t * 5 + c))
