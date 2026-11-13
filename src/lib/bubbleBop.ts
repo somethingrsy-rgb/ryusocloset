@@ -29,6 +29,8 @@ export const LEVELS: Level[] = [
 export interface Body { x: number; y: number; vx: number; vy: number; on: boolean }
 export interface Foe extends Body { id: number; dir: 1 | -1; mad: boolean; jumpT: number }
 export interface Player extends Body { dir: 1 | -1; inv: number; cd: number; prevJump: boolean }
+/** 같이 하기: 친구(원격 플레이어). 몸 움직임은 친구의 폰이 정하고(위치를 받아 옴), 거품·점수·체력은 방장이 판정한다 */
+export interface Mate { uid: string; x: number; y: number; vx: number; vy: number; on: boolean; dir: 1 | -1; inv: number; cd: number; hitN: number; bounceN: number; shots: { x: number; y: number; dir: 1 | -1 }[] }
 export interface Bubble { id: number; x: number; y: number; vx: number; vy: number; t: number; life: number; foe: Foe | null }
 export interface Fruit { id: number; x: number; y: number; vy: number; kind: number; t: number; pts: number }
 /** 대왕 몬스터: 3·6·9단계에 작은 몬스터들(3마리)과 함께 나오고, 그중 한 종류가 커진 모습이다. 거품에 맞으면 체력 1, 머리를 위에서 밟으면(콩!) 체력 2가 닳는다 */
@@ -38,6 +40,7 @@ export const BOSS = { hw: 1.05, h: 2.6, walk: 1.4, madWalk: 2.4, hurtT: 0.55, st
 export interface State {
   level: number; grid: boolean[][]; p: Player; foes: Foe[]; bubbles: Bubble[]; fruits: Fruit[]
   score: number; lives: number; phase: 'play' | 'clear' | 'won' | 'over'; clearT: number; nextId: number; t: number; stars: number; boss: Boss | null
+  /** 같이 하기 친구들(혼자 하면 빈 목록) */ mates: Mate[]
 }
 export interface Input { left: boolean; right: boolean; jump: boolean; shoot: boolean }
 export type Ev = { k: 'jump' | 'shoot' | 'trap' | 'defeat' | 'pop' | 'fruit' | 'hit' | 'escape' | 'bossHit' | 'bossStomp' | 'bossDown' | 'clear' | 'won' | 'over'; x?: number; y?: number }
@@ -59,7 +62,7 @@ export function newLevel(n: number, keep?: Pick<State, 'score' | 'lives' | 'star
   const lv = LEVELS[n]
   let id = 1
   const bhp = BOSS_LEVELS[n]
-  return { level: n, grid: buildGrid(lv), p: newPlayer(), foes: (bhp ? lv.foes.slice(0, 3) : lv.foes).map((f) => mkFoe(id++, f)), boss: bhp ? { x: COLS - 4, y: ROWS - 1, dir: -1, hp: bhp, max: bhp, hurt: 0, age: 0, kindId: 1 + (n % 3), vx: 0, vy: 0, on: true, jumpT: 2.5, dropT: 4 } : null, bubbles: [], fruits: [], score: keep?.score ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', clearT: 0, nextId: id, t: 0, stars: keep?.stars ?? 0 }
+  return { level: n, grid: buildGrid(lv), p: newPlayer(), foes: (bhp ? lv.foes.slice(0, 3) : lv.foes).map((f) => mkFoe(id++, f)), boss: bhp ? { x: COLS - 4, y: ROWS - 1, dir: -1, hp: bhp, max: bhp, hurt: 0, age: 0, kindId: 1 + (n % 3), vx: 0, vy: 0, on: true, jumpT: 2.5, dropT: 4 } : null, bubbles: [], fruits: [], score: keep?.score ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', clearT: 0, nextId: id, t: 0, stars: keep?.stars ?? 0, mates: [] }
 }
 export const newGame = () => newLevel(0)
 
@@ -75,19 +78,31 @@ export function land(grid: boolean[][], b: { x: number; y: number; vy: number; o
 const clampX = (x: number, hw: number) => Math.max(1 + hw, Math.min(COLS - 1 - hw, x))
 const near = (ax: number, ay: number, bx: number, by: number, rx: number, ry: number) => Math.abs(ax - bx) < rx && Math.abs(ay - by) < ry
 
-/** dt 초만큼 진행한다(긴 시간은 작게 나눠서). 일어난 일을 돌려준다 */
+/** dt 초만큼 진행한다(긴 시간은 작게 나눠서). 일어난 일을 돌려준다. 혼자 하기와 같이 하기의 방장이 쓴다 */
 export function step(s: State, inp: Input, dt: number, rnd: () => number = Math.random): Ev[] {
   const ev: Ev[] = []
   let left = dt
-  while (left > 1e-9) { const h = Math.min(left, 1 / 60); sub(s, inp, h, rnd, ev); left -= h }
+  while (left > 1e-9) {
+    const h = Math.min(left, 1 / 60); left -= h
+    if (s.phase === 'over' || s.phase === 'won') continue
+    s.t += h
+    playerPart(s, inp, h, ev, true)
+    worldPart(s, h, rnd, ev)
+  }
   return ev
 }
 
-function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
-  if (s.phase === 'over' || s.phase === 'won') return
-  s.t += dt
+/** 같이 하기에서 방장이 아닌 친구의 폰이 쓴다: 내 몸 움직임(걷기·점프·발판)만 계산하고, 세상(괴물·거품·점수)은 방장이 보낸 것을 그대로 쓴다. 쏜 거품은 방장에게 알릴 수 있게 shoot 이벤트로 돌려준다 */
+export function stepLocalPlayer(s: State, inp: Input, dt: number): Ev[] {
+  const ev: Ev[] = []
+  let left = dt
+  while (left > 1e-9) { const h = Math.min(left, 1 / 60); left -= h; if (s.phase === 'over' || s.phase === 'won') continue; playerPart(s, inp, h, ev, false) }
+  return ev
+}
+
+/** 내 몸: 걷기·점프·거품 쏘기·발판 착지. own 가 거짓이면(같이 하기 친구의 폰) 거품은 만들지 않고 shoot 이벤트만 낸다 */
+function playerPart(s: State, inp: Input, dt: number, ev: Ev[], own: boolean) {
   const p = s.p, hw = CFG.hw
-  // ── 나
   p.inv = Math.max(0, p.inv - dt); p.cd = Math.max(0, p.cd - dt)
   const mv = (inp.right ? 1 : 0) - (inp.left ? 1 : 0)
   p.vx = mv * CFG.walk; if (mv) p.dir = mv > 0 ? 1 : -1
@@ -95,13 +110,34 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
   p.prevJump = inp.jump
   if (inp.shoot && p.cd <= 0) {
     p.cd = CFG.shootCd
-    s.bubbles.push({ id: s.nextId++, x: p.x + p.dir * 0.8, y: p.y - 0.75, vx: p.dir * CFG.bubbleSpeed, vy: 0, t: 0, life: CFG.bubbleLife, foe: null })
+    if (own) s.bubbles.push({ id: s.nextId++, x: p.x + p.dir * 0.8, y: p.y - 0.75, vx: p.dir * CFG.bubbleSpeed, vy: 0, t: 0, life: CFG.bubbleLife, foe: null })
     ev.push({ k: 'shoot', x: p.x, y: p.y })
   }
   const y0 = p.y
   p.vy += CFG.g * dt; p.x = clampX(p.x + p.vx * dt, hw); p.y += p.vy * dt
   if (p.y - CFG.ph < 0.1) { p.y = CFG.ph + 0.1; if (p.vy < 0) p.vy = 0 }
   land(s.grid, p, y0, hw)
+}
+
+type Who = Player | Mate
+/** 한 명이 다쳤다: 목숨은 모두가 같이 쓴다(셋). 나는 처음 자리에서 다시 시작하고, 친구는 hitN 이 늘어서 그 폰이 알아챈다 */
+function hitPlayer(s: State, pl: Who, ev: Ev[]) {
+  s.lives--; ev.push({ k: 'hit', x: pl.x, y: pl.y })
+  if (s.lives <= 0) { s.phase = 'over'; ev.push({ k: 'over' }) }
+  else if (pl === s.p) s.p = { ...newPlayer(), inv: CFG.inv, dir: s.p.dir }
+  else { (pl as Mate).hitN++; pl.inv = CFG.inv }
+}
+
+/** 세상: 별 친구·거품·과일·대왕 몬스터·부딪힘·단계 끝. 모든 플레이어(나 + 친구들)를 함께 본다 */
+function worldPart(s: State, dt: number, rnd: () => number, ev: Ev[]) {
+  const hw = CFG.hw
+  // ── 친구들: 안전 시간·거품 쿨다운, 친구가 쏜 거품 만들기(방장이 쿨다운을 다시 확인한다)
+  for (const m of s.mates) {
+    m.inv = Math.max(0, m.inv - dt); m.cd = Math.max(0, m.cd - dt)
+    for (const sh of m.shots.splice(0)) if (m.cd <= 0) { m.cd = CFG.shootCd; s.bubbles.push({ id: s.nextId++, x: sh.x + sh.dir * 0.8, y: sh.y - 0.75, vx: sh.dir * CFG.bubbleSpeed, vy: 0, t: 0, life: CFG.bubbleLife, foe: null }); ev.push({ k: 'shoot', x: sh.x, y: sh.y }) }
+  }
+  const players: Who[] = [s.p, ...s.mates]
+  const nearestTo = (x: number): Who => players.reduce((a, b) => (Math.abs(b.x - x) < Math.abs(a.x - x) ? b : a))
   // ── 별 친구
   for (const f of s.foes) {
     f.jumpT -= dt
@@ -110,7 +146,7 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
       const ax = f.x + f.dir * (hw + 0.15), r = Math.round(f.y)
       if (ax < 1.1 || ax > COLS - 1.1) f.dir = (f.dir * -1) as 1 | -1
       else if (!s.grid[Math.min(ROWS - 1, r)]?.[Math.floor(ax)] && !(r >= ROWS - 1) && rnd() < 0.05) f.dir = (f.dir * -1) as 1 | -1
-      if (f.jumpT <= 0) { f.jumpT = 3 + rnd() * 3; if (p.y < f.y - 2 && Math.abs(p.x - f.x) < 5) { f.vy = -CFG.foeJump; f.on = false } }
+      if (f.jumpT <= 0) { f.jumpT = 3 + rnd() * 3; const tp = nearestTo(f.x); if (tp.y < f.y - 2 && Math.abs(tp.x - f.x) < 5) { f.vy = -CFG.foeJump; f.on = false } }
     }
     f.vx = f.dir * sp
     const fy0 = f.y
@@ -141,8 +177,8 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
     if (bo && !b.foe && bo.hurt <= 0 && near(b.x, b.y, bo.x, bo.y - BOSS.h / 2, BOSS.hw + 0.4, BOSS.h / 2 + 0.3)) {
       s.bubbles.splice(s.bubbles.indexOf(b), 1); bo.hp--; bo.hurt = BOSS.hurtT; s.score += 20; ev.push({ k: 'bossHit', x: b.x, y: b.y }); continue
     }
-    // 몸으로 터뜨린다(막 뿜은 거품은 잠깐 안전)
-    if (b.t > 0.3 && near(p.x, p.y - CFG.ph / 2, b.x, b.y, 0.85, 1.05)) {
+    // 몸으로 터뜨린다(막 뿜은 거품은 잠깐 안전). 누구든 터뜨릴 수 있다
+    if (b.t > 0.3 && players.some((pl) => near(pl.x, pl.y - CFG.ph / 2, b.x, b.y, 0.85, 1.05))) {
       s.bubbles.splice(s.bubbles.indexOf(b), 1)
       if (b.foe) {
         s.score += CFG.pts.foe; const kind = Math.floor(rnd() * CFG.pts.fruit.length)
@@ -151,21 +187,20 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
       } else { s.score += CFG.pts.bubble; ev.push({ k: 'pop', x: b.x, y: b.y }) }
     }
   }
-  // ── 과일
+  // ── 과일(누구든 먹는다)
   for (const f of [...s.fruits]) {
     f.t += dt; const y0f = f.y; f.vy += CFG.g * 0.5 * dt; f.y += f.vy * dt
     const fb = { x: f.x, y: f.y, vy: f.vy, on: false }; land(s.grid, fb, y0f, 0.3); f.y = fb.y; f.vy = fb.vy
     if (f.t > CFG.fruitLife) { s.fruits.splice(s.fruits.indexOf(f), 1); continue }
-    if (near(p.x, p.y - 0.6, f.x, f.y - 0.4, 0.8, 0.95)) { s.score += f.pts; s.fruits.splice(s.fruits.indexOf(f), 1); ev.push({ k: 'fruit', x: f.x, y: f.y }) }
+    if (players.some((pl) => near(pl.x, pl.y - 0.6, f.x, f.y - 0.4, 0.8, 0.95))) { s.score += f.pts; s.fruits.splice(s.fruits.indexOf(f), 1); ev.push({ k: 'fruit', x: f.x, y: f.y }) }
   }
-  // ── 대왕 몬스터: 바닥을 왔다 갔다 걷고(체력이 반 이하면 화가 나서 빨라진다), 머리를 밟으면 체력이 닳고, 몸에 닿으면 ♥가 줄어든다
+  // ── 대왕 몬스터: 발판을 오가며 돌아다니고(체력이 반 이하면 화가 나서 빨라진다), 머리를 밟으면 체력이 닳고, 몸에 닿으면 ♥가 줄어든다
   const bo = s.boss
   if (bo) {
     bo.age += dt; bo.hurt = Math.max(0, bo.hurt - dt)
     const sp = bo.hp <= bo.max / 2 ? BOSS.madWalk : BOSS.walk
-    // 이곳저곳 다닌다: 발판 위를 걷다가 가장자리에서 돌아서거나(가끔은 그대로 내려가고), 가끔 크게 뛰어 위 발판으로 올라간다
     bo.jumpT -= dt; bo.dropT -= dt
-    if (bo.on && bo.jumpT <= 0) { bo.vy = -BOSS.jump; bo.on = false; bo.jumpT = 2.4 + rnd() * 2.4; bo.dir = p.x >= bo.x ? 1 : -1 }
+    if (bo.on && bo.jumpT <= 0) { bo.vy = -BOSS.jump; bo.on = false; bo.jumpT = 2.4 + rnd() * 2.4; bo.dir = nearestTo(bo.x).x >= bo.x ? 1 : -1 }
     if (bo.on) {
       const ahead = tileUnder(s.grid, bo.x + bo.dir * (BOSS.hw - 0.2), bo.y)
       if (!ahead) { if (bo.dropT <= 0) { bo.dropT = 4 + rnd() * 3 } else bo.dir = (bo.dir * -1) as 1 | -1 } // 가장자리: 보통은 돌아서고, 가끔은 내려간다
@@ -176,11 +211,12 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
     if (bo.y - BOSS.h < 0.3) { bo.y = BOSS.h + 0.3; if (bo.vy < 0) bo.vy = 0 } // 맨 위 칸 밖으로는 못 간다
     land(s.grid, bo, by0, BOSS.hw * 0.8)
     const top = bo.y - BOSS.h
-    if (s.phase === 'play' && Math.abs(p.x - bo.x) < BOSS.hw + 0.15 && p.vy > 0 && p.y > top - 0.7 && p.y < top + 0.8 && bo.hurt <= 0) {
-      bo.hp -= BOSS.stomp; bo.hurt = BOSS.hurtT; p.vy = -BOSS.bounce; p.on = false; s.score += 50; ev.push({ k: 'bossStomp', x: bo.x, y: top })
-    } else if (s.phase === 'play' && p.inv <= 0 && Math.abs(p.x - bo.x) < BOSS.hw + 0.1 && p.y > top + 0.8 && p.y - CFG.ph < bo.y) {
-      s.lives--; ev.push({ k: 'hit', x: p.x, y: p.y })
-      if (s.lives <= 0) { s.phase = 'over'; ev.push({ k: 'over' }) } else { s.p = { ...newPlayer(), inv: CFG.inv, dir: p.dir } }
+    for (const pl of players) {
+      if (s.phase !== 'play') break
+      if (Math.abs(pl.x - bo.x) < BOSS.hw + 0.15 && pl.vy > 0 && pl.y > top - 0.7 && pl.y < top + 0.8 && bo.hurt <= 0) {
+        bo.hp -= BOSS.stomp; bo.hurt = BOSS.hurtT; s.score += 50; ev.push({ k: 'bossStomp', x: bo.x, y: top })
+        if (pl === s.p) { s.p.vy = -BOSS.bounce; s.p.on = false } else (pl as Mate).bounceN++ // 친구는 그 폰이 튀어 오른다
+      } else if (pl.inv <= 0 && Math.abs(pl.x - bo.x) < BOSS.hw + 0.1 && pl.y > top + 0.8 && pl.y - CFG.ph < bo.y) hitPlayer(s, pl, ev)
     }
     if (s.phase === 'play' && bo.hp <= 0) {
       s.boss = null; s.score += 1000; s.stars += 5
@@ -188,19 +224,15 @@ function sub(s: State, inp: Input, dt: number, rnd: () => number, ev: Ev[]) {
       ev.push({ k: 'bossDown', x: bo.x, y: bo.y - BOSS.h / 2 })
     }
   }
-  // ── 부딪힘
-  if (s.phase === 'play' && p.inv <= 0) for (const f of s.foes) if (near(p.x, p.y - 0.65, f.x, f.y - 0.55, 0.62, 0.85)) {
-    s.lives--; ev.push({ k: 'hit', x: p.x, y: p.y })
-    if (s.lives <= 0) { s.phase = 'over'; ev.push({ k: 'over' }) } else { s.p = { ...newPlayer(), inv: CFG.inv, dir: p.dir } }
-    break
-  }
+  // ── 부딪힘(별 친구에게 닿은 사람은 모두 같이 쓰는 목숨이 줄어든다)
+  if (s.phase === 'play') for (const pl of [...players]) if (s.phase === 'play' && pl.inv <= 0 && s.foes.some((f) => near(pl.x, pl.y - 0.65, f.x, f.y - 0.55, 0.62, 0.85))) hitPlayer(s, pl, ev)
   // ── 단계 끝
   if (s.phase === 'play' && s.foes.length === 0 && !s.boss && !s.bubbles.some((b) => b.foe)) { s.phase = 'clear'; s.clearT = CFG.clearWait; s.stars += 5; ev.push({ k: 'clear' }) }
   if (s.phase === 'clear') {
     s.clearT -= dt
     if (s.clearT <= 0) {
       if (s.level + 1 >= LEVELS.length) { s.phase = 'won'; s.stars += 20; ev.push({ k: 'won' }) }
-      else { const n = newLevel(s.level + 1, s); s.level = n.level; s.grid = n.grid; s.lives = CFG.lives; s.p = { ...n.p, inv: 1.5 }; s.foes = n.foes; s.boss = n.boss; s.bubbles = []; s.fruits = []; s.phase = 'play'; s.nextId = n.nextId }
+      else { const n = newLevel(s.level + 1, s); s.level = n.level; s.grid = n.grid; s.lives = CFG.lives; s.p = { ...n.p, inv: 1.5 }; s.foes = n.foes; s.boss = n.boss; s.bubbles = []; s.fruits = []; s.phase = 'play'; s.nextId = n.nextId; for (const m of s.mates) m.inv = 1.5 }
     }
   }
 }

@@ -88,6 +88,7 @@ export function setWhere(room: Where, host: string | null = null) {
 export function say(text: string, home = false) { const t = cleanChat(text); if (t && tr) tr.chat(myName, t, home) }
 /** 같이 레이스할 친구들에게 초대를 보낸다(방 번호를 담은 채팅 한 줄) */
 export function sayRace(room: string) { if (tr) tr.chat(myName, '🏎️ 자동차 레이스 같이할래?', false, room) }
+export function sayBub(room: string) { if (tr) tr.chat(myName, '🫧 별 거품 같이할래?', false, undefined, undefined, undefined, room) }
 export function sayStar(room: string) { if (tr) tr.chat(myName, '⭐ 도망간 별을 잡아라 같이할래?', false, undefined, undefined, room) }
 export function sayJump(room: string) { if (tr) tr.chat(myName, '🎯 점프 퍼즐 같이할래?', false, undefined, room) }
 export const playerCount = () => Object.keys(state.players).length

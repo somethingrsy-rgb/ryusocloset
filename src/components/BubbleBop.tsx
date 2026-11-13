@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { hasBubInvite } from '../lib/raceInvite'
 import { earnStars } from '../lib/shop'
 import { playCoin, playHop, playLose, playPop, playTap, playWin, startBgm, stopBgm } from '../lib/sound'
 import { assetUrl } from '../lib/items'
@@ -15,9 +16,17 @@ import { COLS, CFG, LEVELS, ROWS, newGame, newLevel, step, type Ev, type Input, 
 import { FOE_SET, PLACES, SEA_FOES, SEA_LEVEL, SNOW_FOES, SNOW_LEVEL, THEMES, monsterTheme, type FoeImgs, type Theme } from './gameThemes'
 const INTRO_KEY = 'ryuso.bubble.intro'
 const setKey = (k: string) => { try { localStorage.setItem(k, '1') } catch { /* 저장 못 해도 괜찮다 */ } }
-const load = (src: string) => { const i = new Image(); i.src = assetUrl(src); return i }
+export const load = (src: string) => { const i = new Image(); i.src = assetUrl(src); return i }
+
+const BubbleCoop = lazy(() => import('./BubbleCoop').then((m) => ({ default: m.BubbleCoop })))
 
 export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Outfit }) {
+  const [coop, setCoop] = useState(() => hasBubInvite())
+  if (coop) return <Suspense fallback={null}><BubbleCoop onClose={onClose} outfit={outfit} /></Suspense>
+  return <BubbleSolo onClose={onClose} outfit={outfit} onCoop={() => setCoop(true)} />
+}
+
+function BubbleSolo({ onClose, outfit, onCoop }: { onClose: () => void; outfit: Outfit; onCoop: () => void }) {
   const [state, setState] = useState<'intro' | 'play' | 'over' | 'won'>('intro')
   const [hud, setHud] = useState({ score: 0, lives: CFG.lives, level: 1, foes: 0, stars: 0 })
   const [paused, setPaused] = useState(false)
@@ -158,6 +167,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
               <li>🍓 과일을 먹으면 점수! 별 친구에게 닿으면 ♥가 줄어요</li>
             </ul>
             <button onClick={() => { setKey(INTRO_KEY); begin(false) }} className="min-h-12 w-full rounded-full bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-base font-black text-[#6b4a00] shadow-md">시작!</button>
+            <button onClick={onCoop} className="min-h-12 w-full rounded-full bg-gradient-to-b from-[#ffc2d4] to-[#ff9db9] text-base font-black text-white shadow-md">👫 친구랑 같이 하기</button>
             <button onClick={onClose} className="min-h-11 w-full rounded-full bg-white text-sm font-black text-[#6b5a99] ring-2 ring-[#cdb8f2]">🏡 마을로</button>
           </div>
         </div>
@@ -181,7 +191,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
 }
 
 /* ───── 그리기 ───── */
-type Imgs = { sets: { theme: Theme; foes: FoeImgs; fruit: HTMLImageElement[] }[]; burst: HTMLImageElement; me: HTMLCanvasElement | null; deco: HTMLImageElement[][]; sea: FoeImgs; snow: FoeImgs }
+export type Imgs = { sets: { theme: Theme; foes: FoeImgs; fruit: HTMLImageElement[] }[]; burst: HTMLImageElement; me: HTMLCanvasElement | null; deco: HTMLImageElement[][]; sea: FoeImgs; snow: FoeImgs }
 const ready = (i: HTMLImageElement | HTMLCanvasElement | null): i is HTMLImageElement | HTMLCanvasElement => !!i && (i instanceof HTMLCanvasElement || (i.complete && i.naturalWidth > 0))
 function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, top: string, bot: string, r = 0.22) {
   const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top); gr.addColorStop(1, bot)
@@ -190,7 +200,9 @@ function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: 
 }
 /** 세로 화면에서 놀이판을 위아래로 늘려도 그림이 찌그러지지 않게: 놓는 자리만 늘리고(K) 그림 크기는 그대로(S 배) */
 function at(g: CanvasRenderingContext2D, x: number, y: number, K: number, S: number, fn: () => void) { g.save(); g.translate(x, y); g.scale(S, S / K); fn(); g.restore() }
-function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { k: string; x: number; y: number; t: number; text?: string }[], K = 1, S = 1) {
+/** 같이 하는 친구(그리기용): 그림은 그 친구의 옷 입은 아바타 */
+export interface Other { x: number; y: number; dir: 1 | -1; inv: number; cv: HTMLCanvasElement | null; name: string; color: string; moving: boolean }
+export function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { k: string; x: number; y: number; t: number; text?: string }[], K = 1, S = 1, others: Other[] = []) {
   const set = im.sets[FOE_SET[s.level % PLACES.length]]; if (!set) return
   const foesIm = s.level % PLACES.length === SEA_LEVEL ? im.sea : s.level % PLACES.length === SNOW_LEVEL ? im.snow : set.foes, pl = PLACES[s.level % PLACES.length]
   // 그 장소의 구경거리를 바닥 위 뒤쪽에 세운다(놀이판 가운데 빈 곳)
@@ -241,6 +253,20 @@ function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { 
     g.fillStyle = 'rgba(60,30,100,.25)'; g.beginPath(); g.ellipse(0, 0, 0.5, 0.14, 0, 0, 7); g.fill()
     if (ready(me)) { const bob = p.on && Math.abs(p.vx) > 0.1 ? Math.abs(Math.sin(t * 14)) * 0.1 : 0; g.translate(0, -bob); g.scale(p.dir > 0 ? 1 : -1, 1); g.drawImage(me, -W / 2, -H * (1504 / 1536), W, H) }
     else { g.fillStyle = '#ff8fab'; g.beginPath(); g.ellipse(0, -0.65, 0.35, 0.65, 0, 0, 7); g.fill() } })
+  // 같이 하는 친구들(이름표 + 옷 입은 아바타, 안전 시간에는 깜빡임)
+  for (const o of others) {
+    if (o.inv > 0 && Math.floor(t * 10) % 2) continue
+    at(g, o.x, o.y, K, S, () => {
+      const H = 1.95, W = H * 1024 / 1536
+      g.fillStyle = 'rgba(60,30,100,.25)'; g.beginPath(); g.ellipse(0, 0, 0.5, 0.14, 0, 0, 7); g.fill()
+      g.strokeStyle = o.color; g.lineWidth = 0.09; g.beginPath(); g.ellipse(0, 0.02, 0.62, 0.2, 0, 0, 7); g.stroke()
+      if (ready(o.cv)) { const bob = o.moving ? Math.abs(Math.sin(t * 14)) * 0.1 : 0; g.save(); g.translate(0, -bob); g.scale(o.dir > 0 ? 1 : -1, 1); g.drawImage(o.cv, -W / 2, -H * (1504 / 1536), W, H); g.restore() }
+      else { g.fillStyle = o.color; g.beginPath(); g.ellipse(0, -0.65, 0.35, 0.65, 0, 0, 7); g.fill() }
+      g.font = '800 0.42px sans-serif'; g.textAlign = 'center'; const w = g.measureText(o.name).width + 0.4
+      g.fillStyle = 'rgba(255,255,255,.92)'; g.beginPath(); g.roundRect(-w / 2, -2.55, w, 0.55, 0.27); g.fill(); g.strokeStyle = o.color; g.lineWidth = 0.06; g.stroke()
+      g.fillStyle = '#3b2a63'; g.fillText(o.name, 0, -2.13)
+    })
+  }
   // 효과
   for (const f of fx) at(g, f.x, f.y, K, S, () => {
     if (f.k === 'pts') { const u2 = f.t / 1.1; g.globalAlpha = 1 - u2 * u2; g.font = '900 0.7px sans-serif'; g.textAlign = 'center'; g.lineWidth = 0.14; g.strokeStyle = '#7a5cc0'; g.fillStyle = '#fff'; g.strokeText(f.text ?? '', 0, -u2 * 1.2); g.fillText(f.text ?? '', 0, -u2 * 1.2); g.globalAlpha = 1; return }
