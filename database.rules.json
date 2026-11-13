@@ -499,7 +499,7 @@
             "$other": {
               ".validate": false
             },
-            ".write": "auth != null && (!data.exists() || data.child('host').val() === auth.uid || now - data.child('t').val() > 600000)"
+            ".write": "auth != null && (!data.exists() || data.child('host').val() === auth.uid || now - data.child('t').val() > 600000 || (newData.child('host').val() === auth.uid && root.child('lobby/bub/'+$room+'/players/'+auth.uid).exists() && !root.child('lobby/bub/'+$room+'/players/'+data.child('host').val()).exists()))"
           },
           "players": {
             "$uid": {

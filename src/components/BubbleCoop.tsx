@@ -30,6 +30,8 @@ export function BubbleCoop({ onClose, outfit }: { onClose: () => void; outfit: O
   const [room, setRoom] = useState<BubRoom | null>(null)
   const [err, setErr] = useState('')
   const [hostGone, setHostGone] = useState(false)
+  const [orphan, setOrphan] = useState(false)
+  const promoted = useRef(false)
   const [invited, setInvited] = useState(false)
   const [paused, setPaused] = useState(false)
   const [hud, setHud] = useState({ score: 0, lives: CFG.lives, level: 1, stars: 0, phase: 'play' as State['phase'] })
@@ -64,11 +66,29 @@ export function BubbleCoop({ onClose, outfit }: { onClose: () => void; outfit: O
   const meta = snap.meta
   const me = room?.uid ?? ''
   const isHost = !!room?.host
+  const hostId = meta?.host ?? ''
   const part = meta?.part ?? []
   const inPart = part.includes(me)
   const playing = meta?.phase === 'play'
   const lobbyOrder = Object.entries(snap.players).sort((a, b) => a[1].j - b[1].j || a[0].localeCompare(b[0])).map(([u]) => u)
   useEffect(() => { if (seenMeta.current && !meta) setHostGone(true) }, [meta])
+
+  /* ───── 방장이 나갔을 때: 남은 친구에게 「계속 할래요?」 묻고, 계속하겠다는 친구 중 먼저 들어온 친구가 방장을 이어받는다 ───── */
+  const hostAway = !!meta && !!room && !snap.players[meta.host] && Object.keys(snap.players).length > 0
+  useEffect(() => {
+    if (!hostAway) { setOrphan(false); return }
+    const t = window.setTimeout(() => { roomRef.current?.patchMe({ ready: false }); setOrphan(true) }, 1500) // 잠깐 끊겼다 돌아오는 경우는 묻지 않는다
+    return () => clearTimeout(t)
+  }, [hostAway, hostId])
+  useEffect(() => { if (room) room.patchMe({ ready: false }) }, [hostId, room])
+  const myVote = !!snap.players[me]?.ready
+  useEffect(() => {
+    if (!orphan || !hostAway || !myVote || !room) return
+    const voters = Object.entries(snap.players).filter(([, p]) => p.ready).sort((a, b) => a[1].j - b[1].j || a[0].localeCompare(b[0]))
+    if (voters[0]?.[0] !== me) return
+    promoted.current = meta?.phase === 'play'
+    room.becomeHost()
+  }, [orphan, hostAway, myVote, snap.players, room, me, meta?.phase])
 
   // 내 아바타와 친구들 아바타 그림
   useEffect(() => {
@@ -139,10 +159,21 @@ export function BubbleCoop({ onClose, outfit }: { onClose: () => void; outfit: O
   useEffect(() => {
     if (!playing || !room) return
     const host = room.host
-    let raf = 0, prev = performance.now(), lastSend = 0, lastState = 0, hudSig = '', seq = 0, shotN = 0
+    let raf = 0, prev = performance.now(), lastSend = 0, lastState = 0, hudSig = '', seq = snapRef.current.state?.n ?? 0, shotN = 0
     const lastShot: Record<string, number> = {}, smooth: Record<string, { x: number; y: number }> = {}
     let appliedN = -1, appliedR = -999, myHit = 0, myBounce = 0, myInitRound = -1, hasPrevScore = 0
     const view: { tgt: BState | null } = { tgt: null }
+    // 방장을 이어받은 직후: 내가 보던 세상(괴물·거품·과일·점수)을 그대로 이어서 계산한다
+    if (host && promoted.current) {
+      promoted.current = false
+      const s0 = game.current, st0 = snapRef.current.state
+      if (st0) {
+        const rows = unpack(st0.pl)
+        s0.mates = Object.keys(snapRef.current.players).filter((u) => u !== room.uid).map((u, i) => { const r = rows.find((q) => q[0] === u); const m0 = mkMate(u, i + 1); return r ? { ...m0, x: num(r[1]), y: num(r[2]), dir: num(r[3]) < 0 ? -1 : 1, inv: 1.5, hitN: num(r[5]), bounceN: num(r[6]) } : m0 }) as Mate[]
+        for (const q of s0.bubbles) { q.vx = 0; if (q.foe) { q.vy = -CFG.bubbleRise * 0.8; q.life = CFG.trapLife; q.t = Math.max(q.t, CFG.bubbleFly) } else { q.vy = -CFG.bubbleRise; q.life = 5; q.t = Math.max(q.t, CFG.bubbleFly) } }
+        restartN.current = st0.r
+      }
+    }
     const loop = (t: number) => {
       raf = requestAnimationFrame(loop)
       const dt = Math.min(0.05, (t - prev) / 1000); prev = t
@@ -250,7 +281,7 @@ export function BubbleCoop({ onClose, outfit }: { onClose: () => void; outfit: O
     raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, room, paused, onEvents])
+  }, [playing, room, paused, onEvents, isHost])
 
   const leave = () => { roomRef.current?.leave(); roomRef.current = null; onClose() }
   const hold = (k: 'left' | 'right' | 'jump' | 'shoot') => ({
@@ -269,6 +300,19 @@ export function BubbleCoop({ onClose, outfit }: { onClose: () => void; outfit: O
   if (err) return <div className={frame}>{bg}<div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-3 p-6"><div className={`${panel} text-center`}><p role="alert" className="m-0 mb-3 text-sm font-black text-[#c04a5a]">⚠️ {err}</p><button onClick={leave} className={`${pbtn} bg-[#ff8fab] text-white`}>돌아가기</button></div></div></div>
   if (hostGone) return <div className={frame}>{bg}<div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-3 p-6"><div className={`${panel} text-center`}><p role="status" className="m-0 mb-3 text-base font-black">방장이 나가서 방이 닫혔어요</p><button onClick={leave} className={`${pbtn} bg-[#ff8fab] text-white`}>돌아가기</button></div></div></div>
   if (!room || !meta) return <div className={frame}>{bg}<div className="relative z-10 flex flex-1 items-center justify-center"><p role="status" className="m-0 rounded-full bg-white/90 px-5 py-2 text-sm font-black">방을 찾는 중…</p></div></div>
+
+  const prompt = orphan && hostAway && (
+    <div role="dialog" aria-label="방장이 나갔어요" className="absolute inset-0 z-50 flex items-center justify-center bg-[#2a1a5e]/50 p-3">
+      <div className={`${panel} w-full max-w-xs text-center`}>
+        <p className="m-0 mb-1 text-lg font-black">방장이 나갔어요</p>
+        <p className="m-0 mb-3 text-sm font-bold text-[#6b5a99]">{myVote ? '다른 친구를 기다려요… 계속하는 친구가 방장이 돼요' : '계속 할래요?'}</p>
+        <div className="flex justify-center gap-2">
+          {!myVote && <button onClick={() => { playTap(); room.patchMe({ ready: true }) }} className={`${pbtn} bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-[#6b4a00]`}>▶ 계속하기</button>}
+          <button onClick={leave} className={`${pbtn} bg-white text-[#6b5a99] ring-2 ring-[#cdb8f2]`}>나가기</button>
+        </div>
+      </div>
+    </div>
+  )
 
   // 대기실
   if (!playing) {
@@ -303,6 +347,7 @@ export function BubbleCoop({ onClose, outfit }: { onClose: () => void; outfit: O
             <p className="m-0 mt-2 text-center text-[11px] font-bold text-[#6b5a99]">목숨은 모두 같이 3개! 거품은 같이 쏘고, 대왕 몬스터는 함께 잡아요</p>
           </div>
         </div>
+        {prompt}
       </div>
     )
   }
@@ -336,6 +381,7 @@ export function BubbleCoop({ onClose, outfit }: { onClose: () => void; outfit: O
         </>}
         {paused && <p role="status" className="pointer-events-none absolute inset-x-0 top-1/2 m-0 -translate-y-1/2 text-center text-3xl font-black text-white [text-shadow:0_3px_0_#7a5cc0]">잠깐 멈춤</p>}
       </div>
+      {prompt}
       {over && (
         <div role="dialog" aria-label="결과" className="absolute inset-0 z-40 flex items-center justify-center bg-[#2a1a5e]/45 p-3">
           <div className="flex w-full max-w-xs flex-col items-center gap-2 rounded-3xl bg-[#fff8ec] p-4 text-center shadow-xl ring-2 ring-[#cdb8f2]">
