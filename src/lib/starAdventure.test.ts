@@ -43,6 +43,14 @@ describe('별 모험 규칙', () => {
     expect(hop).toBeGreaterThan(7.8); expect(dbl).toBeLessThan(hop - 1.5)
     expect(trip).toBeGreaterThan(dbl - 0.05)
   })
+  it('관 옆면에 두 줄 이상 닿아도 관을 넘어 순간이동하지 않고 그 앞에서 멈춘다', () => {
+    for (const big of [false, true]) for (const y of [8.9, 9.04, 9.5, 10]) {
+      const s = newRun(0); s.main.foes = []; s.p.inv = 99; s.p.big = big; s.p.x = 9.62; s.p.y = y; s.p.vy = 0
+      for (let i = 0; i < 10; i++) { step(s, { ...none, right: true }, 1 / 60); expect(s.p.x).toBeLessThanOrEqual(10 - CFG.hw + 1e-6) } // 첫 관의 왼쪽 면은 x = 10
+    }
+    const t = newRun(0); t.main.foes = []; t.p.inv = 99; t.p.x = 12.38; t.p.y = 9.04; t.p.vy = 0 // 관 오른쪽에서 왼쪽으로 부딪힐 때도 마찬가지
+    for (let i = 0; i < 10; i++) { step(t, { ...none, left: true }, 1 / 60); expect(t.p.x).toBeGreaterThanOrEqual(12 + CFG.hw - 1e-6) }
+  })
   it('하트 약병을 먹으면 커지고, 커지면서 제자리를 유지한다', () => {
     const s = newRun(0); s.main.foes = []; s.p.x = 6.5; s.p.y = 10
     s.main.items.push({ id: 1, x: 6.9, y: 10, vy: 0, dir: 1, t: 1 })
