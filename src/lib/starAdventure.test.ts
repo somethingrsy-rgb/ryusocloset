@@ -49,6 +49,14 @@ describe('별 모험 규칙', () => {
     const ev = run(s, none, 0.1); expect(ev.some((e) => e.k === 'grow')).toBe(true); expect(s.p.big).toBe(true); expect(s.main.items.length).toBe(0)
     run(s, none, 1); expect(s.p.y).toBeCloseTo(10, 2)
   })
+  it('아래에서 벽돌·물음표를 치면 그 위에 있던 괴물이 물리쳐진다', () => {
+    const s = newRun(0); s.main.foes = [{ id: 1, x: 17.5, y: 6, vy: 0, dir: 1, alive: true, squash: 0 }, { id: 2, x: 24.5, y: 6, vy: 0, dir: 1, alive: true, squash: 0 }]
+    s.p.x = 17.5; s.p.y = 10; s.p.inv = 99 // 벽돌 아래(칸 17, 줄 6)
+    const ev = run(s, { ...none, jump: true }, 0.4)
+    expect(ev.some((e) => e.k === 'break')).toBe(true); expect(s.main.foes[0].alive).toBe(false); expect(s.main.foes[1].alive).toBe(true)
+    const t = newRun(0); t.main.foes = [{ id: 1, x: 14.5, y: 6, vy: 0, dir: 1, alive: true, squash: 0 }]; t.p.x = 14.5; t.p.y = 10; t.p.inv = 99 // 물음표 아래
+    run(t, { ...none, jump: true }, 0.4); expect(t.main.foes[0].alive).toBe(false); expect(t.score).toBeGreaterThanOrEqual(100)
+  })
   it('커진 상태에서 친구에게 닿으면 원래 크기로 돌아오고 ♥는 그대로, 한 번 더 닿으면 ♥가 줄어든다', () => {
     const s = newRun(0); s.main.foes = [{ id: 1, x: 15.2, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]; s.p.x = 14.7; s.p.y = 10; s.p.big = true
     const ev = run(s, none, 0.3); expect(ev.some((e) => e.k === 'shrink')).toBe(true); expect(s.p.big).toBe(false); expect(s.lives).toBe(CFG.lives); expect(s.p.inv).toBeGreaterThan(0)
