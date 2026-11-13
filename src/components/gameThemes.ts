@@ -8,9 +8,11 @@ export const THEMES: Theme[] = [
   { id: 'monster', name: '몬스터 마을', sky: 'starchase/sky_land.webp', foes: [], treats: ['race/fg_strawbush.webp', 'race/fg_blueberry.webp', 'race/fg_cherry.webp', 'race/fg_melonslice.webp', 'race/fg_pineapple.webp'], plat: ['#9be07a', '#3f9a6a'], wall: ['#6fbf8a', '#2f7a5a'] },
 ]
 /** 몬스터 마을의 몬스터 3마리(8종 중, 한 판 동안 같은 친구들) */
-export const monsterTheme = (): Theme => {
+export const monsterTheme = (seed?: number): Theme => {
   const t = THEMES[2]
-  const ids = [...MON_POOL].sort(() => Math.random() - 0.5).slice(0, 3)
+  // seed 를 주면 누구가 해도 같은 3마리가 나온다(같이 하기에서 모두의 화면이 같도록)
+  let x = (seed ?? 0) >>> 0; const rnd = seed === undefined ? Math.random : () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296 }
+  const ids = [...MON_POOL].sort(() => rnd() - 0.5).slice(0, 3)
   return { ...t, foes: ids.map((id) => ({ walk: `travel/monster/${id}_angry.webp`, trapped: `travel/monster/${id}_happy.webp`, mad: `travel/monster/${id}_angry.webp`, h: 1.5 })) }
 }
 export type FoeImgs = { walk: HTMLImageElement; trapped: HTMLImageElement; mad: HTMLImageElement; h: number }[]

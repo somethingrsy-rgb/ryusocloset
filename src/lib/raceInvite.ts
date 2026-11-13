@@ -3,7 +3,7 @@
  * 게임 탭의 그 게임 화면이 열리면서 그 방으로 바로 들어간다. 이미 열려 있으면 이벤트로 알려 준다.
  */
 export const RACE_INVITE_EVENT = 'ryuso:race-invite'
-export type InviteGame = 'race' | 'jump' | 'star'
+export type InviteGame = 'race' | 'jump' | 'star' | 'bub'
 let pending: { game: InviteGame; room: string; from: string } | null = null
 function set(game: InviteGame, room: string, from: string) {
   pending = { game, room, from }
@@ -14,6 +14,9 @@ export const setJumpInvite = (room: string, from: string) => set('jump', room, f
 export const setStarInvite = (room: string, from: string) => set('star', room, from)
 export const hasStarInvite = () => pending?.game === 'star'
 export const takeStarInvite = () => take('star')
+export const setBubInvite = (room: string, from: string) => set('bub', room, from)
+export const hasBubInvite = () => pending?.game === 'bub'
+export const takeBubInvite = () => take('bub')
 export const hasRaceInvite = () => pending?.game === 'race'
 export const hasJumpInvite = () => pending?.game === 'jump'
 /** 담아 둔 초대를 꺼낸다(한 번만). 다른 게임의 초대는 건드리지 않는다 */
