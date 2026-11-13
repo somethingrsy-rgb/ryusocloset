@@ -83,6 +83,10 @@ function hurt(s: State, ev: Ev[]) {
   if (s.lives <= 0) { s.phase = 'over'; ev.push({ k: 'over' }); return }
   s.p.inv = CFG.inv
 }
+/** 아래에서 블록을 치면 그 블록 위에 서 있던 괴물은 튕겨 나가 물리쳐진다 */
+function killOnTop(s: State, R: Room, c: number, r: number, ev: Ev[]) {
+  for (const f of R.foes) if (f.alive && Math.abs(f.x - (c + 0.5)) < 0.85 && f.y > r - 1.3 && f.y <= r + 0.25) { f.alive = false; s.score += 100; ev.push({ k: 'stomp', x: f.x, y: f.y }) }
+}
 function respawn(s: State) { s.p.big = false; s.room = 'main'; s.p.x = 2.5; s.p.y = 10; s.p.vx = s.p.vy = 0; s.p.on = true; s.p.inv = CFG.inv }
 
 function sub(s: State, inp: Input, dt: number, ev: Ev[]) {
@@ -118,6 +122,7 @@ function sub(s: State, inp: Input, dt: number, ev: Ev[]) {
     if (p.vy >= 0) { const r = Math.floor(p.y + E); if (r >= 0 && r < ROWS) { for (let c = c0; c <= c1; c++) if (solid(tileAt(R, c, r)) && p.y - p.vy * dt <= r + 1e-3) { p.y = r; p.vy = 0; p.on = true; break } } }
     else { const r = Math.floor(p.y - ph); for (let c = c0; c <= c1; c++) { const ch = tileAt(R, c, r); if (r >= 0 && solid(ch)) {
       p.y = r + 1 + ph; p.vy = 0
+      if (ch === '?' || ch === '=') killOnTop(s, R, c, r, ev)
       if (ch === '?') {
         R.rows[r][c] = 'u'; s.qHits++
         // 세 번에 한 번(1·4·7번째)은 하트 약병이 옆으로 튀어나와 아래 땅에 내려앉아 그 자리에 있고, 나머지는 코인
