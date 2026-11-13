@@ -86,8 +86,8 @@ describe('별 모험 규칙', () => {
   })
   it('파이프 위에서 아래를 누르면 보너스 방으로, 거기서 나오는 파이프로 돌아온다', () => {
     const s = newRun(0); s.main.foes = []
-    // 들어갈 수 있는 파이프(칸 28~29, 높이 3 → 윗면 7)
-    s.p.x = 28.8; s.p.y = 7; s.p.on = true; run(s, none, 0.1); expect(s.p.y).toBeCloseTo(7, 2)
+    // 들어갈 수 있는 파이프(칸 28~29, 높이 2 → 윗면 8)
+    s.p.x = 28.8; s.p.y = 8; s.p.on = true; run(s, none, 0.1); expect(s.p.y).toBeCloseTo(8, 2)
     const ev = run(s, { ...none, down: true }, 0.05); expect(ev.some((e) => e.k === 'pipe')).toBe(true); expect(s.room).toBe('bonus')
     run(s, { ...none, down: false }, 0.1)
     s.p.x = 19.8; s.p.y = 8; s.p.on = true; run(s, none, 0.1)
