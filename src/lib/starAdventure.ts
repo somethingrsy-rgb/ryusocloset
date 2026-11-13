@@ -33,7 +33,19 @@ const SPECS: Spec[] = [
 ]
 export const LEVELS = 6 // 레이스 장소 6곳(초원·눈·사탕·과일·바닷속·할로윈)을 차례로, 판 모양은 3가지를 돌려 쓴다
 
-function build(sp: Spec): Room {
+/** 단계가 올라갈수록 어려워진다: 괴물 걸음이 빨라지고(0단계는 조금 느리게), 괴물 수가 달라진다(처음엔 적게, 뒤로 갈수록 더 많이) */
+export const foeSpeed = (level: number) => CFG.foe * (0.9 + 0.12 * Math.min(level, LEVELS - 1))
+const EXTRA_COLS = [16, 25, 35, 47, 55, 61]
+function foesFor(sp: Spec, level: number): Spec['foes'] {
+  const base = sp.foes.filter((_, i) => (level === 0 ? i % 3 !== 1 : level === 1 ? i % 4 !== 1 : true))
+  const extra = Math.max(0, level - 2) // 3단계부터 1마리씩 더(3·4·5·6단계: +1, +2, +3)
+  if (!extra) return base
+  const near = (c: number) => base.some((f) => Math.abs((typeof f === 'number' ? f : f[0]) - c) < 3)
+  const free = (c: number) => !sp.pits.some(([a, b]) => c >= a - 2 && c <= b + 2) && !sp.pipes.some((p) => c >= p.c - 2 && c <= p.c + 3) && !near(c)
+  return [...base, ...EXTRA_COLS.filter(free).slice(0, extra)]
+}
+
+function build(sp: Spec, level = 0): Room {
   const rows = Array.from({ length: ROWS }, () => Array<string>(sp.w).fill('.'))
   for (let c = 0; c < sp.w; c++) if (!sp.pits.some(([a, b]) => c >= a && c <= b)) { rows[10][c] = '#'; rows[11][c] = '#' }
   for (const p of sp.pipes) { const top = 10 - p.h; for (let r = top; r < 10; r++) { const t = r === top; rows[r][p.c] = t ? (p.enter ? 'e' : 'l') : 'L'; rows[r][p.c + 1] = t ? (p.enter ? 'f' : 'r') : 'R' } }
@@ -43,7 +55,7 @@ function build(sp: Spec): Room {
   for (const [r, c0, n] of sp.plats.map(([a, b, n]) => [b, a, n] as [number, number, number])) for (let c = c0; c < c0 + n; c++) rows[r][c] = '='
   for (const [c, r] of sp.coins) rows[r][c] = 'o'
   for (let r = 2; r < 10; r++) rows[r][sp.w - 4] = 'F'
-  const foes: Foe[] = sp.foes.map((f, i) => { const [c, r] = typeof f === 'number' ? [f, 10] : f; return { id: i + 1, x: c + 0.5, y: r, vy: 0, dir: -1 as const, alive: true, squash: 0 } })
+  const foes: Foe[] = foesFor(sp, level).map((f, i) => { const [c, r] = typeof f === 'number' ? [f, 10] : f; return { id: i + 1, x: c + 0.5, y: r, vy: 0, dir: -1 as const, alive: true, squash: 0 } })
   return { rows, foes, w: sp.w, items: [] }
 }
 function bonusRoom(): Room {
@@ -61,7 +73,7 @@ function bonusRoom(): Room {
 
 export function newRun(level: number, keep?: Pick<State, 'score' | 'coins' | 'lives' | 'stars'>): State {
   const sp = SPECS[level % SPECS.length]
-  return { level, room: 'main', main: build(sp), bonus: bonusRoom(), p: { x: 2.5, y: 10, vx: 0, vy: 0, on: true, dir: 1, inv: 0, big: false, dj: false }, ret: { col: 0, row: 0 }, flagX: sp.w - 3.5,
+  return { level, room: 'main', main: build(sp, level), bonus: bonusRoom(), p: { x: 2.5, y: 10, vx: 0, vy: 0, on: true, dir: 1, inv: 0, big: false, dj: false }, ret: { col: 0, row: 0 }, flagX: sp.w - 3.5,
     score: keep?.score ?? 0, coins: keep?.coins ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', t: 0, stars: keep?.stars ?? 0, fade: 0, prevJump: false, prevDown: false, clearT: 0, qHits: 0, nextId: 1 }
 }
 
@@ -153,7 +165,7 @@ function sub(s: State, inp: Input, dt: number, ev: Ev[]) {
     const ahead = tileAt(R, Math.floor(f.x + f.dir * 0.45), Math.floor(f.y - 0.5))
     if (solid(ahead) || f.x < 0.6 || f.x > R.w - 0.6) f.dir = (f.dir * -1) as 1 | -1
     if (f.vy === 0) { const fx = f.x + f.dir * 0.5; if (!solid(tileAt(R, Math.floor(fx), Math.round(f.y)))) f.dir = (f.dir * -1) as 1 | -1 } // 낭떠러지 앞에서 돌아선다(떨어져 혼자 죽지 않게)
-    f.x += f.dir * CFG.foe * dt
+    f.x += f.dir * foeSpeed(s.level) * dt
     const y0 = f.y; f.vy = Math.min(20, f.vy + CFG.g * dt); f.y += f.vy * dt
     const r = Math.floor(f.y + E); if (f.vy >= 0 && r >= 0 && r < ROWS && solid(tileAt(R, Math.floor(f.x), r)) && y0 <= r + 1e-3) { f.y = r; f.vy = 0 }
     if (f.y > ROWS + 4) f.alive = false

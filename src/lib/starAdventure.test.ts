@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CFG, LEVELS, newRun, step, type Input, type State } from './starAdventure'
+import { CFG, LEVELS, foeSpeed, newRun, step, type Input, type State } from './starAdventure'
 
 const none: Input = { left: false, right: false, jump: false, down: false }
 const run = (s: State, inp: Input, sec: number) => { const ev = []; for (let t = 0; t < sec; t += 1 / 60) ev.push(...step(s, inp, 1 / 60)); return ev }
@@ -108,5 +108,17 @@ describe('별 모험 규칙', () => {
     const s = newRun(0); s.lives = 1; s.main.foes = [{ id: 1, x: 15.2, y: 10, vy: 0, dir: -1, alive: true, squash: 0 }]; s.p.x = 14.7; s.p.y = 10
     run(s, none, 0.3); expect(s.phase).toBe('over')
     const t = newRun(LEVELS - 1); t.main.foes = []; t.p.x = t.flagX + 0.1; t.p.y = 10; run(t, none, 3); expect(t.phase).toBe('won'); expect(t.stars).toBe(25)
+  })
+
+  it('단계가 올라갈수록 괴물이 빨라지고, 처음엔 적고 뒤로 갈수록 많아진다', () => {
+    const speeds = Array.from({ length: LEVELS }, (_, l) => foeSpeed(l))
+    for (let l = 1; l < LEVELS; l++) expect(speeds[l]).toBeGreaterThan(speeds[l - 1])
+    expect(speeds[0]).toBeLessThan(CFG.foe)
+    const n = Array.from({ length: LEVELS }, (_, l) => newRun(l).main.foes.length)
+    expect(n[0]).toBeLessThan(n[2]) // 같은 판 모양(0·3단계)이라도 3단계가 더 어렵다
+    expect(n[3]).toBeGreaterThan(newRun(0).main.foes.length)
+    expect(n[LEVELS - 1]).toBeGreaterThan(n[3] - 1)
+    // 괴물은 구덩이 위나 관 안에 놓이지 않는다
+    for (let l = 0; l < LEVELS; l++) { const r = newRun(l); for (const f of r.main.foes) expect(['#', '=', '.'].includes(r.main.rows[10][Math.floor(f.x)]) ? true : false).toBe(true) }
   })
 })
