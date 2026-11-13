@@ -369,4 +369,4 @@ button:focus-visible {
 @supports (-webkit-touch-callout: none) {
   input, textarea, select { font-size: max(16px, 1em) !important; }
 }
-body[data-race] .mp-chat-col { top: 22% !important; }
+body[data-race] .mp-chat-col { top: 20% !important; }

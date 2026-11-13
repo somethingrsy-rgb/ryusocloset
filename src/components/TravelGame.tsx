@@ -8,7 +8,7 @@ import { useItemsVersion } from '../lib/useItemsVersion'
 import { useI18n } from '../i18n'
 import { OverWorld } from './OverWorld'
 import { multiplayerAvailable } from '../lib/mp/config'
-import { MultiBadge, PILL, PILL_MULTI, PillText } from './pill'
+import { PILL, PILL_MULTI, PillText } from './pill'
 import { TravelScene } from './TravelScene'
 
 // 놀이 화면(축구·달리기·별비·점프·수학·영어)은 처음 열 때 받는다
@@ -83,6 +83,10 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
   // 전체 화면(여행 도감 숨김): 놀이 화면들, 3D 산책, 3D 산책에서 들어간 집 안(가로 화면만)
   useEffect(() => { onFull?.(math || speaking || jump || starChase || bubbleBop || adventure || soccer || race || flags || walk3d || (runner && wide) || (backToWalk && wide)); return () => onFull?.(false) }, [math, speaking, jump, starChase, bubbleBop, adventure, soccer, race, flags, walk3d, runner, wide, backToWalk, onFull])
 
+  // 게임 화면에서는 대화·마이크 단추를 위로 올려 좌우 이동 버튼·조이스틱과 겹치지 않게 한다(index.css 의 body[data-race])
+  const inGame = math || speaking || jump || starChase || bubbleBop || adventure || soccer || race || flags
+  useEffect(() => { if (!inGame) return; document.body.dataset.race = '1'; return () => { delete document.body.dataset.race } }, [inGame])
+
   const game = useGame()
   const ver = useItemsVersion()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -113,12 +117,12 @@ export function TravelGame({ outfit, tweaks, onWear, onFull, onDecorate, onKitch
         <button className={actionButton} aria-label="별비 산책" onClick={() => setStarRain(true)}>{label(lang === 'ko' ? '별비' : 'Stars')}</button>
         <button className={actionButton} aria-label="달려라 아바타" onClick={() => setRunner(true)}>{label(lang === 'ko' ? '달리기' : 'Run')}</button>
         <button className={actionButton} aria-label="수학 놀이터" onClick={() => setMath(true)}>{label(lang === 'ko' ? '수학' : 'Math')}</button>
-        <button className={multiButton} aria-label="점프 퍼즐(친구와 같이 할 수 있어요)" onClick={() => setJump(true)}>{label(lang === 'ko' ? '점프' : 'Jump')}{multiplayerAvailable && <MultiBadge />}</button>
+        <button className={multiButton} aria-label="점프 퍼즐(친구와 같이 할 수 있어요)" onClick={() => setJump(true)}>{label(lang === 'ko' ? '점프' : 'Jump')}</button>
         <button className={actionButton} aria-label="축구" onClick={() => setSoccer(true)}>{label(lang === 'ko' ? '축구' : 'Soccer')}</button>
-        <button className={multiButton} aria-label="자동차 레이스(친구와 같이 할 수 있어요)" onClick={() => setRace(true)}>{label(lang === 'ko' ? '레이스' : 'Race')}{multiplayerAvailable && <MultiBadge />}</button>
+        <button className={multiButton} aria-label="자동차 레이스(친구와 같이 할 수 있어요)" onClick={() => setRace(true)}>{label(lang === 'ko' ? '레이스' : 'Race')}</button>
         <button className={actionButton} aria-label={lang === 'ko' ? '국기 게임' : 'Flag quiz'} onClick={() => setFlags(true)}>{label(lang === 'ko' ? '국기' : 'Flags')}</button>
-        <button className={multiButton} aria-label="도망간 별을 잡아라(친구와 같이 할 수 있어요)" onClick={() => setStarChase(true)}>{label(lang === 'ko' ? '별잡기' : 'Catch')}{multiplayerAvailable && <MultiBadge />}</button>
-        <button className={actionButton} aria-label="별 거품" onClick={() => setBubbleBop(true)}>{label(lang === 'ko' ? '별거품' : 'Bubbles')}</button>
+        <button className={multiButton} aria-label="도망간 별을 잡아라(친구와 같이 할 수 있어요)" onClick={() => setStarChase(true)}>{label(lang === 'ko' ? '별잡기' : 'Catch')}</button>
+        <button className={multiButton} aria-label="별 거품(친구와 같이 할 수 있어요)" onClick={() => setBubbleBop(true)}>{label(lang === 'ko' ? '별거품' : 'Bubbles')}</button>
         <button className={actionButton} aria-label="별 모험" onClick={() => setAdventure(true)}>{label(lang === 'ko' ? '별모험' : 'Adventure')}</button>
         {onRoom && <button className={actionButton} aria-label="방꾸미기" onClick={onRoom}>{label(lang === 'ko' ? '방꾸미기' : 'Room')}</button>}
       </>}
