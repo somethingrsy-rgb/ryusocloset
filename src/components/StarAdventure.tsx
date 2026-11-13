@@ -173,11 +173,23 @@ function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, cam: n
   const pl = PLACES[s.level % PLACES.length], R = s.room === 'main' ? s.main : s.bonus
   const c0 = Math.max(0, Math.floor(cam) - 1), c1 = Math.min(R.w - 1, Math.ceil(cam + vis) + 1)
   const below = Math.ceil((H - oy) / sc) - ROWS // 화면 아래까지 땅을 이어 그린다
-  // 그 장소의 구경거리(길가 그림): 땅이 있는 곳에만, 뒤쪽에 놓는다
+  // 그 장소의 구경거리(길가 그림): 너무 크지 않게(높이 2.4칸·폭 3칸 이하) 줄이고, 관·계단·블록·구덩이와 겹치면 옆으로 비켜서 놓는다(자리가 없으면 안 그린다)
   if (s.room === 'main') for (let k = 0; k * 6.3 + 3 < R.w; k++) {
-    const x = 3 + k * 6.3 + ((k * 7) % 3) * 0.6, col = Math.floor(x); if (x < cam - 3 || x > cam + vis + 3 || R.rows[10][col] !== '#') continue
-    const [, h] = pl.deco[k % pl.deco.length], i = im.deco[s.level % PLACES.length][k % pl.deco.length]; if (!ready(i)) continue
-    const w = h * i.naturalWidth / i.naturalHeight; g.globalAlpha = 0.95; g.drawImage(i, x - w / 2, 10 - h, w, h); g.globalAlpha = 1
+    const [, h0] = pl.deco[k % pl.deco.length], i = im.deco[s.level % PLACES.length][k % pl.deco.length]; if (!ready(i)) continue
+    const asp = i.naturalWidth / i.naturalHeight
+    const sz = Math.min(1, 2.4 / h0, 3 / (h0 * asp)) * 0.9, h = h0 * sz, w = h * asp
+    const x0 = 3 + k * 6.3 + ((k * 7) % 3) * 0.6
+    if (x0 < cam - 4 || x0 > cam + vis + 4) continue
+    const free = (x: number) => {
+      const a = Math.floor(x - w / 2), b = Math.floor(x + w / 2)
+      if (a < 1 || b >= R.w - 4) return false
+      for (let c = a; c <= b; c++) { if (R.rows[10][c] !== '#') return false; for (let r = 7; r <= 9; r++) if (R.rows[r][c] !== '.' && R.rows[r][c] !== 'o') return false }
+      return true
+    }
+    let x = NaN
+    for (const d of [0, 0.5, -0.5, 1, -1, 1.5, -1.5, 2, -2, 2.5, -2.5, 3, -3]) if (free(x0 + d)) { x = x0 + d; break }
+    if (Number.isNaN(x)) continue
+    g.globalAlpha = 0.95; g.drawImage(i, x - w / 2, 10 - h, w, h); g.globalAlpha = 1
   }
   for (let c = c0; c <= c1; c++) {
     for (let r = 0; r < ROWS; r++) {
