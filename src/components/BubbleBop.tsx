@@ -12,7 +12,7 @@ import { COLS, CFG, LEVELS, ROWS, newGame, step, type Ev, type Input, type State
  * 별 거품: 한 화면 발판 게임. 내 아바타가 거품을 뿜어 별 친구를 가두고, 터뜨리면 과일이 나온다.
  * 규칙은 lib/bubbleBop.ts(순수 함수), 여기는 그리기와 조작만.
  */
-import { FOE_SET, PLACES, SEA_FOES, SEA_LEVEL, THEMES, monsterTheme, type FoeImgs, type Theme } from './gameThemes'
+import { FOE_SET, PLACES, SEA_FOES, SEA_LEVEL, SNOW_FOES, SNOW_LEVEL, THEMES, monsterTheme, type FoeImgs, type Theme } from './gameThemes'
 const INTRO_KEY = 'ryuso.bubble.intro'
 const setKey = (k: string) => { try { localStorage.setItem(k, '1') } catch { /* 저장 못 해도 괜찮다 */ } }
 const load = (src: string) => { const i = new Image(); i.src = assetUrl(src); return i }
@@ -29,7 +29,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
   const keys = useRef(new Set<string>())
   const touch = useRef({ left: false, right: false, jump: false, shoot: false })
   const fx = useRef<{ k: 'pop' | 'burst' | 'hit'; x: number; y: number; t: number }[]>([])
-  const imgs = useRef<Imgs>({ sets: [], burst: load('starchase/burst.webp'), me: null, sea: SEA_FOES.map((f) => ({ walk: load(f.walk), trapped: load(f.trapped), mad: load(f.mad), h: f.h })), deco: PLACES.map((p) => p.deco.map(([n]) => load(`race/${n}.webp`))) })
+  const imgs = useRef<Imgs>({ sets: [], burst: load('starchase/burst.webp'), me: null, sea: SEA_FOES.map((f) => ({ walk: load(f.walk), trapped: load(f.trapped), mad: load(f.mad), h: f.h })), snow: SNOW_FOES.map((f) => ({ walk: load(f.walk), trapped: load(f.trapped), mad: load(f.mad), h: f.h })), deco: PLACES.map((p) => p.deco.map(([n]) => load(`race/${n}.webp`))) })
   const paid = useRef(false)
   if (localTest) (window as unknown as { __bb?: () => State }).__bb = () => game.current // 시험용(?mp=local 에서만)
 
@@ -174,7 +174,7 @@ export function BubbleBop({ onClose, outfit }: { onClose: () => void; outfit: Ou
 }
 
 /* ───── 그리기 ───── */
-type Imgs = { sets: { theme: Theme; foes: FoeImgs; fruit: HTMLImageElement[] }[]; burst: HTMLImageElement; me: HTMLCanvasElement | null; deco: HTMLImageElement[][]; sea: FoeImgs }
+type Imgs = { sets: { theme: Theme; foes: FoeImgs; fruit: HTMLImageElement[] }[]; burst: HTMLImageElement; me: HTMLCanvasElement | null; deco: HTMLImageElement[][]; sea: FoeImgs; snow: FoeImgs }
 const ready = (i: HTMLImageElement | HTMLCanvasElement | null): i is HTMLImageElement | HTMLCanvasElement => !!i && (i instanceof HTMLCanvasElement || (i.complete && i.naturalWidth > 0))
 function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, top: string, bot: string, r = 0.22) {
   const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top); gr.addColorStop(1, bot)
@@ -185,7 +185,7 @@ function block(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: 
 function at(g: CanvasRenderingContext2D, x: number, y: number, K: number, S: number, fn: () => void) { g.save(); g.translate(x, y); g.scale(S, S / K); fn(); g.restore() }
 function draw(g: CanvasRenderingContext2D, s: State, im: Imgs, t: number, fx: { k: string; x: number; y: number; t: number; text?: string }[], K = 1, S = 1) {
   const set = im.sets[FOE_SET[s.level % PLACES.length]]; if (!set) return
-  const foesIm = s.level % PLACES.length === SEA_LEVEL ? im.sea : set.foes, pl = PLACES[s.level % PLACES.length]
+  const foesIm = s.level % PLACES.length === SEA_LEVEL ? im.sea : s.level % PLACES.length === SNOW_LEVEL ? im.snow : set.foes, pl = PLACES[s.level % PLACES.length]
   // 그 장소의 구경거리를 바닥 위 뒤쪽에 세운다(놀이판 가운데 빈 곳)
   for (let k = 0; k < 3; k++) { const [, h] = pl.deco[k % pl.deco.length], i = im.deco[s.level % PLACES.length][k % pl.deco.length]; if (!ready(i)) continue
     const w = h * 0.8 * i.naturalWidth / i.naturalHeight, x = 3.5 + k * 4.6 + ((k + s.level) % 2) * 0.8; g.globalAlpha = 0.9; g.drawImage(i, x - w / 2, ROWS - 1 - h * 0.8, w, h * 0.8); g.globalAlpha = 1 }
