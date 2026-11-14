@@ -38,4 +38,7 @@ describe('별 모험 판 모양(넘을 수 없는 곳이 없다)', () => {
       if (l >= 6) expect(min, `땅 길이 ${min}`).toBeGreaterThanOrEqual(3) // 1~6단계는 손으로 만든 모양(계단·관이 붙어 있음)이라 제외
     })
   }
+  it('모든 단계에 공중에 떠 있는 벽돌·물음표·발판이 충분히 있다(1층만 있는 느낌이 나지 않게)', () => {
+    for (let l = 0; l < LEVELS; l++) { const R = newRun(l).main; let n = 0; for (let r = 0; r < 10; r++) for (const ch of R.rows[r]) if ('=?'.includes(ch)) n++; expect(n, `${l + 1}단계 공중 블록 ${n}개`).toBeGreaterThanOrEqual(22) }
+  })
 })
