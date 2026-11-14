@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BOSS, BOSS_LEVELS, CFG, LEVELS, newGame, newLevel, step, type Input, type State } from './bubbleBop'
+import { BOSS, BOSS_LEVELS, CFG, COLS, LEVELS, ROWS, newGame, newLevel, step, type Input, type State } from './bubbleBop'
 
 const none: Input = { left: false, right: false, jump: false, shoot: false }
 const rnd = () => 0.5
@@ -119,4 +119,31 @@ describe('별 거품 규칙', () => {
       expect(minY).toBeLessThan(10); expect(maxY).toBeLessThanOrEqual(11 + 1e-6); expect(levels.size).toBeGreaterThanOrEqual(2)
     }
   })
+})
+
+describe('별 거품 20단계', () => {
+  it('20단계까지 있고, 대왕 단계(3·6·9·12·15·18·20)의 체력이 갈수록 늘어난다', () => {
+    expect(LEVELS.length).toBe(20)
+    const bosses = Object.keys(BOSS_LEVELS).map(Number).sort((a, b) => a - b)
+    expect(bosses.map((n) => n + 1)).toEqual([3, 6, 9, 12, 15, 18, 20])
+    const hp = bosses.map((n) => BOSS_LEVELS[n]); for (let i = 1; i < hp.length; i++) expect(hp[i]).toBeGreaterThan(hp[i - 1])
+  })
+  for (let n = 0; n < 20; n++) {
+    it(`${n + 1}단계: 모든 발판에 뛰어 올라갈 수 있고, 괴물은 발판 위에 서 있다`, () => {
+      const lv = LEVELS[n], reach = (CFG.jump * CFG.jump) / (2 * CFG.g) // 한 번 뛰어 오르는 높이(칸)
+      const rows = [...lv.plats].sort((a, b) => b[0] - a[0])
+      for (const [r, a, b] of lv.plats) {
+        expect(a >= 1 && b <= COLS - 2 && a <= b).toBe(true)
+        // 아래쪽 발판(또는 땅)이 reach 안에 있고 옆으로 3칸 안이면 뛰어 올라갈 수 있다
+        const below = [ROWS - 1, ...rows.filter(([r2]) => r2 > r).map(([r2]) => r2)]
+        const ok = below.some((r2) => r2 - r <= reach && (r2 === ROWS - 1 || lv.plats.some(([rr, aa, bb]) => rr === r2 && aa <= b + 3 && bb >= a - 3)))
+        expect(ok, `발판 (${r},${a}-${b})이 너무 높아요`).toBe(true)
+      }
+      for (const [c, r] of lv.foes) expect(lv.plats.some(([pr, a, b]) => pr === r && c >= a && c <= b) || r === ROWS - 1, `괴물 (${c},${r})`).toBe(true)
+    })
+  }
+})
+
+describe('별 거품: 모든 단계를 시작해서 몇 초 돌려도 멈추지 않는다', () => {
+  it('1~20단계', () => { for (let n = 0; n < 20; n++) { const s = newLevel(n); for (let i = 0; i < 60 * 5; i++) step(s, { ...none, right: i % 120 < 60, shoot: i % 20 === 0 }, 1 / 60, rnd); expect(Number.isFinite(s.p.x) && s.foes.every((f) => Number.isFinite(f.x))).toBe(true) } })
 })

@@ -24,6 +24,18 @@ export const LEVELS: Level[] = [
   { plats: [[9, 1, 3], [9, 5, 10], [9, 12, 14], [6, 2, 6], [6, 9, 13], [3, 4, 11]], foes: [[2, 9], [7, 9], [13, 9], [4, 6], [11, 6], [7, 3]] },
   { plats: [[8, 1, 6], [8, 9, 14], [5, 1, 3], [5, 6, 9], [5, 12, 14], [2, 3, 6], [2, 9, 12]], foes: [[3, 8], [12, 8], [2, 5], [13, 5], [7, 5], [4, 2]] },
   { plats: [[9, 1, 4], [9, 11, 14], [6, 5, 10], [6, 1, 3], [6, 12, 14], [3, 3, 6], [3, 9, 12]], foes: [[2, 9], [13, 9], [7, 6], [2, 6], [13, 6], [4, 3], [10, 3]] },
+  // 10~20단계: 발판 모양이 계속 바뀌고, 괴물이 더 많이·더 빨라진다(11·14·17·19·20은 대왕 단계). 모든 발판은 아래 발판에서 뛰어 올라갈 수 있다(bubbleBop.test.ts 가 확인)
+  { plats: [[9, 1, 3], [9, 6, 9], [9, 12, 14], [6, 3, 5], [6, 10, 12], [3, 1, 4], [3, 11, 14]], foes: [[2, 9], [7, 9], [13, 9], [4, 6], [11, 6], [2, 3], [12, 3]] },
+  { plats: [[8, 2, 6], [8, 9, 13], [5, 1, 4], [5, 7, 10], [5, 12, 14], [2, 3, 7], [2, 9, 13]], foes: [[4, 8], [11, 8], [2, 5], [8, 5], [13, 5], [5, 2], [11, 2]] },
+  { plats: [[9, 2, 13], [6, 1, 4], [6, 11, 14], [3, 5, 10]], foes: [[7, 9], [2, 6], [12, 6], [8, 3]] },
+  { plats: [[8, 1, 4], [8, 6, 9], [8, 11, 14], [5, 2, 5], [5, 10, 13], [2, 1, 3], [2, 6, 9], [2, 12, 14]], foes: [[2, 8], [7, 8], [13, 8], [3, 5], [11, 5], [2, 2], [7, 2], [13, 2]] },
+  { plats: [[9, 1, 2], [9, 5, 7], [9, 9, 10], [9, 13, 14], [6, 2, 6], [6, 9, 13], [3, 4, 11]], foes: [[1, 9], [6, 9], [9, 9], [14, 9], [4, 6], [11, 6], [7, 3], [10, 3]] },
+  { plats: [[8, 3, 12], [5, 1, 5], [5, 10, 14], [2, 4, 11]], foes: [[7, 8], [3, 5], [12, 5], [7, 2]] },
+  { plats: [[9, 1, 4], [9, 6, 9], [9, 11, 14], [6, 1, 3], [6, 5, 10], [6, 12, 14], [3, 2, 6], [3, 9, 13]], foes: [[2, 9], [7, 9], [13, 9], [2, 6], [8, 6], [13, 6], [4, 3], [11, 3], [6, 3]] },
+  { plats: [[8, 1, 7], [8, 9, 14], [5, 3, 6], [5, 9, 12], [2, 1, 4], [2, 7, 10], [2, 12, 14]], foes: [[4, 8], [11, 8], [4, 5], [10, 5], [2, 2], [8, 2], [13, 2], [7, 8]] },
+  { plats: [[9, 1, 14], [6, 3, 5], [6, 10, 12], [3, 6, 9]], foes: [[7, 9], [4, 6], [11, 6], [7, 3]] },
+  { plats: [[9, 1, 3], [9, 5, 6], [9, 8, 9], [9, 11, 14], [6, 2, 4], [6, 7, 8], [6, 11, 13], [3, 3, 5], [3, 9, 12]], foes: [[2, 9], [5, 9], [9, 9], [12, 9], [3, 6], [7, 6], [12, 6], [4, 3], [10, 3], [11, 3]] },
+  { plats: [[8, 1, 5], [8, 10, 14], [5, 3, 12], [2, 1, 5], [2, 10, 14]], foes: [[3, 8], [12, 8], [7, 5], [3, 2], [12, 2]] },
 ]
 
 export interface Body { x: number; y: number; vx: number; vy: number; on: boolean }
@@ -33,9 +45,9 @@ export interface Player extends Body { dir: 1 | -1; inv: number; cd: number; pre
 export interface Mate { uid: string; x: number; y: number; vx: number; vy: number; on: boolean; dir: 1 | -1; inv: number; cd: number; hitN: number; bounceN: number; shots: { x: number; y: number; dir: 1 | -1 }[] }
 export interface Bubble { id: number; x: number; y: number; vx: number; vy: number; t: number; life: number; foe: Foe | null }
 export interface Fruit { id: number; x: number; y: number; vy: number; kind: number; t: number; pts: number }
-/** 대왕 몬스터: 3·6·9단계에 작은 몬스터들(3마리)과 함께 나오고, 그중 한 종류가 커진 모습이다. 거품에 맞으면 체력 1, 머리를 위에서 밟으면(콩!) 체력 2가 닳는다 */
+/** 대왕 몬스터: 3·6·9·12·15·18·20단계에 작은 몬스터들(3마리)과 함께 나오고, 그중 한 종류가 커진 모습이다. 거품에 맞으면 체력 1, 머리를 위에서 밟으면(콩!) 체력 2가 닳는다 */
 export interface Boss { x: number; y: number; dir: 1 | -1; hp: number; max: number; hurt: number; age: number; /** 이 판의 작은 몬스터 중 어느 친구(번호)가 커진 모습인지 */ kindId: number; vx: number; vy: number; on: boolean; jumpT: number; dropT: number }
-export const BOSS_LEVELS: Record<number, number> = { 2: 6, 5: 8, 8: 10 } // 단계 번호(0부터) → 체력
+export const BOSS_LEVELS: Record<number, number> = { 2: 6, 5: 8, 8: 10, 11: 12, 14: 14, 17: 16, 19: 20 } // 단계 번호(0부터) → 체력
 export const BOSS = { hw: 1.05, h: 2.6, walk: 1.4, madWalk: 2.4, hurtT: 0.55, stomp: 2, bounce: 13, jump: 17.5 }
 export interface State {
   level: number; grid: boolean[][]; p: Player; foes: Foe[]; bubbles: Bubble[]; fruits: Fruit[]
@@ -141,7 +153,7 @@ function worldPart(s: State, dt: number, rnd: () => number, ev: Ev[]) {
   // ── 별 친구
   for (const f of s.foes) {
     f.jumpT -= dt
-    const sp = f.mad ? CFG.foeMad : CFG.foeWalk * (1 + 0.06 * s.level) // 단계가 올라갈수록 조금씩 빨라진다
+    const walk = CFG.foeWalk * (1 + 0.06 * s.level), sp = f.mad ? Math.max(CFG.foeMad, walk * 1.3) : walk // 단계가 올라갈수록 조금씩 빨라진다
     if (f.on) {
       const ax = f.x + f.dir * (hw + 0.15), r = Math.round(f.y)
       if (ax < 1.1 || ax > COLS - 1.1) f.dir = (f.dir * -1) as 1 | -1

@@ -31,18 +31,70 @@ const SPECS: Spec[] = [
     qs: [[11, 6], [24, 6], [37, 6], [49, 6]], bricks: [[12, 6], [23, 6], [25, 6], [36, 6], [38, 6]], plats: [[27, 6, 3], [44, 6, 2], [51, 5, 3], [8, 5, 3]], stairs: [[5, 9], [6, 9], [6, 8], [7, 9], [7, 8], [7, 7]],
     coins: [[13, 8], [14, 8], [27, 8], [28, 8], [39, 8], [40, 8], [51, 7], [52, 7], [53, 7], [8, 4], [9, 4], [10, 4]], foes: [11, 18, 24, 31, 36, 44, 49, 56, 60, [9, 5], [45, 6]] },
 ]
-export const LEVELS = 6 // 레이스 장소 6곳(초원·눈·사탕·과일·바닷속·할로윈)을 차례로, 판 모양은 3가지를 돌려 쓴다
+export const LEVELS = 20 // 20단계: 배경은 레이스 장소 6곳(초원·눈·사탕·과일·바닷속·할로윈)을 차례로 돌고, 1~6단계는 손으로 만든 3가지 모양, 7~20단계는 단계마다 다른 모양을 만든다
+const HAND = 6
 
 /** 단계가 올라갈수록 어려워진다: 괴물 걸음이 빨라지고(0단계는 조금 느리게), 괴물 수가 달라진다(처음엔 적게, 뒤로 갈수록 더 많이) */
-export const foeSpeed = (level: number) => CFG.foe * (0.9 + 0.12 * Math.min(level, LEVELS - 1))
+export const foeSpeed = (level: number) => CFG.foe * (level < HAND ? 0.9 + 0.12 * level : 1.5 + 0.04 * (Math.min(level, LEVELS - 1) - (HAND - 1)))
 const EXTRA_COLS = [16, 25, 35, 47, 55, 61]
 function foesFor(sp: Spec, level: number): Spec['foes'] {
+  if (level >= HAND) return sp.foes // 7단계부터는 만들 때 이미 단계에 맞는 수
   const base = sp.foes.filter((_, i) => (level === 0 ? i % 3 !== 1 : level === 1 ? i % 4 !== 1 : true))
   const extra = Math.max(0, level - 2) // 3단계부터 1마리씩 더(3·4·5·6단계: +1, +2, +3)
   if (!extra) return base
   const near = (c: number) => base.some((f) => Math.abs((typeof f === 'number' ? f : f[0]) - c) < 3)
   const free = (c: number) => !sp.pits.some(([a, b]) => c >= a - 2 && c <= b + 2) && !sp.pipes.some((p) => c >= p.c - 2 && c <= p.c + 3) && !near(c)
   return [...base, ...EXTRA_COLS.filter(free).slice(0, extra)]
+}
+
+/** 7~20단계 판: 단계 번호로 정해서 만든다(같은 단계는 늘 같은 모양). 단계가 올라갈수록 구덩이·관·괴물이 많고 간격이 좁아진다.
+ *  넘을 수 있는 모양만 나오게 규칙을 지킨다(starAdventure.layout.test.ts): 관 높이 ≤2, 관 위 머리 공간, 구덩이 폭 ≤4, 장애물 사이 땅 ≥4칸 */
+const generated = new Map<number, Spec>()
+function genSpec(level: number): Spec {
+  const hit = generated.get(level); if (hit) return hit
+  let seed = (level * 7919 + 13) >>> 0
+  const rnd = () => { seed = (seed + 0x6d2b79f5) >>> 0; let t = seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
+  const d = level - HAND // 0..13
+  const w = 64 + 4 * Math.floor(d / 4)
+  const sp: Spec = { w, pits: [], pipes: [], qs: [], bricks: [], plats: [], coins: [], stairs: [[5, 9], [6, 9], [6, 8], [7, 9], [7, 8], [7, 7]], foes: [] }
+  const gap = Math.max(4, 7 - Math.floor(d / 3)) // 장애물 사이 땅(뒤로 갈수록 좁아짐, 늘 4칸 이상)
+  const maxPit = Math.min(4, 2 + Math.floor(d / 4))
+  let x = 11, enter = false
+  const kinds: ('pit' | 'pipe' | 'bricks' | 'plat')[] = ['pit', 'pipe', 'bricks', 'plat', 'pit', 'pipe']
+  let last = ''
+  while (x < w - 12) {
+    let k = kinds[Math.floor(rnd() * kinds.length)]
+    if (k === last && k !== 'bricks') k = kinds[(kinds.indexOf(k) + 2) % kinds.length] // 같은 모양이 계속 나오지 않게
+    last = k
+    if (k === 'pit') {
+      const n = 2 + Math.floor(rnd() * (maxPit - 1))
+      sp.pits.push([x, x + n - 1])
+      for (let i = 0; i < n; i++) sp.coins.push([x + i, i === 0 || i === n - 1 ? 8 : 7])
+      x += n + gap
+    } else if (k === 'pipe') {
+      const h = rnd() < 0.5 ? 1 : 2
+      sp.pipes.push({ c: x, h, enter: !enter && x > w / 3 ? (enter = true) : false })
+      x += 2 + gap
+    } else if (k === 'bricks') {
+      sp.bricks.push([x, 6], [x + 2, 6]); sp.qs.push([x + 1, 6])
+      x += 3 + gap
+    } else {
+      const n = 3 + Math.floor(rnd() * 3)
+      sp.plats.push([x, 6, n])
+      for (let i = 0; i < n; i++) sp.coins.push([x + i, 5])
+      x += n + gap
+    }
+  }
+  if (!sp.pipes.some((p) => p.enter) && sp.pipes.length) sp.pipes[0].enter = true
+  // 괴물: 땅 위에서 구덩이·관에서 2칸 이상 떨어진 곳에, 서로 3칸 이상 떨어지게(수는 단계에 비례), 몇 마리는 발판 위에
+  const total = 8 + Math.floor(d * 0.8)
+  const ok = (c: number) => c >= 12 && c <= w - 8 && !sp.pits.some(([a, b]) => c >= a - 1 && c <= b + 1) && !sp.pipes.some((p) => c >= p.c - 1 && c <= p.c + 2) && !sp.plats.some(([pc, , n]) => c >= pc - 1 && c <= pc + n) && !sp.bricks.some(([bc]) => c >= bc - 1 && c <= bc + 1)
+  const cols: number[] = []
+  for (let tries = 0; cols.length < total && tries < 400; tries++) { const c = 12 + Math.floor(rnd() * (w - 20)); if (ok(c) && cols.every((q) => Math.abs(q - c) >= 2)) cols.push(c) }
+  sp.foes = cols.sort((a, b) => a - b)
+  for (const [pc, pr, n] of sp.plats) { sp.foes.push([pc + Math.floor(n / 2), pr]); if (d >= 6 && n >= 4) sp.foes.push([pc + n - 1, pr]) }
+  generated.set(level, sp)
+  return sp
 }
 
 function build(sp: Spec, level = 0): Room {
@@ -72,7 +124,7 @@ function bonusRoom(): Room {
 }
 
 export function newRun(level: number, keep?: Pick<State, 'score' | 'coins' | 'lives' | 'stars'>): State {
-  const sp = SPECS[level % SPECS.length]
+  const sp = level < HAND ? SPECS[level % SPECS.length] : genSpec(level)
   return { level, room: 'main', main: build(sp, level), bonus: bonusRoom(), p: { x: 2.5, y: 10, vx: 0, vy: 0, on: true, dir: 1, inv: 0, big: false, dj: false }, ret: { col: 0, row: 0 }, flagX: sp.w - 3.5,
     score: keep?.score ?? 0, coins: keep?.coins ?? 0, lives: keep?.lives ?? CFG.lives, phase: 'play', t: 0, stars: keep?.stars ?? 0, fade: 0, prevJump: false, prevDown: false, clearT: 0, qHits: 0, nextId: 1 }
 }

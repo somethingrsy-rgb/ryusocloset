@@ -37,7 +37,7 @@ export function sanePlayers(v: unknown): Record<string, BPlayer> {
 export function saneState(v: unknown): BState | null {
   const r = obj(v); if (fin(r.r) === null) return null
   const ph = r.ph === 1 ? 1 : r.ph === 2 ? 2 : r.ph === 3 ? 3 : 0
-  return { r: rng(r.r, 0, 99999), lv: rng(r.lv, 0, 8), ph, sc: rng(r.sc, 0, 1e9), li: rng(r.li, 0, 9), st: rng(r.st, 0, 9999), f: str(r.f, 700), b: str(r.b, 700), fr: str(r.fr, 500), bo: str(r.bo, 90), pl: str(r.pl, 400), n: rng(r.n, 0, 1e9) }
+  return { r: rng(r.r, 0, 99999), lv: rng(r.lv, 0, 19), ph, sc: rng(r.sc, 0, 1e9), li: rng(r.li, 0, 9), st: rng(r.st, 0, 9999), f: str(r.f, 700), b: str(r.b, 700), fr: str(r.fr, 500), bo: str(r.bo, 90), pl: str(r.pl, 400), n: rng(r.n, 0, 1e9) }
 }
 export const sanitizeBub = (v: unknown): BubSnap => { const r = obj(v); return { meta: saneMeta(r.meta), players: sanePlayers(r.players), state: saneState(r.state) } }
 

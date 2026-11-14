@@ -163,7 +163,7 @@ function BubbleSolo({ onClose, outfit, onCoop }: { onClose: () => void; outfit: 
               <li>◀ ▶ <b>걷기</b> · ▲ <b>점프</b> (키보드: 화살표, 스페이스)</li>
               <li>🫧 <b>거품</b>을 쏴서 친구들을 가둬요</li>
               <li>👣 갇힌 거품을 <b>몸으로 톡</b> 터뜨리면 과일이 나와요</li>
-              <li>👑 3·6·9단계에는 몬스터들과 함께 <b>대왕 몬스터</b>(그중 하나가 커졌어요)! 거품을 여러 번 맞히거나, 뛰어올라 <b>머리를 콩!</b> 밟으면 체력이 닳아요</li>
+              <li>👑 3·6·9·12·15·18·20단계에는 몬스터들과 함께 <b>대왕 몬스터</b>(그중 하나가 커졌어요)! 거품을 여러 번 맞히거나, 뛰어올라 <b>머리를 콩!</b> 밟으면 체력이 닳아요</li>
               <li>🍓 과일을 먹으면 점수! 별 친구에게 닿으면 ♥가 줄어요</li>
             </ul>
             <button onClick={() => { setKey(INTRO_KEY); begin(false) }} className="min-h-12 w-full rounded-full bg-gradient-to-b from-[#ffe27a] to-[#ffc94a] text-base font-black text-[#6b4a00] shadow-md">시작!</button>
