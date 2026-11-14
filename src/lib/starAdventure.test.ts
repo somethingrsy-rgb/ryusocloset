@@ -116,8 +116,8 @@ describe('별 모험 규칙', () => {
     expect(speeds[0]).toBeLessThan(CFG.foe)
     const n = Array.from({ length: LEVELS }, (_, l) => newRun(l).main.foes.length)
     expect(n[0]).toBeLessThan(n[2]) // 같은 판 모양(0·3단계)이라도 3단계가 더 어렵다
-    expect(n[3]).toBeGreaterThan(newRun(0).main.foes.length)
-    expect(n[LEVELS - 1]).toBeGreaterThan(n[3] - 1)
+    expect(n[5]).toBeGreaterThanOrEqual(n[2])
+    expect(n[LEVELS - 1]).toBeGreaterThan(n[5]) // 20단계가 6단계보다 괴물이 많다
     // 괴물은 구덩이 위나 관 안에 놓이지 않는다
     for (let l = 0; l < LEVELS; l++) { const r = newRun(l); for (const f of r.main.foes) expect(['#', '=', '.'].includes(r.main.rows[10][Math.floor(f.x)]) ? true : false).toBe(true) }
   })

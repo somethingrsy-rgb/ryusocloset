@@ -538,7 +538,7 @@
               ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 99999"
             },
             "lv": {
-              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 8"
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 19"
             },
             "ph": {
               ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3"

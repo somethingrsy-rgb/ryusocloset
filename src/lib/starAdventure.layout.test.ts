@@ -22,4 +22,20 @@ describe('별 모험 판 모양(넘을 수 없는 곳이 없다)', () => {
       expect(max).toBeLessThanOrEqual(4)
     })
   }
+  it('20단계까지 있고 단계마다 판 모양이 다르다', () => {
+    expect(LEVELS).toBe(20)
+    const shapes = new Set(Array.from({ length: LEVELS }, (_, l) => newRun(l).main.rows.map((r) => r.join('')).join('/')))
+    expect(shapes.size).toBeGreaterThanOrEqual(LEVELS - 3) // 1~6단계는 손으로 만든 3가지를 쓰므로 6단계 안에서만 겹칠 수 있다
+  })
+  for (let l = 0; l < LEVELS; l++) {
+    it(`${l + 1}단계: 보너스방 관이 있고, 괴물이 구덩이·관 위가 아닌 곳에 서 있고, 장애물 사이에 걸을 땅이 있다`, () => {
+      const R = newRun(l).main, at = (c: number, r: number) => (c < 0 || c >= R.w || r < 0 || r >= 12 ? '.' : R.rows[r][c])
+      expect(R.rows.some((row) => row.includes('e'))).toBe(true)
+      for (const f of R.foes) { const c = Math.floor(f.x), r = Math.round(f.y); expect(solid(at(c, r)) || r >= 10 ? solid(at(c, r)) || at(c, 10) !== '.' : false, `괴물 (${c},${f.y}) 밑이 비어 있어요`).toBe(true); expect(solid(at(c, r - 1)), `괴물이 벽 속에 있어요 (${c},${f.y})`).toBe(false) }
+      // 땅(10줄)이 이어진 길이: 구덩이와 구덩이 사이·관 사이가 너무 짧지 않다(처음 계단 구역 제외)
+      let run = 0, min = 99, seen = false // 처음과 끝의 시작·깃발 쪽 땅은 빼고, 장애물과 장애물 사이만 잰다
+      for (let c = 9; c < R.w - 5; c++) { if (solid(at(c, 10)) && !'lrLRef'.includes(at(c, 9))) run++; else { if (run > 0 && seen) min = Math.min(min, run); if (run > 0 || !seen) seen = true; run = 0 } }
+      if (l >= 6) expect(min, `땅 길이 ${min}`).toBeGreaterThanOrEqual(3) // 1~6단계는 손으로 만든 모양(계단·관이 붙어 있음)이라 제외
+    })
+  }
 })
