@@ -60,11 +60,11 @@ function genSpec(level: number): Spec {
   const gap = Math.max(4, 7 - Math.floor(d / 3)) // 장애물 사이 땅(뒤로 갈수록 좁아짐, 늘 4칸 이상)
   const maxPit = Math.min(4, 2 + Math.floor(d / 4))
   let x = 11, enter = false
-  const kinds: ('pit' | 'pipe' | 'bricks' | 'plat')[] = ['pit', 'pipe', 'bricks', 'plat', 'pit', 'pipe']
+  const kinds: ('pit' | 'pipe' | 'flat')[] = ['pit', 'pipe', 'flat', 'pit', 'pipe', 'flat']
   let last = ''
   while (x < w - 12) {
     let k = kinds[Math.floor(rnd() * kinds.length)]
-    if (k === last && k !== 'bricks') k = kinds[(kinds.indexOf(k) + 2) % kinds.length] // 같은 모양이 계속 나오지 않게
+    if (k === last && k !== 'flat') k = kinds[(kinds.indexOf(k) + 2) % kinds.length] // 같은 모양이 계속 나오지 않게
     last = k
     if (k === 'pit') {
       const n = 2 + Math.floor(rnd() * (maxPit - 1))
@@ -75,20 +75,34 @@ function genSpec(level: number): Spec {
       const h = rnd() < 0.5 ? 1 : 2
       sp.pipes.push({ c: x, h, enter: !enter && x > w / 3 ? (enter = true) : false })
       x += 2 + gap
-    } else if (k === 'bricks') {
-      sp.bricks.push([x, 6], [x + 2, 6]); sp.qs.push([x + 1, 6])
-      x += 3 + gap
     } else {
-      const n = 3 + Math.floor(rnd() * 3)
-      sp.plats.push([x, 6, n])
-      for (let i = 0; i < n; i++) sp.coins.push([x + i, 5])
-      x += n + gap
+      x += 3 + gap // 평평한 땅(괴물이 서 있기 좋은 곳)
     }
   }
+  if (!sp.pipes.length) { // 관이 하나도 안 나왔으면 보너스방 관을 구덩이에서 먼 땅에 하나 놓는다
+    for (let c = Math.floor(w / 2); c < w - 12; c++) if (!sp.pits.some(([a, b]) => c + 3 >= a - 4 && c <= b + 4)) { sp.pipes.push({ c, h: 2, enter: true }); break }
+  }
   if (!sp.pipes.some((p) => p.enter) && sp.pipes.length) sp.pipes[0].enter = true
+  // 공중에 떠 있는 것들(1~6단계처럼): 벽돌·물음표 상자, 발판, 높은 발판을 판 전체에 고르게. 관 바로 위(머리 공간)에는 낮은 벽돌을 놓지 않는다
+  let fx = 9 + Math.floor(rnd() * 3), nf = 0
+  while (fx < w - 9) {
+    const width = 3 + Math.floor(rnd() * 3)
+    const overPipe = sp.pipes.some((p) => fx + width + 1 >= p.c - 1 && fx - 1 <= p.c + 3)
+    const pick = nf % 3 === 0 ? 'bricks' : nf % 3 === 1 ? 'plat' : rnd() < 0.5 ? 'bricks' : 'high'
+    nf++
+    if (pick === 'bricks' && !overPipe) {
+      for (let i = 0; i < width; i++) { if (i === 1 || (width > 3 && i === width - 2)) sp.qs.push([fx + i, 6]); else sp.bricks.push([fx + i, 6]) }
+    } else if (pick === 'high' && !overPipe) {
+      sp.plats.push([fx, 3, width]); for (let i = 0; i < width; i++) sp.coins.push([fx + i, 2])
+      sp.bricks.push([fx + 1, 6], [fx + width, 6]); sp.qs.push([fx + width - 1, 6]) // 아래에 벽돌 계단처럼 한두 개
+    } else {
+      sp.plats.push([fx, 5, width]); for (let i = 0; i < width; i++) sp.coins.push([fx + i, 4])
+    }
+    fx += width + 2 + Math.floor(rnd() * 3)
+  }
   // 괴물: 땅 위에서 구덩이·관에서 2칸 이상 떨어진 곳에, 서로 3칸 이상 떨어지게(수는 단계에 비례), 몇 마리는 발판 위에
   const total = 8 + Math.floor(d * 0.8)
-  const ok = (c: number) => c >= 12 && c <= w - 8 && !sp.pits.some(([a, b]) => c >= a - 1 && c <= b + 1) && !sp.pipes.some((p) => c >= p.c - 1 && c <= p.c + 2) && !sp.plats.some(([pc, , n]) => c >= pc - 1 && c <= pc + n) && !sp.bricks.some(([bc]) => c >= bc - 1 && c <= bc + 1)
+  const ok = (c: number) => c >= 12 && c <= w - 8 && !sp.pits.some(([a, b]) => c >= a - 1 && c <= b + 1) && !sp.pipes.some((p) => c >= p.c - 1 && c <= p.c + 2)
   const cols: number[] = []
   for (let tries = 0; cols.length < total && tries < 400; tries++) { const c = 12 + Math.floor(rnd() * (w - 20)); if (ok(c) && cols.every((q) => Math.abs(q - c) >= 2)) cols.push(c) }
   sp.foes = cols.sort((a, b) => a - b)
